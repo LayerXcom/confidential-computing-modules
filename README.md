@@ -11,7 +11,7 @@ $ docker pull osuketh/anonify
 $ git clone git@github.com:LayerXcom/anonify.git
 $ cd anonify
 $ docker run -v `pwd`:/root/anonify --rm -it osuketh/anonify
-$ cd sgx/sample/helloworld
+$ cd sgx/helloworld
 $ make
 $ cd bin
 $ ./app
