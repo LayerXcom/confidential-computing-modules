@@ -8,6 +8,8 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
+use sgx_types::*;
+
 extern "C" {
     pub fn ocall_sgx_init_quote(
         ret_val: *mut sgx_status_t,

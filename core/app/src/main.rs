@@ -1,5 +1,3 @@
-
-
 mod init_enclave;
 mod ocalls;
 
