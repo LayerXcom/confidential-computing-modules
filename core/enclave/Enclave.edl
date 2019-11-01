@@ -10,6 +10,10 @@ enclave {
     };
 
     untrusted {
+        sgx_status_t ocall_sgx_init_quote(
+            [out] sgx_target_info_t *ret_ti,
+            [out] sgx_epid_group_id_t *ret_gid
+        );
 
     };
 
