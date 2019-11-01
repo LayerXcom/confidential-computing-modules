@@ -14,7 +14,7 @@ $ git clone git@github.com:LayerXcom/anonify.git
 $ cd anonify
 $ docker run -v `pwd`:/root/anonify --rm -it osuketh/anonify
 $ cd anonify/helloworld
+$ export SGX_MODE=SW
 $ make
-$ cd bin
-$ ./app
+$ cd bin && ./app
 ```

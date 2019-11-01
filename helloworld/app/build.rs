@@ -26,37 +26,22 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef _APP_H_
-#define _APP_H_
+use std::env;
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
+fn main () {
 
-#include "sgx_error.h"       /* sgx_status_t */
-#include "sgx_eid.h"     /* sgx_enclave_id_t */
+    let sdk_dir = env::var("SGX_SDK")
+                    .unwrap_or_else(|_| "/opt/intel/sgxsdk".to_string());
+    let is_sim = env::var("SGX_MODE")
+                    .unwrap_or_else(|_| "HW".to_string());
 
-#ifndef TRUE
-#define TRUE 1
-#endif
+    println!("cargo:rustc-link-search=native=../lib");
+    println!("cargo:rustc-link-lib=static=Enclave_u");
 
-#ifndef FALSE
-#define FALSE 0
-#endif
-
-#define TOKEN_FILENAME   "enclave.token"
-#define ENCLAVE_FILENAME "enclave.signed.so"
-
-extern sgx_enclave_id_t global_eid;    /* global enclave id */
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
-
-#if defined(__cplusplus)
+    println!("cargo:rustc-link-search=native={}/lib64", sdk_dir);
+    match is_sim.as_ref() {
+        "SW" => println!("cargo:rustc-link-lib=dylib=sgx_urts_sim"),
+        "HW" => println!("cargo:rustc-link-lib=dylib=sgx_urts"),
+        _    => println!("cargo:rustc-link-lib=dylib=sgx_urts"), // Treat undefined as HW
+    }
 }
-#endif
-
-#endif /* !_APP_H_ */
