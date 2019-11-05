@@ -9,6 +9,7 @@
 extern crate sgx_tstd as std;
 
 use sgx_types::*;
+use sgx_tse::*;
 
 extern "C" {
     pub fn ocall_sgx_init_quote(
@@ -17,7 +18,7 @@ extern "C" {
         ret_gid: *mut sgx_epid_group_id_t
     ) -> sgx_status_t;
 
-     pub fn ocall_get_quote (
+    pub fn ocall_get_quote (
         ret_val: *mut sgx_status_t,
         p_sigrl: *const u8,
         sigrl_len: u32,
@@ -30,4 +31,18 @@ extern "C" {
         maxlen: u32,
         p_quote_len: *mut u32
     ) -> sgx_status_t;
+}
+
+// TODO: Add sealed public key as extra data
+#[no_mangle]
+pub extern "C" fn ecall_get_registration_quote(
+    target_info: &sgx_target_info_t,
+    real_report: &mut sgx_report_t
+) -> sgx_status_t {
+    let report = sgx_report_data_t::default();
+    if let Ok(r) = rsgx_create_report(&target_info, &report) {
+        *real_report = r;
+    }
+
+    sgx_status_t::SGX_SUCCESS
 }

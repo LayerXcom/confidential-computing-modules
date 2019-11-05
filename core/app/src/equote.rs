@@ -3,6 +3,8 @@ use failure::Error;
 use std::time;
 use crate::error::SgxError;
 
+// Referring to Intel SDK Developer Reference.
+// https://01.org/sites/default/files/documentation/intel_sgx_sdk_developer_reference_for_linux_os_pdf.pdf.
 extern "C" {
     pub fn sgx_init_quote(
         p_target_info: *mut sgx_target_info_t,
@@ -43,6 +45,7 @@ pub struct EnclaveContext {
     spid: sgx_spid_t,
 }
 
+// TODO: Consider SGX_ERROR_BUSY.
 impl EnclaveContext {
     pub fn new(eid: sgx_enclave_id_t, spid: sgx_spid_t) -> Self {
         EnclaveContext {
@@ -54,7 +57,10 @@ impl EnclaveContext {
     fn init_quote(&self) -> Result<sgx_target_info_t, Error> {
         let mut target_info = sgx_target_info_t::default();
         let mut gid = sgx_epid_group_id_t::default();
-        let status = unsafe { sgx_init_quote(&mut target_info, &mut gid) };
+        let status = unsafe {
+            // Defined in P.97 SDK developer reference.
+            sgx_init_quote(&mut target_info, &mut gid)
+        };
 
         if status != sgx_status_t::SGX_SUCCESS {
             return Err(SgxError {
@@ -91,6 +97,7 @@ impl EnclaveContext {
     fn calc_quote_size() -> Result<u32, Error> {
         let mut quote_size: u32 = 0;
         let status = unsafe {
+            // Defined in P.157 SDK developer reference.
             sgx_calc_quote_size(std::ptr::null(), 0, &mut quote_size)
         };
 
@@ -107,8 +114,7 @@ impl EnclaveContext {
     fn get_quote(&self, quote_size: u32, report: sgx_report_t) -> Result<Vec<u8>, Error> {
         let mut quote = vec![0u8; quote_size as usize];
         let status = unsafe {
-            // Defined at P.100 of
-            // https://01.org/sites/default/files/documentation/intel_sgx_sdk_developer_reference_for_linux_os_pdf.pdf.
+            // Defined in P.100
             sgx_get_quote(
                 &report,
                 sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE,

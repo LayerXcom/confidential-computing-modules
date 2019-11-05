@@ -8,5 +8,9 @@ build = "build.rs"
 [dependencies]
 sgx_types = { git = "https://github.com/apache/mesatee-sgx" }
 sgx_urts = { git = "https://github.com/apache/mesatee-sgx" }
-dirs = "2.0.2"
+dirs = "2.0"
 failure = "0.1.6"
+
+[build-dependencies]
+bindgen = "0.51"
+dirs = "2.0"
