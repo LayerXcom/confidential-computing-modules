@@ -1,9 +1,22 @@
 [package]
-name = "anonify-core-enclave"
+name = "anonify-enclave"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "anonifyenclave"
+crate-type = ["staticlib"]
+
+[features]
+default = []
 
 [dependencies]
+
+[target.'cfg(not(target_env = "sgx"))'.dependencies]
+sgx_tse = { rev = "v1.0.9", git = "https://github.com/apache/mesatee-sgx" }
+sgx_tstd = { rev = "v1.0.9", git = "https://github.com/apache/mesatee-sgx", features = ["untrusted_fs","net","backtrace"] }
+sgx_rand = { rev = "v1.0.9", git = "https://github.com/apache/mesatee-sgx" }
+sgx_types = { rev = "v1.0.9", git = "https://github.com/apache/mesatee-sgx" }
+sgx_trts = { rev = "v1.0.9", git = "https://github.com/apache/mesatee-sgx" }
+sgx_tcrypto  = { rev = "v1.0.9", git = "https://github.com/apache/mesatee-sgx" }
