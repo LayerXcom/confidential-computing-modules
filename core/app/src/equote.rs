@@ -1,7 +1,6 @@
 use sgx_types::*;
-use failure::Error;
 use std::time;
-use crate::error::SgxError;
+use crate::error::*;
 
 // Referring to Intel SDK Developer Reference.
 // https://01.org/sites/default/files/documentation/intel_sgx_sdk_developer_reference_for_linux_os_pdf.pdf.
@@ -54,7 +53,7 @@ impl EnclaveContext {
         }
     }
 
-    fn init_quote(&self) -> Result<sgx_target_info_t, Error> {
+    fn init_quote(&self) -> Result<sgx_target_info_t, HostError> {
         let mut target_info = sgx_target_info_t::default();
         let mut gid = sgx_epid_group_id_t::default();
         let status = unsafe {
@@ -63,7 +62,7 @@ impl EnclaveContext {
         };
 
         if status != sgx_status_t::SGX_SUCCESS {
-            return Err(SgxError {
+            return Err(HostErrorKind::Sgx {
                 status,
                 function: "sgx_init_quote",
             }.into());
@@ -72,7 +71,7 @@ impl EnclaveContext {
         Ok(target_info)
     }
 
-    fn get_report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t, Error> {
+    fn get_report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t, HostError> {
         let mut report = sgx_report_t::default();
         let mut retval = sgx_status_t::SGX_SUCCESS;
         let status = unsafe {
@@ -85,7 +84,7 @@ impl EnclaveContext {
         };
 
         if status != sgx_status_t::SGX_SUCCESS || retval != sgx_status_t::SGX_SUCCESS {
-            return Err(SgxError {
+            return Err(HostErrorKind::Sgx {
                 status,
                 function: "ecall_get_registration_quote",
             }.into());
@@ -94,7 +93,7 @@ impl EnclaveContext {
         Ok(report)
     }
 
-    fn calc_quote_size() -> Result<u32, Error> {
+    fn calc_quote_size() -> Result<u32, HostError> {
         let mut quote_size: u32 = 0;
         let status = unsafe {
             // Defined in P.157 SDK developer reference.
@@ -102,7 +101,7 @@ impl EnclaveContext {
         };
 
         if status != sgx_status_t::SGX_SUCCESS || quote_size == 0 {
-            return Err(SgxError {
+            return Err(HostErrorKind::Sgx {
                 status,
                 function: "sgx_calc_quote_size",
             }.into());
@@ -111,7 +110,7 @@ impl EnclaveContext {
         Ok(quote_size)
     }
 
-    fn get_quote(&self, quote_size: u32, report: sgx_report_t) -> Result<Vec<u8>, Error> {
+    fn get_quote(&self, quote_size: u32, report: sgx_report_t) -> Result<Vec<u8>, HostError> {
         let mut quote = vec![0u8; quote_size as usize];
         let status = unsafe {
             // Defined in P.100
@@ -129,7 +128,7 @@ impl EnclaveContext {
         };
 
         if status != sgx_status_t::SGX_SUCCESS {
-            return Err(SgxError {
+            return Err(HostErrorKind::Sgx {
                 status,
                 function: "sgx_get_quote"
             }.into());

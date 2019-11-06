@@ -32,6 +32,8 @@ pub struct Quote {
     report_body: ReportBody,
 }
 
+
+
 // Size: 48 bytes
 pub struct QuoteBody {
     version: [u8; 2],
@@ -42,6 +44,10 @@ pub struct QuoteBody {
     reserved: [u8; 4],
     base_name: [u8; 32],
 }
+
+// impl QuoteBody {
+//     pub fn read<R: Read>(mut reader: R) -> io
+// }
 
 // Size: 384 bytes
 pub struct ReportBody {
