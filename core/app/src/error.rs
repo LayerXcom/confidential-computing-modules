@@ -4,6 +4,8 @@ use std::io;
 use std::fmt;
 use std::fmt::Display;
 
+pub type Result<T> = std::result::Result<T, HostError>;
+
 #[derive(Debug)]
 pub struct HostError {
     inner: Context<HostErrorKind>,
@@ -16,6 +18,8 @@ pub enum HostErrorKind {
         status: sgx_status_t,
         function: &'static str,
     },
+    #[fail(display = "Error while decoding the quote = ({})", _0)]
+    Quote(&'static str),
     #[fail(display = "IO error")]
     Io,
 }

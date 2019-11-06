@@ -53,7 +53,7 @@ impl EnclaveContext {
         }
     }
 
-    fn init_quote(&self) -> Result<sgx_target_info_t, HostError> {
+    fn init_quote(&self) -> Result<sgx_target_info_t> {
         let mut target_info = sgx_target_info_t::default();
         let mut gid = sgx_epid_group_id_t::default();
         let status = unsafe {
@@ -71,7 +71,7 @@ impl EnclaveContext {
         Ok(target_info)
     }
 
-    fn get_report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t, HostError> {
+    fn get_report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {
         let mut report = sgx_report_t::default();
         let mut retval = sgx_status_t::SGX_SUCCESS;
         let status = unsafe {
@@ -93,7 +93,7 @@ impl EnclaveContext {
         Ok(report)
     }
 
-    fn calc_quote_size() -> Result<u32, HostError> {
+    fn calc_quote_size() -> Result<u32> {
         let mut quote_size: u32 = 0;
         let status = unsafe {
             // Defined in P.157 SDK developer reference.
@@ -110,7 +110,7 @@ impl EnclaveContext {
         Ok(quote_size)
     }
 
-    fn get_quote(&self, quote_size: u32, report: sgx_report_t) -> Result<Vec<u8>, HostError> {
+    fn get_quote(&self, quote_size: u32, report: sgx_report_t) -> Result<Vec<u8>> {
         let mut quote = vec![0u8; quote_size as usize];
         let status = unsafe {
             // Defined in P.100
