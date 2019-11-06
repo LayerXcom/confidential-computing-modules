@@ -20,8 +20,14 @@ pub enum HostErrorKind {
     },
     #[fail(display = "Error while decoding the quote = ({})", _0)]
     Quote(&'static str),
+    #[fail(display = "Error while using the attestation service info = ({})", _0)]
+    AS(&'static str),
     #[fail(display = "IO error")]
     Io,
+    #[fail(display = "Reqwest error")]
+    Reqwest,
+    #[fail(display = "Serde Json error")]
+    SerdeJson,
 }
 
 impl Fail for HostError {
@@ -62,6 +68,22 @@ impl From<io::Error> for HostError {
     fn from(error: io::Error) -> Self {
         HostError {
             inner: error.context(HostErrorKind::Io),
+        }
+    }
+}
+
+impl From<reqwest::Error> for HostError {
+    fn from(error: reqwest::Error) -> Self {
+        HostError {
+            inner: error.context(HostErrorKind::Reqwest),
+        }
+    }
+}
+
+impl From<serde_json::Error> for HostError {
+    fn from(error: serde_json::Error) -> Self {
+        HostError {
+            inner: error.context(HostErrorKind::SerdeJson),
         }
     }
 }

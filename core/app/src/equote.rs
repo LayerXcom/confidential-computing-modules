@@ -110,7 +110,7 @@ impl EnclaveContext {
         Ok(quote_size)
     }
 
-    fn get_quote(&self, quote_size: u32, report: sgx_report_t) -> Result<Vec<u8>> {
+    fn get_quote(&self, quote_size: u32, report: sgx_report_t) -> Result<String> {
         let mut quote = vec![0u8; quote_size as usize];
         let status = unsafe {
             // Defined in P.100
@@ -134,6 +134,7 @@ impl EnclaveContext {
             }.into());
         }
 
-        Ok(quote)
+        // Use base64-encoded QUOTE structure to communicate via defined API.
+        Ok(base64::encode(&quote[..]))
     }
 }

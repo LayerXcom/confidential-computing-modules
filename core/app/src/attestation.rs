@@ -1,6 +1,7 @@
 // Defined in https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf
 
 use serde_json::Value;
+use reqwest::Client;
 use std::{
     io::Read,
     convert::TryFrom,
@@ -140,4 +141,82 @@ impl ReportBody {
 
         Ok(report_body)
     }
+}
+
+pub struct AttestationService {
+    url: String,
+    retries: u32,
+}
+
+impl AttestationService {
+    pub fn new(url: String, retries: u32) -> Self {
+        AttestationService {
+            url,
+            retries,
+        }
+    }
+
+    pub fn get_report(&self, quote: &str, is_prod: bool) -> Result<ASResponse> {
+        let req = Self::build_req(quote, is_prod);
+        unimplemented!();
+    }
+
+    fn build_req(quote: &str, is_prod: bool) -> QuoteRequest {
+        QuoteRequest {
+            jsonrpc: "2.0".to_string(),
+            method: "validate".to_string(),
+            params: Params {
+                quote: quote.to_string(),
+                production: is_prod,
+            },
+            id: 1,
+        }
+    }
+
+    fn send_req(&self, req: &QuoteRequest) -> Result<ASResponse> {
+        let client = reqwest::Client::new();
+        unimplemented!();
+    }
+
+    fn try_send_req(&self, client: &Client, req: &QuoteRequest) -> Result<ASResponse> {
+        let mut res = client.post(self.url.as_str()).json(&req).send()?;
+        let res_str = res.text()?;
+        let json_res: Value = serde_json::from_str(res_str.as_str())?;
+        unimplemented!();
+    }
+}
+
+// JSON-RPC response from an attestation service. This includes a validated report.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ASResponse {
+    id: i64,
+    jsonrpc: String,
+    result: ASResult,
+}
+
+// A result of `ASResponse`.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ASResult {
+    pub ca: String,
+    pub certificate: String,
+    pub report: AVReport,
+    pub report_string: String,
+    pub signature: String,
+    pub validate: bool,
+}
+
+// Parameter of `QuoteRequst`.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Params {
+    pub quote: String,
+    pub production: bool,
+}
+
+// JSON-RPC request to send quote to an attestation service.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct QuoteRequest {
+    pub jsonrpc: String,
+    pub method: String,
+    pub params: Params,
+    pub id: i32,
 }
