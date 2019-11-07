@@ -42,3 +42,5 @@ core/bin/anonify-app
 *.la
 *.a
 *.lib
+
+/build

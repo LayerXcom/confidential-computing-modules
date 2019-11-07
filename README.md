@@ -1,5 +1,5 @@
 # anonify
-Trusted anonymization layer for any blockchain
+A trusted anonymization tool for any blockchain
 
 ## Setup
 ```
@@ -7,6 +7,11 @@ $ docker pull osuketh/anonify
 $ git clone git@github.com:LayerXcom/anonify.git
 $ cd anonify
 $ docker run -v `pwd`:/root/anonify --rm -it osuketh/anonify
+```
+
+## Building contracts
+```
+$ solc -o build --bin --abi --optimize --overwrite contracts/AnonymousERC20.sol
 ```
 
 ## Running

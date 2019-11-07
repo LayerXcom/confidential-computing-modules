@@ -169,6 +169,10 @@ enclave:
 compiler-rt:
 	$(MAKE) -C $(SGX_SDK_RUST)/compiler-rt/ 2> /dev/null
 
+.PHONY: test
+test: all
+	@cd app && cargo test $(App_Rust_Flags)
+
 .PHONY: clean
 clean:
 	@rm -f $(App_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) enclave/*_t.* app/*_u.* lib/*.a
