@@ -7,6 +7,8 @@ import "./utils/Base64.sol";
 contract ReportsHandle {
     using SafeMath for uint256;
 
+    // A cryptographic hash of the measurement.
+    // Different builds/versions of an enclave will result in a different MRENCLAVE value.
     bytes32 public mrEnclave;
 
     uint constant internal WORD_SIZE = 32;
