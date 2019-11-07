@@ -21,8 +21,7 @@ contract ReportsHandle {
 
     function isEqualMrEnclave(bytes memory _report, bytes memory _sig) public view returns (bool) {
         bytes32 inputMrEnclave = extractMrEnclaveFromReport(_report, _sig);
-        bytes32 currentMrEnclave = mrEnclave;
-        return currentMrEnclave == inputMrEnclave;
+        return mrEnclave == inputMrEnclave;
     }
 
     function extractMrEnclaveFromReport(bytes memory _report, bytes memory _sig) internal view returns (bytes32) {
