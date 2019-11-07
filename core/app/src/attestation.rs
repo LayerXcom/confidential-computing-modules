@@ -225,7 +225,7 @@ impl AttestationService {
         let ca = v["result"]["ca"].as_str().unwrap().to_string();
         let cert = v["result"]["certificate"].as_str().unwrap().to_string();
         let sig = v["result"]["signature"].as_str().unwrap().to_string();
-        let report_string = v["result"]["report"].as_str().unwrap().to_string();
+        let report_str = v["result"]["report"].as_str().unwrap().to_string();
         let validate = match v["result"]["validate"].as_str() {
             Some(v) => v == "True",
             None => false,
@@ -238,7 +238,7 @@ impl AttestationService {
             sig,
             validate,
             report,
-            report_string
+            report_str
         }
     }
 
@@ -263,7 +263,7 @@ pub struct ASResult {
     pub ca: String,
     pub cert: String,
     pub report: AVReport,
-    pub report_string: String,
+    pub report_str: String,
     pub sig: String,
     pub validate: bool,
 }
@@ -273,8 +273,15 @@ impl ASResult {
         let ca = X509::from_pem(&self.ca.as_bytes())?;
         let cert = X509::from_pem(&self.cert.as_bytes())?;
         let pubkey = cert.public_key()?;
-        let sig = self.sig
-        unimplemented!();
+        let sig = hex::decode(&self.sig)?;
+
+        let mut verifier = Verifier::new(MessageDigest::sha256(), &pubkey)?;
+        verifier.update(&self.report_str.as_bytes())?;
+
+        match ca.issued(&cert) {
+            X509VerifyResult::OK => Ok(verifier.verify(&sig)?),
+            _ => Ok(false)
+        }
     }
 }
 

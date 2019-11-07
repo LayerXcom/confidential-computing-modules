@@ -28,6 +28,10 @@ pub enum HostErrorKind {
     Reqwest,
     #[fail(display = "Serde Json error")]
     SerdeJson,
+    #[fail(display = "OpenSSL error")]
+    OpenSSL,
+    #[fail(display = "Hex decoding error")]
+    Hex,
 }
 
 impl Fail for HostError {
@@ -84,6 +88,22 @@ impl From<serde_json::Error> for HostError {
     fn from(error: serde_json::Error) -> Self {
         HostError {
             inner: error.context(HostErrorKind::SerdeJson),
+        }
+    }
+}
+
+impl From<openssl::error::ErrorStack> for HostError {
+    fn from(error: openssl::error::ErrorStack) -> Self {
+        HostError {
+            inner: error.context(HostErrorKind::OpenSSL),
+        }
+    }
+}
+
+impl From<hex::FromHexError> for HostError {
+    fn from(error: hex::FromHexError) -> Self {
+        HostError {
+            inner: error.context(HostErrorKind::OpenSSL),
         }
     }
 }
