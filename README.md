@@ -11,7 +11,7 @@ $ docker run -v `pwd`:/root/anonify --rm -it osuketh/anonify
 
 ## Building contracts
 ```
-$ solc -o build --bin --abi --optimize --overwrite contracts/AnonymousERC20.sol
+$ solc -o build --bin --abi --optimize --overwrite contracts/AnonymousAsset.sol
 ```
 
 ## Running

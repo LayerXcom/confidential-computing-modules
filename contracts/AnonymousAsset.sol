@@ -4,7 +4,7 @@ import "./reportsHandle.sol";
 import "./utils/ArrayUtils.sol";
 
 // Consider: Avoid inheritting
-contract AnonymousERC20 is ReportsHandle {
+contract AnonymousAsset is ReportsHandle {
     using ArrayUtils for bytes4[];
 
     // Latest encrypted balances in each account

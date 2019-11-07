@@ -1,1 +1,1 @@
-mod erc20;
+mod anonymous_asset;

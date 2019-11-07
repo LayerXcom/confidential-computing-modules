@@ -9,14 +9,14 @@ use web3::{
 };
 
 #[derive(Debug)]
-pub struct AnonymousErc20Contract {
+pub struct AnonymousAssetContract {
     web3: Arc<Web3<Http>>,
     eloop: EventLoopHandle,
     contract: Contract<Http>,
     deployer: Address,
 }
 
-impl AnonymousErc20Contract {
+impl AnonymousAssetContract {
     pub fn deploy<P: AsRef<Path>>(
         abi_path: P,
         eth_url: &str,
@@ -39,9 +39,9 @@ pub trait Gets {
     fn get_balances(&self, offset: U256, len: U256) -> Result<Vec<String>>;
 }
 
-impl Gets for AnonymousErc20Contract {
+impl Gets for AnonymousAssetContract {
     fn get_balances(&self, offset: U256, len: U256) -> Result<Vec<String>> {
-        unimplemented!;
+        unimplemented!();
     }
 }
 
@@ -49,7 +49,7 @@ pub trait Posts<G> {
     fn tranfer(&self, update_balance: String, report: String, signature: String, gas: G, confirmations: usize) -> Result<TransactionReceipt>;
 }
 
-impl<G: Into<U256>> Posts for AnonymousErc20Contract {
+impl<G: Into<U256>> Posts for AnonymousAssetContract {
     fn tranfer(
         &self,
         update_balance: String,
