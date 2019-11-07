@@ -20,7 +20,8 @@ Enclave_u.c
 Enclave_t.c
 Enclave_t.h
 helloworld/bin/app
-core/bin/anonify-app
+core/bin/
+core/lib/
 
 # Prerequisites
 *.d
