@@ -10,6 +10,7 @@ mod constants;
 mod equote;
 mod error;
 mod attestation;
+mod web3;
 
 fn main() {
     let enclave = match init_enclave() {
