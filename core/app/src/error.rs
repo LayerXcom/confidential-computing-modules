@@ -11,7 +11,7 @@ pub struct HostError {
     inner: Context<HostErrorKind>,
 }
 
-#[derive(Copy, Clone, Debug, Fail)]
+#[derive(Debug, Fail)]
 pub enum HostErrorKind {
     #[fail(display = "SGX Ecall Failed function: {}, status: {}", function, status)]
     Sgx {
@@ -21,7 +21,7 @@ pub enum HostErrorKind {
     #[fail(display = "Error while decoding the quote = ({})", _0)]
     Quote(&'static str),
     #[fail(display = "Error while using the attestation service info = ({})", _0)]
-    AS(&'static str),
+    AS(String),
     #[fail(display = "IO error")]
     Io,
     #[fail(display = "Reqwest error")]
@@ -47,8 +47,8 @@ impl Display for HostError {
 }
 
 impl HostError {
-    pub fn kind(&self) -> HostErrorKind {
-        *self.inner.get_context()
+    pub fn kind(&self) -> &HostErrorKind {
+        self.inner.get_context()
     }
 }
 

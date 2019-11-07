@@ -158,7 +158,7 @@ impl AttestationService {
 
     pub fn get_report(&self, quote: &str, is_prod: bool) -> Result<ASResponse> {
         let req = Self::build_req(quote, is_prod);
-        unimplemented!();
+        self.send_req(&req)
     }
 
     fn build_req(quote: &str, is_prod: bool) -> QuoteRequest {
@@ -175,14 +175,71 @@ impl AttestationService {
 
     fn send_req(&self, req: &QuoteRequest) -> Result<ASResponse> {
         let client = reqwest::Client::new();
-        unimplemented!();
+        self.try_send_req(&client, req).or_else(|mut res_err| {
+            for _ in 0..self.retries {
+                self.try_send_req(&client, req).map_err(|e| res_err = e);
+            }
+            return Err(res_err);
+        })
     }
 
     fn try_send_req(&self, client: &Client, req: &QuoteRequest) -> Result<ASResponse> {
         let mut res = client.post(self.url.as_str()).json(&req).send()?;
         let res_str = res.text()?;
         let json_res: Value = serde_json::from_str(res_str.as_str())?;
-        unimplemented!();
+
+        if res.status().is_success() && !json_res["error"].is_object() {
+            let res = self.parse_response(&json_res);
+            Ok(res)
+        } else {
+            let msg = format!(
+                "AttestationSevice: An error occurred. Status code: {:?}\n Error response: {:?}",
+                res.status(),
+                json_res["error"]["message"].as_str()
+            );
+            Err(HostErrorKind::AS(msg).into())
+        }
+    }
+
+    // todo: unwrap()
+    fn parse_response(&self, v: &Value) -> ASResponse {
+        let result = self.parse_result(v);
+        let id = v["id"].as_i64().unwrap();
+        let jsonrpc = v["jsonrpc"].as_str().unwrap().to_string();
+
+        ASResponse {
+            id,
+            jsonrpc,
+            result,
+        }
+    }
+
+    // todo: unwrap()
+    fn parse_result(&self, v: &Value) -> ASResult {
+        let ca = v["result"]["ca"].as_str().unwrap().to_string();
+        let certificate = v["result"]["certificate"].as_str().unwrap().to_string();
+        let sig = v["result"]["signature"].as_str().unwrap().to_string();
+        let report_string = v["result"]["report"].as_str().unwrap().to_string();
+        let validate = match v["result"]["validate"].as_str() {
+            Some(v) => v == "True",
+            None => false,
+        };
+        let report = self.parse_report(v);
+
+        ASResult {
+            ca,
+            certificate,
+            sig,
+            validate,
+            report,
+            report_string
+        }
+    }
+
+    // todo: unwrap()
+    fn parse_report(&self, v: &Value) -> AVReport {
+        let report_str = v["result"]["report"].as_str().unwrap();
+        serde_json::from_str(report_str).unwrap()
     }
 }
 
@@ -201,7 +258,7 @@ pub struct ASResult {
     pub certificate: String,
     pub report: AVReport,
     pub report_string: String,
-    pub signature: String,
+    pub sig: String,
     pub validate: bool,
 }
 
