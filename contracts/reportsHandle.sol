@@ -1,15 +1,37 @@
 pragma solidity ^0.5.0;
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./SolRsaVerify.sol";
-import "./Base64.sol";
+import "./utils/SafeMath.sol";
+import "./utils/SolRsaVerify.sol";
+import "./utils/Base64.sol";
 
-library ReportsHandle {
+contract ReportsHandle {
     using SafeMath for uint256;
+
+    bytes32 public mrEnclave;
 
     uint constant internal WORD_SIZE = 32;
 
-    function extract_quote(bytes memory _report) public view returns(bytes memory) {
+    constructor(bytes memory _report, bytes memory _sig) public {
+        mrEnclave = extractMrEnclaveFromReport(_report, _sig);
+    }
+
+    // TODO: Add updateMrEnclave() function
+
+    function isEqualMrEnclave(bytes memory _report, bytes memory _sig) public view returns (bool) {
+        bytes32 inputMrEnclave = extractMrEnclaveFromReport(_report, _sig);
+        bytes32 currentMrEnclave = mrEnclave;
+        return currentMrEnclave == inputMrEnclave;
+    }
+
+    function extractMrEnclaveFromReport(bytes memory _report, bytes memory _sig) internal view returns (bytes32) {
+        require(verifyReportSig(_report, _sig) == 0, "Invalid report's signature");
+        bytes memory quote = extractQuote(_report);
+
+        // See https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf, P.23.
+        return keccak256(abi.encodePacked(extractElement(quote, 112, 32)));
+    }
+
+    function extractQuote(bytes memory _report) internal pure returns(bytes memory) {
         uint256 i = 0;
         // find the word "Body" in the report, so that we can extract "isvEnclaveQuoteBody" field data.
         while(i < _report.length && !(
@@ -26,7 +48,7 @@ library ReportsHandle {
         i = i + 7;
 
         // 576 bytes is the length of the quote
-        bytes memory quoteBody = extract_element(_report, i, 576);
+        bytes memory quoteBody = extractElement(_report, i, 576);
         return Base64.decode(quoteBody);
     }
 
@@ -42,7 +64,7 @@ library ReportsHandle {
         return SolRsaVerify.pkcs1Sha256VerifyRaw(_report, _sig, exponent, mod);
     }
 
-    function extract_element(bytes memory src, uint offset, uint len) internal pure returns (bytes memory) {
+    function extractElement(bytes memory src, uint offset, uint len) internal pure returns (bytes memory) {
         bytes memory o = new bytes(len);
         uint srcptr;
         uint destptr;
