@@ -2,6 +2,11 @@
 
 use serde_json::Value;
 use reqwest::Client;
+use openssl::{
+    hash::MessageDigest,
+    sign::Verifier,
+    x509::{X509VerifyResult, X509},
+};
 use std::{
     io::Read,
     convert::TryFrom,
@@ -218,7 +223,7 @@ impl AttestationService {
     // todo: unwrap()
     fn parse_result(&self, v: &Value) -> ASResult {
         let ca = v["result"]["ca"].as_str().unwrap().to_string();
-        let certificate = v["result"]["certificate"].as_str().unwrap().to_string();
+        let cert = v["result"]["certificate"].as_str().unwrap().to_string();
         let sig = v["result"]["signature"].as_str().unwrap().to_string();
         let report_string = v["result"]["report"].as_str().unwrap().to_string();
         let validate = match v["result"]["validate"].as_str() {
@@ -229,7 +234,7 @@ impl AttestationService {
 
         ASResult {
             ca,
-            certificate,
+            cert,
             sig,
             validate,
             report,
@@ -256,11 +261,21 @@ pub struct ASResponse {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ASResult {
     pub ca: String,
-    pub certificate: String,
+    pub cert: String,
     pub report: AVReport,
     pub report_string: String,
     pub sig: String,
     pub validate: bool,
+}
+
+impl ASResult {
+    pub fn verify_report(&self) -> Result<bool> {
+        let ca = X509::from_pem(&self.ca.as_bytes())?;
+        let cert = X509::from_pem(&self.cert.as_bytes())?;
+        let pubkey = cert.public_key()?;
+        let sig = self.sig
+        unimplemented!();
+    }
 }
 
 // Parameter of `QuoteRequst`.
