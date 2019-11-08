@@ -32,6 +32,8 @@ pub enum HostErrorKind {
     OpenSSL,
     #[fail(display = "Hex decoding error")]
     Hex,
+    #[fail(display = "Web3 error")]
+    Web3,
 }
 
 impl Fail for HostError {
@@ -104,6 +106,14 @@ impl From<hex::FromHexError> for HostError {
     fn from(error: hex::FromHexError) -> Self {
         HostError {
             inner: error.context(HostErrorKind::OpenSSL),
+        }
+    }
+}
+
+impl From<web3::Error> for HostError {
+    fn from(error: web3::Error) -> Self {
+        HostError {
+            inner: error.context(HostErrorKind::Web3),
         }
     }
 }
