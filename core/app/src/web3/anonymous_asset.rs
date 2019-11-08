@@ -1,6 +1,7 @@
 use std::{
     sync::Arc,
     path::Path,
+    time,
 };
 use crate::error::*;
 use web3::{
@@ -22,9 +23,26 @@ pub struct AnonymousAssetContract {
 impl AnonymousAssetContract {
     pub fn deploy<P: AsRef<Path>>(
         abi_path: P,
-        eth_url: &str,
+        bin_path: P,
+        eth_url: P,
         deployer: Option<&str>,
     ) -> Result<Self> {
+        let (eloop, transport) = Http::new(eth_url.as_str())?;
+        let web3 = Web3::new(transport);
+        let accounts = web3.eth().accounts().wait()?;
+
+        let abi = include_bytes!(abi_path.as_str());
+        let bin = include_bytes!(bin_path.as_str());
+
+        let contract = Contract::deploy(web3.eth(), abi)
+            .unwrap() // TODO
+            .confirmations(CONFIRMATIONS)
+            .poll_interval(time::Duration::from_secs(POLL_INTERVAL_SECS))
+            .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
+            .execute(bin, (), accounts[0])
+            .unwrap() // TODO
+            .wait()?;
+
         unimplemented!();
     }
 
@@ -44,7 +62,15 @@ pub trait Gets {
 
 impl Gets for AnonymousAssetContract {
     fn get_balances(&self, offset: U256, len: U256) -> Result<Vec<String>> {
-        unimplemented!();
+        let encrypted_balances = self.contract.query(
+            "getBalances",
+            (offset, len),
+            self.account,
+            Options::default(),
+            None
+        ).wait().unwrap(); // TODO
+
+        Ok(encrypted_balances)
     }
 }
 

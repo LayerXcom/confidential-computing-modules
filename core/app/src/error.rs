@@ -34,6 +34,8 @@ pub enum HostErrorKind {
     Hex,
     #[fail(display = "Web3 error")]
     Web3,
+    #[fail(display = "Web3 Contract error = ({})", _0)]
+    Web3Contract(String),
 }
 
 impl Fail for HostError {
