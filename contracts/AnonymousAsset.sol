@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "./reportsHandle.sol";
+import "./ReportsHandle.sol";
 import "./utils/ArrayUtils.sol";
 
 // Consider: Avoid inheritting
@@ -10,7 +10,10 @@ contract AnonymousAsset is ReportsHandle {
     // Latest encrypted balances in each account
     bytes4[] public encryptedBalances;
 
-    constructor(bytes memory _report, bytes memory _sig) ReportsHandle(_report, _sig) public {}
+    constructor(bytes4 _initBalance, bytes memory _report, bytes memory _sig) ReportsHandle(_report, _sig) public {
+        require(isEqualMrEnclave(_report, _sig), "mrenclave included in the report is not correct.");
+        encryptedBalances.push(_initBalance);
+    }
 
     function transfer(bytes4 _updateBalance, bytes memory _report, bytes memory _sig) public {
         require(isEqualMrEnclave(_report, _sig), "mrenclave included in the report is not correct.");

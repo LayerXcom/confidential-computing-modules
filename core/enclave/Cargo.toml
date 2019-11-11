@@ -12,6 +12,9 @@ crate-type = ["staticlib"]
 default = []
 
 [dependencies]
+kvdb = { git = "https://github.com/mesalock-linux/parity-common-sgx" }
+kvdb-memorydb = { git = "https://github.com/mesalock-linux/parity-common-sgx" }
+anonify-common = { path = "../common" }
 
 [target.'cfg(not(target_env = "sgx"))'.dependencies]
 sgx_tse = { rev = "v1.0.9", git = "https://github.com/apache/mesatee-sgx" }

@@ -96,7 +96,7 @@ impl<G: Into<U256>> Posts<G> for AnonymousAssetContract {
     ) -> Result<TransactionReceipt> {
         let call = self.contract.call_with_confirmations(
             "transfer",
-            (report.as_bytes().to_vec(), hex::decode(sig)?),
+            (update_balance, report.as_bytes().to_vec(), hex::decode(sig)?),
             self.account,
             Options::with(|opt| opt.gas = Some(gas.into())),
             confirmations
@@ -104,5 +104,17 @@ impl<G: Into<U256>> Posts<G> for AnonymousAssetContract {
 
         // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253
         Ok(call.wait()?)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    const ETH_URL: &'static str = "http://127.0.0.1:7545";
+
+    #[test]
+    fn test_deploy_contract() {
+        let contract = AnonymousAssetContract::deploy(ETH_URL).unwrap();
     }
 }
