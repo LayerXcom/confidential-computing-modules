@@ -11,6 +11,7 @@ mod equote;
 mod error;
 mod attestation;
 mod web3;
+mod tests;
 
 fn main() {
     let enclave = match init_enclave() {

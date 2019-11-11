@@ -111,7 +111,7 @@ impl<G: Into<U256>> Posts<G> for AnonymousAssetContract {
 mod test {
     use super::*;
 
-    const ETH_URL: &'static str = "http://127.0.0.1:7545";
+    const ETH_URL: &'static str = "http://127.0.0.1:8545";
 
     #[test]
     fn test_deploy_contract() {
