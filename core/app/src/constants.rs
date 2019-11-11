@@ -9,9 +9,9 @@ pub const REPORT_SUFFIX	: &str = "/sgx/dev/attestation/v3/report";
 
 pub const IAS_DEFAULT_RETRIES: u32 = 10;
 
-pub const ANONYMOUS_ASSET_ABI_PATH: &str = "../../build/AnonymousAsset.abi";
-pub const ANONYMOUS_ASSET_BIN_PATH: &str = "../../build/AnonymousAsset.bin";
+pub const ANONYMOUS_ASSET_ABI_PATH: &str = "../../../build/AnonymousAsset.abi";
+pub const ANONYMOUS_ASSET_BIN_PATH: &str = "../../../build/AnonymousAsset.bin";
 
-pub const CONFIRMATIONS: u64 = 0;
+pub const CONFIRMATIONS: usize = 0;
 pub const POLL_INTERVAL_SECS: u64 = 10;
 pub const DEPLOY_GAS: u64 = 3_000_00;

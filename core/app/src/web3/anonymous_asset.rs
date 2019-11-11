@@ -3,7 +3,10 @@ use std::{
     path::Path,
     time,
 };
-use crate::error::*;
+use crate::{
+    error::*,
+    constants::*,
+};
 use web3::{
     Web3,
     transports::{EventLoopHandle, Http},
@@ -21,29 +24,33 @@ pub struct AnonymousAssetContract {
 }
 
 impl AnonymousAssetContract {
-    pub fn deploy<P: AsRef<Path>>(
-        abi_path: P,
-        bin_path: P,
-        eth_url: P,
-        deployer: Option<&str>,
+    pub fn deploy(
+        eth_url: &str,
+        // deployer: Option<&str>,
     ) -> Result<Self> {
-        let (eloop, transport) = Http::new(eth_url.as_str())?;
+        let (eloop, transport) = Http::new(eth_url)?;
         let web3 = Web3::new(transport);
-        let accounts = web3.eth().accounts().wait()?;
+        let account = web3.eth().accounts().wait()?[0];
 
-        let abi = include_bytes!(abi_path.as_str());
-        let bin = include_bytes!(bin_path.as_str());
+        let abi = include_bytes!("../../../../build/AnonymousAsset.abi");
+        let bin = include_str!("../../../../build/AnonymousAsset.bin");
 
         let contract = Contract::deploy(web3.eth(), abi)
             .unwrap() // TODO
             .confirmations(CONFIRMATIONS)
             .poll_interval(time::Duration::from_secs(POLL_INTERVAL_SECS))
             .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
-            .execute(bin, (), accounts[0])
+            .execute(bin, (), account)
             .unwrap() // TODO
-            .wait()?;
+            .wait()
+            .unwrap(); // TODO
 
-        unimplemented!();
+        Ok(AnonymousAssetContract {
+            web3: Arc::new(web3),
+            eloop,
+            contract,
+            account,
+        })
     }
 
     pub fn from_deployed<P: AsRef<Path>>(
