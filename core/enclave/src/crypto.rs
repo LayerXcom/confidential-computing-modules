@@ -10,3 +10,5 @@ pub trait AES256GCM {
 
     fn decrypt(ciphertext: Ciphertext, key: &SymmetricKey) -> Self;
 }
+
+// TODO: Signature Verification

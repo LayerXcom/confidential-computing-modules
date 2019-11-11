@@ -11,6 +11,11 @@ extern crate sgx_tstd as std;
 use sgx_types::*;
 use sgx_tse::*;
 
+mod crypto;
+mod state;
+mod error;
+mod kvs;
+
 extern "C" {
     pub fn ocall_sgx_init_quote(
         ret_val: *mut sgx_status_t,
