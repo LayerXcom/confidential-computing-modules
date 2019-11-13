@@ -24,6 +24,8 @@ pub enum HostErrorKind {
     AS(String),
     #[fail(display = "IO error")]
     Io,
+    #[fail(display = "File error = ({})", _0)]
+    File(String),
     #[fail(display = "Reqwest error")]
     Reqwest,
     #[fail(display = "Serde Json error")]
