@@ -24,6 +24,8 @@ pub enum HostErrorKind {
     AS(String),
     #[fail(display = "IO error")]
     Io,
+    #[fail(display = "File error = ({})", _0)]
+    File(String),
     #[fail(display = "Reqwest error")]
     Reqwest,
     #[fail(display = "Serde Json error")]
@@ -32,6 +34,10 @@ pub enum HostErrorKind {
     OpenSSL,
     #[fail(display = "Hex decoding error")]
     Hex,
+    #[fail(display = "Web3 error")]
+    Web3,
+    #[fail(display = "Web3 Contract error = ({})", _0)]
+    Web3Contract(String),
 }
 
 impl Fail for HostError {
@@ -104,6 +110,14 @@ impl From<hex::FromHexError> for HostError {
     fn from(error: hex::FromHexError) -> Self {
         HostError {
             inner: error.context(HostErrorKind::OpenSSL),
+        }
+    }
+}
+
+impl From<web3::Error> for HostError {
+    fn from(error: web3::Error) -> Self {
+        HostError {
+            inner: error.context(HostErrorKind::Web3),
         }
     }
 }
