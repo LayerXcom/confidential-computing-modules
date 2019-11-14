@@ -46,11 +46,23 @@ pub struct EnclaveContext {
 
 // TODO: Consider SGX_ERROR_BUSY.
 impl EnclaveContext {
-    pub fn new(eid: sgx_enclave_id_t, spid: sgx_spid_t) -> Self {
-        EnclaveContext {
+    pub fn new(eid: sgx_enclave_id_t, spid: &str) -> Result<Self> {
+        let spid_vec = hex::decode(spid)?;
+        let mut id = [0; 16];
+        id.copy_from_slice(&spid_vec);
+        let spid: sgx_spid_t = sgx_spid_t { id };
+
+        Ok(EnclaveContext {
             eid,
             spid,
-        }
+        })
+    }
+
+    pub fn get_quote(&self) -> Result<String> {
+        let target_info = self.init_quote()?;
+        let report = self.get_report(&target_info)?;
+        let quote_size = Self::calc_quote_size()?;
+        self.inner_get_quote(quote_size, report)
     }
 
     fn init_quote(&self) -> Result<sgx_target_info_t> {
@@ -110,7 +122,7 @@ impl EnclaveContext {
         Ok(quote_size)
     }
 
-    fn get_quote(&self, quote_size: u32, report: sgx_report_t) -> Result<String> {
+    fn inner_get_quote(&self, quote_size: u32, report: sgx_report_t) -> Result<String> {
         let mut quote = vec![0u8; quote_size as usize];
         let status = unsafe {
             // Defined in P.100
