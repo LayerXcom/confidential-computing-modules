@@ -12,13 +12,13 @@ crate-type = ["staticlib"]
 default = []
 
 [dependencies]
-kvdb = { git = "https://github.com/mesalock-linux/parity-common-sgx" }
-kvdb-memorydb = { git = "https://github.com/mesalock-linux/parity-common-sgx" }
 anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
+elastic-array = { version = "0.10", git = "https://github.com/mesalock-linux/elastic-array-sgx.git" }
+bytes = { package = "parity-bytes", git = "https://github.com/mesalock-linux/parity-common-sgx", default-features = false }
 
-sgx_tse = { rev = "v1.0.9", git = "https://github.com/apache/mesatee-sgx" }
-sgx_tstd = { rev = "v1.0.9", git = "https://github.com/apache/mesatee-sgx", features = ["untrusted_fs","net","backtrace"] }
-sgx_rand = { rev = "v1.0.9", git = "https://github.com/apache/mesatee-sgx" }
-sgx_types = { rev = "v1.0.9", git = "https://github.com/apache/mesatee-sgx" }
-sgx_trts = { rev = "v1.0.9", git = "https://github.com/apache/mesatee-sgx" }
-sgx_tcrypto  = { rev = "v1.0.9", git = "https://github.com/apache/mesatee-sgx" }
+sgx_tse = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
+sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git", features = ["untrusted_fs","net","backtrace"] }
+sgx_rand = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
+sgx_types = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
+sgx_trts = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
+sgx_tcrypto  = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }

@@ -8,9 +8,9 @@ edition = "2018"
 
 [dependencies]
 
-sgx_tstd = { git = "https://github.com/apache/mesatee-sgx", rev = "v1.0.9", optional = true }
-sgx_trts = { git = "https://github.com/apache/mesatee-sgx", rev = "v1.0.9", optional = true }
-sgx_types = { git = "https://github.com/apache/mesatee-sgx", rev = "v1.0.9", optional = true }
+sgx_tstd = { git = "https://github.com/baidu/rust-sgx-sdk.git", rev = "v1.0.9", optional = true }
+sgx_trts = { git = "https://github.com/baidu/rust-sgx-sdk.git", rev = "v1.0.9", optional = true }
+sgx_types = { git = "https://github.com/baidu/rust-sgx-sdk.git", rev = "v1.0.9", optional = true }
 
 [features]
 default = ["std"]
