@@ -31,18 +31,18 @@ impl DBOp {
 
 /// Write transaction. Batches a sequence of put/delete operations for efficiency.
 #[derive(Default, Clone, PartialEq)]
-pub struct DBTransaction {
+pub struct DBTx {
     /// Database operations.
     ops: Vec<DBOp>,
 }
 
-impl DBTransaction {
+impl DBTx {
     pub fn new() -> Self {
         Self::with_capacity(256)
     }
 
     pub fn with_capacity(cap: usize) -> Self {
-        DBTransaction {
+        DBTx {
             ops: Vec::with_capacity(cap)
         }
     }

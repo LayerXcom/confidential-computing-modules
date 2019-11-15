@@ -3,6 +3,7 @@ use std::{
     collections::BTreeMap,
 };
 use anonify_common::types::*;
+use super::*;
 
-pub struct MemoryKVS(RwLock<BTreeMap<Address, Value>>);
+pub struct MemoryKVS(RwLock<BTreeMap<Address, DBValue>>);
 
