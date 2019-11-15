@@ -14,7 +14,6 @@ default = []
 [dependencies]
 anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
 elastic-array = { version = "0.10", git = "https://github.com/mesalock-linux/elastic-array-sgx.git" }
-bytes = { package = "parity-bytes", git = "https://github.com/mesalock-linux/parity-common-sgx", default-features = false }
 
 sgx_tse = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
 sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git", features = ["untrusted_fs","net","backtrace"] }
