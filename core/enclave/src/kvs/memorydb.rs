@@ -6,7 +6,7 @@ use anonify_common::types::*;
 use super::*;
 use crate::error::Result;
 
-pub struct MemoryKVS(RwLock<BTreeMap<Vec<u8>, DBValue>>);
+pub struct MemoryKVS(RwLock<BTreeMap<PubKey, DBValue>>);
 
 impl MemoryKVS {
     pub fn new() -> Self {
