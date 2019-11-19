@@ -3,9 +3,10 @@ use anonify_common::types::*;
 use crate::crypto::*;
 use crate::kvs::DBValue;
 use std::prelude::v1::*;
+use secp256k1::PublicKey;
 
 pub trait AnonymousAssetSTF {
-    fn transfer(from: PubKey, to: PubKey, amount: Value) -> State<NewRand>;
+    fn transfer(from: PublicKey, to: PublicKey, amount: Value) -> State<NewRand>;
 }
 
 pub struct OldRand([u8; 32]);
@@ -13,7 +14,7 @@ pub struct NewRand([u8; 32]);
 
 #[derive(Debug, Clone)]
 pub struct State<R> {
-    pubkey: PubKey,
+    pubkey: PublicKey,
     balance: Value,
     randomness: R,
 }
@@ -65,7 +66,7 @@ impl State<OldRand> {
 }
 
 impl AnonymousAssetSTF for State<OldRand> {
-    fn transfer(from: PubKey, to: PubKey, amount: Value) -> State<NewRand> {
+    fn transfer(from: PublicKey, to: PublicKey, amount: Value) -> State<NewRand> {
         unimplemented!();
     }
 }

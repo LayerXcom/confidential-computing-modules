@@ -1,4 +1,5 @@
 use std::{
+    prelude::v1::*,
     sync::SgxRwLock as RwLock,
     collections::BTreeMap,
 };
@@ -6,7 +7,7 @@ use anonify_common::types::*;
 use super::*;
 use crate::error::Result;
 
-pub struct MemoryKVS(RwLock<BTreeMap<PubKey, DBValue>>);
+pub struct MemoryKVS(RwLock<BTreeMap<Vec<u8>, DBValue>>);
 
 impl MemoryKVS {
     pub fn new() -> Self {

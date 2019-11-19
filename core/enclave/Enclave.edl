@@ -10,8 +10,12 @@ enclave {
     include "sgx_quote.h"
 
     trusted {
-        // public sgx_status_t ecall_get_state();
-        
+        public sgx_status_t ecall_get_state(
+            [in] uint8_t sig[65],
+            [in] uint8_t msg[32],
+            [out] uint64_t* state
+        );
+
         // public sgx_status_t ecall_write_state();
 
         // public sgx_status_t ecall_state_transition();

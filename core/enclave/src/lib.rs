@@ -10,11 +10,22 @@ extern crate sgx_tstd as std;
 
 use sgx_types::*;
 use sgx_tse::*;
+use anonify_common::{Sig, Value, Msg};
 
 mod crypto;
 mod state;
 mod error;
 mod kvs;
+
+#[no_mangle]
+pub unsafe extern "C" fn ecall_get_state(
+    sig: Sig,
+    msg: Msg,
+    state: Value,
+) -> sgx_status_t {
+    
+    sgx_status_t::SGX_SUCCESS
+}
 
 // extern "C" {
 //     pub fn ocall_sgx_init_quote(
@@ -51,3 +62,4 @@ mod kvs;
 
 //     sgx_status_t::SGX_SUCCESS
 // }
+
