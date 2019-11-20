@@ -17,14 +17,22 @@ enclave {
             [out] uint64_t* state
         );
 
-        /*
         public sgx_status_t ecall_write_state(
-            [in] uint8_t ciphertext[60],
-
+            [in] uint8_t ciphertext[60]
         );
-        */
 
-        // public sgx_status_t ecall_state_transition();
+        public sgx_status_t ecall_state_transition(
+            [in] uint8_t sig[65],
+            [in] uint8_t target[20],
+            [in] uint64_t* value,
+            [out] TransitionResult* result
+        );
+
+        public sgx_status_t ecall_contract_deploy(
+            [in] uint8_t sig[65],
+            [in] uint64_t* value,
+            [out] TransitionResult* result
+        );
 
         /*
         public sgx_status_t ecall_get_registration_quote(

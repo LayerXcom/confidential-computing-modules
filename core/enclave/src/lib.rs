@@ -10,7 +10,7 @@ extern crate sgx_tstd as std;
 
 use sgx_types::*;
 use sgx_tse::*;
-use anonify_types::{Sig, Value, Msg};
+use anonify_types::*;
 
 mod crypto;
 mod state;
@@ -20,13 +20,43 @@ mod auto_ffi;
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_get_state(
-    sig: Sig,
-    msg: Msg, // 32 bytes randomness for avoiding replay attacks.
+    sig: &Sig,
+    msg: &Msg, // 32 bytes randomness for avoiding replay attacks.
     state: Value, // Currently, status is just value.
 ) -> sgx_status_t {
 
     sgx_status_t::SGX_SUCCESS
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn ecall_write_state(
+    ciphertext: &Ciphertext,
+) -> sgx_status_t {
+
+    sgx_status_t::SGX_SUCCESS
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ecall_state_transition(
+    sig: &Sig,
+    target: &Address,
+    value: Value,
+    result: &mut TransitionResult,
+) -> sgx_status_t {
+
+    sgx_status_t::SGX_SUCCESS
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ecall_contract_deploy(
+    sig: &Sig,
+    value: Value,
+    result: &mut TransitionResult,
+) -> sgx_status_t {
+
+    sgx_status_t::SGX_SUCCESS
+}
+
 
 // extern "C" {
 //     pub fn ocall_sgx_init_quote(

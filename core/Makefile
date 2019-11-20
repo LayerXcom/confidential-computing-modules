@@ -123,7 +123,7 @@ RustEnclave_Name := enclave/enclave.so
 Signed_RustEnclave_Name := bin/enclave.signed.so
 
 .PHONY: all
-all: $(App_Name) $(Signed_RustEnclave_Name)
+all: $(Signed_RustEnclave_Name)
 
 ######## EDL Objects ########
 

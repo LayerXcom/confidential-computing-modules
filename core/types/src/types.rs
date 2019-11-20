@@ -1,4 +1,4 @@
-use core::{fmt, default::Default};
+use core::{fmt, default::Default, ptr};
 
 pub const STATE_SIZE: usize = 8;
 pub const PUBKEY_SIZE: usize = 64;
@@ -33,5 +33,28 @@ impl fmt::Display for EnclaveReturn {
             Success => "EnclaveReturn: Success",
         };
         write!(f, "{}", p)
+    }
+}
+
+/// Returned from a contract deploy or state transition ecall.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct TransitionResult {
+    res: *const u8,
+}
+
+impl Default for TransitionResult {
+    fn default() -> Self {
+        TransitionResult {
+            res: ptr::null(),
+        }
+    }
+}
+
+impl fmt::Debug for TransitionResult {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut debug_trait_builder = f.debug_struct("TransitionResult");
+        debug_trait_builder.field("res", &(self.res));
+        debug_trait_builder.finish()
     }
 }
