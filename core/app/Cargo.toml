@@ -6,8 +6,9 @@ edition = "2018"
 build = "build.rs"
 
 [dependencies]
-sgx_types = { git = "https://github.com/apache/mesatee-sgx" }
-sgx_urts = { git = "https://github.com/apache/mesatee-sgx" }
+anonify-types = { path = "../types" }
+sgx_types = { git = "https://github.com/baidu/rust-sgx-sdk.git" }
+sgx_urts = { git = "https://github.com/baidu/rust-sgx-sdk.git" }
 dirs = "2.0"
 failure = "0.1.6"
 serde = { version = "1.0", features=["serde_derive"] }

@@ -12,6 +12,7 @@ mod error;
 mod attestation;
 mod web3;
 mod tests;
+mod auto_ffi;
 
 fn main() {
     let enclave = EnclaveDir::new().init_enclave().unwrap();

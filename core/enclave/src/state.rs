@@ -1,30 +1,72 @@
 //! State transition functions for anonymous asset
-use anonify_common::types::*;
-use crate::crypto::{AES256GCM, SymmetricKey};
+use anonify_types::types::*;
+use crate::crypto::*;
+use crate::kvs::DBValue;
+use std::prelude::v1::*;
+use secp256k1::PublicKey;
 
 pub trait AnonymousAssetSTF {
-    fn transfer(from: Address, to: Address, amount: Value);
+    fn transfer(from: PublicKey, to: PublicKey, amount: Value) -> State<NewRand>;
 }
+
+pub struct OldRand([u8; 32]);
+pub struct NewRand([u8; 32]);
 
 #[derive(Debug, Clone)]
-pub struct State {
-    address: Address,
+pub struct State<R> {
+    pubkey: PublicKey,
     balance: Value,
+    randomness: R,
 }
 
-impl AES256GCM for State {
-    fn encrypt(&self, key: &SymmetricKey) -> Ciphertext {
+// State with NewRand must not be allowed to access to the database to avoid from
+// storing data which have not been considered globally consensused.
+impl State<OldRand> {
+    pub fn get_db_key(&self) -> Vec<u8> {
         unimplemented!();
     }
 
+    pub fn get_db_value(&self) -> Vec<u8> {
+        unimplemented!();
+    }
+}
+
+impl From<State<OldRand>> for State<NewRand> {
+    fn from(s: State<OldRand>) -> Self {
+        let mut rand = [0u8; 32];
+        rng_gen(&mut rand).expect("Failt to generate randomness.");
+        State {
+            pubkey: s.pubkey,
+            balance: s.balance,
+            randomness: NewRand(rand),
+        }
+    }
+}
+
+// impl AES256GCM for State {
+//     fn encrypt(&self, key: &SymmetricKey) -> Ciphertext {
+//         unimplemented!();
+//     }
+
+//     fn decrypt(ciphertext: Ciphertext, key: &SymmetricKey) -> Self {
+//         unimplemented!();
+//     }
+// }
+
+impl State<NewRand> {
+    fn encrypt(&self, key: &SymmetricKey) -> Ciphertext {
+        unimplemented!();
+    }
+}
+
+impl State<OldRand> {
     fn decrypt(ciphertext: Ciphertext, key: &SymmetricKey) -> Self {
         unimplemented!();
     }
 }
 
-impl AnonymousAssetSTF for State {
-    fn transfer(from: Address, to: Address, amount: Value) {
+impl AnonymousAssetSTF for State<OldRand> {
+    fn transfer(from: PublicKey, to: PublicKey, amount: Value) -> State<NewRand> {
         unimplemented!();
     }
 }
-

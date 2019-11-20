@@ -8,15 +8,42 @@ enclave {
     from "sgx_tstdc.edl" import *;
 
     include "sgx_quote.h"
+    include "anonify-types.h"
 
     trusted {
+        public sgx_status_t ecall_get_state(
+            [in] uint8_t sig[65],
+            [in] uint8_t msg[32],
+            [out] uint64_t* state
+        );
+
+        public sgx_status_t ecall_write_state(
+            [in] uint8_t ciphertext[60]
+        );
+
+        public sgx_status_t ecall_state_transition(
+            [in] uint8_t sig[65],
+            [in] uint8_t target[20],
+            [in] uint64_t* value,
+            [out] TransitionResult* result
+        );
+
+        public sgx_status_t ecall_contract_deploy(
+            [in] uint8_t sig[65],
+            [in] uint64_t* value,
+            [out] TransitionResult* result
+        );
+
+        /*
         public sgx_status_t ecall_get_registration_quote(
             [in] const sgx_target_info_t *target_info,
             [out] sgx_report_t *report
         );
+        */
     };
 
     untrusted {
+        /*
         sgx_status_t ocall_sgx_init_quote(
             [out] sgx_target_info_t *ret_ti,
             [out] sgx_epid_group_id_t *ret_gid
@@ -34,5 +61,6 @@ enclave {
             uint32_t maxlen,
             [out] uint32_t* p_quote_len
         );
+        */
     };
 };

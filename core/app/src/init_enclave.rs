@@ -46,13 +46,17 @@ impl EnclaveDir {
 
     fn get_launch_token<P: AsRef<Path>>(path: P) -> Result<sgx_launch_token_t> {
         let mut buf = vec![];
-        let f = fs::File::open(path)?;
-        let mut reader = BufReader::new(f);
-        reader.read_to_end(&mut buf)?;
-
-        assert_eq!(buf.len(), 1024);
         let mut res = [0u8; 1024];
-        res.copy_from_slice(&buf[..]);
+
+        match fs::File::open(path) {
+            Ok(f) => {
+                let mut reader = BufReader::new(f);
+                reader.read_to_end(&mut buf)?;
+                assert_eq!(buf.len(), 1024);
+                res.copy_from_slice(&buf[..]);
+            },
+            Err(_) => println!("No launch token file. Will create one."),
+        }
 
         Ok(res)
     }
@@ -90,3 +94,4 @@ impl EnclaveDir {
         )
     }
 }
+

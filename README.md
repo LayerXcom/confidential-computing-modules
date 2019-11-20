@@ -15,6 +15,8 @@ $ solc -o build --bin --abi --optimize --overwrite contracts/AnonymousAsset.sol
 ```
 
 ## Running
+
+### SW
 This tutorial works in simulation mode, so you can run it on macos.
 
 * Helloworld
@@ -33,4 +35,11 @@ $ cd anonify/core
 $ export SGX_MODE=SW
 $ make
 $ cd bin && ./anonify-app
+```
+
+### HW
+Assumed your hardware supports Intel SGX.
+
+```
+$ docker run -v `pwd`:/root/anonify --device /dev/sgx  --rm -it osuketh/anonify
 ```
