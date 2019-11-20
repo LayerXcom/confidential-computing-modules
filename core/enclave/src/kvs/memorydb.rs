@@ -3,8 +3,9 @@ use std::{
     sync::SgxRwLock as RwLock,
     collections::BTreeMap,
 };
-use anonify_common::types::*;
+use anonify_types::*;
 use super::*;
+use super::traits::KVS;
 use crate::error::Result;
 
 pub struct MemoryKVS(RwLock<BTreeMap<Vec<u8>, DBValue>>);
@@ -15,7 +16,7 @@ impl MemoryKVS {
     }
 }
 
-impl traits::KVS for MemoryKVS {
+impl KVS for MemoryKVS {
     fn get(&self, key: &[u8]) -> Option<DBValue> {
         let d = self.0.read().unwrap();
         d.get(key).cloned()

@@ -12,7 +12,7 @@ crate-type = ["staticlib"]
 default = []
 
 [dependencies]
-anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
+anonify-types = { path = "../types", default-features = false, features = ["sgx"] }
 elastic-array = { version = "0.10", git = "https://github.com/mesalock-linux/elastic-array-sgx.git" }
 secp256k1 = { version = "0.16", default-features = false }
 

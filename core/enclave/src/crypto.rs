@@ -1,4 +1,4 @@
-use anonify_common::types::Ciphertext;
+use anonify_types::Ciphertext;
 use crate::error::Result;
 
 /// The size of the symmetric 256 bit key we use for encryption (in bytes).

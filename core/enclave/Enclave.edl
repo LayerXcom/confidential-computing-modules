@@ -8,6 +8,7 @@ enclave {
     from "sgx_tstdc.edl" import *;
 
     include "sgx_quote.h"
+    include "anonify-types.h"
 
     trusted {
         public sgx_status_t ecall_get_state(
@@ -16,7 +17,12 @@ enclave {
             [out] uint64_t* state
         );
 
-        // public sgx_status_t ecall_write_state();
+        /*
+        public sgx_status_t ecall_write_state(
+            [in] uint8_t ciphertext[60],
+
+        );
+        */
 
         // public sgx_status_t ecall_state_transition();
 

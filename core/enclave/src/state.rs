@@ -1,5 +1,5 @@
 //! State transition functions for anonymous asset
-use anonify_common::types::*;
+use anonify_types::types::*;
 use crate::crypto::*;
 use crate::kvs::DBValue;
 use std::prelude::v1::*;

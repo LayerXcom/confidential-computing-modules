@@ -6,6 +6,7 @@ edition = "2018"
 build = "build.rs"
 
 [dependencies]
+anonify-types = { path = "../types" }
 sgx_types = { git = "https://github.com/baidu/rust-sgx-sdk.git" }
 sgx_urts = { git = "https://github.com/baidu/rust-sgx-sdk.git" }
 dirs = "2.0"

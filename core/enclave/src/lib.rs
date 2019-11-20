@@ -10,20 +10,21 @@ extern crate sgx_tstd as std;
 
 use sgx_types::*;
 use sgx_tse::*;
-use anonify_common::{Sig, Value, Msg};
+use anonify_types::{Sig, Value, Msg};
 
 mod crypto;
 mod state;
 mod error;
 mod kvs;
+mod auto_ffi;
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_get_state(
     sig: Sig,
-    msg: Msg,
-    state: Value,
+    msg: Msg, // 32 bytes randomness for avoiding replay attacks.
+    state: Value, // Currently, status is just value.
 ) -> sgx_status_t {
-    
+
     sgx_status_t::SGX_SUCCESS
 }
 

@@ -23,6 +23,8 @@ helloworld/bin/app
 core/bin/
 core/lib/
 
+anonify-types.h
+
 # Prerequisites
 *.d
 
