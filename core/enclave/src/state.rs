@@ -2,6 +2,7 @@
 use anonify_types::types::*;
 use crate::crypto::*;
 use crate::kvs::DBValue;
+use crate::sealing::DbValue;
 use std::prelude::v1::*;
 use secp256k1::PublicKey;
 
@@ -26,7 +27,7 @@ impl State<OldRand> {
         unimplemented!();
     }
 
-    pub fn get_db_value(&self) -> Vec<u8> {
+    pub fn get_db_value(&self) -> DbValue {
         unimplemented!();
     }
 }

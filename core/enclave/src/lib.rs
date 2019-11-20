@@ -17,6 +17,7 @@ mod state;
 mod error;
 mod kvs;
 mod auto_ffi;
+mod sealing;
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_get_state(

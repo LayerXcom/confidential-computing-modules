@@ -6,6 +6,7 @@ pub const ADDRESS_SIZE: usize = 20;
 pub const RANDOMNESS_SIZE: usize = 32;
 pub const SIG_SIZE: usize = 65;
 pub const CIPHERTEXT_SIZE: usize = ADDRESS_SIZE + STATE_SIZE + RANDOMNESS_SIZE;
+pub const DB_VALUE_SIZE: usize = STATE_SIZE + RANDOMNESS_SIZE;
 
 pub type PubKey = [u8; PUBKEY_SIZE];
 pub type Address = [u8; ADDRESS_SIZE];

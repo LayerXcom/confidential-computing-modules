@@ -13,13 +13,12 @@ pub trait AES256GCM {
     fn decrypt(ciphertext: Ciphertext, key: &SymmetricKey) -> Self;
 }
 
-// TODO: User's Signature Verification
-
-// TODO: Enclave's signature generation
-
-
 pub fn rng_gen(rand: &mut [u8]) -> Result<()> {
     use sgx_trts::trts::rsgx_read_rand;
     rsgx_read_rand(rand)?;
     Ok(())
 }
+
+// TODO: User's Signature Verification
+
+// TODO: Enclave's signature generation
