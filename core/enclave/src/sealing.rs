@@ -3,19 +3,20 @@ use anonify_types::DB_VALUE_SIZE;
 use sgx_types::marker::ContiguousMemory;
 use sgx_tseal::SgxSealedData;
 use crate::error::Result;
+use crate::kvs::DBValue;
 
 #[derive(Copy, Clone)]
-pub struct DbValue([u8; DB_VALUE_SIZE]);
+pub struct NonSealedDbValue([u8; DB_VALUE_SIZE]);
 
-unsafe impl ContiguousMemory for DbValue {}
+unsafe impl ContiguousMemory for NonSealedDbValue {}
 
 #[derive(Copy, Clone)]
 pub struct SealedDbValue([u8; DB_VALUE_SIZE]);
 
-impl DbValue {
+impl NonSealedDbValue {
     pub fn seal(&self) -> Result<SealedDbValue> {
         let additional = [0u8; 0];
-        let sealed_data = SgxSealedData::<DbValue>::seal_data(&additional, &self)?;
+        let sealed_data = SgxSealedData::<NonSealedDbValue>::seal_data(&additional, &self)?;
         let sealed_data_v = sealed_data.get_encrypt_txt();
 
         assert_eq!(sealed_data_v.len(), DB_VALUE_SIZE);
@@ -26,3 +27,16 @@ impl DbValue {
     }
 }
 
+// impl SealedDbValue {
+//     pub fn unseal() -> Result<SealedDbValue>  {
+
+//     }
+// }
+
+// impl From<SealedDbValue> for DBValue {
+
+// }
+
+// impl From<DBValue> for SealedDbValue {
+
+// }
