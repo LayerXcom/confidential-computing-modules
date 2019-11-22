@@ -9,6 +9,7 @@ pub type Result<T> = std::result::Result<T, EnclaveError>;
 #[derive(Debug)]
 pub enum EnclaveError {
     IoError(io::Error),
+    RingError{ err: ring::error::Unspecified},
     SgxError{ err: sgx_types::sgx_status_t },
 }
 
@@ -24,11 +25,18 @@ impl From<sgx_types::sgx_status_t> for EnclaveError {
     }
 }
 
+impl From<ring::error::Unspecified> for EnclaveError {
+    fn from(err: ring::error::Unspecified) -> Self {
+        EnclaveError::RingError{ err }
+    }
+}
+
 impl fmt::Display for EnclaveError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             EnclaveError::IoError(ref err) => write!(f, "I/O error: {}", err),
             EnclaveError::SgxError{ err } => write!(f, "Sgx Error: {:?}", err),
+            EnclaveError::RingError{ err } => write!(f, "Ring Error: {:?}", err),
         }
     }
 }
