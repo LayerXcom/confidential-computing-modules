@@ -4,15 +4,21 @@ use crate::{
 };
 use secp256k1::PublicKey;
 use std::io::{Write, Read};
+use byteorder::{ByteOrder, LittleEndian};
 
 pub struct Value(u64);
 
 impl State for Value {
-    fn write<W: Write>(&self, mut writer: W) -> Result<()> {
-        unimplemented!();
+    fn write_le<W: Write>(&self, writer: &mut W) -> Result<()> {
+        let mut buf = [0u8; 8];
+        LittleEndian::write_u64(&mut buf, self.0);
+        writer.write_all(&buf)?;
+
+        Ok(())
     }
 
-    fn read<R: Read>(mut reader: R) -> Result<Self> {
+    fn read_le<R: Read>(reader: &mut R) -> Result<Self> {
+        // LittleEndian::read_u64()
         unimplemented!();
     }
 }

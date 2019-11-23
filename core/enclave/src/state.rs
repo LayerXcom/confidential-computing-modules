@@ -13,9 +13,9 @@ use std::{
 };
 
 pub trait State: Sized {
-    fn write<W: Write>(&self, mut writer: W) -> Result<()>;
+    fn write_le<W: Write>(&self, writer: &mut W) -> Result<()>;
 
-    fn read<R: Read>(mut reader: R) -> Result<Self>;
+    fn read_le<R: Read>(reader: &mut R) -> Result<Self>;
  }
 
 /// Curret nonce for state.
@@ -32,11 +32,11 @@ pub enum NextNonce { }
 /// The secret key is shared among all TEE's enclaves.
 /// State and nonce field of this struct should be encrypted before it'll store enclave's in-memory db.
 #[derive(Debug, Clone)]
-pub struct UserState<S: State, Nonce> {
+pub struct UserState<S: State, N> {
     address: UserAddress,
     state: S,
     nonce: Nonce,
-    _marker: PhantomData<Nonce>,
+    _marker: PhantomData<N>,
 }
 
 // State with NextNonce must not be allowed to access to the database to avoid from
@@ -64,12 +64,12 @@ impl<S: State> UserState<S, CurrentNonce> {
         unimplemented!();
     }
 
-    fn write<W: Write>(&self, mut writer: W) -> Result<()> {
-        use byteorder::{ByteOrder, LittleEndian};
-        let mut inp_vec = vec![];
-        inp_vec.extend_from_slice(&self.address.as_slice());
+    fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
+        self.address.write(writer)?;
+        self.state.write_le(writer)?;
+        self.nonce.write(writer)?;
 
-        unimplemented!();
+        Ok(())
     }
 
     fn next_nonce(&self) -> Nonce {
@@ -109,4 +109,15 @@ impl<S: State> From<UserState<S, CurrentNonce>> for UserState<S, NextNonce> {
 #[derive(Clone, Copy, Debug, Default)]
 struct Nonce([u8; 32]);
 
+impl Nonce {
+    pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
+        writer.write_all(&self.0)?;
+        Ok(())
+    }
 
+    pub fn read<R: Read>(reader: &mut R) -> Result<Self> {
+        let mut res = [0u8; 32];
+        reader.read_exact(&mut res)?;
+        Ok(Nonce(res))
+    }
+}

@@ -114,12 +114,12 @@ impl Sha256 {
 pub struct UserAddress([u8; 20]);
 
 impl UserAddress {
-    pub fn write<W: Write>(&self, mut writer: W) -> Result<()> {
+    pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_all(&self.0)?;
         Ok(())
     }
 
-    pub fn read<R: Read>(mut reader: R) -> Result<Self> {
+    pub fn read<R: Read>(reader: &mut R) -> Result<Self> {
         let mut res = [0u8; 20];
         reader.read_exact(&mut res)?;
         Ok(UserAddress(res))
