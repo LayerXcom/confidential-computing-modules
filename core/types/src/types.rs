@@ -11,7 +11,6 @@ pub const DB_VALUE_SIZE: usize = STATE_SIZE + RANDOMNESS_SIZE;
 
 pub type PubKey = [u8; PUBKEY_SIZE];
 pub type Address = [u8; ADDRESS_SIZE];
-pub type Value = u64;
 pub type Randomness = [u8; RANDOMNESS_SIZE];
 pub type Ciphertext = [u8; CIPHERTEXT_SIZE];
 pub type Plaintext = [u8; PLAINTEXT_SIZE];
