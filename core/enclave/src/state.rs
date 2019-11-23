@@ -8,10 +8,15 @@ use crate::{
 };
 use std::{
     prelude::v1::*,
+    io::{Write, Read},
     marker::PhantomData,
 };
 
-pub trait State { }
+pub trait State: Sized {
+    fn write<W: Write>(&self, mut writer: W) -> Result<()>;
+
+    fn read<R: Read>(mut reader: R) -> Result<Self>;
+ }
 
 /// Curret nonce for state.
 /// Priventing from race condition of writing ciphertext to blockchain.
@@ -28,9 +33,9 @@ pub enum NextNonce { }
 /// State and nonce field of this struct should be encrypted before it'll store enclave's in-memory db.
 #[derive(Debug, Clone)]
 pub struct UserState<S: State, Nonce> {
-    address: Address,
+    address: UserAddress,
     state: S,
-    nonce: [u8; 32],
+    nonce: Nonce,
     _marker: PhantomData<Nonce>,
 }
 
@@ -42,6 +47,8 @@ impl<S: State> UserState<S, CurrentNonce> {
     }
 
     fn sha256(&self) -> Sha256 {
+
+
         unimplemented!();
     }
 
@@ -54,6 +61,18 @@ impl<S: State> UserState<S, CurrentNonce> {
     }
 
     pub fn from_bytes() -> Self {
+        unimplemented!();
+    }
+
+    fn write<W: Write>(&self, mut writer: W) -> Result<()> {
+        use byteorder::{ByteOrder, LittleEndian};
+        let mut inp_vec = vec![];
+        inp_vec.extend_from_slice(&self.address.as_slice());
+
+        unimplemented!();
+    }
+
+    fn next_nonce(&self) -> Nonce {
         unimplemented!();
     }
 
@@ -71,25 +90,23 @@ impl<S: State> UserState<S, NextNonce> {
         // encrypt_aes_256_gcm(, key)
         unimplemented!();
     }
-
-    fn as_bytes(&self) -> &[u8] {
-        use byteorder::{ByteOrder, LittleEndian};
-
-        unimplemented!();
-    }
 }
 
 impl<S: State> From<UserState<S, CurrentNonce>> for UserState<S, NextNonce> {
     fn from(s: UserState<S, CurrentNonce>) -> Self {
-        let mut nonce = [0u8; 32];
         //TODO: Cul next nonce.
-
-        UserState {
-            address: s.address,
-            state: s.state,
-            nonce: nonce,
-            _marker: PhantomData,
-        }
+        let next_nonce = s.next_nonce();
+        unimplemented!();
+        // UserState {
+        //     address: s.address,
+        //     state: s.state,
+        //     nonce: nonce,
+        //     _marker: PhantomData,
+        // }
     }
 }
+
+#[derive(Clone, Copy, Debug, Default)]
+struct Nonce([u8; 32]);
+
 

@@ -4,7 +4,10 @@ use crate::{
     state::{CurrentNonce, State, UserState},
 };
 use ring::aead::{self, Aad, BoundKey, Nonce, UnboundKey, AES_256_GCM};
-use std::prelude::v1::Vec;
+use std::{
+    prelude::v1::Vec,
+    io::{Write, Read},
+};
 use secp256k1::PublicKey;
 
 /// The size of the symmetric 256 bit key we use for encryption in bytes.
@@ -12,14 +15,17 @@ pub const SYMMETRIC_KEY_SIZE: usize = 32;
 /// symmetric key we use for encryption.
 pub type SymmetricKey = [u8; SYMMETRIC_KEY_SIZE];
 
+/// The size of initialization vector for AES-256-GCM.
 pub const IV_SIZE: usize = 12;
 
+/// Generating a random number inside the enclave.
 pub fn rng_gen(rand: &mut [u8]) -> Result<()> {
     use sgx_trts::trts::rsgx_read_rand;
     rsgx_read_rand(rand)?;
     Ok(())
 }
 
+/// Encryption with AES-256-GCM.
 pub fn encrypt_aes_256_gcm(msg: Vec<u8>, key: &SymmetricKey) -> Result<Vec<u8>> {
     let mut iv = [0u8; IV_SIZE];
     rng_gen(&mut iv)?;
@@ -36,6 +42,7 @@ pub fn encrypt_aes_256_gcm(msg: Vec<u8>, key: &SymmetricKey) -> Result<Vec<u8>> 
     Ok(data)
 }
 
+/// Decryption with AES-256-GCM.
 pub fn decrypt_aes_256_gcm(cipheriv: Vec<u8>, key: &SymmetricKey) -> Result<Vec<u8>> {
     let ub_key = UnboundKey::new(&AES_256_GCM, key)?;
     let (mut ciphertext, iv) = cipheriv.split_at(cipheriv.len() - IV_SIZE);
@@ -50,6 +57,8 @@ pub fn decrypt_aes_256_gcm(cipheriv: Vec<u8>, key: &SymmetricKey) -> Result<Vec<
     Ok(ciphertext)
 }
 
+/// A sequences of unique nonces.
+/// See: https://briansmith.org/rustdoc/ring/aead/trait.NonceSequence.html
 struct OneNonceSequence(Option<aead::Nonce>);
 
 impl OneNonceSequence {
@@ -64,12 +73,14 @@ impl aead::NonceSequence for OneNonceSequence {
     }
 }
 
+/// Trait for 256-bits hash functions
 pub trait Hash256 {
     fn from_pubkey(pubkey: &PublicKey) -> Self;
 
     fn from_user_state<S: State>(user_state: &UserState<S, CurrentNonce>) -> Self;
 }
 
+/// Hash digest of sha256 hash function
 #[derive(Clone, Default)]
 pub struct Sha256([u8; 32]);
 
@@ -99,6 +110,25 @@ impl Sha256 {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+pub struct UserAddress([u8; 20]);
+
+impl UserAddress {
+    pub fn write<W: Write>(&self, mut writer: W) -> Result<()> {
+        writer.write_all(&self.0)?;
+        Ok(())
+    }
+
+    pub fn read<R: Read>(mut reader: R) -> Result<Self> {
+        let mut res = [0u8; 20];
+        reader.read_exact(&mut res)?;
+        Ok(UserAddress(res))
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+}
 
 
 // TODO: User's Signature Verification
