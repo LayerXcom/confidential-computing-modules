@@ -74,10 +74,10 @@ impl aead::NonceSequence for OneNonceSequence {
 }
 
 /// Trait for 256-bits hash functions
-pub trait Hash256 {
+pub trait Hash256: Sized {
     fn from_pubkey(pubkey: &PublicKey) -> Self;
 
-    fn from_user_state<S: State>(user_state: &UserState<S, CurrentNonce>) -> Self;
+    fn from_user_state<S: State>(user_state: &UserState<S, CurrentNonce>) -> Result<Self>;
 }
 
 /// Hash digest of sha256 hash function
@@ -89,8 +89,11 @@ impl Hash256 for Sha256 {
         Self::sha256(&pubkey.serialize())
     }
 
-    fn from_user_state<S: State>(user_state: &UserState<S, CurrentNonce>) -> Self {
-        unimplemented!();
+    fn from_user_state<S: State>(user_state: &UserState<S, CurrentNonce>) -> Result<Self> {
+        let mut inp: Vec<u8> = vec![];
+        user_state.write(&mut inp)?;
+
+        Ok(Self::sha256(&inp))
     }
 }
 
@@ -105,12 +108,16 @@ impl Sha256 {
         res
     }
 
+    pub fn get_array(&self) -> [u8; 32] {
+        self.0
+    }
+
     fn copy_from_slice(&mut self, src: &[u8]) {
         self.0.copy_from_slice(src)
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct UserAddress([u8; 20]);
 
 impl UserAddress {

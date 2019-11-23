@@ -6,6 +6,7 @@ use secp256k1::PublicKey;
 use std::io::{Write, Read};
 use byteorder::{ByteOrder, LittleEndian};
 
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Value(u64);
 
 impl State for Value {

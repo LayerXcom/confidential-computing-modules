@@ -4,19 +4,21 @@ use crate::{
     crypto::*,
     kvs::DBValue,
     sealing::NonSealedDbValue,
-    error::Result,
+    error::{Result, EnclaveError},
 };
 use std::{
     prelude::v1::*,
     io::{Write, Read},
     marker::PhantomData,
+    convert::TryFrom,
 };
 
-pub trait State: Sized {
+/// Trait of each user's state.
+pub trait State: Sized + Default {
     fn write_le<W: Write>(&self, writer: &mut W) -> Result<()>;
 
     fn read_le<R: Read>(reader: &mut R) -> Result<Self>;
- }
+}
 
 /// Curret nonce for state.
 /// Priventing from race condition of writing ciphertext to blockchain.
@@ -46,12 +48,6 @@ impl<S: State> UserState<S, CurrentNonce> {
         unimplemented!();
     }
 
-    fn sha256(&self) -> Sha256 {
-
-
-        unimplemented!();
-    }
-
     pub fn into_db_key(&self) -> Vec<u8> {
         unimplemented!();
     }
@@ -64,7 +60,7 @@ impl<S: State> UserState<S, CurrentNonce> {
         unimplemented!();
     }
 
-    fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
+    pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
         self.address.write(writer)?;
         self.state.write_le(writer)?;
         self.nonce.write(writer)?;
@@ -72,8 +68,22 @@ impl<S: State> UserState<S, CurrentNonce> {
         Ok(())
     }
 
-    fn next_nonce(&self) -> Nonce {
-        unimplemented!();
+    pub fn read<R: Read>(reader: &mut R) -> Result<Self> {
+        let address = UserAddress::read(reader)?;
+        let state = S::read_le(reader)?;
+        let nonce = Nonce::read(reader)?;
+
+        Ok(UserState {
+            address,
+            state,
+            nonce,
+            _marker: PhantomData,
+        })
+    }
+
+    fn next_nonce(&self) -> Result<Nonce> {
+        let next_nonce = Sha256::from_user_state(&self)?;
+        Ok(next_nonce.into())
     }
 
     fn encrypt_db_value() {
@@ -92,17 +102,18 @@ impl<S: State> UserState<S, NextNonce> {
     }
 }
 
-impl<S: State> From<UserState<S, CurrentNonce>> for UserState<S, NextNonce> {
-    fn from(s: UserState<S, CurrentNonce>) -> Self {
-        //TODO: Cul next nonce.
-        let next_nonce = s.next_nonce();
-        unimplemented!();
-        // UserState {
-        //     address: s.address,
-        //     state: s.state,
-        //     nonce: nonce,
-        //     _marker: PhantomData,
-        // }
+impl<S: State> TryFrom<UserState<S, CurrentNonce>> for UserState<S, NextNonce> {
+    type Error = EnclaveError;
+
+    fn try_from(s: UserState<S, CurrentNonce>) -> Result<Self> {
+        let next_nonce = s.next_nonce()?;
+
+        Ok(UserState {
+            address: s.address,
+            state: s.state,
+            nonce: next_nonce,
+            _marker: PhantomData,
+        })
     }
 }
 
@@ -119,5 +130,21 @@ impl Nonce {
         let mut res = [0u8; 32];
         reader.read_exact(&mut res)?;
         Ok(Nonce(res))
+    }
+}
+
+impl From<Sha256> for Nonce {
+    fn from(s: Sha256) -> Self {
+        Nonce(s.get_array())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read_write() {
+
     }
 }
