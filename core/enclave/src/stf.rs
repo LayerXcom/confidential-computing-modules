@@ -19,8 +19,11 @@ impl State for Value {
     }
 
     fn read_le<R: Read>(reader: &mut R) -> Result<Self> {
-        // LittleEndian::read_u64()
-        unimplemented!();
+        let mut buf = [0u8; 8];
+        reader.read_exact(&mut buf)?;
+        let res = LittleEndian::read_u64(&buf);
+
+        Ok(Value(res))
     }
 }
 

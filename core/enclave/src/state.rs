@@ -41,11 +41,22 @@ pub struct UserState<S: State, N> {
     _marker: PhantomData<N>,
 }
 
+impl<S: State, N> UserState<S, N> {
+    pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
+        self.address.write(writer)?;
+        self.state.write_le(writer)?;
+        self.nonce.write(writer)?;
+
+        Ok(())
+    }
+}
+
 // State with NextNonce must not be allowed to access to the database to avoid from
 // storing data which have not been considered globally consensused.
 impl<S: State> UserState<S, CurrentNonce> {
-    pub fn decrypt(ciphertext: Ciphertext, key: &SymmetricKey) -> Self {
-        unimplemented!();
+    pub fn decrypt(cipheriv: Vec<u8>, key: &SymmetricKey) -> Result<Self> {
+        let mut res = decrypt_aes_256_gcm(cipheriv, key)?;
+        Self::read(&res[..])
     }
 
     pub fn into_db_key(&self) -> Vec<u8> {
@@ -56,22 +67,10 @@ impl<S: State> UserState<S, CurrentNonce> {
         unimplemented!();
     }
 
-    pub fn from_bytes() -> Self {
-        unimplemented!();
-    }
-
-    pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
-        self.address.write(writer)?;
-        self.state.write_le(writer)?;
-        self.nonce.write(writer)?;
-
-        Ok(())
-    }
-
-    pub fn read<R: Read>(reader: &mut R) -> Result<Self> {
-        let address = UserAddress::read(reader)?;
-        let state = S::read_le(reader)?;
-        let nonce = Nonce::read(reader)?;
+    pub fn read<R: Read>(mut reader: R) -> Result<Self> {
+        let address = UserAddress::read(&mut reader)?;
+        let state = S::read_le(&mut reader)?;
+        let nonce = Nonce::read(&mut reader)?;
 
         Ok(UserState {
             address,
@@ -96,9 +95,10 @@ impl<S: State> UserState<S, CurrentNonce> {
 }
 
 impl<S: State> UserState<S, NextNonce> {
-    pub fn encrypt(&self, key: &SymmetricKey) -> Result<Ciphertext> {
-        // encrypt_aes_256_gcm(, key)
-        unimplemented!();
+    pub fn encrypt(self, key: &SymmetricKey) -> Result<Vec<u8>> {
+        let mut buf = vec![];
+        self.write(&mut buf)?;
+        encrypt_aes_256_gcm(buf, key)
     }
 }
 
