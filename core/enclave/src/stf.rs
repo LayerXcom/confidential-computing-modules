@@ -2,7 +2,7 @@ use crate::{
     state::{State, UserState, CurrentNonce, NextNonce},
     error::Result,
 };
-use secp256k1::PublicKey;
+use ed25519_dalek::PublicKey;
 use std::io::{Write, Read};
 use byteorder::{ByteOrder, LittleEndian};
 

@@ -1,15 +1,14 @@
-use anonify_types::{Ciphertext};
-use crate::{
-    error::Result,
-    state::{CurrentNonce, State, UserState},
-};
-use ring::aead::{self, Aad, BoundKey, Nonce, UnboundKey, AES_256_GCM};
 use std::{
     prelude::v1::Vec,
     io::{Write, Read},
 };
-use secp256k1::{PublicKey, Secp256k1, Message, Verification};
-use secp256k1::recovery::{RecoverableSignature, RecoveryId};
+use anonify_types::{Ciphertext};
+use ring::aead::{self, Aad, BoundKey, Nonce, UnboundKey, AES_256_GCM};
+use ed25519_dalek::PublicKey;
+use crate::{
+    error::Result,
+    state::{CurrentNonce, State, UserState},
+};
 
 /// The size of the symmetric 256 bit key we use for encryption in bytes.
 pub const SYMMETRIC_KEY_SIZE: usize = 32;
@@ -99,7 +98,7 @@ impl Hash256 for Sha256 {
     }
 
     fn from_pubkey(pubkey: &PublicKey) -> Self {
-        Self::hash(&pubkey.serialize())
+        Self::hash(&pubkey.to_bytes())
     }
 
     fn from_user_state<S: State>(user_state: &UserState<S, CurrentNonce>) -> Result<Self> {
@@ -152,18 +151,5 @@ impl UserAddress {
         &self.0[..]
     }
 }
-
-/// Recover user's public key from a ECDSA signature.
-pub fn recover<C: Verification>(secp: &Secp256k1<C>, msg: &[u8], sig: [u8; 64]) -> Result<PublicKey> {
-    let digest = Sha256::hash(&msg);
-    let msg = Message::from_slice(digest.as_bytes())?;
-    let id = RecoveryId::from_i32(0)?;
-    let sig = RecoverableSignature::from_compact(&sig, id)?;
-
-    let pubkey = secp.recover(&msg, &sig)?;
-    Ok(pubkey)
-}
-
-
 
 // TODO: Enclave's signature generation

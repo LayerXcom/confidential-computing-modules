@@ -1,8 +1,11 @@
+use std::prelude::v1::*;
+use elastic_array::{ElasticArray128, ElasticArray32};
+use crate::{
+    error::Result,
+};
+
 mod memorydb;
 mod traits;
-
-use elastic_array::{ElasticArray128, ElasticArray32};
-use std::prelude::v1::*;
 
 /// Database value.
 pub type DBValue = ElasticArray128<u8>;
@@ -47,7 +50,17 @@ impl DBTx {
         }
     }
 
-    pub fn put(&mut self, key: &[u8], value: &[u8]) {
+    pub fn put_by_sig(&mut self, msg: &[u8], sig: [u8; 64], value: &[u8]) -> Result<()> {
+
+
+        Ok(())
+    }
+
+    pub fn delete_by_sig(&mut self, msg: &[u8], sig: [u8; 64]) {
+
+    }
+
+    fn put(&mut self, key: &[u8], value: &[u8]) {
         let mut ekey = ElasticArray32::new();
         ekey.append_slice(key);
         self.ops.push(DBOp::Insert {
@@ -56,7 +69,7 @@ impl DBTx {
         });
     }
 
-    pub fn delete(&mut self, key: &[u8]) {
+    fn delete(&mut self, key: &[u8]) {
         let mut ekey = ElasticArray32::new();
         ekey.append_slice(key);
         self.ops.push(DBOp::Delete {
