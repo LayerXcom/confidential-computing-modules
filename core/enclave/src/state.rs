@@ -63,7 +63,7 @@ impl<S: State, N> UserState<S, N> {
 // storing data which have not been considered globally consensused.
 impl<S: State> UserState<S, CurrentNonce> {
     pub fn decrypt(cipheriv: Vec<u8>, key: &SymmetricKey) -> Result<Self> {
-        let mut res = decrypt_aes_256_gcm(cipheriv, key)?;
+        let res = decrypt_aes_256_gcm(cipheriv, key)?;
         Self::read(&res[..])
     }
 
@@ -108,7 +108,7 @@ impl<S: State> UserState<S, NextNonce> {
         let mut buf = vec![];
         address.write(&mut buf)?;
         state.write_le(&mut buf)?;
-        let nonce = Sha256::sha256(&buf).into();
+        let nonce = Sha256::hash(&buf).into();
 
         Ok(UserState {
             address,
@@ -157,7 +157,7 @@ impl Nonce {
 
 impl From<Sha256> for Nonce {
     fn from(s: Sha256) -> Self {
-        Nonce(s.get_array())
+        Nonce(s.as_array())
     }
 }
 
