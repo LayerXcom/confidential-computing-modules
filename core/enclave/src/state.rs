@@ -15,6 +15,8 @@ use std::{
 
 /// Trait of each user's state.
 pub trait State: Sized + Default {
+    fn new(init: u64) -> Self;
+
     fn write_le<W: Write>(&self, writer: &mut W) -> Result<()>;
 
     fn read_le<R: Read>(reader: &mut R) -> Result<Self>;
@@ -42,6 +44,12 @@ pub struct UserState<S: State, N> {
 }
 
 impl<S: State, N> UserState<S, N> {
+    pub fn try_into_vec(&self) -> Result<Vec<u8>> {
+        let mut buf = vec![];
+        self.write(&mut buf)?;
+        Ok(buf)
+    }
+
     pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
         self.address.write(writer)?;
         self.state.write_le(writer)?;
@@ -95,9 +103,23 @@ impl<S: State> UserState<S, CurrentNonce> {
 }
 
 impl<S: State> UserState<S, NextNonce> {
-    pub fn encrypt(self, key: &SymmetricKey) -> Result<Vec<u8>> {
+    pub fn new(address: UserAddress, init_state: u64) -> Result<Self> {
+        let state = S::new(init_state);
         let mut buf = vec![];
-        self.write(&mut buf)?;
+        address.write(&mut buf)?;
+        state.write_le(&mut buf)?;
+        let nonce = Sha256::sha256(&buf).into();
+
+        Ok(UserState {
+            address,
+            state,
+            nonce,
+            _marker: PhantomData
+        })
+    }
+
+    pub fn encrypt(self, key: &SymmetricKey) -> Result<Vec<u8>> {
+        let buf = self.try_into_vec()?;
         encrypt_aes_256_gcm(buf, key)
     }
 }

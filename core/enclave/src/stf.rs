@@ -10,6 +10,10 @@ use byteorder::{ByteOrder, LittleEndian};
 pub struct Value(u64);
 
 impl State for Value {
+    fn new(init: u64) -> Self {
+        Value(init)
+    }
+
     fn write_le<W: Write>(&self, writer: &mut W) -> Result<()> {
         let mut buf = [0u8; 8];
         LittleEndian::write_u64(&mut buf, self.0);

@@ -98,7 +98,7 @@ impl Hash256 for Sha256 {
 }
 
 impl Sha256 {
-    fn sha256(inp: &[u8]) -> Self {
+    pub fn sha256(inp: &[u8]) -> Self {
         use sha2::Digest;
         let mut hasher = sha2::Sha256::new();
         hasher.input(inp);
@@ -121,6 +121,15 @@ impl Sha256 {
 pub struct UserAddress([u8; 20]);
 
 impl UserAddress {
+    pub fn from_pubkey(pubkey: &PublicKey) -> Self {
+        let hash = Sha256::from_pubkey(pubkey);
+        let addr = &hash.get_array()[12..];
+        let mut res = [0u8; 20];
+        res.copy_from_slice(addr);
+
+        UserAddress(res)
+    }
+
     pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_all(&self.0)?;
         Ok(())
