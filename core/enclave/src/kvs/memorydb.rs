@@ -5,7 +5,7 @@ use std::{
 };
 use anonify_types::*;
 use super::*;
-use super::traits::KVS;
+use super::traits::*;
 use crate::error::Result;
 
 pub struct MemoryKVS(RwLock<BTreeMap<Vec<u8>, DBValue>>);
@@ -17,12 +17,12 @@ impl MemoryKVS {
 }
 
 impl KVS for MemoryKVS {
-    fn get(&self, key: &[u8]) -> Option<DBValue> {
+    fn inner_get(&self, key: &[u8]) -> Option<DBValue> {
         let d = self.0.read().unwrap();
         d.get(key).cloned()
     }
 
-    fn write(&self, tx: DBTx) {
+    fn inner_write(&self, tx: InnerDBTx) {
         let mut d = self.0.write().unwrap();
         let ops = tx.ops;
         for op in ops {
@@ -35,5 +35,16 @@ impl KVS for MemoryKVS {
                 },
             }
         }
+    }
+}
+
+impl SigVerificationKVS for MemoryKVS {
+    fn get(&self, msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Option<DBValue> {
+        let key = get_verified_pubkey(&msg, &sig, &pubkey);
+        self.inner_get(&key)
+    }
+
+    fn write(&self, tx: DBTx) {
+        self.inner_write(tx.into_inner())
     }
 }

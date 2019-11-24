@@ -3,21 +3,20 @@ use super::*;
 use crate::{
     error::Result,
 };
+use ed25519_dalek::{PublicKey, Signature};
 
 /// Inner trait of key-value store instructions
-pub trait KVS: Sync + Send {
+pub(super) trait KVS: Sync + Send {
     fn tx(&self) -> DBTx { DBTx::new() }
 
-    fn get(&self, key: &[u8]) -> Option<DBValue>;
+    fn inner_get(&self, key: &[u8]) -> Option<DBValue>;
 
-    fn write(&self, tx: DBTx);
+    fn inner_write(&self, tx: InnerDBTx);
 }
 
 /// Trait of key-value store instrctions restricted by signature verifications.
 pub trait SigVerificationKVS: Sync + Send {
-    type KVS: KVS;
-
-    fn get(&self, msg: &[u8], sig: [u8; 64]) -> Option<DBValue>;
+    fn get(&self, msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Option<DBValue>;
 
     fn write(&self, tx: DBTx);
 }
