@@ -1,9 +1,8 @@
+#![crate_type = "lib"]
 #[macro_use]
 extern crate failure;
 #[macro_use]
 extern crate serde;
-#[macro_use]
-extern crate clap;
 
 use self::init_enclave::EnclaveDir;
 
@@ -16,10 +15,8 @@ mod attestation;
 mod web3;
 mod tests;
 mod auto_ffi;
-mod term;
-mod config;
 
-fn main() {
+fn init_enclave() {
 
 
 

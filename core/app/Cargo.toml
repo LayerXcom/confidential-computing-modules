@@ -17,11 +17,7 @@ reqwest = "0.9"
 base64 = "0.11"
 web3 = "0.8"
 openssl = "0.10"
-hex = "0.4"
-clap = "~2.32"
-rand = "0.7"
-console = "0.7"
-dialoguer = "0.4"
+hex = "0.4" 
 
 [build-dependencies]
 bindgen = "0.51"

@@ -89,7 +89,7 @@ App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths)
 
 App_Rust_Path := ./app/target/$(Rust_target_dir)
 App_Enclave_u_Object :=app/libEnclave_u.a
-App_Name := bin/app
+App_Name := anonify-app
 
 ######## Enclave Settings ########
 
@@ -120,10 +120,10 @@ RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nod
 	-Wl,--version-script=enclave/Enclave.lds
 
 RustEnclave_Name := enclave/enclave.so
-Signed_RustEnclave_Name := bin/enclave.signed.so
+Signed_RustEnclave_Name := $(CUSTOM_BIN_PATH)/enclave.signed.so
 
 .PHONY: all
-all: $(Signed_RustEnclave_Name)
+all: $(App_Name) $(Signed_RustEnclave_Name)
 
 ######## EDL Objects ########
 
@@ -135,20 +135,20 @@ $(Enclave_EDL_Files): $(SGX_EDGER8R) enclave/Enclave.edl
 ######## App Objects ########
 
 app/Enclave_u.o: $(Enclave_EDL_Files)
+	@cd app && cargo build -p anonify-types
 	@$(CC) $(App_C_Flags) -c app/Enclave_u.c -o $@
 	@echo "CC   <=  $<"
 
 $(App_Enclave_u_Object): app/Enclave_u.o
 	$(AR) rcsD $@ $^
-	mkdir -p lib
-	cp $(App_Enclave_u_Object) ./lib
+	# mkdir -p $(CUSTOM_LIBRARY_PATH)
+	cp $(App_Enclave_u_Object) $(CUSTOM_LIBRARY_PATH)
 
 $(App_Name): $(App_Enclave_u_Object) $(App_SRC_Files)
-	@cd app && cargo build -p anonify-types
 	@cd app && SGX_SDK_RUST=$(SGX_SDK_RUST) SGX_SDK=$(SGX_SDK) cargo build $(App_Rust_Flags)
 	@echo "Cargo  =>  $@"
-	mkdir -p bin
-	cp $(App_Rust_Path)/anonify-app ./bin
+	mkdir -p $(CUSTOM_BIN_PATH)
+	# cp $(App_Rust_Path)/$(App_Name) $(CUSTOM_BIN_PATH)/$(App_Name)
 
 ######## Enclave Objects ########
 
