@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 anonify-app = { path = "../core/app" }
+anonify-wallet = { path = "../wallet" }
 clap = "~2.32"
 rand = "0.7"
 console = "0.7"
