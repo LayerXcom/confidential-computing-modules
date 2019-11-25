@@ -72,12 +72,20 @@ impl<S: State> UserState<S, CurrentNonce> {
     }
 
     // TODO: Encrypt with sealing key.
-    pub fn get_db_value(&self) -> Result<Vec<u8>> {
+    pub fn get_db_value(&self) -> Result<DBValue> {
         let mut buf = vec![];
         self.state.write_le(&mut buf)?;
         self.nonce.write(&mut buf)?;
 
-        Ok(buf)
+        Ok(DBValue::from_vec(buf))
+    }
+
+    pub fn from_db_value(db_value: DBValue) -> Result<(S, Nonce)> {
+        let mut reader = db_value.into_vec();
+        let state = S::read_le(&mut &reader[..])?;
+        let nonce = Nonce::read(&mut &reader[..])?;
+
+        Ok((state, nonce))
     }
 
     pub fn read<R: Read>(mut reader: R) -> Result<Self> {
@@ -145,7 +153,7 @@ impl<S: State> TryFrom<UserState<S, CurrentNonce>> for UserState<S, NextNonce> {
 }
 
 #[derive(Clone, Copy, Debug, Default)]
-struct Nonce([u8; 32]);
+pub struct Nonce([u8; 32]);
 
 impl Nonce {
     pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {

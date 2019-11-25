@@ -11,11 +11,26 @@ use crate::{
     crypto::UserAddress,
 };
 
+lazy_static! {
+    pub static ref MEMORY_DB: MemoryKVS = MemoryKVS::new();
+}
+
 pub struct MemoryKVS(RwLock<BTreeMap<Vec<u8>, DBValue>>);
 
 impl MemoryKVS {
     pub fn new() -> Self {
         MemoryKVS(RwLock::new(BTreeMap::new()))
+    }
+}
+
+impl SigVerificationKVS for MemoryKVS {
+    fn get(&self, msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Option<DBValue> {
+        let key = UserAddress::from_sig(&msg, &sig, &pubkey);
+        self.inner_get(key.as_slice())
+    }
+
+    fn write(&self, tx: DBTx) {
+        self.inner_write(tx.into_inner())
     }
 }
 
@@ -38,16 +53,5 @@ impl KVS for MemoryKVS {
                 },
             }
         }
-    }
-}
-
-impl SigVerificationKVS for MemoryKVS {
-    fn get(&self, msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Option<DBValue> {
-        let key = UserAddress::from_sig(&msg, &sig, &pubkey);
-        self.inner_get(key.as_slice())
-    }
-
-    fn write(&self, tx: DBTx) {
-        self.inner_write(tx.into_inner())
     }
 }

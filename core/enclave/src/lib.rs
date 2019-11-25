@@ -7,10 +7,16 @@
 #[cfg(not(target_env = "sgx"))]
 #[macro_use]
 extern crate sgx_tstd as std;
+#[macro_use]
+extern crate lazy_static;
 
 use sgx_types::*;
 use sgx_tse::*;
 use anonify_types::*;
+use ed25519_dalek::{PublicKey, Signature};
+use crate::kvs::{MemoryKVS, SigVerificationKVS, MEMORY_DB};
+use crate::state::UserState;
+use crate::stf::Value;
 
 mod crypto;
 mod state;
@@ -23,9 +29,15 @@ mod stf;
 #[no_mangle]
 pub unsafe extern "C" fn ecall_get_state(
     sig: &Sig,
+    pubkey: &PubKey,
     msg: &Msg, // 32 bytes randomness for avoiding replay attacks.
     state: u64, // Currently, status is just value.
 ) -> sgx_status_t {
+    let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
+    let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
+
+    let db_value = MEMORY_DB.get(&msg[..], &sig, &pubkey).expect("Failed to get value from in-memory database.");
+    let (state, nonce) = UserState::<Value, _>::from_db_value(db_value).expect("Failed to read db_value.");
 
     sgx_status_t::SGX_SUCCESS
 }
