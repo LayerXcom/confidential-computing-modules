@@ -1,11 +1,31 @@
 use serde::{Deserialize, Serialize};
- use smallvec::SmallVec;
- 
+use smallvec::SmallVec;
+use rand::Rng;
+use crate::{
+    keyfile::KeyFile,
+    error::Result,
+};
+
 mod constants;
 mod derive;
 mod disk;
 mod error;
 mod keyfile;
+
+/// Operations in a wallet directory
+pub trait DirOperations {
+    /// Insert a new keyfile to this wallet directory.
+    fn insert<R: Rng>(&self, keyfile: &mut KeyFile, rng: &mut R) -> Result<()>;
+
+    /// Load a keyfile
+    fn load(&self, keyfile_name: &str) -> Result<KeyFile>;
+
+    /// Load all keyfiles in this wallet directory.
+    fn load_all(&self) -> Result<Vec<KeyFile>>;
+
+    /// Remove a keyfile from this wallet directory.
+    fn remove(&self, keyfile: &mut KeyFile) -> Result<()>;
+}
 
 /// Serializable and deserializable bytes
 #[derive(Deserialize, Serialize, PartialEq, Eq, Debug, Clone)]
