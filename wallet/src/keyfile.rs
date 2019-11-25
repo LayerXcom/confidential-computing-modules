@@ -1,6 +1,6 @@
 //! Keyfile operations such as signing.
 use std::collections::HashMap;
-use ed25519_dalek::SecretKey;
+use ed25519_dalek::Keypair;
 use smallvec::SmallVec;
 use parity_crypto as crypto;
 use parity_crypto::Keccak256;
@@ -18,41 +18,51 @@ pub struct KeyFile {
     /// Unique Keyfile name which is used for filename.
     /// If this keyfile is not stored yet, no name exits.
     pub file_name: Option<String>,
-
     /// User defined account name
     pub account_name: String,
-
     /// base64-encoded address
     pub base64_address: String,
-
     /// Keyfile version
     pub version: u32,
-
     /// Encrypted private key
     pub encrypted_key: KeyCiphertext,
 }
 
 impl KeyFile {
-    // pub fn new<R: Rng>(
-    //     account_name: &str,
-    //     version: u32,
-    //     password: &[u8],
-    //     iters: u32,
-    //     sk: &SecretKey,
-    //     rng: &mut R,
-    // ) -> Result<Self> {
-    //     let encrypted_key = KeyCiphertext::encrypt(sk, password, iters, rng)?;
-    //     let pubkey =
-    //     let base64_address =
+    pub fn new<R: Rng>(
+        account_name: &str,
+        version: u32,
+        password: &[u8],
+        iters: u32,
+        key_pair: &Keypair,
+        rng: &mut R,
+    ) -> Result<Self> {
+        let encrypted_key = KeyCiphertext::encrypt(&key_pair, password, iters, rng)?;
+        let base64_address = Self::key_pair_to_addr(&key_pair);
 
-    //     Ok(KeyFile {
-    //         file_name: None,
-    //         account_name: account_name.to_string(),
-    //         base64_address,
-    //         version,
-    //         encrypted_key,
-    //     })
-    // }
+        Ok(KeyFile {
+            file_name: None,
+            account_name: account_name.to_string(),
+            base64_address,
+            version,
+            encrypted_key,
+        })
+    }
+
+    pub fn get_key_pair(&self, password: &[u8]) -> Result<Keypair> {
+        let key_pair = self.encrypted_key.decrypt(password)?;
+        Ok(key_pair)
+    }
+
+    fn key_pair_to_addr(key_pair: &Keypair) -> String {
+        use sha2::Digest;
+
+        let pubkey = key_pair.public.to_bytes();
+        let mut hasher = sha2::Sha256::new();
+        hasher.input(&pubkey[..]);
+        let addr = &hasher.result()[12..];
+        base64::encode(&addr)
+    }
 
     // pub fn create_master<R: Rng>(
     //     account_name: &str,
@@ -82,19 +92,6 @@ impl KeyFile {
 
     //     Ok(xsk_child)
     // }
-
-    // pub fn get_current_spending_key(&self, password: &[u8]) -> Result<SpendingKey<Bls12>> {
-    //     let xsk = self.encrypted_key.decrypt(password)?;
-    //     Ok(xsk.spending_key)
-    // }
-
-    // pub fn get_dec_key(&self, password: &[u8]) -> Result<DecryptionKey<Bls12>> {
-    //     let xsk = self.encrypted_key.decrypt(password)?;
-    //     let dec_key = ProofGenerationKey::<Bls12>::from_spending_key(&xsk.spending_key, &*PARAMS)
-    //         .into_decryption_key()?;
-
-    //     Ok(dec_key)
-    // }
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
@@ -110,7 +107,7 @@ impl KeyCiphertext {
     /// Encrypt plain bytes data
     /// Currently using `parity-crypto`.
     pub fn encrypt<R: Rng>(
-        sk: &SecretKey,
+        key_pair: &Keypair,
         password: &[u8],
         iters: u32,
         rng: &mut R,
@@ -121,10 +118,11 @@ impl KeyCiphertext {
         let iv: [u8; 16] = rng.gen();
 
         let (derived_left, derived_right) = crypto::derive_key_iterations(password, &salt, iters);
-        let sk_bytes = sk.to_bytes();
-        let mut ciphertext: SmallVec<[u8; 32]> = SmallVec::from_vec(vec![0; sk_bytes.len()]);
+        let key_pair_bytes = key_pair.to_bytes();
+        let mut ciphertext: SmallVec<[u8; 32]> = SmallVec::from_vec(vec![0; key_pair_bytes.len()]);
 
-        crypto::aes::encrypt_128_ctr(&derived_left, &iv, &sk_bytes[..], &mut *ciphertext).map_err(crypto::Error::from)?;
+        crypto::aes::encrypt_128_ctr(&derived_left, &iv, &key_pair_bytes[..], &mut *ciphertext)
+            .map_err(crypto::Error::from)?;
         let mac = crypto::derive_mac(&derived_right, &*ciphertext).keccak256();
 
         Ok(KeyCiphertext {
@@ -136,7 +134,7 @@ impl KeyCiphertext {
         })
     }
 
-    pub fn decrypt(&self, password: &[u8]) -> Result<SecretKey> {
+    pub fn decrypt(&self, password: &[u8]) -> Result<Keypair> {
         let (derived_left, derived_right) = crypto::derive_key_iterations(password, &self.salt.0[..], self.iters);
         let mac = crypto::derive_mac(&derived_right, &self.ciphertext.0).keccak256();
 
@@ -148,9 +146,9 @@ impl KeyCiphertext {
         crypto::aes::decrypt_128_ctr(&derived_left, &self.iv.0, &self.ciphertext.0, &mut plain)
             .map_err(crypto::Error::from)?;
 
-        let sk = SecretKey::from_bytes(&plain.to_vec()[..])?;
+        let key_pair = Keypair::from_bytes(&plain.to_vec()[..])?;
 
-        Ok(sk)
+        Ok(key_pair)
     }
 }
 
