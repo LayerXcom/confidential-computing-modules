@@ -80,12 +80,11 @@ impl<S: State> UserState<S, CurrentNonce> {
         Ok(DBValue::from_vec(buf))
     }
 
-    pub fn from_db_value(db_value: DBValue) -> Result<(S, Nonce)> {
-        let mut reader = db_value.into_vec();
+    pub fn get_state_from_db_value(db_value: DBValue) -> Result<S> {
+        let reader = db_value.into_vec();
         let state = S::read_le(&mut &reader[..])?;
-        let nonce = Nonce::read(&mut &reader[..])?;
 
-        Ok((state, nonce))
+        Ok(state)
     }
 
     pub fn read<R: Read>(mut reader: R) -> Result<Self> {

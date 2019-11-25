@@ -31,13 +31,14 @@ pub unsafe extern "C" fn ecall_get_state(
     sig: &Sig,
     pubkey: &PubKey,
     msg: &Msg, // 32 bytes randomness for avoiding replay attacks.
-    state: u64, // Currently, status is just value.
+    mut state: u64, // Currently, status is just value.
 ) -> sgx_status_t {
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
 
     let db_value = MEMORY_DB.get(&msg[..], &sig, &pubkey).expect("Failed to get value from in-memory database.");
-    let (state, nonce) = UserState::<Value, _>::from_db_value(db_value).expect("Failed to read db_value.");
+    let user_state = UserState::<Value, _>::get_state_from_db_value(db_value).expect("Failed to read db_value.");
+    state = user_state.into_raw_u64();
 
     sgx_status_t::SGX_SUCCESS
 }
