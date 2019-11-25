@@ -67,12 +67,17 @@ impl<S: State> UserState<S, CurrentNonce> {
         Self::read(&res[..])
     }
 
-    pub fn into_db_key(&self) -> Vec<u8> {
-        unimplemented!();
+    pub fn get_db_key(&self) -> &UserAddress {
+        &self.address
     }
 
-    pub fn into_db_value(&self) -> NonSealedDbValue {
-        unimplemented!();
+    // TODO: Encrypt with sealing key.
+    pub fn get_db_value(&self) -> Result<Vec<u8>> {
+        let mut buf = vec![];
+        self.state.write_le(&mut buf)?;
+        self.nonce.write(&mut buf)?;
+
+        Ok(buf)
     }
 
     pub fn read<R: Read>(mut reader: R) -> Result<Self> {

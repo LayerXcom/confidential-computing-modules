@@ -3,6 +3,7 @@ use elastic_array::{ElasticArray128, ElasticArray32};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::{
     error::Result,
+    crypto::UserAddress,
 };
 
 mod memorydb;
@@ -44,15 +45,12 @@ impl DBTx {
     }
 
     /// Put instruction is added to a transaction only if the verification of provided signature returns true.
-    pub fn put_by_sig(
+    pub fn put_by_addr(
         &mut self,
-        msg: &[u8],
-        sig: &Signature,
-        pubkey: &PublicKey,
+        key: &UserAddress,
         value: &[u8],
     ) {
-        let key = get_verified_pubkey(&msg, &sig, &pubkey);
-        self.0.put(&key, value);
+        self.0.put(key.as_slice(), value);
     }
 
     /// Delete instruction is added to a transaction only if the verification of provided signature returns true.
@@ -62,8 +60,8 @@ impl DBTx {
         sig: &Signature,
         pubkey: &PublicKey,
     ) {
-        let key = get_verified_pubkey(&msg, &sig, &pubkey);
-        self.0.delete(&key);
+        let key = UserAddress::from_sig(&msg, &sig, &pubkey);
+        self.0.delete(key.as_slice());
     }
 
     pub(crate) fn into_inner(self) -> InnerDBTx {
@@ -107,7 +105,3 @@ impl InnerDBTx {
     }
 }
 
-pub fn get_verified_pubkey(msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> [u8; 32] {
-    assert!(pubkey.verify(msg, &sig).is_ok());
-    pubkey.to_bytes()
-}

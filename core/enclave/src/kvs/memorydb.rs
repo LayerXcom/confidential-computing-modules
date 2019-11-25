@@ -6,7 +6,10 @@ use std::{
 use anonify_types::*;
 use super::*;
 use super::traits::*;
-use crate::error::Result;
+use crate::{
+    error::Result,
+    crypto::UserAddress,
+};
 
 pub struct MemoryKVS(RwLock<BTreeMap<Vec<u8>, DBValue>>);
 
@@ -40,8 +43,8 @@ impl KVS for MemoryKVS {
 
 impl SigVerificationKVS for MemoryKVS {
     fn get(&self, msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Option<DBValue> {
-        let key = get_verified_pubkey(&msg, &sig, &pubkey);
-        self.inner_get(&key)
+        let key = UserAddress::from_sig(&msg, &sig, &pubkey);
+        self.inner_get(key.as_slice())
     }
 
     fn write(&self, tx: DBTx) {

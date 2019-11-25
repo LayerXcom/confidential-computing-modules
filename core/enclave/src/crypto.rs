@@ -4,7 +4,7 @@ use std::{
 };
 use anonify_types::{Ciphertext};
 use ring::aead::{self, Aad, BoundKey, Nonce, UnboundKey, AES_256_GCM};
-use ed25519_dalek::PublicKey;
+use ed25519_dalek::{PublicKey, Signature};
 use crate::{
     error::Result,
     state::{CurrentNonce, State, UserState},
@@ -123,6 +123,7 @@ impl Sha256 {
     }
 }
 
+/// User address represents last 20 bytes of digest of user's public key.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct UserAddress([u8; 20]);
 
@@ -134,6 +135,12 @@ impl UserAddress {
         res.copy_from_slice(addr);
 
         UserAddress(res)
+    }
+
+    /// Get a user address only if the verification of signature returns true.
+    pub fn from_sig(msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Self {
+        assert!(pubkey.verify(msg, &sig).is_ok());
+        Self::from_pubkey(&pubkey)
     }
 
     pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
