@@ -17,12 +17,14 @@ mod state;
 mod error;
 mod kvs;
 mod auto_ffi;
+mod sealing;
+mod stf;
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_get_state(
     sig: &Sig,
     msg: &Msg, // 32 bytes randomness for avoiding replay attacks.
-    state: Value, // Currently, status is just value.
+    state: u64, // Currently, status is just value.
 ) -> sgx_status_t {
 
     sgx_status_t::SGX_SUCCESS
@@ -40,7 +42,7 @@ pub unsafe extern "C" fn ecall_write_state(
 pub unsafe extern "C" fn ecall_state_transition(
     sig: &Sig,
     target: &Address,
-    value: Value,
+    value: u64,
     result: &mut TransitionResult,
 ) -> sgx_status_t {
 
@@ -50,7 +52,7 @@ pub unsafe extern "C" fn ecall_state_transition(
 #[no_mangle]
 pub unsafe extern "C" fn ecall_contract_deploy(
     sig: &Sig,
-    value: Value,
+    value: u64,
     result: &mut TransitionResult,
 ) -> sgx_status_t {
 
