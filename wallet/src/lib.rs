@@ -1,16 +1,17 @@
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 use rand::Rng;
-use crate::{
-    keyfile::KeyFile,
-    error::Result,
-};
+use crate::error::Result;
 
 mod constants;
 mod derive;
 mod disk;
 mod error;
 mod keyfile;
+
+pub use error::WalletError as Error;
+pub use disk::{WalletDirectory, KeystoreDirectory};
+pub use keyfile::KeyFile;
 
 /// Operations in a wallet directory
 pub trait DirOperations {

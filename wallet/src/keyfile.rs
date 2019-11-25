@@ -49,6 +49,18 @@ impl KeyFile {
         })
     }
 
+    pub fn new_from_seed<R: Rng>(
+        account_name: &str,
+        version: u32,
+        password: &[u8],
+        iters: u32,
+        seed: &[u8],
+        rng: &mut R,
+    ) -> Result<Self> {
+        let key_pair = Keypair::from_bytes(seed)?;
+        Self::new(account_name, version, password, iters, &key_pair, rng)
+    }
+
     pub fn get_key_pair(&self, password: &[u8]) -> Result<Keypair> {
         let key_pair = self.encrypted_key.decrypt(password)?;
         Ok(key_pair)
