@@ -125,7 +125,7 @@ pub mod tests {
             let mut failures = Vec::new();
             rsgx_unit_test_start();
 
-            core_unittests(&mut ctr, &mut failures, test_read_write, "test_read_write");
+            core_unitests(&mut ctr, &mut failures, test_read_write, "test_read_write");
 
             let result = failures.is_empty();
             rsgx_unit_test_end(ctr, failures);

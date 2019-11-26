@@ -25,11 +25,9 @@ fn main() {
 
 fn target_dir() -> PathBuf {
     let mut target = PathBuf::from(env::var("OUT_DIR").unwrap());
-    target.pop();
-    target.pop();
-    target.pop();
-    target.pop();
-    target.pop();
-    
+    for _ in 0..5 {
+        target.pop();
+    }
+
     target
 }

@@ -35,6 +35,11 @@ enclave {
             [out] TransitionResult* result
         );
 
+        public void ecall_run_tests(
+            [in] const RawPointer* ext_ptr,
+            [out] ResultStatus* result
+        );
+
         /*
         public sgx_status_t ecall_get_registration_quote(
             [in] const sgx_target_info_t *target_info,
