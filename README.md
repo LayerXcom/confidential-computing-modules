@@ -41,5 +41,5 @@ $ cd bin && ./anonify-app
 Assumed your hardware supports Intel SGX.
 
 ```
-$ docker run -v `pwd`:/root/anonify --device /dev/sgx  --rm -it osuketh/anonify
+$ docker run -v `pwd`:/root/anonify --device /dev/isgx  --rm -it osuketh/anonify
 ```

@@ -11,11 +11,12 @@ RUN apt-get update && \
     curl -o- -L https://yarnpkg.com/install.sh | bash && \
     export PATH="$HOME/.yarn/bin:$PATH" && \
     yarn global add ganache-cli && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get install software-properties-common && \
+    add-apt-repository -y ppa:ethereum/ethereum && \
+    apt-get install solc
 
 RUN /root/.cargo/bin/cargo install bindgen cargo-audit && \
     rm -rf /root/.cargo/registry && rm -rf /root/.cargo/git
-
-# solc, ganache
 
 RUN git clone --depth 1 -b v1.0.9 https://github.com/baidu/rust-sgx-sdk.git sgx

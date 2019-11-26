@@ -140,7 +140,7 @@ app/Enclave_u.o: $(Enclave_EDL_Files)
 
 $(App_Enclave_u_Object): app/Enclave_u.o
 	$(AR) rcsD $@ $^
-	# mkdir -p $(CUSTOM_LIBRARY_PATH)
+	mkdir -p lib
 	cp $(App_Enclave_u_Object) $(CUSTOM_LIBRARY_PATH)
 
 $(App_Name): $(App_Enclave_u_Object) $(App_SRC_Files)
