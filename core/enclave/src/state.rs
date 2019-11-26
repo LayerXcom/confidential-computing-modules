@@ -173,12 +173,18 @@ impl From<Sha256> for Nonce {
     }
 }
 
-#[cfg(test)]
+#[cfg(debug_assertions)]
 mod tests {
-    use super::*;
+    // use super::*;
+    // use rand_core::RngCore;
+    // use rand_os::OsRng;
+    // use ed25519_dalek::Keypair;
 
-    #[test]
-    fn test_read_write() {
+    // fn test_read_write() {
+    //     let mut rng = OsRng::new().unwrap();
+    //     let keypair: Keypair = Keypair::generate(&mut rng);
+    //     let pubkey = keypair.public;
+    //     let user_address = UserAddress::from_pubkey(&pubkey);
 
-    }
+    // }
 }

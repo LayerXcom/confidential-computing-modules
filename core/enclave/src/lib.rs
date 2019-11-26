@@ -109,3 +109,9 @@ pub unsafe extern "C" fn ecall_contract_deploy(
 //     sgx_status_t::SGX_SUCCESS
 // }
 
+pub mod tests {
+    #[cfg(debug_assertions)]
+    mod internal_tests {
+
+    }
+}
