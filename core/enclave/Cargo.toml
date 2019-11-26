@@ -27,3 +27,4 @@ sgx_types = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" 
 sgx_trts = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
 sgx_tcrypto  = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
 sgx_tseal  = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
+sgx_tunittest = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }

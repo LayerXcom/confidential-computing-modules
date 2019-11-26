@@ -13,5 +13,5 @@ fn test_get_quote() {
 
 #[test]
 fn test_enclave() {
-    let enclave = EnclaveDir::new().init_enclave().unwrap();
+    // let enclave = EnclaveDir::new().init_enclave().unwrap();
 }

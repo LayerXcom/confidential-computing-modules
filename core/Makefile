@@ -135,7 +135,6 @@ $(Enclave_EDL_Files): $(SGX_EDGER8R) enclave/Enclave.edl
 ######## App Objects ########
 
 app/Enclave_u.o: $(Enclave_EDL_Files)
-	@cd app && cargo build -p anonify-types
 	@$(CC) $(App_C_Flags) -c app/Enclave_u.c -o $@
 	@echo "CC   <=  $<"
 
@@ -145,6 +144,7 @@ $(App_Enclave_u_Object): app/Enclave_u.o
 	cp $(App_Enclave_u_Object) $(CUSTOM_LIBRARY_PATH)
 
 $(App_Name): $(App_Enclave_u_Object) $(App_SRC_Files)
+	@cd app && cargo build -p anonify-types
 	@cd app && SGX_SDK_RUST=$(SGX_SDK_RUST) SGX_SDK=$(SGX_SDK) cargo build $(App_Rust_Flags)
 	@echo "Cargo  =>  $@"
 	mkdir -p $(CUSTOM_BIN_PATH)

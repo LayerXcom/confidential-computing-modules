@@ -9,9 +9,12 @@ fn main() {
 
     cbindgen::Builder::new()
         .with_no_includes()
+        .with_sys_include("stdbool.h")
         .with_language(Language::C)
         .include_item("EnclaveReturn")
         .include_item("TransitionResult")
+        .include_item("ResultStatus")
+        .include_item("RawPointer")
         .include_item("Sig")
         .include_item("Msg")
         .with_crate(&crate_dir)
@@ -27,6 +30,6 @@ fn target_dir() -> PathBuf {
     target.pop();
     target.pop();
     target.pop();
-
+    
     target
 }

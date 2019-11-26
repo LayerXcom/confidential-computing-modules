@@ -110,8 +110,58 @@ pub unsafe extern "C" fn ecall_contract_deploy(
 // }
 
 pub mod tests {
+    use anonify_types::{ResultStatus, RawPointer};
+
     #[cfg(debug_assertions)]
     mod internal_tests {
+        use super::*;
+        use sgx_tstd as std;
+        use sgx_tunittest::*;
+        use std::{panic::UnwindSafe, string::String, vec::Vec};
+        use crate::state::tests::*;
 
+        pub unsafe fn internal_tests(ext_ptr: *const RawPointer) -> ResultStatus {
+            let mut ctr = 0u64;
+            let mut failures = Vec::new();
+            rsgx_unit_test_start();
+
+            core_unittests(&mut ctr, &mut failures, test_read_write, "test_read_write");
+
+            let result = failures.is_empty();
+            rsgx_unit_test_end(ctr, failures);
+            result.into()
+        }
+
+        fn core_unitests<F, R>(
+            ncases: &mut u64,
+            failurecases: &mut Vec<String>,
+            f: F,
+            name: &str
+        )
+        where
+            F: FnOnce() -> R + UnwindSafe
+        {
+            *ncases = *ncases + 1;
+            match std::panic::catch_unwind(|| { f(); }).is_ok()
+            {
+                true => {
+                    debug_println!("{} {} ... {}!", "testing", name, "\x1B[1;32mok\x1B[0m");
+                }
+                false => {
+                    debug_println!("{} {} ... {}!", "testing", name, "\x1B[1;31mfailed\x1B[0m");
+                    failurecases.push(String::from(name));
+                }
+            }
+        }
+    }
+
+    #[no_mangle]
+    pub unsafe extern "C" fn ecall_run_tests(ext_ptr: *const RawPointer, result: *mut ResultStatus) {
+        *result = ResultStatus::Ok;
+        #[cfg(debug_assertions)]
+        {
+            let internal_tests_result = self::internal_tests::internal_tests(ext_ptr);
+            *result = internal_tests_result;
+        }
     }
 }
