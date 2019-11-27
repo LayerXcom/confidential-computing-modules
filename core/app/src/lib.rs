@@ -24,8 +24,12 @@ mod tests;
 //     };
 // }
 
+fn init_enclave() {
 
-// mod tests {
+    let enclave = EnclaveDir::new().init_enclave().unwrap();
+    let eid = enclave.geteid();
 
+    println!("[+] Done!");
 
-// }
+    enclave.destroy();
+}
