@@ -1,4 +1,4 @@
-version: 2.1
+version: 2.0
 jobs:
   build:
     docker:
@@ -6,9 +6,8 @@ jobs:
     steps:
       - checkout
       - run:
-        name: core-make
-        command: cd core && RUSTFLAGS=-Awarnings make DEBUG=1
+          name: core-make
+          command: cd core && RUSTFLAGS=-Awarnings make DEBUG=1
       - run:
-        name: core-test
-        command: cd app && cargo test
-# TODO: Device bindings
+          name: core-test
+          command: cd app && cargo test -- --nocapture
