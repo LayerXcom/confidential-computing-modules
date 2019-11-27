@@ -26,6 +26,10 @@ mod auto_ffi;
 mod sealing;
 mod stf;
 
+//
+// ecall
+//
+
 #[no_mangle]
 pub unsafe extern "C" fn ecall_get_state(
     sig: &Sig,
@@ -72,6 +76,23 @@ pub unsafe extern "C" fn ecall_contract_deploy(
     sgx_status_t::SGX_SUCCESS
 }
 
+// TODO: Add sealed public key as extra data
+#[no_mangle]
+pub extern "C" fn ecall_get_registration_quote(
+    target_info: &sgx_target_info_t,
+    real_report: &mut sgx_report_t
+) -> sgx_status_t {
+    let report = sgx_report_data_t::default();
+    if let Ok(r) = rsgx_create_report(&target_info, &report) {
+        *real_report = r;
+    }
+
+    sgx_status_t::SGX_SUCCESS
+}
+
+//
+// ocall
+//
 
 // extern "C" {
 //     pub fn ocall_sgx_init_quote(
@@ -93,20 +114,6 @@ pub unsafe extern "C" fn ecall_contract_deploy(
 //         maxlen: u32,
 //         p_quote_len: *mut u32
 //     ) -> sgx_status_t;
-// }
-
-// TODO: Add sealed public key as extra data
-// #[no_mangle]
-// pub extern "C" fn ecall_get_registration_quote(
-//     target_info: &sgx_target_info_t,
-//     real_report: &mut sgx_report_t
-// ) -> sgx_status_t {
-//     let report = sgx_report_data_t::default();
-//     if let Ok(r) = rsgx_create_report(&target_info, &report) {
-//         *real_report = r;
-//     }
-
-//     sgx_status_t::SGX_SUCCESS
 // }
 
 pub mod tests {
