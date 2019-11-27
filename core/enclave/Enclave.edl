@@ -12,7 +12,8 @@ enclave {
 
     trusted {
         public sgx_status_t ecall_get_state(
-            [in] uint8_t sig[65],
+            [in] uint8_t sig[64],
+            [in] uint8_t pubkey[32],
             [in] uint8_t msg[32],
             [out] uint64_t* state
         );
@@ -34,12 +35,15 @@ enclave {
             [out] TransitionResult* result
         );
 
-        /*
+        public void ecall_run_tests(
+            [in] const RawPointer* ext_ptr,
+            [out] ResultStatus* result
+        );
+
         public sgx_status_t ecall_get_registration_quote(
             [in] const sgx_target_info_t *target_info,
             [out] sgx_report_t *report
         );
-        */
     };
 
     untrusted {

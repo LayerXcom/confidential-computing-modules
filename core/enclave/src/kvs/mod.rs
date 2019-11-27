@@ -9,6 +9,9 @@ use crate::{
 mod memorydb;
 mod traits;
 
+pub use memorydb::{MemoryKVS, MEMORY_DB};
+pub use traits::SigVerificationKVS;
+
 /// Database value.
 pub type DBValue = ElasticArray128<u8>;
 

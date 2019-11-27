@@ -1,6 +1,7 @@
 use sgx_types::*;
 use std::time;
 use crate::error::*;
+use crate::auto_ffi::ecall_get_registration_quote;
 
 // Referring to Intel SDK Developer Reference.
 // https://01.org/sites/default/files/documentation/intel_sgx_sdk_developer_reference_for_linux_os_pdf.pdf.
@@ -8,13 +9,6 @@ extern "C" {
     pub fn sgx_init_quote(
         p_target_info: *mut sgx_target_info_t,
         p_gid: *mut sgx_epid_group_id_t
-    ) -> sgx_status_t;
-
-    pub fn ecall_get_registration_quote(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        target_info: *const sgx_target_info_t,
-        report: *mut sgx_report_t
     ) -> sgx_status_t;
 
     pub fn sgx_calc_quote_size(

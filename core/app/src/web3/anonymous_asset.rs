@@ -114,6 +114,7 @@ mod test {
     const ETH_URL: &'static str = "http://127.0.0.1:8545";
 
     #[test]
+    #[ignore]
     fn test_deploy_contract() {
         let contract = AnonymousAssetContract::deploy(ETH_URL).unwrap();
     }

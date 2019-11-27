@@ -31,6 +31,12 @@ impl State for Value {
     }
 }
 
+impl Value {
+    pub fn into_raw_u64(&self) -> u64 {
+        self.0
+    }
+}
+
 pub trait AnonymousAssetSTF {
     type S: State;
 

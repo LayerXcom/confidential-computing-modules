@@ -1,0 +1,19 @@
+[package]
+name = "client"
+version = "0.1.0"
+authors = ["osuketh <dish230@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anonify-host = { package = "anonify-app", path = "../core/app" }
+anonify-wallet = { path = "../wallet" }
+clap = "~2.32"
+rand = "0.7"
+console = "0.7"
+dialoguer = "0.4"
+dirs = "2.0"
+log = "0.4"
+env_logger = "0.5"
+tiny-bip39 = "0.6.0"

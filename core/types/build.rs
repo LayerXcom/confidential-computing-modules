@@ -9,9 +9,12 @@ fn main() {
 
     cbindgen::Builder::new()
         .with_no_includes()
+        .with_sys_include("stdbool.h")
         .with_language(Language::C)
         .include_item("EnclaveReturn")
         .include_item("TransitionResult")
+        .include_item("ResultStatus")
+        .include_item("RawPointer")
         .include_item("Sig")
         .include_item("Msg")
         .with_crate(&crate_dir)
@@ -22,11 +25,9 @@ fn main() {
 
 fn target_dir() -> PathBuf {
     let mut target = PathBuf::from(env::var("OUT_DIR").unwrap());
-    target.pop();
-    target.pop();
-    target.pop();
-    target.pop();
-    target.pop();
+    for _ in 0..5 {
+        target.pop();
+    }
 
     target
 }
