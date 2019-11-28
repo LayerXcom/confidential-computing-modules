@@ -1,5 +1,5 @@
 [package]
-name = "anonify-app"
+name = "anonify-host"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
@@ -17,7 +17,7 @@ reqwest = "0.9"
 base64 = "0.11"
 web3 = "0.8"
 openssl = "0.10"
-hex = "0.4" 
+hex = "0.4"
 
 [build-dependencies]
 bindgen = "0.51"
