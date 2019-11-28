@@ -6,7 +6,7 @@ use ed25519_dalek::PublicKey;
 use std::io::{Write, Read};
 use byteorder::{ByteOrder, LittleEndian};
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Value(u64);
 
 impl State for Value {

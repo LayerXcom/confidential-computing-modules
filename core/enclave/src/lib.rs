@@ -152,10 +152,10 @@ pub mod tests {
             match std::panic::catch_unwind(|| { f(); }).is_ok()
             {
                 true => {
-                    debug_println!("{} {} ... {}!", "testing", name, "\x1B[1;32mok\x1B[0m");
+                    println!("{} {} ... {}!", "testing", name, "\x1B[1;32mok\x1B[0m");
                 }
                 false => {
-                    debug_println!("{} {} ... {}!", "testing", name, "\x1B[1;31mfailed\x1B[0m");
+                    println!("{} {} ... {}!", "testing", name, "\x1B[1;31mfailed\x1B[0m");
                     failurecases.push(String::from(name));
                 }
             }
