@@ -191,6 +191,6 @@ pub mod tests {
         let mut state_vec = state.try_into_vec().unwrap();
         let res = UserState::read(&state_vec[..]).unwrap();
 
-        assert!(state != res);
+        assert_eq!(state, res);
     }
 }

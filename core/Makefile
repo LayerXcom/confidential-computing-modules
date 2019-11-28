@@ -29,9 +29,14 @@
 
 SGX_SDK_RUST ?= $(HOME)/sgx
 
+######## Settings for Circle CI ######
+CARGO ?= cargo
+BINDGEN ?= bindgen
+RUSTFMT ?= rustfmt
+
 ######## SGX SDK Settings ########
 
-SGX_SDK ?= /opt/intel/sgxsdk
+SGX_SDK ?= /opt/sgxsdk
 SGX_MODE ?= SW
 SGX_ARCH ?= x64
 
@@ -135,7 +140,7 @@ $(Enclave_EDL_Files): $(SGX_EDGER8R) enclave/Enclave.edl
 ######## Host Objects ########
 
 host/Enclave_u.o: $(Enclave_EDL_Files)
-	@cd host && cargo build -p anonify-types
+	@cd host && $(CARGO) build -p anonify-types
 	@$(CC) $(Host_C_Flags) -c host/Enclave_u.c -o $@
 	@echo "CC   <=  $<"
 
@@ -145,7 +150,7 @@ $(Host_Enclave_u_Object): host/Enclave_u.o
 	cp $(Host_Enclave_u_Object) $(CUSTOM_LIBRARY_PATH)
 
 $(Host_Name): $(Host_Enclave_u_Object) $(Host_SRC_Files)
-	@cd host && SGX_SDK_RUST=$(SGX_SDK_RUST) SGX_SDK=$(SGX_SDK) cargo build $(Host_Rust_Flags)
+	@cd host && SGX_SDK_RUST=$(SGX_SDK_RUST) SGX_SDK=$(SGX_SDK) $(CARGO) build $(Host_Rust_Flags)
 	@echo "Cargo  =>  $@"
 	mkdir -p $(CUSTOM_BIN_PATH)
 	# cp $(Host_Rust_Path)/$(Host_Name) $(CUSTOM_BIN_PATH)/$(Host_Name)
@@ -169,7 +174,7 @@ $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 .PHONY: enclave
 enclave: $(Enclave_EDL_Files)
 	mkdir -p $(CUSTOM_LIBRARY_PATH)
-	$(MAKE) -C ./enclave/ CARGO_FLAGS=$(Host_Rust_Flags) Rust_target_dir=$(Rust_target_dir)
+	$(MAKE) -C ./enclave/ CARGO_FLAGS=$(Host_Rust_Flags) Rust_target_dir=$(Rust_target_dir) CARGO=$(CARGO) BINDGEN=$(BINDGEN) RUSTFMT=$(RUSTFMT)
 
 .PHONY: compiler-rt
 compiler-rt:
@@ -177,14 +182,14 @@ compiler-rt:
 
 .PHONY: test
 test: all
-	@cd host && cargo test $(Host_Rust_Flags)
+	@cd host && $(CARGO) test $(Host_Rust_Flags)
 
 .PHONY: clean
 clean:
 	@rm -f $(CUSTOM_BIN_PATH)/$(Host_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) enclave/*_t.* host/*_u.* $(CUSTOM_LIBRARY_PATH)/*.a
 	# @rm -f $(Host_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) enclave/*_t.* host/*_u.* lib/*.a
-	# @cd enclave && cargo clean && rm -f Cargo.lock
-	# @cd host && cargo clean && rm -f Cargo.lock
+	# @cd enclave && $(CARGO) clean && rm -f Cargo.lock
+	# @cd host && $(CARGO) clean && rm -f Cargo.lock
 
 .PHONY: full-clean
 # Clean:
@@ -196,5 +201,5 @@ clean:
 full-clean:
 	@rm -f $(CUSTOM_BIN_PATH)/$(Host_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) enclave/*_t.* host/*_u.* $(CUSTOM_LIBRARY_PATH)/*.a
 	@rm -rf enclave/anonify-types.h host/anonify-types.h
-	@cd enclave && cargo clean && rm -f Cargo.lock
-	@cd host && cargo clean && rm -f Cargo.lock
+	@cd enclave && $(CARGO) clean && rm -f Cargo.lock
+	@cd host && $(CARGO) clean && rm -f Cargo.lock
