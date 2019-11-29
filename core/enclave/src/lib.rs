@@ -25,6 +25,7 @@ mod kvs;
 mod auto_ffi;
 mod sealing;
 mod stf;
+mod attestation;
 
 //
 // ecall

@@ -1,6 +1,6 @@
 use sgx_types::*;
 use anonify_types::{Sig, PubKey, Msg};
-use crate::auto_ffi::ecall_get_state;
+use crate::auto_ffi::*;
 use crate::init_enclave::EnclaveDir;
 
 /// Get state only if the signature verification returns true.
@@ -26,6 +26,15 @@ pub fn get_state(
 
     res
 }
+
+// pub fn contract_deploy(
+//     eid: sgx_enclave_id_t,
+//     sig: &Sig,
+
+// ) {
+//     ecall_contract_deploy()
+// }
+
 
 #[cfg(test)]
 mod tests {

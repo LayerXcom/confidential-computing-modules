@@ -1,0 +1,9 @@
+[package]
+name = "https-sgx-host"
+version = "0.1.0"
+authors = ["osuketh <dish230@gmail.com>"]
+edition = "2018"
+build = "build.rs"
+
+[dependencies]
+sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git", features = ["net"] }
