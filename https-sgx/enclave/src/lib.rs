@@ -4,6 +4,8 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
+mod client;
+
 #[cfg(test)]
 mod tests {
     #[test]
