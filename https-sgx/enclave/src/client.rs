@@ -5,6 +5,7 @@ use std::{
 };
 use mio::{net::TcpStream, Ready, PollOpt};
 use rustls::{ClientSession, ClientConfig, Session};
+use crate::error::Result;
 
 /// Setup a client token to allow us to identify the client event is for the socket.
 const CLIENT: mio::Token = mio::Token(0);
@@ -29,14 +30,16 @@ impl Write for TlsClient {
 impl TlsClient {
     pub fn new(
         socket: TcpStream,
-        hostname: webpki::DNSNameRef,
+        hostname: &str,
         cfg: Arc<ClientConfig>
-    ) -> TlsClient {
-        TlsClient {
+    ) -> Result<TlsClient> {
+        let dns_name = webpki::DNSNameRef::try_from_ascii_str(hostname)?;
+
+        Ok(TlsClient {
             socket,
-            session: ClientSession::new(&cfg, hostname),
+            session: ClientSession::new(&cfg, dns_name),
             is_closed: false,
-        }
+        })
     }
 
     pub fn ready(
@@ -139,3 +142,25 @@ impl TlsClient {
         }
     }
 }
+
+
+
+pub fn create_client_config(cert: &str) -> io::Result<Arc<ClientConfig>> {
+    use std::{
+        //Invoking ocall related functions that brings untrusted data into the trusted execution engine.
+        untrusted::fs::File,
+        io::BufReader,
+    };
+    use crate::cache::PersistCache;
+
+    let mut config = ClientConfig::new();
+    let certfile = File::open(cert)?;
+    let mut reader = BufReader::new(certfile);
+    config.root_store.add_pem_file(&mut reader).unwrap();
+
+    let persist = Arc::new(PersistCache::new());
+    config.set_persistence(persist);
+
+    Ok(Arc::new(config))
+}
+
