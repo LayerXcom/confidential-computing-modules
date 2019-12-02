@@ -45,21 +45,22 @@ impl HttpsClient {
         unimplemented!();
     }
 
-    pub fn send_from_raw_req(&mut self, req: String) -> Result<()> {
+    pub fn send_from_raw_req(&mut self, req: String) -> Result<Vec<u8>> {
         self.0.write_all(req.as_bytes())?;
         let mut poll = mio::Poll::new()?;
         let mut events = mio::Events::with_capacity(DEFAULT_EVENTS_CAPACITY);
         self.0.register(&mut poll);
+        let mut res = vec![];
 
         'outer: loop {
             poll.poll(&mut events, None)?;
-            for ev in events.iter() {
-                if !self.0.ready(&mut poll, &ev) {
+            for ev in &events {
+                if !self.0.ready(&mut poll, &ev, &mut res) {
                     break 'outer;
                 }
             }
         }
 
-        Ok(())
+        Ok(res)
     }
 }

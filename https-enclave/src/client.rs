@@ -45,12 +45,13 @@ impl TlsClient {
     pub fn ready(
         &mut self,
         poll: &mut mio::Poll,
-        event: &mio::event::Event
+        event: &mio::event::Event,
+        buf: &mut Vec<u8>,
     ) -> bool {
         assert_eq!(event.token(), CLIENT);
 
         if event.readiness().is_readable() {
-            self.read_tls();
+            self.read_tls(buf);
         }
 
         if event.readiness().is_writable() {
@@ -75,7 +76,7 @@ impl TlsClient {
         }
     }
 
-    fn read_tls(&mut self) {
+    fn read_tls(&mut self, buf: &mut Vec<u8>) {
         match self.session.read_tls(&mut self.socket) {
             Ok(0) => {
                 println!("EOF; cleanly closed.");
@@ -96,15 +97,10 @@ impl TlsClient {
             return;
         }
 
-        let mut plaintext = vec![];
-        if let Err(e) = self.session.read_to_end(&mut plaintext) {
+        if let Err(e) = self.session.read_to_end(buf) {
             println!("Plaintext Reading error: {:?}", e);
             self.is_closed = true;
             return;
-        }
-
-        if !plaintext.is_empty() {
-            io::stdout().write_all(&plaintext).unwrap();
         }
     }
 
@@ -142,8 +138,6 @@ impl TlsClient {
         }
     }
 }
-
-
 
 pub fn create_client_config(cert: &str) -> io::Result<Arc<ClientConfig>> {
     use std::{
