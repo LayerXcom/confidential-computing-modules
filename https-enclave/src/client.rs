@@ -109,7 +109,7 @@ impl TlsClient {
     }
 
     /// Register an `Evented` handle with the `Poll` instance.
-    fn register(&self, poll: &mut mio::Poll) -> io::Result<()> {
+    pub fn register(&self, poll: &mut mio::Poll) -> io::Result<()> {
         poll.register(
             &self.socket,
             CLIENT,
