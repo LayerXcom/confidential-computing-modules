@@ -2,10 +2,10 @@ use std::prelude::v1::*;
 use https_enclave::{HttpsClient, parse_response_attn_report};
 use crate::error::Result;
 
-pub const DEV_HOSTNAME : &str = "api.trustedservices.intel.com";
+pub const DEV_HOSTNAME : &str = "api.trustedservices.intel.com:443";
 pub const REPORT_PATH : &str = "/sgx/dev/attestation/v3/report";
 pub const IAS_DEFAULT_RETRIES: u32 = 10;
-pub const DEFAULT_CERT_PATH: &str = "./dummy.pem";
+pub const DEFAULT_CERT_PATH: &str = "./enclave/dummy.pem";
 
 pub struct AttestationService<'a> {
     host: &'a str,

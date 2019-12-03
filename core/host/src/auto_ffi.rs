@@ -47,11 +47,3 @@ extern "C" {
         result: *mut ResultStatus,
     ) -> sgx_status_t;
 }
-extern "C" {
-    pub fn ecall_get_registration_quote(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        target_info: *const sgx_target_info_t,
-        report: *mut sgx_report_t,
-    ) -> sgx_status_t;
-}

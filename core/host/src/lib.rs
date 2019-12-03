@@ -11,7 +11,6 @@ mod init_enclave;
 mod ocalls;
 mod ecalls;
 mod constants;
-mod equote;
 mod error;
 mod attestation;
 mod web3;

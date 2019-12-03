@@ -16,8 +16,11 @@ const DEFAULT_EVENTS_CAPACITY: usize = 32;
 impl HttpsClient {
     pub fn new(hostname: &str, cert_path: &str) -> Result<Self> {
         let config = create_client_config(cert_path)?;
-        let mut addrs_iter = (hostname, HTTPS_DEFAULT_PORT).to_socket_addrs()?;
+        println!("HEYHEY");
+        let mut addrs_iter = hostname.to_socket_addrs()?;
+        println!("HEYHEY");
         let socket_addr = addrs_iter.next().unwrap();
+        println!("HEYHEY");
         assert_eq!(addrs_iter.next(), None);
 
         let socket = TcpStream::connect(&socket_addr)?;

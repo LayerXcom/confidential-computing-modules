@@ -13,6 +13,7 @@ pub enum EnclaveError {
     RingError{ err: ring::error::Unspecified},
     SgxError{ err: sgx_types::sgx_status_t },
     HttpsEnclaveError(https_enclave::Error),
+    HexError(hex::FromHexError),
 }
 
 impl From<io::Error> for EnclaveError {
@@ -45,6 +46,12 @@ impl From<https_enclave::Error> for EnclaveError {
     }
 }
 
+impl From<hex::FromHexError> for EnclaveError {
+    fn from(err: hex::FromHexError) -> Self {
+        EnclaveError::HexError(err)
+    }
+}
+
 impl fmt::Display for EnclaveError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -53,6 +60,7 @@ impl fmt::Display for EnclaveError {
             EnclaveError::SgxError{ err } => write!(f, "Sgx Error: {:?}", err),
             EnclaveError::RingError{ err } => write!(f, "Ring Error: {:?}", err),
             EnclaveError::HttpsEnclaveError(ref err) => write!(f, "Https enclacve error: {}", err),
+            EnclaveError::HexError(ref err) => write!(f, "Hex error: {}", err),
         }
     }
 }

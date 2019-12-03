@@ -20,6 +20,8 @@ ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = 
 lazy_static = {version = "1.4", features = ["spin_no_std"] }
 byteorder = { version = "1", default-features = false }
 sha2 = { version = "0.8", default-features = false }
+base64 = { rev = "sgx_1.0.9", git = "https://github.com/mesalock-linux/rust-base64-sgx" }
+hex = { version = "0.4", default-features = false }
 
 sgx_tse = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
 sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git", features = ["untrusted_fs","net","backtrace"] }
