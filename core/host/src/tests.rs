@@ -9,17 +9,17 @@ use attestation::AttestationService;
 
 #[test]
 fn test_get_quote() {
-    let enclave = EnclaveDir::new().init_enclave().unwrap();
-    let enclave_context = EnclaveContext::new(enclave.geteid(), &SPID).unwrap();
-    let quote = enclave_context.get_quote().unwrap();
-    println!("quote: {}",  quote.clone());
+    // let enclave = EnclaveDir::new().init_enclave().unwrap();
+    // let enclave_context = EnclaveContext::new(enclave.geteid(), &SPID).unwrap();
+    // let quote = enclave_context.get_quote().unwrap();
+    // println!("quote: {}",  quote.clone());
 
-    let ias = AttestationService::new(IAS_URL.to_string(), IAS_DEFAULT_RETRIES);
-    let res = ias.get_report(&quote, false).unwrap();
+    // let ias = AttestationService::new(IAS_URL.to_string(), IAS_DEFAULT_RETRIES);
+    // let res = ias.get_report(&quote, false).unwrap();
 
-    
 
-    enclave.destroy();
+
+    // enclave.destroy();
 }
 
 #[test]

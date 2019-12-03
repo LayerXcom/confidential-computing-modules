@@ -139,7 +139,7 @@ impl TlsClient {
     }
 }
 
-pub fn create_client_config(cert: &str) -> io::Result<Arc<ClientConfig>> {
+pub fn create_client_config(cert_path: &str) -> io::Result<Arc<ClientConfig>> {
     use std::{
         //Invoking ocall related functions that brings untrusted data into the trusted execution engine.
         untrusted::fs::File,
@@ -148,7 +148,7 @@ pub fn create_client_config(cert: &str) -> io::Result<Arc<ClientConfig>> {
     use crate::cache::PersistCache;
 
     let mut config = ClientConfig::new();
-    let certfile = File::open(cert)?;
+    let certfile = File::open(cert_path)?;
     let mut reader = BufReader::new(certfile);
     config.root_store.add_pem_file(&mut reader).unwrap();
 

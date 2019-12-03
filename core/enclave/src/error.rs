@@ -12,6 +12,7 @@ pub enum EnclaveError {
     Ed25519Error(ed25519_dalek::SignatureError),
     RingError{ err: ring::error::Unspecified},
     SgxError{ err: sgx_types::sgx_status_t },
+    HttpsEnclaveError(https_enclave::Error),
 }
 
 impl From<io::Error> for EnclaveError {
@@ -38,6 +39,12 @@ impl From<ring::error::Unspecified> for EnclaveError {
     }
 }
 
+impl From<https_enclave::Error> for EnclaveError {
+    fn from(err: https_enclave::Error) -> Self {
+        EnclaveError::HttpsEnclaveError(err)
+    }
+}
+
 impl fmt::Display for EnclaveError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -45,6 +52,7 @@ impl fmt::Display for EnclaveError {
             EnclaveError::Ed25519Error(ref err) => write!(f, "Ed25519 error: {}", err),
             EnclaveError::SgxError{ err } => write!(f, "Sgx Error: {:?}", err),
             EnclaveError::RingError{ err } => write!(f, "Ring Error: {:?}", err),
+            EnclaveError::HttpsEnclaveError(ref err) => write!(f, "Https enclacve error: {}", err),
         }
     }
 }

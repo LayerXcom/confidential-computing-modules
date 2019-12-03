@@ -14,8 +14,8 @@ const HTTPS_DEFAULT_PORT: u16 = 443;
 const DEFAULT_EVENTS_CAPACITY: usize = 32;
 
 impl HttpsClient {
-    pub fn new(hostname: &str, cert: &str) -> Result<Self> {
-        let config = create_client_config(cert)?;
+    pub fn new(hostname: &str, cert_path: &str) -> Result<Self> {
+        let config = create_client_config(cert_path)?;
         let mut addrs_iter = (hostname, HTTPS_DEFAULT_PORT).to_socket_addrs()?;
         let socket_addr = addrs_iter.next().unwrap();
         assert_eq!(addrs_iter.next(), None);
@@ -46,7 +46,7 @@ impl HttpsClient {
         unimplemented!();
     }
 
-    pub fn send_from_raw_req(&mut self, req: String) -> Result<Vec<u8>> {
+    pub fn send_from_raw_req(&mut self, req: &str) -> Result<Vec<u8>> {
         self.0.write_all(req.as_bytes())?;
         let mut poll = mio::Poll::new()?;
         let mut events = mio::Events::with_capacity(DEFAULT_EVENTS_CAPACITY);
