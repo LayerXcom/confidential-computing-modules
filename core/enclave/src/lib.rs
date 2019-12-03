@@ -26,6 +26,8 @@ mod auto_ffi;
 mod sealing;
 mod stf;
 mod attestation;
+#[cfg(debug_assertions)]
+mod tests;
 
 //
 // ecall
@@ -117,7 +119,7 @@ pub extern "C" fn ecall_get_registration_quote(
 //     ) -> sgx_status_t;
 // }
 
-pub mod tests {
+pub mod enclave_tests {
     use anonify_types::{ResultStatus, RawPointer};
 
     #[cfg(debug_assertions)]
@@ -127,6 +129,7 @@ pub mod tests {
         use sgx_tunittest::*;
         use std::{panic::UnwindSafe, string::String, vec::Vec};
         use crate::state::tests::*;
+        use crate::tests::*;
 
         pub unsafe fn internal_tests(ext_ptr: *const RawPointer) -> ResultStatus {
             let mut ctr = 0u64;
@@ -134,6 +137,7 @@ pub mod tests {
             rsgx_unit_test_start();
 
             core_unitests(&mut ctr, &mut failures, test_read_write, "test_read_write");
+            core_unitests(&mut ctr, &mut failures, test_get_report, "test_get_report");
 
             let result = failures.is_empty();
             rsgx_unit_test_end(ctr, failures);

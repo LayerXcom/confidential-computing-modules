@@ -176,7 +176,6 @@ impl From<Sha256> for Nonce {
 #[cfg(debug_assertions)]
 pub mod tests {
     use super::*;
-    // use crate::crypto::rng_gen;
     use crate::stf::Value;
     use ed25519_dalek::{PublicKey, PUBLIC_KEY_LENGTH};
 
@@ -187,9 +186,6 @@ pub mod tests {
         160, 083, 172, 058, 219, 042, 086, 120, ];
 
     pub fn test_read_write() {
-        // let mut buf = [0u8; KEYPAIR_LENGTH];
-        // rng_gen(&mut buf[..]).unwrap();
-        // let keypair = Keypair::from_bytes(&buf).unwrap();
         let pubkey = PublicKey::from_bytes(&PUBLIC_KEY_BYTES).unwrap();
         let user_address = UserAddress::from_pubkey(&pubkey);
 
