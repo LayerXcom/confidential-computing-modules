@@ -45,12 +45,12 @@ impl<'a> AttestationService<'a> {
     fn send_raw_req(&self, req: String) -> Result<String> {
         let fd = get_ias_socket()?;
         let mut socket = TcpStream::new(fd)?;
-        let report = https_enclave::get_response(&mut socket, req)?;
+        // let report = https_enclave::get_response(&mut socket, req)?;
 
 
-        // let mut client = HttpsClient::new(socket, &self.host, DEFAULT_CERT_PATH)?;
-        // let res = client.send_from_raw_req(&req)?;
-        // let (report, sig, sig_cert) = parse_response_attn_report(&res);
+        let mut client = HttpsClient::new(socket, &self.host)?;
+        let res = client.send_from_raw_req(&req)?;
+        let (report, sig, sig_cert) = parse_response_attn_report(&res);
         Ok(report)
     }
 

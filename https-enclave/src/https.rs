@@ -14,7 +14,7 @@ const HTTPS_DEFAULT_PORT: u16 = 443;
 const DEFAULT_EVENTS_CAPACITY: usize = 32;
 
 impl HttpsClient {
-    pub fn new(stream: stdTcpStream, hostname: &str, cert_path: &str) -> Result<Self> {
+    pub fn new(stream: stdTcpStream, hostname: &str) -> Result<Self> {
         let config = create_client_config()?;
 
         // TODO: Cannot resolve dns by sgx_tstd::net::to_socket_addrs
@@ -50,7 +50,6 @@ impl HttpsClient {
     }
 
     pub fn send_from_raw_req(&mut self, req: &str) -> Result<Vec<u8>> {
-        println!("req: {}", req);
         self.0.write_all(req.as_bytes())?;
         let mut poll = mio::Poll::new()?;
         let mut events = mio::Events::with_capacity(DEFAULT_EVENTS_CAPACITY);
