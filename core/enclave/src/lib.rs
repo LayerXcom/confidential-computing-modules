@@ -27,6 +27,7 @@ mod sealing;
 mod stf;
 mod attestation;
 mod quote;
+mod ocalls;
 #[cfg(debug_assertions)]
 mod tests;
 

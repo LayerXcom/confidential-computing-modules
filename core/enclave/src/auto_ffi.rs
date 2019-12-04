@@ -26,3 +26,9 @@ extern "C" {
         p_quote_len: *mut u32,
     ) -> sgx_status_t;
 }
+extern "C" {
+    pub fn ocall_get_ias_socket(
+        retval: *mut sgx_status_t,
+        ret_fd: *mut ::std::os::raw::c_int,
+    ) -> sgx_status_t;
+}

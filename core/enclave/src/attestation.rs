@@ -1,8 +1,12 @@
-use std::prelude::v1::*;
+use std::{
+    prelude::v1::*,
+    net::TcpStream,
+};
 use https_enclave::{HttpsClient, parse_response_attn_report};
 use crate::error::Result;
+use crate::ocalls::get_ias_socket;
 
-pub const DEV_HOSTNAME : &str = "api.trustedservices.intel.com:443";
+pub const DEV_HOSTNAME : &str = "api.trustedservices.intel.com";
 pub const REPORT_PATH : &str = "/sgx/dev/attestation/v3/report";
 pub const IAS_DEFAULT_RETRIES: u32 = 10;
 pub const DEFAULT_CERT_PATH: &str = "./enclave/dummy.pem";
@@ -45,7 +49,10 @@ impl<'a> AttestationService<'a> {
     }
 
     fn send_raw_req(&self, req: &str) -> Result<String> {
-        let mut client = HttpsClient::new(&self.host, DEFAULT_CERT_PATH)?;
+        let fd = get_ias_socket()?;
+        let stream = TcpStream::new(fd)?;
+
+        let mut client = HttpsClient::new(stream, &self.host, DEFAULT_CERT_PATH)?;
         let res = client.send_from_raw_req(req)?;
         let (report, sig, sig_cert) = parse_response_attn_report(&res);
         Ok(report)

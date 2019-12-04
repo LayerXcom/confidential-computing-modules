@@ -1,11 +1,15 @@
 use sgx_types::*;
+use std::{
+    net::{TcpStream, SocketAddr},
+    os::unix::io::IntoRawFd,
+};
+use crate::constants::{DEV_HOSTNAME, HTTPS_PORT};
 
 #[no_mangle]
 pub extern "C" fn ocall_sgx_init_quote(
     ret_ti: *mut sgx_target_info_t,
     ret_gid: *mut sgx_epid_group_id_t
 ) -> sgx_status_t {
-    println!("Entering ocall_sgx_init_quote");
     unsafe { sgx_init_quote(ret_ti, ret_gid) }
 }
 
@@ -56,4 +60,27 @@ fn ocall_get_quote(
     }
 
     ret
+}
+
+#[no_mangle]
+pub extern "C" fn ocall_get_ias_socket(ret_fd : *mut c_int) -> sgx_status_t {
+	let addr = lookup_ipv4(DEV_HOSTNAME, HTTPS_PORT);
+	let sock = TcpStream::connect(&addr).expect("[-] Connect tls server failed!");
+
+	unsafe { *ret_fd = sock.into_raw_fd(); }
+
+	sgx_status_t::SGX_SUCCESS
+}
+
+fn lookup_ipv4(host: &str, port: u16) -> SocketAddr {
+	use std::net::ToSocketAddrs;
+
+	let addrs = (host, port).to_socket_addrs().unwrap();
+	for addr in addrs {
+		if let SocketAddr::V4(_) = addr {
+			return addr;
+		}
+	}
+
+	unreachable!("Cannot lookup address");
 }

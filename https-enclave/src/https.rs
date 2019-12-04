@@ -1,12 +1,12 @@
 use std::{
     prelude::v1::*,
     io::{self, Write},
-    net::{ToSocketAddrs},
+    net::{TcpStream as stdTcpStream, ToSocketAddrs},
     str
 };
 use crate::client::{create_client_config, TlsClient};
 use crate::error::Result;
-use mio::net::TcpStream;
+use mio::net::TcpStream as mioTcpStream;
 
 pub struct HttpsClient(TlsClient);
 
@@ -14,16 +14,16 @@ const HTTPS_DEFAULT_PORT: u16 = 443;
 const DEFAULT_EVENTS_CAPACITY: usize = 32;
 
 impl HttpsClient {
-    pub fn new(hostname: &str, cert_path: &str) -> Result<Self> {
+    pub fn new(stream: stdTcpStream, hostname: &str, cert_path: &str) -> Result<Self> {
         let config = create_client_config(cert_path)?;
-        println!("HEYHEY");
-        let mut addrs_iter = hostname.to_socket_addrs()?;
-        println!("HEYHEY");
-        let socket_addr = addrs_iter.next().unwrap();
-        println!("HEYHEY");
-        assert_eq!(addrs_iter.next(), None);
 
-        let socket = TcpStream::connect(&socket_addr)?;
+        // TODO: Cannot resolve dns by sgx_tstd::net::to_socket_addrs
+        // let mut addrs_iter = (hostname, HTTPS_DEFAULT_PORT).to_socket_addrs()?;
+        // let socket_addr = addrs_iter.next().unwrap();
+        // assert_eq!(addrs_iter.next(), None);
+        // let socket = TcpStream::connect(&socket_addr)?;
+
+        let socket = mioTcpStream::from_stream(stream)?;
         let client = TlsClient::new(socket, hostname, config)?;
 
         Ok(HttpsClient(client))
