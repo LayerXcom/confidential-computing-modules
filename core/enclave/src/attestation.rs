@@ -9,7 +9,6 @@ use crate::ocalls::get_ias_socket;
 pub const DEV_HOSTNAME : &str = "api.trustedservices.intel.com";
 pub const REPORT_PATH : &str = "/sgx/dev/attestation/v3/report";
 pub const IAS_DEFAULT_RETRIES: u32 = 10;
-pub const DEFAULT_CERT_PATH: &str = "./enclave/dummy.pem";
 
 pub struct AttestationService<'a> {
     host: &'a str,
@@ -45,11 +44,12 @@ impl<'a> AttestationService<'a> {
     fn send_raw_req(&self, req: String) -> Result<String> {
         let fd = get_ias_socket()?;
         let mut socket = TcpStream::new(fd)?;
-        let res = https_enclave::get_response(&mut socket, req)?;
 
-
+        // TODO: Fix to call `HttpsClient` to use non-blocking communications.
+        let res = https_enclave::get_report_response(&mut socket, req)?;
         // let mut client = HttpsClient::new(socket, &self.host)?;
         // let res = client.send_from_raw_req(&req)?;
+
         let (report, sig, sig_cert) = parse_response_attn_report(&res);
         Ok(report)
     }

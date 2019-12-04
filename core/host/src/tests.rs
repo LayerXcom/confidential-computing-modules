@@ -4,7 +4,6 @@ use anonify_types::{RawPointer, ResultStatus};
 use constants::*;
 use auto_ffi::ecall_run_tests;
 use sgx_types::*;
-use attestation::AttestationService;
 
 #[test]
 fn test_in_enclave() {

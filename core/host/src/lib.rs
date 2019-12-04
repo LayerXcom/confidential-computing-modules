@@ -12,7 +12,6 @@ mod ocalls;
 mod ecalls;
 mod constants;
 mod error;
-mod attestation;
 mod web3;
 mod auto_ffi;
 #[cfg(test)]

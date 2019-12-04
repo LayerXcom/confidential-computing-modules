@@ -16,13 +16,6 @@ const DEFAULT_EVENTS_CAPACITY: usize = 32;
 impl HttpsClient {
     pub fn new(stream: stdTcpStream, hostname: &str) -> Result<Self> {
         let config = create_client_config()?;
-
-        // TODO: Cannot resolve dns by sgx_tstd::net::to_socket_addrs
-        // let mut addrs_iter = (hostname, HTTPS_DEFAULT_PORT).to_socket_addrs()?;
-        // let socket_addr = addrs_iter.next().unwrap();
-        // assert_eq!(addrs_iter.next(), None);
-        // let socket = TcpStream::connect(&socket_addr)?;
-
         let socket = mioTcpStream::from_stream(stream)?;
         let client = TlsClient::new(socket, hostname, config)?;
 
@@ -70,7 +63,7 @@ impl HttpsClient {
 
 
 //
-// temporary implementation
+// temporary implementations
 //
 
 pub fn parse_response_attn_report(resp : &[u8]) -> (String, String, String){
@@ -141,7 +134,7 @@ fn percent_decode(orig: String) -> String {
     ret
 }
 
-pub fn get_response(socket: &mut stdTcpStream, req: String) -> Result<Vec<u8>> {
+pub fn get_report_response(socket: &mut stdTcpStream, req: String) -> Result<Vec<u8>> {
     let config = create_client_config()?;
     let dns_name = webpki::DNSNameRef::try_from_ascii_str("api.trustedservices.intel.com")?;
     let mut sess = rustls::ClientSession::new(&config, dns_name);

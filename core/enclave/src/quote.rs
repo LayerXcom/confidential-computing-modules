@@ -2,7 +2,7 @@ use sgx_types::*;
 use crate::error::{Result, EnclaveError};
 use std::prelude::v1::*;
 use sgx_tse::rsgx_create_report;
-use crate::auto_ffi::*;
+use crate::ocalls::{sgx_init_quote, get_quote};
 
 /// spid: Service procider ID for the ISV.
 #[derive(Clone)]
@@ -24,26 +24,11 @@ impl EnclaveContext {
     pub fn get_quote(&self) -> Result<String> {
         let target_info = self.init_quote()?;
         let report = self.get_report(&target_info)?;
-        self.inner_get_quote(report)
+        self.get_encoded_quote(report)
     }
 
     pub(crate) fn init_quote(&self) -> Result<sgx_target_info_t> {
-        let mut status = sgx_status_t::SGX_ERROR_UNEXPECTED;
-        let mut target_info = sgx_target_info_t::default();
-        let mut gid = sgx_epid_group_id_t::default();
-
-        let status = unsafe {
-            ocall_sgx_init_quote(
-                &mut status as *mut sgx_status_t,
-                &mut target_info as *mut sgx_target_info_t,
-                &mut gid as *mut sgx_epid_group_id_t,
-            )
-        };
-
-        if status != sgx_status_t::SGX_SUCCESS {
-            return Err(EnclaveError::SgxError{ err: status });
-        }
-
+        let target_info = sgx_init_quote()?;
         Ok(target_info)
     }
 
@@ -58,33 +43,10 @@ impl EnclaveContext {
         Ok(report)
     }
 
-    fn inner_get_quote(&self, report: sgx_report_t) -> Result<String> {
-        const RET_QUOTE_BUF_LEN : u32 = 2048;
-        let mut quote_len: u32 = 0;
-        let mut status = sgx_status_t::SGX_ERROR_UNEXPECTED;
-        let mut quote = vec![0u8; RET_QUOTE_BUF_LEN as usize];
-
-        let status = unsafe {
-            ocall_get_quote(
-                &mut status as *mut sgx_status_t,
-                std::ptr::null(), // p_sigrl
-                0,                // sigrl_len
-                &report as *const sgx_report_t,
-                sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE, // quote_type
-                &self.spid as *const sgx_spid_t, // p_spid
-                std::ptr::null(), // p_nonce
-                std::ptr::null_mut(), // p_qe_report
-                quote.as_mut_ptr() as *mut sgx_quote_t,
-                RET_QUOTE_BUF_LEN, // maxlen
-                &mut quote_len as *mut u32,
-            )
-        };
-
-        if status != sgx_status_t::SGX_SUCCESS {
-            return Err(EnclaveError::SgxError{ err: status });
-        }
+    fn get_encoded_quote(&self, report: sgx_report_t) -> Result<String> {
+        let quote = get_quote(report, &self.spid)?;
 
         // Use base64-encoded QUOTE structure to communicate via defined API.
-        Ok(base64::encode(&quote[..quote_len as usize]))
+        Ok(base64::encode(&quote))
     }
 }

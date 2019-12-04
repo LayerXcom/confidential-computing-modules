@@ -184,18 +184,10 @@ impl TlsClient {
 }
 
 pub fn create_client_config() -> io::Result<Arc<ClientConfig>> {
-    use std::{
-        //Invoking ocall related functions that brings untrusted data into the trusted execution engine.
-        untrusted::fs::File,
-        io::BufReader,
-    };
     use crate::cache::PersistCache;
 
     let mut config = ClientConfig::new();
     config.root_store.add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
-    // let certfile = File::open(cert_path)?;
-    // let mut reader = BufReader::new(certfile);
-    // config.root_store.add_pem_file(&mut reader).unwrap();
 
     let persist = Arc::new(PersistCache::new());
     config.set_persistence(persist);
