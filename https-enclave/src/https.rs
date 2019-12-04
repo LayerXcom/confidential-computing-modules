@@ -141,15 +141,14 @@ fn percent_decode(orig: String) -> String {
     ret
 }
 
-pub fn get_response(socket: &mut stdTcpStream, req: String) -> Result<String> {
+pub fn get_response(socket: &mut stdTcpStream, req: String) -> Result<Vec<u8>> {
     let config = create_client_config()?;
     let dns_name = webpki::DNSNameRef::try_from_ascii_str("api.trustedservices.intel.com")?;
     let mut sess = rustls::ClientSession::new(&config, dns_name);
     let mut tls = rustls::Stream::new(&mut sess, socket);
-    let _result = tls.write(req.as_bytes());
+    tls.write_all(req.as_bytes())?;
     let mut plaintext = Vec::new();
-    tls.read_to_end(&mut plaintext).unwrap();
-    let resp_string = String::from_utf8(plaintext.clone()).unwrap();
-    println!("resp: {}", resp_string);
-    Ok(resp_string)
+    tls.read_to_end(&mut plaintext)?;
+
+    Ok(plaintext)
 }
