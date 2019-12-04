@@ -83,7 +83,7 @@ pub trait Hash256: Sized {
 }
 
 /// Hash digest of sha256 hash function
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug, PartialEq)]
 pub struct Sha256([u8; 32]);
 
 impl Hash256 for Sha256 {
@@ -124,7 +124,7 @@ impl Sha256 {
 }
 
 /// User address represents last 20 bytes of digest of user's public key.
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct UserAddress([u8; 20]);
 
 impl UserAddress {

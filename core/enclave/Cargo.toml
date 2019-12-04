@@ -13,12 +13,15 @@ default = []
 
 [dependencies]
 anonify-types = { path = "../types", default-features = false, features = ["sgx"] }
+https-enclave = { path = "../../https-enclave" }
 elastic-array = { version = "0.10", git = "https://github.com/mesalock-linux/elastic-array-sgx.git" }
-ring = { rev = "sgx_1.0.9", git = "https://github.com/mesalock-linux/ring-sgx" }
+ring = { tag = "v0.16.5", git = "https://github.com/mesalock-linux/ring-sgx" }
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
 lazy_static = {version = "1.4", features = ["spin_no_std"] }
 byteorder = { version = "1", default-features = false }
 sha2 = { version = "0.8", default-features = false }
+base64 = { rev = "sgx_1.0.9", git = "https://github.com/mesalock-linux/rust-base64-sgx" }
+hex = { version = "0.4", default-features = false }
 
 sgx_tse = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
 sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git", features = ["untrusted_fs","net","backtrace"] }

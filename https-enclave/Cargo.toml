@@ -1,0 +1,16 @@
+[package]
+name = "https-enclave"
+version = "0.1.0"
+authors = ["osuketh <dish230@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+rustls = { git = "https://github.com/mesalock-linux/rustls", branch = "mesalock_sgx" }
+sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git", features = ["net"] }
+mio = { git = "https://github.com/mesalock-linux/mio-sgx", branch = "v0.6.19_sgx1.0.8" }
+webpki = { git = "https://github.com/mesalock-linux/webpki", branch = "mesalock_sgx" }
+httparse = { version = "1.3", default-features = false }
+webpki-roots = { rev = "sgx_1.0.9", git = "https://github.com/mesalock-linux/webpki-roots" }
+http = { rev = "sgx_1.0.9", git = "https://github.com/mesalock-linux/http-sgx" }
+
+sgx_types = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }

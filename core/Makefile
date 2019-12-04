@@ -29,9 +29,14 @@
 
 SGX_SDK_RUST ?= $(HOME)/sgx
 
+######## Settings for Circle CI ######
+CARGO ?= cargo
+BINDGEN ?= bindgen
+RUSTFMT ?= rustfmt
+
 ######## SGX SDK Settings ########
 
-SGX_SDK ?= /opt/intel/sgxsdk
+SGX_SDK ?= /opt/sgxsdk
 SGX_MODE ?= SW
 SGX_ARCH ?= x64
 
@@ -65,7 +70,7 @@ ifeq ($(DEBUG), 1)
 	Rust_target_dir := debug
 else
 	SGX_COMMON_CFLAGS += -O2
-	App_Rust_Flags := --release
+	Host_Rust_Flags := --release
 	Rust_target_dir := release
 endif
 
@@ -78,18 +83,18 @@ CUSTOM_COMMON_PATH := $(SGX_SDK_RUST)/common
 
 ######## EDL Settings ########
 
-Enclave_EDL_Files := enclave/Enclave_t.c enclave/Enclave_t.h app/Enclave_u.c app/Enclave_u.h
+Enclave_EDL_Files := enclave/Enclave_t.c enclave/Enclave_t.h host/Enclave_u.c host/Enclave_u.h
 
-######## APP Settings ########
+######## HOST Settings ########
 
-App_Rust_Flags += $(if $(JOBS),-j$(JOBS), )
-App_SRC_Files := $(shell find app/ -type f -name '*.rs') $(shell find app/ -type f -name 'Cargo.toml')
-App_Include_Paths := -I ./app -I./include -I$(SGX_SDK)/include -I$(CUSTOM_EDL_PATH)
-App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths)
+Host_Rust_Flags += $(if $(JOBS),-j$(JOBS), )
+Host_SRC_Files := $(shell find host/ -type f -name '*.rs') $(shell find host/ -type f -name 'Cargo.toml')
+Host_Include_Paths := -I ./host -I./include -I$(SGX_SDK)/include -I$(CUSTOM_EDL_PATH)
+Host_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(Host_Include_Paths)
 
-App_Rust_Path := ./app/target/$(Rust_target_dir)
-App_Enclave_u_Object :=app/libEnclave_u.a
-App_Name := anonify-app
+Host_Rust_Path := ./host/target/$(Rust_target_dir)
+Host_Enclave_u_Object :=host/libEnclave_u.a
+Host_Name := anonify-host
 
 ######## Enclave Settings ########
 
@@ -123,32 +128,32 @@ RustEnclave_Name := enclave/enclave.so
 Signed_RustEnclave_Name := $(CUSTOM_BIN_PATH)/enclave.signed.so
 
 .PHONY: all
-all: $(App_Name) $(Signed_RustEnclave_Name)
+all: $(Host_Name) $(Signed_RustEnclave_Name)
 
 ######## EDL Objects ########
 
 $(Enclave_EDL_Files): $(SGX_EDGER8R) enclave/Enclave.edl
 	$(SGX_EDGER8R) --trusted enclave/Enclave.edl --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --trusted-dir enclave
-	$(SGX_EDGER8R) --untrusted enclave/Enclave.edl --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --untrusted-dir app
+	$(SGX_EDGER8R) --untrusted enclave/Enclave.edl --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --untrusted-dir host
 	@echo "GEN  =>  $(Enclave_EDL_Files)"
 
-######## App Objects ########
+######## Host Objects ########
 
-app/Enclave_u.o: $(Enclave_EDL_Files)
-	@cd app && cargo build -p anonify-types
-	@$(CC) $(App_C_Flags) -c app/Enclave_u.c -o $@
+host/Enclave_u.o: $(Enclave_EDL_Files)
+	@cd host && $(CARGO) build -p anonify-types
+	@$(CC) $(Host_C_Flags) -c host/Enclave_u.c -o $@
 	@echo "CC   <=  $<"
 
-$(App_Enclave_u_Object): app/Enclave_u.o
+$(Host_Enclave_u_Object): host/Enclave_u.o
 	$(AR) rcsD $@ $^
 	mkdir -p lib
-	cp $(App_Enclave_u_Object) $(CUSTOM_LIBRARY_PATH)
+	cp $(Host_Enclave_u_Object) $(CUSTOM_LIBRARY_PATH)
 
-$(App_Name): $(App_Enclave_u_Object) $(App_SRC_Files)
-	@cd app && SGX_SDK_RUST=$(SGX_SDK_RUST) SGX_SDK=$(SGX_SDK) cargo build $(App_Rust_Flags)
+$(Host_Name): $(Host_Enclave_u_Object) $(Host_SRC_Files)
+	@cd host && SGX_SDK_RUST=$(SGX_SDK_RUST) SGX_SDK=$(SGX_SDK) $(CARGO) build $(Host_Rust_Flags)
 	@echo "Cargo  =>  $@"
 	mkdir -p $(CUSTOM_BIN_PATH)
-	# cp $(App_Rust_Path)/$(App_Name) $(CUSTOM_BIN_PATH)/$(App_Name)
+	# cp $(Host_Rust_Path)/$(Host_Name) $(CUSTOM_BIN_PATH)/$(Host_Name)
 
 ######## Enclave Objects ########
 
@@ -169,7 +174,7 @@ $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 .PHONY: enclave
 enclave: $(Enclave_EDL_Files)
 	mkdir -p $(CUSTOM_LIBRARY_PATH)
-	$(MAKE) -C ./enclave/ CARGO_FLAGS=$(App_Rust_Flags) Rust_target_dir=$(Rust_target_dir)
+	$(MAKE) -C ./enclave/ CARGO_FLAGS=$(Host_Rust_Flags) Rust_target_dir=$(Rust_target_dir) CARGO=$(CARGO) BINDGEN=$(BINDGEN) RUSTFMT=$(RUSTFMT)
 
 .PHONY: compiler-rt
 compiler-rt:
@@ -177,14 +182,14 @@ compiler-rt:
 
 .PHONY: test
 test: all
-	@cd app && cargo test $(App_Rust_Flags)
+	@cd host && $(CARGO) test $(Host_Rust_Flags)
 
 .PHONY: clean
 clean:
-	@rm -f $(CUSTOM_BIN_PATH)/$(App_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) enclave/*_t.* app/*_u.* $(CUSTOM_LIBRARY_PATH)/*.a
-	# @rm -f $(App_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) enclave/*_t.* app/*_u.* lib/*.a
-	# @cd enclave && cargo clean && rm -f Cargo.lock
-	# @cd app && cargo clean && rm -f Cargo.lock
+	@rm -f $(CUSTOM_BIN_PATH)/$(Host_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) enclave/*_t.* host/*_u.* $(CUSTOM_LIBRARY_PATH)/*.a
+	# @rm -f $(Host_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) enclave/*_t.* host/*_u.* lib/*.a
+	# @cd enclave && $(CARGO) clean && rm -f Cargo.lock
+	# @cd host && $(CARGO) clean && rm -f Cargo.lock
 
 .PHONY: full-clean
 # Clean:
@@ -194,7 +199,7 @@ clean:
 #	rust target directories
 #	Cargo.lock files
 full-clean:
-	@rm -f $(CUSTOM_BIN_PATH)/$(App_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) enclave/*_t.* app/*_u.* $(CUSTOM_LIBRARY_PATH)/*.a
-	@rm -rf enclave/anonify-types.h app/anonify-types.h
-	@cd enclave && cargo clean && rm -f Cargo.lock
-	@cd app && cargo clean && rm -f Cargo.lock
+	@rm -f $(CUSTOM_BIN_PATH)/$(Host_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) enclave/*_t.* host/*_u.* $(CUSTOM_LIBRARY_PATH)/*.a
+	@rm -rf enclave/anonify-types.h host/anonify-types.h
+	@cd enclave && $(CARGO) clean && rm -f Cargo.lock
+	@cd host && $(CARGO) clean && rm -f Cargo.lock

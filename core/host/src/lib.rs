@@ -5,24 +5,17 @@ extern crate failure;
 extern crate serde;
 
 use init_enclave::EnclaveDir;
-use auto_ffi::ecall_get_state;
+use sgx_types::*;
 
 mod init_enclave;
 mod ocalls;
+mod ecalls;
 mod constants;
-mod equote;
 mod error;
-mod attestation;
 mod web3;
 mod auto_ffi;
 #[cfg(test)]
 mod tests;
-
-// pub fn get_state() {
-//     let state = unsafe {
-//         ecall_get_state()
-//     };
-// }
 
 fn init_enclave() {
 

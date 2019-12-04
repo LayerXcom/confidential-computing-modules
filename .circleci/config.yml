@@ -5,9 +5,15 @@ jobs:
       - image: osuketh/anonify:latest
     steps:
       - checkout
+      - run: LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
+      - run: . /opt/sgxsdk/environment
+      - run: /root/.cargo/bin/cargo --version
+      - run:
+          name: Building contracts
+          command: solc -o build --bin --abi --optimize --overwrite contracts/AnonymousAsset.sol
       - run:
           name: core-make
-          command: cd core && RUSTFLAGS=-Awarnings make DEBUG=1
+          command: cd core && RUSTFLAGS=-Awarnings CARGO=/root/.cargo/bin/cargo BINDGEN=/root/.cargo/bin/bindgen RUSTFMT=/root/.cargo/bin/rustfmt make DEBUG=1
       - run:
           name: core-test
-          command: cd app && cargo test -- --nocapture
+          command: cd host && /root/.cargo/bin/cargo test -- --nocapture

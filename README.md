@@ -25,7 +25,7 @@ This tutorial works in simulation mode, so you can run it on macos.
 $ cd anonify/helloworld
 $ export SGX_MODE=SW
 $ make
-$ cd bin && ./app
+$ cd bin && ./host
 ```
 
 * Core
@@ -34,7 +34,7 @@ $ cd bin && ./app
 $ cd anonify/core
 $ export SGX_MODE=SW
 $ make
-$ cd bin && ./anonify-app
+$ cd bin && ./anonify-host
 ```
 
 ### HW
@@ -42,4 +42,10 @@ Assumed your hardware supports Intel SGX.
 
 ```
 $ docker run -v `pwd`:/root/anonify --device /dev/isgx  --rm -it osuketh/anonify
+```
+
+After entering docker container, the very first thing is to start aesm service daemon.
+
+```
+$ LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
 ```

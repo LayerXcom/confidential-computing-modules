@@ -24,18 +24,18 @@ pub trait State: Sized + Default {
 
 /// Curret nonce for state.
 /// Priventing from race condition of writing ciphertext to blockchain.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum CurrentNonce { }
 
 /// Next nonce for state.
 /// It'll be defined deterministically as `next_nonce = Hash(address, current_state, current_nonce)`.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum NextNonce { }
 
 /// This struct can be got by decrypting ciphertexts which is stored on blockchain.
 /// The secret key is shared among all TEE's enclaves.
 /// State and nonce field of this struct should be encrypted before it'll store enclave's in-memory db.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UserState<S: State, N> {
     address: UserAddress,
     state: S,
@@ -56,6 +56,19 @@ impl<S: State, N> UserState<S, N> {
         self.nonce.write(writer)?;
 
         Ok(())
+    }
+
+    pub fn read<R: Read>(mut reader: R) -> Result<Self> {
+        let address = UserAddress::read(&mut reader)?;
+        let state = S::read_le(&mut reader)?;
+        let nonce = Nonce::read(&mut reader)?;
+
+        Ok(UserState {
+            address,
+            state,
+            nonce,
+            _marker: PhantomData,
+        })
     }
 }
 
@@ -85,19 +98,6 @@ impl<S: State> UserState<S, CurrentNonce> {
         let state = S::read_le(&mut &reader[..])?;
 
         Ok(state)
-    }
-
-    pub fn read<R: Read>(mut reader: R) -> Result<Self> {
-        let address = UserAddress::read(&mut reader)?;
-        let state = S::read_le(&mut reader)?;
-        let nonce = Nonce::read(&mut reader)?;
-
-        Ok(UserState {
-            address,
-            state,
-            nonce,
-            _marker: PhantomData,
-        })
     }
 
     fn next_nonce(&self) -> Result<Nonce> {
@@ -151,7 +151,7 @@ impl<S: State> TryFrom<UserState<S, CurrentNonce>> for UserState<S, NextNonce> {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Nonce([u8; 32]);
 
 impl Nonce {
@@ -176,15 +176,23 @@ impl From<Sha256> for Nonce {
 #[cfg(debug_assertions)]
 pub mod tests {
     use super::*;
-    // use rand_core::RngCore;
-    // use rand_os::OsRng;
-    // use ed25519_dalek::Keypair;
+    use crate::stf::Value;
+    use ed25519_dalek::{PublicKey, PUBLIC_KEY_LENGTH};
+
+    const PUBLIC_KEY_BYTES: [u8; PUBLIC_KEY_LENGTH] = [
+        130, 039, 155, 015, 062, 076, 188, 063,
+        124, 122, 026, 251, 233, 253, 225, 220,
+        014, 041, 166, 120, 108, 035, 254, 077,
+        160, 083, 172, 058, 219, 042, 086, 120, ];
 
     pub fn test_read_write() {
-        // let mut rng = OsRng::new().unwrap();
-        // let keypair: Keypair = Keypair::generate(&mut rng);
-        // let pubkey = keypair.public;
-        // let user_address = UserAddress::from_pubkey(&pubkey);
+        let pubkey = PublicKey::from_bytes(&PUBLIC_KEY_BYTES).unwrap();
+        let user_address = UserAddress::from_pubkey(&pubkey);
 
+        let mut state = UserState::<Value, _>::new(user_address, 100).unwrap();
+        let mut state_vec = state.try_into_vec().unwrap();
+        let res = UserState::read(&state_vec[..]).unwrap();
+
+        assert_eq!(state, res);
     }
 }
