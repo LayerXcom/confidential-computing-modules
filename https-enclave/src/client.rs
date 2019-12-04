@@ -63,10 +63,7 @@ impl TlsClient {
             return false;
         }
 
-        if self.reregister(poll).is_err() {
-            return false;
-        };
-
+        self.reregister(poll);
         true
     }
 
@@ -77,61 +74,108 @@ impl TlsClient {
     }
 
     fn read_tls(&mut self, buf: &mut Vec<u8>) {
-        match self.session.read_tls(&mut self.socket) {
-            Ok(0) => {
-                println!("EOF; cleanly closed.");
-                self.is_closed = true;
-                return;
-            },
-            Err(e) => {
-                println!("TLS Reading error: {:?}", e);
-                self.is_closed = true;
-                return;
-            },
-            _ => { },
-        }
+        // match self.session.read_tls(&mut self.socket) {
+        //     Ok(0) => {
+        //         println!("EOF; cleanly closed.");
+        //         self.is_closed = true;
+        //         return;
+        //     },
+        //     Err(e) => {
+        //         println!("TLS Reading error: {:?}", e);
+        //         self.is_closed = true;
+        //         return;
+        //     },
+        //     _ => { },
+        // }
 
-        if let Err(e) = self.session.process_new_packets() {
-            println!("TLS Error: {:?}", e);
+        // if let Err(e) = self.session.process_new_packets() {
+        //     println!("TLS Error: {:?}", e);
+        //     self.is_closed = true;
+        //     return;
+        // }
+
+        // if let Err(e) = self.session.read_to_end(buf) {
+        //     println!("Plaintext Reading error: {:?}", e);
+        //     self.is_closed = true;
+        //     return;
+        // }
+
+        // Read TLS data.  This fails if the underlying TCP connection
+        // is broken.
+        let rc = self.session.read_tls(&mut self.socket);
+        if rc.is_err() {
+            println!("TLS read error: {:?}", rc);
             self.is_closed = true;
             return;
         }
 
-        if let Err(e) = self.session.read_to_end(buf) {
-            println!("Plaintext Reading error: {:?}", e);
+        // If we're ready but there's no data: EOF.
+        if rc.unwrap() == 0 {
+            println!("EOF");
+            self.is_closed = true;
+            return;
+        }
+
+        // Reading some TLS data might have yielded new TLS
+        // messages to process.  Errors from this indicate
+        // TLS protocol problems and are fatal.
+        let processed = self.session.process_new_packets();
+        if processed.is_err() {
+            println!("TLS error: {:?}", processed.unwrap_err());
+            self.is_closed = true;
+            return;
+        }
+
+        // Having read some TLS data, and processed any new messages,
+        // we might have new plaintext as a result.
+        //
+        // Read it and then write it to stdout.
+        let mut plaintext = Vec::new();
+        let rc = self.session.read_to_end(&mut plaintext);
+        if !plaintext.is_empty() {
+            io::stdout().write_all(&plaintext).unwrap();
+        }
+
+        // If that fails, the peer might have started a clean TLS-level
+        // session closure.
+        if rc.is_err() {
+            let err = rc.unwrap_err();
+            println!("Plaintext read error: {:?}", err);
             self.is_closed = true;
             return;
         }
     }
 
     /// Register an `Evented` handle with the `Poll` instance.
-    pub fn register(&self, poll: &mut mio::Poll) -> io::Result<()> {
+    pub fn register(&self, poll: &mut mio::Poll) {
+        println!("register");
         poll.register(
             &self.socket,
             CLIENT,
             self.ready_interest(),
             PollOpt::level() | PollOpt::oneshot()
-        )
+        ).unwrap()
     }
 
-    fn reregister(&self, poll: &mut mio::Poll) -> io::Result<()> {
+    fn reregister(&self, poll: &mut mio::Poll) {
+        println!("reregister");
         poll.reregister(
             &self.socket,
             CLIENT,
             self.ready_interest(),
             PollOpt::level() | PollOpt::oneshot()
-        )
+        ).unwrap()
     }
 
     /// Use wants_read() and wants_write() to register for
     /// different mio-level I/O readiness events.
     fn ready_interest(&self) -> Ready {
-        let wr = self.session.wants_read();
-        let ww = self.session.wants_write();
+        let wants_read = self.session.wants_read();
+        let wants_write = self.session.wants_write();
 
-        if wr && ww {
+        if wants_read && wants_write {
             Ready::readable() | Ready::writable()
-        } else if wr {
+        } else if wants_write {
             Ready::writable()
         } else {
             Ready::readable()
@@ -139,7 +183,7 @@ impl TlsClient {
     }
 }
 
-pub fn create_client_config(cert_path: &str) -> io::Result<Arc<ClientConfig>> {
+pub fn create_client_config() -> io::Result<Arc<ClientConfig>> {
     use std::{
         //Invoking ocall related functions that brings untrusted data into the trusted execution engine.
         untrusted::fs::File,

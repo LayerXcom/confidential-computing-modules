@@ -64,7 +64,7 @@ fn ocall_get_quote(
 
 #[no_mangle]
 pub extern "C" fn ocall_get_ias_socket(ret_fd : *mut c_int) -> sgx_status_t {
-	let addr = lookup_ipv4(DEV_HOSTNAME, HTTPS_PORT);
+    let addr = lookup_ipv4(DEV_HOSTNAME, HTTPS_PORT);
 	let sock = TcpStream::connect(&addr).expect("[-] Connect tls server failed!");
 
 	unsafe { *ret_fd = sock.into_raw_fd(); }

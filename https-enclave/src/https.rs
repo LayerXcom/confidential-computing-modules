@@ -1,6 +1,6 @@
 use std::{
     prelude::v1::*,
-    io::{self, Write},
+    io::{self, Write, Read},
     net::{TcpStream as stdTcpStream, ToSocketAddrs},
     str
 };
@@ -15,7 +15,7 @@ const DEFAULT_EVENTS_CAPACITY: usize = 32;
 
 impl HttpsClient {
     pub fn new(stream: stdTcpStream, hostname: &str, cert_path: &str) -> Result<Self> {
-        let config = create_client_config(cert_path)?;
+        let config = create_client_config()?;
 
         // TODO: Cannot resolve dns by sgx_tstd::net::to_socket_addrs
         // let mut addrs_iter = (hostname, HTTPS_DEFAULT_PORT).to_socket_addrs()?;
@@ -50,12 +50,12 @@ impl HttpsClient {
     }
 
     pub fn send_from_raw_req(&mut self, req: &str) -> Result<Vec<u8>> {
+        println!("req: {}", req);
         self.0.write_all(req.as_bytes())?;
         let mut poll = mio::Poll::new()?;
         let mut events = mio::Events::with_capacity(DEFAULT_EVENTS_CAPACITY);
         self.0.register(&mut poll);
         let mut res = vec![];
-
         'outer: loop {
             poll.poll(&mut events, None)?;
             for ev in &events {
@@ -70,7 +70,10 @@ impl HttpsClient {
 }
 
 
+//
 // temporary implementation
+//
+
 pub fn parse_response_attn_report(resp : &[u8]) -> (String, String, String){
 	let mut headers = [httparse::EMPTY_HEADER; 16];
 	let mut respp   = httparse::Response::new(&mut headers);
@@ -137,4 +140,17 @@ fn percent_decode(orig: String) -> String {
         }
     }
     ret
+}
+
+pub fn get_response(socket: &mut stdTcpStream, req: String) -> Result<String> {
+    let config = create_client_config()?;
+    let dns_name = webpki::DNSNameRef::try_from_ascii_str("api.trustedservices.intel.com")?;
+    let mut sess = rustls::ClientSession::new(&config, dns_name);
+    let mut tls = rustls::Stream::new(&mut sess, socket);
+    let _result = tls.write(req.as_bytes());
+    let mut plaintext = Vec::new();
+    tls.read_to_end(&mut plaintext).unwrap();
+    let resp_string = String::from_utf8(plaintext.clone()).unwrap();
+    println!("resp: {}", resp_string);
+    Ok(resp_string)
 }

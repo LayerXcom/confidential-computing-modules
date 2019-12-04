@@ -27,19 +27,13 @@ impl<'a> AttestationService<'a> {
     }
 
     pub fn get_report(&self, quote: &str, ias_api_key: &str) -> Result<String> {
-        let req = &self.raw_report_req(quote, ias_api_key);
-        self.send_raw_req(&req)
+        let req = self.raw_report_req(quote, ias_api_key);
+        self.send_raw_req(req)
     }
 
     fn raw_report_req(&self, quote: &str, ias_api_key: &str) -> String {
         let encoded_json = format!("{{\"isvEnclaveQuote\":\"{}\"}}\r\n", quote);
-        format!(
-            "POST {} HTTP/1.1\r\n
-            HOST: {}\r\n
-            Ocp-Apim-Subscription-Key:{}\r\n
-            Content-Length:{}\r\n
-            Content-Type: application/json\r\n
-            Connection: close\r\n\r\n{}",
+        format!("POST {} HTTP/1.1\r\nHOST: {}\r\nOcp-Apim-Subscription-Key:{}\r\nContent-Length:{}\r\nContent-Type: application/json\r\nConnection: close\r\n\r\n{}",
             &self.path,
             &self.host,
             ias_api_key,
@@ -48,13 +42,15 @@ impl<'a> AttestationService<'a> {
         )
     }
 
-    fn send_raw_req(&self, req: &str) -> Result<String> {
+    fn send_raw_req(&self, req: String) -> Result<String> {
         let fd = get_ias_socket()?;
-        let stream = TcpStream::new(fd)?;
+        let mut socket = TcpStream::new(fd)?;
+        let report = https_enclave::get_response(&mut socket, req)?;
 
-        let mut client = HttpsClient::new(stream, &self.host, DEFAULT_CERT_PATH)?;
-        let res = client.send_from_raw_req(req)?;
-        let (report, sig, sig_cert) = parse_response_attn_report(&res);
+
+        // let mut client = HttpsClient::new(socket, &self.host, DEFAULT_CERT_PATH)?;
+        // let res = client.send_from_raw_req(&req)?;
+        // let (report, sig, sig_cert) = parse_response_attn_report(&res);
         Ok(report)
     }
 

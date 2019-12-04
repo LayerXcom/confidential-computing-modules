@@ -85,6 +85,6 @@ impl EnclaveContext {
         }
 
         // Use base64-encoded QUOTE structure to communicate via defined API.
-        Ok(base64::encode(&quote[..]))
+        Ok(base64::encode(&quote[..quote_len as usize]))
     }
 }
