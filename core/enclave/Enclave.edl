@@ -13,25 +13,23 @@ enclave {
 
     trusted {
         public sgx_status_t ecall_get_state(
-            [in] uint8_t sig[64],
-            [in] uint8_t pubkey[32],
-            [in] uint8_t msg[32],
+            [in] const uint8_t sig[64],
+            [in] const uint8_t pubkey[32],
+            [in] const uint8_t msg[32],
             [out] uint64_t* state
         );
 
-        public sgx_status_t ecall_write_state(
-            [in] uint8_t ciphertext[60]
-        );
-
         public sgx_status_t ecall_state_transition(
-            [in] uint8_t sig[65],
-            [in] uint8_t target[20],
+            [in] const uint8_t sig[65],
+            [in] const uint8_t pubkey[32],
+            [in] const uint8_t target[20],
             [in] uint64_t* value,
             [out] TransitionResult* result
         );
 
         public sgx_status_t ecall_contract_deploy(
-            [in] uint8_t sig[65],
+            [in] const uint8_t sig[65],
+            [in] const uint8_t pubkey[32],
             [in] uint64_t* value,
             [out] TransitionResult* result
         );
@@ -44,9 +42,16 @@ enclave {
 
     untrusted {
         /*
-        sgx_status_t ocall_get_ciphertext();
+        sgx_status_t ocall_read_ledger(
 
-        sgx_status_t ocall_write_ciphertext();
+        );
+
+        sgx_status_t ocall_write_ledger(
+            [in] const uint8_t ciphertext[60],
+            [in] const uint8_t ciphertext[60],
+            [in, size=report_len] const uint8_t* report,
+            size_t report_len
+        );
 
         */
 

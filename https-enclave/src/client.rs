@@ -183,15 +183,16 @@ impl TlsClient {
     }
 }
 
+/// Make a `ClientConfig` with a default set of ciphersuites, Mozilla certificate store for Trust Anchors,
+/// a customized session persistence, no ALPN protocols, and no client auth.
 pub fn create_client_config() -> io::Result<Arc<ClientConfig>> {
     use crate::cache::PersistCache;
 
     let mut config = ClientConfig::new();
-    config.root_store.add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
 
+    config.root_store.add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
     let persist = Arc::new(PersistCache::new());
     config.set_persistence(persist);
 
     Ok(Arc::new(config))
 }
-
