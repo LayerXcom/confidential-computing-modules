@@ -19,15 +19,6 @@ $ solc -o build --bin --abi --optimize --overwrite contracts/AnonymousAsset.sol
 ### SW
 This tutorial works in simulation mode, so you can run it on macos.
 
-* Helloworld
-
-```
-$ cd anonify/helloworld
-$ export SGX_MODE=SW
-$ make
-$ cd bin && ./host
-```
-
 * Core
 
 ```

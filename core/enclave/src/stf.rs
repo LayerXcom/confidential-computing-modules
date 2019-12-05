@@ -40,17 +40,17 @@ impl Value {
 
 pub trait AnonymousAssetSTF {
     type S: State;
-    type KVS: SigVerificationKVS;
+    // type KVS: SigVerificationKVS;
 
     fn transfer(from: PublicKey, to: PublicKey, amount: Self::S) -> UserState<Self::S, NextNonce>;
 }
 
 impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
     type S = Value;
-    type KVS = MemoryKVS;
+    // type KVS = MemoryKVS;
 
     fn transfer(from: PublicKey, to: PublicKey, amount: Self::S) -> UserState<Self::S, NextNonce> {
-        
+
         unimplemented!();
     }
 }
