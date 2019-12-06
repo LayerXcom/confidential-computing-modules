@@ -123,7 +123,7 @@ mod test {
 
     const ETH_URL: &'static str = "http://127.0.0.1:8545";
     const report: &'static str = "";
-    const report_sig: &'sttic str = "";
+    const report_sig: &'staic str = "";
 
     #[test]
     #[ignore]

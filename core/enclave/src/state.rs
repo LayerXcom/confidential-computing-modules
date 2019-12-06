@@ -17,6 +17,8 @@ use std::{
 pub trait State: Sized + Default {
     fn new(init: u64) -> Self;
 
+    fn as_bytes(&self) -> Result<Vec<u8>>;
+
     fn write_le<W: Write>(&self, writer: &mut W) -> Result<()>;
 
     fn read_le<R: Read>(reader: &mut R) -> Result<Self>;
@@ -93,7 +95,7 @@ impl<S: State> UserState<S, CurrentNonce> {
         Ok(DBValue::from_vec(buf))
     }
 
-    pub fn get_state_from_db_value(db_value: DBValue) -> Result<S> {
+    pub fn from_db_value(db_value: DBValue) -> Result<S> {
         let reader = db_value.into_vec();
         let state = S::read_le(&mut &reader[..])?;
 

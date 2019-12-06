@@ -2,6 +2,7 @@ use std::prelude::v1::*;
 use super::*;
 use crate::{
     error::Result,
+    crypto::UserAddress,
 };
 use ed25519_dalek::{PublicKey, Signature};
 
@@ -16,7 +17,7 @@ pub(super) trait KVS: Sync + Send {
 
 /// Trait of key-value store instrctions restricted by signature verifications.
 pub trait SigVerificationKVS: Sync + Send {
-    fn get(&self, msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Option<DBValue>;
+    fn get(&self, key: &UserAddress) -> Option<DBValue>;
 
     fn write(&self, tx: DBTx);
 }

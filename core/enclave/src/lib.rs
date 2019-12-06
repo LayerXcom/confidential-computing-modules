@@ -45,9 +45,10 @@ pub unsafe extern "C" fn ecall_get_state(
 ) -> sgx_status_t {
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
+    let key = UserAddress::from_sig(&msg[..], &sig, &pubkey);
 
-    let db_value = MEMORY_DB.get(&msg[..], &sig, &pubkey).expect("Failed to get value from in-memory database.");
-    let user_state = UserState::<Value, _>::get_state_from_db_value(db_value).expect("Failed to read db_value.");
+    let db_value = MEMORY_DB.get(&key).expect("Failed to get value from in-memory database.");
+    let user_state = UserState::<Value, _>::from_db_value(db_value).expect("Failed to read db_value.");
     state = user_state.into_raw_u64();
 
     sgx_status_t::SGX_SUCCESS
@@ -63,8 +64,11 @@ pub unsafe extern "C" fn ecall_state_transition(
 ) -> sgx_status_t {
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
-    // let user_state = UserState
-    // let dbtx = DBTx::new().put_by_addr(key: &UserAddress, value: &[u8])
+    // let user_state = UserState::
+    let mut dbtx = DBTx::new();
+    // dbtx.put(&pubkey, &sig, )
+
+    MEMORY_DB.write(dbtx);
 
     sgx_status_t::SGX_SUCCESS
 }
