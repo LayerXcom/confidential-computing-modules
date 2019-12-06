@@ -32,3 +32,10 @@ extern "C" {
         ret_fd: *mut ::std::os::raw::c_int,
     ) -> sgx_status_t;
 }
+extern "C" {
+    pub fn ocall_save_to_memory(
+        retval: *mut u64,
+        data_ptr: *const u8,
+        data_len: usize,
+    ) -> sgx_status_t;
+}

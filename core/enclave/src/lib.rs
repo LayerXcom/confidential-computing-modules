@@ -82,7 +82,7 @@ pub unsafe extern "C" fn ecall_state_transition(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn ecall_contract_deploy(
+pub unsafe extern "C" fn ecall_init_state(
     sig: &Sig,
     pubkey: &PubKey,
     value: u64,

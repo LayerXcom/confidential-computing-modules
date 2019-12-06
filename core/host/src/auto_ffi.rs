@@ -24,18 +24,16 @@ extern "C" {
         value: *mut u64,
         ciphertext1: *mut [u8; 60usize],
         ciphertext2: *mut [u8; 60usize],
-        result: *mut TransitionResult,
     ) -> sgx_status_t;
 }
 extern "C" {
-    pub fn ecall_contract_deploy(
+    pub fn ecall_init_state(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
         sig: *mut [u8; 64usize],
         pubkey: *mut [u8; 32usize],
         value: *mut u64,
         ciphertext: *mut [u8; 60usize],
-        result: *mut TransitionResult,
     ) -> sgx_status_t;
 }
 extern "C" {
