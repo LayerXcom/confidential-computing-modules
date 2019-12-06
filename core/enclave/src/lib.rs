@@ -16,8 +16,8 @@ use anonify_types::*;
 use ed25519_dalek::{PublicKey, Signature};
 use crate::kvs::{MemoryKVS, SigVerificationKVS, MEMORY_DB, DBTx};
 use crate::state::{UserState, State};
-use crate::stf::Value;
-use crate::crypto::UserAddress;
+use crate::stf::{Value, AnonymousAssetSTF};
+use crate::crypto::{UserAddress, SYMMETRIC_KEY};
 
 mod crypto;
 mod state;
@@ -64,11 +64,14 @@ pub unsafe extern "C" fn ecall_state_transition(
 ) -> sgx_status_t {
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
-    // let user_state = UserState::
-    let mut dbtx = DBTx::new();
-    // dbtx.put(&pubkey, &sig, )
+    let target_addr = UserAddress::from_array(*target);
 
-    MEMORY_DB.write(dbtx);
+    let (my_state, other_state) = UserState::<Value ,_>::transfer(pubkey, sig, target_addr, Value::new(value))
+        .expect("Failed to update state.");
+    let my_ciphertext = my_state.encrypt(&SYMMETRIC_KEY)
+        .expect("Failed to encrypt my state.");
+    let other_ciphertext = other_state.encrypt(&SYMMETRIC_KEY)
+        .expect("Failed to encrypt other state.");
 
     sgx_status_t::SGX_SUCCESS
 }
