@@ -9,6 +9,7 @@ use std::{
     vec::Vec,
     io::{Write, Read},
     ops::{Add, Sub},
+    convert::TryInto,
 };
 use byteorder::{ByteOrder, LittleEndian};
 
@@ -71,31 +72,39 @@ pub trait AnonymousAssetSTF: Sized {
     type S: State;
 
     fn transfer(
-        from: &PublicKey,
-        sig: &Signature,
-        target: &UserAddress,
-        amount: &Self::S,
-    ) -> Result<UserState<Self::S, NextNonce>>;
+        from: PublicKey,
+        sig: Signature,
+        target: UserAddress,
+        amount: Self::S,
+    ) -> Result<(UserState<Self::S, NextNonce>, UserState<Self::S, NextNonce>)>;
 }
 
 impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
     type S = Value;
 
     fn transfer(
-        from: &PublicKey,
-        sig: &Signature,
-        target: &UserAddress,
-        amount: &Self::S,
-    ) -> Result<UserState<Self::S, NextNonce>> {
+        from: PublicKey,
+        sig: Signature,
+        target: UserAddress,
+        amount: Self::S,
+    ) -> Result<(UserState<Self::S, NextNonce>, UserState<Self::S, NextNonce>)> {
         let vec = amount.as_bytes()?;
-        let key = UserAddress::from_sig(&vec[..], &sig, &from);
-        let my_value = MEMORY_DB.get(&key).unwrap();
-        let my_state = UserState::<Self::S, _>::from_db_value(my_value)?;
-
+        let my_addr = UserAddress::from_sig(&vec[..], &sig, &from);
+        let my_value = MEMORY_DB.get(&my_addr).unwrap();
         let other_value = MEMORY_DB.get(&target).unwrap();
 
+        let my_current_balance = UserState::<Self::S, _>::from_db_value(my_value.clone())?.0;
+        assert!(amount > my_current_balance);
+        let other_current_balance = UserState::<Self::S, _>::from_db_value(other_value.clone())?.0;
 
+        let my_current_state = UserState::from_address_and_db_value(my_addr, my_value)?;
+        let other_current_state = UserState::from_address_and_db_value(target, other_value)?;
 
-        unimplemented!();
+        let my_updated: UserState<Self::S, NextNonce> = my_current_state
+            .update_inner_state(my_current_balance - amount).try_into()?;
+        let other_updated: UserState<Self::S, NextNonce> = other_current_state
+            .update_inner_state(other_current_balance + amount).try_into()?;
+
+        Ok((my_updated, other_updated))
     }
 }

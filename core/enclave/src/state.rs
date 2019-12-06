@@ -40,7 +40,7 @@ pub enum NextNonce { }
 #[derive(Debug, Clone, PartialEq)]
 pub struct UserState<S: State, N> {
     address: UserAddress,
-    state: S,
+    inner_state: S,
     nonce: Nonce,
     _marker: PhantomData<N>,
 }
@@ -54,7 +54,7 @@ impl<S: State, N> UserState<S, N> {
 
     pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
         self.address.write(writer)?;
-        self.state.write_le(writer)?;
+        self.inner_state.write_le(writer)?;
         self.nonce.write(writer)?;
 
         Ok(())
@@ -62,12 +62,12 @@ impl<S: State, N> UserState<S, N> {
 
     pub fn read<R: Read>(mut reader: R) -> Result<Self> {
         let address = UserAddress::read(&mut reader)?;
-        let state = S::read_le(&mut reader)?;
+        let inner_state = S::read_le(&mut reader)?;
         let nonce = Nonce::read(&mut reader)?;
 
         Ok(UserState {
             address,
-            state,
+            inner_state,
             nonce,
             _marker: PhantomData,
         })
@@ -77,29 +77,57 @@ impl<S: State, N> UserState<S, N> {
 // State with NextNonce must not be allowed to access to the database to avoid from
 // storing data which have not been considered globally consensused.
 impl<S: State> UserState<S, CurrentNonce> {
+    /// Decrypt Ciphertext which was stored in a shared ledger.
     pub fn decrypt(cipheriv: Vec<u8>, key: &SymmetricKey) -> Result<Self> {
         let res = decrypt_aes_256_gcm(cipheriv, key)?;
         Self::read(&res[..])
     }
 
+    /// Get in-memory database key.
     pub fn get_db_key(&self) -> &UserAddress {
         &self.address
     }
 
+    /// Get in-memory database value.
     // TODO: Encrypt with sealing key.
     pub fn get_db_value(&self) -> Result<DBValue> {
         let mut buf = vec![];
-        self.state.write_le(&mut buf)?;
+        self.inner_state.write_le(&mut buf)?;
         self.nonce.write(&mut buf)?;
 
         Ok(DBValue::from_vec(buf))
     }
 
-    pub fn from_db_value(db_value: DBValue) -> Result<S> {
+    pub fn update_inner_state(&self, update: S) -> Self {
+        UserState {
+            address: self.address,
+            inner_state: update,
+            nonce: self.nonce,
+            _marker: PhantomData,
+        }
+    }
+
+    pub fn from_address_and_db_value(
+        address: UserAddress,
+        db_value: DBValue
+    ) -> Result<Self> {
+        let (inner_state, nonce) = Self::from_db_value(db_value)?;
+
+        Ok(UserState {
+            address,
+            inner_state,
+            nonce,
+            _marker: PhantomData,
+        })
+    }
+
+    /// Get inner state and nonce from database value.
+    pub fn from_db_value(db_value: DBValue) -> Result<(S, Nonce)> {
         let reader = db_value.into_vec();
         let state = S::read_le(&mut &reader[..])?;
+        let nonce = Nonce::read(&mut &reader[..])?;
 
-        Ok(state)
+        Ok((state, nonce))
     }
 
     fn next_nonce(&self) -> Result<Nonce> {
@@ -118,15 +146,15 @@ impl<S: State> UserState<S, CurrentNonce> {
 
 impl<S: State> UserState<S, NextNonce> {
     pub fn new(address: UserAddress, init_state: u64) -> Result<Self> {
-        let state = S::new(init_state);
+        let inner_state = S::new(init_state);
         let mut buf = vec![];
         address.write(&mut buf)?;
-        state.write_le(&mut buf)?;
+        inner_state.write_le(&mut buf)?;
         let nonce = Sha256::hash(&buf).into();
 
         Ok(UserState {
             address,
-            state,
+            inner_state,
             nonce,
             _marker: PhantomData
         })
@@ -146,7 +174,7 @@ impl<S: State> TryFrom<UserState<S, CurrentNonce>> for UserState<S, NextNonce> {
 
         Ok(UserState {
             address: s.address,
-            state: s.state,
+            inner_state: s.inner_state,
             nonce: next_nonce,
             _marker: PhantomData,
         })
@@ -204,8 +232,8 @@ pub mod tests {
         let sig = keypair.sign(&buf);
         let user_address = UserAddress::from_sig(&buf, &sig, &public);
 
-        let mut state = UserState::<Value, _>::new(user_address, 100).unwrap();
-        let mut state_vec = state.try_into_vec().unwrap();
+        let state = UserState::<Value, _>::new(user_address, 100).unwrap();
+        let state_vec = state.try_into_vec().unwrap();
         let res = UserState::read(&state_vec[..]).unwrap();
 
         assert_eq!(state, res);

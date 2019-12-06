@@ -48,7 +48,7 @@ pub unsafe extern "C" fn ecall_get_state(
     let key = UserAddress::from_sig(&msg[..], &sig, &pubkey);
 
     let db_value = MEMORY_DB.get(&key).expect("Failed to get value from in-memory database.");
-    let user_state = UserState::<Value, _>::from_db_value(db_value).expect("Failed to read db_value.");
+    let user_state = UserState::<Value, _>::from_db_value(db_value).expect("Failed to read db_value.").0;
     state = user_state.into_raw_u64();
 
     sgx_status_t::SGX_SUCCESS
