@@ -71,6 +71,12 @@ impl Value {
 pub trait AnonymousAssetSTF: Sized {
     type S: State;
 
+    fn init(
+        from: PublicKey,
+        sin: Signature,
+        amount: Self::S,
+    ) -> Result<UserState<Self::S, NextNonce>>;
+
     fn transfer(
         from: PublicKey,
         sig: Signature,
@@ -81,6 +87,18 @@ pub trait AnonymousAssetSTF: Sized {
 
 impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
     type S = Value;
+
+    fn init(
+        from: PublicKey,
+        sig: Signature,
+        total_supply: Self::S,
+    ) -> Result<UserState<Self::S, NextNonce>> {
+        let vec = total_supply.as_bytes()?;
+        let address = UserAddress::from_sig(&vec[..], &sig, &from);
+        let state: UserState<Self::S, NextNonce> = UserState::new(address, total_supply)?;
+
+        Ok(state)
+    }
 
     fn transfer(
         from: PublicKey,

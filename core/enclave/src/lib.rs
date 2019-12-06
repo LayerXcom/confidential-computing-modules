@@ -60,6 +60,8 @@ pub unsafe extern "C" fn ecall_state_transition(
     pubkey: &PubKey,
     target: &Address,
     value: u64,
+    ciphertext1: &mut Ciphertext,
+    ciphertext2: &mut Ciphertext,
     result: &mut TransitionResult,
 ) -> sgx_status_t {
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
@@ -73,6 +75,9 @@ pub unsafe extern "C" fn ecall_state_transition(
     let other_ciphertext = other_state.encrypt(&SYMMETRIC_KEY)
         .expect("Failed to encrypt other state.");
 
+    *ciphertext1 = my_ciphertext;
+    *ciphertext2 = other_ciphertext;
+
     sgx_status_t::SGX_SUCCESS
 }
 
@@ -81,18 +86,27 @@ pub unsafe extern "C" fn ecall_contract_deploy(
     sig: &Sig,
     pubkey: &PubKey,
     value: u64,
+    ciphertext: &mut Ciphertext,
     result: &mut TransitionResult,
 ) -> sgx_status_t {
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
 
-    // TODO: Allow to compile `Value` to c program.
-    let mut buf = vec![];
-    Value::new(value).write_le(&mut buf).expect("Faild to write value.");
+    let total_supply = Value::new(value);
+    let init_state = UserState::<Value, _>::init(pubkey, sig, total_supply)
+        .expect("Failed to initialize state.");
+    let res_ciphertext = init_state.encrypt(&SYMMETRIC_KEY)
+        .expect("Failed to encrypt init state.");
 
-    let mut dbtx = DBTx::new();
-    dbtx.put(&pubkey, &sig, &buf);
-    MEMORY_DB.write(dbtx);
+    *ciphertext = res_ciphertext;
+
+    // // TODO: Allow to compile `Value` to c program.
+    // let mut buf = vec![];
+    // Value::new(value).write_le(&mut buf).expect("Faild to write value.");
+
+    // let mut dbtx = DBTx::new();
+    // dbtx.put(&pubkey, &sig, &buf);
+    // MEMORY_DB.write(dbtx);
 
     sgx_status_t::SGX_SUCCESS
 }

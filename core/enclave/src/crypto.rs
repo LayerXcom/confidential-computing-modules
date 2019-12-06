@@ -143,6 +143,7 @@ impl Sha256 {
 }
 
 /// User address represents last 20 bytes of digest of user's public key.
+/// A signature verification must return true to generate a user address.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct UserAddress([u8; 20]);
 

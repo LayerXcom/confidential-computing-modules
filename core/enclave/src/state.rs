@@ -145,24 +145,28 @@ impl<S: State> UserState<S, CurrentNonce> {
 }
 
 impl<S: State> UserState<S, NextNonce> {
-    pub fn new(address: UserAddress, init_state: u64) -> Result<Self> {
-        let inner_state = S::new(init_state);
+    /// Initialize userstate. nonce is defined with `Sha256(address || init_state)`.
+    pub fn new(address: UserAddress, init_state: S) -> Result<Self> {
         let mut buf = vec![];
         address.write(&mut buf)?;
-        inner_state.write_le(&mut buf)?;
+        init_state.write_le(&mut buf)?;
         let nonce = Sha256::hash(&buf).into();
 
         Ok(UserState {
             address,
-            inner_state,
+            inner_state: init_state,
             nonce,
             _marker: PhantomData
         })
     }
 
-    pub fn encrypt(self, key: &SymmetricKey) -> Result<Vec<u8>> {
+    pub fn encrypt(self, key: &SymmetricKey) -> Result<[u8; 60]> {
         let buf = self.try_into_vec()?;
-        encrypt_aes_256_gcm(buf, key)
+        let vec = encrypt_aes_256_gcm(buf, key)?;
+
+        let mut res = [0u8; 60];
+        res.copy_from_slice(&vec[..]);
+        Ok(res)
     }
 }
 
@@ -232,7 +236,7 @@ pub mod tests {
         let sig = keypair.sign(&buf);
         let user_address = UserAddress::from_sig(&buf, &sig, &public);
 
-        let state = UserState::<Value, _>::new(user_address, 100).unwrap();
+        let state = UserState::<Value, _>::new(user_address, Value::new(100)).unwrap();
         let state_vec = state.try_into_vec().unwrap();
         let res = UserState::read(&state_vec[..]).unwrap();
 
