@@ -177,7 +177,13 @@ impl From<Sha256> for Nonce {
 pub mod tests {
     use super::*;
     use crate::stf::Value;
-    use ed25519_dalek::{PublicKey, PUBLIC_KEY_LENGTH};
+    use ed25519_dalek::{SecretKey, PublicKey, Keypair, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH};
+
+    const SECRET_KEY_BYTES: [u8; SECRET_KEY_LENGTH] = [
+        062, 070, 027, 163, 092, 182, 011, 003,
+        077, 234, 098, 004, 011, 127, 079, 228,
+        243, 187, 150, 073, 201, 137, 076, 022,
+        085, 251, 152, 002, 241, 042, 072, 054, ];
 
     const PUBLIC_KEY_BYTES: [u8; PUBLIC_KEY_LENGTH] = [
         130, 039, 155, 015, 062, 076, 188, 063,
@@ -186,8 +192,15 @@ pub mod tests {
         160, 083, 172, 058, 219, 042, 086, 120, ];
 
     pub fn test_read_write() {
-        let pubkey = PublicKey::from_bytes(&PUBLIC_KEY_BYTES).unwrap();
-        let user_address = UserAddress::from_pubkey(&pubkey);
+        let secret = SecretKey::from_bytes(&SECRET_KEY_BYTES).unwrap();
+        let public = PublicKey::from_bytes(&PUBLIC_KEY_BYTES).unwrap();
+        let keypair = Keypair { secret, public };
+
+        let mut buf = vec![];
+        Value::new(100).write_le(&mut buf).expect("Faild to write value.");
+
+        let sig = keypair.sign(&buf);
+        let user_address = UserAddress::from_sig(&buf, &sig, &public);
 
         let mut state = UserState::<Value, _>::new(user_address, 100).unwrap();
         let mut state_vec = state.try_into_vec().unwrap();

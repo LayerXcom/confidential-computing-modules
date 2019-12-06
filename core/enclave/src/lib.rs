@@ -14,9 +14,10 @@ use sgx_types::*;
 use sgx_tse::*;
 use anonify_types::*;
 use ed25519_dalek::{PublicKey, Signature};
-use crate::kvs::{MemoryKVS, SigVerificationKVS, MEMORY_DB};
-use crate::state::UserState;
+use crate::kvs::{MemoryKVS, SigVerificationKVS, MEMORY_DB, DBTx};
+use crate::state::{UserState, State};
 use crate::stf::Value;
+use crate::crypto::UserAddress;
 
 mod crypto;
 mod state;
@@ -53,20 +54,17 @@ pub unsafe extern "C" fn ecall_get_state(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn ecall_write_state(
-    ciphertext: &Ciphertext,
-) -> sgx_status_t {
-
-    sgx_status_t::SGX_SUCCESS
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn ecall_state_transition(
     sig: &Sig,
+    pubkey: &PubKey,
     target: &Address,
     value: u64,
     result: &mut TransitionResult,
 ) -> sgx_status_t {
+    let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
+    let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
+    // let user_state = UserState
+    // let dbtx = DBTx::new().put_by_addr(key: &UserAddress, value: &[u8])
 
     sgx_status_t::SGX_SUCCESS
 }
@@ -74,9 +72,20 @@ pub unsafe extern "C" fn ecall_state_transition(
 #[no_mangle]
 pub unsafe extern "C" fn ecall_contract_deploy(
     sig: &Sig,
+    pubkey: &PubKey,
     value: u64,
     result: &mut TransitionResult,
 ) -> sgx_status_t {
+    let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
+    let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
+
+    // TODO: Allow to compile `Value` to c program.
+    let mut buf = vec![];
+    Value::new(value).write_le(&mut buf).expect("Faild to write value.");
+
+    let mut dbtx = DBTx::new();
+    dbtx.put(&pubkey, &sig, &buf);
+    MEMORY_DB.write(dbtx);
 
     sgx_status_t::SGX_SUCCESS
 }

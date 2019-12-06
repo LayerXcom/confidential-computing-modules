@@ -128,19 +128,19 @@ impl Sha256 {
 pub struct UserAddress([u8; 20]);
 
 impl UserAddress {
-    pub fn from_pubkey(pubkey: &PublicKey) -> Self {
+    /// Get a user address only if the verification of signature returns true.
+    pub fn from_sig(msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Self {
+        assert!(pubkey.verify(msg, &sig).is_ok());
+        Self::from_pubkey(&pubkey)
+    }
+    
+    fn from_pubkey(pubkey: &PublicKey) -> Self {
         let hash = Sha256::from_pubkey(pubkey);
         let addr = &hash.as_array()[12..];
         let mut res = [0u8; 20];
         res.copy_from_slice(addr);
 
         UserAddress(res)
-    }
-
-    /// Get a user address only if the verification of signature returns true.
-    pub fn from_sig(msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Self {
-        assert!(pubkey.verify(msg, &sig).is_ok());
-        Self::from_pubkey(&pubkey)
     }
 
     pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {

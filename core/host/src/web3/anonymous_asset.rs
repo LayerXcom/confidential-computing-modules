@@ -11,101 +11,111 @@ use web3::{
     Web3,
     transports::{EventLoopHandle, Http},
     contract::{Contract, Options},
-    types::{Address, Bytes, H160, H256, TransactionReceipt, U256},
+    types::{Address, Bytes, H160, H256, TransactionReceipt, U256, FilterBuilder},
     futures::Future,
 };
+use ethabi::Contract as ContractABI;
+
+pub fn deploy(
+    eth_url: &str,
+    init_balance: String,
+    report: String,
+    report_sig: String,
+) -> Result<()> {
+    let (eloop, transport) = Http::new(eth_url)?;
+    let web3 = Web3::new(transport);
+    let account = web3.eth().accounts().wait()?[0];
+
+    let abi = include_bytes!("../../../../build/AnonymousAsset.abi");
+    let bin = include_str!("../../../../build/AnonymousAsset.bin");
+
+    let contract = Contract::deploy(web3.eth(), abi)
+        .unwrap() // TODO
+        .confirmations(CONFIRMATIONS)
+        .poll_interval(time::Duration::from_secs(POLL_INTERVAL_SECS))
+        .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
+        .execute(bin, (init_balance, report, report_sig), account)
+        .unwrap() // TODO
+        .wait()
+        .unwrap(); // TODO
+
+    // TODO: Show full logs.
+    println!("contract address: {}", contract.address());
+
+    Ok(())
+}
 
 #[derive(Debug)]
 pub struct AnonymousAssetContract {
-    web3: Arc<Web3<Http>>,
-    eloop: EventLoopHandle,
     contract: Contract<Http>,
-    account: Address, // deployer or function caller
+    address: Address, // contract address
+    web3: Web3<Http>,
+    eloop: EventLoopHandle,
 }
 
 impl AnonymousAssetContract {
-    pub fn deploy(
-        eth_url: &str,
-        // deployer: Option<&str>,
-    ) -> Result<Self> {
-        let (eloop, transport) = Http::new(eth_url)?;
-        let web3 = Web3::new(transport);
-        let account = web3.eth().accounts().wait()?[0];
-
-        let abi = include_bytes!("../../../../build/AnonymousAsset.abi");
-        let bin = include_str!("../../../../build/AnonymousAsset.bin");
-
-        let contract = Contract::deploy(web3.eth(), abi)
-            .unwrap() // TODO
-            .confirmations(CONFIRMATIONS)
-            .poll_interval(time::Duration::from_secs(POLL_INTERVAL_SECS))
-            .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
-            .execute(bin, (), account)
-            .unwrap() // TODO
-            .wait()
-            .unwrap(); // TODO
+    pub fn new(eth_url: &str, contract_addr: Address, abi: ContractABI) -> Result<Self> {
+        let (eloop, http) = Http::new(eth_url)?;
+        let web3 = Web3::new(http);
+        let contract = Contract::new(web3.eth(), contract_addr, abi);
 
         Ok(AnonymousAssetContract {
-            web3: Arc::new(web3),
-            eloop,
             contract,
-            account,
+            address: contract_addr,
+            web3,
+            eloop,
         })
     }
 
-    pub fn from_deployed<P: AsRef<Path>>(
-        contract_address: &str,
-        abi_path: P,
-        deployer: Option<&str>,
-        eth_url: &str,
-    ) -> Result<Self> {
-        unimplemented!();
-    }
-}
-
-pub trait Gets {
-    fn get_balances(&self, offset: U256, len: U256) -> Result<Vec<String>>;
-}
-
-impl Gets for AnonymousAssetContract {
-    fn get_balances(&self, offset: U256, len: U256) -> Result<Vec<String>> {
-        let encrypted_balances = self.contract.query(
-            "getBalances",
-            (offset, len),
-            self.account,
-            Options::default(),
-            None
-        ).wait().unwrap(); // TODO
-
-        Ok(encrypted_balances)
-    }
-}
-
-pub trait Posts<G> {
-    fn tranfer(&self, update_balance: String, report: String, signature: String, gas: G, confirmations: usize) -> Result<TransactionReceipt>;
-}
-
-impl<G: Into<U256>> Posts<G> for AnonymousAssetContract {
-    fn tranfer(
+    pub fn tranfer<G: Into<U256>>(
         &self,
-        update_balance: String,
+        from: Address,
+        update_balance1: String,
+        update_balance2: String,
         report: String,
-        sig: String,
+        report_sig: String,
         gas: G,
-        confirmations: usize
-    ) -> Result<TransactionReceipt> {
-        let call = self.contract.call_with_confirmations(
+    ) -> Result<H256> {
+        let call = self.contract.call(
             "transfer",
-            (update_balance, report.as_bytes().to_vec(), hex::decode(sig)?),
-            self.account,
+            (update_balance1, update_balance2, report, report_sig),
+            self.address,
             Options::with(|opt| opt.gas = Some(gas.into())),
-            confirmations
         );
 
         // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253
-        Ok(call.wait()?)
+        let res = call.wait().unwrap(); //TODO: error handling
+        Ok(res)
     }
 }
+
+// pub fn get_logs(eth_url: &str, contract_addrss: Address) -> Result<()> {
+//     let (eloop, transport) = Http::new(eth_url)?;
+//     let web3 = Web3::new(transport);
+
+//     let filter = FilterBuilder::default()
+//         .address(vec![contract_address])
+//         .topics(
+//             Some(vec![]),
+//             None,
+//             None,
+//             None,
+//         )
+//         .build();
+
+//     let event_future = web3
+//         .eth_filter()
+//         .then(|filter| {
+//             filter.unwrap().stream(time::Duration::from_secs(10)).for_each(|log| {
+//                 println!("got log: {}", log);
+//                 Ok(())
+//             })
+//         })
+//         .map_err(|_| ());
+
+//     let call_future = contract.call
+// }
+
 
 #[cfg(test)]
 mod test {
