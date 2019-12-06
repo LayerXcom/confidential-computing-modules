@@ -8,10 +8,11 @@ use ed25519_dalek::{PublicKey, Signature};
 use std::{
     vec::Vec,
     io::{Write, Read},
+    ops::{Add, Sub},
 };
 use byteorder::{ByteOrder, LittleEndian};
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd)]
 pub struct Value(u64);
 
 impl State for Value {
@@ -42,13 +43,20 @@ impl State for Value {
     }
 }
 
-use std::ops::Add;
-
 impl Add for Value {
     type Output = Value;
 
     fn add(self, other: Self) -> Self {
         let res = self.0 + other.0;
+        Value(res)
+    }
+}
+
+impl Sub for Value {
+    type Output = Value;
+
+    fn sub(self, other: Self) -> Self {
+        let res = self.0 - other.0;
         Value(res)
     }
 }
@@ -82,7 +90,7 @@ impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
         let vec = amount.as_bytes()?;
         let key = UserAddress::from_sig(&vec[..], &sig, &from);
         let my_value = MEMORY_DB.get(&key).unwrap();
-        let my_state = UserState::<Self::S, _>::from_db_value(my_value).unwrap();
+        let my_state = UserState::<Self::S, _>::from_db_value(my_value)?;
 
         let other_value = MEMORY_DB.get(&target).unwrap();
 
