@@ -1,4 +1,4 @@
-use core::{fmt, default::Default, ptr};
+use core::{fmt, default::Default, ptr, mem};
 
 pub const STATE_SIZE: usize = 8;
 pub const PUBKEY_SIZE: usize = 32;
@@ -55,8 +55,8 @@ impl Default for UnsignedTx {
         UnsignedTx {
             report: ptr::null(),
             report_sig: ptr::null(),
-            ciphertext_num: 0,
             ciphertexts: ptr::null(),
+            .. unsafe { mem::zeroed() }
         }
     }
 }

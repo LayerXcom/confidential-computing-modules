@@ -1,5 +1,5 @@
 use sgx_types::*;
-use anonify_types::{Sig, PubKey, Msg};
+use anonify_types::{Sig, PubKey, Msg, UnsignedTx};
 use crate::auto_ffi::*;
 use crate::init_enclave::EnclaveDir;
 use crate::error::{HostErrorKind, Result};
@@ -40,9 +40,9 @@ pub fn init_state(
     sig: &Sig,
     pubkey: &PubKey,
     total_supply: u64,
-) -> Result<[u8; 60]> {
+) -> Result<UnsignedTx> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-    let mut ciphertext = [0u8; 60];
+    let mut unsigned_tx = UnsignedTx::default();
 
     let status = unsafe {
         ecall_init_state(
@@ -51,7 +51,7 @@ pub fn init_state(
             sig.as_ptr() as _,
             pubkey.as_ptr() as _,
             total_supply as _,
-            ciphertext.as_ptr() as _,
+            &mut unsigned_tx,
         )
     };
 
@@ -62,7 +62,7 @@ pub fn init_state(
 		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_contract_deploy" }.into());
     }
 
-    Ok(ciphertext)
+    Ok(unsigned_tx)
 }
 
 
@@ -73,6 +73,28 @@ mod tests {
     use rand_os::OsRng;
     use rand::Rng;
     use ed25519_dalek::Keypair;
+
+    #[test]
+    fn test_init_state() {
+        let enclave = EnclaveDir::new().init_enclave().unwrap();
+        let mut csprng: OsRng = OsRng::new().unwrap();
+        let keypair: Keypair = Keypair::generate(&mut csprng);
+
+        let msg = rand::thread_rng().gen::<[u8; 32]>();
+        let sig = keypair.sign(&msg);
+        assert!(keypair.verify(&msg, &sig).is_ok());
+
+        let total_supply = 100;
+
+        let unsigned_tx = init_state(
+            enclave.geteid(),
+            &sig.to_bytes(),
+            &keypair.public.to_bytes(),
+            total_supply,
+        ).unwrap();
+
+        println!("unsigned_tx: {:?}", unsigned_tx);
+    }
 
     #[test]
     #[ignore]
