@@ -18,6 +18,12 @@ use crate::kvs::{MemoryKVS, SigVerificationKVS, MEMORY_DB, DBTx};
 use crate::state::{UserState, State};
 use crate::stf::{Value, AnonymousAssetSTF};
 use crate::crypto::{UserAddress, SYMMETRIC_KEY};
+use crate::attestation::{
+    AttestationService, TEST_SPID, TEST_SUB_KEY,
+    DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES,
+};
+use crate::quote::EnclaveContext;
+use crate::ocalls::save_to_host_memory;
 
 mod crypto;
 mod state;
@@ -60,23 +66,29 @@ pub unsafe extern "C" fn ecall_state_transition(
     pubkey: &PubKey,
     target: &Address,
     value: u64,
-    ciphertext1: &mut Ciphertext,
-    ciphertext2: &mut Ciphertext,
-    result: &mut TransitionResult,
+    unsigned_tx: &mut UnsignedTx,
 ) -> sgx_status_t {
+    let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES);
+    let quote = EnclaveContext::new(TEST_SPID).unwrap().get_quote().unwrap();
+    let (report, report_sig) = service.get_report_and_sig(&quote, TEST_SUB_KEY).unwrap();
+
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let target_addr = UserAddress::from_array(*target);
 
     let (my_state, other_state) = UserState::<Value ,_>::transfer(pubkey, sig, target_addr, Value::new(value))
         .expect("Failed to update state.");
-    let my_ciphertext = my_state.encrypt(&SYMMETRIC_KEY)
+    let mut my_ciphertext = my_state.encrypt(&SYMMETRIC_KEY)
         .expect("Failed to encrypt my state.");
-    let other_ciphertext = other_state.encrypt(&SYMMETRIC_KEY)
+    let mut other_ciphertext = other_state.encrypt(&SYMMETRIC_KEY)
         .expect("Failed to encrypt other state.");
 
-    *ciphertext1 = my_ciphertext;
-    *ciphertext2 = other_ciphertext;
+    my_ciphertext.append(&mut other_ciphertext);
+
+    unsigned_tx.report = save_to_host_memory(report.as_bytes()).unwrap() as *const u8;
+    unsigned_tx.report_sig = save_to_host_memory(report_sig.as_bytes()).unwrap() as *const u8;
+    unsigned_tx.ciphertext_num = 2 as u32; // todo;
+    unsigned_tx.ciphertexts = save_to_host_memory(&my_ciphertext[..]).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS
 }
@@ -86,9 +98,12 @@ pub unsafe extern "C" fn ecall_init_state(
     sig: &Sig,
     pubkey: &PubKey,
     value: u64,
-    ciphertext: &mut Ciphertext,
-    result: &mut TransitionResult,
+    unsigned_tx: &mut UnsignedTx,
 ) -> sgx_status_t {
+    let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES);
+    let quote = EnclaveContext::new(TEST_SPID).unwrap().get_quote().unwrap();
+    let (report, report_sig) = service.get_report_and_sig(&quote, TEST_SUB_KEY).unwrap();
+
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
 
@@ -98,7 +113,10 @@ pub unsafe extern "C" fn ecall_init_state(
     let res_ciphertext = init_state.encrypt(&SYMMETRIC_KEY)
         .expect("Failed to encrypt init state.");
 
-    *ciphertext = res_ciphertext;
+    unsigned_tx.report = save_to_host_memory(report.as_bytes()).unwrap() as *const u8;
+    unsigned_tx.report_sig = save_to_host_memory(report_sig.as_bytes()).unwrap() as *const u8;
+    unsigned_tx.ciphertext_num = 1 as u32; // todo;
+    unsigned_tx.ciphertexts = save_to_host_memory(&res_ciphertext[..]).unwrap() as *const u8;
 
     // // TODO: Allow to compile `Value` to c program.
     // let mut buf = vec![];
@@ -110,7 +128,6 @@ pub unsafe extern "C" fn ecall_init_state(
 
     sgx_status_t::SGX_SUCCESS
 }
-
 
 pub mod enclave_tests {
     use anonify_types::{ResultStatus, RawPointer};

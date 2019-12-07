@@ -22,8 +22,7 @@ extern "C" {
         pubkey: *mut [u8; 32usize],
         target: *mut [u8; 20usize],
         value: *mut u64,
-        ciphertext1: *mut [u8; 60usize],
-        ciphertext2: *mut [u8; 60usize],
+        result: *mut UnsignedTx,
     ) -> sgx_status_t;
 }
 extern "C" {
@@ -33,7 +32,7 @@ extern "C" {
         sig: *mut [u8; 64usize],
         pubkey: *mut [u8; 32usize],
         value: *mut u64,
-        ciphertext: *mut [u8; 60usize],
+        result: *mut UnsignedTx,
     ) -> sgx_status_t;
 }
 extern "C" {

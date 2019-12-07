@@ -160,13 +160,9 @@ impl<S: State> UserState<S, NextNonce> {
         })
     }
 
-    pub fn encrypt(self, key: &SymmetricKey) -> Result<[u8; 60]> {
+    pub fn encrypt(self, key: &SymmetricKey) -> Result<Vec<u8>> {
         let buf = self.try_into_vec()?;
-        let vec = encrypt_aes_256_gcm(buf, key)?;
-
-        let mut res = [0u8; 60];
-        res.copy_from_slice(&vec[..]);
-        Ok(res)
+        encrypt_aes_256_gcm(buf, key)
     }
 }
 

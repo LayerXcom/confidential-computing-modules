@@ -9,6 +9,8 @@ use crate::ocalls::get_ias_socket;
 pub const DEV_HOSTNAME : &str = "api.trustedservices.intel.com";
 pub const REPORT_PATH : &str = "/sgx/dev/attestation/v3/report";
 pub const IAS_DEFAULT_RETRIES: u32 = 10;
+pub const TEST_SPID: &str = "2C149BFC94A61D306A96211AED155BE9";
+pub const TEST_SUB_KEY: &str = "77e2533de0624df28dc3be3a5b9e50d9";
 
 pub struct AttestationService<'a> {
     host: &'a str,
@@ -25,9 +27,10 @@ impl<'a> AttestationService<'a> {
         }
     }
 
-    pub fn get_report(&self, quote: &str, ias_api_key: &str) -> Result<String> {
+    pub fn get_report_and_sig(&self, quote: &str, ias_api_key: &str) -> Result<(String, String)> {
         let req = self.raw_report_req(quote, ias_api_key);
-        self.send_raw_req(req)
+        let (report, sig, _sig_cert) = self.send_raw_req(req)?;
+        Ok((report, sig))
     }
 
     fn raw_report_req(&self, quote: &str, ias_api_key: &str) -> String {
@@ -41,7 +44,7 @@ impl<'a> AttestationService<'a> {
         )
     }
 
-    fn send_raw_req(&self, req: String) -> Result<String> {
+    fn send_raw_req(&self, req: String) -> Result<(String, String, String)> {
         let fd = get_ias_socket()?;
         let mut socket = TcpStream::new(fd)?;
 
@@ -51,7 +54,7 @@ impl<'a> AttestationService<'a> {
         // let res = client.send_from_raw_req(&req)?;
 
         let (report, sig, sig_cert) = parse_response_attn_report(&res);
-        Ok(report)
+        Ok((report, sig, sig_cert))
     }
 
 }

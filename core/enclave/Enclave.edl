@@ -24,15 +24,14 @@ enclave {
             [in] uint8_t pubkey[32],
             [in] uint8_t target[20],
             [in] uint64_t* value,
-            [out] uint8_t ciphertext1[60],
-            [out] uint8_t ciphertext2[60]
+            [out] UnsignedTx* result
         );
 
         public sgx_status_t ecall_init_state(
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
             [in] uint64_t* value,
-            [out] uint8_t ciphertext[60]
+            [out] UnsignedTx* result
         );
 
         public void ecall_run_tests(

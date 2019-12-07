@@ -12,7 +12,7 @@ fn main() {
         .with_sys_include("stdbool.h")
         .with_language(Language::C)
         .include_item("EnclaveReturn")
-        .include_item("TransitionResult")
+        .include_item("UnsignedTx")
         .include_item("ResultStatus")
         .include_item("RawPointer")
         .include_item("Sig")
