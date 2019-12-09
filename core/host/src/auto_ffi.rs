@@ -22,7 +22,7 @@ extern "C" {
         pubkey: *mut [u8; 32usize],
         target: *mut [u8; 20usize],
         value: *mut u64,
-        result: *mut UnsignedTx,
+        result: *mut RawUnsignedTx,
     ) -> sgx_status_t;
 }
 extern "C" {
@@ -33,7 +33,7 @@ extern "C" {
         pubkey: *mut [u8; 32usize],
         msg: *mut [u8; 32usize],
         value: *const u64,
-        result: *mut UnsignedTx,
+        result: *mut RawUnsignedTx,
     ) -> sgx_status_t;
 }
 extern "C" {

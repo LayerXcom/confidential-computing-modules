@@ -1,5 +1,5 @@
 use sgx_types::*;
-use anonify_types::{Sig, PubKey, Msg, UnsignedTx};
+use anonify_types::{Sig, PubKey, Msg, RawUnsignedTx};
 use crate::auto_ffi::*;
 use crate::init_enclave::EnclaveDir;
 use crate::error::{HostErrorKind, Result};
@@ -43,7 +43,7 @@ pub fn init_state(
     total_supply: u64,
 ) -> Result<UnsignedTx> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-    let mut unsigned_tx = UnsignedTx::default();
+    let mut unsigned_tx = RawUnsignedTx::default();
 
     let status = unsafe {
         ecall_init_state(
@@ -64,7 +64,36 @@ pub fn init_state(
 		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_contract_deploy" }.into());
     }
 
-    Ok(unsigned_tx)
+    Ok(unsigned_tx.into())
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct UnsignedTx {
+    pub report: Box<[u8]>,
+    pub report_sig: Box<[u8]>,
+    /// The number of ciphertexts.
+    pub ciphertext_num: u32,
+    pub ciphertexts: Box<[u8]>,
+}
+
+impl From<RawUnsignedTx> for UnsignedTx {
+    fn from(raw_tx: RawUnsignedTx) -> Self {
+        let mut res_tx: UnsignedTx = Default::default();
+
+        let box_report = raw_tx.report as *mut Box<[u8]>;
+        let report = unsafe { Box::from_raw(box_report) };
+        let box_report_sig = raw_tx.report_sig as *mut Box<[u8]>;
+        let report_sig = unsafe { Box::from_raw(box_report_sig) };
+        let box_ciphertexts = raw_tx.ciphertexts as *mut Box<[u8]>;
+        let ciphertexts = unsafe { Box::from_raw(box_ciphertexts) };
+
+        res_tx.report = *report;
+        res_tx.report_sig = *report_sig;
+        res_tx.ciphertexts = *ciphertexts;
+        res_tx.ciphertext_num = raw_tx.ciphertext_num;
+
+        res_tx
+    }
 }
 
 

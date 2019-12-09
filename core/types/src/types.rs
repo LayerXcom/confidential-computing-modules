@@ -41,7 +41,7 @@ impl fmt::Display for EnclaveReturn {
 /// Returned from a contract deploy or state transition ecall.
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct UnsignedTx {
+pub struct RawUnsignedTx {
     /// A pointer to the output of the report using `ocall_save_to_memory()`.
     pub report: *const u8,
     pub report_sig: *const u8,
@@ -50,9 +50,9 @@ pub struct UnsignedTx {
     pub ciphertexts: *const u8,
 }
 
-impl Default for UnsignedTx {
+impl Default for RawUnsignedTx {
     fn default() -> Self {
-        UnsignedTx {
+        RawUnsignedTx {
             report: ptr::null(),
             report_sig: ptr::null(),
             ciphertexts: ptr::null(),
@@ -61,9 +61,9 @@ impl Default for UnsignedTx {
     }
 }
 
-impl fmt::Debug for UnsignedTx {
+impl fmt::Debug for RawUnsignedTx {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut debug_trait_builder = f.debug_struct("UnsignedTx");
+        let mut debug_trait_builder = f.debug_struct("RawUnsignedTx");
         debug_trait_builder.field("report", &(self.report));
         debug_trait_builder.field("report_sig", &(self.report_sig));
         debug_trait_builder.field("ciphertext_num", &(self.ciphertext_num));

@@ -152,11 +152,11 @@ mod test {
             total_supply,
         ).unwrap();
 
-        let contract = AnonymousAssetContract::deploy(
+        let contract = deploy(
             ETH_URL,
-            unsigned_tx.ciphertexts,
-            unsigned_tx.report,
-            unsigned_tx.report_sig
+            &unsigned_tx.ciphertexts,
+            &unsigned_tx.report,
+            &unsigned_tx.report_sig
         ).unwrap();
     }
 }

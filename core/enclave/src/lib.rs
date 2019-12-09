@@ -66,7 +66,7 @@ pub unsafe extern "C" fn ecall_state_transition(
     pubkey: &PubKey,
     target: &Address,
     value: u64,
-    unsigned_tx: &mut UnsignedTx,
+    unsigned_tx: &mut RawUnsignedTx,
 ) -> sgx_status_t {
     let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES);
     let quote = EnclaveContext::new(TEST_SPID).unwrap().get_quote().unwrap();
@@ -99,7 +99,7 @@ pub unsafe extern "C" fn ecall_init_state(
     pubkey: &PubKey,
     msg: &Msg,
     value: u64,
-    unsigned_tx: &mut UnsignedTx,
+    unsigned_tx: &mut RawUnsignedTx,
 ) -> sgx_status_t {
     let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES);
     let quote = EnclaveContext::new(TEST_SPID).unwrap().get_quote().unwrap();
