@@ -88,15 +88,13 @@ mod tests {
 
         let total_supply = 100;
 
-        let unsigned_tx = init_state(
+        assert!(init_state(
             enclave.geteid(),
             &sig.to_bytes(),
             &keypair.public.to_bytes(),
             &msg,
             total_supply,
-        ).unwrap();
-
-        println!("unsigned_tx: {:?}", unsigned_tx);
+        ).is_ok());
     }
 
     #[test]

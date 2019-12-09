@@ -18,9 +18,9 @@ use ethabi::Contract as ContractABI;
 
 pub fn deploy(
     eth_url: &str,
-    init_balance: String,
-    report: String,
-    report_sig: String,
+    init_ciphertext: &[u8],
+    report: &[u8],
+    report_sig: &[u8],
 ) -> Result<()> {
     let (eloop, transport) = Http::new(eth_url)?;
     let web3 = Web3::new(transport);
@@ -34,7 +34,10 @@ pub fn deploy(
         .confirmations(CONFIRMATIONS)
         .poll_interval(time::Duration::from_secs(POLL_INTERVAL_SECS))
         .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
-        .execute(bin, (init_balance, report, report_sig), account)
+        .execute(bin,
+            (init_ciphertext.to_vec(), report.to_vec(), report_sig.to_vec()), // Parameters are got from ecall, so these have to be allocated.
+            account,
+        )
         .unwrap() // TODO
         .wait()
         .unwrap(); // TODO
@@ -70,15 +73,15 @@ impl AnonymousAssetContract {
     pub fn tranfer<G: Into<U256>>(
         &self,
         from: Address,
-        update_balance1: String,
-        update_balance2: String,
-        report: String,
-        report_sig: String,
+        update_balance1: &[u8],
+        update_balance2: &[u8],
+        report: &[u8],
+        report_sig: &[u8],
         gas: G,
     ) -> Result<H256> {
         let call = self.contract.call(
             "transfer",
-            (update_balance1, update_balance2, report, report_sig),
+            (update_balance1.to_vec(), update_balance2.to_vec(), report.to_vec(), report_sig.to_vec()),
             self.address,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );
@@ -120,14 +123,40 @@ impl AnonymousAssetContract {
 #[cfg(test)]
 mod test {
     use super::*;
+    use rand_core::RngCore;
+    use rand_os::OsRng;
+    use rand::Rng;
+    use ed25519_dalek::Keypair;
+    use crate::init_enclave::EnclaveDir;
+    use crate::ecalls::init_state;
 
     const ETH_URL: &'static str = "http://127.0.0.1:8545";
-    const report: &'static str = "";
-    const report_sig: &'static str = "";
 
     #[test]
-    #[ignore]
     fn test_deploy_contract() {
-        // let contract = AnonymousAssetContract::deploy(ETH_URL).unwrap();
+        let enclave = EnclaveDir::new().init_enclave().unwrap();
+        let mut csprng: OsRng = OsRng::new().unwrap();
+        let keypair: Keypair = Keypair::generate(&mut csprng);
+
+        let msg = rand::thread_rng().gen::<[u8; 32]>();
+        let sig = keypair.sign(&msg);
+        assert!(keypair.verify(&msg, &sig).is_ok());
+
+        let total_supply = 100;
+
+        let unsigned_tx = init_state(
+            enclave.geteid(),
+            &sig.to_bytes(),
+            &keypair.public.to_bytes(),
+            &msg,
+            total_supply,
+        ).unwrap();
+
+        let contract = AnonymousAssetContract::deploy(
+            ETH_URL,
+            unsigned_tx.ciphertexts,
+            unsigned_tx.report,
+            unsigned_tx.report_sig
+        ).unwrap();
     }
 }
