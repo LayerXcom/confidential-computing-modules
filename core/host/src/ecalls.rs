@@ -39,6 +39,7 @@ pub fn init_state(
     eid: sgx_enclave_id_t,
     sig: &Sig,
     pubkey: &PubKey,
+    msg: &Msg,
     total_supply: u64,
 ) -> Result<UnsignedTx> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
@@ -50,6 +51,7 @@ pub fn init_state(
             &mut rt,
             sig.as_ptr() as _,
             pubkey.as_ptr() as _,
+            msg.as_ptr() as _,
             &total_supply as *const u64,
             &mut unsigned_tx,
         )
@@ -90,6 +92,7 @@ mod tests {
             enclave.geteid(),
             &sig.to_bytes(),
             &keypair.public.to_bytes(),
+            &msg,
             total_supply,
         ).unwrap();
 

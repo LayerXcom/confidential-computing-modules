@@ -73,7 +73,8 @@ pub trait AnonymousAssetSTF: Sized {
 
     fn init(
         from: PublicKey,
-        sin: Signature,
+        sig: Signature,
+        msg: &[u8],
         amount: Self::S,
     ) -> Result<UserState<Self::S, NextNonce>>;
 
@@ -91,10 +92,10 @@ impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
     fn init(
         from: PublicKey,
         sig: Signature,
+        msg: &[u8],
         total_supply: Self::S,
     ) -> Result<UserState<Self::S, NextNonce>> {
-        let vec = total_supply.as_bytes()?;
-        let address = UserAddress::from_sig(&vec[..], &sig, &from);
+        let address = UserAddress::from_sig(&msg, &sig, &from);
         let state: UserState<Self::S, NextNonce> = UserState::new(address, total_supply)?;
 
         Ok(state)

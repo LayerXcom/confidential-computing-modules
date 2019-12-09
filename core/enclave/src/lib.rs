@@ -97,6 +97,7 @@ pub unsafe extern "C" fn ecall_state_transition(
 pub unsafe extern "C" fn ecall_init_state(
     sig: &Sig,
     pubkey: &PubKey,
+    msg: &Msg,
     value: u64,
     unsigned_tx: &mut UnsignedTx,
 ) -> sgx_status_t {
@@ -108,7 +109,7 @@ pub unsafe extern "C" fn ecall_init_state(
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
 
     let total_supply = Value::new(value);
-    let init_state = UserState::<Value, _>::init(pubkey, sig, total_supply)
+    let init_state = UserState::<Value, _>::init(pubkey, sig, msg, total_supply)
         .expect("Failed to initialize state.");
     let res_ciphertext = init_state.encrypt(&SYMMETRIC_KEY)
         .expect("Failed to encrypt init state.");
