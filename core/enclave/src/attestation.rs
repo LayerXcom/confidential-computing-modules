@@ -3,8 +3,11 @@ use std::{
     net::TcpStream,
 };
 use https_enclave::{HttpsClient, parse_response_attn_report};
-use crate::error::Result;
-use crate::ocalls::get_ias_socket;
+use crate::{
+    error::Result,
+    ocalls::get_ias_socket,
+    cert::verify_report_cert,
+};
 
 pub const DEV_HOSTNAME : &str = "api.trustedservices.intel.com";
 pub const REPORT_PATH : &str = "/sgx/dev/attestation/v3/report";
@@ -27,9 +30,10 @@ impl<'a> AttestationService<'a> {
         }
     }
 
-    pub fn get_report_and_sig(&self, quote: &str, ias_api_key: &str) -> Result<(String, String)> {
+    pub fn get_report_and_sig(&self, quote: &str, ias_api_key: &str) -> Result<(Vec<u8>, Vec<u8>)> {
         let req = self.raw_report_req(quote, ias_api_key);
-        let (report, sig, _sig_cert) = self.send_raw_req(req)?;
+        let payload = self.send_raw_req(req)?;
+        let (report, sig) = verify_report_cert(payload.as_bytes())?;
         Ok((report, sig))
     }
 
@@ -44,7 +48,7 @@ impl<'a> AttestationService<'a> {
         )
     }
 
-    fn send_raw_req(&self, req: String) -> Result<(String, String, String)> {
+    fn send_raw_req(&self, req: String) -> Result<String> {
         let fd = get_ias_socket()?;
         let mut socket = TcpStream::new(fd)?;
 
@@ -54,7 +58,8 @@ impl<'a> AttestationService<'a> {
         // let res = client.send_from_raw_req(&req)?;
 
         let (report, sig, sig_cert) = parse_response_attn_report(&res);
-        Ok((report, sig, sig_cert))
+        let payload = report + "|" + &sig + "|" + &sig_cert;
+        Ok(payload)
     }
 
 }

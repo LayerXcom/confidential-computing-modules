@@ -25,7 +25,7 @@ static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
     &webpki::RSA_PKCS1_3072_8192_SHA384,
 ];
 
-pub fn verify_report_cert(cert_der: &[u8]) -> Result<(), sgx_status_t> {
+pub fn verify_report_cert(cert_der: &[u8]) -> Result<(Vec<u8>, Vec<u8>), sgx_status_t> {
     // Before we reach here, Webpki already verifed the cert is properly signed
 
     // Search for Public Key prime256v1 OID
@@ -209,5 +209,5 @@ pub fn verify_report_cert(cert_der: &[u8]) -> Result<(), sgx_status_t> {
     //     return Err(sgx_status_t::SGX_ERROR_UNEXPECTED);
     // }
 
-    Ok(())
+    Ok((attn_report_raw.to_vec(), sig))
 }
