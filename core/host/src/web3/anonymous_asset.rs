@@ -31,10 +31,11 @@ pub fn deploy(
 
     let contract = Contract::deploy(web3.eth(), abi)
         .unwrap() // TODO
-        .confirmations(CONFIRMATIONS)
-        .poll_interval(time::Duration::from_secs(POLL_INTERVAL_SECS))
+        // .confirmations(CONFIRMATIONS)
+        // .poll_interval(time::Duration::from_secs(POLL_INTERVAL_SECS))
         .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
-        .execute(bin,
+        .execute(
+            bin,
             (init_ciphertext.to_vec(), report.to_vec(), report_sig.to_vec()), // Parameters are got from ecall, so these have to be allocated.
             account,
         )
