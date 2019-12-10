@@ -17,6 +17,8 @@ use std::{
 pub trait State: Sized + Default {
     fn new(init: u64) -> Self;
 
+    fn as_bytes(&self) -> Result<Vec<u8>>;
+
     fn write_le<W: Write>(&self, writer: &mut W) -> Result<()>;
 
     fn read_le<R: Read>(reader: &mut R) -> Result<Self>;
@@ -38,7 +40,7 @@ pub enum NextNonce { }
 #[derive(Debug, Clone, PartialEq)]
 pub struct UserState<S: State, N> {
     address: UserAddress,
-    state: S,
+    inner_state: S,
     nonce: Nonce,
     _marker: PhantomData<N>,
 }
@@ -52,7 +54,7 @@ impl<S: State, N> UserState<S, N> {
 
     pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
         self.address.write(writer)?;
-        self.state.write_le(writer)?;
+        self.inner_state.write_le(writer)?;
         self.nonce.write(writer)?;
 
         Ok(())
@@ -60,12 +62,12 @@ impl<S: State, N> UserState<S, N> {
 
     pub fn read<R: Read>(mut reader: R) -> Result<Self> {
         let address = UserAddress::read(&mut reader)?;
-        let state = S::read_le(&mut reader)?;
+        let inner_state = S::read_le(&mut reader)?;
         let nonce = Nonce::read(&mut reader)?;
 
         Ok(UserState {
             address,
-            state,
+            inner_state,
             nonce,
             _marker: PhantomData,
         })
@@ -75,29 +77,57 @@ impl<S: State, N> UserState<S, N> {
 // State with NextNonce must not be allowed to access to the database to avoid from
 // storing data which have not been considered globally consensused.
 impl<S: State> UserState<S, CurrentNonce> {
+    /// Decrypt Ciphertext which was stored in a shared ledger.
     pub fn decrypt(cipheriv: Vec<u8>, key: &SymmetricKey) -> Result<Self> {
         let res = decrypt_aes_256_gcm(cipheriv, key)?;
         Self::read(&res[..])
     }
 
+    /// Get in-memory database key.
     pub fn get_db_key(&self) -> &UserAddress {
         &self.address
     }
 
+    /// Get in-memory database value.
     // TODO: Encrypt with sealing key.
     pub fn get_db_value(&self) -> Result<DBValue> {
         let mut buf = vec![];
-        self.state.write_le(&mut buf)?;
+        self.inner_state.write_le(&mut buf)?;
         self.nonce.write(&mut buf)?;
 
         Ok(DBValue::from_vec(buf))
     }
 
-    pub fn get_state_from_db_value(db_value: DBValue) -> Result<S> {
+    pub fn update_inner_state(&self, update: S) -> Self {
+        UserState {
+            address: self.address,
+            inner_state: update,
+            nonce: self.nonce,
+            _marker: PhantomData,
+        }
+    }
+
+    pub fn from_address_and_db_value(
+        address: UserAddress,
+        db_value: DBValue
+    ) -> Result<Self> {
+        let (inner_state, nonce) = Self::from_db_value(db_value)?;
+
+        Ok(UserState {
+            address,
+            inner_state,
+            nonce,
+            _marker: PhantomData,
+        })
+    }
+
+    /// Get inner state and nonce from database value.
+    pub fn from_db_value(db_value: DBValue) -> Result<(S, Nonce)> {
         let reader = db_value.into_vec();
         let state = S::read_le(&mut &reader[..])?;
+        let nonce = Nonce::read(&mut &reader[..])?;
 
-        Ok(state)
+        Ok((state, nonce))
     }
 
     fn next_nonce(&self) -> Result<Nonce> {
@@ -115,16 +145,16 @@ impl<S: State> UserState<S, CurrentNonce> {
 }
 
 impl<S: State> UserState<S, NextNonce> {
-    pub fn new(address: UserAddress, init_state: u64) -> Result<Self> {
-        let state = S::new(init_state);
+    /// Initialize userstate. nonce is defined with `Sha256(address || init_state)`.
+    pub fn new(address: UserAddress, init_state: S) -> Result<Self> {
         let mut buf = vec![];
         address.write(&mut buf)?;
-        state.write_le(&mut buf)?;
+        init_state.write_le(&mut buf)?;
         let nonce = Sha256::hash(&buf).into();
 
         Ok(UserState {
             address,
-            state,
+            inner_state: init_state,
             nonce,
             _marker: PhantomData
         })
@@ -144,7 +174,7 @@ impl<S: State> TryFrom<UserState<S, CurrentNonce>> for UserState<S, NextNonce> {
 
         Ok(UserState {
             address: s.address,
-            state: s.state,
+            inner_state: s.inner_state,
             nonce: next_nonce,
             _marker: PhantomData,
         })
@@ -177,7 +207,13 @@ impl From<Sha256> for Nonce {
 pub mod tests {
     use super::*;
     use crate::stf::Value;
-    use ed25519_dalek::{PublicKey, PUBLIC_KEY_LENGTH};
+    use ed25519_dalek::{SecretKey, PublicKey, Keypair, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH};
+
+    const SECRET_KEY_BYTES: [u8; SECRET_KEY_LENGTH] = [
+        062, 070, 027, 163, 092, 182, 011, 003,
+        077, 234, 098, 004, 011, 127, 079, 228,
+        243, 187, 150, 073, 201, 137, 076, 022,
+        085, 251, 152, 002, 241, 042, 072, 054, ];
 
     const PUBLIC_KEY_BYTES: [u8; PUBLIC_KEY_LENGTH] = [
         130, 039, 155, 015, 062, 076, 188, 063,
@@ -186,11 +222,18 @@ pub mod tests {
         160, 083, 172, 058, 219, 042, 086, 120, ];
 
     pub fn test_read_write() {
-        let pubkey = PublicKey::from_bytes(&PUBLIC_KEY_BYTES).unwrap();
-        let user_address = UserAddress::from_pubkey(&pubkey);
+        let secret = SecretKey::from_bytes(&SECRET_KEY_BYTES).unwrap();
+        let public = PublicKey::from_bytes(&PUBLIC_KEY_BYTES).unwrap();
+        let keypair = Keypair { secret, public };
 
-        let mut state = UserState::<Value, _>::new(user_address, 100).unwrap();
-        let mut state_vec = state.try_into_vec().unwrap();
+        let mut buf = vec![];
+        Value::new(100).write_le(&mut buf).expect("Faild to write value.");
+
+        let sig = keypair.sign(&buf);
+        let user_address = UserAddress::from_sig(&buf, &sig, &public);
+
+        let state = UserState::<Value, _>::new(user_address, Value::new(100)).unwrap();
+        let state_vec = state.try_into_vec().unwrap();
         let res = UserState::read(&state_vec[..]).unwrap();
 
         assert_eq!(state, res);

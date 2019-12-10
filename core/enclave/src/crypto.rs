@@ -10,10 +10,29 @@ use crate::{
     state::{CurrentNonce, State, UserState},
 };
 
+lazy_static! {
+    pub static ref SYMMETRIC_KEY: SymmetricKey = Default::default();
+}
+
 /// The size of the symmetric 256 bit key we use for encryption in bytes.
 pub const SYMMETRIC_KEY_SIZE: usize = 32;
+
 /// symmetric key we use for encryption.
-pub type SymmetricKey = [u8; SYMMETRIC_KEY_SIZE];
+#[derive(Debug, Clone, Copy, Default)]
+pub struct SymmetricKey([u8; SYMMETRIC_KEY_SIZE]);
+
+impl SymmetricKey {
+    pub fn new_rand() -> Result<Self> {
+        let mut buf = [0u8; SYMMETRIC_KEY_SIZE];
+        rng_gen(&mut buf[..])?;
+
+        Ok(SymmetricKey(buf))
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0[..]
+    }
+}
 
 /// The size of initialization vector for AES-256-GCM.
 pub const IV_SIZE: usize = 12;
@@ -30,7 +49,7 @@ pub fn encrypt_aes_256_gcm(msg: Vec<u8>, key: &SymmetricKey) -> Result<Vec<u8>> 
     let mut iv = [0u8; IV_SIZE];
     rng_gen(&mut iv)?;
 
-    let ub_key = UnboundKey::new(&AES_256_GCM, key)?;
+    let ub_key = UnboundKey::new(&AES_256_GCM, key.as_bytes())?;
     let nonce = Nonce::assume_unique_for_key(iv);
     let nonce_seq = OneNonceSequence::new(nonce);
 
@@ -44,7 +63,7 @@ pub fn encrypt_aes_256_gcm(msg: Vec<u8>, key: &SymmetricKey) -> Result<Vec<u8>> 
 
 /// Decryption with AES-256-GCM.
 pub fn decrypt_aes_256_gcm(cipheriv: Vec<u8>, key: &SymmetricKey) -> Result<Vec<u8>> {
-    let ub_key = UnboundKey::new(&AES_256_GCM, key)?;
+    let ub_key = UnboundKey::new(&AES_256_GCM, key.as_bytes())?;
     let (ciphertext, iv) = cipheriv.split_at(cipheriv.len() - IV_SIZE);
 
     let nonce = Nonce::try_assume_unique_for_key(iv)?;
@@ -124,23 +143,24 @@ impl Sha256 {
 }
 
 /// User address represents last 20 bytes of digest of user's public key.
+/// A signature verification must return true to generate a user address.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct UserAddress([u8; 20]);
 
 impl UserAddress {
-    pub fn from_pubkey(pubkey: &PublicKey) -> Self {
+    /// Get a user address only if the verification of signature returns true.
+    pub fn from_sig(msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Self {
+        assert!(pubkey.verify(msg, &sig).is_ok());
+        Self::from_pubkey(&pubkey)
+    }
+
+    fn from_pubkey(pubkey: &PublicKey) -> Self {
         let hash = Sha256::from_pubkey(pubkey);
         let addr = &hash.as_array()[12..];
         let mut res = [0u8; 20];
         res.copy_from_slice(addr);
 
         UserAddress(res)
-    }
-
-    /// Get a user address only if the verification of signature returns true.
-    pub fn from_sig(msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Self {
-        assert!(pubkey.verify(msg, &sig).is_ok());
-        Self::from_pubkey(&pubkey)
     }
 
     pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
@@ -156,6 +176,10 @@ impl UserAddress {
 
     pub fn as_slice(&self) -> &[u8] {
         &self.0[..]
+    }
+
+    pub fn from_array(array: [u8; 20]) -> Self {
+        UserAddress(array)
     }
 }
 

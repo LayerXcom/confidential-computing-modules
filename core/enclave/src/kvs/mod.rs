@@ -48,16 +48,18 @@ impl DBTx {
     }
 
     /// Put instruction is added to a transaction only if the verification of provided signature returns true.
-    pub fn put_by_addr(
+    pub fn put(
         &mut self,
-        key: &UserAddress,
-        value: &[u8],
+        pubkey: &PublicKey,
+        sig: &Signature,
+        msg: &[u8],
     ) {
-        self.0.put(key.as_slice(), value);
+        let key = UserAddress::from_sig(&msg, &sig, &pubkey);
+        self.0.put(key.as_slice(), msg);
     }
 
     /// Delete instruction is added to a transaction only if the verification of provided signature returns true.
-    pub fn delete_by_sig(
+    pub fn delete(
         &mut self,
         msg: &[u8],
         sig: &Signature,

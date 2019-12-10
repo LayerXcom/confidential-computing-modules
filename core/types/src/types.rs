@@ -1,4 +1,4 @@
-use core::{fmt, default::Default, ptr};
+use core::{fmt, default::Default, ptr, mem};
 
 pub const STATE_SIZE: usize = 8;
 pub const PUBKEY_SIZE: usize = 32;
@@ -41,22 +41,33 @@ impl fmt::Display for EnclaveReturn {
 /// Returned from a contract deploy or state transition ecall.
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct TransitionResult {
-    res: *const u8,
+pub struct RawUnsignedTx {
+    /// A pointer to the output of the report using `ocall_save_to_memory()`.
+    pub report: *const u8,
+    pub report_sig: *const u8,
+    /// The number of ciphertexts.
+    pub ciphertext_num: u32,
+    pub ciphertexts: *const u8,
 }
 
-impl Default for TransitionResult {
+impl Default for RawUnsignedTx {
     fn default() -> Self {
-        TransitionResult {
-            res: ptr::null(),
+        RawUnsignedTx {
+            report: ptr::null(),
+            report_sig: ptr::null(),
+            ciphertexts: ptr::null(),
+            .. unsafe { mem::zeroed() }
         }
     }
 }
 
-impl fmt::Debug for TransitionResult {
+impl fmt::Debug for RawUnsignedTx {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut debug_trait_builder = f.debug_struct("TransitionResult");
-        debug_trait_builder.field("res", &(self.res));
+        let mut debug_trait_builder = f.debug_struct("RawUnsignedTx");
+        debug_trait_builder.field("report", &(self.report));
+        debug_trait_builder.field("report_sig", &(self.report_sig));
+        debug_trait_builder.field("ciphertext_num", &(self.ciphertext_num));
+        debug_trait_builder.field("ciphertexts", &(self.ciphertexts));
         debug_trait_builder.finish()
     }
 }

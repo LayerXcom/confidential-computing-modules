@@ -15,29 +15,25 @@ extern "C" {
     ) -> sgx_status_t;
 }
 extern "C" {
-    pub fn ecall_write_state(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        ciphertext: *mut [u8; 60usize],
-    ) -> sgx_status_t;
-}
-extern "C" {
     pub fn ecall_state_transition(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
-        sig: *mut [u8; 65usize],
+        sig: *mut [u8; 64usize],
+        pubkey: *mut [u8; 32usize],
         target: *mut [u8; 20usize],
         value: *mut u64,
-        result: *mut TransitionResult,
+        result: *mut RawUnsignedTx,
     ) -> sgx_status_t;
 }
 extern "C" {
-    pub fn ecall_contract_deploy(
+    pub fn ecall_init_state(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
-        sig: *mut [u8; 65usize],
-        value: *mut u64,
-        result: *mut TransitionResult,
+        sig: *mut [u8; 64usize],
+        pubkey: *mut [u8; 32usize],
+        msg: *mut [u8; 32usize],
+        value: *const u64,
+        result: *mut RawUnsignedTx,
     ) -> sgx_status_t;
 }
 extern "C" {

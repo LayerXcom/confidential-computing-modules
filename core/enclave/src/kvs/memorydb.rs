@@ -24,8 +24,7 @@ impl MemoryKVS {
 }
 
 impl SigVerificationKVS for MemoryKVS {
-    fn get(&self, msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Option<DBValue> {
-        let key = UserAddress::from_sig(&msg, &sig, &pubkey);
+    fn get(&self, key: &UserAddress) -> Option<DBValue> {
         self.inner_get(key.as_slice())
     }
 

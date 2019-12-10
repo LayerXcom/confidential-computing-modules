@@ -1,4 +1,5 @@
 use sgx_types::*;
+use anonify_types::traits::SliceCPtr;
 use std::vec::Vec;
 use crate::auto_ffi::*;
 use crate::error::*;
@@ -78,4 +79,13 @@ pub fn get_quote(report: sgx_report_t, spid: &sgx_spid_t) -> Result<Vec<u8>> {
 
     let _ = quote.split_off(quote_len as usize);
     Ok(quote)
+}
+
+// TODO: Replace u64 with *const u8, and pass it via the ocall using *const *const u8
+pub fn save_to_host_memory(data: &[u8]) -> Result<u64> {
+    let mut ptr = 0u64;
+    match unsafe { ocall_save_to_memory(&mut ptr as *mut u64, data.as_c_ptr(), data.len()) } {
+        sgx_status_t::SGX_SUCCESS => Ok(ptr),
+        e => Err(e.into()),
+    }
 }
