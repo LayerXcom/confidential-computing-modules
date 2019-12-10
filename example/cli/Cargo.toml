@@ -7,8 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anonify-host = { path = "../core/host" }
-anonify-wallet = { path = "../wallet" }
+anonify-wallet = { path = "../../wallet" }
+reqwest = "0.10.0-alpha.2"
 clap = "~2.32"
 rand = "0.7"
 console = "0.7"

@@ -2,10 +2,11 @@
 members = [
     "wallet",
     "core/types",
+    "example/cli",
 ]
 exclude = [
     "core/enclave",
     "core/host",
     "https-enclave",
-    "cli",
+    "example/server",
 ]
