@@ -35,6 +35,7 @@ mod stf;
 mod attestation;
 mod quote;
 mod ocalls;
+mod cert;
 #[cfg(debug_assertions)]
 mod tests;
 

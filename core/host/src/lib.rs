@@ -22,7 +22,5 @@ fn init_enclave() {
     let enclave = EnclaveDir::new().init_enclave().unwrap();
     let eid = enclave.geteid();
 
-    println!("[+] Done!");
-
     enclave.destroy();
 }
