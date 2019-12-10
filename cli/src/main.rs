@@ -47,7 +47,12 @@ fn main() {
 
 const ANONIFY_COMMAND: &'static str = "anonify";
 
-fn subcommand_anonify<R: Rng>(mut term: Term, root_dir: PathBuf, matches: &ArgMatches, rng: &mut R) {
+fn subcommand_anonify<R: Rng>(
+    mut term: Term,
+    root_dir: PathBuf,
+    matches: &ArgMatches,
+    rng: &mut R
+) {
     match matches.subcommand() {
         ("get-state", Some(matches)) => {
             get_state(&mut term, root_dir);
@@ -89,6 +94,10 @@ fn subcommand_wallet<R: Rng>(mut term: term::Term, root_dir: PathBuf, matches: &
             new_wallet(&mut term, root_dir, rng)
                 .expect("Invalid operations of creating new wallet.");
         },
+        ("list", Some(_)) => {
+            show_list(&mut term, root_dir)
+                .expect("Invalid operations of showing accounts list.");
+        },
         _ => {
             term.error(matches.usage()).unwrap();
             ::std::process::exit(1)
@@ -100,6 +109,9 @@ fn wallet_commands_definition<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name(WALLET_COMMAND)
         .about("wallet operations")
         .subcommand(SubCommand::with_name("init")
-            .about("Initialize your wallet")
+            .about("Initialize your wallet.")
+        )
+        .subcommand(SubCommand::with_name("list")
+            .about("Show list your accounts.")
         )
 }

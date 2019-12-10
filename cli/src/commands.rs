@@ -56,6 +56,33 @@ pub(crate) fn new_wallet<R: Rng>(term: &mut Term, root_dir: PathBuf, rng: &mut R
     Ok(())
 }
 
+
+pub(crate) fn show_list(
+    term: &mut Term,
+    root_dir: PathBuf,
+) -> Result<()> {
+    let (wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
+
+    let keyfiles = keystore_dir.load_all()?;
+    if keyfiles.len() == 0 {
+        term.warn("Not found accounts\n")?;
+        return Ok(());
+    }
+
+    // let default_index = get_default_index(&wallet_dir)? as usize;
+
+    for (i, keyfile) in keyfiles.iter().enumerate() {
+        let (name, address) = (&*keyfile.account_name, &*keyfile.base64_address);
+        // if i == default_index {
+            // term.success(&format!("* {}: {}\n", name, address))?;
+        // } else {
+            term.success(&format!("{}: {}\n", name, address))?;
+        // }
+    }
+
+    Ok(())
+}
+
 fn wallet_keystore_dirs(root_dir: &PathBuf) -> Result<(WalletDirectory, KeystoreDirectory)> {
     // configure wallet directory
     let wallet_dir = WalletDirectory::create(&root_dir)?;
