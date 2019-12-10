@@ -1,0 +1,11 @@
+[workspace]
+members = [
+    "wallet",
+    "core/types",
+]
+exclude = [
+    "core/enclave",
+    "core/host",
+    "https-enclave",
+    "cli",
+]

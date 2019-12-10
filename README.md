@@ -28,7 +28,7 @@ $ make DEBUG=1
 ```
 
 ### HW
-Assumed your hardware supports Intel SGX or run in on [Azure Confidential Computing](https://azure.microsoft.com/ja-jp/solutions/confidential-compute/).
+Assumed your hardware supports Intel SGX or run it on [Azure Confidential Computing](https://azure.microsoft.com/ja-jp/solutions/confidential-compute/).
 
 ```
 $ docker run -v `pwd`:/root/anonify --device /dev/isgx --network="host" --rm -it osuketh/anonify

@@ -18,7 +18,7 @@ mod error;
 fn main() {
     let default_root_dir = get_default_root_dir();
 
-    let matches = App::new("zface")
+    let matches = App::new("anonify")
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .version(crate_version!())
         .author(crate_authors!())
