@@ -21,7 +21,7 @@ pub fn deploy(
     init_ciphertext: &[u8],
     report: &[u8],
     report_sig: &[u8],
-) -> Result<()> {
+) -> Result<Address> {
     let (eloop, transport) = Http::new(eth_url)?;
     let web3 = Web3::new(transport);
     let account = web3.eth().accounts().wait()?[0];
@@ -43,10 +43,7 @@ pub fn deploy(
         .wait()
         .unwrap(); // TODO
 
-    // TODO: Show full logs.
-    println!("contract address: {}", contract.address());
-
-    Ok(())
+    Ok(contract.address())
 }
 
 #[derive(Debug)]

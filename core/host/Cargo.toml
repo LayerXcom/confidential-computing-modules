@@ -7,8 +7,8 @@ build = "build.rs"
 
 [dependencies]
 anonify-types = { path = "../types" }
-sgx_types = { git = "https://github.com/baidu/rust-sgx-sdk.git" }
-sgx_urts = { git = "https://github.com/baidu/rust-sgx-sdk.git" }
+sgx_types = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
+sgx_urts = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
 dirs = "2.0"
 failure = "0.1.6"
 serde = { version = "1.0", features=["serde_derive"] }

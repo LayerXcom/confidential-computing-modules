@@ -37,9 +37,9 @@ pub fn get_state(
 
 pub fn init_state(
     eid: sgx_enclave_id_t,
-    sig: &Sig,
-    pubkey: &PubKey,
-    msg: &Msg,
+    sig: &[u8],
+    pubkey: &[u8],
+    msg: &[u8],
     total_supply: u64,
 ) -> Result<UnsignedTx> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
