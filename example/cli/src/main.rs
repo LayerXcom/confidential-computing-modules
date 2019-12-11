@@ -47,6 +47,7 @@ fn main() {
 //
 
 const ANONIFY_COMMAND: &'static str = "anonify";
+const DEFAULT_KEYFILE_INDEX: &'static str = "0";
 
 fn subcommand_anonify<R: Rng>(
     mut term: Term,
@@ -58,7 +59,8 @@ fn subcommand_anonify<R: Rng>(
 
     match matches.subcommand() {
         ("deploy", Some(matches)) => {
-            commands::deploy(&mut term, root_dir, anonify_url);
+            let keyfile_index: usize = matches.value_of("keyfile-index").unwrap().parse().unwrap();
+            commands::deploy(&mut term, root_dir, anonify_url, keyfile_index, rng);
         },
         ("get-state", Some(matches)) => {
             commands::get_state(&mut term, root_dir, anonify_url);
@@ -75,6 +77,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         .about("Anonify operations")
         .subcommand(SubCommand::with_name("deploy"))
             .about("Deploy a contract from anonify services.")
+            .arg(Arg::with_name("keyfile-index")
+            .short("i")
+            .takes_value(true)
+            .required(false)
+            .default_value(DEFAULT_KEYFILE_INDEX)
+        )
         .subcommand(SubCommand::with_name("get-state"))
             .about("Get state from anonify services.")
 }
@@ -102,6 +110,11 @@ fn subcommand_wallet<R: Rng>(mut term: term::Term, root_dir: PathBuf, matches: &
             commands::new_wallet(&mut term, root_dir, rng)
                 .expect("Invalid operations of creating new wallet.");
         },
+        ("add-account", Some(_)) => {
+            // Create new wallet
+            commands::add_account(&mut term, root_dir, rng)
+                .expect("Invalid operations of Adding a new account.");
+        },
         ("list", Some(_)) => {
             commands::show_list(&mut term, root_dir)
                 .expect("Invalid operations of showing accounts list.");
@@ -118,6 +131,9 @@ fn wallet_commands_definition<'a, 'b>() -> App<'a, 'b> {
         .about("wallet operations")
         .subcommand(SubCommand::with_name("init")
             .about("Initialize your wallet.")
+        )
+        .subcommand(SubCommand::with_name("add-account")
+            .about("Add a new account into your wallet.")
         )
         .subcommand(SubCommand::with_name("list")
             .about("Show list your accounts.")
