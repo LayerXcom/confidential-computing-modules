@@ -3,7 +3,6 @@ use actix_web::{
     HttpResponse,
 };
 use crate::{
-    api,
     Server,
 };
 use failure::Error;

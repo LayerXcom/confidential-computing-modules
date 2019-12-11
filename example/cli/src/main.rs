@@ -5,10 +5,10 @@ extern crate clap;
 
 use std::path::PathBuf;
 use clap::{Arg, App, SubCommand, AppSettings, ArgMatches};
+use dotenv::dotenv;
 use rand::{rngs::OsRng, Rng};
 use term::Term;
 use crate::config::*;
-use crate::commands::*;
 
 mod term;
 mod config;
@@ -16,6 +16,7 @@ mod commands;
 mod error;
 
 fn main() {
+    dotenv().ok();
     let default_root_dir = get_default_root_dir();
 
     let matches = App::new("anonify")
@@ -53,9 +54,14 @@ fn subcommand_anonify<R: Rng>(
     matches: &ArgMatches,
     rng: &mut R
 ) {
+    let anonify_url = std::env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
+
     match matches.subcommand() {
+        ("deploy", Some(matches)) => {
+            commands::deploy(&mut term, root_dir, anonify_url);
+        },
         ("get-state", Some(matches)) => {
-            get_state(&mut term, root_dir);
+            commands::get_state(&mut term, root_dir, anonify_url);
         },
         _ => {
             term.error(matches.usage()).unwrap();
@@ -67,6 +73,8 @@ fn subcommand_anonify<R: Rng>(
 fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name(ANONIFY_COMMAND)
         .about("Anonify operations")
+        .subcommand(SubCommand::with_name("deploy"))
+            .about("Deploy a contract from anonify services.")
         .subcommand(SubCommand::with_name("get-state"))
             .about("Get state from anonify services.")
 }
@@ -91,11 +99,11 @@ fn subcommand_wallet<R: Rng>(mut term: term::Term, root_dir: PathBuf, matches: &
     match matches.subcommand() {
         ("init", Some(_)) => {
             // Create new wallet
-            new_wallet(&mut term, root_dir, rng)
+            commands::new_wallet(&mut term, root_dir, rng)
                 .expect("Invalid operations of creating new wallet.");
         },
         ("list", Some(_)) => {
-            show_list(&mut term, root_dir)
+            commands::show_list(&mut term, root_dir)
                 .expect("Invalid operations of showing accounts list.");
         },
         _ => {

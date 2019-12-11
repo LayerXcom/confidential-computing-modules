@@ -15,7 +15,6 @@ use actix_web::{
 use handlers::*;
 
 mod handlers;
-mod api;
 
 #[derive(Clone)]
 pub struct Server {
@@ -36,7 +35,8 @@ impl Server {
 fn main() -> io::Result<()> {
     env_logger::init();
     dotenv().ok();
-    let endpoint = "127.0.0.1:8080";
+    let endpoint = env::var("ANONIFY_URL")
+        .expect("ANONIFY_URL is not set.");
 
     let server = Server::new();
 

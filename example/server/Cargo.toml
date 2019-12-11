@@ -8,10 +8,9 @@ edition = "2018"
 
 [dependencies]
 anonify-host = { path = "../../core/host" }
+api = { path = "../api" }
 sgx_types = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
 actix-web = "1.0"
-serde = "1"
-serde_derive = "1"
 env_logger = "0.6"
 dotenv = "0.13"
 failure = "0.1"

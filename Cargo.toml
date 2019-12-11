@@ -3,6 +3,7 @@ members = [
     "wallet",
     "core/types",
     "example/cli",
+    "example/api",
 ]
 exclude = [
     "core/enclave",

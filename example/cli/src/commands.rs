@@ -2,13 +2,20 @@ use std::path::PathBuf;
 use rand::Rng;
 use anonify_wallet::{WalletDirectory, KeystoreDirectory, KeyFile, DirOperations};
 use bip39::{Mnemonic, Language, MnemonicType, Seed};
+use reqwest::Client;
 use crate::{
     term::Term,
     error::Result,
     config::{VERSION, ITERS},
 };
 
-pub(crate) fn get_state(term: &mut Term, root_dir: PathBuf) {
+pub(crate) fn deploy(term: &mut Term, root_dir: PathBuf, anonify_url: String) {
+    let client = Client::new();
+    
+    client.post(&anonify_url).json().send().unwrap();
+}
+
+pub(crate) fn get_state(term: &mut Term, root_dir: PathBuf, anonify_url: String) {
 
 }
 

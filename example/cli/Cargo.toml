@@ -8,7 +8,8 @@ edition = "2018"
 
 [dependencies]
 anonify-wallet = { path = "../../wallet" }
-reqwest = "0.10.0-alpha.2"
+api = { path = "../api" }
+reqwest = "0.9"
 clap = "~2.32"
 rand = "0.7"
 console = "0.7"
@@ -17,3 +18,4 @@ dirs = "2.0"
 log = "0.4"
 env_logger = "0.5"
 tiny-bip39 = "0.6.0"
+dotenv = "0.13"
