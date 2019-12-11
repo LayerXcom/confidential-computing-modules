@@ -15,12 +15,15 @@ pub(crate) fn deploy<R: Rng>(
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
+    total_supply: u64,
     rng: &mut R
 ) -> Result<()> {
     let password = prompt_password(term)?;
 
     let client = Client::new();
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+
+    let req = api::deploy::post::Request::new(&keypair, total_supply, rng);
 
     // client.post(&anonify_url).json().send().unwrap();
 

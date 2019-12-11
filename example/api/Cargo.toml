@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 serde = "1"
 serde_derive = "1"
+ed25519-dalek = "1.0.0-pre.2"
+rand = "0.7"

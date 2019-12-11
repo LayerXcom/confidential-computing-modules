@@ -60,7 +60,9 @@ fn subcommand_anonify<R: Rng>(
     match matches.subcommand() {
         ("deploy", Some(matches)) => {
             let keyfile_index: usize = matches.value_of("keyfile-index").unwrap().parse().unwrap();
-            commands::deploy(&mut term, root_dir, anonify_url, keyfile_index, rng);
+            let total_supply: u64 = matches.value_of("total_supply").unwrap().parse().unwrap();
+
+            commands::deploy(&mut term, root_dir, anonify_url, keyfile_index, total_supply, rng).unwrap();
         },
         ("get-state", Some(matches)) => {
             commands::get_state(&mut term, root_dir, anonify_url);
@@ -78,11 +80,16 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         .subcommand(SubCommand::with_name("deploy"))
             .about("Deploy a contract from anonify services.")
             .arg(Arg::with_name("keyfile-index")
-            .short("i")
-            .takes_value(true)
-            .required(false)
-            .default_value(DEFAULT_KEYFILE_INDEX)
-        )
+                .short("i")
+                .takes_value(true)
+                .required(false)
+                .default_value(DEFAULT_KEYFILE_INDEX)
+            )
+            .arg(Arg::with_name("total_supply")
+                .short("t")
+                .takes_value(true)
+                .required(true)
+            )
         .subcommand(SubCommand::with_name("get-state"))
             .about("Get state from anonify services.")
 }
