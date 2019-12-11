@@ -6,7 +6,7 @@ use std::{
     io::BufReader
 };
 use sgx_types::*;
-use log::{info, error};
+use log::{info, error, debug};
 
 pub const IAS_REPORT_CA:&[u8] = include_bytes!("../AttestationReportSigningCACert.pem");
 

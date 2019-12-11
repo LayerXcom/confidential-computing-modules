@@ -17,10 +17,8 @@ mod auto_ffi;
 #[cfg(test)]
 mod tests;
 
-fn init_enclave() {
-
+pub fn init_enclave() -> sgx_enclave_id_t {
     let enclave = EnclaveDir::new().init_enclave().unwrap();
-    let eid = enclave.geteid();
-
-    enclave.destroy();
+    enclave.geteid()
 }
+
