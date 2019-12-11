@@ -24,9 +24,9 @@ pub(crate) fn deploy<R: Rng>(
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
     let req = api::deploy::post::Request::new(&keypair, total_supply, rng);
+    let res = client.post(&anonify_url).json(&req).send()?;
 
-    // client.post(&anonify_url).json().send().unwrap();
-
+    println!("Deployed Contract Address: {:?}", res);
     Ok(())
 }
 
