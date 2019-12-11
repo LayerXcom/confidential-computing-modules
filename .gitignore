@@ -48,4 +48,4 @@ anonify-types.h
 *.lib
 
 /build
-dummy.pem
+.env

@@ -19,11 +19,15 @@ pub mod deploy {
     pub mod post {
         use serde_derive::{Deserialize, Serialize};
 
-        #[derive(Clone, Deserialize, Serialize)]
+        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
         pub struct Request {
-            total_supply: u64,
-            sig: Vec<u8>,
-            nonce: [u8; 32],
+            pub sig: Vec<u8>,
+            pub pubkey: [u8; 32],
+            pub nonce: [u8; 32],
+            pub total_supply: u64,
         }
+
+        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
+        pub struct Response(pub [u8; 20]);
     }
 }

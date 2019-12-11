@@ -18,7 +18,7 @@ pub fn anonify_deploy(
     nonce: &[u8],
     total_supply: u64,
     eth_url: &str,
-) -> Result<()> {
+) -> Result<[u8; 20]> {
     let unsigned_tx = init_state(
         enclave_id,
         sig,
@@ -27,12 +27,12 @@ pub fn anonify_deploy(
         total_supply,
     )?;
 
-    let contract = web3::deploy(
+    let address = web3::deploy(
         eth_url,
         &unsigned_tx.ciphertexts,
         &unsigned_tx.report,
         &unsigned_tx.report_sig
     )?;
 
-    Ok(())
+    Ok(address.to_fixed_bytes())
 }

@@ -4,16 +4,25 @@ use actix_web::{
 };
 use crate::{
     api,
-    EnclaveId,
+    Server,
 };
+use failure::Error;
 use anonify_host::prelude::anonify_deploy;
 
 pub fn handle_post_deploy(
-    enclave_id: web::Data<EnclaveId>,
+    server: web::Data<Server>,
     req: web::Json<api::deploy::post::Request>,
-) -> HttpResponse {
+) -> Result<HttpResponse, Error> {
+    let contract_addr = anonify_deploy(
+        server.enclave_id,
+        &req.sig[..],
+        &req.pubkey[..],
+        &req.nonce[..],
+        req.total_supply,
+        &server.eth_url,
+    ).expect("Failed to deploy contract.");
 
-    unimplemented!();
+    Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr)))
 }
 
 pub fn handle_post_transfer(
