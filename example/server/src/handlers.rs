@@ -15,10 +15,8 @@ pub fn handle_post_deploy(
 ) -> Result<HttpResponse, Error> {
     debug!("Starting deploy a contract...");
 
-    let enclave_id = init_enclave();
-
     let contract_addr = anonify_deploy(
-        enclave_id,
+        server.enclave_id,
         &req.sig[..],
         &req.pubkey[..],
         &req.nonce[..],
