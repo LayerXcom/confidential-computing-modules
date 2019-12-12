@@ -42,7 +42,7 @@ $ docker run -d --name ganache --net=test-network --rm -it trufflesuite/ganache-
 
 Running intel SGX environment
 ```
-$ docker run -v `pwd`:/root/anonify --device /dev/isgx --net=test-network --rm -it osuketh/anonify
+$ docker run -v `pwd`:/root/anonify --device /dev/isgx --net=test-network --name sgx --rm -it osuketh/anonify
 ```
 - The SDK Driver creates a device at `/dev/isgx`, non-DCAP systems using IAS.
 - Use `--network="host"` for Docker-for-Linux, then `127.0.0.1` in your docker container will point to your docker host. It'll be used by the ganache-cli testing.
