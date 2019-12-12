@@ -4,6 +4,7 @@ use actix_web::{
 };
 use crate::{
     Server,
+    ENCLAVE_ID
 };
 use failure::Error;
 use log::debug;
@@ -16,7 +17,7 @@ pub fn handle_post_deploy(
     debug!("Starting deploy a contract...");
 
     let contract_addr = anonify_deploy(
-        server.enclave_id,
+        *ENCLAVE_ID,
         &req.sig[..],
         &req.pubkey[..],
         &req.nonce[..],

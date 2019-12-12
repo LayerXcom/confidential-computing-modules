@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate lazy_static;
+
 use std::{
     collections::HashMap,
     io,
@@ -16,19 +19,23 @@ use handlers::*;
 
 mod handlers;
 
+lazy_static! {
+    static ref ENCLAVE_ID: sgx_enclave_id_t = { init_enclave() };
+}
+
 #[derive(Clone)]
 pub struct Server {
-    enclave_id: sgx_enclave_id_t,
+    // enclave_id: sgx_enclave_id_t,
     eth_url: String,
 }
 
 impl Server {
     pub fn new() -> Self {
-        let enclave_id = init_enclave();
+        // let enclave_id = init_enclave();
         let eth_url = env::var("ETH_URL")
             .expect("ETH_URL is not set.");
 
-        Server { enclave_id, eth_url }
+        Server { eth_url }
     }
 }
 
