@@ -19,13 +19,8 @@ use handlers::*;
 
 mod handlers;
 
-lazy_static! {
-    static ref ENCLAVE_ID: sgx_enclave_id_t = { init_enclave() };
-}
-
 #[derive(Clone)]
 pub struct Server {
-    // enclave_id: sgx_enclave_id_t,
     eth_url: String,
 }
 
