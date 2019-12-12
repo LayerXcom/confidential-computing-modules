@@ -7,6 +7,8 @@ extern crate serde;
 use init_enclave::EnclaveDir;
 use sgx_types::*;
 
+pub use error::HostError as Error;
+pub mod prelude;
 mod init_enclave;
 mod ocalls;
 mod ecalls;
@@ -16,13 +18,3 @@ mod web3;
 mod auto_ffi;
 #[cfg(test)]
 mod tests;
-
-fn init_enclave() {
-
-    let enclave = EnclaveDir::new().init_enclave().unwrap();
-    let eid = enclave.geteid();
-
-    println!("[+] Done!");
-
-    enclave.destroy();
-}

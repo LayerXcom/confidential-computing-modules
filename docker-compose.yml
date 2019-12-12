@@ -1,0 +1,34 @@
+version: '3'
+services:
+  sgx_machine:
+    image: osuketh/anonify:latest
+    command:
+      - ./scripts/run-server.sh
+    volumes:
+      - ./:/root/anonify
+    # devices:
+    #   - "/dev/isgx"
+    working_dir: /root/anonify
+    environment:
+      ANONIFY_URL: 172.28.1.1:8080
+      ETH_URL: 172.28.1.2:8545
+    networks:
+      testing_net:
+        ipv4_address: 172.28.1.1
+
+  ganache:
+      image: trufflesuite/ganache-cli:latest
+      ports:
+        - "8545:8545"
+      volumes:
+        - ./ganache_data:/ganache_data
+      networks:
+        testing_net:
+          ipv4_address: 172.28.1.2
+
+networks:
+  testing_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16

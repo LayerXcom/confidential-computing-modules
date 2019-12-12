@@ -14,6 +14,7 @@ use web3::{
     types::{Address, Bytes, H160, H256, TransactionReceipt, U256, FilterBuilder},
     futures::Future,
 };
+use log::debug;
 use ethabi::Contract as ContractABI;
 
 pub fn deploy(
@@ -21,7 +22,7 @@ pub fn deploy(
     init_ciphertext: &[u8],
     report: &[u8],
     report_sig: &[u8],
-) -> Result<()> {
+) -> Result<Address> {
     let (eloop, transport) = Http::new(eth_url)?;
     let web3 = Web3::new(transport);
     let account = web3.eth().accounts().wait()?[0];
@@ -43,10 +44,7 @@ pub fn deploy(
         .wait()
         .unwrap(); // TODO
 
-    // TODO: Show full logs.
-    println!("contract address: {}", contract.address());
-
-    Ok(())
+    Ok(contract.address())
 }
 
 #[derive(Debug)]
@@ -131,7 +129,7 @@ mod test {
     use crate::init_enclave::EnclaveDir;
     use crate::ecalls::init_state;
 
-    const ETH_URL: &'static str = "http://127.0.0.1:8545";
+    const ETH_URL: &'static str = "http://172.18.0.2:8545";
 
     #[test]
     fn test_deploy_contract() {
@@ -159,5 +157,10 @@ mod test {
             &unsigned_tx.report,
             &unsigned_tx.report_sig
         ).unwrap();
+    }
+
+    #[test]
+    fn test_transfer() {
+
     }
 }

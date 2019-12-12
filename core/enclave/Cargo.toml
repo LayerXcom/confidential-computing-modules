@@ -22,6 +22,10 @@ byteorder = { version = "1", default-features = false }
 sha2 = { version = "0.8", default-features = false }
 base64 = { rev = "sgx_1.0.9", git = "https://github.com/mesalock-linux/rust-base64-sgx" }
 hex = { version = "0.4", default-features = false }
+log = { version = "0.4", git = "https://github.com/mesalock-linux/log-sgx" }
+env_logger = { version = "0.7", git = "https://github.com/mesalock-linux/env_logger-sgx" }
+webpki = { git = "https://github.com/mesalock-linux/webpki", branch = "mesalock_sgx" }
+rustls = { git = "https://github.com/mesalock-linux/rustls", branch = "mesalock_sgx" }
 
 sgx_tse = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
 sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git", features = ["untrusted_fs","net","backtrace"] }

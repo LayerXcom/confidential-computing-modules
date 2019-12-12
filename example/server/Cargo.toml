@@ -1,0 +1,22 @@
+[package]
+name = "anonify-server"
+version = "0.1.0"
+authors = ["osuketh <dish230@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anonify-host = { path = "../../core/host" }
+api = { path = "../api" }
+sgx_types = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
+actix-web = "1.0"
+dotenv = "0.13"
+failure = "0.1"
+log = "0.4"
+env_logger = "0.7"
+
+# futures = "0.3.1"
+# validator = "0.6.3"
+# validator_derive = "0.6.5"
+

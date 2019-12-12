@@ -20,8 +20,9 @@ extern "C" {
         retval: *mut sgx_status_t,
         sig: *mut [u8; 64usize],
         pubkey: *mut [u8; 32usize],
+        msg: *mut [u8; 32usize],
         target: *mut [u8; 20usize],
-        value: *mut u64,
+        value: *const u64,
         result: *mut RawUnsignedTx,
     ) -> sgx_status_t;
 }

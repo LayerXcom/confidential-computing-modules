@@ -1,14 +1,12 @@
 #[macro_use]
-extern crate log;
-#[macro_use]
 extern crate clap;
 
 use std::path::PathBuf;
 use clap::{Arg, App, SubCommand, AppSettings, ArgMatches};
+use dotenv::dotenv;
 use rand::{rngs::OsRng, Rng};
 use term::Term;
 use crate::config::*;
-use crate::commands::*;
 
 mod term;
 mod config;
@@ -16,9 +14,10 @@ mod commands;
 mod error;
 
 fn main() {
+    dotenv().ok();
     let default_root_dir = get_default_root_dir();
 
-    let matches = App::new("zface")
+    let matches = App::new("anonify")
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .version(crate_version!())
         .author(crate_authors!())
@@ -46,11 +45,32 @@ fn main() {
 //
 
 const ANONIFY_COMMAND: &'static str = "anonify";
+const DEFAULT_KEYFILE_INDEX: &'static str = "0";
 
-fn subcommand_anonify<R: Rng>(mut term: Term, root_dir: PathBuf, matches: &ArgMatches, rng: &mut R) {
+fn subcommand_anonify<R: Rng>(
+    mut term: Term,
+    root_dir: PathBuf,
+    matches: &ArgMatches,
+    rng: &mut R
+) {
+    let anonify_url = std::env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
+
     match matches.subcommand() {
+        ("deploy", Some(matches)) => {
+            let keyfile_index: usize = matches.value_of("keyfile-index")
+                .expect("Not found keyfile-index.")
+                .parse()
+                .expect("Failed to parse keyfile-index");
+            let total_supply: u64 = matches.value_of("total_supply")
+                .expect("Not found total_supply.")
+                .parse()
+                .expect("Failed to parse total_supply");
+
+            commands::deploy(&mut term, root_dir, anonify_url, keyfile_index, total_supply, rng)
+                .expect("Faild to deploy command");
+        },
         ("get-state", Some(matches)) => {
-            get_state(&mut term, root_dir);
+            commands::get_state(&mut term, root_dir, anonify_url);
         },
         _ => {
             term.error(matches.usage()).unwrap();
@@ -62,6 +82,20 @@ fn subcommand_anonify<R: Rng>(mut term: Term, root_dir: PathBuf, matches: &ArgMa
 fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name(ANONIFY_COMMAND)
         .about("Anonify operations")
+        .subcommand(SubCommand::with_name("deploy")
+            .about("Deploy a contract from anonify services.")
+            .arg(Arg::with_name("keyfile-index")
+                .short("i")
+                .takes_value(true)
+                .required(false)
+                .default_value(DEFAULT_KEYFILE_INDEX)
+            )
+            .arg(Arg::with_name("total_supply")
+                .short("t")
+                .takes_value(true)
+                .required(true)
+            )
+        )
         .subcommand(SubCommand::with_name("get-state"))
             .about("Get state from anonify services.")
 }
@@ -86,8 +120,17 @@ fn subcommand_wallet<R: Rng>(mut term: term::Term, root_dir: PathBuf, matches: &
     match matches.subcommand() {
         ("init", Some(_)) => {
             // Create new wallet
-            new_wallet(&mut term, root_dir, rng)
+            commands::new_wallet(&mut term, root_dir, rng)
                 .expect("Invalid operations of creating new wallet.");
+        },
+        ("add-account", Some(_)) => {
+            // Create new wallet
+            commands::add_account(&mut term, root_dir, rng)
+                .expect("Invalid operations of Adding a new account.");
+        },
+        ("list", Some(_)) => {
+            commands::show_list(&mut term, root_dir)
+                .expect("Invalid operations of showing accounts list.");
         },
         _ => {
             term.error(matches.usage()).unwrap();
@@ -100,6 +143,12 @@ fn wallet_commands_definition<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name(WALLET_COMMAND)
         .about("wallet operations")
         .subcommand(SubCommand::with_name("init")
-            .about("Initialize your wallet")
+            .about("Initialize your wallet.")
+        )
+        .subcommand(SubCommand::with_name("add-account")
+            .about("Add a new account into your wallet.")
+        )
+        .subcommand(SubCommand::with_name("list")
+            .about("Show list your accounts.")
         )
 }

@@ -1,5 +1,6 @@
 use console;
 use dialoguer;
+use log::warn;
 use std::{
     error::Error,
     io::{self, Write},

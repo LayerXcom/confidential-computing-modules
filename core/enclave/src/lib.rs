@@ -35,6 +35,7 @@ mod stf;
 mod attestation;
 mod quote;
 mod ocalls;
+mod cert;
 #[cfg(debug_assertions)]
 mod tests;
 
@@ -64,6 +65,7 @@ pub unsafe extern "C" fn ecall_get_state(
 pub unsafe extern "C" fn ecall_state_transition(
     sig: &Sig,
     pubkey: &PubKey,
+    msg: &Msg,
     target: &Address,
     value: u64,
     unsigned_tx: &mut RawUnsignedTx,
@@ -76,7 +78,7 @@ pub unsafe extern "C" fn ecall_state_transition(
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let target_addr = UserAddress::from_array(*target);
 
-    let (my_state, other_state) = UserState::<Value ,_>::transfer(pubkey, sig, target_addr, Value::new(value))
+    let (my_state, other_state) = UserState::<Value ,_>::transfer(pubkey, sig, msg, target_addr, Value::new(value))
         .expect("Failed to update state.");
     let mut my_ciphertext = my_state.encrypt(&SYMMETRIC_KEY)
         .expect("Failed to encrypt my state.");
@@ -85,8 +87,8 @@ pub unsafe extern "C" fn ecall_state_transition(
 
     my_ciphertext.append(&mut other_ciphertext);
 
-    unsigned_tx.report = save_to_host_memory(report.as_bytes()).unwrap() as *const u8;
-    unsigned_tx.report_sig = save_to_host_memory(report_sig.as_bytes()).unwrap() as *const u8;
+    unsigned_tx.report = save_to_host_memory(&report[..]).unwrap() as *const u8;
+    unsigned_tx.report_sig = save_to_host_memory(&report_sig[..]).unwrap() as *const u8;
     unsigned_tx.ciphertext_num = 2 as u32; // todo;
     unsigned_tx.ciphertexts = save_to_host_memory(&my_ciphertext[..]).unwrap() as *const u8;
 
@@ -114,8 +116,8 @@ pub unsafe extern "C" fn ecall_init_state(
     let res_ciphertext = init_state.encrypt(&SYMMETRIC_KEY)
         .expect("Failed to encrypt init state.");
 
-    unsigned_tx.report = save_to_host_memory(report.as_bytes()).unwrap() as *const u8;
-    unsigned_tx.report_sig = save_to_host_memory(report_sig.as_bytes()).unwrap() as *const u8;
+    unsigned_tx.report = save_to_host_memory(&report[..]).unwrap() as *const u8;
+    unsigned_tx.report_sig = save_to_host_memory(&report_sig[..]).unwrap() as *const u8;
     unsigned_tx.ciphertext_num = 1 as u32; // todo;
     unsigned_tx.ciphertexts = save_to_host_memory(&res_ciphertext[..]).unwrap() as *const u8;
 
