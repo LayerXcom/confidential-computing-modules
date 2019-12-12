@@ -9,6 +9,7 @@ use crate::{
     error::Result,
     config::{VERSION, ITERS},
 };
+use log::debug;
 
 pub(crate) fn deploy<R: Rng>(
     term: &mut Term,
@@ -24,9 +25,10 @@ pub(crate) fn deploy<R: Rng>(
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
     let req = api::deploy::post::Request::new(&keypair, total_supply, rng);
+    debug!("Reqest json: {:?}", &req);
     let res = client.post(&anonify_url).json(&req).send()?;
 
-    println!("Deployed Contract Address: {:?}", res);
+    debug!("Response: {:?}", res);
     Ok(())
 }
 

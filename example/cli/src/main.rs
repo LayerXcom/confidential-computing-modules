@@ -1,6 +1,4 @@
 #[macro_use]
-extern crate log;
-#[macro_use]
 extern crate clap;
 
 use std::path::PathBuf;
@@ -17,6 +15,7 @@ mod error;
 
 fn main() {
     dotenv().ok();
+    env_logger::init();
     let default_root_dir = get_default_root_dir();
 
     let matches = App::new("anonify")

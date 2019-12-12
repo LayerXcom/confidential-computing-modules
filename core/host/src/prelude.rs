@@ -1,4 +1,5 @@
 use sgx_types::sgx_enclave_id_t;
+use log::debug;
 use crate::{
     init_enclave::EnclaveDir,
     ecalls::{init_state, get_state},
@@ -26,6 +27,8 @@ pub fn anonify_deploy(
         nonce,
         total_supply,
     )?;
+
+    debug!("unsigned_tx: {:?}", &unsigned_tx);
 
     let address = web3::deploy(
         eth_url,

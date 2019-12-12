@@ -14,6 +14,7 @@ use web3::{
     types::{Address, Bytes, H160, H256, TransactionReceipt, U256, FilterBuilder},
     futures::Future,
 };
+use log::debug;
 use ethabi::Contract as ContractABI;
 
 pub fn deploy(
