@@ -30,11 +30,25 @@ $ make DEBUG=1
 ### HW
 Assumed your hardware supports Intel SGX or run it on [Azure Confidential Computing](https://azure.microsoft.com/ja-jp/solutions/confidential-compute/).
 
+If you don't have a docket network for testing: (Docker compose doesn't be working currently due to AESM service deamon.)
 ```
-$ docker run -v `pwd`:/root/anonify --device /dev/isgx --network="host" --rm -it osuketh/anonify
+$ docker network create --subnet=172.18.0.0/16 test-network
+```
+
+Running ganache-cli
+```
+$ docker run -d --name ganache --net=test-network --rm -it trufflesuite/ganache-cli
+```
+
+Running intel SGX environment
+```
+$ docker run -v `pwd`:/root/anonify --device /dev/isgx --net=test-network --rm -it osuketh/anonify
 ```
 - The SDK Driver creates a device at `/dev/isgx`, non-DCAP systems using IAS.
 - Use `--network="host"` for Docker-for-Linux, then `127.0.0.1` in your docker container will point to your docker host. It'll be used by the ganache-cli testing.
+
+
+### Test
 
 After entering docker container, the very first thing is to start aesm service daemon.
 
@@ -42,11 +56,32 @@ After entering docker container, the very first thing is to start aesm service d
 $ LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
 ```
 
-and then, you can run build and test in HW mode.
+and then, you can run build in HW mode.
 ```
 $ export SGX_MODE=HW
 $ cd anonify/core
 $ make DEBUG=1
+```
+
+Finally, you can test in core-host.
+```
 $ cd host
 $ cargo test
+```
+
+### Running server
+```
+$ ./scripts/run-server.sh
+```
+
+### CLI Usage
+
+You can use anonify-cli to communicate with a whole anonify system.
+
+```
+$ ./scripts/build-cli.sh
+```
+
+```
+$ ./target/release/anonify-cl
 ```

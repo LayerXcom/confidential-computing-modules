@@ -128,7 +128,7 @@ mod test {
     use crate::init_enclave::EnclaveDir;
     use crate::ecalls::init_state;
 
-    const ETH_URL: &'static str = "http://127.0.0.1:8545";
+    const ETH_URL: &'static str = "http://172.18.0.2:8545";
 
     #[test]
     fn test_deploy_contract() {
@@ -160,6 +160,6 @@ mod test {
 
     #[test]
     fn test_transfer() {
-        
+
     }
 }

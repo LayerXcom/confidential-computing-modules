@@ -182,7 +182,7 @@ mod tests {
             &keypair.public.to_bytes(),
             &msg,
             &target[..],
-            total_supply,
+            amount,
         ).is_ok());
     }
 
