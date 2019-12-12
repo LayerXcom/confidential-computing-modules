@@ -26,7 +26,10 @@ pub(crate) fn deploy<R: Rng>(
 
     let req = api::deploy::post::Request::new(&keypair, total_supply, rng);
     println!("Reqest json: {:?}", &req);
-    let res = client.post(&anonify_url).json(&req).send()?;
+    let res = client
+        .post(&format!("{}/deploy", &anonify_url))
+        .json(&req)
+        .send()?;
 
     println!("Response: {:?}", res);
     Ok(())
