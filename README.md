@@ -75,13 +75,24 @@ $ ./scripts/run-server.sh
 ```
 
 ### CLI Usage
-
 You can use anonify-cli to communicate with a whole anonify system.
 
+Build anonify's command line utilities.
 ```
 $ ./scripts/build-cli.sh
 ```
 
+- Initialize a new wallet
 ```
-$ ./target/release/anonify-cl
+$ ./target/release/anonify-cli wallet init
+```
+
+- Add a new account into your wallet
+```
+$  ./target/release/anonify-cli wallet add-account
+```
+
+- Deploy a anonymous-asset contract
+```
+$ ./target/release/anonify-cli anonify deploy -t <TOTAL SUPPLY>
 ```

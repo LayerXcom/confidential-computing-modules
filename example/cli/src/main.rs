@@ -77,7 +77,7 @@ fn subcommand_anonify<R: Rng>(
 fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name(ANONIFY_COMMAND)
         .about("Anonify operations")
-        .subcommand(SubCommand::with_name("deploy"))
+        .subcommand(SubCommand::with_name("deploy")
             .about("Deploy a contract from anonify services.")
             .arg(Arg::with_name("keyfile-index")
                 .short("i")
@@ -90,6 +90,7 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .takes_value(true)
                 .required(true)
             )
+        )
         .subcommand(SubCommand::with_name("get-state"))
             .about("Get state from anonify services.")
 }
