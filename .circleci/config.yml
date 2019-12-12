@@ -14,10 +14,10 @@ jobs:
       - run:
           name: root tests
           command: /root/.cargo/bin/cargo test --all
-      - run:
-          name: server build
-          command: cd example/server && /root/.cargo/bin/cargo build
-          no_output_timeout: 30m
+      # - run:
+      #     name: server build
+      #     command: cd example/server && /root/.cargo/bin/cargo build
+      #     no_output_timeout: 30m
       # - run:
       #     name: core-make
       #     command: cd core && RUSTFLAGS=-Awarnings CARGO=/root/.cargo/bin/cargo BINDGEN=/root/.cargo/bin/bindgen RUSTFMT=/root/.cargo/bin/rustfmt make DEBUG=1

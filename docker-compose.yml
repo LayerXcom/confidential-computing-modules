@@ -2,7 +2,13 @@ version: '3'
 services:
   sgx_machine:
     image: osuketh/anonify:latest
-    command: cd example/server && cargo run
+    command:
+      - ./scripts/run-server.sh
+    volumes:
+      - ./:/root/anonify
+    # devices:
+    #   - "/dev/isgx"
+    working_dir: /root/anonify
     environment:
       ANONIFY_URL: 172.28.1.1:8080
       ETH_URL: 172.28.1.2:8545
@@ -16,20 +22,6 @@ services:
         - "8545:8545"
       volumes:
         - ./ganache_data:/ganache_data
-      environment:
-        ANONIFY_URL: 172.28.1.1:8080
-      entrypoint:
-        - node
-        - ./build/cli.node.js
-        - --deterministic
-        - --db=/ganache_data
-        - --mnemonic
-        - 'minimum symptom minute gloom tragic situate silver mechanic salad amused elite beef'
-        - --networkId
-        - '5777'
-        - --hostname
-        - '0.0.0.0'
-        - --debug
       networks:
         testing_net:
           ipv4_address: 172.28.1.2
