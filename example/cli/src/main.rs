@@ -59,10 +59,17 @@ fn subcommand_anonify<R: Rng>(
 
     match matches.subcommand() {
         ("deploy", Some(matches)) => {
-            let keyfile_index: usize = matches.value_of("keyfile-index").unwrap().parse().unwrap();
-            let total_supply: u64 = matches.value_of("total_supply").unwrap().parse().unwrap();
+            let keyfile_index: usize = matches.value_of("keyfile-index")
+                .expect("Not found keyfile-index.")
+                .parse()
+                .expect("Failed to parse keyfile-index");
+            let total_supply: u64 = matches.value_of("total_supply")
+                .expect("Not found total_supply.")
+                .parse()
+                .expect("Failed to parse total_supply");
 
-            commands::deploy(&mut term, root_dir, anonify_url, keyfile_index, total_supply, rng).unwrap();
+            commands::deploy(&mut term, root_dir, anonify_url, keyfile_index, total_supply, rng)
+                .expect("Faild to deploy command");
         },
         ("get-state", Some(matches)) => {
             commands::get_state(&mut term, root_dir, anonify_url);
