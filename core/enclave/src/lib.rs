@@ -65,6 +65,7 @@ pub unsafe extern "C" fn ecall_get_state(
 pub unsafe extern "C" fn ecall_state_transition(
     sig: &Sig,
     pubkey: &PubKey,
+    msg: &Msg,
     target: &Address,
     value: u64,
     unsigned_tx: &mut RawUnsignedTx,
@@ -77,7 +78,7 @@ pub unsafe extern "C" fn ecall_state_transition(
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let target_addr = UserAddress::from_array(*target);
 
-    let (my_state, other_state) = UserState::<Value ,_>::transfer(pubkey, sig, target_addr, Value::new(value))
+    let (my_state, other_state) = UserState::<Value ,_>::transfer(pubkey, sig, msg, target_addr, Value::new(value))
         .expect("Failed to update state.");
     let mut my_ciphertext = my_state.encrypt(&SYMMETRIC_KEY)
         .expect("Failed to encrypt my state.");

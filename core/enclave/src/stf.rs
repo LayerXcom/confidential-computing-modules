@@ -81,6 +81,7 @@ pub trait AnonymousAssetSTF: Sized {
     fn transfer(
         from: PublicKey,
         sig: Signature,
+        msg: &[u8],
         target: UserAddress,
         amount: Self::S,
     ) -> Result<(UserState<Self::S, NextNonce>, UserState<Self::S, NextNonce>)>;
@@ -104,11 +105,11 @@ impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
     fn transfer(
         from: PublicKey,
         sig: Signature,
+        msg: &[u8],
         target: UserAddress,
         amount: Self::S,
     ) -> Result<(UserState<Self::S, NextNonce>, UserState<Self::S, NextNonce>)> {
-        let vec = amount.as_bytes()?;
-        let my_addr = UserAddress::from_sig(&vec[..], &sig, &from);
+        let my_addr = UserAddress::from_sig(&msg, &sig, &from);
         let my_value = MEMORY_DB.get(&my_addr).unwrap();
         let other_value = MEMORY_DB.get(&target).unwrap();
 

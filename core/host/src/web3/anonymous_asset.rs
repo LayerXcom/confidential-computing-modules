@@ -157,4 +157,9 @@ mod test {
             &unsigned_tx.report_sig
         ).unwrap();
     }
+
+    #[test]
+    fn test_transfer() {
+        
+    }
 }

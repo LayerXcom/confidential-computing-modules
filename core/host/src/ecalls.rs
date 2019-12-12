@@ -35,6 +35,7 @@ pub fn get_state(
     Ok(res)
 }
 
+/// Initialize a state when a new contract is deployed.
 pub fn init_state(
     eid: sgx_enclave_id_t,
     sig: &[u8],
@@ -66,6 +67,42 @@ pub fn init_state(
 
     Ok(unsigned_tx.into())
 }
+
+/// Update states when a transaction is sent to blockchain.
+pub fn state_transition(
+    eid: sgx_enclave_id_t,
+    sig: &[u8],
+    pubkey: &[u8],
+    msg: &[u8],
+    target: &[u8],
+    amount: u64,
+) -> Result<UnsignedTx> {
+    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut unsigned_tx = RawUnsignedTx::default();
+
+    let status = unsafe {
+        ecall_state_transition(
+            eid,
+            &mut rt,
+            sig.as_ptr() as _,
+            pubkey.as_ptr() as _,
+            target.as_ptr() as _,
+            msg.as_ptr() as _,
+            &amount as *const u64,
+            &mut unsigned_tx,
+        )
+    };
+
+    if status != sgx_status_t::SGX_SUCCESS {
+		return Err(HostErrorKind::Sgx{ status, function: "ecall_contract_deploy" }.into());
+    }
+    if rt != sgx_status_t::SGX_SUCCESS {
+		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_contract_deploy" }.into());
+    }
+
+    Ok(unsigned_tx.into())
+}
+
 
 #[derive(Debug, Clone, Default)]
 pub struct UnsignedTx {
@@ -122,6 +159,29 @@ mod tests {
             &sig.to_bytes(),
             &keypair.public.to_bytes(),
             &msg,
+            total_supply,
+        ).is_ok());
+    }
+
+    #[test]
+    fn test_state_transition() {
+        let enclave = EnclaveDir::new().init_enclave().unwrap();
+        let mut csprng: OsRng = OsRng::new().unwrap();
+        let keypair: Keypair = Keypair::generate(&mut csprng);
+
+        let msg = rand::thread_rng().gen::<[u8; 32]>();
+        let sig = keypair.sign(&msg);
+        assert!(keypair.verify(&msg, &sig).is_ok());
+
+        let amount = 0;
+        let target: [u8; 20] = csprng.gen();
+
+        assert!(state_transition(
+            enclave.geteid(),
+            &sig.to_bytes(),
+            &keypair.public.to_bytes(),
+            &msg,
+            &target[..],
             total_supply,
         ).is_ok());
     }
