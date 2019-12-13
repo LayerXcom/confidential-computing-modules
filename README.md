@@ -74,12 +74,22 @@ $ cargo test
 $ ./scripts/run-server.sh
 ```
 
+If you want to build artifacts in release mode, pass a `--release` argument. Any enclave needs to be whitelisted to be able to be launched in release mode.
+```
+$ ./scripts/run-server.sh --release
+```
+
 ### CLI Usage
 You can use anonify-cli to communicate with a whole anonify system.
 
 Build anonify's command line utilities.
 ```
 $ ./scripts/build-cli.sh
+```
+
+If you want to build artifacts in release mode, pass a `--release` argument.
+```
+$ ./scripts/build-cli.sh --release
 ```
 
 - Initialize a new wallet
