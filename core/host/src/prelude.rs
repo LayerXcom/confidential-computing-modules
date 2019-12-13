@@ -7,8 +7,8 @@ use crate::{
     web3,
 };
 
-pub fn init_enclave() -> sgx_enclave_id_t {
-    let enclave = EnclaveDir::new().init_enclave().unwrap();
+pub fn init_enclave(is_debug: bool) -> sgx_enclave_id_t {
+    let enclave = EnclaveDir::new().init_enclave(is_debug).unwrap();
     enclave.geteid()
 }
 

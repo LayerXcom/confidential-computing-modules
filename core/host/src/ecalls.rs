@@ -59,10 +59,10 @@ pub fn init_state(
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(HostErrorKind::Sgx{ status, function: "ecall_contract_deploy" }.into());
+		return Err(HostErrorKind::Sgx{ status, function: "ecall_init_state" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_contract_deploy" }.into());
+		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_init_state" }.into());
     }
 
     Ok(unsigned_tx.into())
@@ -144,7 +144,7 @@ mod tests {
 
     #[test]
     fn test_init_state() {
-        let enclave = EnclaveDir::new().init_enclave().unwrap();
+        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
         let mut csprng: OsRng = OsRng::new().unwrap();
         let keypair: Keypair = Keypair::generate(&mut csprng);
 
@@ -165,7 +165,7 @@ mod tests {
 
     #[test]
     fn test_state_transition() {
-        let enclave = EnclaveDir::new().init_enclave().unwrap();
+        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
         let mut csprng: OsRng = OsRng::new().unwrap();
         let keypair: Keypair = Keypair::generate(&mut csprng);
 
@@ -189,7 +189,7 @@ mod tests {
     #[test]
     #[ignore]
     fn test_ecall_get_state() {
-        let enclave = EnclaveDir::new().init_enclave().unwrap();
+        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
         let mut csprng: OsRng = OsRng::new().unwrap();
         let keypair: Keypair = Keypair::generate(&mut csprng);
 

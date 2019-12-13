@@ -133,7 +133,7 @@ mod test {
 
     #[test]
     fn test_deploy_contract() {
-        let enclave = EnclaveDir::new().init_enclave().unwrap();
+        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
         let mut csprng: OsRng = OsRng::new().unwrap();
         let keypair: Keypair = Keypair::generate(&mut csprng);
 

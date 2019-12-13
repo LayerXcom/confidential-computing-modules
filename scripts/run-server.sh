@@ -14,7 +14,7 @@ export ETH_URL=172.18.0.2:8545
 echo "Start building core components."
 make
 
-rm -rf ../example/bin/
+rm -rf ../example/bin
 cp -r bin/ ../example/bin/
 cd ../example/server
 RUST_LOG=debug cargo run --release
