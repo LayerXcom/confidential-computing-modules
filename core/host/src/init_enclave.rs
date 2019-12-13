@@ -30,7 +30,11 @@ impl EnclaveDir {
         let mut launch_token = Self::get_launch_token(&token_file_path)?;
 
         let mut launch_token_updated = 0;
-        let enclave = Self::create_enclave(&mut launch_token, &mut launch_token_updated, is_debug).unwrap();
+        let enclave = Self::create_enclave(
+            &mut launch_token,
+            &mut launch_token_updated,
+            is_debug
+        ).expect("Failed to create enclave");
 
         // If launch token is updated, save it as token file.
         if launch_token_updated != 0 {
