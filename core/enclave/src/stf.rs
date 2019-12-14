@@ -2,8 +2,8 @@ use crate::{
     state::{State, UserState, CurrentNonce, NextNonce},
     error::Result,
     kvs::{SigVerificationKVS, MEMORY_DB},
-    crypto::UserAddress,
 };
+use anonify_common::UserAddress;
 use ed25519_dalek::{PublicKey, Signature};
 use std::{
     vec::Vec,

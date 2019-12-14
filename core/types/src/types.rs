@@ -1,4 +1,9 @@
-use core::{fmt, default::Default, ptr, mem};
+use core::{
+    fmt,
+    default::Default,
+    ptr,
+    mem,
+};
 
 pub const STATE_SIZE: usize = 8;
 pub const PUBKEY_SIZE: usize = 32;

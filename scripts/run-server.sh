@@ -15,7 +15,7 @@ echo "Start building core components."
 
 if [ "x$1" == "x--release" ]; then
     make
-    rm -rf ../example/bin && cp -r bin/ ../example/bin/ && cd ../example/server
+    rm -rf ../example/bin && cp -rf bin/ ../example/bin/ && cd ../example/server
 
     echo "Build artifacts in release mode, with optimizations."
     cargo run --release
@@ -23,7 +23,7 @@ if [ "x$1" == "x--release" ]; then
 fi
 
 make DEBUG=1
-rm -rf ../example/bin && cp -r bin/ ../example/bin/ && cd ../example/server
+rm -rf ../example/bin && cp -rf bin/ ../example/bin/ && cd ../example/server
 
 echo "Build artifacts in debug mode."
 RUST_LOG=debug cargo run

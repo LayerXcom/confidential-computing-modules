@@ -13,11 +13,12 @@ extern crate lazy_static;
 use sgx_types::*;
 use sgx_tse::*;
 use anonify_types::*;
+use anonify_common::UserAddress;
 use ed25519_dalek::{PublicKey, Signature};
 use crate::kvs::{MemoryKVS, SigVerificationKVS, MEMORY_DB, DBTx};
 use crate::state::{UserState, State};
 use crate::stf::{Value, AnonymousAssetSTF};
-use crate::crypto::{UserAddress, SYMMETRIC_KEY};
+use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{
     AttestationService, TEST_SPID, TEST_SUB_KEY,
     DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES,

@@ -1,6 +1,5 @@
 //! # Traits module
 //! This module should provide low level traits that are required on both sides of the SGX.
-//! right now it only contains the [`SliceCPtr`] trait which is used to *always* provide valid C pointers.
 // reference: https://github.com/enigmampc/enigma-core/blob/develop/enigma-types/src/traits.rs
 
 static EMPTY: [u8; 1] = [0];

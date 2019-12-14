@@ -4,11 +4,11 @@ use std::{
     collections::BTreeMap,
 };
 use anonify_types::*;
+use anonify_common::UserAddress;
 use super::*;
 use super::traits::*;
 use crate::{
     error::Result,
-    crypto::UserAddress,
 };
 
 lazy_static! {

@@ -35,6 +35,31 @@ pub(crate) fn deploy<R: Rng>(
     Ok(())
 }
 
+pub(crate) fn transfer<R: Rng>(
+    term: &mut Term,
+    root_dir: PathBuf,
+    anonify_url: String,
+    index: usize,
+    target: [u8; 20],
+    amount: u64,
+    rng: &mut R
+) -> Result<()> {
+    let password = prompt_password(term)?;
+
+    let client = Client::new();
+    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+
+    let req = api::deploy::post::Request::new(&keypair, amount, rng);
+    println!("Reqest json: {:?}", &req);
+    let res = client
+        .post(&format!("{}/transfer", &anonify_url))
+        .json(&req)
+        .send()?;
+
+    println!("Response: {:?}", res);
+    Ok(())
+}
+
 pub(crate) fn get_state(term: &mut Term, root_dir: PathBuf, anonify_url: String) -> Result<()> {
     Ok(())
 }

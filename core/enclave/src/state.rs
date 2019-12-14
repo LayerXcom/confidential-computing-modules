@@ -1,5 +1,6 @@
 //! State transition functions for anonymous asset
 use anonify_types::types::*;
+use anonify_common::{UserAddress, Sha256, Hash256};
 use crate::{
     crypto::*,
     kvs::DBValue,
@@ -130,8 +131,16 @@ impl<S: State> UserState<S, CurrentNonce> {
         Ok((state, nonce))
     }
 
+    /// Compute hash digest of current user state.
+    pub fn hash(&self) -> Result<Sha256> {
+        let mut inp: Vec<u8> = vec![];
+        self.write(&mut inp)?;
+
+        Ok(Sha256::hash(&inp))
+    }
+
     fn next_nonce(&self) -> Result<Nonce> {
-        let next_nonce = Sha256::from_user_state(&self)?;
+        let next_nonce = self.hash()?;
         Ok(next_nonce.into())
     }
 
