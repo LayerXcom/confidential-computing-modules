@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use rand::Rng;
 use anonify_wallet::{WalletDirectory, KeystoreDirectory, KeyFile, DirOperations};
+use anonify_common::UserAddress;
 use bip39::{Mnemonic, Language, MnemonicType, Seed};
 use reqwest::Client;
 use ed25519_dalek::Keypair;
@@ -35,12 +36,12 @@ pub(crate) fn deploy<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn transfer<R: Rng>(
+pub(crate) fn send<R: Rng>(
     term: &mut Term,
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
-    target: [u8; 20],
+    target: UserAddress,
     amount: u64,
     rng: &mut R
 ) -> Result<()> {
@@ -49,10 +50,10 @@ pub(crate) fn transfer<R: Rng>(
     let client = Client::new();
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::deploy::post::Request::new(&keypair, amount, rng);
+    let req = api::send::post::Request::new(&keypair, amount, target, rng);
     println!("Reqest json: {:?}", &req);
     let res = client
-        .post(&format!("{}/transfer", &anonify_url))
+        .post(&format!("{}/send", &anonify_url))
         .json(&req)
         .send()?;
 

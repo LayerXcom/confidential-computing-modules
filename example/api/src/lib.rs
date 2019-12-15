@@ -17,7 +17,7 @@
 
 pub mod deploy {
     pub mod post {
-        use serde_derive::{Deserialize, Serialize};
+        use serde::{Deserialize, Serialize};
         use rand::Rng;
         use ed25519_dalek::{Keypair, PUBLIC_KEY_LENGTH};
 
@@ -49,5 +49,43 @@ pub mod deploy {
 
         #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
         pub struct Response(pub [u8; 20]);
+    }
+}
+
+pub mod send {
+    pub mod post {
+        use serde::{Deserialize, Serialize};
+        use rand::Rng;
+        use ed25519_dalek::{Keypair, PUBLIC_KEY_LENGTH};
+        use anonify_common::UserAddress;
+
+        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
+        pub struct Request {
+            pub sig: Vec<u8>,
+            pub pubkey: [u8; PUBLIC_KEY_LENGTH],
+            pub nonce: [u8; 32],
+            pub target: UserAddress,
+            pub amount: u64,
+        }
+
+        impl Request {
+            pub fn new<R: Rng>(
+                keypair: &Keypair,
+                amount: u64,
+                target: UserAddress,
+                rng: &mut R,
+            ) -> Self {
+                let nonce: [u8; 32] = rng.gen();
+                let sig = keypair.sign(&nonce[..]);
+
+                Request {
+                    sig: sig.to_bytes()[..].to_vec(),
+                    pubkey: keypair.public.to_bytes(),
+                    nonce,
+                    target,
+                    amount,
+                }
+            }
+        }
     }
 }

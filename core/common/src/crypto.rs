@@ -2,6 +2,7 @@ use std::{
     io::{self, Read, Write},
 };
 use ed25519_dalek::{PublicKey, Signature};
+use serde::{Deserialize, Serialize};
 
 /// Trait for 256-bits hash functions
 pub trait Hash256 {
@@ -12,7 +13,7 @@ pub trait Hash256 {
 
 /// User address represents last 20 bytes of digest of user's public key.
 /// A signature verification must return true to generate a user address.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct UserAddress([u8; 20]);
 
 impl UserAddress {
