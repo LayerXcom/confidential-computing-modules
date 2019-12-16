@@ -32,7 +32,7 @@ pub fn deploy(
 
     let contract = Contract::deploy(web3.eth(), abi)
         .unwrap() // TODO
-        // .confirmations(CONFIRMATIONS)
+        .confirmations(CONFIRMATIONS)
         // .poll_interval(time::Duration::from_secs(POLL_INTERVAL_SECS))
         .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
         .execute(
@@ -151,12 +151,14 @@ mod test {
             total_supply,
         ).unwrap();
 
-        let contract = deploy(
+        let contract_addr = deploy(
             ETH_URL,
             &unsigned_tx.ciphertexts,
             &unsigned_tx.report,
             &unsigned_tx.report_sig
         ).unwrap();
+
+        println!("deployed contract address: {}", contract_addr);
     }
 
     #[test]
