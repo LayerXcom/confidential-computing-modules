@@ -2,6 +2,8 @@ use std::{
     sync::Arc,
     path::Path,
     time,
+    io::BufReader,
+    fs::File,
 };
 use crate::{
     error::*,
@@ -11,7 +13,7 @@ use web3::{
     Web3,
     transports::{EventLoopHandle, Http},
     contract::{Contract, Options},
-    types::{Address, Bytes, H160, H256, TransactionReceipt, U256, FilterBuilder, Filter},
+    types::{Address, Bytes, H160, H256, TransactionReceipt, U256, FilterBuilder, Filter, Log},
     futures::Future,
 };
 use log::debug;
@@ -90,12 +92,23 @@ impl AnonymousAssetContract {
         let res = call.wait().unwrap(); //TODO: error handling
         Ok(res)
     }
+
+    pub fn get_event(&self, event_name: &str) -> Result<Vec<Log>> {
+        let filter = FilterBuilder::default()
+            .address(vec![self.address])
+            .topics(Some(vec![(event_name.as_bytes().keccak256()).into()]), None, None, None)
+            .build();
+
+        let logs = self.web3.eth().logs(filter).wait()?;
+        Ok(logs)
+    }
 }
 
-fn build_event_filter(event_name: &str, contract_addr: &str) -> Filter {
-    // let filter = FilterBuilder::default()
-    //     .topics(Some(vec![*event_name.as_bytes()]))
-    unimplemented!();
+pub fn contract_abi_from_path<P: AsRef<Path>>(path: P) -> Result<ContractABI> {
+    let f = File::open(path)?;
+    let reader = BufReader::new(f);
+    let contract_abi = ContractABI::load(reader).expect("Failed to load contract abi.");
+    Ok(contract_abi)
 }
 
 // pub fn get_logs(eth_url: &str, contract_addrss: Address) -> Result<()> {
@@ -197,6 +210,11 @@ mod test {
 
         println!("deployed contract address: {}", contract_addr);
 
+        let contract_abi = contract_abi_from_path(ANONYMOUS_ASSET_ABI_PATH).unwrap();
+        let contract = AnonymousAssetContract::new(ETH_URL, contract_addr, contract_abi).unwrap();
+        let logs = contract.get_event("Init").unwrap();
+        println!("Init logs: {:?}", logs);
 
+        
     }
 }
