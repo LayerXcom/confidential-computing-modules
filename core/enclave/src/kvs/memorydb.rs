@@ -25,7 +25,7 @@ impl MemoryKVS {
 
 impl SigVerificationKVS for MemoryKVS {
     fn get(&self, key: &UserAddress) -> Option<DBValue> {
-        self.inner_get(key.as_slice())
+        self.inner_get(key.as_bytes())
     }
 
     fn write(&self, tx: DBTx) {

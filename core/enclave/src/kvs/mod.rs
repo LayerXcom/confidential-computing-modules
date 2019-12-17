@@ -55,7 +55,7 @@ impl DBTx {
         msg: &[u8],
     ) {
         let key = UserAddress::from_sig(&msg, &sig, &pubkey);
-        self.0.put(key.as_slice(), msg);
+        self.0.put(key.as_bytes(), msg);
     }
 
     /// Delete instruction is added to a transaction only if the verification of provided signature returns true.
@@ -66,7 +66,7 @@ impl DBTx {
         pubkey: &PublicKey,
     ) {
         let key = UserAddress::from_sig(&msg, &sig, &pubkey);
-        self.0.delete(key.as_slice());
+        self.0.delete(key.as_bytes());
     }
 
     pub(crate) fn into_inner(self) -> InnerDBTx {

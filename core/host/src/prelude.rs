@@ -1,8 +1,9 @@
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
+use anonify_common::UserAddress;
 use crate::{
     init_enclave::EnclaveDir,
-    ecalls::{init_state, get_state},
+    ecalls::*,
     error::Result,
     web3,
 };
@@ -42,4 +43,39 @@ pub fn anonify_deploy(
     )?;
 
     Ok(address.to_fixed_bytes())
+}
+
+pub fn anonify_send(
+    enclave_id: sgx_enclave_id_t,
+    from_addr: &UserAddress,
+    sig: &[u8],
+    pubkey: &[u8],
+    nonce: &[u8],
+    target: &UserAddress,
+    amount: u64,
+    contract: &web3::AnonymousAssetContract,
+    gas: u64,
+) -> Result<()> {
+    let unsigned_tx = state_transition(
+        enclave_id,
+        sig,
+        pubkey,
+        nonce,
+        target.as_bytes(),
+        amount,
+    )?;
+
+    debug!("unsigned_tx: {:?}", &unsigned_tx);
+
+    let (update_bal1, update_bal2) = unsigned_tx.get_two_ciphertexts();
+    let receipt = contract.tranfer::<u64>(
+        from_addr.into(),
+        update_bal1,
+        update_bal2,
+        &unsigned_tx.report,
+        &unsigned_tx.report_sig,
+        gas,
+    )?;
+
+    Ok(())
 }

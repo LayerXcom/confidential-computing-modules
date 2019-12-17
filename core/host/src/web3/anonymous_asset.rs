@@ -188,6 +188,6 @@ mod test {
         let logs = contract.get_event("Init").unwrap();
         println!("Init logs: {:?}", logs);
 
-        
+        // let
     }
 }

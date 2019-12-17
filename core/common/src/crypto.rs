@@ -25,6 +25,22 @@ pub trait Hash256 {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct UserAddress([u8; 20]);
 
+#[cfg(feature = "std")]
+impl From<UserAddress> for web3::types::Address {
+    fn from(address: UserAddress) -> Self {
+        let bytes = address.as_bytes();
+        web3::types::Address::from_slice(bytes)
+    }
+}
+
+#[cfg(feature = "std")]
+impl From<&UserAddress> for web3::types::Address {
+    fn from(address: &UserAddress) -> Self {
+        let bytes = address.as_bytes();
+        web3::types::Address::from_slice(bytes)
+    }
+}
+
 impl Serialize for UserAddress {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -144,7 +160,7 @@ impl UserAddress {
 
     #[cfg(feature = "std")]
     pub fn base64_encode(&self) -> String {
-        base64::encode(self.as_slice())
+        base64::encode(self.as_bytes())
     }
 
     #[cfg(feature = "std")]
@@ -158,7 +174,7 @@ impl UserAddress {
         UserAddress::from_array(arr)
     }
 
-    pub fn as_slice(&self) -> &[u8] {
+    pub fn as_bytes(&self) -> &[u8] {
         &self.0[..]
     }
 
