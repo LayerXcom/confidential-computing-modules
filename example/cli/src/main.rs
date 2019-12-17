@@ -6,6 +6,7 @@ use clap::{Arg, App, SubCommand, AppSettings, ArgMatches};
 use dotenv::dotenv;
 use rand::{rngs::OsRng, Rng};
 use term::Term;
+use anonify_common::UserAddress;
 use crate::config::*;
 
 mod term;
@@ -78,11 +79,13 @@ fn subcommand_anonify<R: Rng>(
                 .expect("Not found amount.")
                 .parse()
                 .expect("Failed to parse amount");
+
             let target: &str = matches.value_of("target")
                 .expect("Not found target");
+            let target_addr = UserAddress::base64_decode(target);
 
-            // commands::send(&mut term, root_dir, anonify_url, keyfile_index, amount, rng)
-            //     .expect("Faild to deploy command");
+            commands::send(&mut term, root_dir, anonify_url, keyfile_index, target_addr, amount, rng)
+                .expect("Faild to deploy command");
         },
         ("get-state", Some(matches)) => {
             commands::get_state(&mut term, root_dir, anonify_url);

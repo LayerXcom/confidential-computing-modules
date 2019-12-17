@@ -122,7 +122,7 @@ impl UserAddress {
         Self::from_pubkey(&pubkey)
     }
 
-    fn from_pubkey(pubkey: &PublicKey) -> Self {
+    pub fn from_pubkey(pubkey: &PublicKey) -> Self {
         let hash = Sha256::from_pubkey(pubkey);
         let addr = &hash.as_array()[12..];
         let mut res = [0u8; 20];
@@ -140,6 +140,22 @@ impl UserAddress {
         let mut res = [0u8; 20];
         reader.read_exact(&mut res)?;
         Ok(UserAddress(res))
+    }
+
+    #[cfg(feature = "std")]
+    pub fn base64_encode(&self) -> String {
+        base64::encode(self.as_slice())
+    }
+
+    #[cfg(feature = "std")]
+    pub fn base64_decode(encoded_str: &str) -> Self {
+        let decoded_vec = base64::decode(encoded_str).expect("Faild to decode base64.");
+        assert_eq!(decoded_vec.len(), 20);
+
+        let mut arr = [0u8; 20];
+        arr.copy_from_slice(&decoded_vec[..]);
+
+        UserAddress::from_array(arr)
     }
 
     pub fn as_slice(&self) -> &[u8] {

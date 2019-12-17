@@ -111,34 +111,6 @@ pub fn contract_abi_from_path<P: AsRef<Path>>(path: P) -> Result<ContractABI> {
     Ok(contract_abi)
 }
 
-// pub fn get_logs(eth_url: &str, contract_addrss: Address) -> Result<()> {
-//     let (eloop, transport) = Http::new(eth_url)?;
-//     let web3 = Web3::new(transport);
-
-//     let filter = FilterBuilder::default()
-//         .address(vec![contract_address])
-//         .topics(
-//             Some(vec![]),
-//             None,
-//             None,
-//             None,
-//         )
-//         .build();
-
-//     let event_future = web3
-//         .eth_filter()
-//         .then(|filter| {
-//             filter.unwrap().stream(time::Duration::from_secs(10)).for_each(|log| {
-//                 println!("got log: {}", log);
-//                 Ok(())
-//             })
-//         })
-//         .map_err(|_| ());
-
-//     let call_future = contract.call
-// }
-
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -150,6 +122,7 @@ mod test {
     use crate::ecalls::init_state;
 
     const ETH_URL: &'static str = "http://172.18.0.2:8545";
+    pub const ANONYMOUS_ASSET_ABI_PATH: &str = "../../build/AnonymousAsset.abi";
 
     #[test]
     fn test_deploy_contract() {

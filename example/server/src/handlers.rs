@@ -30,7 +30,8 @@ pub fn handle_post_deploy(
 }
 
 pub fn handle_post_transfer(
-
+    server: web::Data<Server>,
+    req: web::Json<api::send::post::Request>,
 ) {
     unimplemented!();
 }

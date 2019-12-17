@@ -10,8 +10,7 @@ pub const HTTPS_PORT: u16 = 443;
 
 pub const IAS_DEFAULT_RETRIES: u32 = 10;
 
-pub const ANONYMOUS_ASSET_ABI_PATH: &str = "../../../../build/AnonymousAsset.abi";
-pub const ANONYMOUS_ASSET_BIN_PATH: &str = "../../../../build/AnonymousAsset.bin";
+pub const ANONYMOUS_ASSET_BIN_PATH: &str = "../../../build/AnonymousAsset.bin";
 
 pub const CONFIRMATIONS: usize = 0;
 pub const POLL_INTERVAL_SECS: u64 = 10;
