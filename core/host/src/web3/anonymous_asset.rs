@@ -118,8 +118,10 @@ mod test {
     use rand_os::OsRng;
     use rand::Rng;
     use ed25519_dalek::Keypair;
+    use anonify_common::UserAddress;
     use crate::init_enclave::EnclaveDir;
     use crate::ecalls::init_state;
+    use crate::prelude::*;
 
     const ETH_URL: &'static str = "http://172.18.0.2:8545";
     pub const ANONYMOUS_ASSET_ABI_PATH: &str = "../../build/AnonymousAsset.abi";
@@ -158,18 +160,19 @@ mod test {
     fn test_transfer() {
         let enclave = EnclaveDir::new().init_enclave(true).unwrap();
         let mut csprng: OsRng = OsRng::new().unwrap();
-        let keypair: Keypair = Keypair::generate(&mut csprng);
+        let my_keypair: Keypair = Keypair::generate(&mut csprng);
+        let other_keypair: Keypair = Keypair::generate(&mut csprng);
 
         let msg = rand::thread_rng().gen::<[u8; 32]>();
-        let sig = keypair.sign(&msg);
-        assert!(keypair.verify(&msg, &sig).is_ok());
+        let sig = my_keypair.sign(&msg);
+        assert!(my_keypair.verify(&msg, &sig).is_ok());
 
         let total_supply = 100;
 
         let unsigned_tx = init_state(
             enclave.geteid(),
             &sig.to_bytes(),
-            &keypair.public.to_bytes(),
+            &my_keypair.public.to_bytes(),
             &msg,
             total_supply,
         ).unwrap();
@@ -188,6 +191,21 @@ mod test {
         let logs = contract.get_event("Init").unwrap();
         println!("Init logs: {:?}", logs);
 
-        // let
+        let amount = 30;
+        let gas = 3_000_000;
+
+        let receipt = anonify_send(
+            enclave.geteid(),
+            UserAddress::from_pubkey(&my_keypair.public),
+            &sig.to_bytes(),
+            &my_keypair.public.to_bytes(),
+            &msg,
+            UserAddress::from_pubkey(&other_keypair.public),
+            amount,
+            contract,
+            gas,
+        );
+        
+        println!("receipt: {:?}", receipt);
     }
 }

@@ -1,6 +1,7 @@
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
 use anonify_common::UserAddress;
+use ::web3::types::H256;
 use crate::{
     init_enclave::EnclaveDir,
     ecalls::*,
@@ -55,7 +56,7 @@ pub fn anonify_send(
     amount: u64,
     contract: &web3::AnonymousAssetContract,
     gas: u64,
-) -> Result<()> {
+) -> Result<H256> {
     let unsigned_tx = state_transition(
         enclave_id,
         sig,
@@ -77,5 +78,9 @@ pub fn anonify_send(
         gas,
     )?;
 
-    Ok(())
+    Ok(receipt)
 }
+
+// pub fn anonify_get_state() -> Result<u64> {
+//     get_state()
+// }
