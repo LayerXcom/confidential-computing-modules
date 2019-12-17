@@ -163,8 +163,8 @@ mod tests {
 
         assert!(init_state(
             enclave.geteid(),
-            &sig.to_bytes(),
-            &keypair.public.to_bytes(),
+            &sig,
+            &keypair.public,
             &msg,
             total_supply,
         ).is_ok());
@@ -185,8 +185,8 @@ mod tests {
 
         assert!(state_transition(
             enclave.geteid(),
-            &sig.to_bytes(),
-            &keypair.public.to_bytes(),
+            &sig,
+            &keypair.public,
             &msg,
             &target[..],
             amount,
@@ -204,7 +204,7 @@ mod tests {
         let sig = keypair.sign(&msg);
         assert!(keypair.verify(&msg, &sig).is_ok());
 
-        let state = get_state(enclave.geteid(), &sig.to_bytes(), &keypair.public.to_bytes(), &msg);
+        let state = get_state(enclave.geteid(), &sig, &keypair.public, &msg);
         // assert_eq!(state, 0);
     }
 }

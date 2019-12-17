@@ -49,7 +49,6 @@ pub fn anonify_deploy(
 
 pub fn anonify_send(
     enclave_id: sgx_enclave_id_t,
-    from_addr: &UserAddress,
     sig: &Signature,
     pubkey: &PublicKey,
     nonce: &[u8],
@@ -58,7 +57,7 @@ pub fn anonify_send(
     contract: &web3::AnonymousAssetContract,
     gas: u64,
 ) -> Result<H256> {
-    // let from_addr = UserAddress::from_pubkey(&my_keypair.public),
+    let from_addr = UserAddress::from_pubkey(&pubkey);
 
     let unsigned_tx = state_transition(
         enclave_id,
@@ -86,11 +85,17 @@ pub fn anonify_send(
 
 pub fn anonify_get_state(
     enclave_id: sgx_enclave_id_t,
-    from_addr: &UserAddress,
     sig: &Signature,
     pubkey: &PublicKey,
     nonce: &[u8],
 ) -> Result<u64> {
-    // let state = get_state()?;
-    unimplemented!();
+    let state = get_state(
+        enclave_id,
+        sig,
+        pubkey,
+        nonce,
+    )?;
+
+    debug!("state: {:?}", &state);
+    Ok(state)
 }

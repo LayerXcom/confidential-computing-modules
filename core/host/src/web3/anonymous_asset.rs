@@ -140,8 +140,8 @@ mod test {
 
         let unsigned_tx = init_state(
             enclave.geteid(),
-            &sig.to_bytes(),
-            &keypair.public.to_bytes(),
+            &sig,
+            &keypair.public,
             &msg,
             total_supply,
         ).unwrap();
@@ -171,8 +171,8 @@ mod test {
 
         let unsigned_tx = init_state(
             enclave.geteid(),
-            &sig.to_bytes(),
-            &my_keypair.public.to_bytes(),
+            &sig,
+            &my_keypair.public,
             &msg,
             total_supply,
         ).unwrap();
@@ -196,15 +196,24 @@ mod test {
 
         let receipt = anonify_send(
             enclave.geteid(),
-            &sig.to_bytes(),
-            &my_keypair.public.to_bytes(),
+            &sig,
+            &my_keypair.public,
             &msg,
-            UserAddress::from_pubkey(&other_keypair.public),
+            &UserAddress::from_pubkey(&other_keypair.public),
             amount,
-            contract,
+            &contract,
             gas,
         );
 
         println!("receipt: {:?}", receipt);
+
+        let state = anonify_get_state(
+            enclave.geteid(),
+            &sig,
+            &my_keypair.public,
+            &msg,
+        ).unwrap();
+
+        println!("my state: {}", state);
     }
 }
