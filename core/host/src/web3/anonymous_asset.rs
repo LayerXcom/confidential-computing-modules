@@ -196,7 +196,6 @@ mod test {
 
         let receipt = anonify_send(
             enclave.geteid(),
-            UserAddress::from_pubkey(&my_keypair.public),
             &sig.to_bytes(),
             &my_keypair.public.to_bytes(),
             &msg,
@@ -205,7 +204,7 @@ mod test {
             contract,
             gas,
         );
-        
+
         println!("receipt: {:?}", receipt);
     }
 }

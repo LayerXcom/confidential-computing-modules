@@ -9,5 +9,5 @@ edition = "2018"
 [dependencies]
 anonify-common = { path = "../../core/common" }
 serde = { version = "1", features = ["derive"] }
-ed25519-dalek = "1.0.0-pre.2"
+ed25519-dalek = { version = "1.0.0-pre.2", features = ["serde"] }
 rand = "0.7"

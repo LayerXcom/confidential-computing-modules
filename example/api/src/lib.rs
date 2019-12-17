@@ -19,12 +19,13 @@ pub mod deploy {
     pub mod post {
         use serde::{Deserialize, Serialize};
         use rand::Rng;
-        use ed25519_dalek::{Keypair, PUBLIC_KEY_LENGTH};
+        use ed25519_dalek::{Keypair, Signature, PublicKey};
+        use anonify_common::UserAddress;
 
-        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
+        #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
         pub struct Request {
-            pub sig: Vec<u8>,
-            pub pubkey: [u8; PUBLIC_KEY_LENGTH],
+            pub sig: Signature,
+            pub pubkey: PublicKey,
             pub nonce: [u8; 32],
             pub total_supply: u64,
         }
@@ -39,8 +40,8 @@ pub mod deploy {
                 let sig = keypair.sign(&nonce[..]);
 
                 Request {
-                    sig: sig.to_bytes()[..].to_vec(),
-                    pubkey: keypair.public.to_bytes(),
+                    sig: sig,
+                    pubkey: keypair.public,
                     nonce,
                     total_supply,
                 }
@@ -48,7 +49,7 @@ pub mod deploy {
         }
 
         #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub [u8; 20]);
+        pub struct Response(pub UserAddress);
     }
 }
 
@@ -56,13 +57,13 @@ pub mod send {
     pub mod post {
         use serde::{Deserialize, Serialize};
         use rand::Rng;
-        use ed25519_dalek::{Keypair, PUBLIC_KEY_LENGTH};
         use anonify_common::UserAddress;
+        use ed25519_dalek::{Keypair, Signature, PublicKey};
 
-        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
+        #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
         pub struct Request {
-            pub sig: Vec<u8>,
-            pub pubkey: [u8; PUBLIC_KEY_LENGTH],
+            pub sig: Signature,
+            pub pubkey: PublicKey,
             pub nonce: [u8; 32],
             pub target: UserAddress,
             pub amount: u64,
@@ -79,8 +80,8 @@ pub mod send {
                 let sig = keypair.sign(&nonce[..]);
 
                 Request {
-                    sig: sig.to_bytes()[..].to_vec(),
-                    pubkey: keypair.public.to_bytes(),
+                    sig: sig,
+                    pubkey: keypair.public,
                     nonce,
                     target,
                     amount,

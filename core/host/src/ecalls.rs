@@ -1,5 +1,6 @@
 use sgx_types::*;
 use anonify_types::{Sig, PubKey, Msg, RawUnsignedTx};
+use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
 use crate::init_enclave::EnclaveDir;
 use crate::error::{HostErrorKind, Result};
@@ -7,9 +8,9 @@ use crate::error::{HostErrorKind, Result};
 /// Get state only if the signature verification returns true.
 pub fn get_state(
     eid: sgx_enclave_id_t,
-    sig: &Sig,
-    pubkey: &PubKey,
-    msg: &Msg
+    sig: &Signature,
+    pubkey: &PublicKey,
+    msg: &[u8],
 ) -> Result<u64> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut res: u64 = Default::default();
@@ -18,8 +19,8 @@ pub fn get_state(
         ecall_get_state(
             eid,
             &mut rt,
-            sig.as_ptr() as _,
-            pubkey.as_ptr() as _,
+            sig.to_bytes().as_ptr() as _,
+            pubkey.to_bytes().as_ptr() as _,
             msg.as_ptr() as _,
             res as _,
         )
@@ -38,8 +39,8 @@ pub fn get_state(
 /// Initialize a state when a new contract is deployed.
 pub fn init_state(
     eid: sgx_enclave_id_t,
-    sig: &[u8],
-    pubkey: &[u8],
+    sig: &Signature,
+    pubkey: &PublicKey,
     msg: &[u8],
     total_supply: u64,
 ) -> Result<UnsignedTx> {
@@ -50,8 +51,8 @@ pub fn init_state(
         ecall_init_state(
             eid,
             &mut rt,
-            sig.as_ptr() as _,
-            pubkey.as_ptr() as _,
+            sig.to_bytes().as_ptr() as _,
+            pubkey.to_bytes().as_ptr() as _,
             msg.as_ptr() as _,
             &total_supply as *const u64,
             &mut unsigned_tx,
@@ -71,8 +72,8 @@ pub fn init_state(
 /// Update states when a transaction is sent to blockchain.
 pub fn state_transition(
     eid: sgx_enclave_id_t,
-    sig: &[u8],
-    pubkey: &[u8],
+    sig: &Signature,
+    pubkey: &PublicKey,
     msg: &[u8],
     target: &[u8],
     amount: u64,
@@ -84,8 +85,8 @@ pub fn state_transition(
         ecall_state_transition(
             eid,
             &mut rt,
-            sig.as_ptr() as _,
-            pubkey.as_ptr() as _,
+            sig.to_bytes().as_ptr() as _,
+            pubkey.to_bytes().as_ptr() as _,
             target.as_ptr() as _,
             msg.as_ptr() as _,
             &amount as *const u64,

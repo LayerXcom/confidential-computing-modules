@@ -1,6 +1,7 @@
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
 use anonify_common::UserAddress;
+use ed25519_dalek::{Signature, PublicKey};
 use ::web3::types::H256;
 use crate::{
     init_enclave::EnclaveDir,
@@ -20,8 +21,8 @@ pub fn init_enclave() -> sgx_enclave_id_t {
 
 pub fn anonify_deploy(
     enclave_id: sgx_enclave_id_t,
-    sig: &[u8],
-    pubkey: &[u8],
+    sig: &Signature,
+    pubkey: &PublicKey,
     nonce: &[u8],
     total_supply: u64,
     eth_url: &str,
@@ -49,14 +50,16 @@ pub fn anonify_deploy(
 pub fn anonify_send(
     enclave_id: sgx_enclave_id_t,
     from_addr: &UserAddress,
-    sig: &[u8],
-    pubkey: &[u8],
+    sig: &Signature,
+    pubkey: &PublicKey,
     nonce: &[u8],
     target: &UserAddress,
     amount: u64,
     contract: &web3::AnonymousAssetContract,
     gas: u64,
 ) -> Result<H256> {
+    // let from_addr = UserAddress::from_pubkey(&my_keypair.public),
+
     let unsigned_tx = state_transition(
         enclave_id,
         sig,
@@ -81,6 +84,13 @@ pub fn anonify_send(
     Ok(receipt)
 }
 
-// pub fn anonify_get_state() -> Result<u64> {
-//     get_state()
-// }
+pub fn anonify_get_state(
+    enclave_id: sgx_enclave_id_t,
+    from_addr: &UserAddress,
+    sig: &Signature,
+    pubkey: &PublicKey,
+    nonce: &[u8],
+) -> Result<u64> {
+    // let state = get_state()?;
+    unimplemented!();
+}
