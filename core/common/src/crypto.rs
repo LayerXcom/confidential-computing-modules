@@ -1,7 +1,8 @@
-use std::{
+use crate::localstd::{
     io::{self, Read, Write},
 };
 use ed25519_dalek::{PublicKey, Signature};
+use tiny_keccak::Keccak;
 use serde::{Deserialize, Serialize};
 
 /// Trait for 256-bits hash functions
@@ -83,5 +84,21 @@ impl Sha256 {
 
     fn copy_from_slice(&mut self, src: &[u8]) {
         self.0.copy_from_slice(src)
+    }
+}
+
+/// A trait that will hash using Keccak256 the object it's implemented on.
+pub trait Keccak256<T> {
+    /// This will return a sized object with the hash
+    fn keccak256(&self) -> T where T: Sized;
+}
+
+impl Keccak256<[u8; 32]> for [u8] {
+    fn keccak256(&self) -> [u8; 32] {
+        let mut keccak = Keccak::new_keccak256();
+        let mut result = [0u8; 32];
+        keccak.update(self);
+        keccak.finalize(result.as_mut());
+        result
     }
 }

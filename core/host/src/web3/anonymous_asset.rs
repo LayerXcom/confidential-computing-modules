@@ -11,11 +11,12 @@ use web3::{
     Web3,
     transports::{EventLoopHandle, Http},
     contract::{Contract, Options},
-    types::{Address, Bytes, H160, H256, TransactionReceipt, U256, FilterBuilder},
+    types::{Address, Bytes, H160, H256, TransactionReceipt, U256, FilterBuilder, Filter},
     futures::Future,
 };
 use log::debug;
 use ethabi::Contract as ContractABI;
+use anonify_common::Keccak256;
 
 pub fn deploy(
     eth_url: &str,
@@ -91,6 +92,12 @@ impl AnonymousAssetContract {
     }
 }
 
+fn build_event_filter(event_name: &str, contract_addr: &str) -> Filter {
+    // let filter = FilterBuilder::default()
+    //     .topics(Some(vec![*event_name.as_bytes()]))
+    unimplemented!();
+}
+
 // pub fn get_logs(eth_url: &str, contract_addrss: Address) -> Result<()> {
 //     let (eloop, transport) = Http::new(eth_url)?;
 //     let web3 = Web3::new(transport);
@@ -163,6 +170,33 @@ mod test {
 
     #[test]
     fn test_transfer() {
+        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+        let mut csprng: OsRng = OsRng::new().unwrap();
+        let keypair: Keypair = Keypair::generate(&mut csprng);
+
+        let msg = rand::thread_rng().gen::<[u8; 32]>();
+        let sig = keypair.sign(&msg);
+        assert!(keypair.verify(&msg, &sig).is_ok());
+
+        let total_supply = 100;
+
+        let unsigned_tx = init_state(
+            enclave.geteid(),
+            &sig.to_bytes(),
+            &keypair.public.to_bytes(),
+            &msg,
+            total_supply,
+        ).unwrap();
+
+        let contract_addr = deploy(
+            ETH_URL,
+            &unsigned_tx.ciphertexts,
+            &unsigned_tx.report,
+            &unsigned_tx.report_sig
+        ).unwrap();
+
+        println!("deployed contract address: {}", contract_addr);
+
 
     }
 }

@@ -7,6 +7,7 @@ build = "build.rs"
 
 [dependencies]
 anonify-types = { path = "../types" }
+anonify-common = { path = "../common" }
 sgx_types = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
 sgx_urts = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
 dirs = "2.0"
