@@ -3,7 +3,7 @@ use anonify_types::types::*;
 use anonify_common::{UserAddress, Sha256, Hash256};
 use crate::{
     crypto::*,
-    kvs::DBValue,
+    kvs::{DBValue, MEMORY_DB, DBTx, traits::SigVerificationKVS},
     sealing::NonSealedDbValue,
     error::{Result, EnclaveError},
 };
@@ -79,7 +79,7 @@ impl<S: State, N> UserState<S, N> {
 // storing data which have not been considered globally consensused.
 impl<S: State> UserState<S, CurrentNonce> {
     pub fn insert_cipheriv_memdb(cipheriv: Vec<u8>) -> Result<()> {
-        let user_state = Self::decrypt(cipheriv, SYMMETRIC_KEY)?;
+        let user_state = Self::decrypt(cipheriv, &SYMMETRIC_KEY)?;
         let key = user_state.get_db_key();
         let value = user_state.get_db_value()?;
 

@@ -10,14 +10,14 @@ extern crate sgx_tstd as std;
 #[macro_use]
 extern crate lazy_static;
 
-use std;;slice,
+use std::slice;
 use sgx_types::*;
 use sgx_tse::*;
 use anonify_types::*;
 use anonify_common::UserAddress;
 use ed25519_dalek::{PublicKey, Signature};
 use crate::kvs::{MemoryKVS, SigVerificationKVS, MEMORY_DB, DBTx};
-use crate::state::{UserState, State};
+use crate::state::{UserState, State, CurrentNonce};
 use crate::stf::{Value, AnonymousAssetSTF};
 use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{
@@ -54,11 +54,11 @@ pub unsafe extern "C" fn ecall_insert_logs(
     ciphertexts_num: u32,
 ) -> sgx_status_t {
     let ciphertexts = slice::from_raw_parts(ciphertexts, ciphertexts_len);
-    assert_eq!(ciphertexts.len() % ciphertexts_num, 0, "Ciphertexts must be divisible by ciphertexts_num.");
-    let chunk_size = ciphertexts.len() / ciphertexts_num;
+    assert_eq!(ciphertexts.len() % ciphertexts_num as usize, 0, "Ciphertexts must be divisible by ciphertexts_num.");
+    let chunk_size = ciphertexts.len() / ciphertexts_num as usize;
 
     for ciphertext in ciphertexts.chunks(chunk_size) {
-        UserState::insert_cipheriv_memdb(ciphertext.to_vec())
+        UserState::<Value ,CurrentNonce>::insert_cipheriv_memdb(ciphertext.to_vec())
             .expect("Failed to insert ciphertext into memory database.");
     }
 

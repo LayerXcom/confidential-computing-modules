@@ -7,7 +7,7 @@ use crate::{
 };
 
 mod memorydb;
-mod traits;
+pub mod traits;
 
 pub use memorydb::{MemoryKVS, MEMORY_DB};
 pub use traits::SigVerificationKVS;
