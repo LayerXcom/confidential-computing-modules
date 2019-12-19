@@ -51,7 +51,7 @@ pub fn get_state(
             sig.to_bytes().as_ptr() as _,
             pubkey.to_bytes().as_ptr() as _,
             msg.as_ptr() as _,
-            res as _,
+            &mut res,
         )
     };
 

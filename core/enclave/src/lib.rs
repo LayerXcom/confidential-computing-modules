@@ -70,7 +70,7 @@ pub unsafe extern "C" fn ecall_get_state(
     sig: &Sig,
     pubkey: &PubKey,
     msg: &Msg, // 32 bytes randomness for avoiding replay attacks.
-    mut state: u64, // Currently, status is just value.
+    state: *mut u64, // Currently, status is just value.
 ) -> sgx_status_t {
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
@@ -78,7 +78,7 @@ pub unsafe extern "C" fn ecall_get_state(
 
     let db_value = MEMORY_DB.get(&key).expect("Failed to get value from in-memory database.");
     let user_state = UserState::<Value, _>::from_db_value(db_value).expect("Failed to read db_value.").0;
-    state = user_state.into_raw_u64();
+    *state = user_state.into_raw_u64();
 
     sgx_status_t::SGX_SUCCESS
 }
