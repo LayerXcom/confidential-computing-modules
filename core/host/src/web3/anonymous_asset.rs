@@ -25,6 +25,7 @@ use ethabi::{
     Event,
     EventParam,
     ParamType,
+    decode,
 };
 
 pub fn deploy(
@@ -124,6 +125,8 @@ pub struct Web3Logs(pub Vec<Log>);
 impl Web3Logs {
     pub fn into_enclave_log(&self, event: &Event) -> Result<EnclaveLog> {
         let mut ciphertexts: Vec<u8> = vec![];
+
+        // TODO: How to handle mixied events.
         let ciphertexts_num = match event.name.as_str() {
             "Init" => self.0.len(),
             "Transfer" => self.0.len() * 2,
@@ -147,7 +150,8 @@ impl Web3Logs {
                 }.into())
             }
 
-            ciphertexts.extend_from_slice(&log.data.0[..]);
+            let data = Self::decode_data(&log, &event);
+            ciphertexts.extend_from_slice(&data[..]);
         }
 
         Ok(EnclaveLog {
@@ -156,6 +160,19 @@ impl Web3Logs {
             ciphertexts,
             ciphertexts_num: ciphertexts_num as u32,
         })
+    }
+
+    fn decode_data(log: &Log, event: &Event) -> Vec<u8> {
+        let param_types = event.inputs.iter().map(|e| e.kind.clone()).collect::<Vec<ParamType>>();
+        let tokens = decode(&param_types, &log.data.0).expect("Failed to decode token.");
+        let mut res = vec![];
+
+        for token in tokens {
+            res.extend_from_slice(&token.to_bytes()
+                .expect("Failed to convert token into bytes."));
+        }
+
+        res
     }
 }
 
@@ -275,7 +292,7 @@ mod test {
         let other_sig = other_keypair.sign(&other_msg);
 
         assert!(my_keypair.verify(&my_msg, &my_sig).is_ok());
-        assert!(my_keypair.verify(&other_msg, &other_sig).is_ok());
+        assert!(other_keypair.verify(&other_msg, &other_sig).is_ok());
 
         let total_supply = 100;
 
