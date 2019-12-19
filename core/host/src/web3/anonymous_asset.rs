@@ -100,7 +100,7 @@ impl AnonymousAssetContract {
         Ok(res)
     }
 
-    pub fn get_event(&self, event: Event) -> Result<Web3Logs> {
+    pub fn get_event(&self, event: &Event) -> Result<Web3Logs> {
         let filter = FilterBuilder::default()
             .address(vec![self.address])
             .topic_filter(TopicFilter {
@@ -122,12 +122,12 @@ impl AnonymousAssetContract {
 pub struct Web3Logs(pub Vec<Log>);
 
 impl Web3Logs {
-    pub fn from_logs(&self, event: Event) -> Result<EnclaveLog> {
+    pub fn into_enclave_log(&self, event: &Event) -> Result<EnclaveLog> {
         let mut ciphertexts: Vec<u8> = vec![];
         let ciphertexts_num = match event.name.as_str() {
             "Init" => self.0.len(),
             "Transfer" => self.0.len() * 2,
-            _ => panic!("Invalid event."),
+            _ => panic!("Invalid event name."),
         };
 
         let contract_addr = self.0[0].address;
@@ -264,21 +264,26 @@ mod test {
     #[test]
     fn test_transfer() {
         let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+        let eid = enclave.geteid();
         let mut csprng: OsRng = OsRng::new().unwrap();
         let my_keypair: Keypair = Keypair::generate(&mut csprng);
-        let other_keypair: Keypair = Keypair::generate(&mut csprng);
+        let my_msg = rand::thread_rng().gen::<[u8; 32]>();
+        let my_sig = my_keypair.sign(&my_msg);
 
-        let msg = rand::thread_rng().gen::<[u8; 32]>();
-        let sig = my_keypair.sign(&msg);
-        assert!(my_keypair.verify(&msg, &sig).is_ok());
+        let other_keypair: Keypair = Keypair::generate(&mut csprng);
+        let other_msg = rand::thread_rng().gen::<[u8; 32]>();
+        let other_sig = other_keypair.sign(&other_msg);
+
+        assert!(my_keypair.verify(&my_msg, &my_sig).is_ok());
+        assert!(my_keypair.verify(&other_msg, &other_sig).is_ok());
 
         let total_supply = 100;
 
         let unsigned_tx = init_state(
-            enclave.geteid(),
-            &sig,
+            eid,
+            &my_sig,
             &my_keypair.public,
-            &msg,
+            &my_msg,
             total_supply,
         ).unwrap();
 
@@ -294,19 +299,22 @@ mod test {
         let contract_abi = contract_abi_from_path(ANONYMOUS_ASSET_ABI_PATH).unwrap();
         let contract = AnonymousAssetContract::new(ETH_URL, contract_addr, contract_abi).unwrap();
 
-        let event = build_init_event();
-        let logs = contract.get_event(event).unwrap();
+        let init_event = build_init_event();
+        let logs = contract.get_event(&init_event).unwrap();
         println!("Init logs: {:?}", logs);
-        logs.insert_enclave(eid).unwrap();
+        logs.into_enclave_log(&init_event).unwrap().insert_enclave(eid).unwrap();
+
+        let my_state = get_state(eid, &my_sig, &my_keypair.public, &my_msg).unwrap();
+        assert_eq!(my_state, total_supply);
 
         let amount = 30;
         let gas = 3_000_000;
 
         // let receipt = anonify_send(
         //     enclave.geteid(),
-        //     &sig,
+        //     &my_sig,
         //     &my_keypair.public,
-        //     &msg,
+        //     &my_msg,
         //     &UserAddress::from_pubkey(&other_keypair.public),
         //     amount,
         //     &contract,
@@ -317,9 +325,9 @@ mod test {
 
         // let state = anonify_get_state(
         //     enclave.geteid(),
-        //     &sig,
+        //     &my_sig,
         //     &my_keypair.public,
-        //     &msg,
+        //     &my_msg,
         // ).unwrap();
 
         // println!("my state: {}", state);
