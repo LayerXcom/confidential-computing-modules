@@ -13,7 +13,18 @@ pub use memorydb::{MemoryKVS, MEMORY_DB};
 pub use traits::SigVerificationKVS;
 
 /// Database value.
-pub type DBValue = ElasticArray128<u8>;
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
+pub struct DBValue(ElasticArray128<u8>);
+
+impl DBValue {
+    pub fn from_slice(slice: &[u8]) -> Self {
+        DBValue(ElasticArray128::from_slice(slice))
+    }
+
+    pub fn into_vec(self) -> Vec<u8> {
+        self.into_vec()
+    }
+}
 
 /// Database operation
 #[derive(Clone, PartialEq)]

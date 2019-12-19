@@ -1,7 +1,7 @@
 use crate::{
     state::{State, UserState, CurrentNonce, NextNonce},
     error::Result,
-    kvs::{SigVerificationKVS, MEMORY_DB},
+    kvs::{SigVerificationKVS, MEMORY_DB, DBValue},
 };
 use anonify_common::UserAddress;
 use ed25519_dalek::{PublicKey, Signature};
@@ -111,7 +111,7 @@ impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
     ) -> Result<(UserState<Self::S, NextNonce>, UserState<Self::S, NextNonce>)> {
         let my_addr = UserAddress::from_sig(&msg, &sig, &from);
         let my_value = MEMORY_DB.get(&my_addr).unwrap();
-        let other_value = MEMORY_DB.get(&target).unwrap();
+        let other_value = MEMORY_DB.get(&target).unwrap_or(DBValue::default());
 
         let my_current_balance = UserState::<Self::S, _>::from_db_value(my_value.clone())?.0;
         assert!(amount > my_current_balance);
