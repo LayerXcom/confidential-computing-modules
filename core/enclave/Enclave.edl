@@ -12,6 +12,14 @@ enclave {
     include "anonify-types.h"
 
     trusted {
+        public sgx_status_t ecall_insert_logs(
+            [in] uint8_t contract_addr[20],
+            [in] const uint64_t* block_number,
+            [in, size = ciphertexts_len] const uint8_t *ciphertexts,
+            uint32_t ciphertexts_len,
+            uint32_t ciphertexts_num
+        );
+
         public sgx_status_t ecall_get_state(
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
@@ -43,13 +51,6 @@ enclave {
     };
 
     untrusted {
-        /*
-        sgx_status_t ocall_read_ledger(
-
-        );
-
-        */
-
         sgx_status_t ocall_sgx_init_quote(
             [out] sgx_target_info_t *ret_ti,
             [out] sgx_epid_group_id_t *ret_gid

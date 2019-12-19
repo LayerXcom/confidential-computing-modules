@@ -13,12 +13,18 @@ use web3::{
     Web3,
     transports::{EventLoopHandle, Http},
     contract::{Contract, Options},
-    types::{Address, Bytes, H160, H256, TransactionReceipt, U256, FilterBuilder, Filter, Log},
+    types::{Address, Bytes, H160, H256, TransactionReceipt, U256, FilterBuilder, Filter, Log, BlockNumber},
     futures::Future,
 };
 use log::debug;
-use ethabi::Contract as ContractABI;
-use anonify_common::Keccak256;
+use ethabi::{
+    Contract as ContractABI,
+    Topic,
+    TopicFilter,
+    Event,
+    EventParam,
+    ParamType,
+};
 
 pub fn deploy(
     eth_url: &str,
@@ -93,10 +99,17 @@ impl AnonymousAssetContract {
         Ok(res)
     }
 
-    pub fn get_event(&self, event_name: &str) -> Result<Vec<Log>> {
+    pub fn get_event(&self, event: Event) -> Result<Vec<Log>> {
         let filter = FilterBuilder::default()
             .address(vec![self.address])
-            .topics(Some(vec![(event_name.as_bytes().keccak256()).into()]), None, None, None)
+            .topic_filter(TopicFilter {
+                topic0: Topic::This(event.signature()),
+                topic1: Topic::Any,
+                topic2: Topic::Any,
+                topic3: Topic::Any,
+            })
+            .from_block(BlockNumber::Earliest)
+            .to_block(BlockNumber::Latest)
             .build();
 
         let logs = self.web3.eth().logs(filter).wait()?;
@@ -109,6 +122,85 @@ pub fn contract_abi_from_path<P: AsRef<Path>>(path: P) -> Result<ContractABI> {
     let reader = BufReader::new(f);
     let contract_abi = ContractABI::load(reader).expect("Failed to load contract abi.");
     Ok(contract_abi)
+}
+
+pub fn build_init_event() -> Event {
+    Event {
+        name: "Init".to_owned(),
+        inputs: vec![
+            EventParam {
+                name: "_initBalance".to_owned(),
+                kind: ParamType::Bytes,
+                indexed: false,
+            },
+        ],
+        anonymous: false,
+    }
+}
+
+pub fn build_transfer_event() -> Event {
+    Event {
+        name: "Transfer".to_owned(),
+        inputs: vec![
+            EventParam {
+                name: "_updateBalance1".to_owned(),
+                kind: ParamType::Bytes,
+                indexed: false,
+            },
+            EventParam {
+                name: "_updateBalance2".to_owned(),
+                kind: ParamType::Bytes,
+                indexed: false,
+            },
+        ],
+        anonymous: false,
+    }
+}
+
+/// A log which is sent to enclave. Each log containes ciphertexts data of a given contract address and a given block number.
+pub struct EnclaveLog {
+    contract_addr: [u8; 20],
+    block_number: u64,
+    ciphertexts: Vec<u8>, // Concatenated all ciphertexts within a specified block number.
+    ciphertexts_num: u32, // The number of ciphertexts in logs within a specified block number.
+}
+
+impl EnclaveLog {
+    pub fn from_logs(logs: Vec<Log>, event: Event) -> Result<Self> {
+        let mut ciphertexts: Vec<u8> = vec![];
+        let ciphertexts_num = match event.name.as_str() {
+            "Init" => logs.len(),
+            "Transfer" => logs.len() * 2,
+            _ => panic!("Invalid event."),
+        };
+
+        let contract_addr = logs[0].address;
+        let block_number = logs[0].block_number.expect("Should have block number.");
+
+        for (i, log) in logs.iter().enumerate() {
+            if contract_addr != log.address {
+                return Err(HostErrorKind::Web3Log{
+                    msg: "Each log should have same contract address.",
+                    index: i,
+                }.into());
+            }
+            if block_number != log.block_number.unwrap() {
+                return Err(HostErrorKind::Web3Log {
+                    msg: "Each log should have same block number.",
+                    index: i,
+                }.into())
+            }
+
+            ciphertexts.extend_from_slice(&log.data.0[..]);
+        }
+
+        Ok(EnclaveLog {
+            contract_addr: contract_addr.to_fixed_bytes(),
+            block_number: block_number.as_u64(),
+            ciphertexts,
+            ciphertexts_num: ciphertexts_num as u32,
+        })
+    }
 }
 
 #[cfg(test)]
@@ -188,7 +280,9 @@ mod test {
 
         let contract_abi = contract_abi_from_path(ANONYMOUS_ASSET_ABI_PATH).unwrap();
         let contract = AnonymousAssetContract::new(ETH_URL, contract_addr, contract_abi).unwrap();
-        let logs = contract.get_event("Init").unwrap();
+
+        let event = build_init_event();
+        let logs = contract.get_event(event).unwrap();
         println!("Init logs: {:?}", logs);
 
         let amount = 30;
