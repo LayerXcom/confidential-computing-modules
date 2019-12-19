@@ -56,9 +56,7 @@ pub fn anonify_send(
     amount: u64,
     contract: &web3::AnonymousAssetContract,
     gas: u64,
-) -> Result<H256> {
-    let from_addr = UserAddress::from_pubkey(&pubkey);
-
+) -> Result<H256> {    
     let unsigned_tx = state_transition(
         enclave_id,
         sig,

@@ -116,8 +116,8 @@ pub fn state_transition(
             &mut rt,
             sig.to_bytes().as_ptr() as _,
             pubkey.to_bytes().as_ptr() as _,
-            target.as_ptr() as _,
             msg.as_ptr() as _,
+            target.as_ptr() as _,
             amount,
             &mut unsigned_tx,
         )

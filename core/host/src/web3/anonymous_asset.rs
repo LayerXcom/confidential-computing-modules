@@ -327,18 +327,18 @@ mod test {
         let amount = 30;
         let gas = 3_000_000;
 
-        // let receipt = anonify_send(
-        //     enclave.geteid(),
-        //     &my_sig,
-        //     &my_keypair.public,
-        //     &my_msg,
-        //     &UserAddress::from_pubkey(&other_keypair.public),
-        //     amount,
-        //     &contract,
-        //     gas,
-        // );
+        let receipt = anonify_send(
+            enclave.geteid(),
+            &my_sig,
+            &my_keypair.public,
+            &my_msg,
+            &UserAddress::from_pubkey(&other_keypair.public),
+            amount,
+            &contract,
+            gas,
+        );
 
-        // println!("receipt: {:?}", receipt);
+        println!("receipt: {:?}", receipt);
 
         // let state = anonify_get_state(
         //     enclave.geteid(),
