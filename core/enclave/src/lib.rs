@@ -10,6 +10,7 @@ extern crate sgx_tstd as std;
 #[macro_use]
 extern crate lazy_static;
 
+use std;;slice,
 use sgx_types::*;
 use sgx_tse::*;
 use anonify_types::*;
@@ -46,12 +47,20 @@ mod tests;
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_insert_logs(
-    contract_addr: *const u8,
-    block_number: u64,
+    _contract_addr: &[u8; 20], //TODO
+    _block_number: u64, // TODO
     ciphertexts: *const u8,
-    ciphertexts_len: u32,
+    ciphertexts_len: usize,
     ciphertexts_num: u32,
 ) -> sgx_status_t {
+    let ciphertexts = slice::from_raw_parts(ciphertexts, ciphertexts_len);
+    assert_eq!(ciphertexts.len() % ciphertexts_num, 0, "Ciphertexts must be divisible by ciphertexts_num.");
+    let chunk_size = ciphertexts.len() / ciphertexts_num;
+
+    for ciphertext in ciphertexts.chunks(chunk_size) {
+        UserState::insert_cipheriv_memdb(ciphertext.to_vec())
+            .expect("Failed to insert ciphertext into memory database.");
+    }
 
     sgx_status_t::SGX_SUCCESS
 }
@@ -133,14 +142,6 @@ pub unsafe extern "C" fn ecall_init_state(
     unsigned_tx.report_sig = save_to_host_memory(&report_sig[..]).unwrap() as *const u8;
     unsigned_tx.ciphertext_num = 1 as u32; // todo;
     unsigned_tx.ciphertexts = save_to_host_memory(&res_ciphertext[..]).unwrap() as *const u8;
-
-    // // TODO: Allow to compile `Value` to c program.
-    // let mut buf = vec![];
-    // Value::new(value).write_le(&mut buf).expect("Faild to write value.");
-
-    // let mut dbtx = DBTx::new();
-    // dbtx.put(&pubkey, &sig, &buf);
-    // MEMORY_DB.write(dbtx);
 
     sgx_status_t::SGX_SUCCESS
 }

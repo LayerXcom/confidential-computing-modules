@@ -78,6 +78,18 @@ impl<S: State, N> UserState<S, N> {
 // State with NextNonce must not be allowed to access to the database to avoid from
 // storing data which have not been considered globally consensused.
 impl<S: State> UserState<S, CurrentNonce> {
+    pub fn insert_cipheriv_memdb(cipheriv: Vec<u8>) -> Result<()> {
+        let user_state = Self::decrypt(cipheriv, SYMMETRIC_KEY)?;
+        let key = user_state.get_db_key();
+        let value = user_state.get_db_value()?;
+
+        let mut dbtx = DBTx::new();
+        dbtx.put(&key, &value);
+        MEMORY_DB.write(dbtx);
+
+        Ok(())
+    }
+
     /// Decrypt Ciphertext which was stored in a shared ledger.
     pub fn decrypt(cipheriv: Vec<u8>, key: &SymmetricKey) -> Result<Self> {
         let res = decrypt_aes_256_gcm(cipheriv, key)?;
@@ -91,12 +103,12 @@ impl<S: State> UserState<S, CurrentNonce> {
 
     /// Get in-memory database value.
     // TODO: Encrypt with sealing key.
-    pub fn get_db_value(&self) -> Result<DBValue> {
+    pub fn get_db_value(&self) -> Result<Vec<u8>> {
         let mut buf = vec![];
         self.inner_state.write_le(&mut buf)?;
         self.nonce.write(&mut buf)?;
 
-        Ok(DBValue::from_vec(buf))
+        Ok(buf)
     }
 
     pub fn update_inner_state(&self, update: S) -> Self {
