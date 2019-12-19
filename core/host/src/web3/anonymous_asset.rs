@@ -159,10 +159,10 @@ pub fn build_transfer_event() -> Event {
 
 /// A log which is sent to enclave. Each log containes ciphertexts data of a given contract address and a given block number.
 pub struct EnclaveLog {
-    contract_addr: [u8; 20],
-    block_number: u64,
-    ciphertexts: Vec<u8>, // Concatenated all ciphertexts within a specified block number.
-    ciphertexts_num: u32, // The number of ciphertexts in logs within a specified block number.
+    pub contract_addr: [u8; 20],
+    pub block_number: u64,
+    pub ciphertexts: Vec<u8>, // Concatenated all ciphertexts within a specified block number.
+    pub ciphertexts_num: u32, // The number of ciphertexts in logs within a specified block number.
 }
 
 impl EnclaveLog {

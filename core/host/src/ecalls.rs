@@ -3,7 +3,36 @@ use anonify_types::{Sig, PubKey, Msg, RawUnsignedTx};
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
 use crate::init_enclave::EnclaveDir;
+use crate::web3::EnclaveLog;
 use crate::error::{HostErrorKind, Result};
+
+pub fn insert_logs(
+    eid: sgx_enclave_id_t,
+    enclave_log: &EnclaveLog,
+) -> Result<()> {
+    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+
+    let status = unsafe {
+        ecall_insert_logs(
+            eid,
+            &mut rt,
+            enclave_log.contract_addr.as_ptr() as _,
+            enclave_log.block_number,
+            enclave_log.ciphertexts.as_ptr() as _,
+            enclave_log.ciphertexts.len() as u32,
+            enclave_log.ciphertexts_num,
+        )
+    };
+
+    if status != sgx_status_t::SGX_SUCCESS {
+		return Err(HostErrorKind::Sgx{ status, function: "ecall_insert_logs" }.into());
+    }
+    if rt != sgx_status_t::SGX_SUCCESS {
+		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_insert_logs" }.into());
+    }
+
+    Ok(())
+}
 
 /// Get state only if the signature verification returns true.
 pub fn get_state(

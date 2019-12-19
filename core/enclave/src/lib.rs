@@ -45,6 +45,18 @@ mod tests;
 //
 
 #[no_mangle]
+pub unsafe extern "C" fn ecall_insert_logs(
+    contract_addr: *const u8,
+    block_number: u64,
+    ciphertexts: *const u8,
+    ciphertexts_len: u32,
+    ciphertexts_num: u32,
+) -> sgx_status_t {
+
+    sgx_status_t::SGX_SUCCESS
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn ecall_get_state(
     sig: &Sig,
     pubkey: &PubKey,

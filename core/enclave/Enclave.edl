@@ -14,7 +14,7 @@ enclave {
     trusted {
         public sgx_status_t ecall_insert_logs(
             [in] uint8_t contract_addr[20],
-            [in] const uint64_t* block_number,
+            uint64_t block_number,
             [in, size = ciphertexts_len] const uint8_t *ciphertexts,
             uint32_t ciphertexts_len,
             uint32_t ciphertexts_num

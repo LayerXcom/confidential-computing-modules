@@ -9,7 +9,7 @@ extern "C" {
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
         contract_addr: *mut [u8; 20usize],
-        block_number: *const u64,
+        block_number: u64,
         ciphertexts: *const u8,
         ciphertexts_len: u32,
         ciphertexts_num: u32,
