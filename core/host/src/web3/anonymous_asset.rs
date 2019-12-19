@@ -1,3 +1,4 @@
+use sgx_types::sgx_enclave_id_t;
 use std::{
     sync::Arc,
     path::Path,
@@ -99,7 +100,7 @@ impl AnonymousAssetContract {
         Ok(res)
     }
 
-    pub fn get_event(&self, event: Event) -> Result<Vec<Log>> {
+    pub fn get_event(&self, event: Event) -> Result<Web3Logs> {
         let filter = FilterBuilder::default()
             .address(vec![self.address])
             .topic_filter(TopicFilter {
@@ -113,7 +114,65 @@ impl AnonymousAssetContract {
             .build();
 
         let logs = self.web3.eth().logs(filter).wait()?;
-        Ok(logs)
+        Ok(Web3Logs(logs))
+    }
+}
+
+#[derive(Debug)]
+pub struct Web3Logs(pub Vec<Log>);
+
+impl Web3Logs {
+    pub fn from_logs(&self, event: Event) -> Result<EnclaveLog> {
+        let mut ciphertexts: Vec<u8> = vec![];
+        let ciphertexts_num = match event.name.as_str() {
+            "Init" => self.0.len(),
+            "Transfer" => self.0.len() * 2,
+            _ => panic!("Invalid event."),
+        };
+
+        let contract_addr = self.0[0].address;
+        let block_number = self.0[0].block_number.expect("Should have block number.");
+
+        for (i, log) in self.0.iter().enumerate() {
+            if contract_addr != log.address {
+                return Err(HostErrorKind::Web3Log{
+                    msg: "Each log should have same contract address.",
+                    index: i,
+                }.into());
+            }
+            if block_number != log.block_number.unwrap() {
+                return Err(HostErrorKind::Web3Log {
+                    msg: "Each log should have same block number.",
+                    index: i,
+                }.into())
+            }
+
+            ciphertexts.extend_from_slice(&log.data.0[..]);
+        }
+
+        Ok(EnclaveLog {
+            contract_addr: contract_addr.to_fixed_bytes(),
+            block_number: block_number.as_u64(),
+            ciphertexts,
+            ciphertexts_num: ciphertexts_num as u32,
+        })
+    }
+}
+
+/// A log which is sent to enclave. Each log containes ciphertexts data of a given contract address and a given block number.
+pub struct EnclaveLog {
+    pub contract_addr: [u8; 20],
+    pub block_number: u64,
+    pub ciphertexts: Vec<u8>, // Concatenated all ciphertexts within a specified block number.
+    pub ciphertexts_num: u32, // The number of ciphertexts in logs within a specified block number.
+}
+
+impl EnclaveLog {
+    pub fn insert_enclave(&self, eid: sgx_enclave_id_t) -> Result<()> {
+        use crate::ecalls::insert_logs;
+
+        insert_logs(eid, &self)?;
+        Ok(())
     }
 }
 
@@ -157,52 +216,6 @@ pub fn build_transfer_event() -> Event {
     }
 }
 
-/// A log which is sent to enclave. Each log containes ciphertexts data of a given contract address and a given block number.
-pub struct EnclaveLog {
-    pub contract_addr: [u8; 20],
-    pub block_number: u64,
-    pub ciphertexts: Vec<u8>, // Concatenated all ciphertexts within a specified block number.
-    pub ciphertexts_num: u32, // The number of ciphertexts in logs within a specified block number.
-}
-
-impl EnclaveLog {
-    pub fn from_logs(logs: Vec<Log>, event: Event) -> Result<Self> {
-        let mut ciphertexts: Vec<u8> = vec![];
-        let ciphertexts_num = match event.name.as_str() {
-            "Init" => logs.len(),
-            "Transfer" => logs.len() * 2,
-            _ => panic!("Invalid event."),
-        };
-
-        let contract_addr = logs[0].address;
-        let block_number = logs[0].block_number.expect("Should have block number.");
-
-        for (i, log) in logs.iter().enumerate() {
-            if contract_addr != log.address {
-                return Err(HostErrorKind::Web3Log{
-                    msg: "Each log should have same contract address.",
-                    index: i,
-                }.into());
-            }
-            if block_number != log.block_number.unwrap() {
-                return Err(HostErrorKind::Web3Log {
-                    msg: "Each log should have same block number.",
-                    index: i,
-                }.into())
-            }
-
-            ciphertexts.extend_from_slice(&log.data.0[..]);
-        }
-
-        Ok(EnclaveLog {
-            contract_addr: contract_addr.to_fixed_bytes(),
-            block_number: block_number.as_u64(),
-            ciphertexts,
-            ciphertexts_num: ciphertexts_num as u32,
-        })
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -212,7 +225,7 @@ mod test {
     use ed25519_dalek::Keypair;
     use anonify_common::UserAddress;
     use crate::init_enclave::EnclaveDir;
-    use crate::ecalls::init_state;
+    use crate::ecalls::{init_state, get_state};
     use crate::prelude::*;
 
     const ETH_URL: &'static str = "http://172.18.0.2:8545";
@@ -284,30 +297,31 @@ mod test {
         let event = build_init_event();
         let logs = contract.get_event(event).unwrap();
         println!("Init logs: {:?}", logs);
+        logs.insert_enclave(eid).unwrap();
 
         let amount = 30;
         let gas = 3_000_000;
 
-        let receipt = anonify_send(
-            enclave.geteid(),
-            &sig,
-            &my_keypair.public,
-            &msg,
-            &UserAddress::from_pubkey(&other_keypair.public),
-            amount,
-            &contract,
-            gas,
-        );
+        // let receipt = anonify_send(
+        //     enclave.geteid(),
+        //     &sig,
+        //     &my_keypair.public,
+        //     &msg,
+        //     &UserAddress::from_pubkey(&other_keypair.public),
+        //     amount,
+        //     &contract,
+        //     gas,
+        // );
 
-        println!("receipt: {:?}", receipt);
+        // println!("receipt: {:?}", receipt);
 
-        let state = anonify_get_state(
-            enclave.geteid(),
-            &sig,
-            &my_keypair.public,
-            &msg,
-        ).unwrap();
+        // let state = anonify_get_state(
+        //     enclave.geteid(),
+        //     &sig,
+        //     &my_keypair.public,
+        //     &msg,
+        // ).unwrap();
 
-        println!("my state: {}", state);
+        // println!("my state: {}", state);
     }
 }
