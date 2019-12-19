@@ -83,7 +83,7 @@ pub fn init_state(
             sig.to_bytes().as_ptr() as _,
             pubkey.to_bytes().as_ptr() as _,
             msg.as_ptr() as _,
-            &total_supply as *const u64,
+            total_supply,
             &mut unsigned_tx,
         )
     };
@@ -118,7 +118,7 @@ pub fn state_transition(
             pubkey.to_bytes().as_ptr() as _,
             target.as_ptr() as _,
             msg.as_ptr() as _,
-            &amount as *const u64,
+            amount,
             &mut unsigned_tx,
         )
     };
