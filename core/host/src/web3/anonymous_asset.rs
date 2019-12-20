@@ -53,7 +53,7 @@ impl Web3Http {
 
     pub fn deploy(
         &self,
-        deployer: Address,
+        deployer: &Address,
         init_ciphertext: &[u8],
         report: &[u8],
         report_sig: &[u8],
@@ -69,7 +69,7 @@ impl Web3Http {
             .execute(
                 bin,
                 (init_ciphertext.to_vec(), report.to_vec(), report_sig.to_vec()), // Parameters are got from ecall, so these have to be allocated.
-                deployer,
+                *deployer,
             )
             .unwrap() // TODO
             .wait()
@@ -270,94 +270,61 @@ mod test {
     pub const ANONYMOUS_ASSET_ABI_PATH: &str = "../../build/AnonymousAsset.abi";
 
     #[test]
-    fn test_deploy_contract() {
-        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
-        let mut csprng: OsRng = OsRng::new().unwrap();
-        let keypair: Keypair = Keypair::generate(&mut csprng);
-
-        let msg = rand::thread_rng().gen::<[u8; 32]>();
-        let sig = keypair.sign(&msg);
-        assert!(keypair.verify(&msg, &sig).is_ok());
-
-        let total_supply = 100;
-
-        let unsigned_tx = init_state(
-            enclave.geteid(),
-            &sig,
-            &keypair.public,
-            &msg,
-            total_supply,
-        ).unwrap();
-
-        let contract_addr = deploy(
-            ETH_URL,
-            &unsigned_tx.ciphertexts,
-            &unsigned_tx.report,
-            &unsigned_tx.report_sig
-        ).unwrap();
-
-        println!("deployed contract address: {}", contract_addr);
-    }
-
-    #[test]
     fn test_transfer() {
         let enclave = EnclaveDir::new().init_enclave(true).unwrap();
         let eid = enclave.geteid();
         let mut csprng: OsRng = OsRng::new().unwrap();
-        let my_keypair: Keypair = Keypair::generate(&mut csprng);
-        let my_msg = rand::thread_rng().gen::<[u8; 32]>();
-        let my_sig = my_keypair.sign(&my_msg);
-
-        let other_keypair: Keypair = Keypair::generate(&mut csprng);
-        let other_msg = rand::thread_rng().gen::<[u8; 32]>();
-        let other_sig = other_keypair.sign(&other_msg);
-
-        assert!(my_keypair.verify(&my_msg, &my_sig).is_ok());
-        assert!(other_keypair.verify(&other_msg, &other_sig).is_ok());
+        let my_access_right = AccessRight::new_from_rng(&mut csprng);
+        let other_access_right = AccessRight::new_from_rng(&mut csprng);
 
         let total_supply = 100;
+        let web3_conn = Web3Http::new(ETH_URL).unwrap();
 
-        let unsigned_tx = init_state(
-            eid,
-            &my_sig,
-            &my_keypair.public,
-            &my_msg,
-            total_supply,
-        ).unwrap();
 
-        let contract_addr = deploy(
-            ETH_URL,
-            &unsigned_tx.ciphertexts,
-            &unsigned_tx.report,
-            &unsigned_tx.report_sig
-        ).unwrap();
+        // 1. Deploy
 
+        let deployer_addr = web3_conn.get_account(0).unwrap();
+        let contract_addr = EthDeployer::new(eid, web3_conn)
+            .deploy(&deployer_addr, &my_access_right, total_supply).unwrap();
+
+        println!("Deployer address: {}", deployer_addr);
         println!("deployed contract address: {}", contract_addr);
 
         let contract_abi = contract_abi_from_path(ANONYMOUS_ASSET_ABI_PATH).unwrap();
         let contract = AnonymousAssetContract::new(ETH_URL, contract_addr, contract_abi).unwrap();
 
-        let init_event = build_init_event();
-        let logs = contract.get_event(&init_event).unwrap();
-        println!("Init logs: {:?}", logs);
-        logs.into_enclave_log(&init_event).unwrap().insert_enclave(eid).unwrap();
 
-        let my_state = get_state(eid, &my_sig, &my_keypair.public, &my_msg).unwrap();
+        // 2. Get logs from contract
+
+        let init_event = build_init_event();
+        contract
+            .get_event(&init_event).unwrap()
+            .into_enclave_log(&init_event).unwrap()
+            .insert_enclave(eid).unwrap();
+        // println!("Init logs: {:?}", logs);
+
+
+        // 3. Get state from enclave
+
+        let my_state = my_access_right.get_state(eid).unwrap();
         assert_eq!(my_state, total_supply);
+
+
+        // 4. Send a transaction to contract
 
         let amount = 30;
         let gas = 3_000_000;
+        let other_user_address = other_access_right.user_address();
 
-        let receipt = anonify_send(
-            enclave.geteid(),
-            &my_sig,
-            &my_keypair.public,
-            &my_msg,
-            &UserAddress::from_pubkey(&other_keypair.public),
-            amount,
-            &contract,
-            gas,
-        );
+        let receipt = EthSender::new(eid, contract)
+            .send_tx(
+                &my_access_right,
+                deployer_addr,
+                &other_user_address,
+                amount,
+                gas
+            );
+
 
         println!("receipt: {:?}", receipt);
 
