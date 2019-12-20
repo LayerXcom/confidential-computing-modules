@@ -12,9 +12,10 @@ use crate::{
 };
 use web3::{
     Web3,
+    Transport,
     transports::{EventLoopHandle, Http},
     contract::{Contract, Options},
-    types::{Address, Bytes, H160, H256, TransactionReceipt, U256, FilterBuilder, Filter, Log, BlockNumber},
+    types::{Address, H256, U256, FilterBuilder, Log, BlockNumber},
     futures::Future,
 };
 use log::debug;
@@ -28,34 +29,54 @@ use ethabi::{
     decode,
 };
 
-pub fn deploy(
-    eth_url: &str,
-    init_ciphertext: &[u8],
-    report: &[u8],
-    report_sig: &[u8],
-) -> Result<Address> {
-    let (eloop, transport) = Http::new(eth_url)?;
-    let web3 = Web3::new(transport);
-    let account = web3.eth().accounts().wait()?[0];
+#[derive(Debug)]
+pub struct Web3Http {
+    web3: Web3<Http>,
+    eloop: EventLoopHandle,
+}
 
-    let abi = include_bytes!("../../../../build/AnonymousAsset.abi");
-    let bin = include_str!("../../../../build/AnonymousAsset.bin");
+impl Web3Http {
+    pub fn new(eth_url: &str) -> Result<Self> {
+        let (eloop, transport) = Http::new(eth_url)?;
+        let web3 = Web3::new(transport);
 
-    let contract = Contract::deploy(web3.eth(), abi)
-        .unwrap() // TODO
-        .confirmations(CONFIRMATIONS)
-        // .poll_interval(time::Duration::from_secs(POLL_INTERVAL_SECS))
-        .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
-        .execute(
-            bin,
-            (init_ciphertext.to_vec(), report.to_vec(), report_sig.to_vec()), // Parameters are got from ecall, so these have to be allocated.
-            account,
-        )
-        .unwrap() // TODO
-        .wait()
-        .unwrap(); // TODO
+        Ok(Web3Http {
+            web3,
+            eloop,
+        })
+    }
 
-    Ok(contract.address())
+    pub fn get_account(&self, index: usize) -> Result<Address> {
+        let account = self.web3.eth().accounts().wait()?[index];
+        Ok(account)
+    }
+
+    pub fn deploy(
+        &self,
+        deployer: Address,
+        init_ciphertext: &[u8],
+        report: &[u8],
+        report_sig: &[u8],
+    ) -> Result<Address> {
+        let abi = include_bytes!("../../../../build/AnonymousAsset.abi");
+        let bin = include_str!("../../../../build/AnonymousAsset.bin");
+
+        let contract = Contract::deploy(self.web3.eth(), abi)
+            .unwrap() // TODO
+            .confirmations(CONFIRMATIONS)
+            // .poll_interval(time::Duration::from_secs(POLL_INTERVAL_SECS))
+            .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
+            .execute(
+                bin,
+                (init_ciphertext.to_vec(), report.to_vec(), report_sig.to_vec()), // Parameters are got from ecall, so these have to be allocated.
+                deployer,
+            )
+            .unwrap() // TODO
+            .wait()
+            .unwrap(); // TODO
+
+        Ok(contract.address())
+    }
 }
 
 #[derive(Debug)]

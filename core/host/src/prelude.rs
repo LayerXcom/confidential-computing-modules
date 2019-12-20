@@ -37,14 +37,16 @@ pub fn anonify_deploy(
 
     debug!("unsigned_tx: {:?}", &unsigned_tx);
 
-    let address = web3::deploy(
-        eth_url,
+    let web3_conn = web3::Web3Http::new(eth_url)?;
+    let deployer = web3_conn.get_account(0)?;
+    let contract_addr = web3_conn.deploy(
+        deployer,
         &unsigned_tx.ciphertexts,
         &unsigned_tx.report,
-        &unsigned_tx.report_sig
+        &unsigned_tx.report_sig,
     )?;
 
-    Ok(address.to_fixed_bytes())
+    Ok(contract_addr.to_fixed_bytes())
 }
 
 pub fn anonify_send(
