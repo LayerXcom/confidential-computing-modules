@@ -29,18 +29,20 @@ use ethabi::{
     decode,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Web3Http {
     web3: Web3<Http>,
+    eloop: EventLoopHandle,
 }
 
 impl Web3Http {
     pub fn new(eth_url: &str) -> Result<Self> {
-        let (_eloop, transport) = Http::new(eth_url)?;
+        let (eloop, transport) = Http::new(eth_url)?;
         let web3 = Web3::new(transport);
 
         Ok(Web3Http {
             web3,
+            eloop,
         })
     }
 
@@ -273,9 +275,8 @@ mod test {
 
     #[test]
     fn test_transfer() {
-        let eid = EnclaveDir::new()
-            .init_enclave(true).unwrap()
-            .geteid();
+        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+        let eid = enclave.geteid();
         let mut csprng: OsRng = OsRng::new().unwrap();
         let my_access_right = AccessRight::new_from_rng(&mut csprng);
         let other_access_right = AccessRight::new_from_rng(&mut csprng);
@@ -285,16 +286,14 @@ mod test {
 
         // 1. Deploy
 
-        let web3_conn = Web3Http::new(ETH_URL).unwrap();
-        let deployer_addr = web3_conn.get_account(0).unwrap();
-        let contract_addr = EthDeployer::new(eid, web3_conn.clone())
-            .deploy(&deployer_addr, &my_access_right, total_supply).unwrap();
+        let mut deployer = EthDeployer::new(eid, ETH_URL).unwrap();
+        let deployer_addr = deployer.get_account(0).unwrap();
+        let contract_addr = deployer.deploy(&deployer_addr, &my_access_right, total_supply).unwrap();
 
         println!("Deployer address: {}", deployer_addr);
         println!("deployed contract address: {}", contract_addr);
 
-        let contract_abi = contract_abi_from_path(ANONYMOUS_ASSET_ABI_PATH).unwrap();
-        let contract = AnonymousAssetContract::new(web3_conn.clone(), contract_addr, contract_abi).unwrap();
+        let contract = deployer.get_contract(ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
         // 2. Get logs from contract

@@ -1,3 +1,4 @@
+use std::path::Path;
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
 use anonify_common::UserAddress;
@@ -76,22 +77,30 @@ impl AccessRight {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct EthDeployer {
     enclave_id: sgx_enclave_id_t,
-    web3_conn: Web3Http
+    web3_conn: Web3Http,
+    address: Option<EthAddress>,
 }
 
 impl EthDeployer {
-    pub fn new(enclave_id: sgx_enclave_id_t, web3_conn: Web3Http) -> Self {
-        EthDeployer {
+    pub fn new(enclave_id: sgx_enclave_id_t, eth_url: &str) -> Result<Self> {
+        let web3_conn = Web3Http::new(eth_url)?;
+
+        Ok(EthDeployer {
             enclave_id,
             web3_conn,
-        }
+            address: None,
+        })
+    }
+
+    pub fn get_account(&self, index: usize) -> Result<EthAddress> {
+        self.web3_conn.get_account(index)
     }
 
     pub fn deploy(
-        &self,
+        &mut self,
         deploy_user: &EthAddress,
         access_right: &AccessRight,
         total_supply: u64,
@@ -113,7 +122,16 @@ impl EthDeployer {
             &unsigned_tx.report_sig,
         )?;
 
+        self.address = Some(contract_addr);
+
         Ok(contract_addr)
+    }
+
+    // TODO: generalize, remove abi.
+    pub fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<web3::AnonymousAssetContract> {
+        let abi = web3::contract_abi_from_path(abi_path)?;
+        let adderess = self.address.expect("The contract hasn't be deployed yet.");
+        web3::AnonymousAssetContract::new(self.web3_conn, adderess, abi)
     }
 }
 
