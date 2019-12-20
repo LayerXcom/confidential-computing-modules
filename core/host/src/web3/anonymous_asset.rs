@@ -29,20 +29,18 @@ use ethabi::{
     decode,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Web3Http {
     web3: Web3<Http>,
-    eloop: EventLoopHandle,
 }
 
 impl Web3Http {
     pub fn new(eth_url: &str) -> Result<Self> {
-        let (eloop, transport) = Http::new(eth_url)?;
+        let (_eloop, transport) = Http::new(eth_url)?;
         let web3 = Web3::new(transport);
 
         Ok(Web3Http {
             web3,
-            eloop,
         })
     }
 
@@ -79,25 +77,21 @@ impl Web3Http {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AnonymousAssetContract {
     contract: Contract<Http>,
     address: Address, // contract address
     web3: Web3<Http>,
-    eloop: EventLoopHandle,
 }
 
 impl AnonymousAssetContract {
-    pub fn new(eth_url: &str, contract_addr: Address, abi: ContractABI) -> Result<Self> {
-        let (eloop, http) = Http::new(eth_url)?;
-        let web3 = Web3::new(http);
-        let contract = Contract::new(web3.eth(), contract_addr, abi);
+    pub fn new(web3_conn: Web3Http, contract_addr: Address, abi: ContractABI) -> Result<Self> {
+        let contract = Contract::new(web3_conn.web3.eth(), contract_addr, abi);
 
         Ok(AnonymousAssetContract {
             contract,
             address: contract_addr,
-            web3,
-            eloop,
+            web3: web3_conn.web3,
         })
     }
 
@@ -214,6 +208,14 @@ impl EnclaveLog {
     }
 }
 
+pub struct EthUserAddress(pub Address);
+
+impl EthUserAddress {
+    pub fn new(address: Address) -> Self {
+        EthUserAddress(address)
+    }
+}
+
 pub fn contract_abi_from_path<P: AsRef<Path>>(path: P) -> Result<ContractABI> {
     let f = File::open(path)?;
     let reader = BufReader::new(f);
@@ -271,27 +273,28 @@ mod test {
 
     #[test]
     fn test_transfer() {
-        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
-        let eid = enclave.geteid();
+        let eid = EnclaveDir::new()
+            .init_enclave(true).unwrap()
+            .geteid();
         let mut csprng: OsRng = OsRng::new().unwrap();
         let my_access_right = AccessRight::new_from_rng(&mut csprng);
         let other_access_right = AccessRight::new_from_rng(&mut csprng);
 
         let total_supply = 100;
-        let web3_conn = Web3Http::new(ETH_URL).unwrap();
 
 
         // 1. Deploy
 
+        let web3_conn = Web3Http::new(ETH_URL).unwrap();
         let deployer_addr = web3_conn.get_account(0).unwrap();
-        let contract_addr = EthDeployer::new(eid, web3_conn)
+        let contract_addr = EthDeployer::new(eid, web3_conn.clone())
             .deploy(&deployer_addr, &my_access_right, total_supply).unwrap();
 
         println!("Deployer address: {}", deployer_addr);
         println!("deployed contract address: {}", contract_addr);
 
         let contract_abi = contract_abi_from_path(ANONYMOUS_ASSET_ABI_PATH).unwrap();
-        let contract = AnonymousAssetContract::new(ETH_URL, contract_addr, contract_abi).unwrap();
+        let contract = AnonymousAssetContract::new(web3_conn.clone(), contract_addr, contract_abi).unwrap();
 
 
         // 2. Get logs from contract

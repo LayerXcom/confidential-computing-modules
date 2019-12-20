@@ -22,6 +22,7 @@ pub fn init_enclave() -> sgx_enclave_id_t {
 }
 
 /// Access right of Read/Write to anonify's enclave mem db.
+#[derive(Debug, Clone)]
 pub struct AccessRight {
     sig: Signature,
     pubkey: PublicKey,
@@ -75,7 +76,7 @@ impl AccessRight {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EthDeployer {
     enclave_id: sgx_enclave_id_t,
     web3_conn: Web3Http
@@ -116,6 +117,7 @@ impl EthDeployer {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct EthSender {
     enclave_id: sgx_enclave_id_t,
     contract: web3::AnonymousAssetContract,
