@@ -22,7 +22,7 @@ impl DBValue {
     }
 
     pub fn into_vec(self) -> Vec<u8> {
-        self.into_vec()
+        self.0.into_vec()
     }
 }
 
