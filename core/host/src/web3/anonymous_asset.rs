@@ -111,7 +111,7 @@ impl AnonymousAssetContract {
         let call = self.contract.call(
             "transfer",
             (update_balance1.to_vec(), update_balance2.to_vec(), report.to_vec(), report_sig.to_vec()),
-            self.address,
+            from,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );
 
@@ -298,20 +298,21 @@ mod test {
         let contract = deployer.get_contract(ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
-        // 2. Get logs from contract
+        // 2. Get logs from contract and update state inside enclave.
 
         let init_event = build_init_event();
         contract
             .get_event(&init_event).unwrap()
             .into_enclave_log(&init_event).unwrap()
             .insert_enclave(eid).unwrap();
-        // println!("Init logs: {:?}", logs);
 
 
         // 3. Get state from enclave
 
         let my_state = my_access_right.get_state(eid).unwrap();
+        let other_state = other_access_right.get_state(eid).unwrap();
         assert_eq!(my_state, total_supply);
+        assert_eq!(other_state, 0);
 
 
         // 4. Send a transaction to contract
@@ -320,8 +321,8 @@ mod test {
         let gas = 3_000_000;
         let other_user_address = other_access_right.user_address();
 
-        let receipt = EthSender::new(eid, contract)
-            .send_tx(
+        let eth_sender = EthSender::new(eid, contract);
+        let receipt = eth_sender.send_tx(
                 &my_access_right,
                 deployer_addr,
                 &other_user_address,
@@ -329,16 +330,23 @@ mod test {
                 gas
             );
 
-
         println!("receipt: {:?}", receipt);
 
-        // let state = anonify_get_state(
-        //     enclave.geteid(),
-        //     &my_sig,
-        //     &my_keypair.public,
-        //     &my_msg,
-        // ).unwrap();
 
-        // println!("my state: {}", state);
+        // 5. Update state inside enclave
+        let contract = eth_sender.get_contract();
+        let transfer_event = build_transfer_event();
+        contract
+            .get_event(&transfer_event).unwrap()
+            .into_enclave_log(&transfer_event).unwrap()
+            .insert_enclave(eid).unwrap();
+
+
+        // 6. Check the updated states
+        let my_updated_state = my_access_right.get_state(eid).unwrap();
+        let other_updated_state = other_access_right.get_state(eid).unwrap();
+
+        assert_eq!(my_updated_state, total_supply - amount);
+        assert_eq!(other_updated_state, amount);
     }
 }

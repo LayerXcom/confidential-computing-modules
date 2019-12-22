@@ -183,4 +183,8 @@ impl EthSender {
 
         Ok(receipt)
     }
+
+    pub fn get_contract(self) -> web3::AnonymousAssetContract {
+        self.contract
+    }
 }
