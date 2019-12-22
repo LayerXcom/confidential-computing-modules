@@ -56,7 +56,7 @@ fn test_transfer() {
 
     // 2. Get logs from contract and update state inside enclave.
 
-    let init_event = build_init_event();
+    let init_event = EthEvent::build_init_event();
     contract
         .get_event(&init_event).unwrap()
         .into_enclave_log(&init_event).unwrap()
@@ -91,7 +91,7 @@ fn test_transfer() {
 
     // 5. Update state inside enclave
     let contract = eth_sender.get_contract();
-    let transfer_event = build_transfer_event();
+    let transfer_event = EthEvent::build_transfer_event();
     contract
         .get_event(&transfer_event).unwrap()
         .into_enclave_log(&transfer_event).unwrap()

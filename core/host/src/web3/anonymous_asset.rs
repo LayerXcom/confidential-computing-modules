@@ -120,11 +120,11 @@ impl AnonymousAssetContract {
         Ok(res)
     }
 
-    pub fn get_event(&self, event: &Event) -> Result<Web3Logs> {
+    pub fn get_event(&self, event: &EthEvent) -> Result<Web3Logs> {
         let filter = FilterBuilder::default()
             .address(vec![self.address])
             .topic_filter(TopicFilter {
-                topic0: Topic::This(event.signature()),
+                topic0: Topic::This(event.into_raw().signature()),
                 topic1: Topic::Any,
                 topic2: Topic::Any,
                 topic3: Topic::Any,
@@ -142,11 +142,11 @@ impl AnonymousAssetContract {
 pub struct Web3Logs(pub Vec<Log>);
 
 impl Web3Logs {
-    pub fn into_enclave_log(&self, event: &Event) -> Result<EnclaveLog> {
+    pub fn into_enclave_log(&self, event: &EthEvent) -> Result<EnclaveLog> {
         let mut ciphertexts: Vec<u8> = vec![];
 
         // TODO: How to handle mixied events.
-        let ciphertexts_num = match event.name.as_str() {
+        let ciphertexts_num = match event.into_raw().name.as_str() {
             "Init" => self.0.len(),
             "Transfer" => self.0.len() * 2,
             _ => panic!("Invalid event name."),
@@ -181,8 +181,10 @@ impl Web3Logs {
         })
     }
 
-    fn decode_data(log: &Log, event: &Event) -> Vec<u8> {
-        let param_types = event.inputs.iter().map(|e| e.kind.clone()).collect::<Vec<ParamType>>();
+    fn decode_data(log: &Log, event: &EthEvent) -> Vec<u8> {
+        let param_types = event.into_raw()
+            .inputs.iter()
+            .map(|e| e.kind.clone()).collect::<Vec<ParamType>>();
         let tokens = decode(&param_types, &log.data.0).expect("Failed to decode token.");
         let mut res = vec![];
 
@@ -227,35 +229,50 @@ pub fn contract_abi_from_path<P: AsRef<Path>>(path: P) -> Result<ContractABI> {
     Ok(contract_abi)
 }
 
-pub fn build_init_event() -> Event {
-    Event {
-        name: "Init".to_owned(),
-        inputs: vec![
-            EventParam {
-                name: "_initBalance".to_owned(),
-                kind: ParamType::Bytes,
-                indexed: false,
-            },
-        ],
-        anonymous: false,
+/// A type of events from ethererum network.
+pub struct EthEvent(Event);
+
+impl EthEvent {
+    pub fn build_init_event() -> Self {
+        EthEvent(Event {
+            name: "Init".to_owned(),
+            inputs: vec![
+                EventParam {
+                    name: "_initBalance".to_owned(),
+                    kind: ParamType::Bytes,
+                    indexed: false,
+                },
+            ],
+            anonymous: false,
+        })
+    }
+
+    pub fn build_transfer_event() -> Self {
+        EthEvent(Event {
+            name: "Transfer".to_owned(),
+            inputs: vec![
+                EventParam {
+                    name: "_updateBalance1".to_owned(),
+                    kind: ParamType::Bytes,
+                    indexed: false,
+                },
+                EventParam {
+                    name: "_updateBalance2".to_owned(),
+                    kind: ParamType::Bytes,
+                    indexed: false,
+                },
+            ],
+            anonymous: false,
+        })
+    }
+
+    pub fn into_raw(&self) -> &Event {
+        &self.0
     }
 }
 
-pub fn build_transfer_event() -> Event {
-    Event {
-        name: "Transfer".to_owned(),
-        inputs: vec![
-            EventParam {
-                name: "_updateBalance1".to_owned(),
-                kind: ParamType::Bytes,
-                indexed: false,
-            },
-            EventParam {
-                name: "_updateBalance2".to_owned(),
-                kind: ParamType::Bytes,
-                indexed: false,
-            },
-        ],
-        anonymous: false,
+impl From<EthEvent> for Event {
+    fn from(ev: EthEvent) -> Self {
+        ev.0
     }
 }
