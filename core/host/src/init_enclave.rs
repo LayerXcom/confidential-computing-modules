@@ -67,7 +67,7 @@ impl EnclaveDir {
 
     fn save_launch_token<P: AsRef<Path>>(
         path: P,
-        mut launch_token: sgx_launch_token_t,
+        launch_token: sgx_launch_token_t,
     ) -> Result<()> {
         let f = fs::File::create(path)?;
         let mut writer = BufWriter::new(f);
