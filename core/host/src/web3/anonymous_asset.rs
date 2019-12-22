@@ -79,11 +79,12 @@ impl Web3Http {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct AnonymousAssetContract {
     contract: Contract<Http>,
     address: Address, // contract address
     web3: Web3<Http>,
+    eloop: EventLoopHandle,
 }
 
 impl AnonymousAssetContract {
@@ -94,6 +95,7 @@ impl AnonymousAssetContract {
             contract,
             address: contract_addr,
             web3: web3_conn.web3,
+            eloop: web3_conn.eloop,
         })
     }
 

@@ -135,7 +135,7 @@ impl EthDeployer {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct EthSender {
     enclave_id: sgx_enclave_id_t,
     contract: web3::AnonymousAssetContract,
