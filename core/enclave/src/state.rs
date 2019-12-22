@@ -124,7 +124,7 @@ impl<S: State> UserState<S, CurrentNonce> {
         address: UserAddress,
         db_value: DBValue
     ) -> Result<Self> {
-        let (inner_state, nonce) = Self::from_db_value(db_value)?;
+        let (inner_state, nonce) = Self::get_state_nonce_from_dbvalue(db_value)?;
 
         Ok(UserState {
             address,
@@ -135,10 +135,15 @@ impl<S: State> UserState<S, CurrentNonce> {
     }
 
     /// Get inner state and nonce from database value.
-    pub fn from_db_value(db_value: DBValue) -> Result<(S, Nonce)> {
-        let reader = db_value.into_vec();
-        let state = S::read_le(&mut &reader[..])?;
-        let nonce = Nonce::read(&mut &reader[..])?;
+    pub fn get_state_nonce_from_dbvalue(db_value: DBValue) -> Result<(S, Nonce)> {
+        let mut state = Default::default();
+        let mut nonce = Default::default();
+
+        if db_value != Default::default() {
+            let reader = db_value.into_vec();
+            state = S::read_le(&mut &reader[..])?;
+            nonce = Nonce::read(&mut &reader[..])?;
+        }
 
         Ok((state, nonce))
     }
