@@ -1,15 +1,45 @@
 use sgx_types::*;
-use anonify_types::{Sig, PubKey, Msg, RawUnsignedTx};
+use anonify_types::{Sig, PubKey, Msg, RawUnsignedTx, traits::SliceCPtr};
+use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
 use crate::init_enclave::EnclaveDir;
+use crate::web3::EnclaveLog;
 use crate::error::{HostErrorKind, Result};
+
+pub fn insert_logs(
+    eid: sgx_enclave_id_t,
+    enclave_log: &EnclaveLog,
+) -> Result<()> {
+    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+
+    let status = unsafe {
+        ecall_insert_logs(
+            eid,
+            &mut rt,
+            enclave_log.contract_addr.as_ptr() as _,
+            enclave_log.block_number,
+            enclave_log.ciphertexts.as_c_ptr() as *const u8,
+            enclave_log.ciphertexts.len() as u32,
+            enclave_log.ciphertexts_num,
+        )
+    };
+
+    if status != sgx_status_t::SGX_SUCCESS {
+		return Err(HostErrorKind::Sgx{ status, function: "ecall_insert_logs" }.into());
+    }
+    if rt != sgx_status_t::SGX_SUCCESS {
+		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_insert_logs" }.into());
+    }
+
+    Ok(())
+}
 
 /// Get state only if the signature verification returns true.
 pub fn get_state(
     eid: sgx_enclave_id_t,
-    sig: &Sig,
-    pubkey: &PubKey,
-    msg: &Msg
+    sig: &Signature,
+    pubkey: &PublicKey,
+    msg: &[u8],
 ) -> Result<u64> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut res: u64 = Default::default();
@@ -18,10 +48,10 @@ pub fn get_state(
         ecall_get_state(
             eid,
             &mut rt,
-            sig.as_ptr() as _,
-            pubkey.as_ptr() as _,
+            sig.to_bytes().as_ptr() as _,
+            pubkey.to_bytes().as_ptr() as _,
             msg.as_ptr() as _,
-            res as _,
+            &mut res,
         )
     };
 
@@ -38,8 +68,8 @@ pub fn get_state(
 /// Initialize a state when a new contract is deployed.
 pub fn init_state(
     eid: sgx_enclave_id_t,
-    sig: &[u8],
-    pubkey: &[u8],
+    sig: &Signature,
+    pubkey: &PublicKey,
     msg: &[u8],
     total_supply: u64,
 ) -> Result<UnsignedTx> {
@@ -50,19 +80,19 @@ pub fn init_state(
         ecall_init_state(
             eid,
             &mut rt,
-            sig.as_ptr() as _,
-            pubkey.as_ptr() as _,
+            sig.to_bytes().as_ptr() as _,
+            pubkey.to_bytes().as_ptr() as _,
             msg.as_ptr() as _,
-            &total_supply as *const u64,
+            total_supply,
             &mut unsigned_tx,
         )
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(HostErrorKind::Sgx{ status, function: "ecall_contract_deploy" }.into());
+		return Err(HostErrorKind::Sgx{ status, function: "ecall_init_state" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_contract_deploy" }.into());
+		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_init_state" }.into());
     }
 
     Ok(unsigned_tx.into())
@@ -71,8 +101,8 @@ pub fn init_state(
 /// Update states when a transaction is sent to blockchain.
 pub fn state_transition(
     eid: sgx_enclave_id_t,
-    sig: &[u8],
-    pubkey: &[u8],
+    sig: &Signature,
+    pubkey: &PublicKey,
     msg: &[u8],
     target: &[u8],
     amount: u64,
@@ -84,11 +114,11 @@ pub fn state_transition(
         ecall_state_transition(
             eid,
             &mut rt,
-            sig.as_ptr() as _,
-            pubkey.as_ptr() as _,
-            target.as_ptr() as _,
+            sig.to_bytes().as_ptr() as _,
+            pubkey.to_bytes().as_ptr() as _,
             msg.as_ptr() as _,
-            &amount as *const u64,
+            target.as_ptr() as _,
+            amount,
             &mut unsigned_tx,
         )
     };
@@ -134,6 +164,12 @@ impl From<RawUnsignedTx> for UnsignedTx {
 }
 
 
+impl UnsignedTx {
+    pub fn get_two_ciphertexts(&self) -> (&[u8], &[u8]) {
+        self.ciphertexts.split_at(self.ciphertext_num as usize)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -144,7 +180,7 @@ mod tests {
 
     #[test]
     fn test_init_state() {
-        let enclave = EnclaveDir::new().init_enclave().unwrap();
+        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
         let mut csprng: OsRng = OsRng::new().unwrap();
         let keypair: Keypair = Keypair::generate(&mut csprng);
 
@@ -156,8 +192,8 @@ mod tests {
 
         assert!(init_state(
             enclave.geteid(),
-            &sig.to_bytes(),
-            &keypair.public.to_bytes(),
+            &sig,
+            &keypair.public,
             &msg,
             total_supply,
         ).is_ok());
@@ -165,7 +201,7 @@ mod tests {
 
     #[test]
     fn test_state_transition() {
-        let enclave = EnclaveDir::new().init_enclave().unwrap();
+        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
         let mut csprng: OsRng = OsRng::new().unwrap();
         let keypair: Keypair = Keypair::generate(&mut csprng);
 
@@ -178,8 +214,8 @@ mod tests {
 
         assert!(state_transition(
             enclave.geteid(),
-            &sig.to_bytes(),
-            &keypair.public.to_bytes(),
+            &sig,
+            &keypair.public,
             &msg,
             &target[..],
             amount,
@@ -189,7 +225,7 @@ mod tests {
     #[test]
     #[ignore]
     fn test_ecall_get_state() {
-        let enclave = EnclaveDir::new().init_enclave().unwrap();
+        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
         let mut csprng: OsRng = OsRng::new().unwrap();
         let keypair: Keypair = Keypair::generate(&mut csprng);
 
@@ -197,7 +233,7 @@ mod tests {
         let sig = keypair.sign(&msg);
         assert!(keypair.verify(&msg, &sig).is_ok());
 
-        let state = get_state(enclave.geteid(), &sig.to_bytes(), &keypair.public.to_bytes(), &msg);
+        let state = get_state(enclave.geteid(), &sig, &keypair.public, &msg);
         // assert_eq!(state, 0);
     }
 }

@@ -13,6 +13,7 @@ default = []
 
 [dependencies]
 anonify-types = { path = "../types", default-features = false, features = ["sgx"] }
+anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
 https-enclave = { path = "../../https-enclave" }
 elastic-array = { version = "0.10", git = "https://github.com/mesalock-linux/elastic-array-sgx.git" }
 ring = { tag = "v0.16.5", git = "https://github.com/mesalock-linux/ring-sgx" }

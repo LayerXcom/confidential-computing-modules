@@ -7,7 +7,7 @@ use crate::{
 };
 use failure::Error;
 use log::debug;
-use anonify_host::prelude::anonify_deploy;
+use anonify_host::prelude::*;
 
 pub fn handle_post_deploy(
     server: web::Data<Server>,
@@ -30,8 +30,10 @@ pub fn handle_post_deploy(
 }
 
 pub fn handle_post_transfer(
-
+    server: web::Data<Server>,
+    req: web::Json<api::send::post::Request>,
 ) {
+    
     unimplemented!();
 }
 

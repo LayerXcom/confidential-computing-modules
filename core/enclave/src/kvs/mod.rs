@@ -1,19 +1,30 @@
 use std::prelude::v1::*;
 use elastic_array::{ElasticArray128, ElasticArray32};
 use ed25519_dalek::{PublicKey, Signature};
+use anonify_common::UserAddress;
 use crate::{
     error::Result,
-    crypto::UserAddress,
 };
 
 mod memorydb;
-mod traits;
+pub mod traits;
 
 pub use memorydb::{MemoryKVS, MEMORY_DB};
 pub use traits::SigVerificationKVS;
 
 /// Database value.
-pub type DBValue = ElasticArray128<u8>;
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
+pub struct DBValue(ElasticArray128<u8>);
+
+impl DBValue {
+    pub fn from_slice(slice: &[u8]) -> Self {
+        DBValue(ElasticArray128::from_slice(slice))
+    }
+
+    pub fn into_vec(self) -> Vec<u8> {
+        self.0.into_vec()
+    }
+}
 
 /// Database operation
 #[derive(Clone, PartialEq)]
@@ -50,12 +61,10 @@ impl DBTx {
     /// Put instruction is added to a transaction only if the verification of provided signature returns true.
     pub fn put(
         &mut self,
-        pubkey: &PublicKey,
-        sig: &Signature,
+        user_address: &UserAddress,
         msg: &[u8],
     ) {
-        let key = UserAddress::from_sig(&msg, &sig, &pubkey);
-        self.0.put(key.as_slice(), msg);
+        self.0.put(user_address.as_bytes(), msg);
     }
 
     /// Delete instruction is added to a transaction only if the verification of provided signature returns true.
@@ -66,7 +75,7 @@ impl DBTx {
         pubkey: &PublicKey,
     ) {
         let key = UserAddress::from_sig(&msg, &sig, &pubkey);
-        self.0.delete(key.as_slice());
+        self.0.delete(key.as_bytes());
     }
 
     pub(crate) fn into_inner(self) -> InnerDBTx {

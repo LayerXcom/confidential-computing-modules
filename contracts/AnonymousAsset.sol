@@ -4,6 +4,7 @@ import "./ReportsHandle.sol";
 
 // Consider: Avoid inheritting
 contract AnonymousAsset is ReportsHandle {
+    event Init(bytes _initBalance);
     event Transfer(bytes _updateBalance1, bytes _updateBalance2);
 
     // Latest encrypted balances in each account
@@ -16,6 +17,8 @@ contract AnonymousAsset is ReportsHandle {
     ) ReportsHandle(_report, _sig) public {
         // require(isEqualMrEnclave(_report, _sig), "mrenclave included in the report is not correct.");
         encryptedBalances.push(_initBalance);
+
+        emit Init(_initBalance);
     }
 
     function transfer(
@@ -30,16 +33,4 @@ contract AnonymousAsset is ReportsHandle {
 
         emit Transfer(_updateBalance1, _updateBalance2);
     }
-
-    // function getBalances(uint offset, uint len) public view returns (bytes4[] memory) {
-    //     return encryptedBalances.bytes4_range(offset, len);
-    // }
-
-    // function getAllBalances() public view returns (bytes4[] memory) {
-    //     return encryptedBalances;
-    // }
-
-    // function getBalancesLength() public view returns (uint256) {
-    //     return encryptedBalances.length;
-    // }
 }

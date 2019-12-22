@@ -4,11 +4,11 @@ use std::{
     collections::BTreeMap,
 };
 use anonify_types::*;
+use anonify_common::UserAddress;
 use super::*;
 use super::traits::*;
 use crate::{
     error::Result,
-    crypto::UserAddress,
 };
 
 lazy_static! {
@@ -24,8 +24,8 @@ impl MemoryKVS {
 }
 
 impl SigVerificationKVS for MemoryKVS {
-    fn get(&self, key: &UserAddress) -> Option<DBValue> {
-        self.inner_get(key.as_slice())
+    fn get(&self, key: &UserAddress) -> DBValue {
+        self.inner_get(key.as_bytes()).unwrap_or(DBValue::default())
     }
 
     fn write(&self, tx: DBTx) {

@@ -25,12 +25,16 @@ impl EnclaveDir {
         EnclaveDir(enclave_dir)
     }
 
-    pub fn init_enclave(&self) -> Result<SgxEnclave> {
+    pub fn init_enclave(&self, is_debug: bool) -> Result<SgxEnclave> {
         let token_file_path = self.get_token_file_path();
         let mut launch_token = Self::get_launch_token(&token_file_path)?;
 
         let mut launch_token_updated = 0;
-        let enclave = Self::create_enclave(&mut launch_token, &mut launch_token_updated).unwrap();
+        let enclave = Self::create_enclave(
+            &mut launch_token,
+            &mut launch_token_updated,
+            is_debug
+        ).expect("Failed to create enclave");
 
         // If launch token is updated, save it as token file.
         if launch_token_updated != 0 {
@@ -76,7 +80,14 @@ impl EnclaveDir {
     fn create_enclave(
         launch_token: &mut sgx_launch_token_t,
         launch_token_updated: &mut i32,
+        is_debug: bool,
     ) -> SgxResult<SgxEnclave> {
+        let debug = if is_debug {
+            1 as i32
+        } else {
+            0 as i32
+        };
+
         let mut misc_attr = sgx_misc_attribute_t {
             secs_attr: sgx_attributes_t {
                 flags: 0,
@@ -87,7 +98,7 @@ impl EnclaveDir {
 
         SgxEnclave::create(
             ENCLAVE_FILE,
-            DEBUG,
+            debug,
             launch_token,
             launch_token_updated,
             &mut misc_attr,

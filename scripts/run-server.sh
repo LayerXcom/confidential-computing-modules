@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -e
 
 LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
 
@@ -12,8 +12,18 @@ export ANONIFY_URL=172.18.0.3:8080
 export ETH_URL=172.18.0.2:8545
 
 echo "Start building core components."
-make
 
-cp -r bin/ ../example/bin/
-cd ../example/server
-RUST_LOG=debug cargo run --release
+if [ "x$1" == "x--release" ]; then
+    make
+    rm -rf ../example/bin && cp -rf bin/ ../example/bin/ && cd ../example/server
+
+    echo "Build artifacts in release mode, with optimizations."
+    cargo run --release
+    exit
+fi
+
+make DEBUG=1
+rm -rf ../example/bin && cp -rf bin/ ../example/bin/ && cd ../example/server
+
+echo "Build artifacts in debug mode."
+RUST_LOG=debug cargo run

@@ -38,6 +38,11 @@ pub enum HostErrorKind {
     Web3,
     #[fail(display = "Web3 Contract error = ({})", _0)]
     Web3Contract(String),
+    #[fail(display = "Web3's log data error = ({}), Failed index: {}", msg, index)]
+    Web3Log {
+        msg: &'static str,
+        index: usize,
+    },
 }
 
 impl Fail for HostError {

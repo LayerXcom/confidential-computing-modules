@@ -38,7 +38,7 @@ impl KeyFile {
         rng: &mut R,
     ) -> Result<Self> {
         let encrypted_key = KeyCiphertext::encrypt(&key_pair, password, iters, rng)?;
-        let base64_address = Self::key_pair_to_addr(&key_pair);
+        let base64_address = Self::keypair_to_encoded_addr(&key_pair);
 
         Ok(KeyFile {
             file_name: None,
@@ -66,14 +66,11 @@ impl KeyFile {
         Ok(key_pair)
     }
 
-    fn key_pair_to_addr(key_pair: &Keypair) -> String {
-        use sha2::Digest;
+    fn keypair_to_encoded_addr(key_pair: &Keypair) -> String {
+        use anonify_common::UserAddress;
 
-        let pubkey = key_pair.public.to_bytes();
-        let mut hasher = sha2::Sha256::new();
-        hasher.input(&pubkey[..]);
-        let addr = &hasher.result()[12..];
-        base64::encode(&addr)
+        let user_address = UserAddress::from_pubkey(&key_pair.public);
+        user_address.base64_encode()
     }
 
     // pub fn create_master<R: Rng>(

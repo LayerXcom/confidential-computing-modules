@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use rand::Rng;
 use anonify_wallet::{WalletDirectory, KeystoreDirectory, KeyFile, DirOperations};
+use anonify_common::UserAddress;
 use bip39::{Mnemonic, Language, MnemonicType, Seed};
 use reqwest::Client;
 use ed25519_dalek::Keypair;
@@ -26,7 +27,35 @@ pub(crate) fn deploy<R: Rng>(
 
     let req = api::deploy::post::Request::new(&keypair, total_supply, rng);
     println!("Reqest json: {:?}", &req);
-    let res = client.post(&anonify_url).json(&req).send()?;
+    let res = client
+        .post(&format!("{}/deploy", &anonify_url))
+        .json(&req)
+        .send()?;
+
+    println!("Response: {:?}", res);
+    Ok(())
+}
+
+pub(crate) fn send<R: Rng>(
+    term: &mut Term,
+    root_dir: PathBuf,
+    anonify_url: String,
+    index: usize,
+    target: UserAddress,
+    amount: u64,
+    rng: &mut R
+) -> Result<()> {
+    let password = prompt_password(term)?;
+
+    let client = Client::new();
+    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+
+    let req = api::send::post::Request::new(&keypair, amount, target, rng);
+    println!("Reqest json: {:?}", &req);
+    let res = client
+        .post(&format!("{}/send", &anonify_url))
+        .json(&req)
+        .send()?;
 
     println!("Response: {:?}", res);
     Ok(())

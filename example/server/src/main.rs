@@ -25,6 +25,8 @@ pub struct Server {
 impl Server {
     pub fn new() -> Self {
         let enclave_id = init_enclave();
+        println!("enclave_id: {:?}", enclave_id);
+
         let eth_url = env::var("ETH_URL")
             .expect("ETH_URL is not set.");
 

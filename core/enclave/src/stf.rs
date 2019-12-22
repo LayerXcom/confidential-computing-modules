@@ -1,9 +1,9 @@
 use crate::{
     state::{State, UserState, CurrentNonce, NextNonce},
     error::Result,
-    kvs::{SigVerificationKVS, MEMORY_DB},
-    crypto::UserAddress,
+    kvs::{SigVerificationKVS, MEMORY_DB, DBValue},
 };
+use anonify_common::UserAddress;
 use ed25519_dalek::{PublicKey, Signature};
 use std::{
     vec::Vec,
@@ -102,6 +102,9 @@ impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
         Ok(state)
     }
 
+    // TODO: Generalize state transition function so that developer can define their own stf.
+    // TODO: Must have secure error handling so that part of updated data cannot be stored into mem db and avoiding inconsistency.
+    /// Calcurate state transition results. This function always has no side-effect.
     fn transfer(
         from: PublicKey,
         sig: Signature,
@@ -110,18 +113,18 @@ impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
         amount: Self::S,
     ) -> Result<(UserState<Self::S, NextNonce>, UserState<Self::S, NextNonce>)> {
         let my_addr = UserAddress::from_sig(&msg, &sig, &from);
-        let my_value = MEMORY_DB.get(&my_addr).unwrap();
-        let other_value = MEMORY_DB.get(&target).unwrap();
-
-        let my_current_balance = UserState::<Self::S, _>::from_db_value(my_value.clone())?.0;
-        assert!(amount > my_current_balance);
-        let other_current_balance = UserState::<Self::S, _>::from_db_value(other_value.clone())?.0;
+        let my_value = MEMORY_DB.get(&my_addr);
+        let my_current_balance = UserState::<Self::S, _>::get_state_nonce_from_dbvalue(my_value.clone())?.0;
+        assert!(amount < my_current_balance);
 
         let my_current_state = UserState::from_address_and_db_value(my_addr, my_value)?;
-        let other_current_state = UserState::from_address_and_db_value(target, other_value)?;
-
         let my_updated: UserState<Self::S, NextNonce> = my_current_state
             .update_inner_state(my_current_balance - amount).try_into()?;
+
+        // TODO
+        let other_value = MEMORY_DB.get(&target);
+        let other_current_balance = UserState::<Self::S, _>::get_state_nonce_from_dbvalue(other_value.clone())?.0;
+        let other_current_state = UserState::from_address_and_db_value(target, other_value)?;
         let other_updated: UserState<Self::S, NextNonce> = other_current_state
             .update_inner_state(other_current_balance + amount).try_into()?;
 

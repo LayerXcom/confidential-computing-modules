@@ -6,6 +6,7 @@ use clap::{Arg, App, SubCommand, AppSettings, ArgMatches};
 use dotenv::dotenv;
 use rand::{rngs::OsRng, Rng};
 use term::Term;
+use anonify_common::UserAddress;
 use crate::config::*;
 
 mod term;
@@ -69,6 +70,23 @@ fn subcommand_anonify<R: Rng>(
             commands::deploy(&mut term, root_dir, anonify_url, keyfile_index, total_supply, rng)
                 .expect("Faild to deploy command");
         },
+        ("send", Some(matches)) => {
+            let keyfile_index: usize = matches.value_of("keyfile-index")
+                .expect("Not found keyfile-index.")
+                .parse()
+                .expect("Failed to parse keyfile-index");
+            let amount: u64 = matches.value_of("amount")
+                .expect("Not found amount.")
+                .parse()
+                .expect("Failed to parse amount");
+
+            let target: &str = matches.value_of("target")
+                .expect("Not found target");
+            let target_addr = UserAddress::base64_decode(target);
+
+            commands::send(&mut term, root_dir, anonify_url, keyfile_index, target_addr, amount, rng)
+                .expect("Faild to deploy command");
+        },
         ("get-state", Some(matches)) => {
             commands::get_state(&mut term, root_dir, anonify_url);
         },
@@ -92,6 +110,25 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             )
             .arg(Arg::with_name("total_supply")
                 .short("t")
+                .takes_value(true)
+                .required(true)
+            )
+        )
+        .subcommand(SubCommand::with_name("send")
+            .about("Send state transition to anonify system.")
+            .arg(Arg::with_name("keyfile-index")
+                .short("i")
+                .takes_value(true)
+                .required(false)
+                .default_value(DEFAULT_KEYFILE_INDEX)
+            )
+            .arg(Arg::with_name("amount")
+                .short("a")
+                .takes_value(true)
+                .required(true)
+            )
+            .arg(Arg::with_name("target")
+                .short("to")
                 .takes_value(true)
                 .required(true)
             )

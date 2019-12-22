@@ -8,7 +8,7 @@ use sgx_types::*;
 #[test]
 fn test_in_enclave() {
     let mut tmp = 3;
-    let enclave = EnclaveDir::new().init_enclave().unwrap();
+    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let ptr = unsafe { RawPointer::new_mut(&mut tmp) };
     let mut res = ResultStatus::Ok;
     let ret = unsafe { ecall_run_tests(

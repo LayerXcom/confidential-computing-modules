@@ -8,6 +8,7 @@ members = [
 exclude = [
     "core/enclave",
     "core/host",
+    "core/common",
     "https-enclave",
     "example/server",
 ]

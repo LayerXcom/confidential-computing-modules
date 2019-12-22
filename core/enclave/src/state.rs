@@ -1,8 +1,9 @@
 //! State transition functions for anonymous asset
 use anonify_types::types::*;
+use anonify_common::{UserAddress, Sha256, Hash256};
 use crate::{
     crypto::*,
-    kvs::DBValue,
+    kvs::{DBValue, MEMORY_DB, DBTx, traits::SigVerificationKVS},
     sealing::NonSealedDbValue,
     error::{Result, EnclaveError},
 };
@@ -77,6 +78,18 @@ impl<S: State, N> UserState<S, N> {
 // State with NextNonce must not be allowed to access to the database to avoid from
 // storing data which have not been considered globally consensused.
 impl<S: State> UserState<S, CurrentNonce> {
+    pub fn insert_cipheriv_memdb(cipheriv: Vec<u8>) -> Result<()> {
+        let user_state = Self::decrypt(cipheriv, &SYMMETRIC_KEY)?;
+        let key = user_state.get_db_key();
+        let value = user_state.get_db_value()?;
+
+        let mut dbtx = DBTx::new();
+        dbtx.put(&key, &value);
+        MEMORY_DB.write(dbtx);
+
+        Ok(())
+    }
+
     /// Decrypt Ciphertext which was stored in a shared ledger.
     pub fn decrypt(cipheriv: Vec<u8>, key: &SymmetricKey) -> Result<Self> {
         let res = decrypt_aes_256_gcm(cipheriv, key)?;
@@ -90,12 +103,12 @@ impl<S: State> UserState<S, CurrentNonce> {
 
     /// Get in-memory database value.
     // TODO: Encrypt with sealing key.
-    pub fn get_db_value(&self) -> Result<DBValue> {
+    pub fn get_db_value(&self) -> Result<Vec<u8>> {
         let mut buf = vec![];
         self.inner_state.write_le(&mut buf)?;
         self.nonce.write(&mut buf)?;
 
-        Ok(DBValue::from_vec(buf))
+        Ok(buf)
     }
 
     pub fn update_inner_state(&self, update: S) -> Self {
@@ -111,7 +124,7 @@ impl<S: State> UserState<S, CurrentNonce> {
         address: UserAddress,
         db_value: DBValue
     ) -> Result<Self> {
-        let (inner_state, nonce) = Self::from_db_value(db_value)?;
+        let (inner_state, nonce) = Self::get_state_nonce_from_dbvalue(db_value)?;
 
         Ok(UserState {
             address,
@@ -122,16 +135,29 @@ impl<S: State> UserState<S, CurrentNonce> {
     }
 
     /// Get inner state and nonce from database value.
-    pub fn from_db_value(db_value: DBValue) -> Result<(S, Nonce)> {
-        let reader = db_value.into_vec();
-        let state = S::read_le(&mut &reader[..])?;
-        let nonce = Nonce::read(&mut &reader[..])?;
+    pub fn get_state_nonce_from_dbvalue(db_value: DBValue) -> Result<(S, Nonce)> {
+        let mut state = Default::default();
+        let mut nonce = Default::default();
+
+        if db_value != Default::default() {
+            let reader = db_value.into_vec();
+            state = S::read_le(&mut &reader[..])?;
+            nonce = Nonce::read(&mut &reader[..])?;
+        }
 
         Ok((state, nonce))
     }
 
+    /// Compute hash digest of current user state.
+    pub fn hash(&self) -> Result<Sha256> {
+        let mut inp: Vec<u8> = vec![];
+        self.write(&mut inp)?;
+
+        Ok(Sha256::hash(&inp))
+    }
+
     fn next_nonce(&self) -> Result<Nonce> {
-        let next_nonce = Sha256::from_user_state(&self)?;
+        let next_nonce = self.hash()?;
         Ok(next_nonce.into())
     }
 
