@@ -53,10 +53,10 @@ impl<'a> AttestationService<'a> {
     pub fn get_report_and_sig(&self, quote: &str, ias_api_key: &str) -> Result<(Vec<u8>, Vec<u8>)> {
         let req = self.raw_report_req(quote, ias_api_key);
         let res = self.send_raw_req(req)?;
-        println!("response: {:?}", res);
 
-        // let (report, sig) = verify_report_cert(payload.as_bytes())?;
-        Ok((res.report, res.sig))
+        assert!(res.verify_sig_cert().is_ok());
+
+        Ok((res.body, res.sig))
     }
 
     fn raw_report_req(&self, quote: &str, ias_api_key: &str) -> String {
@@ -85,9 +85,9 @@ impl<'a> AttestationService<'a> {
 
 #[derive(Debug, Clone)]
 pub struct Response {
-    report: Vec<u8>,
     sig: Vec<u8>,
     cert: Vec<u8>,
+    body: Vec<u8>,
 }
 
 impl Response {
@@ -115,7 +115,7 @@ impl Response {
 
         let mut sig = vec![];
         let mut cert_str = String::new();
-        let mut report = vec![];
+        let mut body = vec![];
 
         for i in 0..respp.headers.len() {
             let h = respp.headers[i];
@@ -135,22 +135,23 @@ impl Response {
         cert_str = percent_decode(cert_str);
         let v: Vec<&str> = cert_str.split("-----").collect();
         let cert = base64::decode(v[2])?;
+
+        // This root_cert is equal to AttestationReportSigningCACert.pem
         // let root_cert = v[5].to_string();
 
         if len_num != 0 {
             let header_len = result.unwrap().unwrap();
-            let resp_body = &resp[header_len..];
-            report = base64::decode(resp_body)?;
+            body = resp[header_len..].to_vec();
         }
 
         Ok(Response {
-            report,
             sig,
             cert,
+            body,
         })
     }
 
-    pub fn verify_cert(&self) -> Result<()> {
+    pub fn verify_sig_cert(&self) -> Result<()> {
         let now_func = webpki::Time::try_from(SystemTime::now())?;
 
         let mut ca_reader = BufReader::new(&IAS_REPORT_CA[..]);
@@ -174,6 +175,12 @@ impl Response {
             &webpki::TLSServerTrustAnchors(&trust_anchors),
             &chain,
             now_func,
+        )?;
+
+        sig_cert.verify_signature(
+            &webpki::RSA_PKCS1_2048_8192_SHA256,
+            &self.body,
+            &self.sig
         )?;
 
         Ok(())
