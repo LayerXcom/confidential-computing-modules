@@ -2,7 +2,6 @@ use sgx_types::*;
 use std::{
     net::{TcpStream, SocketAddr},
     os::unix::io::IntoRawFd,
-    ptr,
     slice,
 };
 use crate::constants::{DEV_HOSTNAME, HTTPS_PORT};

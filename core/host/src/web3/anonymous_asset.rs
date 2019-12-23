@@ -1,8 +1,6 @@
 use sgx_types::sgx_enclave_id_t;
 use std::{
-    sync::Arc,
     path::Path,
-    time,
     io::BufReader,
     fs::File,
 };
@@ -12,13 +10,11 @@ use crate::{
 };
 use web3::{
     Web3,
-    Transport,
     transports::{EventLoopHandle, Http},
     contract::{Contract, Options},
     types::{Address, H256, U256, FilterBuilder, Log, BlockNumber},
     futures::Future,
 };
-use log::debug;
 use ethabi::{
     Contract as ContractABI,
     Topic,

@@ -2,9 +2,6 @@ use std::prelude::v1::*;
 use elastic_array::{ElasticArray128, ElasticArray32};
 use ed25519_dalek::{PublicKey, Signature};
 use anonify_common::UserAddress;
-use crate::{
-    error::Result,
-};
 
 mod memorydb;
 pub mod traits;

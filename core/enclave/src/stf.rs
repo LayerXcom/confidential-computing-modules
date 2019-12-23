@@ -1,7 +1,7 @@
 use crate::{
     state::{State, UserState, CurrentNonce, NextNonce},
     error::Result,
-    kvs::{SigVerificationKVS, MEMORY_DB, DBValue},
+    kvs::{SigVerificationKVS, MEMORY_DB},
 };
 use anonify_common::UserAddress;
 use ed25519_dalek::{PublicKey, Signature};

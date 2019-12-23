@@ -1,13 +1,13 @@
+//! This module containes enclave specific cryptographic logics.
+
 use std::{
     prelude::v1::Vec,
-    io::{Write, Read},
+    io::Read,
 };
-use anonify_types::{Ciphertext};
 use ring::aead::{self, Aad, BoundKey, Nonce, UnboundKey, AES_256_GCM};
-use ed25519_dalek::{PublicKey, Signature};
 use crate::{
     error::Result,
-    state::{CurrentNonce, State, UserState},
+    state::State,
 };
 
 lazy_static! {

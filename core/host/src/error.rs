@@ -46,7 +46,7 @@ pub enum HostErrorKind {
 }
 
 impl Fail for HostError {
-    fn cause(&self) -> Option<&Fail> {
+    fn cause(&self) -> Option<&dyn Fail> {
         self.inner.cause()
     }
 
