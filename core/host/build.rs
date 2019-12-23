@@ -76,6 +76,6 @@ fn main () {
 
 fn target_dir() -> PathBuf {
     let mut target = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    target.push("src");
+    target.push("src/bridges");
     target
 }

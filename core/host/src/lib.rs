@@ -9,12 +9,12 @@ use sgx_types::*;
 
 pub use error::HostError as Error;
 pub mod prelude;
+mod bridges;
 mod init_enclave;
-mod ocalls;
-mod ecalls;
 mod constants;
 mod error;
 mod web3;
-mod auto_ffi;
 #[cfg(test)]
 mod tests;
+
+use bridges::{ecalls, auto_ffi};

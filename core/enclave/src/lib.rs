@@ -22,3 +22,5 @@ mod quote;
 mod cert;
 #[cfg(debug_assertions)]
 mod tests;
+
+use bridges::ocalls;
