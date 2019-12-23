@@ -14,13 +14,11 @@ mod crypto;
 mod state;
 mod error;
 mod kvs;
-mod auto_ffi;
+mod bridges;
 mod sealing;
 mod stf;
 mod attestation;
 mod quote;
-mod ocalls;
-mod ecalls;
 mod cert;
 #[cfg(debug_assertions)]
 mod tests;

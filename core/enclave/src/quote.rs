@@ -1,8 +1,8 @@
 use sgx_types::*;
-use crate::error::{Result, EnclaveError};
 use std::prelude::v1::*;
 use sgx_tse::rsgx_create_report;
-use crate::ocalls::{sgx_init_quote, get_quote};
+use crate::error::{Result, EnclaveError};
+use crate::bridges::ocalls::{sgx_init_quote, get_quote};
 
 /// spid: Service procider ID for the ISV.
 #[derive(Clone)]

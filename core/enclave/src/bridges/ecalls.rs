@@ -13,7 +13,7 @@ use crate::attestation::{
     DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES,
 };
 use crate::quote::EnclaveContext;
-use crate::ocalls::save_to_host_memory;
+use super::ocalls::save_to_host_memory;
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_insert_logs(

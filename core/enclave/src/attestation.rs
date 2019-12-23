@@ -5,7 +5,7 @@ use std::{
 use https_enclave::{HttpsClient, parse_response_attn_report};
 use crate::{
     error::Result,
-    ocalls::get_ias_socket,
+    bridges::ocalls::get_ias_socket,
     cert::verify_report_cert,
 };
 

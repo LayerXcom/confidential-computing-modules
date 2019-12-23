@@ -29,7 +29,7 @@
 Rust_Enclave_Name := libenclave.a
 Rust_Enclave_Files := $(wildcard src/*.rs)
 Rust_Target_Path := $(CURDIR)/../../../xargo
-BINDGEN_OUTPUT_FILE := src/auto_ffi.rs
+BINDGEN_OUTPUT_FILE := src/bridges/auto_ffi.rs
 BINDGEN_RAW_LINES := "\#![allow(dead_code)] use anonify_types::*; use sgx_types::*;"
 BINDGEN_CLANG_FLAGS := -I/opt/sgxsdk/include -I $(HOME)/sgx/edl
 BINDGEN_FLAGS := --default-enum-style=rust --rust-target=nightly \

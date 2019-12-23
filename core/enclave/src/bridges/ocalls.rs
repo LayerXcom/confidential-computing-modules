@@ -1,7 +1,7 @@
 use sgx_types::*;
 use anonify_types::traits::SliceCPtr;
 use std::vec::Vec;
-use crate::auto_ffi::*;
+use super::auto_ffi::*;
 use crate::error::*;
 
 pub fn get_ias_socket() -> Result<i32> {
