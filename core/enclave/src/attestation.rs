@@ -32,8 +32,9 @@ impl<'a> AttestationService<'a> {
 
     pub fn get_report_and_sig(&self, quote: &str, ias_api_key: &str) -> Result<(Vec<u8>, Vec<u8>)> {
         let req = self.raw_report_req(quote, ias_api_key);
-        let (report, sig) = self.send_raw_req(req)?;
-        // let (report, sig) = verify_report_cert(payload.as_bytes())?;
+        let payload = self.send_raw_req(req)?;
+        println!("payload: {}", payload.clone());
+        let (report, sig) = verify_report_cert(payload.as_bytes())?;
         Ok((report.as_bytes().to_vec(), sig.as_bytes().to_vec()))
     }
 
@@ -48,7 +49,7 @@ impl<'a> AttestationService<'a> {
         )
     }
 
-    fn send_raw_req(&self, req: String) -> Result<(String, String)> {
+    fn send_raw_req(&self, req: String) -> Result<(String)> {
         let fd = get_ias_socket()?;
         let mut socket = TcpStream::new(fd)?;
 
@@ -58,9 +59,7 @@ impl<'a> AttestationService<'a> {
         // let res = client.send_from_raw_req(&req)?;
 
         let (report, sig, sig_cert) = parse_response_attn_report(&res);
-        // let payload = report + "|" + &sig + "|" + &sig_cert;
-        Ok((report, sig))
+        let payload = report + "|" + &sig + "|" + &sig_cert;
+        Ok(payload)
     }
-
 }
-
