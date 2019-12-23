@@ -1,10 +1,6 @@
 use std::prelude::v1::*;
 use super::*;
 use anonify_common::UserAddress;
-use crate::{
-    error::Result,
-};
-use ed25519_dalek::{PublicKey, Signature};
 
 /// Inner trait of key-value store instructions
 pub(super) trait KVS: Sync + Send {

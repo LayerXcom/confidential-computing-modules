@@ -1,8 +1,6 @@
 use sgx_types::sgx_enclave_id_t;
 use std::{
-    sync::Arc,
     path::Path,
-    time,
     io::BufReader,
     fs::File,
 };
@@ -12,13 +10,11 @@ use crate::{
 };
 use web3::{
     Web3,
-    Transport,
     transports::{EventLoopHandle, Http},
     contract::{Contract, Options},
     types::{Address, H256, U256, FilterBuilder, Log, BlockNumber},
     futures::Future,
 };
-use log::debug;
 use ethabi::{
     Contract as ContractABI,
     Topic,
@@ -120,11 +116,11 @@ impl AnonymousAssetContract {
         Ok(res)
     }
 
-    pub fn get_event(&self, event: &Event) -> Result<Web3Logs> {
+    pub fn get_event(&self, event: &EthEvent) -> Result<Web3Logs> {
         let filter = FilterBuilder::default()
             .address(vec![self.address])
             .topic_filter(TopicFilter {
-                topic0: Topic::This(event.signature()),
+                topic0: Topic::This(event.into_raw().signature()),
                 topic1: Topic::Any,
                 topic2: Topic::Any,
                 topic3: Topic::Any,
@@ -142,11 +138,11 @@ impl AnonymousAssetContract {
 pub struct Web3Logs(pub Vec<Log>);
 
 impl Web3Logs {
-    pub fn into_enclave_log(&self, event: &Event) -> Result<EnclaveLog> {
+    pub fn into_enclave_log(&self, event: &EthEvent) -> Result<EnclaveLog> {
         let mut ciphertexts: Vec<u8> = vec![];
 
         // TODO: How to handle mixied events.
-        let ciphertexts_num = match event.name.as_str() {
+        let ciphertexts_num = match event.into_raw().name.as_str() {
             "Init" => self.0.len(),
             "Transfer" => self.0.len() * 2,
             _ => panic!("Invalid event name."),
@@ -181,8 +177,10 @@ impl Web3Logs {
         })
     }
 
-    fn decode_data(log: &Log, event: &Event) -> Vec<u8> {
-        let param_types = event.inputs.iter().map(|e| e.kind.clone()).collect::<Vec<ParamType>>();
+    fn decode_data(log: &Log, event: &EthEvent) -> Vec<u8> {
+        let param_types = event.into_raw()
+            .inputs.iter()
+            .map(|e| e.kind.clone()).collect::<Vec<ParamType>>();
         let tokens = decode(&param_types, &log.data.0).expect("Failed to decode token.");
         let mut res = vec![];
 
@@ -227,126 +225,50 @@ pub fn contract_abi_from_path<P: AsRef<Path>>(path: P) -> Result<ContractABI> {
     Ok(contract_abi)
 }
 
-pub fn build_init_event() -> Event {
-    Event {
-        name: "Init".to_owned(),
-        inputs: vec![
-            EventParam {
-                name: "_initBalance".to_owned(),
-                kind: ParamType::Bytes,
-                indexed: false,
-            },
-        ],
-        anonymous: false,
+/// A type of events from ethererum network.
+pub struct EthEvent(Event);
+
+impl EthEvent {
+    pub fn build_init_event() -> Self {
+        EthEvent(Event {
+            name: "Init".to_owned(),
+            inputs: vec![
+                EventParam {
+                    name: "_initBalance".to_owned(),
+                    kind: ParamType::Bytes,
+                    indexed: false,
+                },
+            ],
+            anonymous: false,
+        })
+    }
+
+    pub fn build_transfer_event() -> Self {
+        EthEvent(Event {
+            name: "Transfer".to_owned(),
+            inputs: vec![
+                EventParam {
+                    name: "_updateBalance1".to_owned(),
+                    kind: ParamType::Bytes,
+                    indexed: false,
+                },
+                EventParam {
+                    name: "_updateBalance2".to_owned(),
+                    kind: ParamType::Bytes,
+                    indexed: false,
+                },
+            ],
+            anonymous: false,
+        })
+    }
+
+    pub fn into_raw(&self) -> &Event {
+        &self.0
     }
 }
 
-pub fn build_transfer_event() -> Event {
-    Event {
-        name: "Transfer".to_owned(),
-        inputs: vec![
-            EventParam {
-                name: "_updateBalance1".to_owned(),
-                kind: ParamType::Bytes,
-                indexed: false,
-            },
-            EventParam {
-                name: "_updateBalance2".to_owned(),
-                kind: ParamType::Bytes,
-                indexed: false,
-            },
-        ],
-        anonymous: false,
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use rand_core::RngCore;
-    use rand_os::OsRng;
-    use rand::Rng;
-    use ed25519_dalek::Keypair;
-    use anonify_common::UserAddress;
-    use crate::init_enclave::EnclaveDir;
-    use crate::ecalls::{init_state, get_state};
-    use crate::prelude::*;
-
-    const ETH_URL: &'static str = "http://172.18.0.2:8545";
-    pub const ANONYMOUS_ASSET_ABI_PATH: &str = "../../build/AnonymousAsset.abi";
-
-    #[test]
-    fn test_transfer() {
-        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
-        let eid = enclave.geteid();
-        let mut csprng: OsRng = OsRng::new().unwrap();
-        let my_access_right = AccessRight::new_from_rng(&mut csprng);
-        let other_access_right = AccessRight::new_from_rng(&mut csprng);
-
-        let total_supply = 100;
-
-
-        // 1. Deploy
-
-        let mut deployer = EthDeployer::new(eid, ETH_URL).unwrap();
-        let deployer_addr = deployer.get_account(0).unwrap();
-        let contract_addr = deployer.deploy(&deployer_addr, &my_access_right, total_supply).unwrap();
-
-        println!("Deployer address: {}", deployer_addr);
-        println!("deployed contract address: {}", contract_addr);
-
-        let contract = deployer.get_contract(ANONYMOUS_ASSET_ABI_PATH).unwrap();
-
-
-        // 2. Get logs from contract and update state inside enclave.
-
-        let init_event = build_init_event();
-        contract
-            .get_event(&init_event).unwrap()
-            .into_enclave_log(&init_event).unwrap()
-            .insert_enclave(eid).unwrap();
-
-
-        // 3. Get state from enclave
-
-        let my_state = my_access_right.get_state(eid).unwrap();
-        let other_state = other_access_right.get_state(eid).unwrap();
-        assert_eq!(my_state, total_supply);
-        assert_eq!(other_state, 0);
-
-
-        // 4. Send a transaction to contract
-
-        let amount = 30;
-        let gas = 3_000_000;
-        let other_user_address = other_access_right.user_address();
-
-        let eth_sender = EthSender::new(eid, contract);
-        let receipt = eth_sender.send_tx(
-                &my_access_right,
-                deployer_addr,
-                &other_user_address,
-                amount,
-                gas
-            );
-
-        println!("receipt: {:?}", receipt);
-
-
-        // 5. Update state inside enclave
-        let contract = eth_sender.get_contract();
-        let transfer_event = build_transfer_event();
-        contract
-            .get_event(&transfer_event).unwrap()
-            .into_enclave_log(&transfer_event).unwrap()
-            .insert_enclave(eid).unwrap();
-
-
-        // 6. Check the updated states
-        let my_updated_state = my_access_right.get_state(eid).unwrap();
-        let other_updated_state = other_access_right.get_state(eid).unwrap();
-
-        assert_eq!(my_updated_state, total_supply - amount);
-        assert_eq!(other_updated_state, amount);
+impl From<EthEvent> for Event {
+    fn from(ev: EthEvent) -> Self {
+        ev.0
     }
 }

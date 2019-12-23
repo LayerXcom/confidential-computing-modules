@@ -1,10 +1,9 @@
 //! State transition functions for anonymous asset
-use anonify_types::types::*;
+
 use anonify_common::{UserAddress, Sha256, Hash256};
 use crate::{
     crypto::*,
     kvs::{DBValue, MEMORY_DB, DBTx, traits::SigVerificationKVS},
-    sealing::NonSealedDbValue,
     error::{Result, EnclaveError},
 };
 use std::{
@@ -233,7 +232,7 @@ impl From<Sha256> for Nonce {
 pub mod tests {
     use super::*;
     use crate::stf::Value;
-    use ed25519_dalek::{SecretKey, PublicKey, Keypair, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH};
+    use ed25519_dalek::{SecretKey, PublicKey, Keypair, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH};
 
     const SECRET_KEY_BYTES: [u8; SECRET_KEY_LENGTH] = [
         062, 070, 027, 163, 092, 182, 011, 003,

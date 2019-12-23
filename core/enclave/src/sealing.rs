@@ -3,7 +3,6 @@ use anonify_types::DB_VALUE_SIZE;
 use sgx_types::marker::ContiguousMemory;
 use sgx_tseal::SgxSealedData;
 use crate::error::Result;
-use crate::kvs::DBValue;
 
 #[derive(Copy, Clone)]
 pub struct NonSealedDbValue([u8; DB_VALUE_SIZE]);

@@ -7,9 +7,6 @@ use anonify_types::*;
 use anonify_common::UserAddress;
 use super::*;
 use super::traits::*;
-use crate::{
-    error::Result,
-};
 
 lazy_static! {
     pub static ref MEMORY_DB: MemoryKVS = MemoryKVS::new();

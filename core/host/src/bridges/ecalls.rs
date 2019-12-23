@@ -1,8 +1,7 @@
 use sgx_types::*;
-use anonify_types::{Sig, PubKey, Msg, RawUnsignedTx, traits::SliceCPtr};
+use anonify_types::{RawUnsignedTx, traits::SliceCPtr};
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
-use crate::init_enclave::EnclaveDir;
 use crate::web3::EnclaveLog;
 use crate::error::{HostErrorKind, Result};
 
