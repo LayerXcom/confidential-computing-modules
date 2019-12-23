@@ -2,6 +2,7 @@ use std::{
     prelude::v1::*,
     io,
     fmt,
+    error::Error,
 };
 
 pub type Result<T> = std::result::Result<T, EnclaveError>;
@@ -80,3 +81,5 @@ impl fmt::Display for EnclaveError {
         }
     }
 }
+
+impl Error for EnclaveError { }

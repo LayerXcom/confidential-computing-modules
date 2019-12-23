@@ -79,7 +79,7 @@ impl<'a> AttestationService<'a> {
         // let mut client = HttpsClient::new(socket, &self.host)?;
         // let res = client.send_from_raw_req(&req)?;
 
-        Ok(Response::parse(&raw_res))
+        Response::parse(&raw_res)
     }
 }
 
@@ -91,7 +91,7 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn parse(resp : &[u8]) -> Self {
+    pub fn parse(resp : &[u8]) -> Result<Self> {
         let mut headers = [httparse::EMPTY_HEADER; 16];
         let mut respp   = httparse::Response::new(&mut headers);
         let result = respp.parse(resp);
@@ -124,8 +124,8 @@ impl Response {
                     let len_str = String::from_utf8(h.value.to_vec()).unwrap();
                     len_num = len_str.parse::<u32>().unwrap();
                 }
-                "X-IASReport-Signature" => sig = base64::decode(h.value).unwrap(),
-                "X-IASReport-Signing-Certificate" => cert = base64::decode(h.value).unwrap(),
+                "X-IASReport-Signature" => sig = base64::decode(h.value)?,
+                "X-IASReport-Signing-Certificate" => cert = base64::decode(h.value)?,
                 _ => (),
             }
         }
@@ -139,14 +139,14 @@ impl Response {
         if len_num != 0 {
             let header_len = result.unwrap().unwrap();
             let resp_body = &resp[header_len..];
-            report = base64::decode(resp_body).unwrap();
+            report = base64::decode(resp_body)?;
         }
 
-        Response {
+        Ok(Response {
             report,
             sig,
             cert,
-        }
+        })
     }
 
     pub fn verify_cert(&self) -> Result<()> {
