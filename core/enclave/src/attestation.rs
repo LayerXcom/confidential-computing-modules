@@ -114,7 +114,7 @@ impl Response {
         let mut len_num : u32 = 0;
 
         let mut sig = vec![];
-        let mut cert = vec![];
+        let mut cert_str = String::new();
         let mut report = vec![];
 
         for i in 0..respp.headers.len() {
@@ -125,16 +125,17 @@ impl Response {
                     len_num = len_str.parse::<u32>().unwrap();
                 }
                 "X-IASReport-Signature" => sig = base64::decode(h.value)?,
-                "X-IASReport-Signing-Certificate" => cert = base64::decode(h.value)?,
+                "X-IASReport-Signing-Certificate" => cert_str = String::from_utf8(h.value.to_vec()).unwrap(),
                 _ => (),
             }
         }
 
-        // // Remove %0A from cert, and only obtain the signing cert
-        // cert = cert.replace("%0A", "");
-        // cert = percent_decode(cert);
-        // let v: Vec<&str> = cert.split("-----").collect();
-        // let cert = v[2].to_string();
+        // Remove %0A from cert, and only obtain the signing cert
+        cert_str = cert_str.replace("%0A", "");
+        cert_str = percent_decode(cert_str);
+        let v: Vec<&str> = cert_str.split("-----").collect();
+        let cert = base64::decode(v[2])?;
+        // let root_cert = v[5].to_string();
 
         if len_num != 0 {
             let header_len = result.unwrap().unwrap();
