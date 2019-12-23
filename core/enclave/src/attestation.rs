@@ -1,8 +1,12 @@
 use std::{
     prelude::v1::*,
     net::TcpStream,
+    str,
+    time::SystemTime,
+    untrusted::time::SystemTimeEx,
+    io::BufReader,
 };
-use https_enclave::{HttpsClient, parse_response_attn_report};
+use https_enclave::HttpsClient;
 use crate::{
     error::Result,
     ocalls::get_ias_socket,
@@ -14,6 +18,22 @@ pub const REPORT_PATH : &str = "/sgx/dev/attestation/v3/report";
 pub const IAS_DEFAULT_RETRIES: u32 = 10;
 pub const TEST_SPID: &str = "2C149BFC94A61D306A96211AED155BE9";
 pub const TEST_SUB_KEY: &str = "77e2533de0624df28dc3be3a5b9e50d9";
+
+pub const IAS_REPORT_CA: &[u8] = include_bytes!("../AttestationReportSigningCACert.pem");
+type SignatureAlgorithms = &'static [&'static webpki::SignatureAlgorithm];
+static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
+    &webpki::ECDSA_P256_SHA256,
+    &webpki::ECDSA_P256_SHA384,
+    &webpki::ECDSA_P384_SHA256,
+    &webpki::ECDSA_P384_SHA384,
+    &webpki::RSA_PSS_2048_8192_SHA256_LEGACY_KEY,
+    &webpki::RSA_PSS_2048_8192_SHA384_LEGACY_KEY,
+    &webpki::RSA_PSS_2048_8192_SHA512_LEGACY_KEY,
+    &webpki::RSA_PKCS1_2048_8192_SHA256,
+    &webpki::RSA_PKCS1_2048_8192_SHA384,
+    &webpki::RSA_PKCS1_2048_8192_SHA512,
+    &webpki::RSA_PKCS1_3072_8192_SHA384,
+];
 
 pub struct AttestationService<'a> {
     host: &'a str,
@@ -32,10 +52,11 @@ impl<'a> AttestationService<'a> {
 
     pub fn get_report_and_sig(&self, quote: &str, ias_api_key: &str) -> Result<(Vec<u8>, Vec<u8>)> {
         let req = self.raw_report_req(quote, ias_api_key);
-        let payload = self.send_raw_req(req)?;
-        println!("payload: {}", payload.clone());
-        let (report, sig) = verify_report_cert(payload.as_bytes())?;
-        Ok((report.as_bytes().to_vec(), sig.as_bytes().to_vec()))
+        let res = self.send_raw_req(req)?;
+        println!("response: {:?}", res);
+
+        // let (report, sig) = verify_report_cert(payload.as_bytes())?;
+        Ok((res.report, res.sig))
     }
 
     fn raw_report_req(&self, quote: &str, ias_api_key: &str) -> String {
@@ -49,17 +70,136 @@ impl<'a> AttestationService<'a> {
         )
     }
 
-    fn send_raw_req(&self, req: String) -> Result<(String)> {
+    fn send_raw_req(&self, req: String) -> Result<Response> {
         let fd = get_ias_socket()?;
         let mut socket = TcpStream::new(fd)?;
 
         // TODO: Fix to call `HttpsClient` to use non-blocking communications.
-        let res = https_enclave::get_report_response(&mut socket, req)?;
+        let raw_res = https_enclave::get_report_response(&mut socket, req)?;
         // let mut client = HttpsClient::new(socket, &self.host)?;
         // let res = client.send_from_raw_req(&req)?;
 
-        let (report, sig, sig_cert) = parse_response_attn_report(&res);
-        let payload = report + "|" + &sig + "|" + &sig_cert;
-        Ok(payload)
+        Ok(Response::parse(&raw_res))
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct Response {
+    report: Vec<u8>,
+    sig: Vec<u8>,
+    cert: Vec<u8>,
+}
+
+impl Response {
+    pub fn parse(resp : &[u8]) -> Self {
+        let mut headers = [httparse::EMPTY_HEADER; 16];
+        let mut respp   = httparse::Response::new(&mut headers);
+        let result = respp.parse(resp);
+
+        let msg : &'static str;
+
+        match respp.code {
+            Some(200) => msg = "OK Operation Successful",
+            Some(401) => msg = "Unauthorized Failed to authenticate or authorize request.",
+            Some(404) => msg = "Not Found GID does not refer to a valid EPID group ID.",
+            Some(500) => msg = "Internal error occurred",
+            Some(503) => msg = "Service is currently not able to process the request (due to
+                a temporary overloading or maintenance). This is a
+                temporary state – the same request can be repeated after
+                some time. ",
+            _ => {println!("DBG:{}", respp.code.unwrap()); msg = "Unknown error occured"},
+        }
+
+        println!("    [Enclave] msg = {}", msg);
+        let mut len_num : u32 = 0;
+
+        let mut sig = vec![];
+        let mut cert = vec![];
+        let mut report = vec![];
+
+        for i in 0..respp.headers.len() {
+            let h = respp.headers[i];
+            match h.name{
+                "Content-Length" => {
+                    let len_str = String::from_utf8(h.value.to_vec()).unwrap();
+                    len_num = len_str.parse::<u32>().unwrap();
+                }
+                "X-IASReport-Signature" => sig = base64::decode(h.value).unwrap(),
+                "X-IASReport-Signing-Certificate" => cert = base64::decode(h.value).unwrap(),
+                _ => (),
+            }
+        }
+
+        // // Remove %0A from cert, and only obtain the signing cert
+        // cert = cert.replace("%0A", "");
+        // cert = percent_decode(cert);
+        // let v: Vec<&str> = cert.split("-----").collect();
+        // let cert = v[2].to_string();
+
+        if len_num != 0 {
+            let header_len = result.unwrap().unwrap();
+            let resp_body = &resp[header_len..];
+            report = base64::decode(resp_body).unwrap();
+        }
+
+        Response {
+            report,
+            sig,
+            cert,
+        }
+    }
+
+    pub fn verify_cert(&self) -> Result<()> {
+        let now_func = webpki::Time::try_from(SystemTime::now())?;
+
+        let mut ca_reader = BufReader::new(&IAS_REPORT_CA[..]);
+        let mut root_store = rustls::RootCertStore::empty();
+        root_store.add_pem_file(&mut ca_reader).expect("Failed to add CA");
+
+        let trust_anchors: Vec<webpki::TrustAnchor> = root_store
+            .roots
+            .iter()
+            .map(|cert| cert.to_trust_anchor())
+            .collect();
+
+        let ias_cert_dec = Self::decode_ias_report_ca()?;
+        let mut chain:Vec<&[u8]> = Vec::new();
+        chain.push(&ias_cert_dec);
+
+        let sig_cert = webpki::EndEntityCert::from(&self.cert)?;
+
+        sig_cert.verify_is_valid_tls_server_cert(
+            SUPPORTED_SIG_ALGS,
+            &webpki::TLSServerTrustAnchors(&trust_anchors),
+            &chain,
+            now_func,
+        )?;
+
+        Ok(())
+    }
+
+    fn decode_ias_report_ca() -> Result<Vec<u8>> {
+        let mut ias_ca_stripped = IAS_REPORT_CA.to_vec();
+        ias_ca_stripped.retain(|&x| x != 0x0d && x != 0x0a);
+        let head_len = "-----BEGIN CERTIFICATE-----".len();
+        let tail_len = "-----END CERTIFICATE-----".len();
+
+        let full_len = ias_ca_stripped.len();
+        let ias_ca_core : &[u8] = &ias_ca_stripped[head_len..full_len - tail_len];
+        let ias_cert_dec = base64::decode(ias_ca_core)?;
+        Ok(ias_cert_dec)
+    }
+}
+
+fn percent_decode(orig: String) -> String {
+    let v:Vec<&str> = orig.split('%').collect();
+    let mut ret = String::new();
+    ret.push_str(v[0]);
+    if v.len() > 1 {
+        for s in v[1..].iter() {
+            ret.push(u8::from_str_radix(&s[0..2], 16).unwrap() as char);
+            ret.push_str(&s[2..]);
+        }
+    }
+    ret
 }

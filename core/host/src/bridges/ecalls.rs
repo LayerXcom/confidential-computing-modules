@@ -176,6 +176,7 @@ mod tests {
     use rand_os::OsRng;
     use rand::Rng;
     use ed25519_dalek::Keypair;
+    use crate::init_enclave::EnclaveDir;
 
     #[test]
     fn test_init_state() {

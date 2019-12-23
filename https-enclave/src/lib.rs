@@ -9,5 +9,5 @@ mod cache;
 mod error;
 mod https;
 
-pub use https::{HttpsClient, parse_response_attn_report, get_report_response};
+pub use https::{HttpsClient, get_report_response};
 pub use error::HttpsEnclaveError as Error;
