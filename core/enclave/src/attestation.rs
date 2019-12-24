@@ -137,7 +137,7 @@ impl Response {
         let cert = base64::decode(v[2])?;
 
         // This root_cert is equal to AttestationReportSigningCACert.pem
-        // let root_cert = v[5].to_string();
+        // let root_cert = v[6].to_string();
 
         if len_num != 0 {
             let header_len = result.unwrap().unwrap();
