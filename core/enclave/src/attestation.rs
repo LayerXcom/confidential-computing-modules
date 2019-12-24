@@ -54,7 +54,7 @@ impl<'a> AttestationService<'a> {
         let req = self.raw_report_req(quote, ias_api_key);
         let res = self.send_raw_req(req)?;
 
-        assert!(res.verify_sig_cert().is_ok());
+        res.verify_sig_cert()?;
 
         Ok((res.body, res.sig))
     }
@@ -151,7 +151,7 @@ impl Response {
         })
     }
 
-    pub fn verify_sig_cert(&self) -> Result<()> {
+    fn verify_sig_cert(&self) -> Result<()> {
         let now_func = webpki::Time::try_from(SystemTime::now())?;
 
         let mut ca_reader = BufReader::new(&IAS_REPORT_CA[..]);
@@ -185,6 +185,19 @@ impl Response {
 
         Ok(())
     }
+
+    // fn verify_report(&self) -> Result<()> {
+    //     // timestamp is within 24H (90day is recommended by Intel)
+    //     let attn_report: Value = serde_json::from_slice(attn_report_raw).unwrap();
+    //     if let Value::String(time) = &attn_report["timestamp"] {
+    //         let time_fixed = time.clone() + "+0000";
+    //         let ts = DateTime::parse_from_str(&time_fixed, "%Y-%m-%dT%H:%M:%S%.f%z").unwrap().timestamp();
+    //         let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
+    //     } else {
+    //         println!("Failed to fetch timestamp from attestation report");
+    //         return Err(sgx_status_t::SGX_ERROR_UNEXPECTED);
+    //     }
+    // }
 
     fn decode_ias_report_ca() -> Result<Vec<u8>> {
         let mut ias_ca_stripped = IAS_REPORT_CA.to_vec();

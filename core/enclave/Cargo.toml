@@ -28,6 +28,7 @@ env_logger = { version = "0.7", git = "https://github.com/mesalock-linux/env_log
 webpki = { git = "https://github.com/mesalock-linux/webpki", branch = "mesalock_sgx" }
 rustls = { git = "https://github.com/mesalock-linux/rustls", branch = "mesalock_sgx" }
 httparse = { version = "1.3", default-features = false }
+serde_json = { rev = "sgx_1.0.9", git = "https://github.com/mesalock-linux/serde-json-sgx"}
 
 sgx_tse = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
 sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git", features = ["untrusted_fs","net","backtrace"] }

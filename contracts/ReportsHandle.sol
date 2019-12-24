@@ -14,7 +14,7 @@ contract ReportsHandle {
     uint constant internal WORD_SIZE = 32;
 
     constructor(bytes memory _report, bytes memory _sig) public {
-        // mrEnclave = extractMrEnclaveFromReport(_report, _sig);
+        mrEnclave = extractMrEnclaveFromReport(_report, _sig);
     }
 
     // TODO: Add updateMrEnclave() function
