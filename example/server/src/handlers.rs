@@ -15,25 +15,25 @@ pub fn handle_post_deploy(
 ) -> Result<HttpResponse, Error> {
     debug!("Starting deploy a contract...");
 
-    let contract_addr = anonify_deploy(
-        server.enclave_id,
-        &req.sig[..],
-        &req.pubkey[..],
-        &req.nonce[..],
-        req.total_supply,
-        &server.eth_url,
-    ).expect("Failed to deploy contract.");
+    let access_right = AccessRight::new(req.sig, req.pubkey, req. nonce);
+
+    let mut deployer = EthDeployer::new(server.eid, &server.eth_url)
+        .expect("Failed to generate new deployer.");
+    let deployer_addr = deployer.get_account(0)
+        .expect("Failed to get a eth account.");
+    let contract_addr = deployer.deploy(&deployer_addr, &access_right, req.total_supply)
+        .expect("Failed to deploy a contract.");
 
     debug!("Contract address: {:?}", &contract_addr);
 
-    Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr)))
+    Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr.to_fixed_bytes())))
 }
 
 pub fn handle_post_transfer(
     server: web::Data<Server>,
     req: web::Json<api::send::post::Request>,
 ) {
-    
+
     unimplemented!();
 }
 

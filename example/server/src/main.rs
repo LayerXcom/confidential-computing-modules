@@ -18,19 +18,19 @@ mod handlers;
 
 #[derive(Clone)]
 pub struct Server {
-    enclave_id: sgx_enclave_id_t,
+    eid: sgx_enclave_id_t,
     eth_url: String,
 }
 
 impl Server {
     pub fn new() -> Self {
-        let enclave_id = init_enclave();
-        println!("enclave_id: {:?}", enclave_id);
+        let eid = init_enclave();
+        println!("eid: {:?}", eid);
 
         let eth_url = env::var("ETH_URL")
             .expect("ETH_URL is not set.");
 
-        Server { enclave_id, eth_url }
+        Server { eid, eth_url }
     }
 }
 

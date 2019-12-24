@@ -33,11 +33,11 @@ fn test_in_enclave() {
 
 #[test]
 fn test_transfer() {
-    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
-    let eid = enclave.geteid();
+    let eid = init_enclave();
     let mut csprng: OsRng = OsRng::new().unwrap();
     let my_access_right = AccessRight::new_from_rng(&mut csprng);
     let other_access_right = AccessRight::new_from_rng(&mut csprng);
+    let third_access_right = AccessRight::new_from_rng(&mut csprng);
 
     let total_supply = 100;
 
@@ -69,7 +69,7 @@ fn test_transfer() {
     let other_state = other_access_right.get_state(eid).unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, 0);
-
+    assert!(third_access_right.get_state(eid).is_err());
 
     // 4. Send a transaction to contract
 

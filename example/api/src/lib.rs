@@ -48,8 +48,8 @@ pub mod deploy {
             }
         }
 
-        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub UserAddress);
+        #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
+        pub struct Response(pub [u8; 20]);
     }
 }
 
