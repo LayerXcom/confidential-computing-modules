@@ -4,7 +4,7 @@ use std::{
     env,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_host::prelude::init_enclave;
+use anonify_host::EnclaveDir;
 use dotenv::dotenv;
 use actix_web::{
     client::Client,
@@ -24,7 +24,10 @@ pub struct Server {
 
 impl Server {
     pub fn new() -> Self {
-        let eid = init_enclave();
+        let enclave = EnclaveDir::new()
+            .init_enclave(true)
+            .expect("Failed to initialize enclave.");
+        let eid = enclave.geteid();
         println!("eid: {:?}", eid);
 
         let eth_url = env::var("ETH_URL")

@@ -11,3 +11,4 @@ mod web3;
 mod tests;
 
 use bridges::{ecalls, auto_ffi};
+pub use init_enclave::EnclaveDir;

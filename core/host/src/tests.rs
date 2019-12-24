@@ -33,7 +33,8 @@ fn test_in_enclave() {
 
 #[test]
 fn test_transfer() {
-    let eid = init_enclave();
+    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+    let eid = enclave.geteid();
     let mut csprng: OsRng = OsRng::new().unwrap();
     let my_access_right = AccessRight::new_from_rng(&mut csprng);
     let other_access_right = AccessRight::new_from_rng(&mut csprng);

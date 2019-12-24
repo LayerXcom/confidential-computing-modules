@@ -13,7 +13,8 @@ use crate::{
     web3::{self, Web3Http},
 };
 
-pub fn init_enclave() -> sgx_enclave_id_t {
+// TODO: This function throws error regarding invalid enclave id.
+fn init_enclave() -> sgx_enclave_id_t {
     #[cfg(not(debug_assertions))]
     let enclave = EnclaveDir::new().init_enclave(false).unwrap();
     #[cfg(debug_assertions)]
