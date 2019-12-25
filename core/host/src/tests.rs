@@ -70,7 +70,7 @@ fn test_transfer() {
     let other_state = other_access_right.get_state(eid).unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, 0);
-    assert!(third_access_right.get_state(eid).is_err());
+    assert_eq!(third_access_right.get_state(eid).unwrap(), 0);
 
     // 4. Send a transaction to contract
 
@@ -105,4 +105,5 @@ fn test_transfer() {
 
     assert_eq!(my_updated_state, total_supply - amount);
     assert_eq!(other_updated_state, amount);
+    assert_eq!(third_access_right.get_state(eid).unwrap(), 0);
 }

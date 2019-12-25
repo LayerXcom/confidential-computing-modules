@@ -15,7 +15,7 @@ pub fn handle_post_deploy(
 ) -> Result<HttpResponse, Error> {
     debug!("Starting deploy a contract...");
 
-    let access_right = AccessRight::new(req.sig, req.pubkey, req. nonce);
+    let access_right = AccessRight::new(req.sig, req.pubkey, req.nonce);
 
     let mut deployer = EthDeployer::new(server.eid, &server.eth_url)
         .expect("Failed to generate new deployer.");

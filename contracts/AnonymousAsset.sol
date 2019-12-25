@@ -15,7 +15,6 @@ contract AnonymousAsset is ReportsHandle {
         bytes memory _report,
         bytes memory _sig
     ) ReportsHandle(_report, _sig) public {
-        require(isEqualMrEnclave(_report, _sig), "mrenclave included in the report is not correct.");
         encryptedBalances.push(_initBalance);
 
         emit Init(_initBalance);
