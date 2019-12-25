@@ -7,6 +7,7 @@ use crate::{
 };
 use failure::Error;
 use log::debug;
+use ed25519_dalek::{PublicKey, Signature};
 use anonify_host::prelude::*;
 
 pub fn handle_post_deploy(
@@ -15,7 +16,10 @@ pub fn handle_post_deploy(
 ) -> Result<HttpResponse, Error> {
     debug!("Starting deploy a contract...");
 
-    let access_right = AccessRight::new(req.sig, req.pubkey, req.nonce);
+    let sig = Signature::from_bytes(req.sig).expect("Failed to get signature.");
+    let pubkey = PublicKey::from_bytes(req.pubkey).expect("Failed to get public key.");
+
+    let access_right = AccessRight::new(sig, pubkey, req.nonce);
 
     let mut deployer = EthDeployer::new(server.eid, &server.eth_url)
         .expect("Failed to generate new deployer.");

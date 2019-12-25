@@ -18,14 +18,17 @@
 pub mod deploy {
     pub mod post {
         use serde::{Deserialize, Serialize};
+        use serde_big_array::big_array;
         use rand::Rng;
-        use ed25519_dalek::{Keypair, Signature, PublicKey};
-        use anonify_common::UserAddress;
+        use ed25519_dalek::{Keypair, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
 
-        #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
+        big_array! { BigArray; }
+
+        #[derive(Clone, Deserialize, Serialize)]
         pub struct Request {
-            pub sig: Signature,
-            pub pubkey: PublicKey,
+            #[serde(with = "BigArray")]
+            pub sig: [u8; SIGNATURE_LENGTH],
+            pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub nonce: [u8; 32],
             pub total_supply: u64,
         }
@@ -37,11 +40,11 @@ pub mod deploy {
                 rng: &mut R
             ) -> Self {
                 let nonce: [u8; 32] = rng.gen();
-                let sig = keypair.sign(&nonce[..]);
+                let sig = keypair.sign(&nonce[..]).to_bytes();
 
                 Request {
                     sig: sig,
-                    pubkey: keypair.public,
+                    pubkey: keypair.public.to_bytes(),
                     nonce,
                     total_supply,
                 }
@@ -56,9 +59,12 @@ pub mod deploy {
 pub mod send {
     pub mod post {
         use serde::{Deserialize, Serialize};
+        use serde_big_array::big_array;
         use rand::Rng;
         use anonify_common::UserAddress;
         use ed25519_dalek::{Keypair, Signature, PublicKey};
+
+        big_array! { BigArray; }
 
         #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
         pub struct Request {
