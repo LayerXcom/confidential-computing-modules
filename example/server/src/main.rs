@@ -33,13 +33,24 @@ lazy_static! {
     // };
 }
 
+#[derive(Debug)]
+pub struct Enclacve {
+    pub eid: sgx_enclave_id_t,
+}
+
 fn main() {
     env_logger::init();
     dotenv().ok();
     let endpoint = env::var("ANONIFY_URL")
         .expect("ANONIFY_URL is not set.");
 
+    let enclave = EnclaveDir::new()
+            .init_enclave(true)
+            .expect("Failed to initialize enclave.");
+    let eid = enclave.geteid();
+
     rocket::ignite()
+        .manage(Enclacve { eid })
         .mount("/", routes![handle_deploy])
         .launch();
 }

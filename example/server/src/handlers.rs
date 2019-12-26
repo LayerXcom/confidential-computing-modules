@@ -3,11 +3,14 @@ use log::debug;
 use ed25519_dalek::{PublicKey, Signature};
 use anonify_host::prelude::*;
 use rocket_contrib::json::Json;
-use crate::{ENCLAVE_ID, ETH_URL};
+use rocket::State;
+use sgx_types::sgx_enclave_id_t;
+use crate::{ENCLAVE_ID, ETH_URL, Enclacve};
 
 #[post("/deploy", format = "json", data = "<req>")]
 pub fn handle_deploy(
     req: Json<api::deploy::post::Request>,
+    enclave: State<Enclacve>,
 ) -> String {
     debug!("Starting deploy a contract...");
 
@@ -16,7 +19,7 @@ pub fn handle_deploy(
 
     let access_right = AccessRight::new(sig, pubkey, req.nonce);
 
-    let mut deployer = EthDeployer::new(*ENCLAVE_ID, ETH_URL)
+    let mut deployer = EthDeployer::new(enclave.eid, ETH_URL)
         .expect("Failed to generate new deployer.");
     let deployer_addr = deployer.get_account(0)
         .expect("Failed to get a eth account.");

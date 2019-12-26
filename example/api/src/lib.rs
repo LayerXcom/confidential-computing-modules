@@ -40,10 +40,11 @@ pub mod deploy {
                 rng: &mut R
             ) -> Self {
                 let nonce: [u8; 32] = rng.gen();
-                let sig = keypair.sign(&nonce[..]).to_bytes();
+                let sig = keypair.sign(&nonce[..]);
+                assert!(keypair.verify(&nonce, &sig).is_ok());
 
                 Request {
-                    sig: sig,
+                    sig: sig.to_bytes(),
                     pubkey: keypair.public.to_bytes(),
                     nonce,
                     total_supply,
@@ -84,6 +85,7 @@ pub mod send {
             ) -> Self {
                 let nonce: [u8; 32] = rng.gen();
                 let sig = keypair.sign(&nonce[..]);
+                assert!(keypair.verify(&nonce, &sig).is_ok());
 
                 Request {
                     sig: sig,
