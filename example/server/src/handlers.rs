@@ -16,8 +16,8 @@ pub fn handle_post_deploy(
 ) -> Result<HttpResponse, Error> {
     debug!("Starting deploy a contract...");
 
-    let sig = Signature::from_bytes(req.sig).expect("Failed to get signature.");
-    let pubkey = PublicKey::from_bytes(req.pubkey).expect("Failed to get public key.");
+    let sig = Signature::from_bytes(&req.sig).expect("Failed to get signature.");
+    let pubkey = PublicKey::from_bytes(&req.pubkey).expect("Failed to get public key.");
 
     let access_right = AccessRight::new(sig, pubkey, req.nonce);
 
