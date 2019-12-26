@@ -16,3 +16,8 @@ failure = "0.1"
 log = "0.4"
 env_logger = "0.7"
 ed25519-dalek = "1.0.0-pre.2"
+hex = "0.4"
+
+rocket = "0.4"
+lazy_static = "1.4"
+rocket_contrib = { version = "0.4", features = ["json"] }
