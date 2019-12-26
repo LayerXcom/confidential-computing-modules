@@ -2,16 +2,20 @@ use failure::Error;
 use log::debug;
 use ed25519_dalek::{PublicKey, Signature};
 use anonify_host::prelude::*;
-use rocket_contrib::json::Json;
-use rocket::State;
 use sgx_types::sgx_enclave_id_t;
-use crate::{ENCLAVE_ID, ETH_URL, Enclacve};
 
-#[post("/deploy", format = "json", data = "<req>")]
+use actix_web::{
+    web,
+    HttpResponse,
+};
+use crate::{
+    Server,
+};
+
 pub fn handle_deploy(
-    req: Json<api::deploy::post::Request>,
-    enclave: State<Enclacve>,
-) -> String {
+    server: web::Data<Server>,
+    req: web::Json<api::deploy::post::Request>,
+) -> Result<HttpResponse, Error> {
     debug!("Starting deploy a contract...");
 
     let sig = Signature::from_bytes(&req.sig).expect("Failed to get signature.");
@@ -19,7 +23,7 @@ pub fn handle_deploy(
 
     let access_right = AccessRight::new(sig, pubkey, req.nonce);
 
-    let mut deployer = EthDeployer::new(enclave.eid, ETH_URL)
+    let mut deployer = EthDeployer::new(server.eid, &server.eth_url)
         .expect("Failed to generate new deployer.");
     let deployer_addr = deployer.get_account(0)
         .expect("Failed to get a eth account.");
@@ -28,5 +32,5 @@ pub fn handle_deploy(
 
     debug!("Contract address: {:?}", &contract_addr);
 
-    hex::encode(contract_addr.to_fixed_bytes())
+    Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr.to_fixed_bytes())))
 }
