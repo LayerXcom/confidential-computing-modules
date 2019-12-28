@@ -47,6 +47,8 @@ impl AccessRight {
         pubkey: PublicKey,
         nonce: [u8; 32],
     ) -> Self {
+        assert!(pubkey.verify(&nonce, &sig).is_ok());
+
         AccessRight {
             sig,
             pubkey,

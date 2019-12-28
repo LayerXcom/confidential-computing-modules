@@ -17,6 +17,7 @@
 
 pub mod deploy {
     pub mod post {
+        use std::fmt;
         use serde::{Deserialize, Serialize};
         use serde_big_array::big_array;
         use rand::Rng;
@@ -49,6 +50,16 @@ pub mod deploy {
                     nonce,
                     total_supply,
                 }
+            }
+        }
+
+        impl fmt::Debug for Request {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(
+                    f,
+                    "Request {{ sig: {:?}, pubkey: {:?}, nonce: {:?}, total_supply: {:?} }}",
+                    &self.sig[..], self.pubkey, self.nonce, self.total_supply
+                )
             }
         }
 

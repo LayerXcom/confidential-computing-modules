@@ -23,12 +23,7 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new() -> Self {
-        let enclave = EnclaveDir::new()
-            .init_enclave(true)
-            .expect("Failed to initialize enclave.");
-        let eid = enclave.geteid();
-
+    pub fn new(eid: sgx_enclave_id_t) -> Self {
         let eth_url = env::var("ETH_URL")
             .expect("ETH_URL is not set.");
 
@@ -42,7 +37,13 @@ fn main() -> io::Result<()> {
     let endpoint = env::var("ANONIFY_URL")
         .expect("ANONIFY_URL is not set.");
 
-    let server = Server::new();
+    // Enclave must be initialized in main function.
+    let enclave = EnclaveDir::new()
+            .init_enclave(true)
+            .expect("Failed to initialize enclave.");
+    let eid = enclave.geteid();
+
+    let server = Server::new(eid);
 
     HttpServer::new(move || {
         App::new()

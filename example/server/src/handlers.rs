@@ -34,3 +34,12 @@ pub fn handle_deploy(
 
     Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr.to_fixed_bytes())))
 }
+
+// pub fn handle_send(
+//     server: web::Data<Server>,
+//     req: web::Json<api::deploy::send::Request>,
+// ) -> Result<HttpResponse, Error> {
+
+//     let sig = Signature::from_bytes(&req.sig).expect("Failed to get signature.");
+//     let pubkey = PublicKey::from_bytes(&req.pubkey).expect("Failed to get public key.");
+// }
