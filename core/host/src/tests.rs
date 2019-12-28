@@ -78,7 +78,7 @@ fn test_transfer() {
     let gas = 3_000_000;
     let other_user_address = other_access_right.user_address();
 
-    let eth_sender = EthSender::new(eid, contract);
+    let eth_sender = EthSender::from_contract(eid, contract);
     let receipt = eth_sender.send_tx(
             &my_access_right,
             deployer_addr,

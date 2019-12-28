@@ -8,8 +8,6 @@ dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/../core"
 echo $PWD
 export SGX_MODE=HW
-export ANONIFY_URL=172.18.0.3:8080
-export ETH_URL=http://172.18.0.2:8545
 
 echo "Start building core components."
 

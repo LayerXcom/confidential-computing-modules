@@ -70,21 +70,24 @@ pub mod deploy {
 
 pub mod send {
     pub mod post {
+        use std::fmt;
         use serde::{Deserialize, Serialize};
         use serde_big_array::big_array;
         use rand::Rng;
         use anonify_common::UserAddress;
-        use ed25519_dalek::{Keypair, Signature, PublicKey};
+        use ed25519_dalek::{Keypair, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
 
         big_array! { BigArray; }
 
-        #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
+        #[derive(Clone, Deserialize, Serialize)]
         pub struct Request {
-            pub sig: Signature,
-            pub pubkey: PublicKey,
+            #[serde(with = "BigArray")]
+            pub sig: [u8; SIGNATURE_LENGTH],
+            pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub nonce: [u8; 32],
             pub target: UserAddress,
             pub amount: u64,
+            pub contract_addr: String,
         }
 
         impl Request {
@@ -92,6 +95,7 @@ pub mod send {
                 keypair: &Keypair,
                 amount: u64,
                 target: UserAddress,
+                contract_addr: String,
                 rng: &mut R,
             ) -> Self {
                 let nonce: [u8; 32] = rng.gen();
@@ -99,12 +103,23 @@ pub mod send {
                 assert!(keypair.verify(&nonce, &sig).is_ok());
 
                 Request {
-                    sig: sig,
-                    pubkey: keypair.public,
+                    sig: sig.to_bytes(),
+                    pubkey: keypair.public.to_bytes(),
                     nonce,
                     target,
                     amount,
+                    contract_addr,
                 }
+            }
+        }
+
+        impl fmt::Debug for Request {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(
+                    f,
+                    "Request {{ sig: {:?}, pubkey: {:?}, nonce: {:?}, target: {:?}, amount: {:?} }}",
+                    &self.sig[..], self.pubkey, self.nonce, self.target, self.amount
+                )
             }
         }
     }

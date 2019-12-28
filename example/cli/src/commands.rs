@@ -42,6 +42,7 @@ pub(crate) fn send<R: Rng>(
     index: usize,
     target: UserAddress,
     amount: u64,
+    contract_addr: String,
     rng: &mut R
 ) -> Result<()> {
     let password = prompt_password(term)?;
@@ -49,7 +50,7 @@ pub(crate) fn send<R: Rng>(
     let client = Client::new();
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::send::post::Request::new(&keypair, amount, target, rng);
+    let req = api::send::post::Request::new(&keypair, amount, target, contract_addr, rng);
     println!("Reqest json: {:?}", &req);
     let res = client
         .post(&format!("{}/send", &anonify_url))

@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate clap;
+#[macro_use]
+extern crate dotenv_codegen;
 
 use std::path::PathBuf;
 use clap::{Arg, App, SubCommand, AppSettings, ArgMatches};
@@ -47,6 +49,7 @@ fn main() {
 
 const ANONIFY_COMMAND: &'static str = "anonify";
 const DEFAULT_KEYFILE_INDEX: &'static str = "0";
+const DEFAULT_CONTRACT_ADDRESS: &'static str = "0x580bc66c83f54056bb337a75eae8e424e96f32de";
 
 fn subcommand_anonify<R: Rng>(
     mut term: Term,
@@ -54,7 +57,7 @@ fn subcommand_anonify<R: Rng>(
     matches: &ArgMatches,
     rng: &mut R
 ) {
-    let anonify_url = std::env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
+    let anonify_url = dotenv!("ANONIFY_URL").to_string();
 
     match matches.subcommand() {
         ("deploy", Some(matches)) => {
@@ -67,8 +70,15 @@ fn subcommand_anonify<R: Rng>(
                 .parse()
                 .expect("Failed to parse total_supply");
 
-            commands::deploy(&mut term, root_dir, anonify_url, keyfile_index, total_supply, rng)
-                .expect("Faild to deploy command");
+            commands::deploy(
+                &mut term,
+                root_dir,
+                anonify_url,
+                keyfile_index,
+                total_supply,
+                rng
+            )
+            .expect("Faild to deploy command");
         },
         ("send", Some(matches)) => {
             let keyfile_index: usize = matches.value_of("keyfile-index")
@@ -84,8 +94,21 @@ fn subcommand_anonify<R: Rng>(
                 .expect("Not found target");
             let target_addr = UserAddress::base64_decode(target);
 
-            commands::send(&mut term, root_dir, anonify_url, keyfile_index, target_addr, amount, rng)
-                .expect("Faild to deploy command");
+            let contract_addr = matches.value_of("contract-addr")
+                .expect("Not found contract-addr")
+                .to_string();
+
+            commands::send(
+                &mut term,
+                root_dir,
+                anonify_url,
+                keyfile_index,
+                target_addr,
+                amount,
+                contract_addr,
+                rng
+            )
+            .expect("Faild to deploy command");
         },
         ("get-state", Some(matches)) => {
             commands::get_state(&mut term, root_dir, anonify_url);
@@ -131,6 +154,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .short("to")
                 .takes_value(true)
                 .required(true)
+            )
+            .arg(Arg::with_name("contract-addr")
+                .short("c")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_CONTRACT_ADDRESS)
             )
         )
         .subcommand(SubCommand::with_name("get-state"))

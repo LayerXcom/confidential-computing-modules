@@ -35,11 +35,29 @@ pub fn handle_deploy(
     Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr.to_fixed_bytes())))
 }
 
-// pub fn handle_send(
-//     server: web::Data<Server>,
-//     req: web::Json<api::deploy::send::Request>,
-// ) -> Result<HttpResponse, Error> {
+pub fn handle_send(
+    server: web::Data<Server>,
+    req: web::Json<api::send::post::Request>,
+) -> Result<HttpResponse, Error> {
+    let sig = Signature::from_bytes(&req.sig).expect("Failed to get signature.");
+    let pubkey = PublicKey::from_bytes(&req.pubkey).expect("Failed to get public key.");
 
-//     let sig = Signature::from_bytes(&req.sig).expect("Failed to get signature.");
-//     let pubkey = PublicKey::from_bytes(&req.pubkey).expect("Failed to get public key.");
-// }
+    let access_right = AccessRight::new(sig, pubkey, req.nonce);
+    let eth_sender = EthSender::new(
+        server.eid,
+        dotenv!("ETH_URL"),
+        &req.contract_addr,
+        dotenv!("ANONYMOUS_ASSET_ABI_PATH"),
+    )
+    .expect("Failed to initialize EthSender");
+
+    // let receipt = eth_sender.send_tx(
+    //         &access_right,
+    //         deployer_addr,
+    //         &other_user_address,
+    //         amount,
+    //         gas
+    //     );
+
+    unimplemented!();
+}

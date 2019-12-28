@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate dotenv_codegen;
 use std::{
     collections::HashMap,
     io,
@@ -24,8 +26,7 @@ pub struct Server {
 
 impl Server {
     pub fn new(eid: sgx_enclave_id_t) -> Self {
-        let eth_url = env::var("ETH_URL")
-            .expect("ETH_URL is not set.");
+        let eth_url = dotenv!("ETH_URL").to_string();
 
         Server { eid, eth_url }
     }
@@ -34,8 +35,6 @@ impl Server {
 fn main() -> io::Result<()> {
     env_logger::init();
     dotenv().ok();
-    let endpoint = env::var("ANONIFY_URL")
-        .expect("ANONIFY_URL is not set.");
 
     // Enclave must be initialized in main function.
     let enclave = EnclaveDir::new()
@@ -52,6 +51,6 @@ fn main() -> io::Result<()> {
             // .route("/transfer", web::post().to())
             // .route("/balance", web::get().to())
     })
-    .bind(endpoint)?
+    .bind(dotenv!("ANONIFY_URL"))?
     .run()
 }

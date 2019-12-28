@@ -1,4 +1,7 @@
-use std::path::Path;
+use std::{
+    path::Path,
+    str::FromStr,
+};
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
 use anonify_common::UserAddress;
@@ -145,7 +148,21 @@ pub struct EthSender {
 }
 
 impl EthSender {
-    pub fn new(
+    pub fn new<P: AsRef<Path>>(
+        enclave_id: sgx_enclave_id_t,
+        eth_url: &str,
+        contract_addr: &str,
+        abi_path: P,
+    ) -> Result<Self> {
+        let web3_http = Web3Http::new(eth_url)?;
+        let abi = web3::contract_abi_from_path(abi_path)?;
+        let addr = EthAddress::from_str(contract_addr)?;
+        let contract = web3::AnonymousAssetContract::new(web3_http, addr, abi)?;
+
+        Ok(EthSender { enclave_id, contract })
+    }
+
+    pub fn from_contract(
         enclave_id: sgx_enclave_id_t,
         contract: web3::AnonymousAssetContract
     ) -> Self {
