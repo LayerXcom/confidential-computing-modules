@@ -51,13 +51,17 @@ pub fn handle_send(
     )
     .expect("Failed to initialize EthSender");
 
-    // let receipt = eth_sender.send_tx(
-    //         &access_right,
-    //         deployer_addr,
-    //         &other_user_address,
-    //         amount,
-    //         gas
-    //     );
+    let from_eth_addr = eth_sender.get_account(0).expect("Failed to get account.");
+
+    let receipt = eth_sender.send_tx(
+        &access_right,
+        deployer_addr,
+        &other_user_address,
+        amount,
+        from_eth_addr,
+        gas
+    )
+    .expect("Failed to send a transaction.");
 
     unimplemented!();
 }

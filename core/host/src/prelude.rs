@@ -172,12 +172,16 @@ impl EthSender {
         }
     }
 
+    pub fn get_account(&self, index: usize) -> Result<EthAddress> {
+        self.get_account(index)
+    }
+
     pub fn send_tx(
         &self,
         access_right: &AccessRight,
-        from_eth_addr: EthAddress,
         target: &UserAddress,
         amount: u64,
+        from_eth_addr: EthAddress,
         gas: u64,
     ) -> Result<H256> {
         let unsigned_tx = state_transition(

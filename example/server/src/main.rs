@@ -7,7 +7,6 @@ use std::{
 };
 use sgx_types::sgx_enclave_id_t;
 use anonify_host::EnclaveDir;
-use dotenv::dotenv;
 use handlers::*;
 use actix_web::{
     client::Client,
@@ -34,7 +33,7 @@ impl Server {
 
 fn main() -> io::Result<()> {
     env_logger::init();
-    dotenv().ok();
+    dotenv::from_filename(".env.template").ok();
 
     // Enclave must be initialized in main function.
     let enclave = EnclaveDir::new()

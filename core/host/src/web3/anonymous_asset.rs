@@ -12,7 +12,7 @@ use web3::{
     Web3,
     transports::{EventLoopHandle, Http},
     contract::{Contract, Options},
-    types::{Address, H256, U256, FilterBuilder, Log, BlockNumber},
+    types::{Address, H256, U256, Filter, FilterBuilder, Log, BlockNumber},
     futures::Future,
 };
 use ethabi::{
@@ -25,6 +25,7 @@ use ethabi::{
     decode,
 };
 
+/// Basic web3 connection components via HTTP.
 #[derive(Debug)]
 pub struct Web3Http {
     web3: Web3<Http>,
@@ -45,6 +46,11 @@ impl Web3Http {
     pub fn get_account(&self, index: usize) -> Result<Address> {
         let account = self.web3.eth().accounts().wait()?[index];
         Ok(account)
+    }
+
+    pub fn get_logs(&self, filter: Filter) -> Result<Web3Logs> {
+        let logs = self.web3.eth().logs(filter).wait()?;
+        Ok(Web3Logs(logs))
     }
 
     pub fn deploy(
@@ -75,23 +81,22 @@ impl Web3Http {
     }
 }
 
+/// Web3 connection components of anonymous asset contract.
 #[derive(Debug)]
 pub struct AnonymousAssetContract {
     contract: Contract<Http>,
     address: Address, // contract address
-    web3: Web3<Http>,
-    eloop: EventLoopHandle,
+    web3_conn: Web3Http,
 }
 
 impl AnonymousAssetContract {
-    pub fn new(web3_conn: Web3Http, contract_addr: Address, abi: ContractABI) -> Result<Self> {
-        let contract = Contract::new(web3_conn.web3.eth(), contract_addr, abi);
+    pub fn new(web3_conn: Web3Http, address: Address, abi: ContractABI) -> Result<Self> {
+        let contract = Contract::new(web3_conn.web3.eth(), address, abi);
 
         Ok(AnonymousAssetContract {
             contract,
-            address: contract_addr,
-            web3: web3_conn.web3,
-            eloop: web3_conn.eloop,
+            address,
+            web3_conn,
         })
     }
 
@@ -129,11 +134,15 @@ impl AnonymousAssetContract {
             .to_block(BlockNumber::Latest)
             .build();
 
-        let logs = self.web3.eth().logs(filter).wait()?;
-        Ok(Web3Logs(logs))
+        self.web3_conn.get_logs(filter)
+    }
+
+    pub fn get_account(&self, index: usize) -> Result<Address> {
+        self.web3_conn.get_account(index)
     }
 }
 
+/// Event fetched logs from smart contracts.
 #[derive(Debug)]
 pub struct Web3Logs(pub Vec<Log>);
 
