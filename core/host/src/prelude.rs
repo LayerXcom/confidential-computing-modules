@@ -4,11 +4,9 @@ use std::{
 };
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
-use anonify_common::UserAddress;
+use anonify_common::{UserAddress, AccessRight};
 use ed25519_dalek::{Signature, PublicKey, Keypair};
 use ::web3::types::{H160, H256, Address as EthAddress};
-use rand::Rng;
-use rand_core::{RngCore, CryptoRng};
 use crate::{
     init_enclave::EnclaveDir,
     ecalls::*,
@@ -24,63 +22,6 @@ fn init_enclave() -> sgx_enclave_id_t {
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
 
     enclave.geteid()
-}
-
-/// Access right of Read/Write to anonify's enclave mem db.
-#[derive(Debug, Clone)]
-pub struct AccessRight {
-    sig: Signature,
-    pubkey: PublicKey,
-    nonce: [u8; 32],
-}
-
-impl AccessRight {
-    pub fn new_from_rng<R: RngCore + CryptoRng>(rng: &mut R) -> Self {
-        let keypair: Keypair = Keypair::generate(rng);
-        let nonce = rand::thread_rng().gen::<[u8; 32]>();
-        let sig = keypair.sign(&nonce);
-
-        assert!(keypair.verify(&nonce, &sig).is_ok());
-
-        Self::new(sig, keypair.public, nonce)
-    }
-
-    pub fn new(
-        sig: Signature,
-        pubkey: PublicKey,
-        nonce: [u8; 32],
-    ) -> Self {
-        assert!(pubkey.verify(&nonce, &sig).is_ok());
-
-        AccessRight {
-            sig,
-            pubkey,
-            nonce,
-        }
-    }
-
-    pub fn get_state(
-        &self,
-        enclave_id: sgx_enclave_id_t,
-    ) -> Result<u64> {
-        let state = get_state(
-            enclave_id,
-            &self.sig,
-            &self.pubkey,
-            &self.nonce,
-        )?;
-
-        debug!("state: {:?}", &state);
-        Ok(state)
-    }
-
-    pub fn user_address(&self) -> UserAddress {
-        UserAddress::from_pubkey(&self.pubkey())
-    }
-
-    pub fn pubkey(&self) -> &PublicKey {
-        &self.pubkey
-    }
 }
 
 #[derive(Debug)]
@@ -211,4 +152,18 @@ impl EthSender {
     pub fn get_contract(self) -> web3::AnonymousAssetContract {
         self.contract
     }
+}
+
+pub fn get_state_by_access_right(
+    access_right: &AccessRight,
+    enclave_id: sgx_enclave_id_t,
+) -> Result<u64> {
+    let state = get_state(
+        enclave_id,
+        &access_right.sig,
+        &access_right.pubkey,
+        &access_right.nonce,
+    )?;
+
+    Ok(state)
 }

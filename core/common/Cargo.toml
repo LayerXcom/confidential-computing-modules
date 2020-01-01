@@ -15,8 +15,10 @@ serde-sgx = { package = "serde", git = "https://github.com/mesalock-linux/serde-
 sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git", optional = true }
 base64 = { version = "0.11", optional = true }
 web3 = { version = "0.8", optional = true }
+rand = { version = "0.6", optional = true }
+rand_core = { version = "0.3", optional = true }
 
 [features]
 default = ["std"]
-std = ["serde", "base64", "web3" ]
+std = ["serde", "base64", "web3", "rand", "rand_core" ]
 sgx = ["sgx_tstd", "serde-sgx"]

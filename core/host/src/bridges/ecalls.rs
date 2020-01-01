@@ -41,7 +41,7 @@ pub fn get_state(
     msg: &[u8],
 ) -> Result<u64> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-    let mut res: u64 = Default::default();
+    let mut res: u64 = Default::default(); // TODO Change type from u64 to Vec<u8>
 
     let status = unsafe {
         ecall_get_state(
