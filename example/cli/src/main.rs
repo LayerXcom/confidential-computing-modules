@@ -6,6 +6,7 @@ extern crate dotenv_codegen;
 use std::path::PathBuf;
 use clap::{Arg, App, SubCommand, AppSettings, ArgMatches};
 use rand::{rngs::OsRng, Rng};
+use dotenv::dotenv;
 use term::Term;
 use anonify_common::UserAddress;
 use crate::config::*;
@@ -16,7 +17,7 @@ mod commands;
 mod error;
 
 fn main() {
-    dotenv::from_filename(".env.template").ok();
+    dotenv().ok();
     let default_root_dir = get_default_root_dir();
 
     let matches = App::new("anonify")
@@ -56,7 +57,7 @@ fn subcommand_anonify<R: Rng>(
     matches: &ArgMatches,
     rng: &mut R
 ) {
-    let anonify_url = std::env::var("ANONIFY_URL").unwrap().to_string();
+    let anonify_url = dotenv!("ANONIFY_URL").to_string();
 
     match matches.subcommand() {
         ("deploy", Some(matches)) => {
