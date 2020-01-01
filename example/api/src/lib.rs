@@ -124,3 +124,16 @@ pub mod send {
         }
     }
 }
+
+pub mod state {
+    pub mod get {
+        use std::fmt;
+        use serde::{Deserialize, Serialize};
+        use serde_big_array::big_array;
+        use rand::Rng;
+        use anonify_common::UserAddress;
+        use ed25519_dalek::{Keypair, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
+
+        
+    }
+}

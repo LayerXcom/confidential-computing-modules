@@ -59,3 +59,9 @@ pub fn handle_send(
 
     Ok(HttpResponse::Ok().finish())
 }
+
+pub fn handle_state(
+
+) -> Result<HttpResponse, Error> {
+    unimplemented!();
+}

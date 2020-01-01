@@ -47,8 +47,8 @@ fn main() -> io::Result<()> {
         App::new()
             .data(server.clone())
             .route("/deploy", web::post().to(handle_deploy))
-            // .route("/transfer", web::post().to())
-            // .route("/balance", web::get().to())
+            .route("/send", web::post().to(handle_send))
+            .route("/state", web::get().to())
     })
     .bind(dotenv!("ANONIFY_URL"))?
     .run()

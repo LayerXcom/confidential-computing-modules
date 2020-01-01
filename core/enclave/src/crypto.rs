@@ -5,10 +5,7 @@ use std::{
     io::Read,
 };
 use ring::aead::{self, Aad, BoundKey, Nonce, UnboundKey, AES_256_GCM};
-use crate::{
-    error::Result,
-    state::State,
-};
+use crate::error::Result;
 
 lazy_static! {
     pub static ref SYMMETRIC_KEY: SymmetricKey = Default::default();
