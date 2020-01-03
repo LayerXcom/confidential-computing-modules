@@ -4,14 +4,14 @@ use std::{
 };
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
-use anonify_common::{UserAddress, AccessRight};
+use anonify_common::{UserAddress, AccessRight, State};
 use ed25519_dalek::{Signature, PublicKey, Keypair};
 use ::web3::types::{H160, H256, Address as EthAddress};
 use crate::{
     init_enclave::EnclaveDir,
     ecalls::*,
     error::Result,
-    web3::{self, Web3Http},
+    web3::{self, Web3Http, EthEvent},
 };
 
 // TODO: This function throws error regarding invalid enclave id.
@@ -154,6 +154,52 @@ impl EthSender {
     }
 }
 
+pub struct Indexer {
+    contract: web3::AnonymousAssetContract,
+}
+
+impl Indexer {
+    pub fn new<P: AsRef<Path>>(
+        eth_url: &str,
+        abi_path: P,
+        contract_addr: &str
+    ) -> Result<Self> {
+        let web3_http = Web3Http::new(eth_url)?;
+        let abi = web3::contract_abi_from_path(abi_path)?;
+        let addr = EthAddress::from_str(contract_addr)?;
+        let contract = web3::AnonymousAssetContract::new(web3_http, addr, abi)?;
+
+        Ok(Indexer { contract })
+    }
+
+    /// Blocking INIT event fetch from blockchain nodes.
+    pub fn block_on_init(&self, eid: sgx_enclave_id_t) -> Result<()> {
+        let init_event = EthEvent::build_init_event();
+        self.contract
+            .get_event(&init_event)?
+            .into_enclave_log(&init_event)?
+            .insert_enclave(eid)?;
+
+        Ok(())
+    }
+
+    /// Blocking SEND event fetch from blockchain nodes.
+    pub fn block_on_send(&self, eid: sgx_enclave_id_t) -> Result<()> {
+        let transfer_event = EthEvent::build_send_event();
+        self.contract
+            .get_event(&transfer_event)?
+            .into_enclave_log(&transfer_event)?
+            .insert_enclave(eid)?;
+
+        Ok(())
+    }
+
+    pub fn get_contract(self) -> web3::AnonymousAssetContract {
+        self.contract
+    }
+}
+
+// TODO: Return State trait, not u64.
 pub fn get_state_by_access_right(
     access_right: &AccessRight,
     enclave_id: sgx_enclave_id_t,

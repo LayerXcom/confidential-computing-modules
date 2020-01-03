@@ -3,7 +3,6 @@ use log::debug;
 use ed25519_dalek::{PublicKey, Signature};
 use anonify_host::prelude::*;
 use sgx_types::sgx_enclave_id_t;
-
 use actix_web::{
     web,
     HttpResponse,
@@ -20,10 +19,7 @@ pub fn handle_deploy(
 ) -> Result<HttpResponse, Error> {
     debug!("Starting deploy a contract...");
 
-    let sig = Signature::from_bytes(&req.sig)?;
-    let pubkey = PublicKey::from_bytes(&req.pubkey)?;
-    let access_right = AccessRight::new(sig, pubkey, req.nonce);
-
+    let access_right = req.into_access_right()?;
     let mut deployer = EthDeployer::new(server.eid, &server.eth_url)?;
     let deployer_addr = deployer.get_account(0)?;
     let contract_addr = deployer.deploy(&deployer_addr, &access_right, req.total_supply)?;
@@ -37,10 +33,7 @@ pub fn handle_send(
     server: web::Data<Server>,
     req: web::Json<api::send::post::Request>,
 ) -> Result<HttpResponse, Error> {
-    let sig = Signature::from_bytes(&req.sig)?;
-    let pubkey = PublicKey::from_bytes(&req.pubkey)?;
-    let access_right = AccessRight::new(sig, pubkey, req.nonce);
-
+    let access_right = req.into_access_right()?;
     let eth_sender = EthSender::new(
         server.eid,
         &server.eth_url,
@@ -60,8 +53,21 @@ pub fn handle_send(
     Ok(HttpResponse::Ok().finish())
 }
 
+/// Fetch events from blockchain nodes manually, and then get state from enclave.
 pub fn handle_state(
-
+    server: web::Data<Server>,
+    req: web::Json<api::state::get::Request>,
 ) -> Result<HttpResponse, Error> {
-    unimplemented!();
+    let indexer = Indexer::new(
+        &server.eth_url,
+        dotenv!("ANONYMOUS_ASSET_ABI_PATH"),
+        &req.contract_addr,
+    )?;
+    indexer.block_on_init(server.eid)?;
+    indexer.block_on_send(server.eid)?;
+
+    let access_right = req.into_access_right()?;
+    let state = get_state_by_access_right(&access_right, server.eid)?;
+
+    Ok(HttpResponse::Ok().json(api::state::get::Response(state)))
 }

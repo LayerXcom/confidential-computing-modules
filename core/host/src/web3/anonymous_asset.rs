@@ -252,7 +252,7 @@ impl EthEvent {
         })
     }
 
-    pub fn build_transfer_event() -> Self {
+    pub fn build_send_event() -> Self {
         EthEvent(Event {
             name: "Transfer".to_owned(),
             inputs: vec![
