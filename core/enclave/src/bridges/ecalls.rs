@@ -14,6 +14,7 @@ use crate::attestation::{
 use crate::quote::EnclaveContext;
 use super::ocalls::save_to_host_memory;
 
+/// Insert event logs from blockchain nodes into enclave's memory database.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_insert_logs(
     _contract_addr: &[u8; 20], //TODO
@@ -34,12 +35,13 @@ pub unsafe extern "C" fn ecall_insert_logs(
     sgx_status_t::SGX_SUCCESS
 }
 
+/// Get current state of the user represented the given public key from enclave memory database.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_get_state(
     sig: &Sig,
     pubkey: &PubKey,
     msg: &Msg, // 32 bytes randomness for avoiding replay attacks.
-    state: *mut u64, // Currently, status is just value.
+    state: &mut EnclaveState,
 ) -> sgx_status_t {
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
@@ -48,11 +50,13 @@ pub unsafe extern "C" fn ecall_get_state(
     let db_value = MEMORY_DB.get(&key);
     let user_state = UserState::<Value, _>::get_state_nonce_from_dbvalue(db_value)
         .expect("Failed to read db_value.").0;
-    *state = user_state.into_raw_u64();
+
+    state.0 = save_to_host_memory(&user_state.as_bytes().unwrap()).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS
 }
 
+/// Execute state transition in enclave. It depends on state transition functions and provided inputs.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_state_transition(
     sig: &Sig,

@@ -200,10 +200,10 @@ impl Indexer {
 }
 
 // TODO: Return State trait, not u64.
-pub fn get_state_by_access_right(
+pub fn get_state_by_access_right<S: State>(
     access_right: &AccessRight,
     enclave_id: sgx_enclave_id_t,
-) -> Result<u64> {
+) -> Result<S> {
     let state = get_state(
         enclave_id,
         &access_right.sig,

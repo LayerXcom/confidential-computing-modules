@@ -77,6 +77,25 @@ impl fmt::Debug for RawUnsignedTx {
     }
 }
 
+/// Returned from getting state operations.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct EnclaveState(pub *const u8);
+
+impl Default for EnclaveState {
+    fn default() -> Self {
+        EnclaveState ( ptr::null() )
+    }
+}
+
+impl fmt::Debug for EnclaveState {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut debug_trait_builder = f.debug_struct("EnclaveState");
+        debug_trait_builder.field("0", &(self.0));
+        debug_trait_builder.finish()
+    }
+}
+
 #[repr(C)]
 #[derive(Debug, PartialEq)]
 pub enum ResultStatus {

@@ -1,5 +1,5 @@
 use crate::localstd::{
-    io::{self, Read, Write},
+    io::{self, Write, Read},
     vec::Vec,
 };
 
@@ -8,6 +8,8 @@ pub trait State: Sized + Default {
     fn new(init: u64) -> Self;
 
     fn as_bytes(&self) -> io::Result<Vec<u8>>;
+
+    fn from_bytes(bytes: &[u8]) -> io::Result<Self>;
 
     fn write_le<W: Write>(&self, writer: &mut W) -> io::Result<()>;
 

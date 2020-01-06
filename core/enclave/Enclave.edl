@@ -24,7 +24,7 @@ enclave {
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
             [in] uint8_t msg[32],
-            [out] uint64_t* state
+            [out] EnclaveState* state
         );
 
         public sgx_status_t ecall_state_transition(

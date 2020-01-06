@@ -7,11 +7,13 @@ use anonify_common::{UserAddress, State};
 use ed25519_dalek::{PublicKey, Signature};
 use std::{
     vec::Vec,
-    io::{self, Write, Read},
+    io::{self, Write, Read, Error, ErrorKind},
     ops::{Add, Sub},
     convert::TryInto,
 };
 use byteorder::{ByteOrder, LittleEndian};
+
+const VALUE_LENGTH: usize = 8;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd)]
 pub struct Value(u64);
@@ -23,8 +25,22 @@ impl State for Value {
 
     fn as_bytes(&self) -> io::Result<Vec<u8>> {
         let mut buf = vec![];
-        self.write_le(&mut buf)?;
+        LittleEndian::write_u64(&mut buf, self.0);
+
+        if buf.len() != VALUE_LENGTH {
+            return Err(Error::new(ErrorKind::InvalidData, "Invalid Value length."));
+        }
+
         Ok(buf)
+    }
+
+    fn from_bytes(bytes: &[u8]) -> io::Result<Self> {
+        if bytes.len() != VALUE_LENGTH {
+            return Err(Error::new(ErrorKind::InvalidData, "Invalid Value length."));
+        }
+
+        let res = LittleEndian::read_u64(bytes);
+        Ok(Value(res))
     }
 
     fn write_le<W: Write>(&self, writer: &mut W) -> io::Result<()> {
