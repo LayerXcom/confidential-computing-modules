@@ -6,6 +6,7 @@ use crate::auto_ffi::*;
 use crate::web3::InnerEnclaveLog;
 use crate::error::{HostErrorKind, Result};
 
+/// Insert event logs from blockchain nodes into enclave memory database.
 pub(crate) fn insert_logs(
     eid: sgx_enclave_id_t,
     enclave_log: &InnerEnclaveLog,
@@ -242,7 +243,7 @@ mod tests {
         let sig = keypair.sign(&msg);
         assert!(keypair.verify(&msg, &sig).is_ok());
 
-        let state = get_state(enclave.geteid(), &sig, &keypair.public, &msg);
+        let state = get_state::<Value>(enclave.geteid(), &sig, &keypair.public, &msg);
         // assert_eq!(state, 0);
     }
 }

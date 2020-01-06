@@ -1,6 +1,7 @@
 use failure::Error;
 use log::debug;
 use anonify_host::prelude::*;
+use anonymous_asset::api;
 use sgx_types::sgx_enclave_id_t;
 use actix_web::{
     web,
