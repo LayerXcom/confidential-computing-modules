@@ -25,7 +25,7 @@ pub fn handle_deploy(
 
     debug!("Contract address: {:?}", &contract_addr);
 
-    Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr))
+    Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr)))
 }
 
 pub fn handle_send(
@@ -49,7 +49,7 @@ pub fn handle_send(
         DEFAULT_SEND_GAS,
     )?;
 
-    Ok(HttpResponse::Ok().finish())
+    Ok(HttpResponse::Ok().json(api::send::post::Response(receipt)))
 }
 
 /// Fetch events from blockchain nodes manually, and then get state from enclave.

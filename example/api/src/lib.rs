@@ -85,6 +85,7 @@ pub mod send {
         use rand::Rng;
         use anonify_common::{UserAddress, AccessRight};
         use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
+        use web3::types::H256;
 
         big_array! { BigArray; }
 
@@ -138,6 +139,9 @@ pub mod send {
                 )
             }
         }
+
+        #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
+        pub struct Response(pub H256);
     }
 }
 
