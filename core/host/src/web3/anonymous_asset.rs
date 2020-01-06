@@ -12,7 +12,7 @@ use web3::{
     Web3,
     transports::{EventLoopHandle, Http},
     contract::{Contract, Options},
-    types::{Address, H256, U256, FilterBuilder, Log, BlockNumber},
+    types::{Address, H256, U256, Filter, FilterBuilder, Log, BlockNumber},
     futures::Future,
 };
 use ethabi::{
@@ -25,6 +25,7 @@ use ethabi::{
     decode,
 };
 
+/// Basic web3 connection components via HTTP.
 #[derive(Debug)]
 pub struct Web3Http {
     web3: Web3<Http>,
@@ -45,6 +46,11 @@ impl Web3Http {
     pub fn get_account(&self, index: usize) -> Result<Address> {
         let account = self.web3.eth().accounts().wait()?[index];
         Ok(account)
+    }
+
+    pub fn get_logs(&self, filter: Filter) -> Result<Web3Logs> {
+        let logs = self.web3.eth().logs(filter).wait()?;
+        Ok(Web3Logs(logs))
     }
 
     pub fn deploy(
@@ -75,23 +81,22 @@ impl Web3Http {
     }
 }
 
+/// Web3 connection components of anonymous asset contract.
 #[derive(Debug)]
 pub struct AnonymousAssetContract {
     contract: Contract<Http>,
     address: Address, // contract address
-    web3: Web3<Http>,
-    eloop: EventLoopHandle,
+    web3_conn: Web3Http,
 }
 
 impl AnonymousAssetContract {
-    pub fn new(web3_conn: Web3Http, contract_addr: Address, abi: ContractABI) -> Result<Self> {
-        let contract = Contract::new(web3_conn.web3.eth(), contract_addr, abi);
+    pub fn new(web3_conn: Web3Http, address: Address, abi: ContractABI) -> Result<Self> {
+        let contract = Contract::new(web3_conn.web3.eth(), address, abi);
 
         Ok(AnonymousAssetContract {
             contract,
-            address: contract_addr,
-            web3: web3_conn.web3,
-            eloop: web3_conn.eloop,
+            address,
+            web3_conn,
         })
     }
 
@@ -129,11 +134,15 @@ impl AnonymousAssetContract {
             .to_block(BlockNumber::Latest)
             .build();
 
-        let logs = self.web3.eth().logs(filter).wait()?;
-        Ok(Web3Logs(logs))
+        self.web3_conn.get_logs(filter)
+    }
+
+    pub fn get_account(&self, index: usize) -> Result<Address> {
+        self.web3_conn.get_account(index)
     }
 }
 
+/// Event fetched logs from smart contracts.
 #[derive(Debug)]
 pub struct Web3Logs(pub Vec<Log>);
 
@@ -147,6 +156,11 @@ impl Web3Logs {
             "Transfer" => self.0.len() * 2,
             _ => panic!("Invalid event name."),
         };
+
+        // If log data is not fetched currently, return empty EnclaveLog.
+        if self.0.len() == 0 {
+            return Ok(EnclaveLog{ inner: None })
+        }
 
         let contract_addr = self.0[0].address;
         let block_number = self.0[0].block_number.expect("Should have block number.");
@@ -170,10 +184,12 @@ impl Web3Logs {
         }
 
         Ok(EnclaveLog {
-            contract_addr: contract_addr.to_fixed_bytes(),
-            block_number: block_number.as_u64(),
-            ciphertexts,
-            ciphertexts_num: ciphertexts_num as u32,
+            inner : Some(InnerEnclaveLog {
+                contract_addr: contract_addr.to_fixed_bytes(),
+                block_number: block_number.as_u64(),
+                ciphertexts,
+                ciphertexts_num: ciphertexts_num as u32,
+            })
         })
     }
 
@@ -194,18 +210,27 @@ impl Web3Logs {
 }
 
 /// A log which is sent to enclave. Each log containes ciphertexts data of a given contract address and a given block number.
+#[derive(Debug, Clone)]
+pub(crate) struct InnerEnclaveLog {
+    pub(crate) contract_addr: [u8; 20],
+    pub(crate) block_number: u64,
+    pub(crate) ciphertexts: Vec<u8>, // Concatenated all ciphertexts within a specified block number.
+    pub(crate) ciphertexts_num: u32, // The number of ciphertexts in logs within a specified block number.
+}
+
+#[derive(Debug, Clone)]
 pub struct EnclaveLog {
-    pub contract_addr: [u8; 20],
-    pub block_number: u64,
-    pub ciphertexts: Vec<u8>, // Concatenated all ciphertexts within a specified block number.
-    pub ciphertexts_num: u32, // The number of ciphertexts in logs within a specified block number.
+    inner: Option<InnerEnclaveLog>,
 }
 
 impl EnclaveLog {
     pub fn insert_enclave(&self, eid: sgx_enclave_id_t) -> Result<()> {
         use crate::ecalls::insert_logs;
+        match &self.inner {
+            Some(log) => insert_logs(eid, log)?,
+            None => return Ok(()),
+        }
 
-        insert_logs(eid, &self)?;
         Ok(())
     }
 }
@@ -243,7 +268,7 @@ impl EthEvent {
         })
     }
 
-    pub fn build_transfer_event() -> Self {
+    pub fn build_send_event() -> Self {
         EthEvent(Event {
             name: "Transfer".to_owned(),
             inputs: vec![

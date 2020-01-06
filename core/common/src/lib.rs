@@ -12,5 +12,7 @@ use {
 extern crate core as localstd;
 
 mod crypto;
+mod traits;
 
 pub use crate::crypto::*;
+pub use crate::traits::*;

@@ -1,55 +1,55 @@
+#[macro_use]
+extern crate dotenv_codegen;
 use std::{
     collections::HashMap,
     io,
     env,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_host::prelude::init_enclave;
-use dotenv::dotenv;
+use anonify_host::EnclaveDir;
+use handlers::*;
 use actix_web::{
     client::Client,
     error::ErrorBadRequest,
     web::{self, BytesMut},
     App, Error, HttpResponse, HttpServer,
 };
-use handlers::*;
 
 mod handlers;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Server {
-    enclave_id: sgx_enclave_id_t,
-    eth_url: String,
+    pub eid: sgx_enclave_id_t,
+    pub eth_url: String,
 }
 
 impl Server {
-    pub fn new() -> Self {
-        let enclave_id = init_enclave();
-        println!("enclave_id: {:?}", enclave_id);
+    pub fn new(eid: sgx_enclave_id_t) -> Self {
+        let eth_url = dotenv!("ETH_URL").to_string();
 
-        let eth_url = env::var("ETH_URL")
-            .expect("ETH_URL is not set.");
-
-        Server { enclave_id, eth_url }
+        Server { eid, eth_url }
     }
 }
 
 fn main() -> io::Result<()> {
     env_logger::init();
-    dotenv().ok();
-    let endpoint = env::var("ANONIFY_URL")
-        .expect("ANONIFY_URL is not set.");
+    dotenv::from_filename(".env.template").ok();
 
-    let server = Server::new();
+    // Enclave must be initialized in main function.
+    let enclave = EnclaveDir::new()
+            .init_enclave(true)
+            .expect("Failed to initialize enclave.");
+    let eid = enclave.geteid();
 
-    println!("Starting server at: {:?}", endpoint);
+    let server = Server::new(eid);
+
     HttpServer::new(move || {
         App::new()
             .data(server.clone())
-            .route("/deploy", web::post().to(handle_post_deploy))
-            // .route("/transfer", web::post().to())
-            // .route("/balance", web::get().to())
+            .route("/deploy", web::post().to(handle_deploy))
+            .route("/send", web::post().to(handle_send))
+            .route("/state", web::get().to(handle_state))
     })
-    .bind(endpoint)?
+    .bind(dotenv!("ANONIFY_URL"))?
     .run()
 }

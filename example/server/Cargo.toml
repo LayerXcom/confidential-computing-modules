@@ -12,11 +12,9 @@ api = { path = "../api" }
 sgx_types = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
 actix-web = "1.0"
 dotenv = "0.13"
+dotenv_codegen = "0.15.0"
 failure = "0.1"
 log = "0.4"
 env_logger = "0.7"
-
-# futures = "0.3.1"
-# validator = "0.6.3"
-# validator_derive = "0.6.5"
-
+ed25519-dalek = "1.0.0-pre.2"
+hex = "0.4"

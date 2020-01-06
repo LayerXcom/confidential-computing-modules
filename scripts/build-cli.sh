@@ -6,7 +6,6 @@ dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/../example/cli"
 echo $PWD
 export SGX_MODE=HW
-export ANONIFY_URL=http://172.18.0.3:8080
 
 if [ -n "$1" ]; then
     if [ "$1" == "--release" ]; then

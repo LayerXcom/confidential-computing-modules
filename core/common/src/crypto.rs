@@ -2,7 +2,7 @@ use crate::localstd::{
     io::{self, Read, Write},
     fmt,
 };
-use ed25519_dalek::{PublicKey, Signature};
+use ed25519_dalek::{PublicKey, Signature, Keypair};
 use tiny_keccak::Keccak;
 #[cfg(feature = "sgx")]
 use serde_sgx::ser::{Serialize, SerializeStruct, Serializer};
@@ -12,6 +12,10 @@ use serde_sgx::de::{self, Deserialize, Deserializer, Visitor, SeqAccess, MapAcce
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 #[cfg(feature = "std")]
 use serde::de::{self, Deserialize, Deserializer, Visitor, SeqAccess, MapAccess};
+#[cfg(feature = "std")]
+use rand::Rng;
+#[cfg(feature = "std")]
+use rand_core::{RngCore, CryptoRng};
 
 /// Trait for 256-bits hash functions
 pub trait Hash256 {
@@ -47,7 +51,7 @@ impl Serialize for UserAddress {
         S: Serializer,
     {
         let mut s = serializer.serialize_struct("UserAddress", 1)?;
-        s.serialize_field("0", &self.0)?;
+        s.serialize_field("zero", &self.0)?;
         s.end()
     }
 }
@@ -230,5 +234,48 @@ impl Keccak256<[u8; 32]> for [u8] {
         keccak.update(self);
         keccak.finalize(result.as_mut());
         result
+    }
+}
+
+/// Access right of Read/Write to anonify's enclave mem db.
+#[derive(Debug, Clone)]
+pub struct AccessRight {
+    pub sig: Signature,
+    pub pubkey: PublicKey,
+    pub nonce: [u8; 32],
+}
+
+impl AccessRight {
+    #[cfg(feature = "std")]
+    pub fn new_from_rng<R: RngCore + CryptoRng>(rng: &mut R) -> Self {
+        let keypair = Keypair::generate(rng);
+        let nonce = rand::thread_rng().gen::<[u8; 32]>();
+        let sig = keypair.sign(&nonce);
+
+        assert!(keypair.verify(&nonce, &sig).is_ok());
+
+        Self::new(sig, keypair.public, nonce)
+    }
+
+    pub fn new(
+        sig: Signature,
+        pubkey: PublicKey,
+        nonce: [u8; 32],
+    ) -> Self {
+        assert!(pubkey.verify(&nonce, &sig).is_ok());
+
+        AccessRight {
+            sig,
+            pubkey,
+            nonce,
+        }
+    }
+
+    pub fn user_address(&self) -> UserAddress {
+        UserAddress::from_pubkey(&self.pubkey())
+    }
+
+    pub fn pubkey(&self) -> &PublicKey {
+        &self.pubkey
     }
 }

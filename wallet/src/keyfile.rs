@@ -1,6 +1,6 @@
 //! Keyfile operations such as signing.
 use std::collections::HashMap;
-use ed25519_dalek::Keypair;
+use ed25519_dalek::{Keypair, SecretKey, PublicKey, SECRET_KEY_LENGTH};
 use smallvec::SmallVec;
 use parity_crypto as crypto;
 use parity_crypto::Keccak256;
@@ -57,7 +57,11 @@ impl KeyFile {
         seed: &[u8],
         rng: &mut R,
     ) -> Result<Self> {
-        let key_pair = Keypair::from_bytes(seed)?;
+        assert!(seed.len() < SECRET_KEY_LENGTH);
+        let secret = SecretKey::from_bytes(&seed[..SECRET_KEY_LENGTH])?;
+        let public = PublicKey::from(&secret);
+        let key_pair = Keypair { secret, public };
+        
         Self::new(account_name, version, password, iters, &key_pair, rng)
     }
 

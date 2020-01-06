@@ -1,6 +1,6 @@
 //! State transition functions for anonymous asset
 
-use anonify_common::{UserAddress, Sha256, Hash256};
+use anonify_common::{UserAddress, Sha256, Hash256, State};
 use crate::{
     crypto::*,
     kvs::{DBValue, MEMORY_DB, DBTx, traits::SigVerificationKVS},
@@ -12,17 +12,6 @@ use std::{
     marker::PhantomData,
     convert::TryFrom,
 };
-
-/// Trait of each user's state.
-pub trait State: Sized + Default {
-    fn new(init: u64) -> Self;
-
-    fn as_bytes(&self) -> Result<Vec<u8>>;
-
-    fn write_le<W: Write>(&self, writer: &mut W) -> Result<()>;
-
-    fn read_le<R: Read>(reader: &mut R) -> Result<Self>;
-}
 
 /// Curret nonce for state.
 /// Priventing from race condition of writing ciphertext to blockchain.

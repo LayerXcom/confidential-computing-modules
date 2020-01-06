@@ -14,4 +14,5 @@ pub const ANONYMOUS_ASSET_BIN_PATH: &str = "../../../build/AnonymousAsset.bin";
 
 pub const CONFIRMATIONS: usize = 0;
 pub const POLL_INTERVAL_SECS: u64 = 10;
-pub const DEPLOY_GAS: u64 = 3_000_000;
+pub const DEPLOY_GAS: u64 = 5_000_000;
+pub const SEND_GAS: u64 = 3_000_000;

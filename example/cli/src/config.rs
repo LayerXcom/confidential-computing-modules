@@ -9,9 +9,6 @@ const APPLICATION_ENVIRONMENT_ROOT_DIR: &'static str = "ANONIFY_ROOT_DIR";
 pub const VERSION: u32 = 1;
 pub const ITERS: u32 = 1024;
 
-pub const DEFAULT_AMOUNT: &str = "10";
-pub const DEFAULT_BALANCE: &str = "100";
-
 /// root directory configuration
 pub(crate) fn get_default_root_dir() -> PathBuf {
     match dirs::data_local_dir() {

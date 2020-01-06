@@ -2,12 +2,12 @@ use sgx_types::*;
 use anonify_types::{RawUnsignedTx, traits::SliceCPtr};
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
-use crate::web3::EnclaveLog;
+use crate::web3::InnerEnclaveLog;
 use crate::error::{HostErrorKind, Result};
 
-pub fn insert_logs(
+pub(crate) fn insert_logs(
     eid: sgx_enclave_id_t,
-    enclave_log: &EnclaveLog,
+    enclave_log: &InnerEnclaveLog,
 ) -> Result<()> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
 
@@ -41,7 +41,7 @@ pub fn get_state(
     msg: &[u8],
 ) -> Result<u64> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-    let mut res: u64 = Default::default();
+    let mut res: u64 = Default::default(); // TODO Change type from u64 to Vec<u8>
 
     let status = unsafe {
         ecall_get_state(
@@ -176,6 +176,7 @@ mod tests {
     use rand_os::OsRng;
     use rand::Rng;
     use ed25519_dalek::Keypair;
+    use crate::init_enclave::EnclaveDir;
 
     #[test]
     fn test_init_state() {

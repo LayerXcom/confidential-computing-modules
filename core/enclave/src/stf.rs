@@ -1,13 +1,13 @@
 use crate::{
-    state::{State, UserState, CurrentNonce, NextNonce},
+    state::{UserState, CurrentNonce, NextNonce},
     error::Result,
     kvs::{SigVerificationKVS, MEMORY_DB},
 };
-use anonify_common::UserAddress;
+use anonify_common::{UserAddress, State};
 use ed25519_dalek::{PublicKey, Signature};
 use std::{
     vec::Vec,
-    io::{Write, Read},
+    io::{self, Write, Read},
     ops::{Add, Sub},
     convert::TryInto,
 };
@@ -21,13 +21,13 @@ impl State for Value {
         Value(init)
     }
 
-    fn as_bytes(&self) -> Result<Vec<u8>> {
+    fn as_bytes(&self) -> io::Result<Vec<u8>> {
         let mut buf = vec![];
         self.write_le(&mut buf)?;
         Ok(buf)
     }
 
-    fn write_le<W: Write>(&self, writer: &mut W) -> Result<()> {
+    fn write_le<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         let mut buf = [0u8; 8];
         LittleEndian::write_u64(&mut buf, self.0);
         writer.write_all(&buf)?;
@@ -35,7 +35,7 @@ impl State for Value {
         Ok(())
     }
 
-    fn read_le<R: Read>(reader: &mut R) -> Result<Self> {
+    fn read_le<R: Read>(reader: &mut R) -> io::Result<Self> {
         let mut buf = [0u8; 8];
         reader.read_exact(&mut buf)?;
         let res = LittleEndian::read_u64(&buf);
@@ -115,6 +115,8 @@ impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
         let my_addr = UserAddress::from_sig(&msg, &sig, &from);
         let my_value = MEMORY_DB.get(&my_addr);
         let my_current_balance = UserState::<Self::S, _>::get_state_nonce_from_dbvalue(my_value.clone())?.0;
+
+        // TODO: Return as error
         assert!(amount < my_current_balance);
 
         let my_current_state = UserState::from_address_and_db_value(my_addr, my_value)?;

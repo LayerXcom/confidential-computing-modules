@@ -8,6 +8,7 @@ jobs:
       - run: LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
       - run: . /opt/sgxsdk/environment
       - run: /root/.cargo/bin/cargo --version
+      - run: cp .env.template .env && cp example/server/.env.template example/server/.env
       - run:
           name: Building contracts
           command: solc -o build --bin --abi --optimize --overwrite contracts/AnonymousAsset.sol

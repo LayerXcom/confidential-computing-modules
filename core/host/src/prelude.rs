@@ -1,80 +1,27 @@
-use std::path::Path;
+use std::{
+    path::Path,
+    str::FromStr,
+};
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
-use anonify_common::UserAddress;
+use anonify_common::{UserAddress, AccessRight, State};
 use ed25519_dalek::{Signature, PublicKey, Keypair};
 use ::web3::types::{H160, H256, Address as EthAddress};
-use rand::Rng;
-use rand_core::{RngCore, CryptoRng};
 use crate::{
     init_enclave::EnclaveDir,
     ecalls::*,
     error::Result,
-    web3::{self, Web3Http},
+    web3::{self, Web3Http, EthEvent},
 };
 
-pub fn init_enclave() -> sgx_enclave_id_t {
+// TODO: This function throws error regarding invalid enclave id.
+fn init_enclave() -> sgx_enclave_id_t {
     #[cfg(not(debug_assertions))]
     let enclave = EnclaveDir::new().init_enclave(false).unwrap();
     #[cfg(debug_assertions)]
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
 
     enclave.geteid()
-}
-
-/// Access right of Read/Write to anonify's enclave mem db.
-#[derive(Debug, Clone)]
-pub struct AccessRight {
-    sig: Signature,
-    pubkey: PublicKey,
-    nonce: [u8; 32],
-}
-
-impl AccessRight {
-    pub fn new_from_rng<R: RngCore + CryptoRng>(rng: &mut R) -> Self {
-        let keypair: Keypair = Keypair::generate(rng);
-        let nonce = rand::thread_rng().gen::<[u8; 32]>();
-        let sig = keypair.sign(&nonce);
-
-        assert!(keypair.verify(&nonce, &sig).is_ok());
-
-        Self::new(sig, keypair.public, nonce)
-    }
-
-    pub fn new(
-        sig: Signature,
-        pubkey: PublicKey,
-        nonce: [u8; 32],
-    ) -> Self {
-        AccessRight {
-            sig,
-            pubkey,
-            nonce,
-        }
-    }
-
-    pub fn get_state(
-        &self,
-        enclave_id: sgx_enclave_id_t,
-    ) -> Result<u64> {
-        let state = get_state(
-            enclave_id,
-            &self.sig,
-            &self.pubkey,
-            &self.nonce,
-        )?;
-
-        debug!("state: {:?}", &state);
-        Ok(state)
-    }
-
-    pub fn user_address(&self) -> UserAddress {
-        UserAddress::from_pubkey(&self.pubkey())
-    }
-
-    pub fn pubkey(&self) -> &PublicKey {
-        &self.pubkey
-    }
 }
 
 #[derive(Debug)]
@@ -142,7 +89,21 @@ pub struct EthSender {
 }
 
 impl EthSender {
-    pub fn new(
+    pub fn new<P: AsRef<Path>>(
+        enclave_id: sgx_enclave_id_t,
+        eth_url: &str,
+        contract_addr: &str,
+        abi_path: P,
+    ) -> Result<Self> {
+        let web3_http = Web3Http::new(eth_url)?;
+        let abi = web3::contract_abi_from_path(abi_path)?;
+        let addr = EthAddress::from_str(contract_addr)?;
+        let contract = web3::AnonymousAssetContract::new(web3_http, addr, abi)?;
+
+        Ok(EthSender { enclave_id, contract })
+    }
+
+    pub fn from_contract(
         enclave_id: sgx_enclave_id_t,
         contract: web3::AnonymousAssetContract
     ) -> Self {
@@ -152,12 +113,16 @@ impl EthSender {
         }
     }
 
+    pub fn get_account(&self, index: usize) -> Result<EthAddress> {
+        self.contract.get_account(index)
+    }
+
     pub fn send_tx(
         &self,
         access_right: &AccessRight,
-        from_eth_addr: EthAddress,
         target: &UserAddress,
         amount: u64,
+        from_eth_addr: EthAddress,
         gas: u64,
     ) -> Result<H256> {
         let unsigned_tx = state_transition(
@@ -187,4 +152,64 @@ impl EthSender {
     pub fn get_contract(self) -> web3::AnonymousAssetContract {
         self.contract
     }
+}
+
+pub struct Indexer {
+    contract: web3::AnonymousAssetContract,
+}
+
+impl Indexer {
+    pub fn new<P: AsRef<Path>>(
+        eth_url: &str,
+        abi_path: P,
+        contract_addr: &str
+    ) -> Result<Self> {
+        let web3_http = Web3Http::new(eth_url)?;
+        let abi = web3::contract_abi_from_path(abi_path)?;
+        let addr = EthAddress::from_str(contract_addr)?;
+        let contract = web3::AnonymousAssetContract::new(web3_http, addr, abi)?;
+
+        Ok(Indexer { contract })
+    }
+
+    /// Blocking INIT event fetch from blockchain nodes.
+    pub fn block_on_init(&self, eid: sgx_enclave_id_t) -> Result<()> {
+        let init_event = EthEvent::build_init_event();
+        self.contract
+            .get_event(&init_event)?
+            .into_enclave_log(&init_event)?
+            .insert_enclave(eid)?;
+
+        Ok(())
+    }
+
+    /// Blocking SEND event fetch from blockchain nodes.
+    pub fn block_on_send(&self, eid: sgx_enclave_id_t) -> Result<()> {
+        let transfer_event = EthEvent::build_send_event();
+        self.contract
+            .get_event(&transfer_event)?
+            .into_enclave_log(&transfer_event)?
+            .insert_enclave(eid)?;
+
+        Ok(())
+    }
+
+    pub fn get_contract(self) -> web3::AnonymousAssetContract {
+        self.contract
+    }
+}
+
+// TODO: Return State trait, not u64.
+pub fn get_state_by_access_right(
+    access_right: &AccessRight,
+    enclave_id: sgx_enclave_id_t,
+) -> Result<u64> {
+    let state = get_state(
+        enclave_id,
+        &access_right.sig,
+        &access_right.pubkey,
+        &access_right.nonce,
+    )?;
+
+    Ok(state)
 }

@@ -38,6 +38,7 @@ fn test_transfer() {
     let mut csprng: OsRng = OsRng::new().unwrap();
     let my_access_right = AccessRight::new_from_rng(&mut csprng);
     let other_access_right = AccessRight::new_from_rng(&mut csprng);
+    let third_access_right = AccessRight::new_from_rng(&mut csprng);
 
     let total_supply = 100;
 
@@ -69,7 +70,7 @@ fn test_transfer() {
     let other_state = other_access_right.get_state(eid).unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, 0);
-
+    assert_eq!(third_access_right.get_state(eid).unwrap(), 0);
 
     // 4. Send a transaction to contract
 
@@ -77,7 +78,7 @@ fn test_transfer() {
     let gas = 3_000_000;
     let other_user_address = other_access_right.user_address();
 
-    let eth_sender = EthSender::new(eid, contract);
+    let eth_sender = EthSender::from_contract(eid, contract);
     let receipt = eth_sender.send_tx(
             &my_access_right,
             deployer_addr,
@@ -104,4 +105,5 @@ fn test_transfer() {
 
     assert_eq!(my_updated_state, total_supply - amount);
     assert_eq!(other_updated_state, amount);
+    assert_eq!(third_access_right.get_state(eid).unwrap(), 0);
 }
