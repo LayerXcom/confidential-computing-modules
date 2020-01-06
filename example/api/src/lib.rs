@@ -22,6 +22,7 @@ pub mod deploy {
         use serde_big_array::big_array;
         use rand::Rng;
         use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
+        use web3::types::H160;
         use anonify_common::AccessRight;
 
         big_array! { BigArray; }
@@ -72,7 +73,7 @@ pub mod deploy {
         }
 
         #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub [u8; 20]);
+        pub struct Response(pub H160);
     }
 }
 

@@ -43,6 +43,7 @@ fn main() {
     }
 }
 
+
 //
 // Anonify Sub Commands
 //
@@ -192,15 +193,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .default_value(DEFAULT_CONTRACT_ADDRESS)
             )
 }
-
-
-// .arg(Arg::with_name("target address")
-//                 .short("to")
-//                 .long("target-address")
-//                 .help("Specify a target address.")
-//                 .takes_value(true)
-//                 .required(true)
-//             )
 
 
 //

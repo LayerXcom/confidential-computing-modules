@@ -29,7 +29,8 @@ pub(crate) fn deploy<R: Rng>(
     let res = client
         .post(&format!("{}/deploy", &anonify_url))
         .json(&req)
-        .send()?;
+        .send()?
+        .json()?;
 
     println!("Response: {:?}", res);
     Ok(())
@@ -53,7 +54,8 @@ pub(crate) fn send<R: Rng>(
     let res = Client::new()
         .post(&format!("{}/send", &anonify_url))
         .json(&req)
-        .send()?;
+        .send()?
+        .json()?;
 
     println!("Response: {:?}", res);
     Ok(())
@@ -75,17 +77,17 @@ pub(crate) fn get_state<R: Rng>(
     let res = Client::new()
         .get(&format!("{}/send", &anonify_url))
         .json(&req)
-        .send()?;
+        .send()?
+        .json()?;
 
     println!("Response: {:?}", res);
-
     Ok(())
 }
 
 /// Create a new wallet
 pub(crate) fn new_wallet<R: Rng>(term: &mut Term, root_dir: PathBuf, rng: &mut R) -> Result<()> {
     // 1. configure wallet directory
-    let (wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
+    let (_wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
 
     // 2. configure user-defined passoword
     term.info("Set a wallet password. This is for local use only. It allows you to protect your cached private key and prevents the creation of non-desired transactions.\n")?;
@@ -129,7 +131,7 @@ pub(crate) fn new_wallet<R: Rng>(term: &mut Term, root_dir: PathBuf, rng: &mut R
 /// Add a new account
 pub(crate) fn add_account<R: Rng>(term: &mut Term, root_dir: PathBuf, rng: &mut R) -> Result<()> {
     // 1. configure wallet directory
-    let (wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
+    let (_wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
 
     // 2. configure user-defined passoword
     term.info("Set a wallet password. This is for local use only. It allows you to protect your cached private key and prevents the creation of non-desired transactions.\n")?;
@@ -175,7 +177,7 @@ pub(crate) fn show_list(
     term: &mut Term,
     root_dir: PathBuf,
 ) -> Result<()> {
-    let (wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
+    let (_wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
 
     let keyfiles = keystore_dir.load_all()?;
     if keyfiles.len() == 0 {
@@ -216,7 +218,7 @@ pub fn prompt_password(term: &mut Term) -> Result<Vec<u8>> {
 }
 
 pub fn get_keypair_from_keystore(root_dir: PathBuf, password: &[u8], keyfile_index: usize) -> Result<Keypair> {
-    let (wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
+    let (_wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
     let keyfile = &keystore_dir.load_all()?[keyfile_index];
     let keypair = keyfile.get_key_pair(password)?;
     Ok(keypair)

@@ -25,7 +25,7 @@ pub fn handle_deploy(
 
     debug!("Contract address: {:?}", &contract_addr);
 
-    Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr.to_fixed_bytes())))
+    Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr))
 }
 
 pub fn handle_send(
