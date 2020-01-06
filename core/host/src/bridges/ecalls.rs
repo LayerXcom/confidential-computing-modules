@@ -2,12 +2,12 @@ use sgx_types::*;
 use anonify_types::{RawUnsignedTx, traits::SliceCPtr};
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
-use crate::web3::EnclaveLog;
+use crate::web3::InnerEnclaveLog;
 use crate::error::{HostErrorKind, Result};
 
-pub fn insert_logs(
+pub(crate) fn insert_logs(
     eid: sgx_enclave_id_t,
-    enclave_log: &EnclaveLog,
+    enclave_log: &InnerEnclaveLog,
 ) -> Result<()> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
 

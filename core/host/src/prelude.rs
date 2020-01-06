@@ -114,7 +114,7 @@ impl EthSender {
     }
 
     pub fn get_account(&self, index: usize) -> Result<EthAddress> {
-        self.get_account(index)
+        self.contract.get_account(index)
     }
 
     pub fn send_tx(

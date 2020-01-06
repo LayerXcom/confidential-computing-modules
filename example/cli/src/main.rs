@@ -25,6 +25,10 @@ fn main() {
         .version(crate_version!())
         .author(crate_authors!())
         .about("Anonify's command line interface")
+        .arg(global_verbose_definition())
+        .arg(global_quiet_difinition())
+        .arg(global_color_definition())
+        .arg(global_rootdir_definition(&default_root_dir))
         .subcommand(anonify_commands_definition())
         .subcommand(wallet_commands_definition())
         .get_matches();
@@ -50,7 +54,10 @@ fn main() {
 
 const ANONIFY_COMMAND: &'static str = "anonify";
 const DEFAULT_KEYFILE_INDEX: &'static str = "0";
-const DEFAULT_CONTRACT_ADDRESS: &'static str = "0x580bc66c83f54056bb337a75eae8e424e96f32de";
+const DEFAULT_CONTRACT_ADDRESS: &'static str = "580bc66c83f54056bb337a75eae8e424e96f32de";
+const DEFAULT_AMOUNT: &str = "10";
+const DEFAULT_BALANCE: &str = "100";
+const DEFAULT_TARGET: &str = "7H5cyDJ9CXBKOiM8tWnGaz5vqHY=";
 
 fn subcommand_anonify<R: Rng>(
     mut term: Term,
@@ -109,9 +116,9 @@ fn subcommand_anonify<R: Rng>(
                 contract_addr,
                 rng
             )
-            .expect("Faild to deploy command");
+            .expect("Faild to send command");
         },
-        ("get-state", Some(matches)) => {
+        ("state", Some(matches)) => {
             let keyfile_index: usize = matches.value_of("keyfile-index")
                 .expect("Not found keyfile-index.")
                 .parse()
@@ -151,6 +158,7 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .short("t")
                 .takes_value(true)
                 .required(true)
+                .default_value(DEFAULT_BALANCE)
             )
         )
         .subcommand(SubCommand::with_name("send")
@@ -165,11 +173,13 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .short("a")
                 .takes_value(true)
                 .required(true)
+                .default_value(DEFAULT_AMOUNT)
             )
             .arg(Arg::with_name("target")
                 .short("to")
                 .takes_value(true)
                 .required(true)
+                .default_value(DEFAULT_TARGET)
             )
             .arg(Arg::with_name("contract-addr")
                 .short("c")
@@ -178,7 +188,7 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .default_value(DEFAULT_CONTRACT_ADDRESS)
             )
         )
-        .subcommand(SubCommand::with_name("get-state"))
+        .subcommand(SubCommand::with_name("state")
             .about("Get state from anonify services.")
             .arg(Arg::with_name("keyfile-index")
                 .short("i")
@@ -192,6 +202,7 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .required(true)
                 .default_value(DEFAULT_CONTRACT_ADDRESS)
             )
+        )
 }
 
 

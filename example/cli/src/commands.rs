@@ -30,9 +30,9 @@ pub(crate) fn deploy<R: Rng>(
         .post(&format!("{}/deploy", &anonify_url))
         .json(&req)
         .send()?
-        .json()?;
+        .text()?;
 
-    println!("Response: {:?}", res);
+    println!("Deployed Contract address: {}", res);
     Ok(())
 }
 
@@ -55,9 +55,9 @@ pub(crate) fn send<R: Rng>(
         .post(&format!("{}/send", &anonify_url))
         .json(&req)
         .send()?
-        .json()?;
+        .text()?;
 
-    println!("Response: {:?}", res);
+    println!("Transaction Receipt: {}", res);
     Ok(())
 }
 
@@ -75,12 +75,12 @@ pub(crate) fn get_state<R: Rng>(
     let req = api::state::get::Request::new(&keypair, contract_addr, rng);
     println!("Reqest json: {:?}", &req);
     let res = Client::new()
-        .get(&format!("{}/send", &anonify_url))
+        .get(&format!("{}/state", &anonify_url))
         .json(&req)
         .send()?
-        .json()?;
+        .text()?;
 
-    println!("Response: {:?}", res);
+    println!("Current State: {}", res);
     Ok(())
 }
 

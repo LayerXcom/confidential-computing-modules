@@ -157,6 +157,11 @@ impl Web3Logs {
             _ => panic!("Invalid event name."),
         };
 
+        // If log data is not fetched currently, return empty EnclaveLog.
+        if self.0.len() == 0 {
+            return Ok(EnclaveLog{ inner: None })
+        }
+
         let contract_addr = self.0[0].address;
         let block_number = self.0[0].block_number.expect("Should have block number.");
 
@@ -179,10 +184,12 @@ impl Web3Logs {
         }
 
         Ok(EnclaveLog {
-            contract_addr: contract_addr.to_fixed_bytes(),
-            block_number: block_number.as_u64(),
-            ciphertexts,
-            ciphertexts_num: ciphertexts_num as u32,
+            inner : Some(InnerEnclaveLog {
+                contract_addr: contract_addr.to_fixed_bytes(),
+                block_number: block_number.as_u64(),
+                ciphertexts,
+                ciphertexts_num: ciphertexts_num as u32,
+            })
         })
     }
 
@@ -203,18 +210,27 @@ impl Web3Logs {
 }
 
 /// A log which is sent to enclave. Each log containes ciphertexts data of a given contract address and a given block number.
+#[derive(Debug, Clone)]
+pub(crate) struct InnerEnclaveLog {
+    pub(crate) contract_addr: [u8; 20],
+    pub(crate) block_number: u64,
+    pub(crate) ciphertexts: Vec<u8>, // Concatenated all ciphertexts within a specified block number.
+    pub(crate) ciphertexts_num: u32, // The number of ciphertexts in logs within a specified block number.
+}
+
+#[derive(Debug, Clone)]
 pub struct EnclaveLog {
-    pub contract_addr: [u8; 20],
-    pub block_number: u64,
-    pub ciphertexts: Vec<u8>, // Concatenated all ciphertexts within a specified block number.
-    pub ciphertexts_num: u32, // The number of ciphertexts in logs within a specified block number.
+    inner: Option<InnerEnclaveLog>,
 }
 
 impl EnclaveLog {
     pub fn insert_enclave(&self, eid: sgx_enclave_id_t) -> Result<()> {
         use crate::ecalls::insert_logs;
+        match &self.inner {
+            Some(log) => insert_logs(eid, log)?,
+            None => return Ok(()),
+        }
 
-        insert_logs(eid, &self)?;
         Ok(())
     }
 }

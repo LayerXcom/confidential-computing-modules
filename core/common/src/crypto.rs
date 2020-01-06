@@ -51,7 +51,7 @@ impl Serialize for UserAddress {
         S: Serializer,
     {
         let mut s = serializer.serialize_struct("UserAddress", 1)?;
-        s.serialize_field("0", &self.0)?;
+        s.serialize_field("zero", &self.0)?;
         s.end()
     }
 }

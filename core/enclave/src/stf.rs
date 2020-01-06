@@ -115,6 +115,8 @@ impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
         let my_addr = UserAddress::from_sig(&msg, &sig, &from);
         let my_value = MEMORY_DB.get(&my_addr);
         let my_current_balance = UserState::<Self::S, _>::get_state_nonce_from_dbvalue(my_value.clone())?.0;
+
+        // TODO: Return as error
         assert!(amount < my_current_balance);
 
         let my_current_state = UserState::from_address_and_db_value(my_addr, my_value)?;
