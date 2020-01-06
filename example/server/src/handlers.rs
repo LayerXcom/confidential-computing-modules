@@ -1,6 +1,5 @@
 use failure::Error;
 use log::debug;
-use ed25519_dalek::{PublicKey, Signature};
 use anonify_host::prelude::*;
 use sgx_types::sgx_enclave_id_t;
 use actix_web::{

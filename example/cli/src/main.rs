@@ -111,7 +111,22 @@ fn subcommand_anonify<R: Rng>(
             .expect("Faild to deploy command");
         },
         ("get-state", Some(matches)) => {
-            commands::get_state(&mut term, root_dir, anonify_url);
+            let keyfile_index: usize = matches.value_of("keyfile-index")
+                .expect("Not found keyfile-index.")
+                .parse()
+                .expect("Failed to parse keyfile-index");
+            let contract_addr = matches.value_of("contract-addr")
+                .expect("Not found contract-addr")
+                .to_string();
+
+            commands::get_state(
+                &mut term,
+                root_dir,
+                anonify_url,
+                keyfile_index,
+                contract_addr,
+                rng)
+            .expect("Faild to get state command");
         },
         _ => {
             term.error(matches.usage()).unwrap();
@@ -164,6 +179,18 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         )
         .subcommand(SubCommand::with_name("get-state"))
             .about("Get state from anonify services.")
+            .arg(Arg::with_name("keyfile-index")
+                .short("i")
+                .takes_value(true)
+                .required(false)
+                .default_value(DEFAULT_KEYFILE_INDEX)
+            )
+            .arg(Arg::with_name("contract-addr")
+                .short("c")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_CONTRACT_ADDRESS)
+            )
 }
 
 

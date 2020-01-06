@@ -46,13 +46,11 @@ pub(crate) fn send<R: Rng>(
     rng: &mut R
 ) -> Result<()> {
     let password = prompt_password(term)?;
-
-    let client = Client::new();
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
     let req = api::send::post::Request::new(&keypair, amount, target, contract_addr, rng);
     println!("Reqest json: {:?}", &req);
-    let res = client
+    let res = Client::new()
         .post(&format!("{}/send", &anonify_url))
         .json(&req)
         .send()?;
@@ -61,7 +59,26 @@ pub(crate) fn send<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn get_state(term: &mut Term, root_dir: PathBuf, anonify_url: String) -> Result<()> {
+pub(crate) fn get_state<R: Rng>(
+    term: &mut Term,
+    root_dir: PathBuf,
+    anonify_url: String,
+    index: usize,
+    contract_addr: String,
+    rng: &mut R,
+) -> Result<()> {
+    let password = prompt_password(term)?;
+    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+
+    let req = api::state::get::Request::new(&keypair, contract_addr, rng);
+    println!("Reqest json: {:?}", &req);
+    let res = Client::new()
+        .get(&format!("{}/send", &anonify_url))
+        .json(&req)
+        .send()?;
+
+    println!("Response: {:?}", res);
+
     Ok(())
 }
 
