@@ -51,7 +51,6 @@ Running intel SGX environment
 $ docker run -v `pwd`:/root/anonify --device /dev/isgx --net=test-network --name sgx --rm -it osuketh/anonify
 ```
 - The SDK Driver creates a device at `/dev/isgx`, non-DCAP systems using IAS.
-- Use `--network="host"` for Docker-for-Linux, then `127.0.0.1` in your docker container will point to your docker host. It'll be used by the ganache-cli testing.
 
 
 ### Test
@@ -98,17 +97,36 @@ If you want to build artifacts in release mode, pass a `--release` argument.
 $ ./scripts/build-cli.sh --release
 ```
 
+#### Wallet operations
+
 - Initialize a new wallet
 ```
-$ ./target/release/anonify-cli wallet init
+$ ./target/debug/anonify-cli wallet init
 ```
 
 - Add a new account into your wallet
 ```
-$  ./target/release/anonify-cli wallet add-account
+$  ./target/debug/anonify-cli wallet add-account
 ```
+
+- Show a list of your accounts
+```
+$ ./target/debug/anonify-cli wallet list
+```
+
+#### Anonify operations
 
 - Deploy a anonymous-asset contract
 ```
-$ ./target/release/anonify-cli anonify deploy -t <TOTAL SUPPLY>
+$ ./target/debug/anonify-cli anonify deploy -t <TOTAL SUPPLY>
+```
+
+- Get state from enclave
+```
+$ ./target/debug/anonify-cli anonify state -c <CONTRACT ADDRESS w/o "0x">
+```
+
+- Transfer assets
+```
+$ ./target/debug/anonify-cli anonify send -a <AMOUNT> -t <TARGET_ACCOUNT> -c <CONTRACT ADDRESS w/o "0x">
 ```
