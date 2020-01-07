@@ -50,7 +50,6 @@ pub(crate) fn send<R: Rng>(
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
     let req = api::send::post::Request::new(&keypair, amount, target, contract_addr, rng);
-    println!("Reqest json: {:?}", &req);
     let res = Client::new()
         .post(&format!("{}/send", &anonify_url))
         .json(&req)
@@ -73,7 +72,6 @@ pub(crate) fn get_state<R: Rng>(
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
     let req = api::state::get::Request::new(&keypair, contract_addr, rng);
-    println!("Reqest json: {:?}", &req);
     let res = Client::new()
         .get(&format!("{}/state", &anonify_url))
         .json(&req)
