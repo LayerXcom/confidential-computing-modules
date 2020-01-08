@@ -8,6 +8,7 @@ use actix_web::{
 };
 use crate::{
     Server,
+    EVENT_DB,
 };
 
 pub const DEFAULT_SEND_GAS: u64 = 3_000_000;
@@ -61,6 +62,7 @@ pub fn handle_state(
         &server.eth_url,
         dotenv!("ANONYMOUS_ASSET_ABI_PATH"),
         &req.contract_addr,
+        EVENT_DB,
     )?;
     ev_watcher.block_on_init(server.eid)?;
     ev_watcher.block_on_send(server.eid)?;

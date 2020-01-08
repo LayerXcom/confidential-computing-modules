@@ -20,6 +20,7 @@ pub trait KVS: Sync + Send {
     fn inner_write(&self, tx: DBTx);
 }
 
+#[derive(Debug)]
 pub struct MemoryKVS(RwLock<BTreeMap<Vec<u8>, DBValue>>);
 
 impl MemoryKVS {

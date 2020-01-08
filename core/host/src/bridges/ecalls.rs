@@ -16,7 +16,7 @@ pub(crate) fn insert_logs(
             eid,
             &mut rt,
             enclave_log.contract_addr.as_ptr() as _,
-            enclave_log.block_number,
+            enclave_log.latest_blc_num,
             enclave_log.ciphertexts.as_c_ptr() as *const u8,
             enclave_log.ciphertexts.len() as u32,
             enclave_log.ciphertexts_num,

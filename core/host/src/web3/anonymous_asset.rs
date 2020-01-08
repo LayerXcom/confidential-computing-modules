@@ -23,6 +23,7 @@ use ethabi::{
     EventParam,
     ParamType,
     decode,
+    Hash,
 };
 
 /// Basic web3 connection components via HTTP.
@@ -121,7 +122,8 @@ impl AnonymousAssetContract {
         Ok(res)
     }
 
-    pub fn get_event(&self, event: &EthEvent) -> Result<Web3Logs> {
+    pub fn get_event(&self, event: &EthEvent, from_block: BlockNumber) -> Result<Web3Logs> {
+
         let filter = FilterBuilder::default()
             .address(vec![self.address])
             .topic_filter(TopicFilter {
@@ -130,7 +132,7 @@ impl AnonymousAssetContract {
                 topic2: Topic::Any,
                 topic3: Topic::Any,
             })
-            .from_block(BlockNumber::Earliest)
+            .from_block(from_block)
             .to_block(BlockNumber::Latest)
             .build();
 
@@ -163,7 +165,8 @@ impl Web3Logs {
         }
 
         let contract_addr = self.0[0].address;
-        let block_number = self.0[0].block_number.expect("Should have block number.");
+        let mut latest_blc_num = 0;
+        // let block_number = self.0[0].block_number.expect("Should have block number.");
 
         for (i, log) in self.0.iter().enumerate() {
             if contract_addr != log.address {
@@ -172,11 +175,12 @@ impl Web3Logs {
                     index: i,
                 }.into());
             }
-            if block_number != log.block_number.unwrap() {
-                return Err(HostErrorKind::Web3Log {
-                    msg: "Each log should have same block number.",
-                    index: i,
-                }.into())
+
+            if let Some(blc_num) = log.block_number {
+                let blc_num = blc_num.as_u64();
+                if latest_blc_num < blc_num {
+                    latest_blc_num = blc_num
+                }
             }
 
             let data = Self::decode_data(&log, &event);
@@ -186,7 +190,7 @@ impl Web3Logs {
         Ok(EnclaveLog {
             inner : Some(InnerEnclaveLog {
                 contract_addr: contract_addr.to_fixed_bytes(),
-                block_number: block_number.as_u64(),
+                latest_blc_num,
                 ciphertexts,
                 ciphertexts_num: ciphertexts_num as u32,
             })
@@ -213,7 +217,7 @@ impl Web3Logs {
 #[derive(Debug, Clone)]
 pub(crate) struct InnerEnclaveLog {
     pub(crate) contract_addr: [u8; 20],
-    pub(crate) block_number: u64,
+    pub(crate) latest_blc_num: u64,
     pub(crate) ciphertexts: Vec<u8>, // Concatenated all ciphertexts within a specified block number.
     pub(crate) ciphertexts_num: u32, // The number of ciphertexts in logs within a specified block number.
 }
@@ -224,6 +228,8 @@ pub struct EnclaveLog {
 }
 
 impl EnclaveLog {
+    /// Store logs into enclave in-memory.
+    /// This returns
     pub fn insert_enclave(&self, eid: sgx_enclave_id_t) -> Result<()> {
         use crate::ecalls::insert_logs;
         match &self.inner {
@@ -232,6 +238,13 @@ impl EnclaveLog {
         }
 
         Ok(())
+    }
+
+    pub fn get_latest_block_num(&self) -> u64 {
+        match &self.inner {
+            Some(log) => log.latest_blc_num,
+            None => 0,
+        }
     }
 }
 
@@ -285,6 +298,10 @@ impl EthEvent {
             ],
             anonymous: false,
         })
+    }
+
+    pub fn signature(&self) -> Hash {
+        self.0.signature()
     }
 
     pub fn into_raw(&self) -> &Event {
