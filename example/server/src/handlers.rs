@@ -57,13 +57,13 @@ pub fn handle_state(
     server: web::Data<Server>,
     req: web::Json<api::state::get::Request>,
 ) -> Result<HttpResponse, Error> {
-    let indexer = Indexer::new(
+    let ev_watcher = EventWatcher::new(
         &server.eth_url,
         dotenv!("ANONYMOUS_ASSET_ABI_PATH"),
         &req.contract_addr,
     )?;
-    indexer.block_on_init(server.eid)?;
-    indexer.block_on_send(server.eid)?;
+    ev_watcher.block_on_init(server.eid)?;
+    ev_watcher.block_on_send(server.eid)?;
 
     let access_right = req.into_access_right()?;
     let state = get_state_by_access_right(&access_right, server.eid)?;

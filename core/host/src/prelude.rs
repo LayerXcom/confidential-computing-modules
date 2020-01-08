@@ -154,11 +154,11 @@ impl EthSender {
     }
 }
 
-pub struct Indexer {
+pub struct EventWatcher {
     contract: web3::AnonymousAssetContract,
 }
 
-impl Indexer {
+impl EventWatcher {
     pub fn new<P: AsRef<Path>>(
         eth_url: &str,
         abi_path: P,
@@ -169,7 +169,7 @@ impl Indexer {
         let addr = EthAddress::from_str(contract_addr)?;
         let contract = web3::AnonymousAssetContract::new(web3_http, addr, abi)?;
 
-        Ok(Indexer { contract })
+        Ok(EventWatcher { contract })
     }
 
     /// Blocking INIT event fetch from blockchain nodes.

@@ -17,8 +17,10 @@ base64 = { version = "0.11", optional = true }
 web3 = { version = "0.8", optional = true }
 rand = { version = "0.6", optional = true }
 rand_core = { version = "0.3", optional = true }
+sgx-elastic-array = { package = "elastic-array", version = "0.10", git = "https://github.com/mesalock-linux/elastic-array-sgx.git", optional = true }
+elastic-array = { version = "0.10", optional = true }
 
 [features]
 default = ["std"]
-std = ["serde", "base64", "web3", "rand", "rand_core" ]
-sgx = ["sgx_tstd", "serde-sgx"]
+std = ["serde", "base64", "web3", "rand", "rand_core", "elastic-array" ]
+sgx = ["sgx_tstd", "serde-sgx", "sgx-elastic-array" ]

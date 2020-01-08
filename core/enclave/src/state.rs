@@ -1,9 +1,12 @@
 //! State transition functions for anonymous asset
 
-use anonify_common::{UserAddress, Sha256, Hash256, State};
+use anonify_common::{
+    UserAddress, Sha256, Hash256, State,
+    kvs::*,
+};
 use crate::{
     crypto::*,
-    kvs::{DBValue, MEMORY_DB, DBTx, traits::SigVerificationKVS},
+    kvs::{MEMORY_DB, SigVerificationKVS, EnclaveDBTx},
     error::{Result, EnclaveError},
 };
 use std::{
@@ -71,7 +74,7 @@ impl<S: State> UserState<S, CurrentNonce> {
         let key = user_state.get_db_key();
         let value = user_state.get_db_value()?;
 
-        let mut dbtx = DBTx::new();
+        let mut dbtx = EnclaveDBTx::new();
         dbtx.put(&key, &value);
         MEMORY_DB.write(dbtx);
 

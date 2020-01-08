@@ -1,58 +1,44 @@
-use std::prelude::v1::*;
-use elastic_array::{ElasticArray128, ElasticArray32};
+use std::{
+    prelude::v1::*,
+    sync::SgxRwLock as RwLock,
+    collections::BTreeMap,
+};
 use ed25519_dalek::{PublicKey, Signature};
-use anonify_common::UserAddress;
+use anonify_common::{
+    UserAddress,
+    kvs::*,
+};
+use anonify_types::*;
 
-mod memorydb;
-pub mod traits;
-
-pub use memorydb::{MemoryKVS, MEMORY_DB};
-pub use traits::SigVerificationKVS;
-
-/// Database value.
-#[derive(Default, Clone, Debug, PartialEq, Eq)]
-pub struct DBValue(ElasticArray128<u8>);
-
-impl DBValue {
-    pub fn from_slice(slice: &[u8]) -> Self {
-        DBValue(ElasticArray128::from_slice(slice))
-    }
-
-    pub fn into_vec(self) -> Vec<u8> {
-        self.0.into_vec()
-    }
+lazy_static! {
+    pub static ref MEMORY_DB: MemoryKVS = MemoryKVS::new();
 }
 
-/// Database operation
-#[derive(Clone, PartialEq)]
-pub enum DBOp {
-    Insert {
-        key: ElasticArray32<u8>,
-        value: DBValue,
-    },
-    Delete {
-        key: ElasticArray32<u8>,
-    }
+/// Trait of key-value store instrctions restricted by signature verifications.
+pub trait SigVerificationKVS: Sync + Send {
+    fn get(&self, key: &UserAddress) -> DBValue;
+
+    fn write(&self, tx: EnclaveDBTx);
 }
 
-impl DBOp {
-    /// Returns the key associated with this operation.
-    pub fn key(&self) -> &[u8] {
-        match *self {
-            DBOp::Insert { ref key, .. } => key,
-            DBOp::Delete { ref key, .. } => key,
-        }
+impl SigVerificationKVS for MemoryKVS {
+    fn get(&self, key: &UserAddress) -> DBValue {
+        self.inner_get(key.as_bytes()).unwrap_or(DBValue::default())
+    }
+
+    fn write(&self, tx: EnclaveDBTx) {
+        self.inner_write(tx.into_inner())
     }
 }
 
 /// Batches a sequence of put/delete operations for efficiency.
 /// These operations are protected from signature verifications.
 #[derive(Default, Clone, PartialEq)]
-pub struct DBTx(InnerDBTx);
+pub struct EnclaveDBTx(DBTx);
 
-impl DBTx {
+impl EnclaveDBTx {
     pub fn new() -> Self {
-        DBTx(InnerDBTx::new())
+        EnclaveDBTx(DBTx::new())
     }
 
     /// Put instruction is added to a transaction only if the verification of provided signature returns true.
@@ -75,44 +61,7 @@ impl DBTx {
         self.0.delete(key.as_bytes());
     }
 
-    pub(crate) fn into_inner(self) -> InnerDBTx {
+    pub(crate) fn into_inner(self) -> DBTx {
         self.0
     }
 }
-
-/// Inner struct to write transaction. Batches a sequence of put/delete operations for efficiency.
-#[derive(Default, Clone, PartialEq)]
-pub(crate) struct InnerDBTx {
-    /// Database operations.
-    ops: Vec<DBOp>,
-}
-
-impl InnerDBTx {
-    fn new() -> Self {
-        Self::with_capacity(256)
-    }
-
-    fn with_capacity(cap: usize) -> Self {
-        InnerDBTx {
-            ops: Vec::with_capacity(cap)
-        }
-    }
-
-    fn put(&mut self, key: &[u8], value: &[u8]) {
-        let mut ekey = ElasticArray32::new();
-        ekey.append_slice(key);
-        self.ops.push(DBOp::Insert {
-            key: ekey,
-            value: DBValue::from_slice(value),
-        });
-    }
-
-    fn delete(&mut self, key: &[u8]) {
-        let mut ekey = ElasticArray32::new();
-        ekey.append_slice(key);
-        self.ops.push(DBOp::Delete {
-            key: ekey,
-        });
-    }
-}
-
