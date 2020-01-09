@@ -6,7 +6,7 @@ use std::{
     collections::HashMap,
     io,
     env,
-    sync::{Arc, RwLock},
+    sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
 use anonify_host::{EnclaveDir, prelude::EventDB};
@@ -24,17 +24,19 @@ lazy_static! {
     pub static ref EVENT_DB: EventDB = { EventDB::new() };
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Server {
     pub eid: sgx_enclave_id_t,
     pub eth_url: String,
+    pub event_db: Arc<EventDB>,
 }
 
 impl Server {
     pub fn new(eid: sgx_enclave_id_t) -> Self {
         let eth_url = dotenv!("ETH_URL").to_string();
+        let event_db = Arc::new(EventDB::new());
 
-        Server { eid, eth_url }
+        Server { eid, eth_url, event_db }
     }
 }
 
@@ -47,7 +49,7 @@ fn main() -> io::Result<()> {
             .init_enclave(true)
             .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
-    let server = Server::new(eid);
+    let server = Arc::new(Server::new(eid));
 
     HttpServer::new(move || {
         App::new()

@@ -3,6 +3,7 @@ use std::{
     path::Path,
     io::BufReader,
     fs::File,
+    sync::Arc,
 };
 use crate::{
     error::*,
@@ -126,7 +127,7 @@ impl AnonymousAssetContract {
     pub fn get_event<D: BlockNumDB>(
         &self,
         // event: &EthEvent,
-        block_num_db: D,
+        block_num_db: Arc<D>,
         key: Hash
     ) -> Result<Web3Logs<D>> {
         // Read latest block number from in-memory event db.
@@ -160,7 +161,7 @@ impl AnonymousAssetContract {
 #[derive(Debug)]
 pub struct Web3Logs<D: BlockNumDB>{
     logs: Vec<Log>,
-    db: D,
+    db: Arc<D>,
 }
 
 impl<D: BlockNumDB> Web3Logs<D> {
@@ -253,7 +254,7 @@ pub(crate) struct InnerEnclaveLog {
 #[derive(Debug, Clone)]
 pub struct EnclaveLog<D: BlockNumDB> {
     inner: Option<InnerEnclaveLog>,
-    db: D,
+    db: Arc<D>,
 }
 
 impl<D: BlockNumDB> EnclaveLog<D> {
@@ -282,7 +283,7 @@ impl<D: BlockNumDB> EnclaveLog<D> {
 #[derive(Debug, Clone)]
 pub struct EnclaveBlockNumber<D: BlockNumDB> {
     inner: Option<u64>,
-    db: D,
+    db: Arc<D>,
 }
 
 impl<D: BlockNumDB> EnclaveBlockNumber<D> {

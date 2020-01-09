@@ -1,6 +1,7 @@
 use std::{
     path::Path,
     str::FromStr,
+    sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
@@ -160,7 +161,7 @@ impl EthSender {
 /// Components needed to watch events
 pub struct EventWatcher {
     contract: web3::AnonymousAssetContract,
-    event_db: EventDB,
+    event_db: Arc<EventDB>,
 }
 
 impl EventWatcher {
@@ -168,7 +169,7 @@ impl EventWatcher {
         eth_url: &str,
         abi_path: P,
         contract_addr: &str,
-        event_db: EventDB,
+        event_db: Arc<EventDB>,
     ) -> Result<Self> {
         let web3_http = Web3Http::new(eth_url)?;
         let abi = web3::contract_abi_from_path(abi_path)?;
