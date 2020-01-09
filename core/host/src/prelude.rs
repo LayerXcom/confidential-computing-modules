@@ -13,7 +13,7 @@ use crate::{
     error::Result,
     web3::{self, Web3Http, EthEvent},
 };
-pub use crate::web3::eventdb::EventDB;
+pub use crate::web3::eventdb::{EventDB, EventDBTx};
 
 // TODO: This function throws error regarding invalid enclave id.
 fn init_enclave() -> sgx_enclave_id_t {
@@ -25,6 +25,7 @@ fn init_enclave() -> sgx_enclave_id_t {
     enclave.geteid()
 }
 
+/// Components needed to deploy a contract
 #[derive(Debug)]
 pub struct EthDeployer {
     enclave_id: sgx_enclave_id_t,
@@ -83,6 +84,7 @@ impl EthDeployer {
     }
 }
 
+/// Components needed to send a transaction
 #[derive(Debug)]
 pub struct EthSender {
     enclave_id: sgx_enclave_id_t,
@@ -155,6 +157,7 @@ impl EthSender {
     }
 }
 
+/// Components needed to watch events
 pub struct EventWatcher {
     contract: web3::AnonymousAssetContract,
     event_db: EventDB,
@@ -175,34 +178,19 @@ impl EventWatcher {
         Ok(EventWatcher { contract, event_db })
     }
 
-    /// Blocking INIT event fetch from blockchain nodes.
-    pub fn block_on_init(
-        &self,
+    /// Blocking event fetch from blockchain nodes.
+    pub fn block_on_event(
+        self,
         eid: sgx_enclave_id_t,
     ) -> Result<()> {
-        let init_event = EthEvent::build_init_event();
-        let key = init_event.signature();
-        let current_latest_blc_num = self.event_db.get_latest_block_num(key);
-        self.contract
-            .get_event(&init_event, current_latest_blc_num)?
-            .into_enclave_log(&init_event)?
-            .insert_enclave(eid)?;
+        let event = EthEvent::build_event();
+        let key = event.signature();
 
-        Ok(())
-    }
-
-    /// Blocking SEND event fetch from blockchain nodes.
-    pub fn block_on_send(
-        &self,
-        eid: sgx_enclave_id_t,
-    ) -> Result<()> {
-        let transfer_event = EthEvent::build_send_event();
-        let key = transfer_event.signature();
-        let current_latest_blc_num = self.event_db.get_latest_block_num(key);
         self.contract
-            .get_event(&transfer_event, current_latest_blc_num)?
-            .into_enclave_log(&transfer_event)?
-            .insert_enclave(eid)?;
+            .get_event(self.event_db, key)?
+            .into_enclave_log(&event)?
+            .insert_enclave(eid)?
+            .set_to_db(key);
 
         Ok(())
     }

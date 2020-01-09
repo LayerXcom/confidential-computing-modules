@@ -62,10 +62,9 @@ pub fn handle_state(
         &server.eth_url,
         dotenv!("ANONYMOUS_ASSET_ABI_PATH"),
         &req.contract_addr,
-        EVENT_DB,
+        *EVENT_DB,
     )?;
-    ev_watcher.block_on_init(server.eid)?;
-    ev_watcher.block_on_send(server.eid)?;
+    ev_watcher.block_on_event(server.eid)?;
 
     let access_right = req.into_access_right()?;
     let state = get_state_by_access_right(&access_right, server.eid)?;

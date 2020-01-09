@@ -4,24 +4,32 @@ use web3::types::BlockNumber;
 use byteorder::{LittleEndian, ByteOrder};
 use crate::error::Result;
 
+pub trait BlockNumDB {
+    fn set_next_block_num(&self, tx: EventDBTx);
+
+    fn get_latest_block_num(&self, key: Hash) -> u64;
+}
+
 #[derive(Debug)]
 pub struct EventDB(MemoryKVS);
 
-impl EventDB {
-    pub fn new() -> Self {
-        EventDB(MemoryKVS::new())
-    }
-
-    pub fn set_latest_block_num(&self, tx: EventDBTx) {
+impl BlockNumDB for EventDB {
+    fn set_next_block_num(&self, tx: EventDBTx) {
         self.0.inner_write(tx.0)
     }
 
-    pub fn get_latest_block_num(&self, key: Hash) -> BlockNumber {
+    fn get_latest_block_num(&self, key: Hash) -> u64 {
         let db_value = self.0.inner_get(key.as_bytes())
             .unwrap_or(DBValue::default());
         let blk_num = LittleEndian::read_u64(&db_value.into_vec());
 
-        BlockNumber::Number(blk_num)
+        blk_num
+    }
+}
+
+impl EventDB {
+    pub fn new() -> Self {
+        EventDB(MemoryKVS::new())
     }
 }
 
