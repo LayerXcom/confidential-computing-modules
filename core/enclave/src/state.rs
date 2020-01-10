@@ -1,9 +1,12 @@
 //! State transition functions for anonymous asset
 
-use anonify_common::{UserAddress, Sha256, Hash256, State};
+use anonify_common::{
+    UserAddress, Sha256, Hash256, State,
+    kvs::*,
+};
 use crate::{
     crypto::*,
-    kvs::{DBValue, MEMORY_DB, DBTx, traits::SigVerificationKVS},
+    kvs::{MEMORY_DB, SigVerificationKVS, EnclaveDBTx},
     error::{Result, EnclaveError},
 };
 use std::{
@@ -26,6 +29,7 @@ pub enum NextNonce { }
 /// This struct can be got by decrypting ciphertexts which is stored on blockchain.
 /// The secret key is shared among all TEE's enclaves.
 /// State and nonce field of this struct should be encrypted before it'll store enclave's in-memory db.
+/// [Example]: A size of ciphertext for each user state is 88 bytes, if inner_state is u64 value.
 #[derive(Debug, Clone, PartialEq)]
 pub struct UserState<S: State, N> {
     address: UserAddress,
@@ -71,7 +75,7 @@ impl<S: State> UserState<S, CurrentNonce> {
         let key = user_state.get_db_key();
         let value = user_state.get_db_value()?;
 
-        let mut dbtx = DBTx::new();
+        let mut dbtx = EnclaveDBTx::new();
         dbtx.put(&key, &value);
         MEMORY_DB.write(dbtx);
 

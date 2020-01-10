@@ -15,9 +15,9 @@ enclave {
         public sgx_status_t ecall_insert_logs(
             [in] uint8_t contract_addr[20],
             uint64_t block_number,
-            [in, size = ciphertexts_len] const uint8_t *ciphertexts,
-            uint32_t ciphertexts_len,
-            uint32_t ciphertexts_num
+            [in, count=ciphertexts_len] const uint8_t *ciphertexts,
+            size_t ciphertexts_len,
+            size_t ciphertext_size
         );
 
         public sgx_status_t ecall_get_state(

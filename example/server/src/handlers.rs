@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use failure::Error;
 use log::debug;
 use anonify_host::prelude::*;
@@ -8,12 +9,13 @@ use actix_web::{
 };
 use crate::{
     Server,
+    EVENT_DB,
 };
 
 pub const DEFAULT_SEND_GAS: u64 = 3_000_000;
 
 pub fn handle_deploy(
-    server: web::Data<Server>,
+    server: web::Data<Arc<Server>>,
     req: web::Json<api::deploy::post::Request>,
 ) -> Result<HttpResponse, Error> {
     debug!("Starting deploy a contract...");
@@ -29,7 +31,7 @@ pub fn handle_deploy(
 }
 
 pub fn handle_send(
-    server: web::Data<Server>,
+    server: web::Data<Arc<Server>>,
     req: web::Json<api::send::post::Request>,
 ) -> Result<HttpResponse, Error> {
     let access_right = req.into_access_right()?;
@@ -54,16 +56,16 @@ pub fn handle_send(
 
 /// Fetch events from blockchain nodes manually, and then get state from enclave.
 pub fn handle_state(
-    server: web::Data<Server>,
+    server: web::Data<Arc<Server>>,
     req: web::Json<api::state::get::Request>,
 ) -> Result<HttpResponse, Error> {
-    let indexer = Indexer::new(
+    let ev_watcher = EventWatcher::new(
         &server.eth_url,
         dotenv!("ANONYMOUS_ASSET_ABI_PATH"),
         &req.contract_addr,
+        server.event_db.clone(),
     )?;
-    indexer.block_on_init(server.eid)?;
-    indexer.block_on_send(server.eid)?;
+    ev_watcher.block_on_event(server.eid)?;
 
     let access_right = req.into_access_right()?;
     let state = get_state_by_access_right(&access_right, server.eid)?;

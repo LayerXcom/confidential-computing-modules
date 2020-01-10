@@ -13,6 +13,7 @@ extern crate core as localstd;
 
 mod crypto;
 mod traits;
+pub mod kvs;
 
 pub use crate::crypto::*;
 pub use crate::traits::*;

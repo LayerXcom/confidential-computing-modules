@@ -1,12 +1,15 @@
 use sgx_types::sgx_enclave_id_t;
+use log::debug;
 use std::{
     path::Path,
     io::BufReader,
     fs::File,
+    sync::Arc,
 };
 use crate::{
     error::*,
     constants::*,
+    web3::eventdb::{BlockNumDB, EventDBTx},
 };
 use web3::{
     Web3,
@@ -23,6 +26,7 @@ use ethabi::{
     EventParam,
     ParamType,
     decode,
+    Hash,
 };
 
 /// Basic web3 connection components via HTTP.
@@ -48,9 +52,9 @@ impl Web3Http {
         Ok(account)
     }
 
-    pub fn get_logs(&self, filter: Filter) -> Result<Web3Logs> {
+    pub fn get_logs(&self, filter: Filter) -> Result<Vec<Log>> {
         let logs = self.web3.eth().logs(filter).wait()?;
-        Ok(Web3Logs(logs))
+        Ok(logs)
     }
 
     pub fn deploy(
@@ -121,20 +125,31 @@ impl AnonymousAssetContract {
         Ok(res)
     }
 
-    pub fn get_event(&self, event: &EthEvent) -> Result<Web3Logs> {
+    pub fn get_event<D: BlockNumDB>(
+        &self,
+        block_num_db: Arc<D>,
+        key: Hash
+    ) -> Result<Web3Logs<D>> {
+        // Read latest block number from in-memory event db.
+        let latest_fetched_num = block_num_db.get_latest_block_num(key);
+
         let filter = FilterBuilder::default()
             .address(vec![self.address])
-            .topic_filter(TopicFilter {
-                topic0: Topic::This(event.into_raw().signature()),
-                topic1: Topic::Any,
-                topic2: Topic::Any,
-                topic3: Topic::Any,
-            })
-            .from_block(BlockNumber::Earliest)
+            // .topic_filter(TopicFilter {
+            //     topic0: Topic::This(event.into_raw().signature()),
+            //     topic1: Topic::Any,
+            //     topic2: Topic::Any,
+            //     topic3: Topic::Any,
+            // })
+            .from_block(BlockNumber::Number(latest_fetched_num))
             .to_block(BlockNumber::Latest)
             .build();
 
-        self.web3_conn.get_logs(filter)
+        let logs = self.web3_conn.get_logs(filter)?;
+        Ok(Web3Logs {
+            logs,
+            db: block_num_db,
+        })
     }
 
     pub fn get_account(&self, index: usize) -> Result<Address> {
@@ -144,60 +159,69 @@ impl AnonymousAssetContract {
 
 /// Event fetched logs from smart contracts.
 #[derive(Debug)]
-pub struct Web3Logs(pub Vec<Log>);
+pub struct Web3Logs<D: BlockNumDB>{
+    logs: Vec<Log>,
+    db: Arc<D>,
+}
 
-impl Web3Logs {
-    pub fn into_enclave_log(&self, event: &EthEvent) -> Result<EnclaveLog> {
+impl<D: BlockNumDB> Web3Logs<D> {
+    pub fn into_enclave_log(self, event: &EthEvent) -> Result<EnclaveLog<D>> {
         let mut ciphertexts: Vec<u8> = vec![];
 
-        // TODO: How to handle mixied events.
-        let ciphertexts_num = match event.into_raw().name.as_str() {
-            "Init" => self.0.len(),
-            "Transfer" => self.0.len() * 2,
-            _ => panic!("Invalid event name."),
-        };
-
         // If log data is not fetched currently, return empty EnclaveLog.
-        if self.0.len() == 0 {
-            return Ok(EnclaveLog{ inner: None })
+        // This case occurs if you fetched data of dupulicated block number.
+        if self.logs.len() == 0 {
+            return Ok(EnclaveLog{
+                inner: None,
+                db: self.db
+            });
         }
 
-        let contract_addr = self.0[0].address;
-        let block_number = self.0[0].block_number.expect("Should have block number.");
+        let contract_addr = self.logs[0].address;
+        let mut latest_blc_num = 0;
+        let ciphertext_size = Self::decode_data(&self.logs[0]).len();
 
-        for (i, log) in self.0.iter().enumerate() {
+        for (i, log) in self.logs.iter().enumerate() {
+            debug!("log: {:?}, \nindex: {:?}", log, i);
+
             if contract_addr != log.address {
                 return Err(HostErrorKind::Web3Log{
                     msg: "Each log should have same contract address.",
                     index: i,
                 }.into());
             }
-            if block_number != log.block_number.unwrap() {
+
+            let data = Self::decode_data(&log);
+            if ciphertext_size != data.len() && data.len() != 0  {
                 return Err(HostErrorKind::Web3Log {
-                    msg: "Each log should have same block number.",
+                    msg: "Each log should have same size of data.",
                     index: i,
-                }.into())
+                }.into());
             }
 
-            let data = Self::decode_data(&log, &event);
+            if let Some(blc_num) = log.block_number {
+                let blc_num = blc_num.as_u64();
+                if latest_blc_num < blc_num {
+                    latest_blc_num = blc_num
+                }
+            }
+
             ciphertexts.extend_from_slice(&data[..]);
         }
 
         Ok(EnclaveLog {
             inner : Some(InnerEnclaveLog {
                 contract_addr: contract_addr.to_fixed_bytes(),
-                block_number: block_number.as_u64(),
+                latest_blc_num: latest_blc_num,
                 ciphertexts,
-                ciphertexts_num: ciphertexts_num as u32,
-            })
+                ciphertext_size,
+            }),
+            db: self.db,
         })
     }
 
-    fn decode_data(log: &Log, event: &EthEvent) -> Vec<u8> {
-        let param_types = event.into_raw()
-            .inputs.iter()
-            .map(|e| e.kind.clone()).collect::<Vec<ParamType>>();
-        let tokens = decode(&param_types, &log.data.0).expect("Failed to decode token.");
+    fn decode_data(log: &Log) -> Vec<u8> {
+        let tokens = decode(&[ParamType::Bytes], &log.data.0).expect("Failed to decode token.");
         let mut res = vec![];
 
         for token in tokens {
@@ -213,25 +237,59 @@ impl Web3Logs {
 #[derive(Debug, Clone)]
 pub(crate) struct InnerEnclaveLog {
     pub(crate) contract_addr: [u8; 20],
-    pub(crate) block_number: u64,
-    pub(crate) ciphertexts: Vec<u8>, // Concatenated all ciphertexts within a specified block number.
-    pub(crate) ciphertexts_num: u32, // The number of ciphertexts in logs within a specified block number.
+    pub(crate) latest_blc_num: u64,
+    pub(crate) ciphertexts: Vec<u8>, // Concatenated all fetched ciphertexts
+    pub(crate) ciphertext_size: usize, // Byte size of a ciphertext
+}
+
+/// A wrapper type of enclave logs.
+#[derive(Debug, Clone)]
+pub struct EnclaveLog<D: BlockNumDB> {
+    inner: Option<InnerEnclaveLog>,
+    db: Arc<D>,
+}
+
+impl<D: BlockNumDB> EnclaveLog<D> {
+    /// Store logs into enclave in-memory.
+    /// This returns a latest block number specified by fetched logs.
+    pub fn insert_enclave(self, eid: sgx_enclave_id_t) -> Result<EnclaveBlockNumber<D>> {
+        use crate::ecalls::insert_logs;
+        match &self.inner {
+            Some(log) => {
+                insert_logs(eid, log)?;
+                let next_blc_num = log.latest_blc_num + 1;
+
+                return Ok(EnclaveBlockNumber {
+                    inner: Some(next_blc_num),
+                    db: self.db,
+                });
+            },
+            None => return Ok(EnclaveBlockNumber {
+                inner: None,
+                db: self.db,
+            }),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
-pub struct EnclaveLog {
-    inner: Option<InnerEnclaveLog>,
+pub struct EnclaveBlockNumber<D: BlockNumDB> {
+    inner: Option<u64>,
+    db: Arc<D>,
 }
 
-impl EnclaveLog {
-    pub fn insert_enclave(&self, eid: sgx_enclave_id_t) -> Result<()> {
-        use crate::ecalls::insert_logs;
+impl<D: BlockNumDB> EnclaveBlockNumber<D> {
+    /// Only if EnclaveBlockNumber has new block number to log,
+    /// it's set next block number to event db.
+    pub fn set_to_db(&self, key: Hash) {
         match &self.inner {
-            Some(log) => insert_logs(eid, log)?,
-            None => return Ok(()),
+            Some(num) => {
+                let mut dbtx = EventDBTx::new();
+                dbtx.put(key, *num);
+                self.db.set_next_block_num(dbtx);
+            },
+            None => { },
         }
-
-        Ok(())
     }
 }
 
@@ -254,12 +312,12 @@ pub fn contract_abi_from_path<P: AsRef<Path>>(path: P) -> Result<ContractABI> {
 pub struct EthEvent(Event);
 
 impl EthEvent {
-    pub fn build_init_event() -> Self {
+    pub fn build_event() -> Self {
         EthEvent(Event {
-            name: "Init".to_owned(),
+            name: "StoreCiphertext".to_owned(),
             inputs: vec![
                 EventParam {
-                    name: "_initBalance".to_owned(),
+                    name: "ciphertext".to_owned(),
                     kind: ParamType::Bytes,
                     indexed: false,
                 },
@@ -268,23 +326,8 @@ impl EthEvent {
         })
     }
 
-    pub fn build_send_event() -> Self {
-        EthEvent(Event {
-            name: "Transfer".to_owned(),
-            inputs: vec![
-                EventParam {
-                    name: "_updateBalance1".to_owned(),
-                    kind: ParamType::Bytes,
-                    indexed: false,
-                },
-                EventParam {
-                    name: "_updateBalance2".to_owned(),
-                    kind: ParamType::Bytes,
-                    indexed: false,
-                },
-            ],
-            anonymous: false,
-        })
+    pub fn signature(&self) -> Hash {
+        self.0.signature()
     }
 
     pub fn into_raw(&self) -> &Event {
