@@ -23,9 +23,7 @@ pub unsafe extern "C" fn ecall_insert_logs(
     ciphertext_size: usize, // Byte size of a ciphertext
 ) -> sgx_status_t {
     let ciphertexts = slice::from_raw_parts(ciphertexts, ciphertexts_len);
-
-    // assert_eq!(ciphertexts.len() % ciphertexts_num as usize, 0, "Ciphertexts must be divisible by ciphertexts_num.");
-    // let chunk_size = ciphertexts.len() / ciphertexts_num as usize;
+    assert_eq!(ciphertexts.len() % ciphertext_size, 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
     for ciphertext in ciphertexts.chunks(ciphertext_size) {
         UserState::<Value ,CurrentNonce>::insert_cipheriv_memdb(ciphertext.to_vec())

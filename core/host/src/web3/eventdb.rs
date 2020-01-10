@@ -19,11 +19,10 @@ impl BlockNumDB for EventDB {
     }
 
     fn get_latest_block_num(&self, key: Hash) -> u64 {
-        let db_value = self.0.inner_get(key.as_bytes())
-            .unwrap_or(DBValue::default());
-        let blk_num = LittleEndian::read_u64(&db_value.into_vec());
-
-        blk_num
+        match self.0.inner_get(key.as_bytes()) {
+            Some(val) => LittleEndian::read_u64(&val.into_vec()),
+            None => 0,
+        }
     }
 }
 

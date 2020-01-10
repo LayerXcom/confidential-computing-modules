@@ -29,6 +29,7 @@ pub enum NextNonce { }
 /// This struct can be got by decrypting ciphertexts which is stored on blockchain.
 /// The secret key is shared among all TEE's enclaves.
 /// State and nonce field of this struct should be encrypted before it'll store enclave's in-memory db.
+/// [Example]: A size of ciphertext for each user state is 88 bytes, if inner_state is u64 value.
 #[derive(Debug, Clone, PartialEq)]
 pub struct UserState<S: State, N> {
     address: UserAddress,

@@ -1,4 +1,5 @@
 use sgx_types::sgx_enclave_id_t;
+use log::debug;
 use std::{
     path::Path,
     io::BufReader,
@@ -126,7 +127,6 @@ impl AnonymousAssetContract {
 
     pub fn get_event<D: BlockNumDB>(
         &self,
-        // event: &EthEvent,
         block_num_db: Arc<D>,
         key: Hash
     ) -> Result<Web3Logs<D>> {
@@ -168,13 +168,6 @@ impl<D: BlockNumDB> Web3Logs<D> {
     pub fn into_enclave_log(self, event: &EthEvent) -> Result<EnclaveLog<D>> {
         let mut ciphertexts: Vec<u8> = vec![];
 
-        // // TODO: How to handle mixied events.
-        // let ciphertexts_num = match event.into_raw().name.as_str() {
-        //     "Init" => self.logs.len(),
-        //     "Transfer" => self.logs.len() * 2,
-        //     _ => panic!("Invalid event name."),
-        // };
-
         // If log data is not fetched currently, return empty EnclaveLog.
         // This case occurs if you fetched data of dupulicated block number.
         if self.logs.len() == 0 {
@@ -186,9 +179,11 @@ impl<D: BlockNumDB> Web3Logs<D> {
 
         let contract_addr = self.logs[0].address;
         let mut latest_blc_num = 0;
-        let ciphertext_size = self.logs[0].data.0.len();
+        let ciphertext_size = Self::decode_data(&self.logs[0]).len();
 
         for (i, log) in self.logs.iter().enumerate() {
+            debug!("log: {:?}, \nindex: {:?}", log, i);
+
             if contract_addr != log.address {
                 return Err(HostErrorKind::Web3Log{
                     msg: "Each log should have same contract address.",
@@ -196,7 +191,8 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 }.into());
             }
 
-            if ciphertext_size != log.data.0.len() {
+            let data = Self::decode_data(&log);
+            if ciphertext_size != data.len() && data.len() != 0  {
                 return Err(HostErrorKind::Web3Log {
                     msg: "Each log should have same size of data.",
                     index: i,
@@ -210,7 +206,6 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 }
             }
 
-            let data = Self::decode_data(&log);
             ciphertexts.extend_from_slice(&data[..]);
         }
 
@@ -219,16 +214,13 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 contract_addr: contract_addr.to_fixed_bytes(),
                 latest_blc_num: latest_blc_num,
                 ciphertexts,
-                ciphertext_size: ciphertext_size,
+                ciphertext_size,
             }),
             db: self.db,
         })
     }
 
     fn decode_data(log: &Log) -> Vec<u8> {
-        // let param_types = event.into_raw()
-        //     .inputs.iter()
-        //     .map(|e| e.kind.clone()).collect::<Vec<ParamType>>();
         let tokens = decode(&[ParamType::Bytes], &log.data.0).expect("Failed to decode token.");
         let mut res = vec![];
 
@@ -246,7 +238,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
 pub(crate) struct InnerEnclaveLog {
     pub(crate) contract_addr: [u8; 20],
     pub(crate) latest_blc_num: u64,
-    pub(crate) ciphertexts: Vec<u8>, // Concatenated all ciphertexts within a specified block number.
+    pub(crate) ciphertexts: Vec<u8>, // Concatenated all fetched ciphertexts
     pub(crate) ciphertext_size: usize, // Byte size of a ciphertext
 }
 

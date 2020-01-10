@@ -166,7 +166,11 @@ impl From<RawUnsignedTx> for UnsignedTx {
 
 impl UnsignedTx {
     pub fn get_two_ciphertexts(&self) -> (&[u8], &[u8]) {
-        self.ciphertexts.split_at(self.ciphertext_num as usize)
+        let c_size = self.ciphertexts.len() / self.ciphertext_num as usize;
+        let (c1, c2) = self.ciphertexts.split_at(c_size);
+        assert_eq!(c1.len(), c2.len());
+
+        (c1, c2)
     }
 }
 
