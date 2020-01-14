@@ -24,4 +24,4 @@ make DEBUG=1
 rm -rf ../example/bin && cp -rf bin/ ../example/bin/ && cd ../example/server
 
 echo "Build artifacts in debug mode."
-RUST_LOG=debug cargo run
+RUST_BACKTRACE=1 RUST_LOG=debug cargo run

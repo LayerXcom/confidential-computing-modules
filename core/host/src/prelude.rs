@@ -1,18 +1,20 @@
 use std::{
     path::Path,
     str::FromStr,
+    sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
 use anonify_common::{UserAddress, AccessRight, State};
 use ed25519_dalek::{Signature, PublicKey, Keypair};
-use ::web3::types::{H160, H256, Address as EthAddress};
+use ::web3::types::{H160, H256, Address as EthAddress, BlockNumber};
 use crate::{
     init_enclave::EnclaveDir,
     ecalls::*,
     error::Result,
     web3::{self, Web3Http, EthEvent},
 };
+pub use crate::web3::eventdb::{EventDB, EventDBTx};
 
 // TODO: This function throws error regarding invalid enclave id.
 fn init_enclave() -> sgx_enclave_id_t {
@@ -24,6 +26,7 @@ fn init_enclave() -> sgx_enclave_id_t {
     enclave.geteid()
 }
 
+/// Components needed to deploy a contract
 #[derive(Debug)]
 pub struct EthDeployer {
     enclave_id: sgx_enclave_id_t,
@@ -82,6 +85,7 @@ impl EthDeployer {
     }
 }
 
+/// Components needed to send a transaction
 #[derive(Debug)]
 pub struct EthSender {
     enclave_id: sgx_enclave_id_t,
@@ -154,42 +158,40 @@ impl EthSender {
     }
 }
 
-pub struct Indexer {
+/// Components needed to watch events
+pub struct EventWatcher {
     contract: web3::AnonymousAssetContract,
+    event_db: Arc<EventDB>,
 }
 
-impl Indexer {
+impl EventWatcher {
     pub fn new<P: AsRef<Path>>(
         eth_url: &str,
         abi_path: P,
-        contract_addr: &str
+        contract_addr: &str,
+        event_db: Arc<EventDB>,
     ) -> Result<Self> {
         let web3_http = Web3Http::new(eth_url)?;
         let abi = web3::contract_abi_from_path(abi_path)?;
         let addr = EthAddress::from_str(contract_addr)?;
         let contract = web3::AnonymousAssetContract::new(web3_http, addr, abi)?;
 
-        Ok(Indexer { contract })
+        Ok(EventWatcher { contract, event_db })
     }
 
-    /// Blocking INIT event fetch from blockchain nodes.
-    pub fn block_on_init(&self, eid: sgx_enclave_id_t) -> Result<()> {
-        let init_event = EthEvent::build_init_event();
-        self.contract
-            .get_event(&init_event)?
-            .into_enclave_log(&init_event)?
-            .insert_enclave(eid)?;
+    /// Blocking event fetch from blockchain nodes.
+    pub fn block_on_event(
+        self,
+        eid: sgx_enclave_id_t,
+    ) -> Result<()> {
+        let event = EthEvent::build_event();
+        let key = event.signature();
 
-        Ok(())
-    }
-
-    /// Blocking SEND event fetch from blockchain nodes.
-    pub fn block_on_send(&self, eid: sgx_enclave_id_t) -> Result<()> {
-        let transfer_event = EthEvent::build_send_event();
         self.contract
-            .get_event(&transfer_event)?
-            .into_enclave_log(&transfer_event)?
-            .insert_enclave(eid)?;
+            .get_event(self.event_db, key)?
+            .into_enclave_log(&event)?
+            .insert_enclave(eid)?
+            .set_to_db(key);
 
         Ok(())
     }

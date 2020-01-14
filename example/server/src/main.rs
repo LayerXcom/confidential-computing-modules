@@ -1,12 +1,15 @@
 #[macro_use]
 extern crate dotenv_codegen;
+#[macro_use]
+extern crate lazy_static;
 use std::{
     collections::HashMap,
     io,
     env,
+    sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_host::EnclaveDir;
+use anonify_host::{EnclaveDir, prelude::EventDB};
 use handlers::*;
 use actix_web::{
     client::Client,
@@ -17,17 +20,23 @@ use actix_web::{
 
 mod handlers;
 
-#[derive(Debug, Clone)]
+lazy_static! {
+    pub static ref EVENT_DB: EventDB = { EventDB::new() };
+}
+
+#[derive(Debug)]
 pub struct Server {
     pub eid: sgx_enclave_id_t,
     pub eth_url: String,
+    pub event_db: Arc<EventDB>,
 }
 
 impl Server {
     pub fn new(eid: sgx_enclave_id_t) -> Self {
         let eth_url = dotenv!("ETH_URL").to_string();
+        let event_db = Arc::new(EventDB::new());
 
-        Server { eid, eth_url }
+        Server { eid, eth_url, event_db }
     }
 }
 
@@ -40,8 +49,7 @@ fn main() -> io::Result<()> {
             .init_enclave(true)
             .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
-
-    let server = Server::new(eid);
+    let server = Arc::new(Server::new(eid));
 
     HttpServer::new(move || {
         App::new()

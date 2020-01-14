@@ -20,14 +20,13 @@ pub unsafe extern "C" fn ecall_insert_logs(
     _contract_addr: &[u8; 20], //TODO
     _block_number: u64, // TODO
     ciphertexts: *const u8,
-    ciphertexts_len: usize,
-    ciphertexts_num: u32,
+    ciphertexts_len: usize, // Byte size of all ciphertexts
+    ciphertext_size: usize, // Byte size of a ciphertext
 ) -> sgx_status_t {
     let ciphertexts = slice::from_raw_parts(ciphertexts, ciphertexts_len);
-    assert_eq!(ciphertexts.len() % ciphertexts_num as usize, 0, "Ciphertexts must be divisible by ciphertexts_num.");
-    let chunk_size = ciphertexts.len() / ciphertexts_num as usize;
+    assert_eq!(ciphertexts.len() % ciphertext_size, 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
-    for ciphertext in ciphertexts.chunks(chunk_size) {
+    for ciphertext in ciphertexts.chunks(ciphertext_size) {
         UserState::<Value ,CurrentNonce>::insert_cipheriv_memdb(ciphertext.to_vec())
             .expect("Failed to insert ciphertext into memory database.");
     }
