@@ -1,11 +1,11 @@
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
-use anonify_common::{UserAddress, State};
+use anonify_common::{UserAddress, State, stf::Value};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::kvs::{SigVerificationKVS, MEMORY_DB};
 use crate::state::{UserState, CurrentNonce};
-use crate::stf::{Value, AnonymousAssetSTF};
+use crate::stf::AnonymousAssetSTF;
 use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{
     AttestationService, TEST_SPID, TEST_SUB_KEY,

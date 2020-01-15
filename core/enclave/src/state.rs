@@ -224,7 +224,7 @@ impl From<Sha256> for Nonce {
 #[cfg(debug_assertions)]
 pub mod tests {
     use super::*;
-    use crate::stf::Value;
+    use anonify_common::stf::Value;
     use ed25519_dalek::{SecretKey, PublicKey, Keypair, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH};
 
     const SECRET_KEY_BYTES: [u8; SECRET_KEY_LENGTH] = [

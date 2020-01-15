@@ -248,7 +248,7 @@ mod tests {
         let sig = keypair.sign(&msg);
         assert!(keypair.verify(&msg, &sig).is_ok());
 
-        let state = get_state::<Value>(enclave.geteid(), &sig, &keypair.public, &msg);
+        // let state = get_state::<Value>(enclave.geteid(), &sig, &keypair.public, &msg);
         // assert_eq!(state, 0);
     }
 }

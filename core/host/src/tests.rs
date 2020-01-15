@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use rand_core::RngCore;
@@ -41,7 +42,8 @@ fn test_transfer() {
     let third_access_right = AccessRight::new_from_rng(&mut csprng);
 
     let total_supply = 100;
-
+    let db = Arc::new(EventDB::new());
+    let event = EthEvent::build_event();
 
     // 1. Deploy
 
@@ -56,11 +58,9 @@ fn test_transfer() {
 
 
     // 2. Get logs from contract and update state inside enclave.
-
-    let init_event = EthEvent::build_init_event();
     contract
-        .get_event(&init_event).unwrap()
-        .into_enclave_log(&init_event).unwrap()
+        .get_event(db, &event).unwrap()
+        .into_enclave_log(&event).unwrap()
         .insert_enclave(eid).unwrap();
 
 
@@ -94,10 +94,9 @@ fn test_transfer() {
 
     // 5. Update state inside enclave
     let contract = eth_sender.get_contract();
-    let transfer_event = EthEvent::build_send_event();
     contract
-        .get_event(&transfer_event).unwrap()
-        .into_enclave_log(&transfer_event).unwrap()
+        .get_event(&event).unwrap()
+        .into_enclave_log(&event).unwrap()
         .insert_enclave(eid).unwrap();
 
 

@@ -3,7 +3,7 @@ use crate::{
     error::Result,
     kvs::{SigVerificationKVS, MEMORY_DB},
 };
-use anonify_common::{UserAddress, State};
+use anonify_common::{UserAddress, State, stf::Value};
 use ed25519_dalek::{PublicKey, Signature};
 use std::{
     vec::Vec,
@@ -11,78 +11,6 @@ use std::{
     ops::{Add, Sub},
     convert::TryInto,
 };
-use byteorder::{ByteOrder, LittleEndian};
-
-const VALUE_LENGTH: usize = 8;
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd)]
-pub struct Value(u64);
-
-impl State for Value {
-    fn new(init: u64) -> Self {
-        Value(init)
-    }
-
-    fn as_bytes(&self) -> io::Result<Vec<u8>> {
-        let mut buf = vec![];
-        LittleEndian::write_u64(&mut buf, self.0);
-
-        if buf.len() != VALUE_LENGTH {
-            return Err(Error::new(ErrorKind::InvalidData, "Invalid Value length."));
-        }
-
-        Ok(buf)
-    }
-
-    fn from_bytes(bytes: &[u8]) -> io::Result<Self> {
-        if bytes.len() != VALUE_LENGTH {
-            return Err(Error::new(ErrorKind::InvalidData, "Invalid Value length."));
-        }
-
-        let res = LittleEndian::read_u64(bytes);
-        Ok(Value(res))
-    }
-
-    fn write_le<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        let mut buf = [0u8; 8];
-        LittleEndian::write_u64(&mut buf, self.0);
-        writer.write_all(&buf)?;
-
-        Ok(())
-    }
-
-    fn read_le<R: Read>(reader: &mut R) -> io::Result<Self> {
-        let mut buf = [0u8; 8];
-        reader.read_exact(&mut buf)?;
-        let res = LittleEndian::read_u64(&buf);
-
-        Ok(Value(res))
-    }
-}
-
-impl Add for Value {
-    type Output = Value;
-
-    fn add(self, other: Self) -> Self {
-        let res = self.0 + other.0;
-        Value(res)
-    }
-}
-
-impl Sub for Value {
-    type Output = Value;
-
-    fn sub(self, other: Self) -> Self {
-        let res = self.0 - other.0;
-        Value(res)
-    }
-}
-
-impl Value {
-    pub fn into_raw_u64(&self) -> u64 {
-        self.0
-    }
-}
 
 pub trait AnonymousAssetSTF: Sized {
     type S: State;
