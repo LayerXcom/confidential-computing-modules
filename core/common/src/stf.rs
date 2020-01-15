@@ -5,10 +5,14 @@ use crate::localstd::{
     vec::Vec,
 };
 use byteorder::{ByteOrder, LittleEndian};
+#[cfg(feature = "sgx")]
+use serde_sgx::{Deserialize, Serialize};
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
 
 const VALUE_LENGTH: usize = 8;
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Serialize, Deserialize)]
 pub struct Value(u64);
 
 impl State for Value {

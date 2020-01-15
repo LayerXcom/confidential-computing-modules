@@ -3,6 +3,7 @@ use failure::Error;
 use log::debug;
 use anonify_host::prelude::*;
 use anonymous_asset::api;
+use anonify_common::stf::Value;
 use sgx_types::sgx_enclave_id_t;
 use actix_web::{
     web,
@@ -69,7 +70,7 @@ pub fn handle_state(
     ev_watcher.block_on_event(server.eid)?;
 
     let access_right = req.into_access_right()?;
-    let state = get_state_by_access_right(&access_right, server.eid)?;
+    let state = get_state_by_access_right::<Value>(&access_right, server.eid)?;
 
     Ok(HttpResponse::Ok().json(api::state::get::Response(state)))
 }

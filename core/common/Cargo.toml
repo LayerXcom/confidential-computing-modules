@@ -10,7 +10,7 @@ edition = "2018"
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
 sha2 = { version = "0.8", default-features = false }
 tiny-keccak = "1.4"
-serde = { version = "1", optional = true }
+serde = { version = "1", features=["derive"], optional = true }
 serde-sgx = { package = "serde", git = "https://github.com/mesalock-linux/serde-sgx.git", rev = "sgx_1.0.9", default-features = false, features=["serde_derive"], optional = true }
 sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git", optional = true }
 base64 = { version = "0.11", optional = true }

@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 anonymous-asset = { path = "../anonymous-asset" }
+anonify-common = { path = "../../core/common" }
 anonify-host = { path = "../../core/host" }
 sgx_types = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
 actix-web = "1.0"
