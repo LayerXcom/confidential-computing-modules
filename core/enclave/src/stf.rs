@@ -1,5 +1,5 @@
 use crate::{
-    state::{UserState, CurrentNonce, NextNonce},
+    state::{UserState, StateValue, Current, Next},
     error::Result,
     kvs::{SigVerificationKVS, MEMORY_DB},
 };
@@ -20,7 +20,7 @@ pub trait AnonymousAssetSTF: Sized {
         sig: Signature,
         msg: &[u8],
         amount: Self::S,
-    ) -> Result<UserState<Self::S, NextNonce>>;
+    ) -> Result<UserState<Self::S, Next>>;
 
     fn transfer(
         from: PublicKey,
@@ -28,10 +28,10 @@ pub trait AnonymousAssetSTF: Sized {
         msg: &[u8],
         target: UserAddress,
         amount: Self::S,
-    ) -> Result<(UserState<Self::S, NextNonce>, UserState<Self::S, NextNonce>)>;
+    ) -> Result<(UserState<Self::S, Next>, UserState<Self::S, Next>)>;
 }
 
-impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
+impl<S: State> AnonymousAssetSTF for UserState<S, Current> {
     type S = Value;
 
     fn init(
@@ -39,9 +39,9 @@ impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
         sig: Signature,
         msg: &[u8],
         total_supply: Self::S,
-    ) -> Result<UserState<Self::S, NextNonce>> {
+    ) -> Result<UserState<Self::S, Next>> {
         let address = UserAddress::from_sig(&msg, &sig, &from);
-        let state: UserState<Self::S, NextNonce> = UserState::new(address, total_supply)?;
+        let state: UserState<Self::S, Next> = UserState::new(address, total_supply)?;
 
         Ok(state)
     }
@@ -55,24 +55,26 @@ impl<S: State> AnonymousAssetSTF for UserState<S, CurrentNonce> {
         msg: &[u8],
         target: UserAddress,
         amount: Self::S,
-    ) -> Result<(UserState<Self::S, NextNonce>, UserState<Self::S, NextNonce>)> {
+    ) -> Result<(UserState<Self::S, Next>, UserState<Self::S, Next>)> {
         let my_addr = UserAddress::from_sig(&msg, &sig, &from);
         let my_value = MEMORY_DB.get(&my_addr);
-        let my_current_balance = UserState::<Self::S, _>::get_state_nonce_from_dbvalue(my_value.clone())?.0;
+        let my_current_state_value = StateValue::<Self::S, Current>::from_dbvalue(my_value.clone())?;
+        let my_current_balance = my_current_state_value.inner_state();
 
         // TODO: Return as error
-        assert!(amount < my_current_balance);
+        assert!(amount < *my_current_balance);
 
         let my_current_state = UserState::from_address_and_db_value(my_addr, my_value)?;
-        let my_updated: UserState<Self::S, NextNonce> = my_current_state
-            .update_inner_state(my_current_balance - amount).try_into()?;
+        let my_updated: UserState<Self::S, Next> = my_current_state
+            .update_inner_state(*my_current_balance - amount).try_into()?;
 
         // TODO
         let other_value = MEMORY_DB.get(&target);
-        let other_current_balance = UserState::<Self::S, _>::get_state_nonce_from_dbvalue(other_value.clone())?.0;
+        let other_current_state_value = StateValue::<Self::S, Current>::from_dbvalue(other_value.clone())?;
+        let other_current_balance = other_current_state_value.inner_state();
         let other_current_state = UserState::from_address_and_db_value(target, other_value)?;
-        let other_updated: UserState<Self::S, NextNonce> = other_current_state
-            .update_inner_state(other_current_balance + amount).try_into()?;
+        let other_updated: UserState<Self::S, Next> = other_current_state
+            .update_inner_state(*other_current_balance + amount).try_into()?;
 
         Ok((my_updated, other_updated))
     }

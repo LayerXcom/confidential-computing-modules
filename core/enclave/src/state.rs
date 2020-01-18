@@ -19,23 +19,77 @@ use std::{
 /// Curret nonce for state.
 /// Priventing from race condition of writing ciphertext to blockchain.
 #[derive(Debug, PartialEq)]
-pub enum CurrentNonce { }
+pub enum Current { }
 
 /// Next nonce for state.
 /// It'll be defined deterministically as `next_nonce = Hash(address, current_state, current_nonce)`.
 #[derive(Debug, PartialEq)]
-pub enum NextNonce { }
+pub enum Next { }
 
 /// This struct can be got by decrypting ciphertexts which is stored on blockchain.
 /// The secret key is shared among all TEE's enclaves.
-/// State and nonce field of this struct should be encrypted before it'll store enclave's in-memory db.
+/// StateValue field of this struct should be encrypted before it'll store enclave's in-memory db.
 /// [Example]: A size of ciphertext for each user state is 88 bytes, if inner_state is u64 value.
 #[derive(Debug, Clone, PartialEq)]
 pub struct UserState<S: State, N> {
     address: UserAddress,
-    inner_state: S,
-    nonce: Nonce,
+    state_value: StateValue<S, N>,
+}
+
+/// State value per each user's state.
+/// inner_state depends on the state of your application on anonify system.
+/// Nonce is used to avoid data collisions when TEEs send transactions to blockchain.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct StateValue<S: State, N> {
+    pub(crate) inner_state: S,
+    pub(crate) nonce: Nonce,
     _marker: PhantomData<N>,
+}
+
+impl<S: State, N> StateValue<S, N> {
+    pub fn new(inner_state: S, nonce: Nonce) -> Self {
+        StateValue {
+            inner_state,
+            nonce,
+            _marker: PhantomData,
+        }
+    }
+
+    /// Get inner state and nonce from database value.
+    pub fn from_dbvalue(db_value: DBValue) -> Result<Self> {
+        let mut state = Default::default();
+        let mut nonce = Default::default();
+
+        if db_value != Default::default() {
+            let reader = db_value.into_vec();
+            state = S::read_le(&mut &reader[..])?;
+            nonce = Nonce::read(&mut &reader[..])?;
+        }
+
+        Ok(StateValue::new(state, nonce))
+    }
+
+    pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
+        self.inner_state.write_le(writer)?;
+        self.nonce.write(writer)?;
+
+        Ok(())
+    }
+
+    pub fn read<R: Read>(mut reader: R) -> Result<Self> {
+        let inner_state = S::read_le(&mut reader)?;
+        let nonce = Nonce::read(&mut reader)?;
+
+        Ok(StateValue::new(inner_state, nonce))
+    }
+
+    pub fn inner_state(&self) -> &S {
+        &self.inner_state
+    }
+
+    pub fn nonce(&self) -> &Nonce {
+        &self.nonce
+    }
 }
 
 impl<S: State, N> UserState<S, N> {
@@ -47,29 +101,42 @@ impl<S: State, N> UserState<S, N> {
 
     pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
         self.address.write(writer)?;
-        self.inner_state.write_le(writer)?;
-        self.nonce.write(writer)?;
+        self.state_value.write(writer)?;
 
         Ok(())
     }
 
     pub fn read<R: Read>(mut reader: R) -> Result<Self> {
         let address = UserAddress::read(&mut reader)?;
-        let inner_state = S::read_le(&mut reader)?;
-        let nonce = Nonce::read(&mut reader)?;
+        let state_value = StateValue::read(&mut reader)?;
 
         Ok(UserState {
             address,
-            inner_state,
-            nonce,
-            _marker: PhantomData,
+            state_value,
         })
+    }
+
+    pub fn inner_state(&self) -> &S {
+        &self.state_value.inner_state
+    }
+
+    pub fn nonce(&self) -> &Nonce {
+        &self.state_value.nonce
     }
 }
 
-// State with NextNonce must not be allowed to access to the database to avoid from
-// storing data which have not been considered globally consensused.
-impl<S: State> UserState<S, CurrentNonce> {
+/// Operations of user state before sending a transaction or after fetching as a ciphertext
+impl<S: State> UserState<S, Current> {
+    // /// Apply user defined state transition function to current state.
+    // pub fn apply_stf<F>(&self, stf: F) -> Result<Vec<UserState<S, Next>>>
+    // where
+    //     F: Fn(S, S) -> S
+    // {
+    //     let my_current_balance = UserState::<Self::S, _>::from_dbvalue(my_value.clone())?.0;
+    // }
+
+    // Only State with `Current` allows to access to the database to avoid from
+    // storing data which have not been considered globally consensused.
     pub fn insert_cipheriv_memdb(cipheriv: Vec<u8>) -> Result<()> {
         let user_state = Self::decrypt(cipheriv, &SYMMETRIC_KEY)?;
         let key = user_state.get_db_key();
@@ -97,8 +164,7 @@ impl<S: State> UserState<S, CurrentNonce> {
     // TODO: Encrypt with sealing key.
     pub fn get_db_value(&self) -> Result<Vec<u8>> {
         let mut buf = vec![];
-        self.inner_state.write_le(&mut buf)?;
-        self.nonce.write(&mut buf)?;
+        self.state_value.write(&mut buf)?;
 
         Ok(buf)
     }
@@ -106,9 +172,7 @@ impl<S: State> UserState<S, CurrentNonce> {
     pub fn update_inner_state(&self, update: S) -> Self {
         UserState {
             address: self.address,
-            inner_state: update,
-            nonce: self.nonce,
-            _marker: PhantomData,
+            state_value: StateValue::new(update, *self.nonce()),
         }
     }
 
@@ -116,28 +180,12 @@ impl<S: State> UserState<S, CurrentNonce> {
         address: UserAddress,
         db_value: DBValue
     ) -> Result<Self> {
-        let (inner_state, nonce) = Self::get_state_nonce_from_dbvalue(db_value)?;
+        let state_value = StateValue::from_dbvalue(db_value)?;
 
         Ok(UserState {
             address,
-            inner_state,
-            nonce,
-            _marker: PhantomData,
+            state_value,
         })
-    }
-
-    /// Get inner state and nonce from database value.
-    pub fn get_state_nonce_from_dbvalue(db_value: DBValue) -> Result<(S, Nonce)> {
-        let mut state = Default::default();
-        let mut nonce = Default::default();
-
-        if db_value != Default::default() {
-            let reader = db_value.into_vec();
-            state = S::read_le(&mut &reader[..])?;
-            nonce = Nonce::read(&mut &reader[..])?;
-        }
-
-        Ok((state, nonce))
     }
 
     /// Compute hash digest of current user state.
@@ -162,19 +210,18 @@ impl<S: State> UserState<S, CurrentNonce> {
     }
 }
 
-impl<S: State> UserState<S, NextNonce> {
+impl<S: State> UserState<S, Next> {
     /// Initialize userstate. nonce is defined with `Sha256(address || init_state)`.
     pub fn new(address: UserAddress, init_state: S) -> Result<Self> {
         let mut buf = vec![];
         address.write(&mut buf)?;
         init_state.write_le(&mut buf)?;
         let nonce = Sha256::hash(&buf).into();
+        let state_value = StateValue::new(init_state, nonce);
 
         Ok(UserState {
             address,
-            inner_state: init_state,
-            nonce,
-            _marker: PhantomData
+            state_value,
         })
     }
 
@@ -184,21 +231,22 @@ impl<S: State> UserState<S, NextNonce> {
     }
 }
 
-impl<S: State> TryFrom<UserState<S, CurrentNonce>> for UserState<S, NextNonce> {
+impl<S: State> TryFrom<UserState<S, Current>> for UserState<S, Next> {
     type Error = EnclaveError;
 
-    fn try_from(s: UserState<S, CurrentNonce>) -> Result<Self> {
+    fn try_from(s: UserState<S, Current>) -> Result<Self> {
         let next_nonce = s.next_nonce()?;
+        let inner_state = s.state_value.inner_state;
+        let state_value = StateValue::new(inner_state, next_nonce);
 
         Ok(UserState {
             address: s.address,
-            inner_state: s.inner_state,
-            nonce: next_nonce,
-            _marker: PhantomData,
+            state_value,
         })
     }
 }
 
+/// To avoid data collision when a transaction is sent to a blockchain.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Nonce([u8; 32]);
 

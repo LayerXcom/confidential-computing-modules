@@ -4,7 +4,7 @@ use crate::localstd::{
 };
 
 /// Trait of each user's state.
-pub trait State: Sized + Default {
+pub trait State: Sized + Default + Clone {
     fn new(init: u64) -> Self;
 
     fn as_bytes(&self) -> io::Result<Vec<u8>>;

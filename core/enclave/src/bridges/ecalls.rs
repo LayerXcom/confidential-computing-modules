@@ -4,7 +4,7 @@ use anonify_types::*;
 use anonify_common::{UserAddress, State, stf::Value};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::kvs::{SigVerificationKVS, MEMORY_DB};
-use crate::state::{UserState, CurrentNonce};
+use crate::state::{UserState, StateValue, Current};
 use crate::stf::AnonymousAssetSTF;
 use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{
@@ -27,7 +27,7 @@ pub unsafe extern "C" fn ecall_insert_logs(
     assert_eq!(ciphertexts.len() % ciphertext_size, 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
     for ciphertext in ciphertexts.chunks(ciphertext_size) {
-        UserState::<Value ,CurrentNonce>::insert_cipheriv_memdb(ciphertext.to_vec())
+        UserState::<Value ,Current>::insert_cipheriv_memdb(ciphertext.to_vec())
             .expect("Failed to insert ciphertext into memory database.");
     }
 
@@ -47,8 +47,9 @@ pub unsafe extern "C" fn ecall_get_state(
     let key = UserAddress::from_sig(&msg[..], &sig, &pubkey);
 
     let db_value = MEMORY_DB.get(&key);
-    let user_state = UserState::<Value, _>::get_state_nonce_from_dbvalue(db_value)
-        .expect("Failed to read db_value.").0;
+    let user_state_value = StateValue::<Value, Current>::from_dbvalue(db_value)
+        .expect("Failed to read db_value.");
+    let user_state = user_state_value.inner_state();
 
     state.0 = save_to_host_memory(&user_state.as_bytes().unwrap()).unwrap() as *const u8;
 
