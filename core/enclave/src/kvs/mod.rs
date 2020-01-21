@@ -15,13 +15,13 @@ lazy_static! {
 }
 
 /// Trait of key-value store instrctions restricted by signature verifications.
-pub trait SigVerificationKVS: Sync + Send {
+pub trait EnclaveKVS: Sync + Send {
     fn get(&self, key: &UserAddress) -> DBValue;
 
     fn write(&self, tx: EnclaveDBTx);
 }
 
-impl SigVerificationKVS for MemoryKVS {
+impl EnclaveKVS for MemoryKVS {
     fn get(&self, key: &UserAddress) -> DBValue {
         self.inner_get(key.as_bytes()).unwrap_or(DBValue::default())
     }

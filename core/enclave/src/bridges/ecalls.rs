@@ -3,7 +3,7 @@ use sgx_types::*;
 use anonify_types::*;
 use anonify_common::{UserAddress, State, stf::Value};
 use ed25519_dalek::{PublicKey, Signature};
-use crate::kvs::{SigVerificationKVS, MEMORY_DB};
+use crate::kvs::{EnclaveKVS, MEMORY_DB};
 use crate::state::{UserState, StateValue, Current};
 use crate::stf::AnonymousAssetSTF;
 use crate::crypto::SYMMETRIC_KEY;

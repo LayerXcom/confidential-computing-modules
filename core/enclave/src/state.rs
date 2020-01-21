@@ -4,9 +4,10 @@ use anonify_common::{
     UserAddress, Sha256, Hash256, State,
     kvs::*,
 };
+use ed25519_dalek::{PublicKey, Signature};
 use crate::{
     crypto::*,
-    kvs::{MEMORY_DB, SigVerificationKVS, EnclaveDBTx},
+    kvs::{MEMORY_DB, EnclaveKVS, EnclaveDBTx},
     error::{Result, EnclaveError},
 };
 use std::{
@@ -130,9 +131,13 @@ impl<S: State> UserState<S, Current> {
     // /// Apply user defined state transition function to current state.
     // pub fn apply_stf<F>(&self, stf: F) -> Result<Vec<UserState<S, Next>>>
     // where
-    //     F: Fn(S, S) -> S
+    //     F: FnOnce(S, S, S) -> (S, S)
     // {
-    //     let my_current_balance = UserState::<Self::S, _>::from_dbvalue(my_value.clone())?.0;
+    //     let my_current_balance = self.state_value::from_dbvalue()
+
+    //     let (my_update_state, other_update_state) = stf();
+    //     let my_update: UserState<S, Next> = self.update_inner_state(my_update_state).try_into()?;
+    //     let other_update: UserState<S, Next>
     // }
 
     // Only State with `Current` allows to access to the database to avoid from
@@ -268,6 +273,62 @@ impl From<Sha256> for Nonce {
         Nonce(s.as_array())
     }
 }
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub struct StfWrapper<D: EnclaveKVS>{
+    my_addr: UserAddress,
+    target_addr: UserAddress,
+    db: D,
+}
+
+impl<D: EnclaveKVS> StfWrapper<D> {
+    pub fn new(
+        pubkey: PublicKey,
+        sig: Signature,
+        msg: &[u8],
+        target_addr: UserAddress,
+        db: D,
+    ) -> Self {
+        let my_addr = UserAddress::from_sig(&msg, &sig, &pubkey);
+
+        StfWrapper {
+            my_addr,
+            target_addr,
+            db,
+        }
+    }
+
+    pub fn apply<F, S, I>(&self, stf: F, input: S) -> Result<StateIter<I, S>>
+    where
+        F: FnOnce(S, S, S) -> Result<Vec<S>>, // TODO: Implement StateInput trait to tuple.
+        S: State,
+        I: IntoIterator<Item=S>,
+    {
+        let my_state_value = self.db.get(&self.my_addr);
+        let my_state = StateValue::<S, Current>::from_dbvalue(my_state_value)?.inner_state;
+        let other_state_value = self.db.get(&self.target_addr);
+        let other_state = StateValue::<S, Current>::from_dbvalue(other_state_value)?.inner_state;
+
+        let state_vec = stf(my_state, other_state, input)?;
+        Ok(StateIter(state_vec))
+    }
+}
+
+pub struct StateIter<I: IntoIterator<Item=S>, S: State>(I);
+
+// impl StateIter<I, S>
+// where
+//     I: IntoIterator<Item=S>,
+//     S: State,
+// {
+//     pub fn into_concat_ciphertexts(self) -> (Vec<u8>, usize) {
+//         self.0.into_iter()
+//             .map(|e| UserState<S, Next>)
+//     }
+
+//     // TODO: Shuffle ciphertexts
+// }
+
 
 #[cfg(debug_assertions)]
 pub mod tests {
