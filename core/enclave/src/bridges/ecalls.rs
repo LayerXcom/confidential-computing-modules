@@ -1,10 +1,10 @@
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
-use anonify_common::{UserAddress, State, stf::Value};
+use anonify_common::{UserAddress, State, stf::{Value, state_transition}};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::kvs::{EnclaveKVS, MEMORY_DB};
-use crate::state::{UserState, StateValue, Current};
+use crate::state::{UserState, StateValue, Current, StfWrapper};
 use crate::stf::AnonymousAssetSTF;
 use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{
@@ -63,7 +63,7 @@ pub unsafe extern "C" fn ecall_state_transition(
     pubkey: &PubKey,
     msg: &Msg,
     target: &Address,
-    value: u64,
+    params: Value,
     unsigned_tx: &mut RawUnsignedTx,
 ) -> sgx_status_t {
     let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES);
@@ -74,19 +74,14 @@ pub unsafe extern "C" fn ecall_state_transition(
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let target_addr = UserAddress::from_array(*target);
 
-    let (my_state, other_state) = UserState::<Value ,_>::transfer(pubkey, sig, msg, target_addr, Value::new(value))
-        .expect("Failed to update state.");
-    let mut my_ciphertext = my_state.encrypt(&SYMMETRIC_KEY)
-        .expect("Failed to encrypt my state.");
-    let mut other_ciphertext = other_state.encrypt(&SYMMETRIC_KEY)
-        .expect("Failed to encrypt other state.");
-
-    my_ciphertext.append(&mut other_ciphertext);
+    let (ciphertexts, ciphertext_num) = StfWrapper::new(pubkey, sig, &msg[..], target_addr)
+        .apply(state_transition, params, &SYMMETRIC_KEY)
+        .expect("Faild to execute applying function.");
 
     unsigned_tx.report = save_to_host_memory(&report[..]).unwrap() as *const u8;
     unsigned_tx.report_sig = save_to_host_memory(&report_sig[..]).unwrap() as *const u8;
-    unsigned_tx.ciphertext_num = 2 as u32; // todo;
-    unsigned_tx.ciphertexts = save_to_host_memory(&my_ciphertext[..]).unwrap() as *const u8;
+    unsigned_tx.ciphertext_num = ciphertext_num; // todo;
+    unsigned_tx.ciphertexts = save_to_host_memory(&ciphertexts[..]).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS
 }
@@ -115,7 +110,7 @@ pub unsafe extern "C" fn ecall_init_state(
 
     unsigned_tx.report = save_to_host_memory(&report[..]).unwrap() as *const u8;
     unsigned_tx.report_sig = save_to_host_memory(&report_sig[..]).unwrap() as *const u8;
-    unsigned_tx.ciphertext_num = 1 as u32; // todo;
+    unsigned_tx.ciphertext_num = 1;
     unsigned_tx.ciphertexts = save_to_host_memory(&res_ciphertext[..]).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS

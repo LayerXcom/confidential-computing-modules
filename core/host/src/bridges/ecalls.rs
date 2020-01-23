@@ -149,7 +149,7 @@ pub struct UnsignedTx {
     pub report: Box<[u8]>,
     pub report_sig: Box<[u8]>,
     /// The number of ciphertexts.
-    pub ciphertext_num: u32,
+    pub ciphertext_num: usize,
     pub ciphertexts: Box<[u8]>,
 }
 
@@ -176,7 +176,7 @@ impl From<RawUnsignedTx> for UnsignedTx {
 
 impl UnsignedTx {
     pub fn get_two_ciphertexts(&self) -> (&[u8], &[u8]) {
-        let c_size = self.ciphertexts.len() / self.ciphertext_num as usize;
+        let c_size = self.ciphertexts.len() / self.ciphertext_num;
         let (c1, c2) = self.ciphertexts.split_at(c_size);
         assert_eq!(c1.len(), c2.len());
 

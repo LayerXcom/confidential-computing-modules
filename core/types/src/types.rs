@@ -51,7 +51,7 @@ pub struct RawUnsignedTx {
     pub report: *const u8,
     pub report_sig: *const u8,
     /// The number of ciphertexts.
-    pub ciphertext_num: u32,
+    pub ciphertext_num: usize,
     pub ciphertexts: *const u8,
 }
 

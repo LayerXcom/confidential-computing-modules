@@ -12,7 +12,7 @@ use crate::{
 };
 use std::{
     prelude::v1::*,
-    io::{Write, Read},
+    io::{self, Write, Read},
     marker::PhantomData,
     convert::{TryFrom, TryInto},
 };
@@ -280,44 +280,41 @@ impl From<Sha256> for Nonce {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
-pub struct StfWrapper<D: EnclaveKVS>{
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
+pub struct StfWrapper{
     my_addr: UserAddress,
     target_addr: UserAddress,
-    db: D,
 }
 
-impl<D: EnclaveKVS> StfWrapper<D> {
+impl StfWrapper {
     pub fn new(
         pubkey: PublicKey,
         sig: Signature,
         msg: &[u8],
         target_addr: UserAddress,
-        db: D,
     ) -> Self {
         let my_addr = UserAddress::from_sig(&msg, &sig, &pubkey);
 
         StfWrapper {
             my_addr,
             target_addr,
-            db,
         }
     }
 
     // TODO: To be more generic parameters to stf.
     // TODO: Fix dupulicate state values.
-    pub fn apply<F, S, I>(self, stf: F, input: S, symm_key: &SymmetricKey) -> Result<(Vec<u8>, usize)>
+    // TODO: Remove from MEMORY_DB static from this function.
+    pub fn apply<F, S>(self, stf: F, params: S, symm_key: &SymmetricKey) -> Result<(Vec<u8>, usize)>
     where
-        F: FnOnce(S, S, S) -> Result<(S, S)>, // TODO: Implement StateInput trait to tuple.
+        F: Fn(S, S, S) -> io::Result<(S, S)>, // TODO: Implement StateInput trait to tuple.
         S: State,
-        I: IntoIterator<Item=S>,
     {
-        let my_state_value = self.db.get(&self.my_addr);
+        let my_state_value = MEMORY_DB.get(&self.my_addr);
         let my_state_value = StateValue::<S, Current>::from_dbvalue(my_state_value)?;
-        let other_state_value = self.db.get(&self.target_addr);
+        let other_state_value = MEMORY_DB.get(&self.target_addr);
         let other_state_value = StateValue::<S, Current>::from_dbvalue(other_state_value)?;
 
-        let (my_update, other_update) = stf(my_state_value.inner_state.clone(), other_state_value.inner_state.clone(), input)?;
+        let (my_update, other_update) = stf(my_state_value.inner_state.clone(), other_state_value.inner_state.clone(), params)?;
         let my_update_state: UserState::<S, Next> = UserState::<S, Current>::new(self.my_addr, my_state_value)
             .update_inner_state(my_update)
             .try_into()?;

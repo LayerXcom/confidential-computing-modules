@@ -78,3 +78,15 @@ impl Value {
         self.0
     }
 }
+
+// TODO: Replace Error to our own error type.
+/// Devepler defined state transition function for thier applications.
+pub fn state_transition(my_current: Value, other_current: Value, params: Value) -> io::Result<(Value, Value)> {
+    if my_current < params {
+        return Err(Error::new(ErrorKind::InvalidData, "Current balance sould be over transferred amount."));
+    }
+    let my_update = my_current - params;
+    let other_update = other_current + params;
+
+    Ok((my_update, other_update))
+}
