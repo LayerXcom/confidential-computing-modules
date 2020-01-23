@@ -134,17 +134,6 @@ impl<S: State> UserState<S, Current> {
             state_value,
         }
     }
-    // /// Apply user defined state transition function to current state.
-    // pub fn apply_stf<F>(&self, stf: F) -> Result<Vec<UserState<S, Next>>>
-    // where
-    //     F: FnOnce(S, S, S) -> (S, S)
-    // {
-    //     let my_current_balance = self.state_value::from_dbvalue()
-
-    //     let (my_update_state, other_update_state) = stf();
-    //     let my_update: UserState<S, Next> = self.update_inner_state(my_update_state).try_into()?;
-    //     let other_update: UserState<S, Next>
-    // }
 
     // Only State with `Current` allows to access to the database to avoid from
     // storing data which have not been considered globally consensused.
