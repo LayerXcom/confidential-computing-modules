@@ -41,7 +41,7 @@ impl<S: State> AnonymousAssetSTF for UserState<S, Current> {
         total_supply: Self::S,
     ) -> Result<UserState<Self::S, Next>> {
         let address = UserAddress::from_sig(&msg, &sig, &from);
-        let state: UserState<Self::S, Next> = UserState::new(address, total_supply)?;
+        let state: UserState<Self::S, Next> = UserState::init(address, total_supply)?;
 
         Ok(state)
     }

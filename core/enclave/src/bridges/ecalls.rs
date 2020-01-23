@@ -107,7 +107,8 @@ pub unsafe extern "C" fn ecall_init_state(
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
 
     let total_supply = Value::new(value);
-    let init_state = UserState::<Value, _>::init(pubkey, sig, msg, total_supply)
+    let user_address = UserAddress::from_sig(&msg[..], &sig, &pubkey);
+    let init_state = UserState::<Value, _>::init(user_address, total_supply)
         .expect("Failed to initialize state.");
     let res_ciphertext = init_state.encrypt(&SYMMETRIC_KEY)
         .expect("Failed to encrypt init state.");

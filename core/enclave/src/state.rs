@@ -14,7 +14,7 @@ use std::{
     prelude::v1::*,
     io::{Write, Read},
     marker::PhantomData,
-    convert::TryFrom,
+    convert::{TryFrom, TryInto},
 };
 
 /// Curret nonce for state.
@@ -41,9 +41,9 @@ pub struct UserState<S: State, N> {
 /// inner_state depends on the state of your application on anonify system.
 /// Nonce is used to avoid data collisions when TEEs send transactions to blockchain.
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct StateValue<S: State, N> {
-    pub(crate) inner_state: S,
-    pub(crate) nonce: Nonce,
+pub struct StateValue<S: State, N> {
+    pub inner_state: S,
+    pub nonce: Nonce,
     _marker: PhantomData<N>,
 }
 
@@ -128,6 +128,12 @@ impl<S: State, N> UserState<S, N> {
 
 /// Operations of user state before sending a transaction or after fetching as a ciphertext
 impl<S: State> UserState<S, Current> {
+    pub fn new(address: UserAddress, state_value: StateValue<S, Current>) -> Self {
+        UserState {
+            address,
+            state_value,
+        }
+    }
     // /// Apply user defined state transition function to current state.
     // pub fn apply_stf<F>(&self, stf: F) -> Result<Vec<UserState<S, Next>>>
     // where
@@ -217,7 +223,7 @@ impl<S: State> UserState<S, Current> {
 
 impl<S: State> UserState<S, Next> {
     /// Initialize userstate. nonce is defined with `Sha256(address || init_state)`.
-    pub fn new(address: UserAddress, init_state: S) -> Result<Self> {
+    pub fn init(address: UserAddress, init_state: S) -> Result<Self> {
         let mut buf = vec![];
         address.write(&mut buf)?;
         init_state.write_le(&mut buf)?;
@@ -298,36 +304,33 @@ impl<D: EnclaveKVS> StfWrapper<D> {
         }
     }
 
-    pub fn apply<F, S, I>(&self, stf: F, input: S) -> Result<StateIter<I, S>>
+    // TODO: To be more generic parameters to stf.
+    // TODO: Fix dupulicate state values.
+    pub fn apply<F, S, I>(self, stf: F, input: S, symm_key: &SymmetricKey) -> Result<(Vec<u8>, usize)>
     where
-        F: FnOnce(S, S, S) -> Result<Vec<S>>, // TODO: Implement StateInput trait to tuple.
+        F: FnOnce(S, S, S) -> Result<(S, S)>, // TODO: Implement StateInput trait to tuple.
         S: State,
         I: IntoIterator<Item=S>,
     {
         let my_state_value = self.db.get(&self.my_addr);
-        let my_state = StateValue::<S, Current>::from_dbvalue(my_state_value)?.inner_state;
+        let my_state_value = StateValue::<S, Current>::from_dbvalue(my_state_value)?;
         let other_state_value = self.db.get(&self.target_addr);
-        let other_state = StateValue::<S, Current>::from_dbvalue(other_state_value)?.inner_state;
+        let other_state_value = StateValue::<S, Current>::from_dbvalue(other_state_value)?;
 
-        let state_vec = stf(my_state, other_state, input)?;
-        Ok(StateIter(state_vec))
+        let (my_update, other_update) = stf(my_state_value.inner_state.clone(), other_state_value.inner_state.clone(), input)?;
+        let my_update_state: UserState::<S, Next> = UserState::<S, Current>::new(self.my_addr, my_state_value)
+            .update_inner_state(my_update)
+            .try_into()?;
+        let mut my_enc_state = my_update_state.encrypt(&symm_key)?;
+        let other_update_state: UserState::<S, Next> = UserState::<S, Current>::new(self.target_addr, other_state_value)
+            .update_inner_state(other_update)
+            .try_into()?;
+        let mut other_enc_state = other_update_state.encrypt(&symm_key)?;
+
+        my_enc_state.append(&mut other_enc_state);
+        Ok((my_enc_state, 2))
     }
 }
-
-pub struct StateIter<I: IntoIterator<Item=S>, S: State>(I);
-
-// impl StateIter<I, S>
-// where
-//     I: IntoIterator<Item=S>,
-//     S: State,
-// {
-//     pub fn into_concat_ciphertexts(self) -> (Vec<u8>, usize) {
-//         self.0.into_iter()
-//             .map(|e| UserState<S, Next>)
-//     }
-
-//     // TODO: Shuffle ciphertexts
-// }
 
 
 #[cfg(debug_assertions)]
@@ -359,7 +362,7 @@ pub mod tests {
         let sig = keypair.sign(&buf);
         let user_address = UserAddress::from_sig(&buf, &sig, &public);
 
-        let state = UserState::<Value, _>::new(user_address, Value::new(100)).unwrap();
+        let state = UserState::<Value, Next>::init(user_address, Value::new(100)).unwrap();
         let state_vec = state.try_into_vec().unwrap();
         let res = UserState::read(&state_vec[..]).unwrap();
 
