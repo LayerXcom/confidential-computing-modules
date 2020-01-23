@@ -16,7 +16,6 @@ mod error;
 mod kvs;
 mod bridges;
 mod sealing;
-mod stf;
 mod attestation;
 mod quote;
 mod cert;

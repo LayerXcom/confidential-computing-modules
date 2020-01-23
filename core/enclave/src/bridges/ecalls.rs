@@ -1,11 +1,10 @@
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
-use anonify_common::{UserAddress, State, stf::{Value, state_transition}};
+use anonify_common::{UserAddress, State, stf::{Value, transfer}};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::kvs::{EnclaveKVS, MEMORY_DB};
 use crate::state::{UserState, StateValue, Current, StfWrapper};
-use crate::stf::AnonymousAssetSTF;
 use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{
     AttestationService, TEST_SPID, TEST_SUB_KEY,
@@ -75,7 +74,7 @@ pub unsafe extern "C" fn ecall_state_transition(
     let target_addr = UserAddress::from_array(*target);
 
     let (ciphertexts, ciphertext_num) = StfWrapper::new(pubkey, sig, &msg[..], target_addr)
-        .apply(state_transition, params, &SYMMETRIC_KEY)
+        .apply(transfer, params, &SYMMETRIC_KEY)
         .expect("Faild to execute applying function.");
 
     unsigned_tx.report = save_to_host_memory(&report[..]).unwrap() as *const u8;
