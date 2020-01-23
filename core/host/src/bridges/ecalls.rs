@@ -1,11 +1,13 @@
 use sgx_types::*;
-use anonify_types::{RawUnsignedTx, traits::SliceCPtr};
+use anonify_types::{RawUnsignedTx, traits::SliceCPtr, EnclaveState};
+use anonify_common::State;
 use ed25519_dalek::{Signature, PublicKey};
 use ::web3::types::U64;
 use crate::auto_ffi::*;
 use crate::web3::InnerEnclaveLog;
 use crate::error::{HostErrorKind, Result};
 
+/// Insert event logs from blockchain nodes into enclave memory database.
 pub(crate) fn insert_logs(
     eid: sgx_enclave_id_t,
     enclave_log: &InnerEnclaveLog,
@@ -35,14 +37,14 @@ pub(crate) fn insert_logs(
 }
 
 /// Get state only if the signature verification returns true.
-pub fn get_state(
+pub fn get_state<S: State>(
     eid: sgx_enclave_id_t,
     sig: &Signature,
     pubkey: &PublicKey,
     msg: &[u8],
-) -> Result<u64> {
+) -> Result<S> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-    let mut res: u64 = Default::default(); // TODO Change type from u64 to Vec<u8>
+    let mut state = EnclaveState::default();
 
     let status = unsafe {
         ecall_get_state(
@@ -51,7 +53,7 @@ pub fn get_state(
             sig.to_bytes().as_ptr() as _,
             pubkey.to_bytes().as_ptr() as _,
             msg.as_ptr() as _,
-            &mut res,
+            &mut state,
         )
     };
 
@@ -62,7 +64,15 @@ pub fn get_state(
 		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_get_state" }.into());
     }
 
+    let res = S::from_bytes(&state_as_bytes(state))?;
     Ok(res)
+}
+
+fn state_as_bytes(state: EnclaveState) -> Box<[u8]> {
+    let raw_state = state.0 as *mut Box<[u8]>;
+    let box_state = unsafe { Box::from_raw(raw_state) };
+
+    *box_state
 }
 
 /// Initialize a state when a new contract is deployed.
@@ -139,7 +149,7 @@ pub struct UnsignedTx {
     pub report: Box<[u8]>,
     pub report_sig: Box<[u8]>,
     /// The number of ciphertexts.
-    pub ciphertext_num: u32,
+    pub ciphertext_num: usize,
     pub ciphertexts: Box<[u8]>,
 }
 
@@ -166,7 +176,7 @@ impl From<RawUnsignedTx> for UnsignedTx {
 
 impl UnsignedTx {
     pub fn get_two_ciphertexts(&self) -> (&[u8], &[u8]) {
-        let c_size = self.ciphertexts.len() / self.ciphertext_num as usize;
+        let c_size = self.ciphertexts.len() / self.ciphertext_num;
         let (c1, c2) = self.ciphertexts.split_at(c_size);
         assert_eq!(c1.len(), c2.len());
 
@@ -238,7 +248,7 @@ mod tests {
         let sig = keypair.sign(&msg);
         assert!(keypair.verify(&msg, &sig).is_ok());
 
-        let state = get_state(enclave.geteid(), &sig, &keypair.public, &msg);
+        // let state = get_state::<Value>(enclave.geteid(), &sig, &keypair.public, &msg);
         // assert_eq!(state, 0);
     }
 }

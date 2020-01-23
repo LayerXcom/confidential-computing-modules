@@ -152,7 +152,7 @@ pub mod state {
         use serde_big_array::big_array;
         use rand::Rng;
         use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
-        use anonify_common::AccessRight;
+        use anonify_common::{AccessRight, State};
 
         big_array! { BigArray; }
 
@@ -202,6 +202,6 @@ pub mod state {
         }
 
         #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub u64);
+        pub struct Response<S: State>(pub S);
     }
 }

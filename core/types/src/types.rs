@@ -51,7 +51,7 @@ pub struct RawUnsignedTx {
     pub report: *const u8,
     pub report_sig: *const u8,
     /// The number of ciphertexts.
-    pub ciphertext_num: u32,
+    pub ciphertext_num: usize,
     pub ciphertexts: *const u8,
 }
 
@@ -73,6 +73,25 @@ impl fmt::Debug for RawUnsignedTx {
         debug_trait_builder.field("report_sig", &(self.report_sig));
         debug_trait_builder.field("ciphertext_num", &(self.ciphertext_num));
         debug_trait_builder.field("ciphertexts", &(self.ciphertexts));
+        debug_trait_builder.finish()
+    }
+}
+
+/// Returned from getting state operations.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct EnclaveState(pub *const u8);
+
+impl Default for EnclaveState {
+    fn default() -> Self {
+        EnclaveState ( ptr::null() )
+    }
+}
+
+impl fmt::Debug for EnclaveState {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut debug_trait_builder = f.debug_struct("EnclaveState");
+        debug_trait_builder.field("0", &(self.0));
         debug_trait_builder.finish()
     }
 }

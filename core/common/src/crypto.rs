@@ -1,17 +1,9 @@
 use crate::localstd::{
     io::{self, Read, Write},
-    fmt,
 };
 use ed25519_dalek::{PublicKey, Signature, Keypair};
 use tiny_keccak::Keccak;
-#[cfg(feature = "sgx")]
-use serde_sgx::ser::{Serialize, SerializeStruct, Serializer};
-#[cfg(feature = "sgx")]
-use serde_sgx::de::{self, Deserialize, Deserializer, Visitor, SeqAccess, MapAccess};
-#[cfg(feature = "std")]
-use serde::ser::{Serialize, SerializeStruct, Serializer};
-#[cfg(feature = "std")]
-use serde::de::{self, Deserialize, Deserializer, Visitor, SeqAccess, MapAccess};
+use crate::serde::{Serialize, Deserialize};
 #[cfg(feature = "std")]
 use rand::Rng;
 #[cfg(feature = "std")]
@@ -26,7 +18,8 @@ pub trait Hash256 {
 
 /// User address represents last 20 bytes of digest of user's public key.
 /// A signature verification must return true to generate a user address.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub struct UserAddress([u8; 20]);
 
 #[cfg(feature = "std")]
@@ -42,96 +35,6 @@ impl From<&UserAddress> for web3::types::Address {
     fn from(address: &UserAddress) -> Self {
         let bytes = address.as_bytes();
         web3::types::Address::from_slice(bytes)
-    }
-}
-
-impl Serialize for UserAddress {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut s = serializer.serialize_struct("UserAddress", 1)?;
-        s.serialize_field("zero", &self.0)?;
-        s.end()
-    }
-}
-
-impl<'de> Deserialize<'de> for UserAddress {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        enum Field { Zero };
-
-        impl<'de> Deserialize<'de> for Field {
-            fn deserialize<D>(deserializer: D) -> Result<Field, D::Error>
-            where
-                D: Deserializer<'de>,
-            {
-                struct FieldVisitor;
-
-                impl<'de> Visitor<'de> for FieldVisitor {
-                    type Value = Field;
-
-                    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                        formatter.write_str("`zero`")
-                    }
-
-                    fn visit_str<E>(self, value: &str) -> Result<Field, E>
-                    where
-                        E: de::Error,
-                    {
-                        match value {
-                            "zero" => Ok(Field::Zero),
-                            _ => Err(de::Error::unknown_field(value, FIELDS)),
-                        }
-                    }
-                }
-
-                deserializer.deserialize_identifier(FieldVisitor)
-            }
-        }
-
-        struct UserAddressVisitor;
-
-        impl<'de> Visitor<'de> for UserAddressVisitor {
-            type Value = UserAddress;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("struct UserAddress")
-            }
-
-            fn visit_seq<V>(self, mut seq: V) -> Result<UserAddress, V::Error>
-            where
-                V: SeqAccess<'de>,
-            {
-                let zero = seq.next_element()?
-                    .ok_or_else(|| de::Error::invalid_length(0, &self))?;
-                Ok(UserAddress(zero))
-            }
-
-            fn visit_map<V>(self, mut map: V) -> Result<UserAddress, V::Error>
-            where
-                V: MapAccess<'de>,
-            {
-                let mut zero = None;
-                while let Some(key) = map.next_key()? {
-                    match key {
-                        Field::Zero => {
-                            if zero.is_some() {
-                                return Err(de::Error::duplicate_field("zero"));
-                            }
-                            zero = Some(map.next_value()?);
-                        }
-                    }
-                }
-                let zero = zero.ok_or_else(|| de::Error::missing_field("zero"))?;
-                Ok(UserAddress(zero))
-            }
-        }
-
-        const FIELDS: &'static [&'static str] = &["zero"];
-        deserializer.deserialize_struct("UserAddress", FIELDS, UserAddressVisitor)
     }
 }
 

@@ -1,10 +1,11 @@
+use std::sync::Arc;
 use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use rand_core::RngCore;
 use rand_os::OsRng;
 use rand::Rng;
 use ed25519_dalek::Keypair;
-use anonify_common::UserAddress;
+use anonify_common::{UserAddress, AccessRight};
 use crate::auto_ffi::ecall_run_tests;
 use crate::constants::*;
 use crate::init_enclave::EnclaveDir;
@@ -41,7 +42,8 @@ fn test_transfer() {
     let third_access_right = AccessRight::new_from_rng(&mut csprng);
 
     let total_supply = 100;
-
+    let db = Arc::new(EventDB::new());
+    let event = EthEvent::build_event();
 
     // 1. Deploy
 
@@ -56,21 +58,21 @@ fn test_transfer() {
 
 
     // 2. Get logs from contract and update state inside enclave.
-
-    let init_event = EthEvent::build_init_event();
     contract
-        .get_event(&init_event).unwrap()
-        .into_enclave_log(&init_event).unwrap()
+        .get_event(db, &event).unwrap()
+        .into_enclave_log(&event).unwrap()
         .insert_enclave(eid).unwrap();
 
 
     // 3. Get state from enclave
 
-    let my_state = my_access_right.get_state(eid).unwrap();
-    let other_state = other_access_right.get_state(eid).unwrap();
+
+    let my_state = get_state_by_access_right(&my_access_right, eid).unwrap();
+    let other_state = get_state_by_access_right(&other_access_right, eid).unwrap();
+    let third_state = get_state_by_access_right(&third_access_right, eid).unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, 0);
-    assert_eq!(third_access_right.get_state(eid).unwrap(), 0);
+    assert_eq!(third_state, 0);
 
     // 4. Send a transaction to contract
 
@@ -81,9 +83,9 @@ fn test_transfer() {
     let eth_sender = EthSender::from_contract(eid, contract);
     let receipt = eth_sender.send_tx(
             &my_access_right,
-            deployer_addr,
             &other_user_address,
             amount,
+            deployer_addr,
             gas
         );
 
@@ -92,18 +94,18 @@ fn test_transfer() {
 
     // 5. Update state inside enclave
     let contract = eth_sender.get_contract();
-    let transfer_event = EthEvent::build_transfer_event();
     contract
-        .get_event(&transfer_event).unwrap()
-        .into_enclave_log(&transfer_event).unwrap()
+        .get_event(&event).unwrap()
+        .into_enclave_log(&event).unwrap()
         .insert_enclave(eid).unwrap();
 
 
     // 6. Check the updated states
-    let my_updated_state = my_access_right.get_state(eid).unwrap();
-    let other_updated_state = other_access_right.get_state(eid).unwrap();
+    let my_updated_state = get_state_by_access_right(&my_access_right, eid).unwrap();
+    let other_updated_state = get_state_by_access_right(&other_access_right, eid).unwrap();
+    let third_updated_state = get_state_by_access_right(&third_access_right, eid).unwrap();
 
     assert_eq!(my_updated_state, total_supply - amount);
     assert_eq!(other_updated_state, amount);
-    assert_eq!(third_access_right.get_state(eid).unwrap(), 0);
+    assert_eq!(third_updated_state, 0);
 }

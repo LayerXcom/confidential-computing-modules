@@ -1,11 +1,10 @@
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
-use anonify_common::{UserAddress, State};
+use anonify_common::{UserAddress, State, stf::{Value, transfer}};
 use ed25519_dalek::{PublicKey, Signature};
-use crate::kvs::{SigVerificationKVS, MEMORY_DB};
-use crate::state::{UserState, CurrentNonce};
-use crate::stf::{Value, AnonymousAssetSTF};
+use crate::kvs::{EnclaveKVS, MEMORY_DB};
+use crate::state::{UserState, StateValue, Current, StfWrapper};
 use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{
     AttestationService, TEST_SPID, TEST_SUB_KEY,
@@ -14,6 +13,7 @@ use crate::attestation::{
 use crate::quote::EnclaveContext;
 use super::ocalls::save_to_host_memory;
 
+/// Insert event logs from blockchain nodes into enclave's memory database.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_insert_logs(
     _contract_addr: &[u8; 20], //TODO
@@ -26,39 +26,43 @@ pub unsafe extern "C" fn ecall_insert_logs(
     assert_eq!(ciphertexts.len() % ciphertext_size, 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
     for ciphertext in ciphertexts.chunks(ciphertext_size) {
-        UserState::<Value ,CurrentNonce>::insert_cipheriv_memdb(ciphertext.to_vec())
+        UserState::<Value ,Current>::insert_cipheriv_memdb(ciphertext.to_vec())
             .expect("Failed to insert ciphertext into memory database.");
     }
 
     sgx_status_t::SGX_SUCCESS
 }
 
+/// Get current state of the user represented the given public key from enclave memory database.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_get_state(
     sig: &Sig,
     pubkey: &PubKey,
     msg: &Msg, // 32 bytes randomness for avoiding replay attacks.
-    state: *mut u64, // Currently, status is just value.
+    state: &mut EnclaveState,
 ) -> sgx_status_t {
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let key = UserAddress::from_sig(&msg[..], &sig, &pubkey);
 
     let db_value = MEMORY_DB.get(&key);
-    let user_state = UserState::<Value, _>::get_state_nonce_from_dbvalue(db_value)
-        .expect("Failed to read db_value.").0;
-    *state = user_state.into_raw_u64();
+    let user_state_value = StateValue::<Value, Current>::from_dbvalue(db_value)
+        .expect("Failed to read db_value.");
+    let user_state = user_state_value.inner_state();
+
+    state.0 = save_to_host_memory(&user_state.as_bytes().unwrap()).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS
 }
 
+/// Execute state transition in enclave. It depends on state transition functions and provided inputs.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_state_transition(
     sig: &Sig,
     pubkey: &PubKey,
     msg: &Msg,
     target: &Address,
-    value: u64,
+    params: Value,
     unsigned_tx: &mut RawUnsignedTx,
 ) -> sgx_status_t {
     let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES);
@@ -69,19 +73,14 @@ pub unsafe extern "C" fn ecall_state_transition(
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let target_addr = UserAddress::from_array(*target);
 
-    let (my_state, other_state) = UserState::<Value ,_>::transfer(pubkey, sig, msg, target_addr, Value::new(value))
-        .expect("Failed to update state.");
-    let mut my_ciphertext = my_state.encrypt(&SYMMETRIC_KEY)
-        .expect("Failed to encrypt my state.");
-    let mut other_ciphertext = other_state.encrypt(&SYMMETRIC_KEY)
-        .expect("Failed to encrypt other state.");
-
-    my_ciphertext.append(&mut other_ciphertext);
+    let (ciphertexts, ciphertext_num) = StfWrapper::new(pubkey, sig, &msg[..], target_addr)
+        .apply(transfer, params, &SYMMETRIC_KEY)
+        .expect("Faild to execute applying function.");
 
     unsigned_tx.report = save_to_host_memory(&report[..]).unwrap() as *const u8;
     unsigned_tx.report_sig = save_to_host_memory(&report_sig[..]).unwrap() as *const u8;
-    unsigned_tx.ciphertext_num = 2 as u32; // todo;
-    unsigned_tx.ciphertexts = save_to_host_memory(&my_ciphertext[..]).unwrap() as *const u8;
+    unsigned_tx.ciphertext_num = ciphertext_num; // todo;
+    unsigned_tx.ciphertexts = save_to_host_memory(&ciphertexts[..]).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS
 }
@@ -102,14 +101,15 @@ pub unsafe extern "C" fn ecall_init_state(
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
 
     let total_supply = Value::new(value);
-    let init_state = UserState::<Value, _>::init(pubkey, sig, msg, total_supply)
+    let user_address = UserAddress::from_sig(&msg[..], &sig, &pubkey);
+    let init_state = UserState::<Value, _>::init(user_address, total_supply)
         .expect("Failed to initialize state.");
     let res_ciphertext = init_state.encrypt(&SYMMETRIC_KEY)
         .expect("Failed to encrypt init state.");
 
     unsigned_tx.report = save_to_host_memory(&report[..]).unwrap() as *const u8;
     unsigned_tx.report_sig = save_to_host_memory(&report_sig[..]).unwrap() as *const u8;
-    unsigned_tx.ciphertext_num = 1 as u32; // todo;
+    unsigned_tx.ciphertext_num = 1;
     unsigned_tx.ciphertexts = save_to_host_memory(&res_ciphertext[..]).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS

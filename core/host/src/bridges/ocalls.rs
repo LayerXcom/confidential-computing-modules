@@ -26,7 +26,8 @@ fn ocall_get_quote(
     p_qe_report: *mut sgx_report_t,
     p_quote: *mut u8,
     _maxlen: u32,
-    p_quote_len: *mut u32) -> sgx_status_t {
+    p_quote_len: *mut u32,
+) -> sgx_status_t {
     let mut real_quote_len : u32 = 0;
 
     let ret = unsafe {

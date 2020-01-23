@@ -22,7 +22,7 @@ extern "C" {
         sig: *mut [u8; 64usize],
         pubkey: *mut [u8; 32usize],
         msg: *mut [u8; 32usize],
-        state: *mut u64,
+        state: *mut EnclaveState,
     ) -> sgx_status_t;
 }
 extern "C" {
