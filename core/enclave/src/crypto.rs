@@ -89,4 +89,4 @@ impl aead::NonceSequence for OneNonceSequence {
     }
 }
 
-// TODO: Enclave's signature generation
+

@@ -26,7 +26,7 @@ pub unsafe extern "C" fn ecall_insert_logs(
     assert_eq!(ciphertexts.len() % ciphertext_size, 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
     for ciphertext in ciphertexts.chunks(ciphertext_size) {
-        UserState::<Value ,Current>::insert_cipheriv_memdb(ciphertext.to_vec())
+        UserState::<Value ,Current>::insert_cipheriv_memdb(ciphertext.to_vec(), &SYMMETRIC_KEY)
             .expect("Failed to insert ciphertext into memory database.");
     }
 

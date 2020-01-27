@@ -137,8 +137,8 @@ impl<S: State> UserState<S, Current> {
 
     // Only State with `Current` allows to access to the database to avoid from
     // storing data which have not been considered globally consensused.
-    pub fn insert_cipheriv_memdb(cipheriv: Vec<u8>) -> Result<()> {
-        let user_state = Self::decrypt(cipheriv, &SYMMETRIC_KEY)?;
+    pub fn insert_cipheriv_memdb(cipheriv: Vec<u8>, symm_key: &SymmetricKey) -> Result<()> {
+        let user_state = Self::decrypt(cipheriv, &symm_key)?;
         let key = user_state.get_db_key();
         let value = user_state.get_db_value()?;
 
