@@ -4,7 +4,7 @@ services:
   drone:
     image: drone/drone:1
     ports:
-      - 8000:80
+      - 3080:80
       - 443:443
     volumes:
       - /var/lib/drone:/data

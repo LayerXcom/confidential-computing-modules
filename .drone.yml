@@ -1,1 +1,19 @@
 kind: pipeline
+type: docker
+name: anonify-debug
+
+steps:
+- name: prepare
+  image: osuketh/anonify:latest
+  commands:
+    - . /opt/sgxsdk/environment
+    - . /root/.cargo/env
+    - cp .env.template .env && cp example/server/.env.template example/server/.env
+- name: Build contracts
+  image: osuketh/anonify:latest
+  commands:
+    - solc -o build --bin --abi --optimize --overwrite contracts/AnonymousAsset.sol
+- name: test
+  image: osuketh/anonify:latest
+  commands:
+    - ./scripts/test.sh
