@@ -1,11 +1,15 @@
 //! This module containes enclave specific cryptographic logics.
 
+use sgx_types::sgx_report_data_t;
 use std::{
     prelude::v1::Vec,
     io::Read,
 };
 use ring::aead::{self, Aad, BoundKey, Nonce, UnboundKey, AES_256_GCM};
-use secp256k1::{SecretKey, PublicKey};
+use secp256k1::{SecretKey, PublicKey, util::{
+    SECRET_KEY_SIZE,
+    COMPRESSED_PUBLIC_KEY_SIZE,
+}};
 use crate::error::Result;
 
 lazy_static! {
@@ -13,13 +17,11 @@ lazy_static! {
 }
 
 /// The size of the symmetric 256 bit key we use for encryption in bytes.
-pub const SYMMETRIC_KEY_SIZE: usize = 32;
+const SYMMETRIC_KEY_SIZE: usize = 32;
 /// The size of initialization vector for AES-256-GCM.
-pub const IV_SIZE: usize = 12;
-
-const SECRET_SIZE: usize = 32;
-const NONCE_SIZE: usize = 32;
-const REPORT_DATA_SIZE: usize = SECRET_SIZE + NONCE_SIZE;
+const IV_SIZE: usize = 12;
+const NONCE_SIZE: usize = 31;
+const REPORT_DATA_SIZE: usize = COMPRESSED_PUBLIC_KEY_SIZE + NONCE_SIZE;
 
 /// symmetric key we use for encryption.
 #[derive(Debug, Clone, Copy, Default)]
@@ -103,7 +105,7 @@ pub struct EIK {
 impl EIK {
     pub fn new() -> Self {
         let secret = loop {
-            let mut ret = [0u8; SECRET_SIZE];
+            let mut ret = [0u8; SECRET_KEY_SIZE];
             sgx_rand_assign(&mut ret);
 
             match SecretKey::parse(&ret) {
@@ -125,11 +127,19 @@ impl EIK {
         PublicKey::from_secret_key(&self.secret)
     }
 
-    pub fn report_date(&self) -> [u8; REPORT_DATA_SIZE] {
+    /// Generate a value of REPORTDATA field in REPORT struct.
+    /// REPORTDATA consists of a compressed secp256k1 public key and nonce.
+    /// The public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
+    /// because this enclave identity key is binding to enclave's code.
+    /// The nonce is used for prevenring from replay attacks.
+    pub fn report_date(&self) -> sgx_report_data_t {
         let mut report_data = [0u8; REPORT_DATA_SIZE];
-        report_data[..32].copy_from_slice(&self.secret.serialize()[..]);
-        report_data[32..].copy_from_slice(&self.nonce[..]);
+        let ser_pubkey = &self.public_key().serialize_compressed();
+        report_data[..COMPRESSED_PUBLIC_KEY_SIZE].copy_from_slice(&ser_pubkey[..]);
+        report_data[COMPRESSED_PUBLIC_KEY_SIZE..].copy_from_slice(&self.nonce[..]);
 
-        report_data
+        sgx_report_data_t {
+            d: report_data
+        }
     }
 }

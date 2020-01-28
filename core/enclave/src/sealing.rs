@@ -25,17 +25,3 @@ impl NonSealedDbValue {
         Ok(SealedDbValue(res))
     }
 }
-
-// impl SealedDbValue {
-//     pub fn unseal() -> Result<SealedDbValue>  {
-
-//     }
-// }
-
-// impl From<SealedDbValue> for DBValue {
-
-// }
-
-// impl From<DBValue> for SealedDbValue {
-
-// }
