@@ -151,7 +151,7 @@ impl<S: State> UserState<S, Current> {
 
     /// Decrypt Ciphertext which was stored in a shared ledger.
     pub fn decrypt(cipheriv: Vec<u8>, key: &SymmetricKey) -> Result<Self> {
-        let res = decrypt_aes_256_gcm(cipheriv, key)?;
+        let res = key.decrypt_aes_256_gcm(cipheriv)?;
         Self::read(&res[..])
     }
 
@@ -227,7 +227,7 @@ impl<S: State> UserState<S, Next> {
 
     pub fn encrypt(self, key: &SymmetricKey) -> Result<Vec<u8>> {
         let buf = self.try_into_vec()?;
-        encrypt_aes_256_gcm(buf, key)
+        key.encrypt_aes_256_gcm(buf)
     }
 }
 
