@@ -1,11 +1,17 @@
-use std::sync::Arc;
+use std::{
+    sync::Arc,
+    io::{self, Read, Write},
+    ops::{Add, Sub},
+};
 use anonify_types::{RawPointer, ResultStatus};
+use byteorder::{ByteOrder, LittleEndian};
 use sgx_types::*;
 use rand_core::RngCore;
 use rand_os::OsRng;
 use rand::Rng;
 use ed25519_dalek::Keypair;
-use anonify_common::{UserAddress, AccessRight, stf::Value};
+use anonify_common::{UserAddress, AccessRight, State};
+use serde::{Serialize, Deserialize};
 use crate::auto_ffi::ecall_run_tests;
 use crate::constants::*;
 use crate::init_enclave::EnclaveDir;
@@ -15,6 +21,69 @@ use crate::web3::*;
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
 const ANONYMOUS_ASSET_ABI_PATH: &str = "../../build/AnonymousAsset.abi";
+
+const MOCK_STATE_LENGTH: usize = 8;
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Serialize, Deserialize)]
+// #[serde(crate = "crate::serde")]
+pub struct MockState(u64);
+
+impl State for MockState {
+    fn new(init: u64) -> Self {
+        MockState(init)
+    }
+
+    fn as_bytes(&self) -> io::Result<Vec<u8>> {
+        let mut buf = Vec::with_capacity(MOCK_STATE_LENGTH);
+        self.write_le(&mut buf)?;
+        Ok(buf)
+    }
+
+    fn from_bytes(bytes: &[u8]) -> io::Result<Self> {
+        let mut buf = bytes;
+        Self::read_le(&mut buf)
+    }
+
+    fn write_le<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        let mut buf = [0u8; MOCK_STATE_LENGTH];
+        LittleEndian::write_u64(&mut buf, self.0);
+        writer.write_all(&buf)?;
+
+        Ok(())
+    }
+
+    fn read_le<R: Read>(reader: &mut R) -> io::Result<Self> {
+        let mut buf = [0u8; MOCK_STATE_LENGTH];
+        reader.read_exact(&mut buf)?;
+        let res = LittleEndian::read_u64(&buf);
+
+        Ok(MockState(res))
+    }
+}
+
+impl Add for MockState {
+    type Output = MockState;
+
+    fn add(self, other: Self) -> Self {
+        let res = self.0 + other.0;
+        MockState(res)
+    }
+}
+
+impl Sub for MockState {
+    type Output = MockState;
+
+    fn sub(self, other: Self) -> Self {
+        let res = self.0 - other.0;
+        MockState(res)
+    }
+}
+
+impl MockState {
+    pub fn into_raw(&self) -> u64 {
+        self.0
+    }
+}
 
 #[test]
 fn test_in_enclave() {
@@ -33,7 +102,7 @@ fn test_in_enclave() {
 }
 
 #[test]
-fn test_transfer() {
+fn test_integration_transfer() {
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let mut csprng: OsRng = OsRng::new().unwrap();
@@ -56,20 +125,21 @@ fn test_transfer() {
     let contract = deployer.get_contract(ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
-
     // 2. Get logs from contract and update state inside enclave.
+    let contract_addr = hex::encode(contract_addr.as_bytes());
+    println!("{:?}", contract_addr);
     let ev_watcher = EventWatcher::new(
         &ETH_URL,
         ANONYMOUS_ASSET_ABI_PATH,
-        &base64::encode(contract_addr.as_bytes()),
+        &contract_addr,
         event_db.clone(),
     ).unwrap();
     ev_watcher.block_on_event(eid).unwrap();
 
     // 3. Get state from enclave
-    let my_state = get_state_by_access_right::<Value>(&my_access_right, eid).unwrap();
-    let other_state = get_state_by_access_right::<Value>(&other_access_right, eid).unwrap();
-    let third_state = get_state_by_access_right::<Value>(&third_access_right, eid).unwrap();
+    let my_state = get_state_by_access_right::<MockState>(&my_access_right, eid).unwrap();
+    let other_state = get_state_by_access_right::<MockState>(&other_access_right, eid).unwrap();
+    let third_state = get_state_by_access_right::<MockState>(&third_access_right, eid).unwrap();
     assert_eq!(my_state.into_raw(), total_supply);
     assert_eq!(other_state.into_raw(), 0);
     assert_eq!(third_state.into_raw(), 0);
@@ -96,16 +166,16 @@ fn test_transfer() {
     let ev_watcher = EventWatcher::new(
         &ETH_URL,
         ANONYMOUS_ASSET_ABI_PATH,
-        &base64::encode(contract_addr.as_bytes()),
+        &contract_addr,
         event_db.clone(),
     ).unwrap();
     ev_watcher.block_on_event(eid).unwrap();
 
-    
+
     // 6. Check the updated states
-    let my_updated_state = get_state_by_access_right::<Value>(&my_access_right, eid).unwrap();
-    let other_updated_state = get_state_by_access_right::<Value>(&other_access_right, eid).unwrap();
-    let third_updated_state = get_state_by_access_right::<Value>(&third_access_right, eid).unwrap();
+    let my_updated_state = get_state_by_access_right::<MockState>(&my_access_right, eid).unwrap();
+    let other_updated_state = get_state_by_access_right::<MockState>(&other_access_right, eid).unwrap();
+    let third_updated_state = get_state_by_access_right::<MockState>(&third_access_right, eid).unwrap();
 
     assert_eq!(my_updated_state.into_raw(), total_supply - amount);
     assert_eq!(other_updated_state.into_raw(), amount);
