@@ -201,7 +201,18 @@ impl EventWatcher {
     }
 }
 
-// TODO: Return State trait, not u64.
+pub trait StateGetter: Sized {
+    type S: State;
+
+    fn get_state_with_access_right(
+        access_right: &AccessRight,
+        enclave_id: sgx_enclave_id_t,
+    ) -> Result<Self::S>;
+}
+
+pub struct StateHandler;
+
+
 pub fn get_state_by_access_right<S: State>(
     access_right: &AccessRight,
     enclave_id: sgx_enclave_id_t,

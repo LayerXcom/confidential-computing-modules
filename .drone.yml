@@ -6,8 +6,7 @@ steps:
 - name: prepare
   image: osuketh/anonify:latest
   commands:
-    - . /opt/sgxsdk/environment
-    - . /root/.cargo/env
+    - . /opt/sgxsdk/environment && . /root/.cargo/env
     - cp .env.template .env && cp example/server/.env.template example/server/.env
 - name: Build contracts
   image: osuketh/anonify:latest
@@ -15,5 +14,19 @@ steps:
     - solc -o build --bin --abi --optimize --overwrite contracts/AnonymousAsset.sol
 - name: test
   image: osuketh/anonify:latest
+  privileged: true
+  volumes:
+    - name: isgx
+      path: /dev/isgx
+    - name: sock
+      path: /var/run/docker.sock
   commands:
     - ./scripts/test.sh
+
+volumes:
+  - name: isgx
+    host:
+      path: /dev/isgx
+  - name: sock
+    host:
+      path: /var/run/docker.sock
