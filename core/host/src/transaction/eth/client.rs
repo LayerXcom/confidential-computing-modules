@@ -7,14 +7,14 @@ use sgx_types::sgx_enclave_id_t;
 use log::debug;
 use anonify_common::{UserAddress, AccessRight, State};
 use ed25519_dalek::{Signature, PublicKey, Keypair};
-use ::web3::types::{H160, H256, Address as EthAddress, BlockNumber};
+use web3::types::{H160, H256, Address as EthAddress, BlockNumber};
 use crate::{
     init_enclave::EnclaveDir,
     ecalls::*,
     error::Result,
-    web3::{self, Web3Http, EthEvent},
+    transaction::eventdb::{EventDB, EventDBTx},
 };
-pub use crate::web3::eventdb::{EventDB, EventDBTx};
+use super::primitives::{self, Web3Http, EthEvent, Web3Contract, contract_abi_from_path};
 
 // TODO: This function throws error regarding invalid enclave id.
 fn init_enclave() -> sgx_enclave_id_t {
@@ -78,10 +78,10 @@ impl EthDeployer {
     }
 
     // TODO: generalize, remove abi.
-    pub fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<web3::AnonymousAssetContract> {
-        let abi = web3::contract_abi_from_path(abi_path)?;
+    pub fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<Web3Contract> {
+        let abi = contract_abi_from_path(abi_path)?;
         let adderess = self.address.expect("The contract hasn't be deployed yet.");
-        web3::AnonymousAssetContract::new(self.web3_conn, adderess, abi)
+        Web3Contract::new(self.web3_conn, adderess, abi)
     }
 }
 
@@ -89,7 +89,7 @@ impl EthDeployer {
 #[derive(Debug)]
 pub struct EthSender {
     enclave_id: sgx_enclave_id_t,
-    contract: web3::AnonymousAssetContract,
+    contract: Web3Contract,
 }
 
 impl EthSender {
@@ -100,16 +100,16 @@ impl EthSender {
         abi_path: P,
     ) -> Result<Self> {
         let web3_http = Web3Http::new(eth_url)?;
-        let abi = web3::contract_abi_from_path(abi_path)?;
+        let abi = contract_abi_from_path(abi_path)?;
         let addr = EthAddress::from_str(contract_addr)?;
-        let contract = web3::AnonymousAssetContract::new(web3_http, addr, abi)?;
+        let contract = Web3Contract::new(web3_http, addr, abi)?;
 
         Ok(EthSender { enclave_id, contract })
     }
 
     pub fn from_contract(
         enclave_id: sgx_enclave_id_t,
-        contract: web3::AnonymousAssetContract
+        contract: Web3Contract
     ) -> Self {
         EthSender {
             enclave_id,
@@ -153,14 +153,14 @@ impl EthSender {
         Ok(receipt)
     }
 
-    pub fn get_contract(self) -> web3::AnonymousAssetContract {
+    pub fn get_contract(self) -> Web3Contract {
         self.contract
     }
 }
 
 /// Components needed to watch events
 pub struct EventWatcher {
-    contract: web3::AnonymousAssetContract,
+    contract: Web3Contract,
     event_db: Arc<EventDB>,
 }
 
@@ -172,9 +172,9 @@ impl EventWatcher {
         event_db: Arc<EventDB>,
     ) -> Result<Self> {
         let web3_http = Web3Http::new(eth_url)?;
-        let abi = web3::contract_abi_from_path(abi_path)?;
+        let abi = contract_abi_from_path(abi_path)?;
         let addr = EthAddress::from_str(contract_addr)?;
-        let contract = web3::AnonymousAssetContract::new(web3_http, addr, abi)?;
+        let contract = Web3Contract::new(web3_http, addr, abi)?;
 
         Ok(EventWatcher { contract, event_db })
     }
@@ -196,21 +196,10 @@ impl EventWatcher {
         Ok(())
     }
 
-    pub fn get_contract(self) -> web3::AnonymousAssetContract {
+    pub fn get_contract(self) -> Web3Contract {
         self.contract
     }
 }
-
-pub trait StateGetter: Sized {
-    type S: State;
-
-    fn get_state_with_access_right(
-        access_right: &AccessRight,
-        enclave_id: sgx_enclave_id_t,
-    ) -> Result<Self::S>;
-}
-
-pub struct StateHandler;
 
 
 pub fn get_state_by_access_right<S: State>(

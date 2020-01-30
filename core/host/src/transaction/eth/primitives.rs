@@ -6,11 +6,6 @@ use std::{
     fs::File,
     sync::Arc,
 };
-use crate::{
-    error::*,
-    constants::*,
-    web3::eventdb::{BlockNumDB, EventDBTx},
-};
 use web3::{
     Web3,
     transports::{EventLoopHandle, Http},
@@ -27,6 +22,11 @@ use ethabi::{
     ParamType,
     decode,
     Hash,
+};
+use crate::{
+    error::*,
+    constants::*,
+    transaction::eventdb::{BlockNumDB, EventDBTx},
 };
 
 /// Basic web3 connection components via HTTP.
@@ -64,8 +64,8 @@ impl Web3Http {
         report: &[u8],
         report_sig: &[u8],
     ) -> Result<Address> {
-        let abi = include_bytes!("../../../../build/AnonymousAsset.abi");
-        let bin = include_str!("../../../../build/AnonymousAsset.bin");
+        let abi = include_bytes!("../../../../../build/AnonymousAsset.abi");
+        let bin = include_str!("../../../../../build/AnonymousAsset.bin");
 
         let contract = Contract::deploy(self.web3.eth(), abi)
             .unwrap() // TODO
@@ -85,19 +85,19 @@ impl Web3Http {
     }
 }
 
-/// Web3 connection components of anonymous asset contract.
+/// Web3 connection components of a contract.
 #[derive(Debug)]
-pub struct AnonymousAssetContract {
+pub struct Web3Contract {
     contract: Contract<Http>,
     address: Address, // contract address
     web3_conn: Web3Http,
 }
 
-impl AnonymousAssetContract {
+impl Web3Contract {
     pub fn new(web3_conn: Web3Http, address: Address, abi: ContractABI) -> Result<Self> {
         let contract = Contract::new(web3_conn.web3.eth(), address, abi);
 
-        Ok(AnonymousAssetContract {
+        Ok(Web3Contract {
             contract,
             address,
             web3_conn,

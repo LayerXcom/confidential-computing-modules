@@ -2,9 +2,9 @@ use sgx_types::*;
 use anonify_types::{RawUnsignedTx, traits::SliceCPtr, EnclaveState};
 use anonify_common::State;
 use ed25519_dalek::{Signature, PublicKey};
-use ::web3::types::U64;
+use web3::types::U64;
 use crate::auto_ffi::*;
-use crate::web3::InnerEnclaveLog;
+use crate::transaction::eth::primitives::InnerEnclaveLog; // TODO
 use crate::error::{HostErrorKind, Result};
 
 /// Insert event logs from blockchain nodes into enclave memory database.

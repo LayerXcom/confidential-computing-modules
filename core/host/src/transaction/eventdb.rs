@@ -1,6 +1,5 @@
 use anonify_common::kvs::{KVS, MemoryKVS, DBValue, DBTx};
 use ethabi::Hash;
-use web3::types::BlockNumber;
 use byteorder::{LittleEndian, ByteOrder};
 use crate::error::Result;
 
