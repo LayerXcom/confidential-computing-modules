@@ -12,7 +12,10 @@ use crate::{
     init_enclave::EnclaveDir,
     ecalls::*,
     error::Result,
-    transaction::eventdb::{EventDB, EventDBTx},
+    transaction::{
+        eventdb::{EventDB, EventDBTx},
+        dispatcher::*,
+    },
 };
 use super::primitives::{self, Web3Http, EthEvent, Web3Contract, contract_abi_from_path};
 
@@ -34,9 +37,9 @@ pub struct EthDeployer {
     address: Option<EthAddress>,
 }
 
-impl EthDeployer {
-    pub fn new(enclave_id: sgx_enclave_id_t, eth_url: &str) -> Result<Self> {
-        let web3_conn = Web3Http::new(eth_url)?;
+impl Deployer for EthDeployer {
+    fn new(enclave_id: sgx_enclave_id_t, node_url: &str) -> Result<Self> {
+        let web3_conn = Web3Http::new(node_url)?;
 
         Ok(EthDeployer {
             enclave_id,
@@ -45,13 +48,15 @@ impl EthDeployer {
         })
     }
 
-    pub fn get_account(&self, index: usize) -> Result<EthAddress> {
-        self.web3_conn.get_account(index)
+    fn get_account(&self, index: usize) -> Result<SignerAddress> {
+        Ok(SignerAddress::EthAddress(
+            self.web3_conn.get_account(index)?
+        ))
     }
 
-    pub fn deploy<S: State>(
+    fn deploy<S: State>(
         &mut self,
-        deploy_user: &EthAddress,
+        deploy_user: &SignerAddress,
         access_right: &AccessRight,
         state: S,
     ) -> Result<H160> {
@@ -62,26 +67,30 @@ impl EthDeployer {
             &access_right.nonce,
             state,
         )?;
-
         debug!("unsigned_tx: {:?}", &unsigned_tx);
 
-        let contract_addr = self.web3_conn.deploy(
-            &deploy_user,
-            &unsigned_tx.ciphertexts,
-            &unsigned_tx.report,
-            &unsigned_tx.report_sig,
-        )?;
-
+        let contract_addr = match deploy_user {
+            SignerAddress::EthAddress(address) => {
+                self.web3_conn.deploy(
+                    &address,
+                    &unsigned_tx.ciphertexts,
+                    &unsigned_tx.report,
+                    &unsigned_tx.report_sig,
+                )?
+            }
+        };
         self.address = Some(contract_addr);
 
         Ok(contract_addr)
     }
 
     // TODO: generalize, remove abi.
-    pub fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<Web3Contract> {
+    fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind> {
         let abi = contract_abi_from_path(abi_path)?;
         let adderess = self.address.expect("The contract hasn't be deployed yet.");
-        Web3Contract::new(self.web3_conn, adderess, abi)
+        Ok(ContractKind::Web3Contract(
+            Web3Contract::new(self.web3_conn, adderess, abi)?
+        ))
     }
 }
 
