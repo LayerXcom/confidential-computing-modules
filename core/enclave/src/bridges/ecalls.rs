@@ -93,7 +93,8 @@ pub unsafe extern "C" fn ecall_init_state(
     sig: &Sig,
     pubkey: &PubKey,
     msg: &Msg,
-    value: u64,
+    state: *const u8,
+    state_len: usize,
     unsigned_tx: &mut RawUnsignedTx,
 ) -> sgx_status_t {
     let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES);
@@ -103,9 +104,11 @@ pub unsafe extern "C" fn ecall_init_state(
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
 
-    let total_supply = Value::new(value);
+    let params = slice::from_raw_parts(state, state_len);
+    let params = Value::from_bytes(&params).unwrap();
+
     let user_address = UserAddress::from_sig(&msg[..], &sig, &pubkey);
-    let init_state = UserState::<Value, _>::init(user_address, total_supply)
+    let init_state = UserState::<Value, _>::init(user_address, params)
         .expect("Failed to initialize state.");
     let res_ciphertext = init_state.encrypt(&SYMMETRIC_KEY)
         .expect("Failed to encrypt init state.");

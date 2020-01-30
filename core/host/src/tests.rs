@@ -117,7 +117,7 @@ fn test_integration_transfer() {
     // 1. Deploy
     let mut deployer = EthDeployer::new(eid, ETH_URL).unwrap();
     let deployer_addr = deployer.get_account(0).unwrap();
-    let contract_addr = deployer.deploy(&deployer_addr, &my_access_right, total_supply).unwrap();
+    let contract_addr = deployer.deploy(&deployer_addr, &my_access_right, MockState::new(total_supply)).unwrap();
 
     println!("Deployer address: {}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -136,7 +136,7 @@ fn test_integration_transfer() {
     ).unwrap();
     ev_watcher.block_on_event(eid).unwrap();
 
-    
+
     // 3. Get state from enclave
     let my_state = get_state_by_access_right::<MockState>(&my_access_right, eid).unwrap();
     let other_state = get_state_by_access_right::<MockState>(&other_access_right, eid).unwrap();
@@ -155,7 +155,7 @@ fn test_integration_transfer() {
     let receipt = eth_sender.send_tx(
             &my_access_right,
             &other_user_address,
-            amount,
+            MockState::new(amount),
             deployer_addr,
             gas
         );

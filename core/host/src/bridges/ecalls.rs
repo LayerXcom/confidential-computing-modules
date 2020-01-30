@@ -76,15 +76,16 @@ fn state_as_bytes(state: EnclaveState) -> Box<[u8]> {
 }
 
 /// Initialize a state when a new contract is deployed.
-pub fn init_state(
+pub fn init_state<S: State>(
     eid: sgx_enclave_id_t,
     sig: &Signature,
     pubkey: &PublicKey,
     msg: &[u8],
-    total_supply: u64,
+    state: S,
 ) -> Result<UnsignedTx> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut unsigned_tx = RawUnsignedTx::default();
+    let state = state.as_bytes()?;
 
     let status = unsafe {
         ecall_init_state(
@@ -93,7 +94,8 @@ pub fn init_state(
             sig.to_bytes().as_ptr() as _,
             pubkey.to_bytes().as_ptr() as _,
             msg.as_ptr() as _,
-            total_supply,
+            state.as_c_ptr() as *const u8,
+            state.len(),
             &mut unsigned_tx,
         )
     };

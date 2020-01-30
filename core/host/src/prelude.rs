@@ -49,18 +49,18 @@ impl EthDeployer {
         self.web3_conn.get_account(index)
     }
 
-    pub fn deploy(
+    pub fn deploy<S: State>(
         &mut self,
         deploy_user: &EthAddress,
         access_right: &AccessRight,
-        total_supply: u64,
+        state: S,
     ) -> Result<H160> {
         let unsigned_tx = init_state(
             self.enclave_id,
             &access_right.sig,
             &access_right.pubkey,
             &access_right.nonce,
-            total_supply,
+            state,
         )?;
 
         debug!("unsigned_tx: {:?}", &unsigned_tx);
