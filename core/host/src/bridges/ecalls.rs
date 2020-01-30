@@ -196,6 +196,7 @@ mod tests {
     use rand::Rng;
     use ed25519_dalek::Keypair;
     use crate::init_enclave::EnclaveDir;
+    use crate::mock::MockState;
 
     #[test]
     fn test_init_state() {
@@ -214,7 +215,7 @@ mod tests {
             &sig,
             &keypair.public,
             &msg,
-            total_supply,
+            MockState::new(total_supply),
         ).is_ok());
     }
 
@@ -237,7 +238,7 @@ mod tests {
             &keypair.public,
             &msg,
             &target[..],
-            amount,
+            MockState::new(amount),
         ).is_ok());
     }
 

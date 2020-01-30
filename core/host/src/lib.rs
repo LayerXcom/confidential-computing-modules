@@ -9,6 +9,8 @@ mod error;
 mod web3;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod mock;
 
 use bridges::{ecalls, auto_ffi};
 pub use init_enclave::EnclaveDir;
