@@ -101,8 +101,8 @@ pub struct EthSender {
     contract: Web3Contract,
 }
 
-impl EthSender {
-    pub fn new<P: AsRef<Path>>(
+impl Sender for EthSender {
+    fn new<P: AsRef<Path>>(
         enclave_id: sgx_enclave_id_t,
         eth_url: &str,
         contract_addr: &str,
@@ -116,26 +116,32 @@ impl EthSender {
         Ok(EthSender { enclave_id, contract })
     }
 
-    pub fn from_contract(
+    fn from_contract(
         enclave_id: sgx_enclave_id_t,
-        contract: Web3Contract
+        contract: ContractKind,
     ) -> Self {
-        EthSender {
-            enclave_id,
-            contract,
+        match contract {
+            ContractKind::Web3Contract(contract) => {
+                EthSender {
+                    enclave_id,
+                    contract,
+                }
+            }
         }
     }
 
-    pub fn get_account(&self, index: usize) -> Result<EthAddress> {
-        self.contract.get_account(index)
+    fn get_account(&self, index: usize) -> Result<SignerAddress> {
+        Ok(SignerAddress::EthAddress(
+            self.contract.get_account(index)?
+        ))
     }
 
-    pub fn send_tx<S: State>(
+    fn send_tx<S: State>(
         &self,
         access_right: &AccessRight,
         target: &UserAddress,
         state: S,
-        from_eth_addr: EthAddress,
+        from_eth_addr: SignerAddress,
         gas: u64,
     ) -> Result<H256> {
         let unsigned_tx = state_transition(
@@ -148,22 +154,26 @@ impl EthSender {
         )?;
 
         debug!("unsigned_tx: {:?}", &unsigned_tx);
-
         let (update_bal1, update_bal2) = unsigned_tx.get_two_ciphertexts();
-        let receipt = self.contract.tranfer::<u64>(
-            from_eth_addr,
-            update_bal1,
-            update_bal2,
-            &unsigned_tx.report,
-            &unsigned_tx.report_sig,
-            gas,
-        )?;
+
+        let receipt = match from_eth_addr {
+            SignerAddress::EthAddress(addr) => {
+                self.contract.tranfer::<u64>(
+                    addr,
+                    update_bal1,
+                    update_bal2,
+                    &unsigned_tx.report,
+                    &unsigned_tx.report_sig,
+                    gas,
+                )?
+            }
+        };
 
         Ok(receipt)
     }
 
-    pub fn get_contract(self) -> Web3Contract {
-        self.contract
+    fn get_contract(self) -> ContractKind {
+        ContractKind::Web3Contract(self.contract)
     }
 }
 
