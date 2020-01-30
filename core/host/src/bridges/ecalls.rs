@@ -4,7 +4,7 @@ use anonify_common::State;
 use ed25519_dalek::{Signature, PublicKey};
 use web3::types::U64;
 use crate::auto_ffi::*;
-use crate::transaction::eth::primitives::InnerEnclaveLog; // TODO
+use crate::transaction::eventdb::InnerEnclaveLog; // TODO
 use crate::error::{HostErrorKind, Result};
 
 /// Insert event logs from blockchain nodes into enclave memory database.
@@ -37,7 +37,7 @@ pub(crate) fn insert_logs(
 }
 
 /// Get state only if the signature verification returns true.
-pub fn get_state<S: State>(
+pub(crate) fn get_state<S: State>(
     eid: sgx_enclave_id_t,
     sig: &Signature,
     pubkey: &PublicKey,
@@ -76,7 +76,7 @@ fn state_as_bytes(state: EnclaveState) -> Box<[u8]> {
 }
 
 /// Initialize a state when a new contract is deployed.
-pub fn init_state<S: State>(
+pub(crate) fn init_state<S: State>(
     eid: sgx_enclave_id_t,
     sig: &Signature,
     pubkey: &PublicKey,
@@ -111,7 +111,7 @@ pub fn init_state<S: State>(
 }
 
 /// Update states when a transaction is sent to blockchain.
-pub fn state_transition<S: State>(
+pub(crate) fn state_transition<S: State>(
     eid: sgx_enclave_id_t,
     sig: &Signature,
     pubkey: &PublicKey,
@@ -149,7 +149,7 @@ pub fn state_transition<S: State>(
 
 
 #[derive(Debug, Clone, Default)]
-pub struct UnsignedTx {
+pub(crate) struct UnsignedTx {
     pub report: Box<[u8]>,
     pub report_sig: Box<[u8]>,
     /// The number of ciphertexts.
@@ -179,7 +179,7 @@ impl From<RawUnsignedTx> for UnsignedTx {
 
 
 impl UnsignedTx {
-    pub fn get_two_ciphertexts(&self) -> (&[u8], &[u8]) {
+    pub(crate) fn get_two_ciphertexts(&self) -> (&[u8], &[u8]) {
         let c_size = self.ciphertexts.len() / self.ciphertext_num;
         let (c1, c2) = self.ciphertexts.split_at(c_size);
         assert_eq!(c1.len(), c2.len());

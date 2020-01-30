@@ -1,4 +1,4 @@
-pub(crate) mod eth;
-mod eventdb;
+mod eth;
+pub(crate) mod eventdb;
 mod utils;
 mod dispatcher;

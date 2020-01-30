@@ -26,7 +26,7 @@ use ethabi::{
 use crate::{
     error::*,
     constants::*,
-    transaction::eventdb::{BlockNumDB, EventDBTx},
+    transaction::eventdb::{BlockNumDB, EventDBTx, InnerEnclaveLog, EnclaveLog},
 };
 
 /// Basic web3 connection components via HTTP.
@@ -230,74 +230,6 @@ impl<D: BlockNumDB> Web3Logs<D> {
         }
 
         res
-    }
-}
-
-/// A log which is sent to enclave. Each log containes ciphertexts data of a given contract address and a given block number.
-#[derive(Debug, Clone)]
-pub(crate) struct InnerEnclaveLog {
-    pub(crate) contract_addr: [u8; 20],
-    pub(crate) latest_blc_num: u64,
-    pub(crate) ciphertexts: Vec<u8>, // Concatenated all fetched ciphertexts
-    pub(crate) ciphertext_size: usize, // Byte size of a ciphertext
-}
-
-/// A wrapper type of enclave logs.
-#[derive(Debug, Clone)]
-pub struct EnclaveLog<D: BlockNumDB> {
-    inner: Option<InnerEnclaveLog>,
-    db: Arc<D>,
-}
-
-impl<D: BlockNumDB> EnclaveLog<D> {
-    /// Store logs into enclave in-memory.
-    /// This returns a latest block number specified by fetched logs.
-    pub fn insert_enclave(self, eid: sgx_enclave_id_t) -> Result<EnclaveBlockNumber<D>> {
-        use crate::ecalls::insert_logs;
-        match &self.inner {
-            Some(log) => {
-                insert_logs(eid, log)?;
-                let next_blc_num = log.latest_blc_num + 1;
-
-                return Ok(EnclaveBlockNumber {
-                    inner: Some(next_blc_num),
-                    db: self.db,
-                });
-            },
-            None => return Ok(EnclaveBlockNumber {
-                inner: None,
-                db: self.db,
-            }),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct EnclaveBlockNumber<D: BlockNumDB> {
-    inner: Option<u64>,
-    db: Arc<D>,
-}
-
-impl<D: BlockNumDB> EnclaveBlockNumber<D> {
-    /// Only if EnclaveBlockNumber has new block number to log,
-    /// it's set next block number to event db.
-    pub fn set_to_db(&self, key: Hash) {
-        match &self.inner {
-            Some(num) => {
-                let mut dbtx = EventDBTx::new();
-                dbtx.put(key, *num);
-                self.db.set_next_block_num(dbtx);
-            },
-            None => { },
-        }
-    }
-}
-
-pub struct EthUserAddress(pub Address);
-
-impl EthUserAddress {
-    pub fn new(address: Address) -> Self {
-        EthUserAddress(address)
     }
 }
 

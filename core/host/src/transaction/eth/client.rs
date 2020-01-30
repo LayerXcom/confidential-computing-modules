@@ -13,21 +13,11 @@ use crate::{
     ecalls::*,
     error::Result,
     transaction::{
-        eventdb::{EventDB, EventDBTx},
+        eventdb::{EventDB, EventDBTx, BlockNumDB},
         dispatcher::*,
     },
 };
 use super::primitives::{self, Web3Http, EthEvent, Web3Contract, contract_abi_from_path};
-
-// TODO: This function throws error regarding invalid enclave id.
-fn init_enclave() -> sgx_enclave_id_t {
-    #[cfg(not(debug_assertions))]
-    let enclave = EnclaveDir::new().init_enclave(false).unwrap();
-    #[cfg(debug_assertions)]
-    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
-
-    enclave.geteid()
-}
 
 /// Components needed to deploy a contract
 #[derive(Debug)]
@@ -104,11 +94,11 @@ pub struct EthSender {
 impl Sender for EthSender {
     fn new<P: AsRef<Path>>(
         enclave_id: sgx_enclave_id_t,
-        eth_url: &str,
+        node_url: &str,
         contract_addr: &str,
         abi_path: P,
     ) -> Result<Self> {
-        let web3_http = Web3Http::new(eth_url)?;
+        let web3_http = Web3Http::new(node_url)?;
         let abi = contract_abi_from_path(abi_path)?;
         let addr = EthAddress::from_str(contract_addr)?;
         let contract = Web3Contract::new(web3_http, addr, abi)?;
@@ -178,19 +168,21 @@ impl Sender for EthSender {
 }
 
 /// Components needed to watch events
-pub struct EventWatcher {
+pub struct EventWatcher<DB: BlockNumDB> {
     contract: Web3Contract,
-    event_db: Arc<EventDB>,
+    event_db: Arc<DB>,
 }
 
-impl EventWatcher {
-    pub fn new<P: AsRef<Path>>(
-        eth_url: &str,
+impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
+    type DB = DB;
+
+    fn new<P: AsRef<Path>>(
+        node_url: &str,
         abi_path: P,
         contract_addr: &str,
-        event_db: Arc<EventDB>,
+        event_db: Arc<DB>,
     ) -> Result<Self> {
-        let web3_http = Web3Http::new(eth_url)?;
+        let web3_http = Web3Http::new(node_url)?;
         let abi = contract_abi_from_path(abi_path)?;
         let addr = EthAddress::from_str(contract_addr)?;
         let contract = Web3Contract::new(web3_http, addr, abi)?;
@@ -198,8 +190,7 @@ impl EventWatcher {
         Ok(EventWatcher { contract, event_db })
     }
 
-    /// Blocking event fetch from blockchain nodes.
-    pub fn block_on_event(
+    fn block_on_event(
         self,
         eid: sgx_enclave_id_t,
     ) -> Result<()> {
@@ -215,22 +206,7 @@ impl EventWatcher {
         Ok(())
     }
 
-    pub fn get_contract(self) -> Web3Contract {
-        self.contract
+    fn get_contract(self) -> ContractKind {
+        ContractKind::Web3Contract(self.contract)
     }
-}
-
-
-pub fn get_state_by_access_right<S: State>(
-    access_right: &AccessRight,
-    enclave_id: sgx_enclave_id_t,
-) -> Result<S> {
-    let state = get_state(
-        enclave_id,
-        &access_right.sig,
-        &access_right.pubkey,
-        &access_right.nonce,
-    )?;
-
-    Ok(state)
 }
