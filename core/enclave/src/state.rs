@@ -3,6 +3,7 @@
 use anonify_common::{
     UserAddress, Sha256, Hash256, State,
     kvs::*,
+    stf::{Runtime, CallKind},
 };
 use ed25519_dalek::{PublicKey, Signature};
 use crate::{
@@ -293,17 +294,15 @@ impl StfWrapper {
     // TODO: To be more generic parameters to stf.
     // TODO: Fix dupulicate state values.
     // TODO: Remove from MEMORY_DB static from this function.
-    pub fn apply<F, S>(self, stf: F, params: S, symm_key: &SymmetricKey) -> Result<(Vec<u8>, usize)>
-    where
-        F: Fn(S, S, S) -> io::Result<(S, S)>, // TODO: Implement StateInput trait to tuple.
-        S: State,
+    pub fn apply<S: State>(self, _stf: &str, params: S, symm_key: &SymmetricKey) -> Result<(Vec<u8>, usize)>
     {
         let my_state_value = MEMORY_DB.get(&self.my_addr);
         let my_state_value = StateValue::<S, Current>::from_dbvalue(my_state_value)?;
         let other_state_value = MEMORY_DB.get(&self.target_addr);
         let other_state_value = StateValue::<S, Current>::from_dbvalue(other_state_value)?;
 
-        let (my_update, other_update) = stf(my_state_value.inner_state.clone(), other_state_value.inner_state.clone(), params)?;
+        let (my_update, other_update) = Runtime(CallKind::Transfer)
+            .exec((my_state_value.inner_state.clone(), other_state_value.inner_state.clone(), params))?;
         let my_update_state: UserState::<S, Next> = UserState::<S, Current>::new(self.my_addr, my_state_value)
             .update_inner_state(my_update)
             .try_into()?;

@@ -121,11 +121,11 @@ impl EthSender {
         self.contract.get_account(index)
     }
 
-    pub fn send_tx(
+    pub fn send_tx<S: State>(
         &self,
         access_right: &AccessRight,
         target: &UserAddress,
-        amount: u64,
+        state: S,
         from_eth_addr: EthAddress,
         gas: u64,
     ) -> Result<H256> {
@@ -135,7 +135,7 @@ impl EthSender {
             &access_right.pubkey,
             &access_right.nonce,
             target.as_bytes(),
-            amount,
+            state,
         )?;
 
         debug!("unsigned_tx: {:?}", &unsigned_tx);

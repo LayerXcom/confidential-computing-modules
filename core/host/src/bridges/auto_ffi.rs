@@ -33,7 +33,8 @@ extern "C" {
         pubkey: *mut [u8; 32usize],
         msg: *mut [u8; 32usize],
         target: *mut [u8; 20usize],
-        value: u64,
+        state: *const u8,
+        state_len: usize,
         result: *mut RawUnsignedTx,
     ) -> sgx_status_t;
 }

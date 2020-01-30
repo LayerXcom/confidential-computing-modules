@@ -1,7 +1,7 @@
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
-use anonify_common::{UserAddress, State, stf::{Value, transfer}};
+use anonify_common::{UserAddress, State, stf::Value};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::kvs::{EnclaveKVS, MEMORY_DB};
 use crate::state::{UserState, StateValue, Current, StfWrapper};
@@ -62,7 +62,8 @@ pub unsafe extern "C" fn ecall_state_transition(
     pubkey: &PubKey,
     msg: &Msg,
     target: &Address,
-    params: Value,
+    state: *const u8,
+    state_len: usize,
     unsigned_tx: &mut RawUnsignedTx,
 ) -> sgx_status_t {
     let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES);
@@ -72,9 +73,11 @@ pub unsafe extern "C" fn ecall_state_transition(
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let target_addr = UserAddress::from_array(*target);
+    let params = slice::from_raw_parts(state, state_len);
+    let params = Value::from_bytes(&params).unwrap();
 
     let (ciphertexts, ciphertext_num) = StfWrapper::new(pubkey, sig, &msg[..], target_addr)
-        .apply(transfer, params, &SYMMETRIC_KEY)
+        .apply::<Value>("transfer", params, &SYMMETRIC_KEY)
         .expect("Faild to execute applying function.");
 
     unsigned_tx.report = save_to_host_memory(&report[..]).unwrap() as *const u8;

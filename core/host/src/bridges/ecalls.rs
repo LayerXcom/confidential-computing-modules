@@ -109,16 +109,17 @@ pub fn init_state(
 }
 
 /// Update states when a transaction is sent to blockchain.
-pub fn state_transition(
+pub fn state_transition<S: State>(
     eid: sgx_enclave_id_t,
     sig: &Signature,
     pubkey: &PublicKey,
     msg: &[u8],
     target: &[u8],
-    amount: u64,
+    state: S,
 ) -> Result<UnsignedTx> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut unsigned_tx = RawUnsignedTx::default();
+    let state = state.as_bytes()?;
 
     let status = unsafe {
         ecall_state_transition(
@@ -128,7 +129,8 @@ pub fn state_transition(
             pubkey.to_bytes().as_ptr() as _,
             msg.as_ptr() as _,
             target.as_ptr() as _,
-            amount,
+            state.as_c_ptr() as *const u8,
+            state.len(),
             &mut unsigned_tx,
         )
     };

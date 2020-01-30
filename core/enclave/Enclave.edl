@@ -32,7 +32,8 @@ enclave {
             [in] uint8_t pubkey[32],
             [in] uint8_t msg[32],
             [in] uint8_t target[20],
-            uint64_t value,
+            [in, count=state_len] const uint8_t *state,
+            size_t state_len,
             [out] RawUnsignedTx* result
         );
 

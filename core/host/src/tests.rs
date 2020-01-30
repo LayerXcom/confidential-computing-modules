@@ -136,6 +136,7 @@ fn test_integration_transfer() {
     ).unwrap();
     ev_watcher.block_on_event(eid).unwrap();
 
+    
     // 3. Get state from enclave
     let my_state = get_state_by_access_right::<MockState>(&my_access_right, eid).unwrap();
     let other_state = get_state_by_access_right::<MockState>(&other_access_right, eid).unwrap();
