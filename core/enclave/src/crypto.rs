@@ -97,16 +97,16 @@ pub fn sgx_rand_assign(rand: &mut [u8]) -> Result<()> {
 
 /// Enclave Identity Key
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct EIK {
+pub struct Eik {
     secret: SecretKey,
     nonce: [u8; NONCE_SIZE],
 }
 
-impl EIK {
-    pub fn new() -> Self {
+impl Eik {
+    pub fn new() -> Result<Self> {
         let secret = loop {
             let mut ret = [0u8; SECRET_KEY_SIZE];
-            sgx_rand_assign(&mut ret);
+            sgx_rand_assign(&mut ret)?;
 
             match SecretKey::parse(&ret) {
                 Ok(key) => break key,
@@ -115,12 +115,12 @@ impl EIK {
         };
 
         let mut nonce = [0u8; NONCE_SIZE];
-        sgx_rand_assign(&mut nonce);
+        sgx_rand_assign(&mut nonce)?;
 
-        EIK {
+        Ok(Eik {
             secret,
             nonce,
-        }
+        })
     }
 
     pub fn public_key(&self) -> PublicKey {

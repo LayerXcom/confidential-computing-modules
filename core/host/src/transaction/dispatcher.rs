@@ -8,22 +8,53 @@ use super::{
 };
 use crate::error::Result;
 
+// TODO
+const ANONYMOUS_ASSET_ABI_PATH: &str = "../../../build/AnonymousAsset.abi";
+
 /// Dispatcher communicates with a blockchain node.
-pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher> {
+pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
     deployer: D,
-    sender: S,
-    watcher: W,
+    sender: Option<S>,
+    watcher: Option<W>,
+    event_db: Arc<DB>,
 }
 
-// impl Dispatcher {
-//     pub fn new<D: BlockNumDB>(
-//         enclave_id: sgx_enclave_id_t,
-//         node_url: &str,
-//         event_db: Arc<D>,
-//     ) -> Self {
+impl<D, S, W, DB> Dispatcher<D, S, W, DB>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher<WatcherDB=DB>,
+    DB: BlockNumDB,
+{
+    pub fn new_with_deployer(
+        enclave_id: sgx_enclave_id_t,
+        node_url: &str,
+        event_db: Arc<DB>,
+    ) -> Result<Self> {
+        let deployer = D::new(enclave_id, node_url)?;
 
-//     }
-// }
+        Ok(Dispatcher {
+            deployer,
+            event_db,
+            sender: None,
+            watcher: None,
+        })
+    }
+
+    pub fn update_contract_addr(mut self, contract_addr: &str) -> Result<Self> {
+        let enclave_id = self.deployer.get_enclave_id();
+        let node_url = self.deployer.get_node_url();
+        let sender = S::new(enclave_id, node_url, contract_addr, ANONYMOUS_ASSET_ABI_PATH)?;
+        let watcher = W::new(node_url, ANONYMOUS_ASSET_ABI_PATH, contract_addr, self.event_db.clone())?;
+
+        Ok(Dispatcher {
+            deployer: self.deployer,
+            sender: Some(sender),
+            watcher: Some(watcher),
+            event_db: self.event_db,
+        })
+    }
+}
 
 /// A trait for deploying contracts
 pub trait Deployer: Sized {
@@ -39,6 +70,10 @@ pub trait Deployer: Sized {
     ) -> Result<H160>;
 
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;
+
+    fn get_enclave_id(&self) -> sgx_enclave_id_t;
+
+    fn get_node_url(&self) -> &str;
 }
 
 /// A trait for sending transactions to blockchain nodes
@@ -71,13 +106,13 @@ pub trait Sender: Sized {
 
 /// A trait of fetching event from blockchian nodes
 pub trait Watcher: Sized {
-    type DB: BlockNumDB;
+    type WatcherDB: BlockNumDB;
 
     fn new<P: AsRef<Path>>(
         node_url: &str,
         abi_path: P,
         contract_addr: &str,
-        event_db: Arc<Self::DB>,
+        event_db: Arc<Self::WatcherDB>,
     ) -> Result<Self>;
 
     /// Blocking event fetch from blockchain nodes.

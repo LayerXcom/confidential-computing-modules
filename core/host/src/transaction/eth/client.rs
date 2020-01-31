@@ -24,7 +24,7 @@ use super::primitives::{self, Web3Http, EthEvent, Web3Contract, contract_abi_fro
 pub struct EthDeployer {
     enclave_id: sgx_enclave_id_t,
     web3_conn: Web3Http,
-    address: Option<EthAddress>,
+    address: Option<EthAddress>, // contract address
 }
 
 impl Deployer for EthDeployer {
@@ -81,6 +81,14 @@ impl Deployer for EthDeployer {
         Ok(ContractKind::Web3Contract(
             Web3Contract::new(self.web3_conn, adderess, abi)?
         ))
+    }
+
+    fn get_enclave_id(&self) -> sgx_enclave_id_t {
+        self.enclave_id
+    }
+
+    fn get_node_url(&self) -> &str {
+        &self.web3_conn.get_eth_url()
     }
 }
 
@@ -174,7 +182,7 @@ pub struct EventWatcher<DB: BlockNumDB> {
 }
 
 impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
-    type DB = DB;
+    type WatcherDB = DB;
 
     fn new<P: AsRef<Path>>(
         node_url: &str,

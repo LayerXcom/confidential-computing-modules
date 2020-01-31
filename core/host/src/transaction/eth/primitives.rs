@@ -34,6 +34,7 @@ use crate::{
 pub struct Web3Http {
     web3: Web3<Http>,
     eloop: EventLoopHandle,
+    eth_url: String,
 }
 
 impl Web3Http {
@@ -44,6 +45,7 @@ impl Web3Http {
         Ok(Web3Http {
             web3,
             eloop,
+            eth_url: eth_url.to_string(),
         })
     }
 
@@ -82,6 +84,10 @@ impl Web3Http {
             .unwrap(); // TODO
 
         Ok(contract.address())
+    }
+
+    pub fn get_eth_url(&self) -> &str {
+        &self.eth_url
     }
 }
 
