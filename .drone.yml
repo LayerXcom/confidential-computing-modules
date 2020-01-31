@@ -29,6 +29,3 @@ volumes:
   - name: isgx
     host:
       path: /dev/isgx
-  - name: sock
-    host:
-      path: /var/run/docker.sock
