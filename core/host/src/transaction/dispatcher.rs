@@ -6,7 +6,7 @@ use super::{
     eth::primitives::Web3Contract,
     eventdb::{EventDB, BlockNumDB},
 };
-use crate::error::Result;
+use crate::error::{Result, HostErrorKind};
 
 // TODO
 const ANONYMOUS_ASSET_ABI_PATH: &str = "../../../build/AnonymousAsset.abi";
@@ -41,18 +41,16 @@ where
         })
     }
 
-    pub fn update_contract_addr(mut self, contract_addr: &str) -> Result<Self> {
+    pub fn set_contract_addr(mut self, contract_addr: &str) -> Result<()> {
         let enclave_id = self.deployer.get_enclave_id();
         let node_url = self.deployer.get_node_url();
         let sender = S::new(enclave_id, node_url, contract_addr, ANONYMOUS_ASSET_ABI_PATH)?;
-        let watcher = W::new(node_url, ANONYMOUS_ASSET_ABI_PATH, contract_addr, self.event_db.clone())?;
+        let watcher = W::new(node_url, ANONYMOUS_ASSET_ABI_PATH, contract_addr, self.event_db)?;
 
-        Ok(Dispatcher {
-            deployer: self.deployer,
-            sender: Some(sender),
-            watcher: Some(watcher),
-            event_db: self.event_db,
-        })
+        self.sender = Some(sender);
+        self.watcher = Some(watcher);
+
+        Ok(())
     }
 
     pub fn deploy<ST: State>(
@@ -62,6 +60,30 @@ where
         state: ST,
     ) -> Result<H160> {
         self.deployer.deploy(deploy_user, access_right, state)
+    }
+
+    pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
+        self.deployer.get_account(index)
+    }
+
+    pub fn block_on_event(self)  -> Result<()> {
+        let eid = self.deployer.get_enclave_id();
+        self.watcher
+            .ok_or(HostErrorKind::Msg("Contract address have not been set."))?
+            .block_on_event(eid)
+    }
+
+    pub fn send_tx<ST: State>(
+        &self,
+        access_right: &AccessRight,
+        target: &UserAddress,
+        state: ST,
+        from_eth_addr: SignerAddress,
+        gas: u64,
+    ) -> Result<H256> {
+        self.sender.as_ref()
+            .ok_or(HostErrorKind::Msg("Contract address have not been set."))?
+            .send_tx(access_right, target, state, from_eth_addr, gas)
     }
 }
 
@@ -101,11 +123,11 @@ pub trait Sender: Sized {
 
     fn get_account(&self, index: usize) -> Result<SignerAddress>;
 
-    fn send_tx<S: State>(
+    fn send_tx<ST: State>(
         &self,
         access_right: &AccessRight,
         target: &UserAddress,
-        state: S,
+        state: ST,
         from_eth_addr: SignerAddress,
         gas: u64,
     ) -> Result<H256>;

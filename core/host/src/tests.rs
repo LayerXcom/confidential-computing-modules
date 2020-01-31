@@ -46,17 +46,16 @@ fn test_integration_eth_transfer() {
 
     let total_supply = 100;
     let event_db = Arc::new(EventDB::new());
-    let dispatcher = Dispatcher::new_with_deployer(eid, node_url: &str, event_db).unwrap();
+    let mut dispatcher = Dispatcher::new_with_deployer(eid, ETH_URL, event_db).unwrap();
 
     // 1. Deploy
-    let mut deployer = EthDeployer::new(eid, ETH_URL).unwrap();
-    let deployer_addr = deployer.get_account(0).unwrap();
-    let contract_addr = deployer.deploy(&deployer_addr, &my_access_right, MockState::new(total_supply)).unwrap();
-
+    let deployer_addr = dispatcher.get_account(0).unwrap();
+    let contract_addr = dispatcher.deploy(&deployer_addr, &my_access_right, MockState::new(total_supply)).unwrap();
+    dispatcher.set_contract_addr(&contract_addr).unwrap();
     println!("Deployer address: {}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
 
-    let contract = deployer.get_contract(ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    // let contract = deployer.get_contract(ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
     // 2. Get logs from contract and update state inside enclave.

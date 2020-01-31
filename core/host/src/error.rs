@@ -45,6 +45,8 @@ pub enum HostErrorKind {
         msg: &'static str,
         index: usize,
     },
+    #[fail(display = "{}", _0)]
+    Msg(&'static str),
 }
 
 impl Fail for HostError {

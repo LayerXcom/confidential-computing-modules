@@ -5,9 +5,10 @@ set -eu
 LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
 
 dirpath=$(cd $(dirname $0) && pwd)
-cd "${dirpath}/../core"
-solc -o build --bin --abi --optimize --overwrite ../contracts/AnonymousAsset.sol
+cd "${dirpath}/.."
+solc -o build --bin --abi --optimize --overwrite contracts/AnonymousAsset.sol
 
+cd core
 export PATH=~/.cargo/bin:$PATH
 export SGX_MODE=HW
 

@@ -14,7 +14,7 @@ steps:
     - docker run -v `pwd`:/root/anonify --device /dev/isgx --net=test-network --name sgxci --rm osuketh/anonify:latest /bin/bash /root/anonify/scripts/test.sh
 - name: Teardown
   commands:
-    - docker stop sgxci
+    - docker stop sgxci || exit 0
   when:
     status:
       - failure

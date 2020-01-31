@@ -134,11 +134,11 @@ impl Sender for EthSender {
         ))
     }
 
-    fn send_tx<S: State>(
+    fn send_tx<ST: State>(
         &self,
         access_right: &AccessRight,
         target: &UserAddress,
-        state: S,
+        state: ST,
         from_eth_addr: SignerAddress,
         gas: u64,
     ) -> Result<H256> {
