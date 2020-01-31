@@ -11,7 +11,7 @@ use crate::error::Result;
 // TODO
 const ANONYMOUS_ASSET_ABI_PATH: &str = "../../../build/AnonymousAsset.abi";
 
-/// Dispatcher communicates with a blockchain node.
+/// This dispatcher communicates with a blockchain node.
 pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
     deployer: D,
     sender: Option<S>,

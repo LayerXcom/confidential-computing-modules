@@ -1,6 +1,10 @@
 kind: pipeline
-type: docker
+type: exec
 name: anonify-debug
+
+platform:
+  os: linux
+  arch: amd64
 
 steps:
 - name: prepare
@@ -18,8 +22,6 @@ steps:
   volumes:
     - name: isgx
       path: /dev/isgx
-    - name: sock
-      path: /var/run/docker.sock
   commands:
     - ./scripts/test.sh
 

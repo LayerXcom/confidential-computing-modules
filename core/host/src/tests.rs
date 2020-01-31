@@ -12,8 +12,7 @@ use crate::auto_ffi::ecall_run_tests;
 use crate::constants::*;
 use crate::init_enclave::EnclaveDir;
 use crate::ecalls::{init_state, get_state};
-use crate::prelude::*;
-use crate::web3::*;
+use crate::transaction::dispatcher::*;
 use crate::mock::*;
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
