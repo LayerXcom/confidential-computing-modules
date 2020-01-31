@@ -54,6 +54,15 @@ where
             event_db: self.event_db,
         })
     }
+
+    pub fn deploy<ST: State>(
+        &mut self,
+        deploy_user: &SignerAddress,
+        access_right: &AccessRight,
+        state: ST,
+    ) -> Result<H160> {
+        self.deployer.deploy(deploy_user, access_right, state)
+    }
 }
 
 /// A trait for deploying contracts
@@ -62,11 +71,11 @@ pub trait Deployer: Sized {
 
     fn get_account(&self, index: usize) -> Result<SignerAddress>;
 
-    fn deploy<S: State>(
+    fn deploy<ST: State>(
         &mut self,
         deploy_user: &SignerAddress,
         access_right: &AccessRight,
-        state: S,
+        state: ST,
     ) -> Result<H160>;
 
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;

@@ -13,6 +13,7 @@ use crate::constants::*;
 use crate::init_enclave::EnclaveDir;
 use crate::ecalls::{init_state, get_state};
 use crate::transaction::dispatcher::*;
+use crate::transaction::eventdb::EventDB;
 use crate::mock::*;
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
@@ -45,7 +46,7 @@ fn test_integration_eth_transfer() {
 
     let total_supply = 100;
     let event_db = Arc::new(EventDB::new());
-    let event = EthEvent::build_event();
+    let dispatcher = Dispatcher::new_with_deployer(eid, node_url: &str, event_db).unwrap();
 
     // 1. Deploy
     let mut deployer = EthDeployer::new(eid, ETH_URL).unwrap();

@@ -44,11 +44,11 @@ impl Deployer for EthDeployer {
         ))
     }
 
-    fn deploy<S: State>(
+    fn deploy<ST: State>(
         &mut self,
         deploy_user: &SignerAddress,
         access_right: &AccessRight,
-        state: S,
+        state: ST,
     ) -> Result<H160> {
         let unsigned_tx = init_state(
             self.enclave_id,

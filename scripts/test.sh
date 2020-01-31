@@ -6,7 +6,8 @@ LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-
 
 dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/../core"
-echo $PWD
+solc -o build --bin --abi --optimize --overwrite ../contracts/AnonymousAsset.sol
+
 export PATH=~/.cargo/bin:$PATH
 export SGX_MODE=HW
 
