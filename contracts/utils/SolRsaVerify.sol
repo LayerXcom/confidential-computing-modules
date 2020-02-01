@@ -102,15 +102,8 @@ library SolRsaVerify {
         uint decipherlen = _m.length;
         bytes memory decipher = new bytes(decipherlen);
         assembly {
-            pop(staticcall(sub(gas, 2000), 5, add(input,0x20), inputlen, add(decipher,0x20), decipherlen))
+            pop(staticcall(sub(gas,2000), 5, add(input,0x20), inputlen, add(decipher,0x20), decipherlen))
 	    }
-
-        /// 0x00 || 0x01 || PS || 0x00 || DigestInfo
-        /// PS is padding filled with 0xff
-        //  DigestInfo ::= SEQUENCE {
-        //     digestAlgorithm AlgorithmIdentifier,
-        //     digest OCTET STRING
-        //  }
 
         uint paddingLen = decipherlen - 3 - sha256Prefix.length - 32;
 
