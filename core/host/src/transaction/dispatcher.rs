@@ -58,7 +58,7 @@ where
         deploy_user: &SignerAddress,
         access_right: &AccessRight,
         state: ST,
-    ) -> Result<H160> {
+    ) -> Result<String> {
         self.deployer.deploy(deploy_user, access_right, state)
     }
 
@@ -98,7 +98,7 @@ pub trait Deployer: Sized {
         deploy_user: &SignerAddress,
         access_right: &AccessRight,
         state: ST,
-    ) -> Result<H160>;
+    ) -> Result<String>;
 
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;
 
@@ -156,6 +156,7 @@ pub trait Watcher: Sized {
 }
 
 /// A type of transaction signing address
+#[derive(Debug)]
 pub enum SignerAddress {
     EthAddress(web3::types::Address)
 }

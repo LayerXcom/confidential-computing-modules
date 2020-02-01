@@ -49,7 +49,7 @@ impl Deployer for EthDeployer {
         deploy_user: &SignerAddress,
         access_right: &AccessRight,
         state: ST,
-    ) -> Result<H160> {
+    ) -> Result<String> {
         let unsigned_tx = init_state(
             self.enclave_id,
             &access_right.sig,
@@ -71,7 +71,7 @@ impl Deployer for EthDeployer {
         };
         self.address = Some(contract_addr);
 
-        Ok(contract_addr)
+        Ok(hex::encode(contract_addr.as_bytes()))
     }
 
     // TODO: generalize, remove abi.

@@ -12,8 +12,11 @@ use crate::auto_ffi::ecall_run_tests;
 use crate::constants::*;
 use crate::init_enclave::EnclaveDir;
 use crate::ecalls::{init_state, get_state};
-use crate::transaction::dispatcher::*;
-use crate::transaction::eventdb::EventDB;
+use crate::transaction::{
+    dispatcher::*,
+    eventdb::EventDB,
+    utils::get_state_by_access_right,
+};
 use crate::mock::*;
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
@@ -52,14 +55,13 @@ fn test_integration_eth_transfer() {
     let deployer_addr = dispatcher.get_account(0).unwrap();
     let contract_addr = dispatcher.deploy(&deployer_addr, &my_access_right, MockState::new(total_supply)).unwrap();
     dispatcher.set_contract_addr(&contract_addr).unwrap();
-    println!("Deployer address: {}", deployer_addr);
+    println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
 
     // let contract = deployer.get_contract(ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
     // 2. Get logs from contract and update state inside enclave.
-    let contract_addr = hex::encode(contract_addr.as_bytes());
     println!("{:?}", contract_addr);
     let ev_watcher = EventWatcher::new(
         &ETH_URL,
