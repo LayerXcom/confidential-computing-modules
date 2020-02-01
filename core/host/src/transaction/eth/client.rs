@@ -6,18 +6,16 @@ use std::{
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
 use anonify_common::{UserAddress, AccessRight, State};
-use ed25519_dalek::{Signature, PublicKey, Keypair};
-use web3::types::{H160, H256, Address as EthAddress, BlockNumber};
+use web3::types::{H256, Address as EthAddress};
 use crate::{
-    init_enclave::EnclaveDir,
     ecalls::*,
     error::Result,
     transaction::{
-        eventdb::{EventDB, EventDBTx, BlockNumDB},
+        eventdb::BlockNumDB,
         dispatcher::*,
     },
 };
-use super::primitives::{self, Web3Http, EthEvent, Web3Contract, contract_abi_from_path};
+use super::primitives::{Web3Http, EthEvent, Web3Contract, contract_abi_from_path};
 
 /// Components needed to deploy a contract
 #[derive(Debug)]
@@ -207,7 +205,7 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
 
         self.contract
             .get_event(self.event_db.clone(), key)?
-            .into_enclave_log(&event)?
+            .into_enclave_log()?
             .insert_enclave(eid)?
             .set_to_db(key);
 

@@ -1,4 +1,3 @@
-use sgx_types::sgx_enclave_id_t;
 use log::debug;
 use std::{
     path::Path,
@@ -26,7 +25,7 @@ use ethabi::{
 use crate::{
     error::*,
     constants::*,
-    transaction::eventdb::{BlockNumDB, EventDBTx, InnerEnclaveLog, EnclaveLog},
+    transaction::eventdb::{BlockNumDB, InnerEnclaveLog, EnclaveLog},
 };
 
 /// Basic web3 connection components via HTTP.
@@ -141,12 +140,12 @@ impl Web3Contract {
 
         let filter = FilterBuilder::default()
             .address(vec![self.address])
-            // .topic_filter(TopicFilter {
-            //     topic0: Topic::This(event.into_raw().signature()),
-            //     topic1: Topic::Any,
-            //     topic2: Topic::Any,
-            //     topic3: Topic::Any,
-            // })
+            .topic_filter(TopicFilter {
+                topic0: Topic::This(key),
+                topic1: Topic::Any,
+                topic2: Topic::Any,
+                topic3: Topic::Any,
+            })
             .from_block(BlockNumber::Number(latest_fetched_num))
             .to_block(BlockNumber::Latest)
             .build();
@@ -171,7 +170,7 @@ pub struct Web3Logs<D: BlockNumDB>{
 }
 
 impl<D: BlockNumDB> Web3Logs<D> {
-    pub fn into_enclave_log(self, event: &EthEvent) -> Result<EnclaveLog<D>> {
+    pub fn into_enclave_log(self) -> Result<EnclaveLog<D>> {
         let mut ciphertexts: Vec<u8> = vec![];
 
         // If log data is not fetched currently, return empty EnclaveLog.

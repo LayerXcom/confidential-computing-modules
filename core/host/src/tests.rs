@@ -3,15 +3,10 @@ use std::{
 };
 use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
-use rand_core::RngCore;
 use rand_os::OsRng;
-use rand::Rng;
-use ed25519_dalek::Keypair;
-use anonify_common::{UserAddress, AccessRight, State};
+use anonify_common::{AccessRight, State};
 use crate::auto_ffi::ecall_run_tests;
-use crate::constants::*;
 use crate::init_enclave::EnclaveDir;
-use crate::ecalls::{init_state, get_state};
 use crate::transaction::{
     dispatcher::*,
     eventdb::EventDB,

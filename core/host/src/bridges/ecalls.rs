@@ -2,7 +2,6 @@ use sgx_types::*;
 use anonify_types::{RawUnsignedTx, traits::SliceCPtr, EnclaveState};
 use anonify_common::State;
 use ed25519_dalek::{Signature, PublicKey};
-use web3::types::U64;
 use crate::auto_ffi::*;
 use crate::transaction::eventdb::InnerEnclaveLog; // TODO
 use crate::error::{HostErrorKind, Result};
@@ -191,7 +190,6 @@ impl UnsignedTx {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand_core::RngCore;
     use rand_os::OsRng;
     use rand::Rng;
     use ed25519_dalek::Keypair;

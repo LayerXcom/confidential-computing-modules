@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use anonify_common::kvs::{KVS, MemoryKVS, DBValue, DBTx};
+use anonify_common::kvs::{KVS, MemoryKVS, DBTx};
 use ethabi::Hash;
 use sgx_types::sgx_enclave_id_t;
 use byteorder::{LittleEndian, ByteOrder};

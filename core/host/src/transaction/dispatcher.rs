@@ -1,15 +1,17 @@
+#![allow(dead_code)]
+
 use std::{path::Path, sync::Arc};
 use sgx_types::sgx_enclave_id_t;
 use anonify_common::{AccessRight, State, UserAddress};
 use web3::types::{H256};
 use super::{
     eth::primitives::Web3Contract,
-    eventdb::{EventDB, BlockNumDB},
+    eventdb::BlockNumDB,
 };
 use crate::error::{Result, HostErrorKind};
 
 // TODO
-const ANONYMOUS_ASSET_ABI_PATH: &str = "../../../build/AnonymousAsset.abi";
+const ANONYMOUS_ASSET_ABI_PATH: &str = "../../../../build/AnonymousAsset.abi";
 
 /// This dispatcher communicates with a blockchain node.
 pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
