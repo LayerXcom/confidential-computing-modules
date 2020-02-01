@@ -199,14 +199,14 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
     }
 
     fn block_on_event(
-        self,
+        &self,
         eid: sgx_enclave_id_t,
     ) -> Result<()> {
         let event = EthEvent::build_event();
         let key = event.signature();
 
         self.contract
-            .get_event(self.event_db, key)?
+            .get_event(self.event_db.clone(), key)?
             .into_enclave_log(&event)?
             .insert_enclave(eid)?
             .set_to_db(key);

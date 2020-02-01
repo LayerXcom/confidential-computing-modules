@@ -15,6 +15,7 @@ use crate::ecalls::{init_state, get_state};
 use crate::transaction::{
     dispatcher::*,
     eventdb::EventDB,
+    eth::client::*,
     utils::get_state_by_access_right,
 };
 use crate::mock::*;
@@ -49,7 +50,7 @@ fn test_integration_eth_transfer() {
 
     let total_supply = 100;
     let event_db = Arc::new(EventDB::new());
-    let mut dispatcher = Dispatcher::new_with_deployer(eid, ETH_URL, event_db).unwrap();
+    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new_with_deployer(eid, ETH_URL, event_db).unwrap();
 
     // 1. Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
@@ -58,18 +59,9 @@ fn test_integration_eth_transfer() {
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
 
-    // let contract = deployer.get_contract(ANONYMOUS_ASSET_ABI_PATH).unwrap();
-
 
     // 2. Get logs from contract and update state inside enclave.
-    println!("{:?}", contract_addr);
-    let ev_watcher = EventWatcher::new(
-        &ETH_URL,
-        ANONYMOUS_ASSET_ABI_PATH,
-        &contract_addr,
-        event_db.clone(),
-    ).unwrap();
-    ev_watcher.block_on_event(eid).unwrap();
+    dispatcher.block_on_event().unwrap();
 
 
     // 3. Get state from enclave
@@ -85,27 +77,18 @@ fn test_integration_eth_transfer() {
     let amount = 30;
     let gas = 3_000_000;
     let other_user_address = other_access_right.user_address();
-
-    let eth_sender = EthSender::from_contract(eid, contract);
-    let receipt = eth_sender.send_tx(
+    let receipt = dispatcher.send_tx(
             &my_access_right,
             &other_user_address,
             MockState::new(amount),
             deployer_addr,
             gas
         );
-
     println!("receipt: {:?}", receipt);
 
 
     // 5. Update state inside enclave
-    let ev_watcher = EventWatcher::new(
-        &ETH_URL,
-        ANONYMOUS_ASSET_ABI_PATH,
-        &contract_addr,
-        event_db.clone(),
-    ).unwrap();
-    ev_watcher.block_on_event(eid).unwrap();
+    dispatcher.block_on_event().unwrap();
 
 
     // 6. Check the updated states

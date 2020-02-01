@@ -1,7 +1,7 @@
 use std::{path::Path, sync::Arc};
 use sgx_types::sgx_enclave_id_t;
 use anonify_common::{AccessRight, State, UserAddress};
-use web3::types::{H160, H256};
+use web3::types::{H256};
 use super::{
     eth::primitives::Web3Contract,
     eventdb::{EventDB, BlockNumDB},
@@ -41,11 +41,11 @@ where
         })
     }
 
-    pub fn set_contract_addr(mut self, contract_addr: &str) -> Result<()> {
+    pub fn set_contract_addr(&mut self, contract_addr: &str) -> Result<()> {
         let enclave_id = self.deployer.get_enclave_id();
         let node_url = self.deployer.get_node_url();
         let sender = S::new(enclave_id, node_url, contract_addr, ANONYMOUS_ASSET_ABI_PATH)?;
-        let watcher = W::new(node_url, ANONYMOUS_ASSET_ABI_PATH, contract_addr, self.event_db)?;
+        let watcher = W::new(node_url, ANONYMOUS_ASSET_ABI_PATH, contract_addr, self.event_db.clone())?;
 
         self.sender = Some(sender);
         self.watcher = Some(watcher);
@@ -66,9 +66,9 @@ where
         self.deployer.get_account(index)
     }
 
-    pub fn block_on_event(self)  -> Result<()> {
+    pub fn block_on_event(&self)  -> Result<()> {
         let eid = self.deployer.get_enclave_id();
-        self.watcher
+        self.watcher.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set."))?
             .block_on_event(eid)
     }
@@ -148,7 +148,7 @@ pub trait Watcher: Sized {
 
     /// Blocking event fetch from blockchain nodes.
     fn block_on_event(
-        self,
+        &self,
         eid: sgx_enclave_id_t,
     ) -> Result<()>;
 
