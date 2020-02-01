@@ -10,9 +10,6 @@ use super::{
 };
 use crate::error::{Result, HostErrorKind};
 
-// TODO
-const ANONYMOUS_ASSET_ABI_PATH: &str = "../../../../build/AnonymousAsset.abi";
-
 /// This dispatcher communicates with a blockchain node.
 pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
     deployer: D,
@@ -43,11 +40,11 @@ where
         })
     }
 
-    pub fn set_contract_addr(&mut self, contract_addr: &str) -> Result<()> {
+    pub fn set_contract_addr<P: AsRef<Path> + Copy>(&mut self, contract_addr: &str, abi_path: P) -> Result<()> {
         let enclave_id = self.deployer.get_enclave_id();
         let node_url = self.deployer.get_node_url();
-        let sender = S::new(enclave_id, node_url, contract_addr, ANONYMOUS_ASSET_ABI_PATH)?;
-        let watcher = W::new(node_url, ANONYMOUS_ASSET_ABI_PATH, contract_addr, self.event_db.clone())?;
+        let sender = S::new(enclave_id, node_url, contract_addr, abi_path)?;
+        let watcher = W::new(node_url, abi_path, contract_addr, self.event_db.clone())?;
 
         self.sender = Some(sender);
         self.watcher = Some(watcher);

@@ -50,7 +50,7 @@ fn test_integration_eth_transfer() {
     // 1. Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
     let contract_addr = dispatcher.deploy(&deployer_addr, &my_access_right, MockState::new(total_supply)).unwrap();
-    dispatcher.set_contract_addr(&contract_addr).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
 
