@@ -5,11 +5,11 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-rustls = { git = "https://github.com/mesalock-linux/rustls", branch = "mesalock_sgx" }
-sgx_tstd = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git", features = ["net"] }
-mio = { git = "https://github.com/mesalock-linux/mio-sgx", branch = "v0.6.19_sgx1.0.8" }
+rustls = { branch = "mesalock_sgx", git = "https://github.com/mesalock-linux/rustls" }
+sgx_tstd = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net"] }
+mio = { branch = "v0.6_sgx_1.1.0", git = "https://github.com/mesalock-linux/mio-sgx" }
 webpki = { git = "https://github.com/mesalock-linux/webpki", branch = "mesalock_sgx" }
-webpki-roots = { rev = "sgx_1.0.9", git = "https://github.com/mesalock-linux/webpki-roots" }
-http = { rev = "sgx_1.0.9", git = "https://github.com/mesalock-linux/http-sgx" }
+webpki-roots = { rev = "sgx_1.1.0", git = "https://github.com/mesalock-linux/webpki-roots" }
+http = { rev = "sgx_1.1.0", git = "https://github.com/mesalock-linux/http-sgx" }
 
-sgx_types = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
+sgx_types = "1.1.0"

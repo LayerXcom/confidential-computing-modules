@@ -1,5 +1,5 @@
 # inherit the baidu sdk image
-FROM baiduxlab/sgx-rust:1804-1.0.9
+FROM baiduxlab/sgx-rust:1804-1.1.0
 MAINTAINER osuke
 WORKDIR /root
 RUN rm -rf /root/sgx
@@ -17,6 +17,4 @@ RUN set -x && \
 
 RUN /root/.cargo/bin/cargo install bindgen cargo-audit && \
     rm -rf /root/.cargo/registry && rm -rf /root/.cargo/git && \
-    git clone --depth 1 -b v1.0.9 https://github.com/baidu/rust-sgx-sdk.git sgx
-
-RUN LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
+    git clone --depth 1 -b v1.1.0 https://github.com/baidu/rust-sgx-sdk.git sgx
