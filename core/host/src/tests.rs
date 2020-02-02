@@ -9,7 +9,7 @@ use crate::auto_ffi::ecall_run_tests;
 use crate::init_enclave::EnclaveDir;
 use crate::transaction::{
     dispatcher::*,
-    eventdb::EventDB,
+    eventdb::{EventDB, BlockNumDB},
     eth::client::*,
     utils::get_state_by_access_right,
 };
@@ -45,7 +45,7 @@ fn test_integration_eth_transfer() {
 
     let total_supply = 100;
     let event_db = Arc::new(EventDB::new());
-    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new_with_deployer(eid, ETH_URL, event_db).unwrap();
+    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // 1. Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
@@ -56,7 +56,7 @@ fn test_integration_eth_transfer() {
 
 
     // 2. Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event().unwrap();
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
     // 3. Get state from enclave
@@ -77,13 +77,15 @@ fn test_integration_eth_transfer() {
         &other_user_address,
         MockState::new(amount),
         deployer_addr,
-        gas
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
     ).unwrap();
     println!("receipt: {}", receipt);
 
 
     // 5. Update state inside enclave
-    dispatcher.block_on_event().unwrap();
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
     // 6. Check the updated states

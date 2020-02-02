@@ -1,13 +1,7 @@
 #[macro_use]
 extern crate dotenv_codegen;
-#[macro_use]
-extern crate lazy_static;
-use std::{
-    collections::HashMap,
-    io,
-    env,
-    sync::Arc,
-};
+
+use std::{sync::Arc, io};
 use sgx_types::sgx_enclave_id_t;
 use anonify_host::{
     EnclaveDir,
@@ -17,23 +11,15 @@ use anonify_host::{
     },
 };
 use handlers::*;
-use actix_web::{
-    client::Client,
-    error::ErrorBadRequest,
-    web::{self, BytesMut},
-    App, Error, HttpResponse, HttpServer,
-};
+use actix_web::{web, App, HttpServer};
 
 mod handlers;
-
-lazy_static! {
-    pub static ref EVENT_DB: EventDB = { EventDB::new() };
-}
 
 #[derive(Debug)]
 pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
     pub eid: sgx_enclave_id_t,
     pub eth_url: String,
+    pub abi_path: String,
     pub dispatcher: Dispatcher<D, S, W, DB>,
 }
 
@@ -46,14 +32,14 @@ where
 {
     pub fn new(eid: sgx_enclave_id_t) -> Self {
         let eth_url = dotenv!("ETH_URL").to_string();
-
+        let abi_path = dotenv!("ANONYMOUS_ASSET_ABI_PATH").to_string();
         let event_db = Arc::new(DB::new());
-        let dispatcher = Dispatcher::<D,S,W,DB>::new_with_deployer(eid, &eth_url, event_db).unwrap();
-        let dispatcher = Arc::new(dispatcher);
+        let dispatcher = Dispatcher::<D,S,W,DB>::new(eid, &eth_url, event_db).unwrap();
 
         Server {
             eid,
             eth_url,
+            abi_path,
             dispatcher
         }
     }
@@ -68,7 +54,9 @@ fn main() -> io::Result<()> {
             .init_enclave(true)
             .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
-    let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid));
+    let server = Arc::new(
+        Server::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid)
+    );
 
     HttpServer::new(move || {
         App::new()

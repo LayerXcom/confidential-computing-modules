@@ -7,15 +7,11 @@ use anonify_host::transaction::{
 };
 use anonymous_asset::api;
 use anonify_common::{stf::Value, State};
-use sgx_types::sgx_enclave_id_t;
 use actix_web::{
     web,
     HttpResponse,
 };
-use crate::{
-    Server,
-    EVENT_DB,
-};
+use crate::Server;
 
 const DEFAULT_SEND_GAS: u64 = 3_000_000;
 
@@ -60,6 +56,8 @@ where
         Value::new(req.amount),
         from_eth_addr,
         DEFAULT_SEND_GAS,
+        &req.contract_addr,
+        &server.abi_path,
     )?;
 
     Ok(HttpResponse::Ok().json(api::send::post::Response(receipt)))
@@ -76,7 +74,7 @@ where
     W: Watcher<WatcherDB=DB>,
     DB: BlockNumDB,
 {
-    server.dispatcher.block_on_event()?;
+    server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path)?;
 
     let access_right = req.into_access_right()?;
     let state = get_state_by_access_right::<Value>(&access_right, server.eid)?;

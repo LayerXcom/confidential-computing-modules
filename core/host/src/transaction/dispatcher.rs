@@ -12,9 +12,9 @@ use crate::error::{Result, HostErrorKind};
 use self::traits::*;
 
 /// This dispatcher communicates with a blockchain node.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
-    inner: Arc<RwLock<InnerDispatcher<D,S,W,DB>>>,
+    inner: RwLock<InnerDispatcher<D,S,W,DB>>,
 }
 
 impl<D, S, W, DB> Dispatcher<D, S, W, DB>
@@ -32,7 +32,7 @@ where
         let inner = InnerDispatcher::new_with_deployer(enclave_id, node_url, event_db)?;
 
         Ok(Dispatcher {
-            inner: Arc::new(RwLock::new(inner))
+            inner: RwLock::new(inner)
         })
     }
 
@@ -41,7 +41,7 @@ where
         P: AsRef<Path> + Copy,
     {
         let mut inner = self.inner.write();
-        inner.set_contract_addr(contract_addr, abi_path);
+        inner.set_contract_addr(contract_addr, abi_path)?;
 
         Ok(())
     }

@@ -6,13 +6,13 @@ use std::{
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
 use anonify_common::{UserAddress, AccessRight, State};
-use web3::types::{H256, Address as EthAddress};
+use web3::types::Address as EthAddress;
 use crate::{
     ecalls::*,
     error::Result,
     transaction::{
         eventdb::BlockNumDB,
-        dispatcher::{Dispatcher, SignerAddress, ContractKind, traits::*},
+        dispatcher::{SignerAddress, ContractKind, traits::*},
     },
 };
 use super::primitives::{Web3Http, EthEvent, Web3Contract, contract_abi_from_path};
