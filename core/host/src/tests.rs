@@ -73,13 +73,13 @@ fn test_integration_eth_transfer() {
     let gas = 3_000_000;
     let other_user_address = other_access_right.user_address();
     let receipt = dispatcher.send_tx(
-            &my_access_right,
-            &other_user_address,
-            MockState::new(amount),
-            deployer_addr,
-            gas
-        );
-    println!("receipt: {:?}", receipt);
+        &my_access_right,
+        &other_user_address,
+        MockState::new(amount),
+        deployer_addr,
+        gas
+    ).unwrap();
+    println!("receipt: {}", receipt);
 
 
     // 5. Update state inside enclave

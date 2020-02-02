@@ -3,7 +3,7 @@ use anonify_types::{RawUnsignedTx, traits::SliceCPtr, EnclaveState};
 use anonify_common::State;
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
-use crate::transaction::eventdb::InnerEnclaveLog; // TODO
+use crate::transaction::eventdb::InnerEnclaveLog;
 use crate::error::{HostErrorKind, Result};
 
 /// Insert event logs from blockchain nodes into enclave memory database.

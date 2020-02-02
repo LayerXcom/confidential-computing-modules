@@ -6,6 +6,8 @@ use byteorder::{LittleEndian, ByteOrder};
 use crate::error::Result;
 
 pub trait BlockNumDB {
+    fn new() -> Self;
+
     fn set_next_block_num(&self, tx: EventDBTx);
 
     fn get_latest_block_num(&self, key: Hash) -> u64;
@@ -15,6 +17,10 @@ pub trait BlockNumDB {
 pub struct EventDB(MemoryKVS);
 
 impl BlockNumDB for EventDB {
+    fn new() -> Self {
+        EventDB(MemoryKVS::new())
+    }
+
     fn set_next_block_num(&self, tx: EventDBTx) {
         self.0.inner_write(tx.0)
     }
@@ -24,12 +30,6 @@ impl BlockNumDB for EventDB {
             Some(val) => LittleEndian::read_u64(&val.into_vec()),
             None => 0,
         }
-    }
-}
-
-impl EventDB {
-    pub fn new() -> Self {
-        EventDB(MemoryKVS::new())
     }
 }
 

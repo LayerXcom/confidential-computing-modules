@@ -1,4 +1,7 @@
-pub(crate) mod eth;
+pub mod eth;
 pub(crate) mod eventdb;
-pub(crate) mod utils;
+pub mod utils;
 pub(crate) mod dispatcher;
+
+pub use self::dispatcher::{Dispatcher, traits};
+pub use self::eventdb::{EventDB, BlockNumDB};

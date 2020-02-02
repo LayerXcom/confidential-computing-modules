@@ -12,7 +12,7 @@ use crate::{
     error::Result,
     transaction::{
         eventdb::BlockNumDB,
-        dispatcher::*,
+        dispatcher::{Dispatcher, SignerAddress, ContractKind, traits::*},
     },
 };
 use super::primitives::{Web3Http, EthEvent, Web3Contract, contract_abi_from_path};
@@ -139,7 +139,7 @@ impl Sender for EthSender {
         state: ST,
         from_eth_addr: SignerAddress,
         gas: u64,
-    ) -> Result<H256> {
+    ) -> Result<String> {
         let unsigned_tx = state_transition(
             self.enclave_id,
             &access_right.sig,
@@ -165,7 +165,7 @@ impl Sender for EthSender {
             }
         };
 
-        Ok(receipt)
+        Ok(hex::encode(receipt.as_bytes()))
     }
 
     fn get_contract(self) -> ContractKind {
