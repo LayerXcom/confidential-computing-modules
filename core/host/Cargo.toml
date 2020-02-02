@@ -24,6 +24,7 @@ ed25519-dalek = "1.0.0-pre.2"
 rand = "0.6"
 rand_core = "0.3"
 byteorder = "1"
+parking_lot = "0.10"
 
 [dev-dependencies]
 rand_os = "0.1"

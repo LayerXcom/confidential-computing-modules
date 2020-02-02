@@ -29,10 +29,10 @@ echo "Testing core components..."
 cd host
 RUST_BACKTRACE=1 cargo test -- --nocapture
 
-cd ../../example/server
-echo "Build server."
-RUST_BACKTRACE=1 RUST_LOG=debug cargo build
+# cd ../../example/server
+# echo "Build server."
+# RUST_BACKTRACE=1 RUST_LOG=debug cargo build
 
-echo "Build in root dir."
-cd ../../
-RUST_BACKTRACE=1 RUST_LOG=debug cargo build
+# echo "Build in root dir."
+# cd ../../
+# RUST_BACKTRACE=1 RUST_LOG=debug cargo build
