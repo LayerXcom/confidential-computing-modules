@@ -2,5 +2,5 @@ build/
 target/
 core/enclave/target
 core/host/target
-Dockerfile
+docker/Dockerfile
 .dockerignore

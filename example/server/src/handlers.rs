@@ -1,73 +1,80 @@
 use std::sync::Arc;
 use failure::Error;
 use log::debug;
-use anonify_host::prelude::*;
+use anonify_host::transaction::{
+    BlockNumDB, traits::*,
+    utils::get_state_by_access_right,
+};
 use anonymous_asset::api;
-use anonify_common::stf::Value;
-use sgx_types::sgx_enclave_id_t;
+use anonify_common::{stf::Value, State};
 use actix_web::{
     web,
     HttpResponse,
 };
-use crate::{
-    Server,
-    EVENT_DB,
-};
+use crate::Server;
 
-pub const DEFAULT_SEND_GAS: u64 = 3_000_000;
+const DEFAULT_SEND_GAS: u64 = 3_000_000;
 
-pub fn handle_deploy(
-    server: web::Data<Arc<Server>>,
+pub fn handle_deploy<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::deploy::post::Request>,
-) -> Result<HttpResponse, Error> {
+) -> Result<HttpResponse, Error>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher<WatcherDB=DB>,
+    DB: BlockNumDB,
+{
     debug!("Starting deploy a contract...");
 
     let access_right = req.into_access_right()?;
-    let mut deployer = EthDeployer::new(server.eid, &server.eth_url)?;
-    let deployer_addr = deployer.get_account(0)?;
-    let contract_addr = deployer.deploy(&deployer_addr, &access_right, req.total_supply)?;
+    let deployer_addr = server.dispatcher.get_account(0)?;
+    let contract_addr = server.dispatcher
+        .deploy(&deployer_addr, &access_right, Value::new(req.total_supply))?;
 
     debug!("Contract address: {:?}", &contract_addr);
 
     Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr)))
 }
 
-pub fn handle_send(
-    server: web::Data<Arc<Server>>,
+pub fn handle_send<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::send::post::Request>,
-) -> Result<HttpResponse, Error> {
+) -> Result<HttpResponse, Error>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher<WatcherDB=DB>,
+    DB: BlockNumDB,
+{
     let access_right = req.into_access_right()?;
-    let eth_sender = EthSender::new(
-        server.eid,
-        &server.eth_url,
-        &req.contract_addr,
-        dotenv!("ANONYMOUS_ASSET_ABI_PATH"),
-    )?;
-    let from_eth_addr = eth_sender.get_account(0)?;
+    let from_eth_addr = server.dispatcher.get_account(0)?;
 
-    let receipt = eth_sender.send_tx(
+    let receipt = server.dispatcher.send_tx(
         &access_right,
         &req.target,
-        req.amount,
+        Value::new(req.amount),
         from_eth_addr,
         DEFAULT_SEND_GAS,
+        &req.contract_addr,
+        &server.abi_path,
     )?;
 
     Ok(HttpResponse::Ok().json(api::send::post::Response(receipt)))
 }
 
 /// Fetch events from blockchain nodes manually, and then get state from enclave.
-pub fn handle_state(
-    server: web::Data<Arc<Server>>,
+pub fn handle_state<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::state::get::Request>,
-) -> Result<HttpResponse, Error> {
-    let ev_watcher = EventWatcher::new(
-        &server.eth_url,
-        dotenv!("ANONYMOUS_ASSET_ABI_PATH"),
-        &req.contract_addr,
-        server.event_db.clone(),
-    )?;
-    ev_watcher.block_on_event(server.eid)?;
+) -> Result<HttpResponse, Error>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher<WatcherDB=DB>,
+    DB: BlockNumDB,
+{
+    server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path)?;
 
     let access_right = req.into_access_right()?;
     let state = get_state_by_access_right::<Value>(&access_right, server.eid)?;

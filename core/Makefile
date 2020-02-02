@@ -37,7 +37,7 @@ RUSTFMT ?= rustfmt
 ######## SGX SDK Settings ########
 
 SGX_SDK ?= /opt/sgxsdk
-SGX_MODE ?= SW
+SGX_MODE ?= HW
 SGX_ARCH ?= x64
 
 ifeq ($(shell getconf LONG_BIT), 32)

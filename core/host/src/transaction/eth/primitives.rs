@@ -1,15 +1,9 @@
-use sgx_types::sgx_enclave_id_t;
 use log::debug;
 use std::{
     path::Path,
     io::BufReader,
     fs::File,
     sync::Arc,
-};
-use crate::{
-    error::*,
-    constants::*,
-    web3::eventdb::{BlockNumDB, EventDBTx},
 };
 use web3::{
     Web3,
@@ -28,12 +22,18 @@ use ethabi::{
     decode,
     Hash,
 };
+use crate::{
+    error::*,
+    constants::*,
+    transaction::eventdb::{BlockNumDB, InnerEnclaveLog, EnclaveLog},
+};
 
 /// Basic web3 connection components via HTTP.
 #[derive(Debug)]
 pub struct Web3Http {
     web3: Web3<Http>,
     eloop: EventLoopHandle,
+    eth_url: String,
 }
 
 impl Web3Http {
@@ -44,6 +44,7 @@ impl Web3Http {
         Ok(Web3Http {
             web3,
             eloop,
+            eth_url: eth_url.to_string(),
         })
     }
 
@@ -64,8 +65,8 @@ impl Web3Http {
         report: &[u8],
         report_sig: &[u8],
     ) -> Result<Address> {
-        let abi = include_bytes!("../../../../build/AnonymousAsset.abi");
-        let bin = include_str!("../../../../build/AnonymousAsset.bin");
+        let abi = include_bytes!("../../../../../build/AnonymousAsset.abi");
+        let bin = include_str!("../../../../../build/AnonymousAsset.bin");
 
         let contract = Contract::deploy(self.web3.eth(), abi)
             .unwrap() // TODO
@@ -83,21 +84,25 @@ impl Web3Http {
 
         Ok(contract.address())
     }
+
+    pub fn get_eth_url(&self) -> &str {
+        &self.eth_url
+    }
 }
 
-/// Web3 connection components of anonymous asset contract.
+/// Web3 connection components of a contract.
 #[derive(Debug)]
-pub struct AnonymousAssetContract {
+pub struct Web3Contract {
     contract: Contract<Http>,
     address: Address, // contract address
     web3_conn: Web3Http,
 }
 
-impl AnonymousAssetContract {
+impl Web3Contract {
     pub fn new(web3_conn: Web3Http, address: Address, abi: ContractABI) -> Result<Self> {
         let contract = Contract::new(web3_conn.web3.eth(), address, abi);
 
-        Ok(AnonymousAssetContract {
+        Ok(Web3Contract {
             contract,
             address,
             web3_conn,
@@ -135,12 +140,12 @@ impl AnonymousAssetContract {
 
         let filter = FilterBuilder::default()
             .address(vec![self.address])
-            // .topic_filter(TopicFilter {
-            //     topic0: Topic::This(event.into_raw().signature()),
-            //     topic1: Topic::Any,
-            //     topic2: Topic::Any,
-            //     topic3: Topic::Any,
-            // })
+            .topic_filter(TopicFilter {
+                topic0: Topic::This(key),
+                topic1: Topic::Any,
+                topic2: Topic::Any,
+                topic3: Topic::Any,
+            })
             .from_block(BlockNumber::Number(latest_fetched_num))
             .to_block(BlockNumber::Latest)
             .build();
@@ -165,7 +170,7 @@ pub struct Web3Logs<D: BlockNumDB>{
 }
 
 impl<D: BlockNumDB> Web3Logs<D> {
-    pub fn into_enclave_log(self, event: &EthEvent) -> Result<EnclaveLog<D>> {
+    pub fn into_enclave_log(self) -> Result<EnclaveLog<D>> {
         let mut ciphertexts: Vec<u8> = vec![];
 
         // If log data is not fetched currently, return empty EnclaveLog.
@@ -230,74 +235,6 @@ impl<D: BlockNumDB> Web3Logs<D> {
         }
 
         res
-    }
-}
-
-/// A log which is sent to enclave. Each log containes ciphertexts data of a given contract address and a given block number.
-#[derive(Debug, Clone)]
-pub(crate) struct InnerEnclaveLog {
-    pub(crate) contract_addr: [u8; 20],
-    pub(crate) latest_blc_num: u64,
-    pub(crate) ciphertexts: Vec<u8>, // Concatenated all fetched ciphertexts
-    pub(crate) ciphertext_size: usize, // Byte size of a ciphertext
-}
-
-/// A wrapper type of enclave logs.
-#[derive(Debug, Clone)]
-pub struct EnclaveLog<D: BlockNumDB> {
-    inner: Option<InnerEnclaveLog>,
-    db: Arc<D>,
-}
-
-impl<D: BlockNumDB> EnclaveLog<D> {
-    /// Store logs into enclave in-memory.
-    /// This returns a latest block number specified by fetched logs.
-    pub fn insert_enclave(self, eid: sgx_enclave_id_t) -> Result<EnclaveBlockNumber<D>> {
-        use crate::ecalls::insert_logs;
-        match &self.inner {
-            Some(log) => {
-                insert_logs(eid, log)?;
-                let next_blc_num = log.latest_blc_num + 1;
-
-                return Ok(EnclaveBlockNumber {
-                    inner: Some(next_blc_num),
-                    db: self.db,
-                });
-            },
-            None => return Ok(EnclaveBlockNumber {
-                inner: None,
-                db: self.db,
-            }),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct EnclaveBlockNumber<D: BlockNumDB> {
-    inner: Option<u64>,
-    db: Arc<D>,
-}
-
-impl<D: BlockNumDB> EnclaveBlockNumber<D> {
-    /// Only if EnclaveBlockNumber has new block number to log,
-    /// it's set next block number to event db.
-    pub fn set_to_db(&self, key: Hash) {
-        match &self.inner {
-            Some(num) => {
-                let mut dbtx = EventDBTx::new();
-                dbtx.put(key, *num);
-                self.db.set_next_block_num(dbtx);
-            },
-            None => { },
-        }
-    }
-}
-
-pub struct EthUserAddress(pub Address);
-
-impl EthUserAddress {
-    pub fn new(address: Address) -> Self {
-        EthUserAddress(address)
     }
 }
 

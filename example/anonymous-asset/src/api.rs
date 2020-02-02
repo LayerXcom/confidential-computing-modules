@@ -22,7 +22,6 @@ pub mod deploy {
         use serde_big_array::big_array;
         use rand::Rng;
         use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
-        use web3::types::H160;
         use anonify_common::AccessRight;
 
         big_array! { BigArray; }
@@ -72,8 +71,8 @@ pub mod deploy {
             }
         }
 
-        #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub H160);
+        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
+        pub struct Response(pub String);
     }
 }
 
@@ -85,7 +84,6 @@ pub mod send {
         use rand::Rng;
         use anonify_common::{UserAddress, AccessRight};
         use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
-        use web3::types::H256;
 
         big_array! { BigArray; }
 
@@ -140,8 +138,8 @@ pub mod send {
             }
         }
 
-        #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub H256);
+        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
+        pub struct Response(pub String);
     }
 }
 

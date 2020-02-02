@@ -3,11 +3,13 @@ use std::prelude::v1::*;
 use sgx_tse::rsgx_create_report;
 use crate::error::{Result, EnclaveError};
 use crate::ocalls::{sgx_init_quote, get_quote};
+use crate::crypto::Eik;
 
 /// spid: Service procider ID for the ISV.
 #[derive(Clone)]
 pub struct EnclaveContext {
     spid: sgx_spid_t,
+    identity_key: Eik,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
@@ -18,7 +20,9 @@ impl EnclaveContext {
         id.copy_from_slice(&spid_vec);
         let spid: sgx_spid_t = sgx_spid_t { id };
 
-        Ok(EnclaveContext{ spid })
+        let identity_key = Eik::new()?;
+
+        Ok(EnclaveContext{ spid, identity_key })
     }
 
     pub fn get_quote(&self) -> Result<String> {
@@ -34,7 +38,7 @@ impl EnclaveContext {
 
     fn get_report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {
         let mut report = sgx_report_t::default();
-        let report_data = sgx_report_data_t::default();
+        let report_data = &self.identity_key.report_date();
 
         if let Ok(r) = rsgx_create_report(&target_info, &report_data) {
             report = r;

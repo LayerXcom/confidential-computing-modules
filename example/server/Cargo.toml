@@ -10,7 +10,7 @@ edition = "2018"
 anonymous-asset = { path = "../anonymous-asset" }
 anonify-common = { path = "../../core/common" }
 anonify-host = { path = "../../core/host" }
-sgx_types = { rev = "v1.0.9", git = "https://github.com/baidu/rust-sgx-sdk.git" }
+sgx_types = "1.1.0"
 actix-web = "1.0"
 dotenv = "0.13"
 dotenv_codegen = "0.15.0"
@@ -19,4 +19,3 @@ log = "0.4"
 env_logger = "0.7"
 ed25519-dalek = "1.0.0-pre.2"
 hex = "0.4"
-lazy_static = "1.4"

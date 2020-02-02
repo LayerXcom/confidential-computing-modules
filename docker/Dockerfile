@@ -1,8 +1,11 @@
 # inherit the baidu sdk image
-FROM baiduxlab/sgx-rust:1804-1.0.9
+FROM baiduxlab/sgx-rust:1804-1.1.0
 MAINTAINER osuke
 WORKDIR /root
-RUN rm -rf /root/sgx
+
+RUN rm -rf /root/sgx && \
+    echo 'source /opt/sgxsdk/environment' >> /root/.docker_bashrc && \
+    echo 'source /root/.cargo/env' >> /root/.docker_bashrc
 
 RUN set -x && \
     apt-get update && \
@@ -12,11 +15,9 @@ RUN set -x && \
     export PATH="$HOME/.yarn/bin:$PATH" && \
     yarn global add ganache-cli && \
     rm -rf /var/lib/apt/lists/* && \
-    add-apt-repository -y ppa:ethereum/ethereum && \
-    apt-get install -y solc
+    curl -o /usr/bin/solc -fL https://github.com/ethereum/solidity/releases/download/v0.5.16/solc-static-linux && \
+    chmod u+x /usr/bin/solc
 
 RUN /root/.cargo/bin/cargo install bindgen cargo-audit && \
     rm -rf /root/.cargo/registry && rm -rf /root/.cargo/git && \
-    git clone --depth 1 -b v1.0.9 https://github.com/baidu/rust-sgx-sdk.git sgx
-
-RUN LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
+    git clone --depth 1 -b v1.1.0 https://github.com/baidu/rust-sgx-sdk.git sgx

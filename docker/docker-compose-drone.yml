@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  drone:
+    image: drone/drone:1
+    ports:
+      - 3080:80
+      - 80:80
+      - 443:443
+    expose:
+      - 3000
+    volumes:
+      - /var/lib/drone:/data
+    restart: always
+    environment:
+      - DRONE_GITHUB_SERVER=https://github.com
+      - DRONE_GITHUB_CLIENT_ID=${DRONE_GITHUB_CLIENT_ID}
+      - DRONE_GITHUB_CLIENT_SECRET=${DRONE_GITHUB_CLIENT_SECRET}
+      - DRONE_RPC_SECRET=${DRONE_RPC_SECRET}
+      - DRONE_SERVER_HOST=${DRONE_SERVER_HOST}
+      - DRONE_SERVER_PROTO=https
+      - DRONE_TLS_AUTOCERT=true
+      - DRONE_USER_CREATE=username:${DRONE_USER},admin:true
+    networks:
+      drone_net:
+        ipv4_address: 172.16.238.2
+
+
+  # drone-runner:
+  #   image: drone/drone-runner-docker:1
+  #   command: runner
+  #   restart: always
+  #   depends_on:
+  #     - drone
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - /dev/isgx:/dev/isgx
+  #   environment:
+  #     - DRONE_RPC_HOST=drone
+  #     - DRONE_RPC_SECRET=${DRONE_RPC_SECRET}
+  #     - DRONE_RUNNER_CAPACITY=2
+  #     - DRONE_RUNNER_DEVICES=/dev/isgx
+
+networks:
+  drone_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.238.0/16
