@@ -56,6 +56,17 @@ where
         inner.deploy(deploy_user, access_right, state)
     }
 
+    pub fn register<P: AsRef<Path> + Copy>(
+        &self,
+        from_eth_addr: SignerAddress,
+        gas: u64,
+        contract_addr: &str,
+        abi_path: P,
+    ) -> Result<String> {
+        let mut inner = self.inner.write();
+        inner.register(from_eth_addr, gas, contract_addr, abi_path)
+    }
+
     pub fn send_tx<ST, P>(
         &self,
         access_right: &AccessRight,
@@ -163,6 +174,20 @@ where
             .block_on_event(eid)
     }
 
+    fn register<P: AsRef<Path> + Copy>(
+        &mut self,
+        from_eth_addr: SignerAddress,
+        gas: u64,
+        contract_addr: &str,
+        abi_path: P,
+    ) -> Result<String> {
+        self.set_contract_addr(contract_addr, abi_path)?;
+
+        self.sender.as_ref()
+            .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
+            .register(from_eth_addr, gas)
+    }
+
     fn send_tx<ST, P>(
         &mut self,
         access_right: &AccessRight,
@@ -243,6 +268,12 @@ pub mod traits {
             access_right: &AccessRight,
             target: &UserAddress,
             state: ST,
+            from_eth_addr: SignerAddress,
+            gas: u64,
+        ) -> Result<String>;
+
+        fn register(
+            &self,
             from_eth_addr: SignerAddress,
             gas: u64,
         ) -> Result<String>;

@@ -32,4 +32,10 @@ contract AnonymousAsset is ReportsHandle {
         emit StoreCiphertext(_encState1);
         emit StoreCiphertext(_encState2);
     }
+
+    function register(bytes memory _report, bytes memory _sig) public {
+        require(isEqualMrEnclave(_report, _sig), "mrenclave included in the report is not correct.");
+
+        // TODO: Store public key and nonce from _report
+    }
 }

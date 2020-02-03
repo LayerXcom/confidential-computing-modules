@@ -132,6 +132,26 @@ impl Sender for EthSender {
         ))
     }
 
+    fn register(
+        &self,
+        from_eth_addr: SignerAddress,
+        gas: u64,
+    ) -> Result<String> {
+        let register_tx = BoxedRegisterTx::register(self.enclave_id)?;
+        let receipt = match from_eth_addr {
+            SignerAddress::EthAddress(addr) => {
+                self.contract.register(
+                    addr,
+                    &register_tx.report,
+                    &register_tx.report_sig,
+                    gas
+                )?
+            }
+        };
+
+        Ok(hex::encode(receipt.as_bytes()))
+    }
+
     fn send_tx<ST: State>(
         &self,
         access_right: &AccessRight,
