@@ -19,6 +19,7 @@ pub trait EnclaveKVS: Sync + Send {
     fn get(&self, key: &UserAddress) -> DBValue;
 
     fn write(&self, tx: EnclaveDBTx);
+
 }
 
 impl EnclaveKVS for MemoryKVS {
@@ -29,6 +30,10 @@ impl EnclaveKVS for MemoryKVS {
     fn write(&self, tx: EnclaveDBTx) {
         self.inner_write(tx.into_inner())
     }
+
+    // fn state_hash(&self) -> StateHash {
+
+    // }
 }
 
 /// Batches a sequence of put/delete operations for efficiency.

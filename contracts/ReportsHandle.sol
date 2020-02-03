@@ -11,6 +11,9 @@ contract ReportsHandle {
     // Different builds/versions of an enclave will result in a different MRENCLAVE value.
     bytes32 public mrEnclave;
 
+    // This key is compact formatted secp256k1 public key. The size is 33 bytes.
+    mapping(bytes => bytes) public EnclavePubkey;
+
     // this is the modulus and the exponent of intel's certificate, you can extract it using:
     // `openssl x509 -noout -modulus -in AttestationReportSigningCert.pem` and `openssl x509 -in AttestationReportSigningCert.pem -text`.
     bytes constant internal RSA_EXP = hex"0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010001";
@@ -20,8 +23,6 @@ contract ReportsHandle {
     constructor(bytes memory _report, bytes memory _sig) public {
         mrEnclave = extractMrEnclaveFromReport(_report, _sig);
     }
-
-    // TODO: Add updateMrEnclave() function
 
     function isEqualMrEnclave(bytes memory _report, bytes memory _sig) public view returns (bool) {
         bytes32 inputMrEnclave = extractMrEnclaveFromReport(_report, _sig);
