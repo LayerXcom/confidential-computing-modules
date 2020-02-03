@@ -22,25 +22,26 @@ contract AnonymousAsset is ReportsHandle {
         emit StoreCiphertext(_initEncState);
     }
 
+    // _message: a message signed by enclave private key
     function stateTransition(
-        bytes memory _encState1,
-        bytes memory _encState2,
+        bytes memory _ciphertext1,
+        bytes memory _ciphertext2,
         bytes32 _lockParam,
-        uint8 _secp256k1_prefix,
-        uint256 _secp256k1_x
+        bytes memory _enclaveSig,
+        bytes32 _message
     ) public {
         require(lockParams[_lockParam] == 0, "The state has already been modified.");
         lockParams[_lockParam] = _lockParam;
 
-        encryptedBalances.push(_encState1);
-        encryptedBalances.push(_encState2);
+        encryptedBalances.push(_ciphertext1);
+        encryptedBalances.push(_ciphertext2);
 
-        emit StoreCiphertext(_encState1);
-        emit StoreCiphertext(_encState2);
+        emit StoreCiphertext(_ciphertext1);
+        emit StoreCiphertext(_ciphertext2);
     }
 
     function register(bytes memory _report, bytes memory _sig) public {
-        require(isEqualMrEnclave(_report, _sig), "mrenclave included in the report is not correct.");
+        handleReport(_report, _sig);
 
         // TODO: Store public key and nonce from _report
     }

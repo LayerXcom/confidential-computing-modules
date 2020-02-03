@@ -3,6 +3,7 @@ pragma solidity ^0.5.0;
 import "./utils/SafeMath.sol";
 import "./utils/SolRsaVerify.sol";
 import "./utils/Base64.sol";
+import "./utils/BytesUtils.sol";
 
 contract ReportsHandle {
     using SafeMath for uint256;
@@ -11,8 +12,15 @@ contract ReportsHandle {
     // Different builds/versions of an enclave will result in a different MRENCLAVE value.
     bytes32 public mrEnclave;
 
-    // This key is compact formatted secp256k1 public key. The size is 33 bytes.
-    mapping(bytes => bytes) public EnclavePubkey;
+    // Compact formatted secp256k1 public key. The size is 33 bytes.
+    mapping(address => address) public EnclaveAddress;
+    // Nonce data which is included `reportdata` field and used to prevent from replay attacks.
+    // The size is 31 bytes because `reportdata` field is 64 bytes size. We use it for Enclave Public key to rest of the field.
+    // This Report Nonce is not actually needed because the existing check of enclave public key provides replay protection features.
+    // We, however, check additional replay checks because the size of `reportdata` is fixed to 64 bytes size,
+    // so we have the left over of 31 bytes data field.
+    // We may remove this feature for perfomance.
+    mapping(bytes31 => bytes31) public ReportNonce;
 
     // this is the modulus and the exponent of intel's certificate, you can extract it using:
     // `openssl x509 -noout -modulus -in AttestationReportSigningCert.pem` and `openssl x509 -in AttestationReportSigningCert.pem -text`.
@@ -24,9 +32,20 @@ contract ReportsHandle {
         mrEnclave = extractMrEnclaveFromReport(_report, _sig);
     }
 
-    function isEqualMrEnclave(bytes memory _report, bytes memory _sig) public view returns (bool) {
-        bytes32 inputMrEnclave = extractMrEnclaveFromReport(_report, _sig);
-        return mrEnclave == inputMrEnclave;
+    function handleReport(bytes memory _report, bytes memory _sig) public {
+        require(verifyReportSig(_report, _sig) == 0, "Invalid report's signature");
+        bytes memory quote = extractQuote(_report);
+        bytes32 inputMrEnclave = keccak256(abi.encodePacked(extractElement(quote, 112, 32)));
+        require(mrEnclave == inputMrEnclave, "mrenclave included in the report is not correct.");
+
+        address enclaveAddress = BytesUtils.toAddress(extractElement(quote, 368, 33), 0);
+        // bytes memory _reportNonce = extractElement(quote, 401, 31);
+
+        require(EnclaveAddress[enclaveAddress] == address(0), "The enclave public key has already been registered.");
+        EnclaveAddress[enclaveAddress] = enclaveAddress;
+
+        // require(ReportNonce[_reportNonce] == 0, "The report nonce has already been used.");
+
     }
 
     function extractMrEnclaveFromReport(bytes memory _report, bytes memory _sig) internal view returns (bytes32) {
@@ -34,6 +53,7 @@ contract ReportsHandle {
         bytes memory quote = extractQuote(_report);
 
         // See https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf, P.23.
+        // wrapping over keccak256 to convert type from `bytes` to `bytes32`.
         return keccak256(abi.encodePacked(extractElement(quote, 112, 32)));
     }
 
