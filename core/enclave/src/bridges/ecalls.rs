@@ -89,6 +89,19 @@ pub unsafe extern "C" fn ecall_state_transition(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn ecall_register(
+    register_tx: &mut RawRegisterTx,
+) -> sgx_status_t {
+    let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES);
+    let quote = EnclaveContext::new(TEST_SPID).unwrap().get_quote().unwrap();
+    let (report, report_sig) = service.get_report_and_sig(&quote, TEST_SUB_KEY).unwrap();
+
+
+
+    sgx_status_t::SGX_SUCCESS
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn ecall_init_state(
     sig: &Sig,
     pubkey: &PubKey,

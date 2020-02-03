@@ -4,6 +4,7 @@ use core::{
     ptr,
     mem,
 };
+use crate::traits::RawEnclaveTx;
 
 pub const STATE_SIZE: usize = 8;
 pub const PUBKEY_SIZE: usize = 32;
@@ -40,6 +41,35 @@ impl fmt::Display for EnclaveReturn {
             Success => "EnclaveReturn: Success",
         };
         write!(f, "{}", p)
+    }
+}
+
+/// Bridged type from enclave to host to send a register transaction.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RawRegisterTx {
+    /// A pointer to the output of the report using `ocall_save_to_memory()`.
+    pub report: *const u8,
+    pub report_sig: *const u8,
+}
+
+impl RawEnclaveTx for RawRegisterTx { }
+
+impl Default for RawRegisterTx {
+    fn default() -> Self {
+        RawRegisterTx {
+            report: ptr::null(),
+            report_sig: ptr::null(),
+        }
+    }
+}
+
+impl fmt::Debug for RawRegisterTx {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut debug_trait_builder = f.debug_struct("RawRegisterTx");
+        debug_trait_builder.field("report", &(self.report));
+        debug_trait_builder.field("report_sig", &(self.report_sig));
+        debug_trait_builder.finish()
     }
 }
 

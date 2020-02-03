@@ -190,7 +190,7 @@ impl<S: State> UserState<S, Current> {
     }
 
     /// Compute hash digest of current user state.
-    pub fn hash(&self) -> Result<Sha256> {
+    fn hash(&self) -> Result<Sha256> {
         let mut inp: Vec<u8> = vec![];
         self.write(&mut inp)?;
 

@@ -56,7 +56,7 @@ impl<'a> AttestationService<'a> {
 
         res.verify_sig_cert()?;
 
-        Ok((res.body, res.sig))
+        Ok((res.body.0, res.sig.0)) // TODO
     }
 
     fn raw_report_req(&self, quote: &str, ias_api_key: &str) -> String {
@@ -83,11 +83,34 @@ impl<'a> AttestationService<'a> {
     }
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct Report(Vec<u8>);
+
+impl Report {
+    pub fn new(report: Vec<u8>) -> Self {
+        Report(report)
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ReportSig(Vec<u8>);
+
+impl ReportSig {
+    pub fn base64_decode(v: &[u8]) -> Result<Self> {
+        let v = base64::decode(v)?;
+        Ok(ReportSig(v))
+    }
+
+    pub fn new(report_sig: Vec<u8>) -> Self {
+        ReportSig(report_sig)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Response {
-    sig: Vec<u8>,
+    body: Report,
+    sig: ReportSig,
     cert: Vec<u8>,
-    body: Vec<u8>,
 }
 
 impl Response {
@@ -113,9 +136,9 @@ impl Response {
         println!("    [Enclave] msg = {}", msg);
         let mut len_num : u32 = 0;
 
-        let mut sig = vec![];
+        let mut sig = ReportSig::default();
         let mut cert_str = String::new();
-        let mut body = vec![];
+        let mut body = Report::default();
 
         for i in 0..respp.headers.len() {
             let h = respp.headers[i];
@@ -124,7 +147,7 @@ impl Response {
                     let len_str = String::from_utf8(h.value.to_vec()).unwrap();
                     len_num = len_str.parse::<u32>().unwrap();
                 }
-                "X-IASReport-Signature" => sig = base64::decode(h.value)?,
+                "X-IASReport-Signature" => sig = ReportSig::base64_decode(h.value)?,
                 "X-IASReport-Signing-Certificate" => cert_str = String::from_utf8(h.value.to_vec()).unwrap(),
                 _ => (),
             }
@@ -141,13 +164,13 @@ impl Response {
 
         if len_num != 0 {
             let header_len = result.unwrap().unwrap();
-            body = resp[header_len..].to_vec();
+            body = Report::new(resp[header_len..].to_vec());
         }
 
         Ok(Response {
+            body,
             sig,
             cert,
-            body,
         })
     }
 
@@ -179,8 +202,8 @@ impl Response {
 
         sig_cert.verify_signature(
             &webpki::RSA_PKCS1_2048_8192_SHA256,
-            &self.body,
-            &self.sig
+            &self.body.0,
+            &self.sig.0,
         )?;
 
         Ok(())

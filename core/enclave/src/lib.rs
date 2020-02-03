@@ -18,6 +18,7 @@ mod bridges;
 mod sealing;
 mod attestation;
 mod quote;
+mod transaction;
 mod cert;
 #[cfg(debug_assertions)]
 mod tests;
