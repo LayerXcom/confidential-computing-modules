@@ -1,26 +1,23 @@
 use anonify_types::{RawRegisterTx, traits::RawEnclaveTx};
 use crate::{
-    attestation::{Report, ReportSig},
+    attestation::{Report, ReportSig, AttestationService},
     error::Result,
+    quote::{EnclaveContext, ENCLAVE_CONTEXT},
+    bridges::ocalls::save_to_host_memory,
 };
 
 pub trait EnclaveTx: Sized {
     type R: RawEnclaveTx;
 
-    fn construct() -> Result<Self>;
+    fn construct(
+        host: &str,
+        path: &str,
+        ias_api_key: &str,
+        ctx: &EnclaveContext,
+    ) -> Result<Self>;
 
-    fn into_raw() -> Self::R;
+    fn into_raw(&self) -> Result<Self::R>;
  }
-
-// impl<U, T> From<U> for T
-// where
-//     U: EnclaveTx,
-//     T: RawEnclaveTx,
-// {
-//     fn from(e: U) -> Self {
-//         e.into_raw()
-//     }
-// }
 
 #[derive(Debug, Clone)]
 pub struct RegisterTx {
@@ -32,12 +29,30 @@ pub struct RegisterTx {
 impl EnclaveTx for RegisterTx {
     type R = RawRegisterTx;
 
-    fn construct() -> Result<Self> {
-        unimplemented!();
+    fn construct(
+        host: &str,
+        path: &str,
+        ias_api_key: &str,
+        ctx: &EnclaveContext,
+    ) -> Result<Self> {
+        let service = AttestationService::new(host, path);
+        let quote = ctx.get_quote()?;
+        let (report, report_sig) = service.get_report_and_sig_new(&quote, ias_api_key)?;
+
+        Ok(RegisterTx {
+            report,
+            report_sig,
+        })
     }
 
-    fn into_raw() -> Self::R {
-        unimplemented!();
+    fn into_raw(&self) -> Result<Self::R> {
+        let report = save_to_host_memory(&self.report.as_bytes())? as *const u8;
+        let report_sig = save_to_host_memory(&self.report_sig.as_bytes())? as *const u8;
+
+        Ok(RawRegisterTx {
+            report,
+            report_sig,
+        })
     }
 }
 

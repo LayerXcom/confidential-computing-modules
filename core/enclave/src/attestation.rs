@@ -15,7 +15,6 @@ use crate::{
 
 pub const DEV_HOSTNAME : &str = "api.trustedservices.intel.com";
 pub const REPORT_PATH : &str = "/sgx/dev/attestation/v3/report";
-pub const IAS_DEFAULT_RETRIES: u32 = 10;
 pub const TEST_SPID: &str = "2C149BFC94A61D306A96211AED155BE9";
 pub const TEST_SUB_KEY: &str = "77e2533de0624df28dc3be3a5b9e50d9";
 
@@ -38,15 +37,13 @@ static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
 pub struct AttestationService<'a> {
     host: &'a str,
     path: &'a str,
-    retries: u32,
 }
 
 impl<'a> AttestationService<'a> {
-    pub fn new(host: &'a str, path: &'a str, retries: u32) -> Self {
+    pub fn new(host: &'a str, path: &'a str) -> Self {
         AttestationService {
             host,
             path,
-            retries,
         }
     }
 
@@ -57,6 +54,15 @@ impl<'a> AttestationService<'a> {
         res.verify_sig_cert()?;
 
         Ok((res.body.0, res.sig.0)) // TODO
+    }
+
+    pub fn get_report_and_sig_new(&self, quote: &str, ias_api_key: &str) -> Result<(Report, ReportSig)> {
+        let req = self.raw_report_req(quote, ias_api_key);
+        let res = self.send_raw_req(req)?;
+
+        res.verify_sig_cert()?;
+
+        Ok((res.body, res.sig))
     }
 
     fn raw_report_req(&self, quote: &str, ias_api_key: &str) -> String {
@@ -90,6 +96,10 @@ impl Report {
     pub fn new(report: Vec<u8>) -> Self {
         Report(report)
     }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0[..]
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -103,6 +113,10 @@ impl ReportSig {
 
     pub fn new(report_sig: Vec<u8>) -> Self {
         ReportSig(report_sig)
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0[..]
     }
 }
 

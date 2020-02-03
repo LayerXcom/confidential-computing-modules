@@ -8,9 +8,10 @@ use crate::state::{UserState, StateValue, Current, StfWrapper};
 use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{
     AttestationService, TEST_SPID, TEST_SUB_KEY,
-    DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES,
+    DEV_HOSTNAME, REPORT_PATH,
 };
-use crate::quote::EnclaveContext;
+use crate::quote::{EnclaveContext, ENCLAVE_CONTEXT};
+use crate::transaction::{RegisterTx, EnclaveTx};
 use super::ocalls::save_to_host_memory;
 
 /// Insert event logs from blockchain nodes into enclave's memory database.
@@ -66,7 +67,7 @@ pub unsafe extern "C" fn ecall_state_transition(
     state_len: usize,
     unsigned_tx: &mut RawUnsignedTx,
 ) -> sgx_status_t {
-    let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES);
+    let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH);
     let quote = EnclaveContext::new(TEST_SPID).unwrap().get_quote().unwrap();
     let (report, report_sig) = service.get_report_and_sig(&quote, TEST_SUB_KEY).unwrap();
 
@@ -90,13 +91,12 @@ pub unsafe extern "C" fn ecall_state_transition(
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_register(
-    register_tx: &mut RawRegisterTx,
+    raw_register_tx: &mut RawRegisterTx,
 ) -> sgx_status_t {
-    let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES);
-    let quote = EnclaveContext::new(TEST_SPID).unwrap().get_quote().unwrap();
-    let (report, report_sig) = service.get_report_and_sig(&quote, TEST_SUB_KEY).unwrap();
-
-
+    let register_tx = RegisterTx::construct(DEV_HOSTNAME, REPORT_PATH, TEST_SUB_KEY, &ENCLAVE_CONTEXT)
+        .expect("Faild to constract register transaction.");
+    *raw_register_tx = register_tx.into_raw()
+        .expect("Faild to convert into raw register transaction.");
 
     sgx_status_t::SGX_SUCCESS
 }
@@ -110,7 +110,7 @@ pub unsafe extern "C" fn ecall_init_state(
     state_len: usize,
     unsigned_tx: &mut RawUnsignedTx,
 ) -> sgx_status_t {
-    let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH, IAS_DEFAULT_RETRIES);
+    let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH);
     let quote = EnclaveContext::new(TEST_SPID).unwrap().get_quote().unwrap();
     let (report, report_sig) = service.get_report_and_sig(&quote, TEST_SUB_KEY).unwrap();
 

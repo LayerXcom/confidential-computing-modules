@@ -4,6 +4,11 @@ use sgx_tse::rsgx_create_report;
 use crate::error::{Result, EnclaveError};
 use crate::ocalls::{sgx_init_quote, get_quote};
 use crate::crypto::Eik;
+use crate::attestation::TEST_SPID;
+
+lazy_static! {
+    pub static ref ENCLAVE_CONTEXT: EnclaveContext = EnclaveContext::new(TEST_SPID).unwrap();
+}
 
 /// spid: Service procider ID for the ISV.
 #[derive(Clone)]
