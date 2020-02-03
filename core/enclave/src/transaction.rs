@@ -4,6 +4,8 @@ use crate::{
     error::Result,
     quote::{EnclaveContext, ENCLAVE_CONTEXT},
     bridges::ocalls::save_to_host_memory,
+    state::LockParam,
+    crypto::Ciphertext,
 };
 
 pub trait EnclaveTx: Sized {
@@ -68,7 +70,7 @@ impl RegisterTx {
 // #[derive(Debug, Clone)]
 // pub struct StateTransitionTx {
 //     ciphertexts: Vec<Ciphertext>,
-//     lock_param: Vec<u8>,
+//     lock_param: LockParam,
 //     blc_num: u64,
 //     state_hash: Vec<u8>,
 //     enclave_sig: Vec<u8>,

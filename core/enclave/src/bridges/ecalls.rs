@@ -5,7 +5,7 @@ use anonify_common::{UserAddress, State, stf::Value};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::kvs::{EnclaveKVS, MEMORY_DB};
 use crate::state::{UserState, StateValue, Current, StfWrapper};
-use crate::crypto::SYMMETRIC_KEY;
+use crate::crypto::{SYMMETRIC_KEY, Ciphertext};
 use crate::attestation::{
     AttestationService, TEST_SPID, TEST_SUB_KEY,
     DEV_HOSTNAME, REPORT_PATH,
@@ -27,7 +27,7 @@ pub unsafe extern "C" fn ecall_insert_logs(
     assert_eq!(ciphertexts.len() % ciphertext_size, 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
     for ciphertext in ciphertexts.chunks(ciphertext_size) {
-        UserState::<Value ,Current>::insert_cipheriv_memdb(ciphertext.to_vec(), &SYMMETRIC_KEY)
+        UserState::<Value ,Current>::insert_cipheriv_memdb(Ciphertext(ciphertext.to_vec()), &SYMMETRIC_KEY)
             .expect("Failed to insert ciphertext into memory database.");
     }
 
@@ -129,7 +129,7 @@ pub unsafe extern "C" fn ecall_init_state(
     unsigned_tx.report = save_to_host_memory(&report[..]).unwrap() as *const u8;
     unsigned_tx.report_sig = save_to_host_memory(&report_sig[..]).unwrap() as *const u8;
     unsigned_tx.ciphertext_num = 1;
-    unsigned_tx.ciphertexts = save_to_host_memory(&res_ciphertext[..]).unwrap() as *const u8;
+    unsigned_tx.ciphertexts = save_to_host_memory(&res_ciphertext.0[..]).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS
 }

@@ -40,7 +40,7 @@ impl SymmetricKey {
     }
 
     /// Encryption with AES-256-GCM.
-    pub fn encrypt_aes_256_gcm(&self, msg: Vec<u8>) -> Result<Vec<u8>> {
+    pub fn encrypt_aes_256_gcm(&self, msg: Vec<u8>) -> Result<Ciphertext> {
         let mut iv = [0u8; IV_SIZE];
         sgx_rand_assign(&mut iv)?;
 
@@ -53,13 +53,13 @@ impl SymmetricKey {
         s_key.seal_in_place_append_tag(Aad::empty(), &mut data)?;
         data.extend_from_slice(&iv);
 
-        Ok(data)
+        Ok(Ciphertext(data))
     }
 
     /// Decryption with AES-256-GCM.
-    pub fn decrypt_aes_256_gcm(&self, cipheriv: Vec<u8>) -> Result<Vec<u8>> {
+    pub fn decrypt_aes_256_gcm(&self, cipheriv: Ciphertext) -> Result<Vec<u8>> {
         let ub_key = UnboundKey::new(&AES_256_GCM, &self.as_bytes())?;
-        let (ciphertext, iv) = cipheriv.split_at(cipheriv.len() - IV_SIZE);
+        let (ciphertext, iv) = cipheriv.0.split_at(cipheriv.0.len() - IV_SIZE);
 
         let nonce = Nonce::try_assume_unique_for_key(iv)?;
         let nonce_seq = OneNonceSequence::new(nonce);
@@ -85,6 +85,15 @@ impl OneNonceSequence {
 impl aead::NonceSequence for OneNonceSequence {
     fn advance(&mut self) -> std::result::Result<aead::Nonce, ring::error::Unspecified> {
         self.0.take().ok_or(ring::error::Unspecified).into()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Ciphertext(pub Vec<u8>);
+
+impl Ciphertext {
+    pub fn new(raw: Vec<u8>) -> Self {
+        Ciphertext(raw)
     }
 }
 
