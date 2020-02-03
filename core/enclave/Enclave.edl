@@ -37,6 +37,10 @@ enclave {
             [out] RawUnsignedTx* result
         );
 
+        public sgx_status_t ecall_register(
+            [out] RawRegisterTx* result
+        );
+
         public sgx_status_t ecall_init_state(
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],

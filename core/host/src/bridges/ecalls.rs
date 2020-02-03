@@ -1,5 +1,5 @@
 use sgx_types::*;
-use anonify_types::{RawUnsignedTx, traits::SliceCPtr, EnclaveState};
+use anonify_types::{RawUnsignedTx, traits::SliceCPtr, EnclaveState, RawRegisterTx};
 use anonify_common::State;
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
@@ -146,6 +146,51 @@ pub(crate) fn state_transition<S: State>(
     Ok(unsigned_tx.into())
 }
 
+#[derive(Debug, Clone, Default)]
+pub(crate) struct BoxedRegisterTx {
+    pub report: Box<[u8]>,
+    pub report_sig: Box<[u8]>,
+}
+
+impl BoxedRegisterTx {
+    pub(crate) fn register(eid: sgx_enclave_id_t) -> Result<Self> {
+        let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+        let mut raw_reg_tx = RawRegisterTx::default();
+
+        let status = unsafe {
+            ecall_register(
+                eid,
+                &mut rt,
+                &mut raw_reg_tx,
+            )
+        };
+
+        if status != sgx_status_t::SGX_SUCCESS {
+            return Err(HostErrorKind::Sgx{ status, function: "ecall_register" }.into());
+        }
+        if rt != sgx_status_t::SGX_SUCCESS {
+            return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_register" }.into());
+        }
+
+        Ok(raw_reg_tx.into())
+    }
+}
+
+impl From<RawRegisterTx> for BoxedRegisterTx {
+    fn from(raw_reg_tx: RawRegisterTx) -> Self {
+        let mut res_tx = BoxedRegisterTx::default();
+
+        let box_report = raw_reg_tx.report as *mut Box<[u8]>;
+        let report = unsafe { Box::from_raw(box_report) };
+        let box_report_sig = raw_reg_tx.report_sig as *mut Box<[u8]>;
+        let report_sig = unsafe { Box::from_raw(box_report_sig) };
+
+        res_tx.report = *report;
+        res_tx.report_sig = *report_sig;
+
+        res_tx
+    }
+}
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct UnsignedTx {

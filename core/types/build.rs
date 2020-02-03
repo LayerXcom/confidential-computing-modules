@@ -13,6 +13,7 @@ fn main() {
         .with_language(Language::C)
         .include_item("EnclaveReturn")
         .include_item("RawUnsignedTx")
+        .include_item("RawRegisterTx")
         .include_item("EnclaveState")
         .include_item("ResultStatus")
         .include_item("RawPointer")

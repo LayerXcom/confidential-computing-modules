@@ -39,6 +39,13 @@ extern "C" {
     ) -> sgx_status_t;
 }
 extern "C" {
+    pub fn ecall_register(
+        eid: sgx_enclave_id_t,
+        retval: *mut sgx_status_t,
+        result: *mut RawRegisterTx,
+    ) -> sgx_status_t;
+}
+extern "C" {
     pub fn ecall_init_state(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
