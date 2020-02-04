@@ -10,17 +10,17 @@ contract ReportsHandle {
 
     // A cryptographic hash of the measurement.
     // Different builds/versions of an enclave will result in a different MRENCLAVE value.
-    bytes32 public mrEnclave;
+    bytes32 private _mrEnclave;
 
     // Compact formatted secp256k1 public key. The size is 33 bytes.
-    mapping(address => address) public EnclaveAddress;
+    mapping(address => address) public enclaveAddress;
     // Nonce data which is included `reportdata` field and used to prevent from replay attacks.
     // The size is 31 bytes because `reportdata` field is 64 bytes size. We use it for Enclave Public key to rest of the field.
     // This Report Nonce is not actually needed because the existing check of enclave public key provides replay protection features.
     // We, however, check additional replay checks because the size of `reportdata` is fixed to 64 bytes size,
     // so we have the left over of 31 bytes data field.
     // We may remove this feature for perfomance.
-    mapping(bytes => bytes) public ReportNonce;
+    mapping(bytes => bytes) private _reportNonce;
 
     // this is the modulus and the exponent of intel's certificate, you can extract it using:
     // `openssl x509 -noout -modulus -in AttestationReportSigningCert.pem` and `openssl x509 -in AttestationReportSigningCert.pem -text`.
@@ -28,29 +28,32 @@ contract ReportsHandle {
     bytes constant internal RSA_MOD = hex"A97A2DE0E66EA6147C9EE745AC0162686C7192099AFC4B3F040FAD6DE093511D74E802F510D716038157DCAF84F4104BD3FED7E6B8F99C8817FD1FF5B9B864296C3D81FA8F1B729E02D21D72FFEE4CED725EFE74BEA68FBC4D4244286FCDD4BF64406A439A15BCB4CF67754489C423972B4A80DF5C2E7C5BC2DBAF2D42BB7B244F7C95BF92C75D3B33FC5410678A89589D1083DA3ACC459F2704CD99598C275E7C1878E00757E5BDB4E840226C11C0A17FF79C80B15C1DDB5AF21CC2417061FBD2A2DA819ED3B72B7EFAA3BFEBE2805C9B8AC19AA346512D484CFC81941E15F55881CC127E8F7AA12300CD5AFB5742FA1D20CB467A5BEB1C666CF76A368978B5";
     uint constant internal WORD_SIZE = 32;
 
+    // Set new mrenclave value and enclave address
     constructor(bytes memory _report, bytes memory _sig) public {
-        mrEnclave = extractMrEnclaveFromReport(_report, _sig);
+        (bytes32 inpMrEnclave, address inpEnclaveAddr) = extractFromReport(_report, _sig);
+        require(_mrEnclave == 0, "mrenclave included in the report is not correct.");
+
+        _mrEnclave = inpMrEnclave;
+        enclaveAddress[inpEnclaveAddr] = inpEnclaveAddr;
     }
 
+    // Check mrenclave value and report signature and then set new enclave address.
     function handleReport(bytes memory _report, bytes memory _sig) public {
-        require(verifyReportSig(_report, _sig) == 0, "Invalid report's signature");
-        bytes memory quote = extractQuote(_report);
-        bytes32 inputMrEnclave = BytesUtils.toBytes32(extractElement(quote, 112, 32), 0);
-        require(mrEnclave == inputMrEnclave, "mrenclave included in the report is not correct.");
+        (bytes32 inpMrEnclave, address inpEnclaveAddr) = extractFromReport(_report, _sig);
+        require(_mrEnclave == inpMrEnclave, "mrenclave included in the report is not correct.");
 
-        address enclaveAddress = BytesUtils.toAddress(extractElement(quote, 368, 33), 0);
-        // bytes memory _reportNonce = extractElement(quote, 401, 31);
-
-        require(EnclaveAddress[enclaveAddress] == address(0), "The enclave public key has already been registered.");
-        EnclaveAddress[enclaveAddress] = enclaveAddress;
+        enclaveAddress[inpEnclaveAddr] = inpEnclaveAddr;
     }
 
-    function extractMrEnclaveFromReport(bytes memory _report, bytes memory _sig) internal view returns (bytes32) {
+    function extractFromReport(bytes memory _report, bytes memory _sig) internal view returns (bytes32, address) {
         require(verifyReportSig(_report, _sig) == 0, "Invalid report's signature");
         bytes memory quote = extractQuote(_report);
-
         // See https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf, P.23.
-        return BytesUtils.toBytes32(extractElement(quote, 112, 32), 0);
+        bytes32 mrEnclave = BytesUtils.toBytes32(extractElement(quote, 112, 32), 0);
+        address inpEnclaveAddr = BytesUtils.toAddress(extractElement(quote, 368, 20), 0);
+        require(enclaveAddress[inpEnclaveAddr] == address(0), "The enclave public key has already been registered.");
+
+        return (mrEnclave, inpEnclaveAddr);
     }
 
     function extractQuote(bytes memory _report) internal pure returns(bytes memory) {
