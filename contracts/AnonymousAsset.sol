@@ -31,6 +31,9 @@ contract AnonymousAsset is ReportsHandle {
         bytes32 _message
     ) public {
         require(lockParams[_lockParam] == 0, "The state has already been modified.");
+        address enclaveAddr = Secp256k1.recover(_message, _enclaveSig);
+        require(EnclaveAddress[enclaveAddr] == enclaveAddr, "Invalid enclave signature.");
+
         lockParams[_lockParam] = _lockParam;
 
         encryptedBalances.push(_ciphertext1);
@@ -42,7 +45,5 @@ contract AnonymousAsset is ReportsHandle {
 
     function register(bytes memory _report, bytes memory _sig) public {
         handleReport(_report, _sig);
-
-        // TODO: Store public key and nonce from _report
     }
 }

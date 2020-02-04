@@ -8,11 +8,6 @@ library Secp256k1 {
     // the modulus
     uint256 constant PP = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
 
-    function verifySig(bytes32 _message, bytes memory _signature) internal pure returns (bool) {
-        address enclaveAddr = recover(_message, _signature);
-
-    }
-
     /// @dev Derives the y coordinate from a compressed-format point x [[SEC-1]](https://www.secg.org/SEC1-Ver-1.0.pdf).
     /// @param _prefix parity byte (0x02 even, 0x03 odd)
     /// @param _x coordinate x

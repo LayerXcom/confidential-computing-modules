@@ -20,7 +20,7 @@ contract ReportsHandle {
     // We, however, check additional replay checks because the size of `reportdata` is fixed to 64 bytes size,
     // so we have the left over of 31 bytes data field.
     // We may remove this feature for perfomance.
-    mapping(bytes31 => bytes31) public ReportNonce;
+    mapping(bytes => bytes) public ReportNonce;
 
     // this is the modulus and the exponent of intel's certificate, you can extract it using:
     // `openssl x509 -noout -modulus -in AttestationReportSigningCert.pem` and `openssl x509 -in AttestationReportSigningCert.pem -text`.
@@ -35,7 +35,7 @@ contract ReportsHandle {
     function handleReport(bytes memory _report, bytes memory _sig) public {
         require(verifyReportSig(_report, _sig) == 0, "Invalid report's signature");
         bytes memory quote = extractQuote(_report);
-        bytes32 inputMrEnclave = keccak256(abi.encodePacked(extractElement(quote, 112, 32)));
+        bytes32 inputMrEnclave = BytesUtils.toBytes32(extractElement(quote, 112, 32), 0);
         require(mrEnclave == inputMrEnclave, "mrenclave included in the report is not correct.");
 
         address enclaveAddress = BytesUtils.toAddress(extractElement(quote, 368, 33), 0);
@@ -43,9 +43,6 @@ contract ReportsHandle {
 
         require(EnclaveAddress[enclaveAddress] == address(0), "The enclave public key has already been registered.");
         EnclaveAddress[enclaveAddress] = enclaveAddress;
-
-        // require(ReportNonce[_reportNonce] == 0, "The report nonce has already been used.");
-
     }
 
     function extractMrEnclaveFromReport(bytes memory _report, bytes memory _sig) internal view returns (bytes32) {
@@ -53,8 +50,7 @@ contract ReportsHandle {
         bytes memory quote = extractQuote(_report);
 
         // See https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf, P.23.
-        // wrapping over keccak256 to convert type from `bytes` to `bytes32`.
-        return keccak256(abi.encodePacked(extractElement(quote, 112, 32)));
+        return BytesUtils.toBytes32(extractElement(quote, 112, 32), 0);
     }
 
     function extractQuote(bytes memory _report) internal pure returns(bytes memory) {
