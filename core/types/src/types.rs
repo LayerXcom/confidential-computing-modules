@@ -73,34 +73,38 @@ impl fmt::Debug for RawRegisterTx {
     }
 }
 
-// /// Bridged type from enclave to host to send a register transaction.
-// #[repr(C)]
-// #[derive(Clone, Copy)]
-// pub struct RawInitStateTx {
-//     /// The number of ciphertexts.
-//     pub ciphertext_num: usize,
-//     pub ciphertexts: *const u8,
-// }
+/// Bridged type from enclave to host to initialize state transaction.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RawInitStateTx {
+    pub state_id: u64,
+    pub ciphertext: *const u8,
+    pub lock_param: *const u8,
+    pub enclave_sig: *const u8,
+}
 
-// impl RawEnclaveTx for RawInitStateTx { }
+impl RawEnclaveTx for RawInitStateTx { }
 
-// impl Default for RawInitStateTx {
-//     fn default() -> Self {
-//         RawInitStateTx {
-//             report: ptr::null(),
-//             report_sig: ptr::null(),
-//         }
-//     }
-// }
+impl Default for RawInitStateTx {
+    fn default() -> Self {
+        RawInitStateTx {
+            ciphertext: ptr::null(),
+            lock_param: ptr::null(),
+            enclave_sig: ptr::null(),
+            .. unsafe { mem::zeroed() }
+        }
+    }
+}
 
-// impl fmt::Debug for RawInitStateTx {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         let mut debug_trait_builder = f.debug_struct("RawInitStateTx");
-//         debug_trait_builder.field("report", &(self.report));
-//         debug_trait_builder.field("report_sig", &(self.report_sig));
-//         debug_trait_builder.finish()
-//     }
-// }
+impl fmt::Debug for RawInitStateTx {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut debug_trait_builder = f.debug_struct("RawInitStateTx");
+        debug_trait_builder.field("ciphertext", &(self.ciphertext));
+        debug_trait_builder.field("lock_param", &(self.lock_param));
+        debug_trait_builder.field("enclave_sig", &(self.enclave_sig));
+        debug_trait_builder.finish()
+    }
+}
 
 /// Returned from a contract deploy or state transition ecall.
 #[repr(C)]

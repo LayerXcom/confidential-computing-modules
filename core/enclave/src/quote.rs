@@ -1,10 +1,13 @@
 use sgx_types::*;
 use std::prelude::v1::*;
 use sgx_tse::rsgx_create_report;
-use crate::error::{Result, EnclaveError};
-use crate::ocalls::{sgx_init_quote, get_quote};
-use crate::crypto::Eik;
-use crate::attestation::TEST_SPID;
+use crate::{
+    crypto::Eik,
+    state::LockParam,
+    attestation::TEST_SPID,
+    ocalls::{sgx_init_quote, get_quote},
+    error::{Result, EnclaveError},
+};
 
 lazy_static! {
     pub static ref ENCLAVE_CONTEXT: EnclaveContext = EnclaveContext::new(TEST_SPID).unwrap();
@@ -39,6 +42,10 @@ impl EnclaveContext {
     pub(crate) fn init_quote(&self) -> Result<sgx_target_info_t> {
         let target_info = sgx_init_quote()?;
         Ok(target_info)
+    }
+
+    pub fn sign(&self, msg: &LockParam) -> Result<secp256k1::Signature> {
+        self.identity_key.sign(msg.as_bytes())
     }
 
     fn get_report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {

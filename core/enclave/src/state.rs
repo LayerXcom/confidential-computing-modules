@@ -1,7 +1,7 @@
 //! State transition functions for anonymous asset
 
 use anonify_common::{
-    UserAddress, Sha256, Hash256, State,
+    UserAddress, Sha256, Hash256, State, Ciphertext,
     kvs::*,
     stf::{Runtime, CallKind},
 };
@@ -252,6 +252,10 @@ impl<S: State> TryFrom<UserState<S, Current>> for UserState<S, Next> {
 pub struct LockParam([u8; 32]);
 
 impl LockParam {
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0[..]
+    }
+
     pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
         writer.write_all(&self.0)?;
         Ok(())
@@ -294,8 +298,12 @@ impl StfWrapper {
     // TODO: To be more generic parameters to stf.
     // TODO: Fix dupulicate state values.
     // TODO: Remove from MEMORY_DB static from this function.
-    pub fn apply<S: State>(self, _stf: &str, params: S, symm_key: &SymmetricKey) -> Result<(Vec<u8>, usize)>
-    {
+    pub fn apply<S: State>(
+        self,
+        _stf: &str,
+        params: S,
+        symm_key: &SymmetricKey
+    ) -> Result<(Ciphertext, Ciphertext)> {
         let my_state_value = MEMORY_DB.get(&self.my_addr);
         let my_state_value = StateValue::<S, Current>::from_dbvalue(my_state_value)?;
         let other_state_value = MEMORY_DB.get(&self.target_addr);
@@ -306,14 +314,13 @@ impl StfWrapper {
         let my_update_state: UserState::<S, Next> = UserState::<S, Current>::new(self.my_addr, my_state_value)
             .update_inner_state(my_update)
             .try_into()?;
-        let mut my_enc_state = my_update_state.encrypt(&symm_key)?;
+        let my_enc_state = my_update_state.encrypt(&symm_key)?;
         let other_update_state: UserState::<S, Next> = UserState::<S, Current>::new(self.target_addr, other_state_value)
             .update_inner_state(other_update)
             .try_into()?;
-        let mut other_enc_state = other_update_state.encrypt(&symm_key)?;
+        let other_enc_state = other_update_state.encrypt(&symm_key)?;
 
-        my_enc_state.0.append(&mut other_enc_state.0);
-        Ok((my_enc_state.0, 2))
+        Ok((my_enc_state, other_enc_state))
     }
 }
 

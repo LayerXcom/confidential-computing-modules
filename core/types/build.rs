@@ -14,6 +14,7 @@ fn main() {
         .include_item("EnclaveReturn")
         .include_item("RawUnsignedTx")
         .include_item("RawRegisterTx")
+        .include_item("RawInitStateTx")
         .include_item("EnclaveState")
         .include_item("ResultStatus")
         .include_item("RawPointer")

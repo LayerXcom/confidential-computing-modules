@@ -12,7 +12,6 @@ extern "C" {
         block_number: u64,
         ciphertexts: *const u8,
         ciphertexts_len: usize,
-        ciphertext_size: usize,
     ) -> sgx_status_t;
 }
 extern "C" {
@@ -54,7 +53,8 @@ extern "C" {
         msg: *mut [u8; 32usize],
         state: *const u8,
         state_len: usize,
-        result: *mut RawUnsignedTx,
+        state_id: u64,
+        result: *mut RawInitStateTx,
     ) -> sgx_status_t;
 }
 extern "C" {

@@ -1,5 +1,5 @@
 use sgx_types::*;
-use anonify_types::{RawUnsignedTx, traits::SliceCPtr, EnclaveState, RawRegisterTx};
+use anonify_types::{RawUnsignedTx, traits::SliceCPtr, EnclaveState, RawRegisterTx, RawInitStateTx};
 use anonify_common::State;
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
@@ -21,7 +21,6 @@ pub(crate) fn insert_logs(
             enclave_log.latest_blc_num,
             enclave_log.ciphertexts.as_c_ptr() as *const u8,
             enclave_log.ciphertexts.len(),
-            enclave_log.ciphertext_size,
         )
     };
 
@@ -81,9 +80,10 @@ pub(crate) fn init_state<S: State>(
     pubkey: &PublicKey,
     msg: &[u8],
     state: S,
-) -> Result<UnsignedTx> {
+    state_id: u64,
+) -> Result<RawInitStateTx> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-    let mut unsigned_tx = RawUnsignedTx::default();
+    let mut raw_init_state_tx = RawInitStateTx::default();
     let state = state.as_bytes()?;
 
     let status = unsafe {
@@ -95,7 +95,8 @@ pub(crate) fn init_state<S: State>(
             msg.as_ptr() as _,
             state.as_c_ptr() as *const u8,
             state.len(),
-            &mut unsigned_tx,
+            state_id,
+            &mut raw_init_state_tx,
         )
     };
 
@@ -106,7 +107,7 @@ pub(crate) fn init_state<S: State>(
 		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_init_state" }.into());
     }
 
-    Ok(unsigned_tx.into())
+    Ok(raw_init_state_tx.into())
 }
 
 /// Update states when a transaction is sent to blockchain.
@@ -252,6 +253,7 @@ mod tests {
         assert!(keypair.verify(&msg, &sig).is_ok());
 
         let total_supply = 100;
+        let state_id = 0;
 
         assert!(init_state(
             enclave.geteid(),
@@ -259,6 +261,7 @@ mod tests {
             &keypair.public,
             &msg,
             MockState::new(total_supply),
+            state_id,
         ).is_ok());
     }
 

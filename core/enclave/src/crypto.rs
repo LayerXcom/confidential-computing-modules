@@ -9,7 +9,7 @@ use ring::aead::{self, Aad, BoundKey, Nonce, UnboundKey, AES_256_GCM};
 use secp256k1::{self, Message, Signature, RecoveryId, SecretKey, PublicKey, util::{
     SECRET_KEY_SIZE,
 }};
-use anonify_common::{Keccak256, IV_SIZE};
+use anonify_common::{Keccak256, IV_SIZE, CIPHERTEXT_SIZE, Ciphertext};
 use crate::error::Result;
 
 lazy_static! {
@@ -53,13 +53,13 @@ impl SymmetricKey {
         s_key.seal_in_place_append_tag(Aad::empty(), &mut data)?;
         data.extend_from_slice(&iv);
 
-        Ok(Ciphertext(data))
+        Ok(Ciphertext::from_bytes(&data))
     }
 
     /// Decryption with AES-256-GCM.
     pub fn decrypt_aes_256_gcm(&self, cipheriv: Ciphertext) -> Result<Vec<u8>> {
         let ub_key = UnboundKey::new(&AES_256_GCM, &self.as_bytes())?;
-        let (ciphertext, iv) = cipheriv.0.split_at(cipheriv.0.len() - IV_SIZE);
+        let (ciphertext, iv) = cipheriv.as_bytes().split_at(CIPHERTEXT_SIZE - IV_SIZE);
 
         let nonce = Nonce::try_assume_unique_for_key(iv)?;
         let nonce_seq = OneNonceSequence::new(nonce);
@@ -85,15 +85,6 @@ impl OneNonceSequence {
 impl aead::NonceSequence for OneNonceSequence {
     fn advance(&mut self) -> std::result::Result<aead::Nonce, ring::error::Unspecified> {
         self.0.take().ok_or(ring::error::Unspecified).into()
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Ciphertext(pub Vec<u8>);
-
-impl Ciphertext {
-    pub fn new(raw: Vec<u8>) -> Self {
-        Ciphertext(raw)
     }
 }
 
@@ -132,10 +123,10 @@ impl Eik {
         })
     }
 
-    pub fn sign(&self, msg: &[u8]) -> Result<(Signature, RecoveryId)> {
+    pub fn sign(&self, msg: &[u8]) -> Result<Signature> {
         let msg = Message::parse_slice(msg)?;
         let sig = secp256k1::sign(&msg, &self.secret)?;
-        Ok(sig)
+        Ok(sig.0)
     }
 
     pub fn public_key(&self) -> PublicKey {

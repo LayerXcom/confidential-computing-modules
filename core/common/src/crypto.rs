@@ -186,11 +186,12 @@ impl AccessRight {
 
 /// The size of initialization vector for AES-256-GCM.
 pub const IV_SIZE: usize = 12;
-const CIPHERTEXT_SIZE: usize = STATE_SIZE + IV_SIZE;
+pub const CIPHERTEXT_SIZE: usize = STATE_SIZE + IV_SIZE;
 
+#[derive(Debug, Clone)]
 pub struct Ciphertext([u8; CIPHERTEXT_SIZE]);
 
-impl Ciphertext {    
+impl Ciphertext {
     pub fn from_bytes(bytes: &[u8]) -> Self {
         assert_eq!(bytes.len(), CIPHERTEXT_SIZE);
         let mut buf = [0u8; CIPHERTEXT_SIZE];
@@ -198,7 +199,11 @@ impl Ciphertext {
         Ciphertext(buf)
     }
 
-    pub fn into_bytes(&self) -> &[u8] {
+    pub fn as_bytes(&self) -> &[u8] {
         &self.0[..]
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
     }
 }

@@ -22,6 +22,7 @@ use ethabi::{
     decode,
     Hash,
 };
+use anonify_common::Ciphertext;
 use crate::{
     error::*,
     constants::*,
@@ -189,7 +190,7 @@ pub struct Web3Logs<D: BlockNumDB>{
 
 impl<D: BlockNumDB> Web3Logs<D> {
     pub fn into_enclave_log(self) -> Result<EnclaveLog<D>> {
-        let mut ciphertexts: Vec<u8> = vec![];
+        let mut ciphertexts: Vec<Ciphertext> = vec![];
 
         // If log data is not fetched currently, return empty EnclaveLog.
         // This case occurs if you fetched data of dupulicated block number.
@@ -229,7 +230,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 }
             }
 
-            ciphertexts.extend_from_slice(&data[..]);
+            ciphertexts.push(Ciphertext::from_bytes(&data[..]));
         }
 
         Ok(EnclaveLog {
@@ -237,7 +238,6 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 contract_addr: contract_addr.to_fixed_bytes(),
                 latest_blc_num: latest_blc_num,
                 ciphertexts,
-                ciphertext_size,
             }),
             db: self.db,
         })

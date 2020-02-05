@@ -1,5 +1,8 @@
 use std::sync::Arc;
-use anonify_common::kvs::{KVS, MemoryKVS, DBTx};
+use anonify_common::{
+    Ciphertext,
+    kvs::{KVS, MemoryKVS, DBTx}
+};
 use ethabi::Hash;
 use sgx_types::sgx_enclave_id_t;
 use byteorder::{LittleEndian, ByteOrder};
@@ -53,8 +56,7 @@ impl EventDBTx {
 pub(crate) struct InnerEnclaveLog {
     pub(crate) contract_addr: [u8; 20],
     pub(crate) latest_blc_num: u64,
-    pub(crate) ciphertexts: Vec<u8>, // Concatenated all fetched ciphertexts
-    pub(crate) ciphertext_size: usize, // Byte size of a ciphertext
+    pub(crate) ciphertexts: Vec<Ciphertext>, // Concatenated all fetched ciphertexts
 }
 
 /// A wrapper type of enclave logs.

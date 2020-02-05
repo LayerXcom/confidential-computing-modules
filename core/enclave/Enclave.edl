@@ -16,8 +16,7 @@ enclave {
             [in] uint8_t contract_addr[20],
             uint64_t block_number,
             [in, count=ciphertexts_len] const uint8_t *ciphertexts,
-            size_t ciphertexts_len,
-            size_t ciphertext_size
+            size_t ciphertexts_len
         );
 
         public sgx_status_t ecall_get_state(
@@ -47,7 +46,8 @@ enclave {
             [in] uint8_t msg[32],
             [in, count=state_len] const uint8_t *state,
             size_t state_len,
-            [out] RawUnsignedTx* result
+            uint64_t state_id,
+            [out] RawInitStateTx* result
         );
 
         public void ecall_run_tests(
