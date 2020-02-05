@@ -13,7 +13,7 @@ pub fn get_state_by_access_right<S: State>(
         enclave_id,
         &access_right.sig,
         &access_right.pubkey,
-        &access_right.nonce,
+        &access_right.challenge,
     )?;
 
     Ok(state)

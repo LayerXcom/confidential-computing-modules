@@ -68,9 +68,10 @@ where
 
     pub fn state_transition<ST, P>(
         &self,
-        access_right: &AccessRight,
+        access_right: AccessRight,
         target: &UserAddress,
         state: ST,
+        state_id: u64,
         from_eth_addr: SignerAddress,
         gas: u64,
         contract_addr: &str,
@@ -81,17 +82,19 @@ where
         P: AsRef<Path> + Copy,
     {
         let mut inner = self.inner.write();
-        inner.state_transition(access_right, target, state, from_eth_addr, gas, contract_addr, abi_path)
+        inner.state_transition(access_right, target, state, state_id, from_eth_addr, gas, contract_addr, abi_path)
     }
 
     pub fn init_state<ST: State>(
         &self,
-        access_right: &AccessRight,
+        access_right: AccessRight,
         init_state: ST,
+        state_id: u64,
         from_eth_addr: SignerAddress,
         gas: u64,
-    )  -> Result<String> {
-        unimplemented!();
+    ) -> Result<String> {
+        let mut inner = self.inner.write();
+        inner.init_state(access_right, init_state, state_id, from_eth_addr, gas)
     }
 
     pub fn block_on_event<P: AsRef<Path> + Copy>(
@@ -198,19 +201,23 @@ where
 
     fn init_state<ST: State>(
         &self,
-        access_right: &AccessRight,
+        access_right: AccessRight,
         init_state: ST,
+        state_id: u64,
         from_eth_addr: SignerAddress,
         gas: u64,
     )  -> Result<String> {
-        unimplemented!();
+        self.sender.as_ref()
+            .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
+            .init_state(access_right, init_state, state_id, from_eth_addr, gas)
     }
 
     fn state_transition<ST, P>(
         &mut self,
-        access_right: &AccessRight,
+        access_right: AccessRight,
         target: &UserAddress,
         state: ST,
+        state_id: u64,
         from_eth_addr: SignerAddress,
         gas: u64,
         contract_addr: &str,
@@ -227,7 +234,7 @@ where
 
         self.sender.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .state_transition(access_right, target, state, from_eth_addr, gas)
+            .state_transition(access_right, target, state, state_id, from_eth_addr, gas)
     }
 }
 
@@ -282,9 +289,10 @@ pub mod traits {
 
         fn state_transition<ST: State>(
             &self,
-            access_right: &AccessRight,
+            access_right: AccessRight,
             target: &UserAddress,
             state: ST,
+            state_id: u64,
             from_eth_addr: SignerAddress,
             gas: u64,
         ) -> Result<String>;
@@ -297,8 +305,9 @@ pub mod traits {
 
         fn init_state<ST: State>(
             &self,
-            access_right: &AccessRight,
+            access_right: AccessRight,
             init_state: ST,
+            state_id: u64,
             from_eth_addr: SignerAddress,
             gas: u64,
         )  -> Result<String> {

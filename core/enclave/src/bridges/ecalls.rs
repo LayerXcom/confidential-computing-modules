@@ -1,3 +1,4 @@
+ use std::vec::Vec;
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
@@ -55,39 +56,6 @@ pub unsafe extern "C" fn ecall_get_state(
     sgx_status_t::SGX_SUCCESS
 }
 
-/// Execute state transition in enclave. It depends on state transition functions and provided inputs.
-#[no_mangle]
-pub unsafe extern "C" fn ecall_state_transition(
-    sig: &Sig,
-    pubkey: &PubKey,
-    msg: &Msg,
-    target: &Address,
-    state: *const u8,
-    state_len: usize,
-    unsigned_tx: &mut RawUnsignedTx,
-) -> sgx_status_t {
-    let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH);
-    let quote = EnclaveContext::new(TEST_SPID).unwrap().get_quote().unwrap();
-    let (report, report_sig) = service.get_report_and_sig(&quote, TEST_SUB_KEY).unwrap();
-
-    let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
-    let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
-    let target_addr = UserAddress::from_array(*target);
-    let params = slice::from_raw_parts(state, state_len);
-    let params = Value::from_bytes(&params).unwrap();
-
-    let (my_ciphertext, other_ciphertext) = StfWrapper::new(pubkey, sig, &msg[..], target_addr)
-        .apply::<Value>("transfer", params, &SYMMETRIC_KEY)
-        .expect("Faild to execute applying function.");
-
-    unsigned_tx.report = save_to_host_memory(&report[..]).unwrap() as *const u8;
-    unsigned_tx.report_sig = save_to_host_memory(&report_sig[..]).unwrap() as *const u8;
-    unsigned_tx.ciphertext_num = 2; // todo;
-    // unsigned_tx.ciphertexts = save_to_host_memory(ciphertexts.as_bytes()).unwrap() as *const u8;
-
-    sgx_status_t::SGX_SUCCESS
-}
-
 #[no_mangle]
 pub unsafe extern "C" fn ecall_register(
     raw_register_tx: &mut RawRegisterTx,
@@ -102,22 +70,42 @@ pub unsafe extern "C" fn ecall_register(
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_init_state(
-    sig: &Sig,
-    pubkey: &PubKey,
-    msg: &Msg,
+    access_right: AccessRight,
     state: *const u8,
     state_len: usize,
     state_id: u64,
-    raw_init_state_tx: &mut RawInitStateTx,
+    raw_state_tx: &mut RawStateTransTx,
 ) -> sgx_status_t {
-    let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
-    let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
-    let user_address = UserAddress::from_sig(&msg[..], &sig, &pubkey);
+    let user_address = UserAddress::from_access_right(&access_right)
+        .expect("Failed to generate user address from access right.");
     let params = slice::from_raw_parts(state, state_len);
 
     let init_state_tx = InitStateTx::construct::<Value>(state_id, params, user_address, &ENCLAVE_CONTEXT)
         .expect("Failed to construct init state tx.");
-    *raw_init_state_tx = init_state_tx.into_raw()
+    *raw_state_tx = init_state_tx.into_raw()
+        .expect("Failed to convert into raw init state transaction.");
+
+    sgx_status_t::SGX_SUCCESS
+}
+
+/// Execute state transition in enclave. It depends on state transition functions and provided inputs.
+#[no_mangle]
+pub unsafe extern "C" fn ecall_state_transition(
+    access_right: AccessRight,
+    target: &Address,
+    state: *const u8,
+    state_len: usize,
+    state_id: u64,
+    raw_state_tx: &mut RawStateTransTx,
+) -> sgx_status_t {
+    let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
+    let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
+    let target_addr = UserAddress::from_array(*target);
+    let params = slice::from_raw_parts(state, state_len);
+
+    let state_trans_tx = StateTransTx::construct::<Value>(state_id, params, target_addr, &ENCLAVE_CONTEXT)
+        .expect("Failed to construct init state tx.");
+    *raw_state_tx = state_trans_tx.into_raw()
         .expect("Failed to convert into raw init state transaction.");
 
     sgx_status_t::SGX_SUCCESS

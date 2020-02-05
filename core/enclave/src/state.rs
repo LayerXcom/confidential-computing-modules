@@ -1,7 +1,7 @@
 //! State transition functions for anonymous asset
 
 use anonify_common::{
-    UserAddress, Sha256, Hash256, State, Ciphertext,
+    UserAddress, Sha256, Hash256, State, Ciphertext, LockParam,
     kvs::*,
     stf::{Runtime, CallKind},
 };
@@ -244,33 +244,6 @@ impl<S: State> TryFrom<UserState<S, Current>> for UserState<S, Next> {
             address: s.address,
             state_value,
         })
-    }
-}
-
-/// To avoid data collision when a transaction is sent to a blockchain.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct LockParam([u8; 32]);
-
-impl LockParam {
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.0[..]
-    }
-
-    pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
-        writer.write_all(&self.0)?;
-        Ok(())
-    }
-
-    pub fn read<R: Read>(reader: &mut R) -> Result<Self> {
-        let mut res = [0u8; 32];
-        reader.read_exact(&mut res)?;
-        Ok(LockParam(res))
-    }
-}
-
-impl From<Sha256> for LockParam {
-    fn from(s: Sha256) -> Self {
-        LockParam(s.as_array())
     }
 }
 

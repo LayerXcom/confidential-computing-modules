@@ -1,9 +1,9 @@
 use sgx_types::*;
 use std::prelude::v1::*;
 use sgx_tse::rsgx_create_report;
+use anonify_common::LockParam;
 use crate::{
     crypto::Eik,
-    state::LockParam,
     attestation::TEST_SPID,
     ocalls::{sgx_init_quote, get_quote},
     error::{Result, EnclaveError},

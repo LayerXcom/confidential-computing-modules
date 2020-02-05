@@ -73,21 +73,21 @@ impl fmt::Debug for RawRegisterTx {
     }
 }
 
-/// Bridged type from enclave to host to initialize state transaction.
+/// Bridged type from enclave to host to modify state transaction.
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct RawInitStateTx {
+pub struct RawStateTransTx {
     pub state_id: u64,
     pub ciphertext: *const u8,
     pub lock_param: *const u8,
     pub enclave_sig: *const u8,
 }
 
-impl RawEnclaveTx for RawInitStateTx { }
+impl RawEnclaveTx for RawStateTransTx { }
 
-impl Default for RawInitStateTx {
+impl Default for RawStateTransTx {
     fn default() -> Self {
-        RawInitStateTx {
+        RawStateTransTx {
             ciphertext: ptr::null(),
             lock_param: ptr::null(),
             enclave_sig: ptr::null(),
@@ -96,9 +96,10 @@ impl Default for RawInitStateTx {
     }
 }
 
-impl fmt::Debug for RawInitStateTx {
+impl fmt::Debug for RawStateTransTx {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut debug_trait_builder = f.debug_struct("RawInitStateTx");
+        let mut debug_trait_builder = f.debug_struct("RawStateTransTx");
+        debug_trait_builder.field("state_id", &(self.state_id));
         debug_trait_builder.field("ciphertext", &(self.ciphertext));
         debug_trait_builder.field("lock_param", &(self.lock_param));
         debug_trait_builder.field("enclave_sig", &(self.enclave_sig));
@@ -106,36 +107,30 @@ impl fmt::Debug for RawInitStateTx {
     }
 }
 
-/// Returned from a contract deploy or state transition ecall.
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct RawUnsignedTx {
-    /// A pointer to the output of the report using `ocall_save_to_memory()`.
-    pub report: *const u8,
-    pub report_sig: *const u8,
-    /// The number of ciphertexts.
-    pub ciphertext_num: usize,
-    pub ciphertexts: *const u8,
+pub struct RawAccessRight {
+    pub sig: *const u8,
+    pub pubkey: *const u8,
+    pub challenge: *const u8,
 }
 
-impl Default for RawUnsignedTx {
+impl Default for RawAccessRight {
     fn default() -> Self {
-        RawUnsignedTx {
-            report: ptr::null(),
-            report_sig: ptr::null(),
-            ciphertexts: ptr::null(),
-            .. unsafe { mem::zeroed() }
+        RawAccessRight {
+            sig: ptr::null(),
+            pubkey: ptr::null(),
+            challenge: ptr::null(),
         }
     }
 }
 
-impl fmt::Debug for RawUnsignedTx {
+impl fmt::Debug for RawAccessRight {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut debug_trait_builder = f.debug_struct("RawUnsignedTx");
-        debug_trait_builder.field("report", &(self.report));
-        debug_trait_builder.field("report_sig", &(self.report_sig));
-        debug_trait_builder.field("ciphertext_num", &(self.ciphertext_num));
-        debug_trait_builder.field("ciphertexts", &(self.ciphertexts));
+        let mut debug_trait_builder = f.debug_struct("RawAccessRight");
+        debug_trait_builder.field("sig", &(self.sig));
+        debug_trait_builder.field("pubkey", &(self.pubkey));
+        debug_trait_builder.field("challenge", &(self.challenge));
         debug_trait_builder.finish()
     }
 }

@@ -14,5 +14,3 @@ cbindgen = "0.9"
 
 [features]
 default = []
-std = []
-sgx = []

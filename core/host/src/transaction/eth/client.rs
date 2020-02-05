@@ -145,42 +145,56 @@ impl Sender for EthSender {
 
     fn init_state<ST: State>(
         &self,
-        access_right: &AccessRight,
+        access_right: AccessRight,
         init_state: ST,
+        state_id: u64,
         from_eth_addr: SignerAddress,
         gas: u64,
     )  -> Result<String> {
-        unimplemented!();
+        let init_state_tx = BoxedStateTransTx::init_state(
+            self.enclave_id, access_right, init_state, state_id
+        )?;
+
+        let receipt = match from_eth_addr {
+            SignerAddress::EthAddress(addr) => {
+                self.contract.init_state::<u64>(
+                    addr,
+                    init_state_tx.state_id,
+                    &init_state_tx.ciphertext,
+                    &init_state_tx.lock_param,
+                    &init_state_tx.enclave_sig,
+                    gas,
+                )?
+            }
+        };
+
+        Ok(hex::encode(receipt.as_bytes()))
     }
 
     fn state_transition<ST: State>(
         &self,
-        access_right: &AccessRight,
+        access_right: AccessRight,
         target: &UserAddress,
         state: ST,
+        state_id: u64,
         from_eth_addr: SignerAddress,
         gas: u64,
     ) -> Result<String> {
-        let unsigned_tx = state_transition(
-            self.enclave_id,
-            &access_right.sig,
-            &access_right.pubkey,
-            &access_right.nonce,
-            target.as_bytes(),
-            state,
+        let state_trans_tx = BoxedStateTransTx::state_transition(
+            self.enclave_id, access_right, target, state, state_id
         )?;
 
-        debug!("unsigned_tx: {:?}", &unsigned_tx);
-        let (update_bal1, update_bal2) = unsigned_tx.get_two_ciphertexts();
+        let ciphers = state_trans_tx.get_ciphertexts();
+        let locks = state_trans_tx.get_lock_params();
 
         let receipt = match from_eth_addr {
             SignerAddress::EthAddress(addr) => {
-                self.contract.tranfer::<u64>(
+                self.contract.state_transition(
                     addr,
-                    update_bal1,
-                    update_bal2,
-                    &unsigned_tx.report,
-                    &unsigned_tx.report_sig,
+                    state_trans_tx.state_id,
+                    ciphers,
+                    locks,
+                    &state_trans_tx.enclave_sig,
                     gas,
                 )?
             }

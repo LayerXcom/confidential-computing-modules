@@ -22,7 +22,7 @@ use ethabi::{
     decode,
     Hash,
 };
-use anonify_common::Ciphertext;
+use anonify_common::{Ciphertext, LockParam};
 use crate::{
     error::*,
     constants::*,
@@ -128,18 +128,48 @@ impl Web3Contract {
         Ok(res)
     }
 
-    pub fn tranfer<G: Into<U256>>(
+    pub fn init_state<G: Into<U256>>(
         &self,
         from: Address,
-        update_balance1: &[u8],
-        update_balance2: &[u8],
-        report: &[u8],
-        report_sig: &[u8],
+        state_id: u64,
+        init_state: &[u8],
+        lock_param: &[u8],
+        enclave_sig: &[u8],
         gas: G,
     ) -> Result<H256> {
         let call = self.contract.call(
-            "transfer",
-            (update_balance1.to_vec(), update_balance2.to_vec(), report.to_vec(), report_sig.to_vec()),
+            "initState",
+            (state_id, init_state.to_vec(), lock_param.to_vec(), enclave_sig.to_vec()),
+            from,
+            Options::with(|opt| opt.gas = Some(gas.into())),
+        );
+
+        // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253
+        let res = call.wait().unwrap(); //TODO: error handling
+        Ok(res)
+    }
+
+    pub fn state_transition(
+        &self,
+        from: Address,
+        state_id: u64,
+        mut ciphertexts: impl Iterator<Item=Ciphertext>,
+        mut lock_params: impl Iterator<Item=LockParam>,
+        enclave_sig: &[u8],
+        gas: u64,
+    ) -> Result<H256> {
+        // iterators have to have its field.
+        let ct1 = ciphertexts.next().unwrap().into_vec();
+        let ct2 = ciphertexts.next().unwrap().into_vec();
+        let lp1 = lock_params.next().unwrap().into_vec();
+        let lp2 = lock_params.next().unwrap().into_vec();
+
+        assert_eq!(ciphertexts.count(), 2);
+        assert_eq!(lock_params.count(), 2);
+
+        let call = self.contract.call(
+            "stateTransition",
+            (state_id, ct1, ct2, lp1, lp2, enclave_sig.to_vec()),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );

@@ -27,13 +27,12 @@ enclave {
         );
 
         public sgx_status_t ecall_state_transition(
-            [in] uint8_t sig[64],
-            [in] uint8_t pubkey[32],
-            [in] uint8_t msg[32],
+            [in] const RawAccessRight* access_right,
             [in] uint8_t target[20],
             [in, count=state_len] const uint8_t *state,
             size_t state_len,
-            [out] RawUnsignedTx* result
+            uint64_t state_id,
+            [out] RawStateTransTx* result
         );
 
         public sgx_status_t ecall_register(
@@ -41,13 +40,11 @@ enclave {
         );
 
         public sgx_status_t ecall_init_state(
-            [in] uint8_t sig[64],
-            [in] uint8_t pubkey[32],
-            [in] uint8_t msg[32],
+            [in] const RawAccessRight* access_right,
             [in, count=state_len] const uint8_t *state,
             size_t state_len,
             uint64_t state_id,
-            [out] RawInitStateTx* result
+            [out] RawStateTransTx* result
         );
 
         public void ecall_run_tests(
