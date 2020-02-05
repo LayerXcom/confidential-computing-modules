@@ -61,7 +61,6 @@ impl Web3Http {
     pub fn deploy(
         &self,
         deployer: &Address,
-        init_ciphertext: &[u8],
         report: &[u8],
         report_sig: &[u8],
     ) -> Result<Address> {
@@ -75,7 +74,7 @@ impl Web3Http {
             .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
             .execute(
                 bin,
-                (init_ciphertext.to_vec(), report.to_vec(), report_sig.to_vec()), // Parameters are got from ecall, so these have to be allocated.
+                (report.to_vec(), report_sig.to_vec()), // Parameters are got from ecall, so these have to be allocated.
                 *deployer,
             )
             .unwrap() // TODO

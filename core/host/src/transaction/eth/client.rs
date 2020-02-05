@@ -42,28 +42,19 @@ impl Deployer for EthDeployer {
         ))
     }
 
-    fn deploy<ST: State>(
+    fn deploy(
         &mut self,
         deploy_user: &SignerAddress,
         access_right: &AccessRight,
-        state: ST,
     ) -> Result<String> {
-        let unsigned_tx = init_state(
-            self.enclave_id,
-            &access_right.sig,
-            &access_right.pubkey,
-            &access_right.nonce,
-            state,
-        )?;
-        debug!("unsigned_tx: {:?}", &unsigned_tx);
+        let register_tx = BoxedRegisterTx::register(self.enclave_id)?;
 
         let contract_addr = match deploy_user {
             SignerAddress::EthAddress(address) => {
                 self.web3_conn.deploy(
                     &address,
-                    &unsigned_tx.ciphertexts,
-                    &unsigned_tx.report,
-                    &unsigned_tx.report_sig,
+                    &register_tx.report,
+                    &register_tx.report_sig,
                 )?
             }
         };
@@ -152,7 +143,17 @@ impl Sender for EthSender {
         Ok(hex::encode(receipt.as_bytes()))
     }
 
-    fn send_tx<ST: State>(
+    fn init_state<ST: State>(
+        &self,
+        access_right: &AccessRight,
+        init_state: ST,
+        from_eth_addr: SignerAddress,
+        gas: u64,
+    )  -> Result<String> {
+        unimplemented!();
+    }
+
+    fn state_transition<ST: State>(
         &self,
         access_right: &AccessRight,
         target: &UserAddress,

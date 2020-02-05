@@ -46,14 +46,13 @@ where
         Ok(())
     }
 
-    pub fn deploy<ST: State>(
+    pub fn deploy(
         &self,
         deploy_user: &SignerAddress,
         access_right: &AccessRight,
-        state: ST,
     ) -> Result<String> {
         let mut inner = self.inner.write();
-        inner.deploy(deploy_user, access_right, state)
+        inner.deploy(deploy_user, access_right)
     }
 
     pub fn register<P: AsRef<Path> + Copy>(
@@ -67,7 +66,7 @@ where
         inner.register(from_eth_addr, gas, contract_addr, abi_path)
     }
 
-    pub fn send_tx<ST, P>(
+    pub fn state_transition<ST, P>(
         &self,
         access_right: &AccessRight,
         target: &UserAddress,
@@ -82,7 +81,17 @@ where
         P: AsRef<Path> + Copy,
     {
         let mut inner = self.inner.write();
-        inner.send_tx(access_right, target, state, from_eth_addr, gas, contract_addr, abi_path)
+        inner.state_transition(access_right, target, state, from_eth_addr, gas, contract_addr, abi_path)
+    }
+
+    pub fn init_state<ST: State>(
+        &self,
+        access_right: &AccessRight,
+        init_state: ST,
+        from_eth_addr: SignerAddress,
+        gas: u64,
+    )  -> Result<String> {
+        unimplemented!();
     }
 
     pub fn block_on_event<P: AsRef<Path> + Copy>(
@@ -145,13 +154,12 @@ where
         Ok(())
     }
 
-    fn deploy<ST: State>(
+    fn deploy(
         &mut self,
         deploy_user: &SignerAddress,
         access_right: &AccessRight,
-        state: ST,
     ) -> Result<String> {
-        self.deployer.deploy(deploy_user, access_right, state)
+        self.deployer.deploy(deploy_user, access_right)
     }
 
     fn get_account(&self, index: usize) -> Result<SignerAddress> {
@@ -188,7 +196,17 @@ where
             .register(from_eth_addr, gas)
     }
 
-    fn send_tx<ST, P>(
+    fn init_state<ST: State>(
+        &self,
+        access_right: &AccessRight,
+        init_state: ST,
+        from_eth_addr: SignerAddress,
+        gas: u64,
+    )  -> Result<String> {
+        unimplemented!();
+    }
+
+    fn state_transition<ST, P>(
         &mut self,
         access_right: &AccessRight,
         target: &UserAddress,
@@ -209,7 +227,7 @@ where
 
         self.sender.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .send_tx(access_right, target, state, from_eth_addr, gas)
+            .state_transition(access_right, target, state, from_eth_addr, gas)
     }
 }
 
@@ -233,11 +251,10 @@ pub mod traits {
 
         fn get_account(&self, index: usize) -> Result<SignerAddress>;
 
-        fn deploy<ST: State>(
+        fn deploy(
             &mut self,
             deploy_user: &SignerAddress,
             access_right: &AccessRight,
-            state: ST,
         ) -> Result<String>;
 
         fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;
@@ -263,7 +280,7 @@ pub mod traits {
 
         fn get_account(&self, index: usize) -> Result<SignerAddress>;
 
-        fn send_tx<ST: State>(
+        fn state_transition<ST: State>(
             &self,
             access_right: &AccessRight,
             target: &UserAddress,
@@ -277,6 +294,16 @@ pub mod traits {
             from_eth_addr: SignerAddress,
             gas: u64,
         ) -> Result<String>;
+
+        fn init_state<ST: State>(
+            &self,
+            access_right: &AccessRight,
+            init_state: ST,
+            from_eth_addr: SignerAddress,
+            gas: u64,
+        )  -> Result<String> {
+            unimplemented!();
+        }
 
         fn get_contract(self) -> ContractKind;
     }
