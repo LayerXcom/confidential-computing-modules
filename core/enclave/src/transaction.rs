@@ -125,7 +125,8 @@ impl StateTransTx {
     pub fn construct<S: State>(
         state_id: u64,
         params: &[u8],
-        user_address: UserAddress,
+        access_right: &AccessRight,
+        target_address: UserAddress,
         enclave_ctx: &EnclaveContext,
     ) -> Result<Self> {
         let params = S::from_bytes(params)?;
@@ -136,7 +137,7 @@ impl StateTransTx {
             .expect("Failed to encrypt init state.");
         let enclave_sig = enclave_ctx.sign(&lock_param)?;
 
-        let (my_ciphertext, other_ciphertext) = StfWrapper::new(pubkey, sig, &msg[..], target_addr)
+        let (my_ciphertext, other_ciphertext) = StfWrapper::from_access_right(access_right, target_addr)?
             .apply::<Value>("transfer", params, &SYMMETRIC_KEY)
             .expect("Faild to execute applying function.");
 

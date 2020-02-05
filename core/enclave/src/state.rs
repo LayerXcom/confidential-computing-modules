@@ -259,13 +259,25 @@ impl StfWrapper {
         sig: Signature,
         msg: &[u8],
         target_addr: UserAddress,
-    ) -> Self {
-        let my_addr = UserAddress::from_sig(&msg, &sig, &pubkey);
+    ) -> Result<Self> {
+        let my_addr = UserAddress::from_sig(&msg, &sig, &pubkey)?;
 
-        StfWrapper {
+        Ok(StfWrapper {
             my_addr,
             target_addr,
-        }
+        })
+    }
+
+    pub fn from_access_right(
+        access_right: &AccessRight,
+        target_addr: UserAddress
+    ) -> Result<Self> {
+        let my_addr = UserAddress::from_access_right(access_right)?;
+
+        Ok(StfWrapper {
+            my_addr,
+            target_addr,
+        })
     }
 
     // TODO: To be more generic parameters to stf.

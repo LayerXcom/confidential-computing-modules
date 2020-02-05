@@ -204,6 +204,10 @@ impl AccessRight {
             challenge: self.challenge.as_ptr(),
         }
     }
+
+    pub fn from_raw(raw_ar: RawAccessRight) -> Self {
+        unimplemented!();
+    }
 }
 
 /// The size of initialization vector for AES-256-GCM.

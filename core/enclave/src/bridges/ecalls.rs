@@ -2,7 +2,7 @@
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
-use anonify_common::{UserAddress, State, stf::Value, Ciphertext, CIPHERTEXT_SIZE};
+use anonify_common::{UserAddress, State, stf::Value, Ciphertext, CIPHERTEXT_SIZE, AccessRight};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::kvs::{EnclaveKVS, MEMORY_DB};
 use crate::state::{UserState, StateValue, Current, StfWrapper};
@@ -70,7 +70,7 @@ pub unsafe extern "C" fn ecall_register(
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_init_state(
-    access_right: AccessRight,
+    raw_ar: &RawAccessRight,
     state: *const u8,
     state_len: usize,
     state_id: u64,
@@ -91,19 +91,17 @@ pub unsafe extern "C" fn ecall_init_state(
 /// Execute state transition in enclave. It depends on state transition functions and provided inputs.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_state_transition(
-    access_right: AccessRight,
+    raw_ar: &RawAccessRight,
     target: &Address,
     state: *const u8,
     state_len: usize,
     state_id: u64,
     raw_state_tx: &mut RawStateTransTx,
 ) -> sgx_status_t {
-    let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
-    let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let target_addr = UserAddress::from_array(*target);
     let params = slice::from_raw_parts(state, state_len);
 
-    let state_trans_tx = StateTransTx::construct::<Value>(state_id, params, target_addr, &ENCLAVE_CONTEXT)
+    let state_trans_tx = StateTransTx::construct::<Value>(state_id, params, &access_right, target_addr, &ENCLAVE_CONTEXT)
         .expect("Failed to construct init state tx.");
     *raw_state_tx = state_trans_tx.into_raw()
         .expect("Failed to convert into raw init state transaction.");
