@@ -6,10 +6,10 @@ use std::{
     io::Read,
 };
 use ring::aead::{self, Aad, BoundKey, Nonce, UnboundKey, AES_256_GCM};
-use secp256k1::{SecretKey, PublicKey, util::{
+use secp256k1::{self, Message, Signature, RecoveryId, SecretKey, PublicKey, util::{
     SECRET_KEY_SIZE,
-    COMPRESSED_PUBLIC_KEY_SIZE,
 }};
+use anonify_common::Keccak256;
 use crate::error::Result;
 
 lazy_static! {
@@ -20,8 +20,10 @@ lazy_static! {
 const SYMMETRIC_KEY_SIZE: usize = 32;
 /// The size of initialization vector for AES-256-GCM.
 const IV_SIZE: usize = 12;
-const NONCE_SIZE: usize = 31;
-const REPORT_DATA_SIZE: usize = COMPRESSED_PUBLIC_KEY_SIZE + NONCE_SIZE;
+const NONCE_SIZE: usize = 32;
+const ADDRESS_SIZE: usize = 20;
+const FILLED_REPORT_DATA_SIZE: usize = ADDRESS_SIZE + NONCE_SIZE;
+const REPORT_DATA_SIZE: usize = 64;
 
 /// symmetric key we use for encryption.
 #[derive(Debug, Clone, Copy, Default)]
@@ -132,6 +134,12 @@ impl Eik {
         })
     }
 
+    pub fn sign(&self, msg: &[u8]) -> Result<(Signature, RecoveryId)> {
+        let msg = Message::parse_slice(msg)?;
+        let sig = secp256k1::sign(&msg, &self.secret)?;
+        Ok(sig)
+    }
+
     pub fn public_key(&self) -> PublicKey {
         PublicKey::from_secret_key(&self.secret)
     }
@@ -141,14 +149,25 @@ impl Eik {
     /// The public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
     /// because this enclave identity key is binding to enclave's code.
     /// The nonce is used for prevenring from replay attacks.
-    pub fn report_date(&self) -> sgx_report_data_t {
+    /// 20bytes: address
+    /// 32bytes: nonce
+    /// 12bytes: zero padding
+    pub fn report_date(&self) -> Result<sgx_report_data_t> {
         let mut report_data = [0u8; REPORT_DATA_SIZE];
-        let ser_pubkey = &self.public_key().serialize_compressed();
-        report_data[..COMPRESSED_PUBLIC_KEY_SIZE].copy_from_slice(&ser_pubkey[..]);
-        report_data[COMPRESSED_PUBLIC_KEY_SIZE..].copy_from_slice(&self.nonce[..]);
+        report_data[..ADDRESS_SIZE].copy_from_slice(&self.address()[..]);
+        report_data[ADDRESS_SIZE..FILLED_REPORT_DATA_SIZE].copy_from_slice(&&self.nonce[..]);
 
-        sgx_report_data_t {
+        Ok(sgx_report_data_t {
             d: report_data
-        }
+        })
+    }
+
+    fn address(&self) -> [u8; ADDRESS_SIZE] {
+        let pubkey = &self.public_key().serialize();
+        let address = &pubkey.keccak256()[12..];
+        assert_eq!(address.len(), ADDRESS_SIZE);
+        let mut res = [0u8; ADDRESS_SIZE];
+        res.copy_from_slice(address);
+        res
     }
 }

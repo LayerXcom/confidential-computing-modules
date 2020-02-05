@@ -14,12 +14,12 @@ contract AnonymousAsset is ReportsHandle {
 
     constructor(
         bytes memory _report,
-        bytes memory _sig
-    ) ReportsHandle(_report, _sig) public { }
+        bytes memory _reportSig
+    ) ReportsHandle(_report, _reportSig) public { }
 
     // Register a new TEE participant.
-    function register(bytes memory _report, bytes memory _sig) public {
-        handleReport(_report, _sig);
+    function register(bytes memory _report, bytes memory _reportSig) public {
+        handleReport(_report, _reportSig);
     }
 
     // emurate deploying new contracts and storing ciphertexts.
@@ -39,13 +39,12 @@ contract AnonymousAsset is ReportsHandle {
         bytes memory _ciphertext2,
         bytes32 _lockParam1,
         bytes32 _lockParam2,
-        bytes memory _enclaveSig,
-        bytes32 _message
+        bytes memory _enclaveSig
     ) public {
         require(_ciphertexts[_stateId].length != 0, "The state id has not been initialized yet.");
         require(_lockParams[_stateId][_lockParam1] == 0, "The state has already been modified.");
         require(_lockParams[_stateId][_lockParam2] == 0, "The state has already been modified.");
-        address inpEnclaveAddr = Secp256k1.recover(_message, _enclaveSig);
+        address inpEnclaveAddr = Secp256k1.recover(_lockParam1, _enclaveSig);
         require(enclaveAddress[inpEnclaveAddr] == inpEnclaveAddr, "Invalid enclave signature.");
 
         _lockParams[_stateId][_lockParam1] = _lockParam1;
