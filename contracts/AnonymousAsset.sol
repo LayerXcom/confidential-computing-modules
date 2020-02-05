@@ -23,13 +23,21 @@ contract AnonymousAsset is ReportsHandle {
     }
 
     // emurate deploying new contracts and storing ciphertexts.
-    function initEncState(uint256 _stateId, bytes memory _initEncState, bytes32 _lockParam) public {
+    function initState(
+        uint256 _stateId,
+        bytes memory _ciphertext,
+        bytes32 _lockParam,
+        bytes memory _enclaveSig
+    ) public {
         require(_ciphertexts[_stateId].length == 0, "The state id has been already initialized.");
+        require(_lockParams[_stateId][_lockParam] == 0, "The state has already been modified.");
+        address inpEnclaveAddr = Secp256k1.recover(_lockParam, _enclaveSig);
+        require(enclaveAddress[inpEnclaveAddr] == inpEnclaveAddr, "Invalid enclave signature.");
 
         _lockParams[_stateId][_lockParam] = _lockParam;
-        _ciphertexts[_stateId].push(_initEncState);
+        _ciphertexts[_stateId].push(_ciphertext);
 
-        emit StoreCiphertext(_initEncState);
+        emit StoreCiphertext(_ciphertext);
     }
 
     // _message: a message signed by enclave private key

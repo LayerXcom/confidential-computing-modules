@@ -11,13 +11,6 @@ use crate::{
 pub trait EnclaveTx: Sized {
     type R: RawEnclaveTx;
 
-    fn construct(
-        host: &str,
-        path: &str,
-        ias_api_key: &str,
-        ctx: &EnclaveContext,
-    ) -> Result<Self>;
-
     fn into_raw(&self) -> Result<Self::R>;
  }
 
@@ -30,22 +23,6 @@ pub struct RegisterTx {
 
 impl EnclaveTx for RegisterTx {
     type R = RawRegisterTx;
-
-    fn construct(
-        host: &str,
-        path: &str,
-        ias_api_key: &str,
-        ctx: &EnclaveContext,
-    ) -> Result<Self> {
-        let service = AttestationService::new(host, path);
-        let quote = ctx.get_quote()?;
-        let (report, report_sig) = service.get_report_and_sig_new(&quote, ias_api_key)?;
-
-        Ok(RegisterTx {
-            report,
-            report_sig,
-        })
-    }
 
     fn into_raw(&self) -> Result<Self::R> {
         let report = save_to_host_memory(&self.report.as_bytes())? as *const u8;
@@ -65,14 +42,48 @@ impl RegisterTx {
             report_sig,
         }
     }
+
+    pub fn construct(
+        host: &str,
+        path: &str,
+        ias_api_key: &str,
+        ctx: &EnclaveContext,
+    ) -> Result<Self> {
+        let service = AttestationService::new(host, path);
+        let quote = ctx.get_quote()?;
+        let (report, report_sig) = service.get_report_and_sig_new(&quote, ias_api_key)?;
+
+        Ok(RegisterTx {
+            report,
+            report_sig,
+        })
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct InitStateTx {
+    state_id: u64,
+    ciphertext: Ciphertext,
+    lock_param: LockParam,
+    enclave_sig: secp256k1::Signature,
+}
+
+impl InitStateTx {
+    pub fn new() -> Self {
+        unimplemented!();
+    }
+
+    pub fn construct(state_id: u64) -> Result<Self> {
+        unimplemented!();
+    }
 }
 
 // #[derive(Debug, Clone)]
 // pub struct StateTransitionTx {
 //     ciphertexts: Vec<Ciphertext>,
-//     lock_param: LockParam,
+//     lock_params: Vec<LockParam>,
 //     blc_num: u64,
 //     state_hash: Vec<u8>,
-//     enclave_sig: Vec<u8>,
+//     enclave_sig: secp256k1::Signature,
 // }
 

@@ -10,7 +10,7 @@ use crate::localstd::{
 use byteorder::{ByteOrder, LittleEndian};
 use crate::serde::{Serialize, Deserialize};
 
-const VALUE_LENGTH: usize = 8;
+pub const STATE_SIZE: usize = 8;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
@@ -22,7 +22,7 @@ impl State for Value {
     }
 
     fn as_bytes(&self) -> io::Result<Vec<u8>> {
-        let mut buf = Vec::with_capacity(VALUE_LENGTH);
+        let mut buf = Vec::with_capacity(STATE_SIZE);
         self.write_le(&mut buf)?;
         Ok(buf)
     }
@@ -33,7 +33,7 @@ impl State for Value {
     }
 
     fn write_le<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        let mut buf = [0u8; VALUE_LENGTH];
+        let mut buf = [0u8; STATE_SIZE];
         LittleEndian::write_u64(&mut buf, self.0);
         writer.write_all(&buf)?;
 
@@ -41,7 +41,7 @@ impl State for Value {
     }
 
     fn read_le<R: Read>(reader: &mut R) -> io::Result<Self> {
-        let mut buf = [0u8; VALUE_LENGTH];
+        let mut buf = [0u8; STATE_SIZE];
         reader.read_exact(&mut buf)?;
         let res = LittleEndian::read_u64(&buf);
 

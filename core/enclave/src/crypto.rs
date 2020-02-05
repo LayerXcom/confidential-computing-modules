@@ -9,7 +9,7 @@ use ring::aead::{self, Aad, BoundKey, Nonce, UnboundKey, AES_256_GCM};
 use secp256k1::{self, Message, Signature, RecoveryId, SecretKey, PublicKey, util::{
     SECRET_KEY_SIZE,
 }};
-use anonify_common::Keccak256;
+use anonify_common::{Keccak256, IV_SIZE};
 use crate::error::Result;
 
 lazy_static! {
@@ -18,8 +18,6 @@ lazy_static! {
 
 /// The size of the symmetric 256 bit key we use for encryption in bytes.
 const SYMMETRIC_KEY_SIZE: usize = 32;
-/// The size of initialization vector for AES-256-GCM.
-const IV_SIZE: usize = 12;
 const NONCE_SIZE: usize = 32;
 const ADDRESS_SIZE: usize = 20;
 const FILLED_REPORT_DATA_SIZE: usize = ADDRESS_SIZE + NONCE_SIZE;

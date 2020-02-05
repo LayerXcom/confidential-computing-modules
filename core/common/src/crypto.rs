@@ -1,6 +1,7 @@
 use crate::localstd::{
     io::{self, Read, Write},
 };
+use crate::stf::STATE_SIZE;
 use ed25519_dalek::{PublicKey, Signature, Keypair};
 use tiny_keccak::Keccak;
 use crate::serde::{Serialize, Deserialize};
@@ -180,5 +181,24 @@ impl AccessRight {
 
     pub fn pubkey(&self) -> &PublicKey {
         &self.pubkey
+    }
+}
+
+/// The size of initialization vector for AES-256-GCM.
+pub const IV_SIZE: usize = 12;
+const CIPHERTEXT_SIZE: usize = STATE_SIZE + IV_SIZE;
+
+pub struct Ciphertext([u8; CIPHERTEXT_SIZE]);
+
+impl Ciphertext {    
+    pub fn from_bytes(bytes: &[u8]) -> Self {
+        assert_eq!(bytes.len(), CIPHERTEXT_SIZE);
+        let mut buf = [0u8; CIPHERTEXT_SIZE];
+        buf.copy_from_slice(bytes);
+        Ciphertext(buf)
+    }
+
+    pub fn into_bytes(&self) -> &[u8] {
+        &self.0[..]
     }
 }

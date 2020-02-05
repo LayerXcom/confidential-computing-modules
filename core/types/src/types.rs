@@ -73,6 +73,35 @@ impl fmt::Debug for RawRegisterTx {
     }
 }
 
+// /// Bridged type from enclave to host to send a register transaction.
+// #[repr(C)]
+// #[derive(Clone, Copy)]
+// pub struct RawInitStateTx {
+//     /// The number of ciphertexts.
+//     pub ciphertext_num: usize,
+//     pub ciphertexts: *const u8,
+// }
+
+// impl RawEnclaveTx for RawInitStateTx { }
+
+// impl Default for RawInitStateTx {
+//     fn default() -> Self {
+//         RawInitStateTx {
+//             report: ptr::null(),
+//             report_sig: ptr::null(),
+//         }
+//     }
+// }
+
+// impl fmt::Debug for RawInitStateTx {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         let mut debug_trait_builder = f.debug_struct("RawInitStateTx");
+//         debug_trait_builder.field("report", &(self.report));
+//         debug_trait_builder.field("report_sig", &(self.report_sig));
+//         debug_trait_builder.finish()
+//     }
+// }
+
 /// Returned from a contract deploy or state transition ecall.
 #[repr(C)]
 #[derive(Clone, Copy)]
