@@ -11,9 +11,9 @@ pub fn get_state_by_access_right<S: State>(
 ) -> Result<S> {
     let state = get_state(
         enclave_id,
-        &access_right.sig,
-        &access_right.pubkey,
-        &access_right.challenge,
+        &access_right.sig(),
+        &access_right.pubkey(),
+        &access_right.challenge(),
     )?;
 
     Ok(state)

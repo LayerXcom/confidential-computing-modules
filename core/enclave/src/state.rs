@@ -18,6 +18,7 @@ use std::{
     convert::{TryFrom, TryInto},
 };
 
+/// Service for state transition operations
 #[derive(Clone, Debug, PartialEq)]
 pub struct StateService<DB: EnclaveDB, S: State>{
     my_state: UserState<S, Current>,
@@ -63,19 +64,24 @@ where
         _stf: &str,
         params: S,
         symm_key: &SymmetricKey
-    ) -> Result<(Ciphertext, Ciphertext)> {
+    ) -> Result<Vec<Ciphertext>> {
         let (my_update, other_update) = Runtime(CallKind::Transfer)
             .exec((self.my_state.inner_state().clone(), self.other_state.inner_state().clone(), params))?;
-        let my_update_state: UserState::<S, Next> = UserState::<S, Current>::new(self.my_addr, my_state_value)
+
+        let my_update_state: UserState::<S, Next> = self.my_state
             .update_inner_state(my_update)
             .try_into()?;
-        let my_enc_state = my_update_state.encrypt(&symm_key)?;
-        let other_update_state: UserState::<S, Next> = UserState::<S, Current>::new(self.target_addr, other_state_value)
+        let other_update_state: UserState::<S, Next> = self.other_state
             .update_inner_state(other_update)
             .try_into()?;
-        let other_enc_state = other_update_state.encrypt(&symm_key)?;
 
-        Ok((my_enc_state, other_enc_state))
+        let my_enc_state = my_update_state.encrypt(&symm_key)?;
+        let other_enc_state = other_update_state.encrypt(&symm_key)?;
+        let mut res = vec![];
+        res.push(my_enc_state);
+        res.push(other_enc_state);
+
+        Ok(res)
     }
 }
 
@@ -339,7 +345,7 @@ pub mod tests {
         Value::new(100).write_le(&mut buf).expect("Faild to write value.");
 
         let sig = keypair.sign(&buf);
-        let user_address = UserAddress::from_sig(&buf, &sig, &public);
+        let user_address = UserAddress::from_sig(&buf, &sig, &public).unwrap();
 
         let state = UserState::<Value, Next>::init(user_address, Value::new(100)).unwrap();
         let state_vec = state.try_into_vec().unwrap();

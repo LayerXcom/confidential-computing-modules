@@ -25,13 +25,14 @@ pub struct EnclaveContext<DB: EnclaveDB> {
 
 // TODO: Consider SGX_ERROR_BUSY.
 impl<DB: EnclaveDB> EnclaveContext<DB> {
-    pub fn new(spid: &str, db: DB) -> Result<Self> {
+    pub fn new(spid: &str) -> Result<Self> {
         let spid_vec = hex::decode(spid)?;
         let mut id = [0; 16];
         id.copy_from_slice(&spid_vec);
         let spid: sgx_spid_t = sgx_spid_t { id };
 
         let identity_key = Eik::new()?;
+        let db = DB::new();
 
         Ok(EnclaveContext{
             spid,

@@ -1,4 +1,4 @@
- use std::vec::Vec;
+use std::vec::Vec;
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
@@ -27,7 +27,7 @@ pub unsafe extern "C" fn ecall_insert_logs(
     assert_eq!(ciphertexts.len() % CIPHERTEXT_SIZE, 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
     for ciphertext in ciphertexts.chunks(CIPHERTEXT_SIZE) {
-        UserState::<Value ,Current>::insert_cipheriv_memdb(Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY)
+        UserState::<Value ,Current>::insert_cipheriv_memdb(Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY, ENCLAVE_CONTEXT.db)
             .expect("Failed to insert ciphertext into memory database.");
     }
 
@@ -44,7 +44,7 @@ pub unsafe extern "C" fn ecall_get_state(
 ) -> sgx_status_t {
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
-    let key = UserAddress::from_sig(&msg[..], &sig, &pubkey);
+    let key = UserAddress::from_sig(&msg[..], &sig, &pubkey).expect("Faild to generate user address.");
 
     let db_value = ENCLAVE_CONTEXT.db.get(&key);
     let user_state_value = StateValue::<Value, Current>::from_dbvalue(db_value)
@@ -76,11 +76,12 @@ pub unsafe extern "C" fn ecall_init_state(
     state_id: u64,
     raw_state_tx: &mut RawStateTransTx,
 ) -> sgx_status_t {
-    let user_address = UserAddress::from_access_right(&access_right)
+    let ar = AccessRight::from_raw(*raw_ar).expect("Failed to generate access right.");
+    let user_address = UserAddress::from_access_right(&ar)
         .expect("Failed to generate user address from access right.");
     let params = slice::from_raw_parts(state, state_len);
 
-    let init_state_tx = InitStateTx::construct::<Value>(state_id, params, user_address, &ENCLAVE_CONTEXT)
+    let init_state_tx = InitStateTx::construct::<Value, _>(state_id, params, user_address, &ENCLAVE_CONTEXT)
         .expect("Failed to construct init state tx.");
     *raw_state_tx = init_state_tx.into_raw()
         .expect("Failed to convert into raw init state transaction.");
@@ -101,7 +102,10 @@ pub unsafe extern "C" fn ecall_state_transition(
     let target_addr = UserAddress::from_array(*target);
     let params = slice::from_raw_parts(state, state_len);
 
-    let state_trans_tx = StateTransTx::construct::<Value>(state_id, params, &access_right, target_addr, &ENCLAVE_CONTEXT)
+    let ar = AccessRight::from_raw(*raw_ar).expect("Failed to generate access right.");
+    let state_trans_tx = StateTransTx::construct::<Value, _>(
+        state_id, params, &ar, target_addr, &ENCLAVE_CONTEXT
+    )
         .expect("Failed to construct init state tx.");
     *raw_state_tx = state_trans_tx.into_raw()
         .expect("Failed to convert into raw init state transaction.");

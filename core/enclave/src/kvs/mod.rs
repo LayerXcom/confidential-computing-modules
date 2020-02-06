@@ -9,16 +9,22 @@ use anonify_common::{
     kvs::*,
 };
 use anonify_types::*;
+use crate::error::Result;
 
 /// Trait of key-value store instrctions restricted by signature verifications.
 pub trait EnclaveDB: Sync + Send {
+    fn new() -> Self;
+
     fn get(&self, key: &UserAddress) -> DBValue;
 
     fn write(&self, tx: EnclaveDBTx);
-
 }
 
 impl EnclaveDB for MemoryDB {
+    fn new() -> Self {
+        MemoryDB::new()
+    }
+
     fn get(&self, key: &UserAddress) -> DBValue {
         self.inner_get(key.as_bytes()).unwrap_or(DBValue::default())
     }
@@ -57,9 +63,11 @@ impl EnclaveDBTx {
         msg: &[u8],
         sig: &Signature,
         pubkey: &PublicKey,
-    ) {
-        let key = UserAddress::from_sig(&msg, &sig, &pubkey);
+    ) -> Result<()> {
+        let key = UserAddress::from_sig(&msg, &sig, &pubkey)?;
         self.0.delete(key.as_bytes());
+
+        Ok(())
     }
 
     pub(crate) fn into_inner(self) -> DBTx {

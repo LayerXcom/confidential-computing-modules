@@ -140,10 +140,10 @@ impl StateTransTx {
     {
         let params = S::from_bytes(params)?;
 
-        let service = StateService::from_access_right(access_right, target_addr, enclave_ctx.db)?;
+        let service = StateService::from_access_right(access_right, target_address, enclave_ctx.db)?;
         let lock_params = service.reveal_lock_params();
         let enclave_sig = enclave_ctx.sign(&lock_params[0])?;
-        let ciphertexts = service.apply::<Value>("transfer", params, &SYMMETRIC_KEY)
+        let ciphertexts = service.apply("transfer", params, &SYMMETRIC_KEY)
             .expect("Faild to execute applying function.");
 
         Ok(StateTransTx {

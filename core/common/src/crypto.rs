@@ -1,12 +1,13 @@
 use crate::localstd::{
     io::{self, Read, Write},
     vec::Vec,
+    slice,
 };
 use crate::{
     stf::STATE_SIZE,
     serde::{Serialize, Deserialize}
 };
-use ed25519_dalek::{PublicKey, Signature, Keypair, SignatureError};
+use ed25519_dalek::{PublicKey, Signature, Keypair, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
 use tiny_keccak::Keccak;
 use anonify_types::RawAccessRight;
 #[cfg(feature = "std")]
@@ -150,12 +151,14 @@ impl Keccak256<[u8; 32]> for [u8] {
     }
 }
 
+const CHALLENGE_SIZE: usize = 32;
+
 /// Access right of Read/Write to anonify's enclave mem db.
 #[derive(Debug, Clone)]
 pub struct AccessRight {
-    pub sig: Signature,
-    pub pubkey: PublicKey,
-    pub challenge: [u8; 32],
+    sig: Signature,
+    pubkey: PublicKey,
+    challenge: [u8; CHALLENGE_SIZE],
 }
 
 impl AccessRight {
@@ -193,8 +196,16 @@ impl AccessRight {
         UserAddress::from_pubkey(&self.pubkey())
     }
 
+    pub fn sig(&self) -> &Signature {
+        &self.sig
+    }
+
     pub fn pubkey(&self) -> &PublicKey {
         &self.pubkey
+    }
+
+    pub fn challenge(&self) -> &[u8] {
+        &self.challenge
     }
 
     pub fn into_raw(self) -> RawAccessRight {
@@ -205,10 +216,22 @@ impl AccessRight {
         }
     }
 
-    pub fn from_raw(raw_ar: RawAccessRight) -> Self {
-        unimplemented!();
+    pub fn from_raw(raw_ar: RawAccessRight) -> Result<Self, SignatureError> {
+        let sig = Signature::from_bytes(unsafe {
+            slice::from_raw_parts(raw_ar.sig, SIGNATURE_LENGTH)
+        })?;
+        let pubkey = PublicKey::from_bytes(unsafe {
+            slice::from_raw_parts(raw_ar.pubkey, PUBLIC_KEY_LENGTH)
+        })?;
+        let mut challenge = [0u8; CHALLENGE_SIZE];
+        let buf = unsafe { slice::from_raw_parts(raw_ar.challenge, CHALLENGE_SIZE) };
+        challenge.copy_from_slice(&buf);
+
+        Ok(AccessRight::new(sig, pubkey, challenge))
     }
 }
+
+pub trait 
 
 /// The size of initialization vector for AES-256-GCM.
 pub const IV_SIZE: usize = 12;
