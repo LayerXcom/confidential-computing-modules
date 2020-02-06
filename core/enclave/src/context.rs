@@ -1,7 +1,7 @@
 use sgx_types::*;
 use std::prelude::v1::*;
 use sgx_tse::rsgx_create_report;
-use anonify_common::LockParam;
+use anonify_common::{LockParam, kvs::MemoryDB};
 use crate::{
     crypto::Eik,
     attestation::TEST_SPID,
@@ -11,7 +11,7 @@ use crate::{
 };
 
 lazy_static! {
-    pub static ref ENCLAVE_CONTEXT: EnclaveContext<DB: EnclaveDB>
+    pub static ref ENCLAVE_CONTEXT: EnclaveContext<MemoryDB>
         = EnclaveContext::new(TEST_SPID).unwrap();
 }
 
@@ -20,7 +20,7 @@ lazy_static! {
 pub struct EnclaveContext<DB: EnclaveDB> {
     spid: sgx_spid_t,
     identity_key: Eik,
-    db: DB,
+    pub db: DB,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.

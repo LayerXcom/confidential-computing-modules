@@ -1,7 +1,7 @@
 //! State transition functions for anonymous asset
 
 use anonify_common::{
-    UserAddress, Sha256, Hash256, State, Ciphertext, LockParam,
+    UserAddress, Sha256, Hash256, State, Ciphertext, LockParam, AccessRight,
     kvs::*,
     stf::{Runtime, CallKind},
 };
@@ -138,14 +138,18 @@ impl<S: State> UserState<S, Current> {
 
     // Only State with `Current` allows to access to the database to avoid from
     // storing data which have not been considered globally consensused.
-    pub fn insert_cipheriv_memdb(cipheriv: Ciphertext, symm_key: &SymmetricKey) -> Result<()> {
+    pub fn insert_cipheriv_memdb<DB: EnclaveDB>(
+        cipheriv: Ciphertext,
+        symm_key: &SymmetricKey,
+        enclave_db: DB,
+    ) -> Result<()> {
         let user_state = Self::decrypt(cipheriv, &symm_key)?;
         let key = user_state.get_db_key();
         let value = user_state.get_db_value()?;
 
         let mut dbtx = EnclaveDBTx::new();
         dbtx.put(&key, &value);
-        MEMORY_DB.write(dbtx);
+        enclave_db.write(dbtx);
 
         Ok(())
     }

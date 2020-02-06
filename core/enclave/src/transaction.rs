@@ -1,6 +1,6 @@
 use std::vec::Vec;
 use anonify_types::{RawRegisterTx, RawStateTransTx, traits::RawEnclaveTx};
-use anonify_common::{State, UserAddress, Ciphertext, LockParam, stf::Value};
+use anonify_common::{State, UserAddress, Ciphertext, LockParam, stf::Value, AccessRight};
 use crate::{
     attestation::{Report, ReportSig, AttestationService},
     error::Result,

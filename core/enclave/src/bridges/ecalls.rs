@@ -4,7 +4,7 @@ use sgx_types::*;
 use anonify_types::*;
 use anonify_common::{UserAddress, State, stf::Value, Ciphertext, CIPHERTEXT_SIZE, AccessRight};
 use ed25519_dalek::{PublicKey, Signature};
-use crate::kvs::{EnclaveDB, MEMORY_DB};
+use crate::kvs::EnclaveDB;
 use crate::state::{UserState, StateValue, Current, StfWrapper};
 use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{
@@ -12,7 +12,7 @@ use crate::attestation::{
     DEV_HOSTNAME, REPORT_PATH,
 };
 use crate::context::{EnclaveContext, ENCLAVE_CONTEXT};
-use crate::transaction::{RegisterTx, InitStateTx, EnclaveTx};
+use crate::transaction::{RegisterTx, InitStateTx, EnclaveTx, StateTransTx};
 use super::ocalls::save_to_host_memory;
 
 /// Insert event logs from blockchain nodes into enclave's memory database.
@@ -46,7 +46,7 @@ pub unsafe extern "C" fn ecall_get_state(
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let key = UserAddress::from_sig(&msg[..], &sig, &pubkey);
 
-    let db_value = MEMORY_DB.get(&key);
+    let db_value = ENCLAVE_CONTEXT.db.get(&key);
     let user_state_value = StateValue::<Value, Current>::from_dbvalue(db_value)
         .expect("Failed to read db_value.");
     let user_state = user_state_value.inner_state();

@@ -10,10 +10,6 @@ use anonify_common::{
 };
 use anonify_types::*;
 
-lazy_static! {
-    pub static ref MEMORY_DB: MemoryDB = MemoryDB::new();
-}
-
 /// Trait of key-value store instrctions restricted by signature verifications.
 pub trait EnclaveDB: Sync + Send {
     fn get(&self, key: &UserAddress) -> DBValue;
