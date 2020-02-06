@@ -239,7 +239,7 @@ where
 }
 
 /// A type of transaction signing address
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SignerAddress {
     EthAddress(web3::types::Address)
 }
