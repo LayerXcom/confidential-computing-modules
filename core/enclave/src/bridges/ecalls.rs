@@ -5,7 +5,7 @@ use anonify_types::*;
 use anonify_common::{UserAddress, State, stf::Value, Ciphertext, CIPHERTEXT_SIZE, AccessRight};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::kvs::EnclaveDB;
-use crate::state::{UserState, StateValue, Current, StfWrapper};
+use crate::state::{UserState, StateValue, Current};
 use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{
     AttestationService, TEST_SPID, TEST_SUB_KEY,

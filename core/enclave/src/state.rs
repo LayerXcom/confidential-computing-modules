@@ -18,14 +18,75 @@ use std::{
     convert::{TryFrom, TryInto},
 };
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct StateService<DB: EnclaveDB, S: State>{
+    my_state: UserState<S, Current>,
+    other_state: UserState<S, Current>,
+    db: DB,
+}
+
+impl<DB, S> StateService<DB, S>
+where
+    DB: EnclaveDB,
+    S: State,
+{
+    pub fn from_access_right(
+        access_right: &AccessRight,
+        target_addr: UserAddress,
+        db: DB,
+    ) -> Result<Self> {
+        let my_addr = UserAddress::from_access_right(access_right)?;
+
+        let my_dv = db.get(&my_addr);
+        let my_state = UserState::<S, Current>::from_db_value(my_addr, my_dv)?;
+        let other_dv = db.get(&target_addr);
+        let other_state = UserState::<S, Current>::from_db_value(target_addr, other_dv)?;
+
+        Ok(StateService {
+            my_state,
+            other_state,
+            db,
+        })
+    }
+
+    pub fn reveal_lock_params(&self) -> Vec<LockParam> {
+        let mut res = vec![];
+        res.push(*self.my_state.lock_param());
+        res.push(*self.other_state.lock_param());
+        res
+    }
+
+    // TODO: To be more generic parameters to stf.
+    // TODO: Fix dupulicate state values.
+    pub fn apply(
+        self,
+        _stf: &str,
+        params: S,
+        symm_key: &SymmetricKey
+    ) -> Result<(Ciphertext, Ciphertext)> {
+        let (my_update, other_update) = Runtime(CallKind::Transfer)
+            .exec((self.my_state.inner_state().clone(), self.other_state.inner_state().clone(), params))?;
+        let my_update_state: UserState::<S, Next> = UserState::<S, Current>::new(self.my_addr, my_state_value)
+            .update_inner_state(my_update)
+            .try_into()?;
+        let my_enc_state = my_update_state.encrypt(&symm_key)?;
+        let other_update_state: UserState::<S, Next> = UserState::<S, Current>::new(self.target_addr, other_state_value)
+            .update_inner_state(other_update)
+            .try_into()?;
+        let other_enc_state = other_update_state.encrypt(&symm_key)?;
+
+        Ok((my_enc_state, other_enc_state))
+    }
+}
+
 /// Curret generation of lock parameter for state.
 /// Priventing from race condition of writing ciphertext to blockchain.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Current { }
 
 /// Next generation of lock parameter for state.
 /// It'll be defined deterministically as `next_lock_param = Hash(address, current_state, current_lock_param)`.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Next { }
 
 /// This struct can be got by decrypting ciphertexts which is stored on blockchain.
@@ -36,62 +97,6 @@ pub enum Next { }
 pub struct UserState<S: State, N> {
     address: UserAddress,
     state_value: StateValue<S, N>,
-}
-
-/// State value per each user's state.
-/// inner_state depends on the state of your application on anonify system.
-/// LockParam is used to avoid data collisions when TEEs send transactions to blockchain.
-#[derive(Debug, Clone, PartialEq)]
-pub struct StateValue<S: State, N> {
-    pub inner_state: S,
-    pub lock_param: LockParam,
-    _marker: PhantomData<N>,
-}
-
-impl<S: State, N> StateValue<S, N> {
-    pub fn new(inner_state: S, lock_param: LockParam) -> Self {
-        StateValue {
-            inner_state,
-            lock_param,
-            _marker: PhantomData,
-        }
-    }
-
-    /// Get inner state and lock_param from database value.
-    pub fn from_dbvalue(db_value: DBValue) -> Result<Self> {
-        let mut state = Default::default();
-        let mut lock_param = Default::default();
-
-        if db_value != Default::default() {
-            let reader = db_value.into_vec();
-            state = S::read_le(&mut &reader[..])?;
-            lock_param = LockParam::read(&mut &reader[..])?;
-        }
-
-        Ok(StateValue::new(state, lock_param))
-    }
-
-    pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
-        self.inner_state.write_le(writer)?;
-        self.lock_param.write(writer)?;
-
-        Ok(())
-    }
-
-    pub fn read<R: Read>(mut reader: R) -> Result<Self> {
-        let inner_state = S::read_le(&mut reader)?;
-        let lock_param = LockParam::read(&mut reader)?;
-
-        Ok(StateValue::new(inner_state, lock_param))
-    }
-
-    pub fn inner_state(&self) -> &S {
-        &self.inner_state
-    }
-
-    pub fn lock_param(&self) -> &LockParam {
-        &self.lock_param
-    }
 }
 
 impl<S: State, N> UserState<S, N> {
@@ -251,83 +256,61 @@ impl<S: State> TryFrom<UserState<S, Current>> for UserState<S, Next> {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct StateService<DB: EnclaveDB, S: State>{
-    my_state: UserState<S, Current>,
-    other_state: UserState<S, Current>,
-    db: DB,
+/// State value per each user's state.
+/// inner_state depends on the state of your application on anonify system.
+/// LockParam is used to avoid data collisions when TEEs send transactions to blockchain.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StateValue<S: State, N> {
+    pub inner_state: S,
+    pub lock_param: LockParam,
+    _marker: PhantomData<N>,
 }
 
-impl<DB, S> StateService<DB, S>
-where
-    DB: EnclaveDB,
-    S: State,
-{
-    // pub fn new(
-    //     pubkey: PublicKey,
-    //     sig: Signature,
-    //     msg: &[u8],
-    //     target_addr: UserAddress,
-    //     db: DB,
-    // ) -> Result<Self> {
-    //     let my_addr = UserAddress::from_sig(&msg, &sig, &pubkey)?;
-
-    //     Ok(StateService {
-    //         my_addr,
-    //         target_addr,
-    //         db,
-    //     })
-    // }
-
-    pub fn from_access_right(
-        access_right: &AccessRight,
-        target_addr: UserAddress,
-        db: DB,
-    ) -> Result<Self> {
-        let my_addr = UserAddress::from_access_right(access_right)?;
-
-        let my_dv = db.get(&my_addr);
-        let my_state = UserState<S, Current>::from_db_value(my_addr, my_dv)?;
-        let other_dv = db.get(&target_addr);
-        let other_state = UserState<S, Current>::from_db_value(target_addr, other_dv)?;
-
-        Ok(StateService {
-            my_state,
-            other_state,
-            db,
-        })
+impl<S: State, N> StateValue<S, N> {
+    pub fn new(inner_state: S, lock_param: LockParam) -> Self {
+        StateValue {
+            inner_state,
+            lock_param,
+            _marker: PhantomData,
+        }
     }
 
-    pub fn reveal_lock_params(&self) -> Vec<LockParam> {
-        let mut res = vec![];
-        res.push(*self.my_state.lock_param());
-        res.push(*self.other_state.lock_param());
-        res
+    /// Get inner state and lock_param from database value.
+    pub fn from_dbvalue(db_value: DBValue) -> Result<Self> {
+        let mut state = Default::default();
+        let mut lock_param = Default::default();
+
+        if db_value != Default::default() {
+            let reader = db_value.into_vec();
+            state = S::read_le(&mut &reader[..])?;
+            lock_param = LockParam::read(&mut &reader[..])?;
+        }
+
+        Ok(StateValue::new(state, lock_param))
     }
 
-    // TODO: To be more generic parameters to stf.
-    // TODO: Fix dupulicate state values.
-    pub fn apply(
-        self,
-        _stf: &str,
-        params: S,
-        symm_key: &SymmetricKey
-    ) -> Result<(Ciphertext, Ciphertext)> {
-        let (my_update, other_update) = Runtime(CallKind::Transfer)
-            .exec((self.my_state.inner_state.clone(), self.other_state.inner_state.clone(), params))?;
-        let my_update_state: UserState::<S, Next> = UserState::<S, Current>::new(self.my_addr, my_state_value)
-            .update_inner_state(my_update)
-            .try_into()?;
-        let my_enc_state = my_update_state.encrypt(&symm_key)?;
-        let other_update_state: UserState::<S, Next> = UserState::<S, Current>::new(self.target_addr, other_state_value)
-            .update_inner_state(other_update)
-            .try_into()?;
-        let other_enc_state = other_update_state.encrypt(&symm_key)?;
+    pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
+        self.inner_state.write_le(writer)?;
+        self.lock_param.write(writer)?;
 
-        Ok((my_enc_state, other_enc_state))
+        Ok(())
+    }
+
+    pub fn read<R: Read>(mut reader: R) -> Result<Self> {
+        let inner_state = S::read_le(&mut reader)?;
+        let lock_param = LockParam::read(&mut reader)?;
+
+        Ok(StateValue::new(inner_state, lock_param))
+    }
+
+    pub fn inner_state(&self) -> &S {
+        &self.inner_state
+    }
+
+    pub fn lock_param(&self) -> &LockParam {
+        &self.lock_param
     }
 }
-
 
 #[cfg(debug_assertions)]
 pub mod tests {
