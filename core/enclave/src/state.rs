@@ -136,6 +136,18 @@ impl<S: State> UserState<S, Current> {
         }
     }
 
+    pub fn from_db_value(
+        address: UserAddress,
+        db_value: DBValue
+    ) -> Result<Self> {
+        let state_value = StateValue::from_dbvalue(db_value)?;
+
+        Ok(UserState {
+            address,
+            state_value,
+        })
+    }
+
     // Only State with `Current` allows to access to the database to avoid from
     // storing data which have not been considered globally consensused.
     pub fn insert_cipheriv_memdb<DB: EnclaveDB>(
@@ -179,18 +191,6 @@ impl<S: State> UserState<S, Current> {
             address: self.address,
             state_value: StateValue::new(update, *self.lock_param()),
         }
-    }
-
-    pub fn from_address_and_db_value(
-        address: UserAddress,
-        db_value: DBValue
-    ) -> Result<Self> {
-        let state_value = StateValue::from_dbvalue(db_value)?;
-
-        Ok(UserState {
-            address,
-            state_value,
-        })
     }
 
     /// Compute hash digest of current user state.
@@ -252,28 +252,32 @@ impl<S: State> TryFrom<UserState<S, Current>> for UserState<S, Next> {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct StfWrapper<DB: EnclaveDB>{
-    my_addr: UserAddress,
-    target_addr: UserAddress,
+pub struct StateService<DB: EnclaveDB, S: State>{
+    my_state: UserState<S, Current>,
+    other_state: UserState<S, Current>,
     db: DB,
 }
 
-impl<DB: EnclaveDB> StfWrapper<DB> {
-    pub fn new(
-        pubkey: PublicKey,
-        sig: Signature,
-        msg: &[u8],
-        target_addr: UserAddress,
-        db: DB,
-    ) -> Result<Self> {
-        let my_addr = UserAddress::from_sig(&msg, &sig, &pubkey)?;
+impl<DB, S> StateService<DB, S>
+where
+    DB: EnclaveDB,
+    S: State,
+{
+    // pub fn new(
+    //     pubkey: PublicKey,
+    //     sig: Signature,
+    //     msg: &[u8],
+    //     target_addr: UserAddress,
+    //     db: DB,
+    // ) -> Result<Self> {
+    //     let my_addr = UserAddress::from_sig(&msg, &sig, &pubkey)?;
 
-        Ok(StfWrapper {
-            my_addr,
-            target_addr,
-            db,
-        })
-    }
+    //     Ok(StateService {
+    //         my_addr,
+    //         target_addr,
+    //         db,
+    //     })
+    // }
 
     pub fn from_access_right(
         access_right: &AccessRight,
@@ -282,28 +286,35 @@ impl<DB: EnclaveDB> StfWrapper<DB> {
     ) -> Result<Self> {
         let my_addr = UserAddress::from_access_right(access_right)?;
 
-        Ok(StfWrapper {
-            my_addr,
-            target_addr,
-            db
+        let my_dv = db.get(&my_addr);
+        let my_state = UserState<S, Current>::from_db_value(my_addr, my_dv)?;
+        let other_dv = db.get(&target_addr);
+        let other_state = UserState<S, Current>::from_db_value(target_addr, other_dv)?;
+
+        Ok(StateService {
+            my_state,
+            other_state,
+            db,
         })
+    }
+
+    pub fn reveal_lock_params(&self) -> Vec<LockParam> {
+        let mut res = vec![];
+        res.push(*self.my_state.lock_param());
+        res.push(*self.other_state.lock_param());
+        res
     }
 
     // TODO: To be more generic parameters to stf.
     // TODO: Fix dupulicate state values.
-    pub fn apply<S: State>(
+    pub fn apply(
         self,
         _stf: &str,
         params: S,
         symm_key: &SymmetricKey
     ) -> Result<(Ciphertext, Ciphertext)> {
-        let my_state_value = self.db.get(&self.my_addr);
-        let my_state_value = StateValue::<S, Current>::from_dbvalue(my_state_value)?;
-        let other_state_value = self.db.get(&self.target_addr);
-        let other_state_value = StateValue::<S, Current>::from_dbvalue(other_state_value)?;
-
         let (my_update, other_update) = Runtime(CallKind::Transfer)
-            .exec((my_state_value.inner_state.clone(), other_state_value.inner_state.clone(), params))?;
+            .exec((self.my_state.inner_state.clone(), self.other_state.inner_state.clone(), params))?;
         let my_update_state: UserState::<S, Next> = UserState::<S, Current>::new(self.my_addr, my_state_value)
             .update_inner_state(my_update)
             .try_into()?;

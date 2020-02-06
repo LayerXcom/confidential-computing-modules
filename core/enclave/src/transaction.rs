@@ -6,7 +6,7 @@ use crate::{
     error::Result,
     context::{EnclaveContext, ENCLAVE_CONTEXT},
     bridges::ocalls::save_to_host_memory,
-    state::{UserState, StfWrapper},
+    state::{UserState, StateService},
     crypto::SYMMETRIC_KEY,
     kvs::EnclaveDB,
 };
@@ -138,22 +138,18 @@ impl StateTransTx {
         S: State,
         DB: EnclaveDB,
     {
-        let params = S::from_bytes(params)?;
-        let init_state = UserState::<S, _>::init(user_address, state)
-            .expect("Failed to initialize state.");
-        let lock_param = *init_state.lock_param();
-        let ciphertext = init_state.encrypt(&SYMMETRIC_KEY)
-            .expect("Failed to encrypt init state.");
-        let enclave_sig = enclave_ctx.sign(&lock_param)?;
+        let params = S::from_bytes(params)?;        
 
-        let (my_ciphertext, other_ciphertext) = StfWrapper::from_access_right(access_right, target_addr, enclave_ctx.db)?
-            .apply::<Value>("transfer", params, &SYMMETRIC_KEY)
+        let service = StateService::from_access_right(access_right, target_addr, enclave_ctx.db)?;
+        let lock_params = service.reveal_lock_params();
+        let enclave_sig = enclave_ctx.sign(&lock_param[0])?;
+        let ciphertexts = service.apply::<Value>("transfer", params, &SYMMETRIC_KEY)
             .expect("Faild to execute applying function.");
 
         Ok(StateTransTx {
             state_id,
-            ciphertext,
-            lock_param,
+            ciphertexts,
+            lock_params,
             enclave_sig,
         })
     }
