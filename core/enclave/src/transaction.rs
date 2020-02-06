@@ -4,7 +4,7 @@ use anonify_common::{State, UserAddress, Ciphertext, LockParam, stf::Value};
 use crate::{
     attestation::{Report, ReportSig, AttestationService},
     error::Result,
-    quote::{EnclaveContext, ENCLAVE_CONTEXT},
+    context::{EnclaveContext, ENCLAVE_CONTEXT},
     bridges::ocalls::save_to_host_memory,
     state::{UserState, StfWrapper},
     crypto::SYMMETRIC_KEY,

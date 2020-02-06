@@ -11,7 +11,8 @@ use crate::{
 };
 
 lazy_static! {
-    pub static ref ENCLAVE_CONTEXT: EnclaveContext = EnclaveContext::new(TEST_SPID).unwrap();
+    pub static ref ENCLAVE_CONTEXT: EnclaveContext<DB: EnclaveDB>
+        = EnclaveContext::new(TEST_SPID).unwrap();
 }
 
 /// spid: Service procider ID for the ISV.

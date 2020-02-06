@@ -1,6 +1,6 @@
 use super::*;
 use attestation::*;
-use quote::EnclaveContext;
+use context::EnclaveContext;
 
 pub(crate) fn test_get_report() {
     let service = AttestationService::new(DEV_HOSTNAME, REPORT_PATH);

@@ -17,7 +17,7 @@ mod kvs;
 mod bridges;
 mod sealing;
 mod attestation;
-mod quote;
+mod context;
 mod transaction;
 mod cert;
 #[cfg(debug_assertions)]

@@ -11,7 +11,7 @@ use crate::attestation::{
     AttestationService, TEST_SPID, TEST_SUB_KEY,
     DEV_HOSTNAME, REPORT_PATH,
 };
-use crate::quote::{EnclaveContext, ENCLAVE_CONTEXT};
+use crate::context::{EnclaveContext, ENCLAVE_CONTEXT};
 use crate::transaction::{RegisterTx, InitStateTx, EnclaveTx};
 use super::ocalls::save_to_host_memory;
 
