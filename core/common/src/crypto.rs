@@ -231,7 +231,27 @@ impl AccessRight {
     }
 }
 
-pub trait 
+pub trait IntoVec {
+    fn into_vec(&self) -> Vec<u8>;
+}
+
+impl<T: IntoVec> IntoVec for Vec<T> {
+    fn into_vec(&self) -> Vec<u8> {
+        self.iter().fold(vec![], |mut acc, x| {
+            acc.extend_from_slice(&x.into_vec());
+            acc
+        })
+    }
+}
+
+impl<T: IntoVec> IntoVec for &[T] {
+    fn into_vec(&self) -> Vec<u8> {
+        self.iter().fold(vec![], |mut acc, x| {
+            acc.extend_from_slice(&x.into_vec());
+            acc
+        })
+    }
+}
 
 /// The size of initialization vector for AES-256-GCM.
 pub const IV_SIZE: usize = 12;
@@ -239,6 +259,18 @@ pub const CIPHERTEXT_SIZE: usize = STATE_SIZE + IV_SIZE;
 
 #[derive(Debug, Clone)]
 pub struct Ciphertext([u8; CIPHERTEXT_SIZE]);
+
+impl Default for Ciphertext {
+    fn default() -> Self {
+        Ciphertext([0u8; CIPHERTEXT_SIZE])
+    }
+}
+
+impl IntoVec for Ciphertext {
+    fn into_vec(&self) -> Vec<u8> {
+        self.0.to_vec()
+    }
+}
 
 impl Ciphertext {
     pub fn from_bytes(bytes: &[u8]) -> Self {
@@ -263,10 +295,6 @@ impl Ciphertext {
 
     pub fn as_bytes(&self) -> &[u8] {
         &self.0[..]
-    }
-
-    pub fn into_vec(self) -> Vec<u8> {
-        self.0.to_vec()
     }
 
     pub fn len(&self) -> usize {

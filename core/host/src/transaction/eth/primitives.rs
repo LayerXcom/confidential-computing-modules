@@ -22,7 +22,7 @@ use ethabi::{
     decode,
     Hash,
 };
-use anonify_common::{Ciphertext, LockParam};
+use anonify_common::{Ciphertext, LockParam, IntoVec};
 use crate::{
     error::*,
     constants::*,
