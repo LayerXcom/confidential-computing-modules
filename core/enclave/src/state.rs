@@ -8,7 +8,7 @@ use anonify_common::{
 use ed25519_dalek::{PublicKey, Signature};
 use crate::{
     crypto::*,
-    kvs::{MEMORY_DB, EnclaveKVS, EnclaveDBTx},
+    kvs::{EnclaveDB, EnclaveDBTx},
     error::{Result, EnclaveError},
 };
 use std::{
@@ -248,50 +248,54 @@ impl<S: State> TryFrom<UserState<S, Current>> for UserState<S, Next> {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct StfWrapper{
+pub struct StfWrapper<DB: EnclaveDB>{
     my_addr: UserAddress,
     target_addr: UserAddress,
+    db: DB,
 }
 
-impl StfWrapper {
+impl<DB: EnclaveDB> StfWrapper<DB> {
     pub fn new(
         pubkey: PublicKey,
         sig: Signature,
         msg: &[u8],
         target_addr: UserAddress,
+        db: DB,
     ) -> Result<Self> {
         let my_addr = UserAddress::from_sig(&msg, &sig, &pubkey)?;
 
         Ok(StfWrapper {
             my_addr,
             target_addr,
+            db,
         })
     }
 
     pub fn from_access_right(
         access_right: &AccessRight,
-        target_addr: UserAddress
+        target_addr: UserAddress,
+        db: DB,
     ) -> Result<Self> {
         let my_addr = UserAddress::from_access_right(access_right)?;
 
         Ok(StfWrapper {
             my_addr,
             target_addr,
+            db
         })
     }
 
     // TODO: To be more generic parameters to stf.
     // TODO: Fix dupulicate state values.
-    // TODO: Remove from MEMORY_DB static from this function.
     pub fn apply<S: State>(
         self,
         _stf: &str,
         params: S,
         symm_key: &SymmetricKey
     ) -> Result<(Ciphertext, Ciphertext)> {
-        let my_state_value = MEMORY_DB.get(&self.my_addr);
+        let my_state_value = self.db.get(&self.my_addr);
         let my_state_value = StateValue::<S, Current>::from_dbvalue(my_state_value)?;
-        let other_state_value = MEMORY_DB.get(&self.target_addr);
+        let other_state_value = self.db.get(&self.target_addr);
         let other_state_value = StateValue::<S, Current>::from_dbvalue(other_state_value)?;
 
         let (my_update, other_update) = Runtime(CallKind::Transfer)

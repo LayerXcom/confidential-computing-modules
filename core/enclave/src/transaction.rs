@@ -8,6 +8,7 @@ use crate::{
     bridges::ocalls::save_to_host_memory,
     state::{UserState, StfWrapper},
     crypto::SYMMETRIC_KEY,
+    kvs::EnclaveDB,
 };
 
 pub trait EnclaveTx: Sized {
@@ -45,11 +46,11 @@ impl RegisterTx {
         }
     }
 
-    pub fn construct(
+    pub fn construct<DB: EnclaveDB>(
         host: &str,
         path: &str,
         ias_api_key: &str,
-        ctx: &EnclaveContext,
+        ctx: &EnclaveContext<DB>,
     ) -> Result<Self> {
         let service = AttestationService::new(host, path);
         let quote = ctx.get_quote()?;
@@ -71,12 +72,16 @@ pub struct InitStateTx {
 }
 
 impl InitStateTx {
-    pub fn construct<S: State>(
+    pub fn construct<S, DB>(
         state_id: u64,
         params: &[u8],
         user_address: UserAddress,
-        enclave_ctx: &EnclaveContext,
-    ) -> Result<Self> {
+        enclave_ctx: &EnclaveContext<DB>,
+    ) -> Result<Self>
+    where
+        S: State,
+        DB: EnclaveDB,
+    {
         let params = S::from_bytes(params)?;
         let init_state = UserState::<S, _>::init(user_address, params)
             .expect("Failed to initialize state.");
@@ -122,22 +127,26 @@ pub struct StateTransTx {
 }
 
 impl StateTransTx {
-    pub fn construct<S: State>(
+    pub fn construct<S, DB>(
         state_id: u64,
         params: &[u8],
         access_right: &AccessRight,
         target_address: UserAddress,
-        enclave_ctx: &EnclaveContext,
-    ) -> Result<Self> {
+        enclave_ctx: &EnclaveContext<DB>,
+    ) -> Result<Self>
+    where
+        S: State,
+        DB: EnclaveDB,
+    {
         let params = S::from_bytes(params)?;
-        let init_state = UserState::<S, _>::init(user_address, params)
+        let init_state = UserState::<S, _>::init(user_address, state)
             .expect("Failed to initialize state.");
         let lock_param = *init_state.lock_param();
         let ciphertext = init_state.encrypt(&SYMMETRIC_KEY)
             .expect("Failed to encrypt init state.");
         let enclave_sig = enclave_ctx.sign(&lock_param)?;
 
-        let (my_ciphertext, other_ciphertext) = StfWrapper::from_access_right(access_right, target_addr)?
+        let (my_ciphertext, other_ciphertext) = StfWrapper::from_access_right(access_right, target_addr, enclave_ctx.db)?
             .apply::<Value>("transfer", params, &SYMMETRIC_KEY)
             .expect("Faild to execute applying function.");
 

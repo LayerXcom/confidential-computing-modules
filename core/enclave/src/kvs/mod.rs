@@ -11,18 +11,18 @@ use anonify_common::{
 use anonify_types::*;
 
 lazy_static! {
-    pub static ref MEMORY_DB: MemoryKVS = MemoryKVS::new();
+    pub static ref MEMORY_DB: MemoryDB = MemoryDB::new();
 }
 
 /// Trait of key-value store instrctions restricted by signature verifications.
-pub trait EnclaveKVS: Sync + Send {
+pub trait EnclaveDB: Sync + Send {
     fn get(&self, key: &UserAddress) -> DBValue;
 
     fn write(&self, tx: EnclaveDBTx);
 
 }
 
-impl EnclaveKVS for MemoryKVS {
+impl EnclaveDB for MemoryDB {
     fn get(&self, key: &UserAddress) -> DBValue {
         self.inner_get(key.as_bytes()).unwrap_or(DBValue::default())
     }

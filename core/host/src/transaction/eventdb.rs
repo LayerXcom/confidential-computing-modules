@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use anonify_common::{
     Ciphertext,
-    kvs::{KVS, MemoryKVS, DBTx}
+    kvs::{KVS, MemoryDB, DBTx}
 };
 use ethabi::Hash;
 use sgx_types::sgx_enclave_id_t;
@@ -17,11 +17,11 @@ pub trait BlockNumDB {
 }
 
 #[derive(Debug)]
-pub struct EventDB(MemoryKVS);
+pub struct EventDB(MemoryDB);
 
 impl BlockNumDB for EventDB {
     fn new() -> Self {
-        EventDB(MemoryKVS::new())
+        EventDB(MemoryDB::new())
     }
 
     fn set_next_block_num(&self, tx: EventDBTx) {

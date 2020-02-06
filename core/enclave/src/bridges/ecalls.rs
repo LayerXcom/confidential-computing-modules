@@ -4,7 +4,7 @@ use sgx_types::*;
 use anonify_types::*;
 use anonify_common::{UserAddress, State, stf::Value, Ciphertext, CIPHERTEXT_SIZE, AccessRight};
 use ed25519_dalek::{PublicKey, Signature};
-use crate::kvs::{EnclaveKVS, MEMORY_DB};
+use crate::kvs::{EnclaveDB, MEMORY_DB};
 use crate::state::{UserState, StateValue, Current, StfWrapper};
 use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{

@@ -7,6 +7,7 @@ use crate::{
     attestation::TEST_SPID,
     ocalls::{sgx_init_quote, get_quote},
     error::{Result, EnclaveError},
+    kvs::EnclaveDB,
 };
 
 lazy_static! {
@@ -15,14 +16,15 @@ lazy_static! {
 
 /// spid: Service procider ID for the ISV.
 #[derive(Clone)]
-pub struct EnclaveContext {
+pub struct EnclaveContext<DB: EnclaveDB> {
     spid: sgx_spid_t,
     identity_key: Eik,
+    db: DB,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
-impl EnclaveContext {
-    pub fn new(spid: &str) -> Result<Self> {
+impl<DB: EnclaveDB> EnclaveContext<DB> {
+    pub fn new(spid: &str, db: DB) -> Result<Self> {
         let spid_vec = hex::decode(spid)?;
         let mut id = [0; 16];
         id.copy_from_slice(&spid_vec);
@@ -30,7 +32,11 @@ impl EnclaveContext {
 
         let identity_key = Eik::new()?;
 
-        Ok(EnclaveContext{ spid, identity_key })
+        Ok(EnclaveContext{
+            spid,
+            identity_key,
+            db,
+        })
     }
 
     pub fn get_quote(&self) -> Result<String> {
