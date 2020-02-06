@@ -1,13 +1,13 @@
 use sgx_types::*;
 use std::prelude::v1::*;
 use sgx_tse::rsgx_create_report;
-use anonify_common::{LockParam, kvs::MemoryDB};
+use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
 use crate::{
     crypto::Eik,
     attestation::TEST_SPID,
     ocalls::{sgx_init_quote, get_quote},
     error::{Result, EnclaveError},
-    kvs::EnclaveDB,
+    kvs::{EnclaveDB, EnclaveDBTx},
 };
 
 lazy_static! {
@@ -20,7 +20,7 @@ lazy_static! {
 pub struct EnclaveContext<DB: EnclaveDB> {
     spid: sgx_spid_t,
     identity_key: Eik,
-    pub db: DB,
+    db: DB,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
@@ -54,6 +54,14 @@ impl<DB: EnclaveDB> EnclaveContext<DB> {
 
     pub fn sign(&self, msg: &LockParam) -> Result<secp256k1::Signature> {
         self.identity_key.sign(msg.as_bytes())
+    }
+
+    pub fn write(&self, tx: EnclaveDBTx) {
+        self.db.write(tx)
+    }
+
+    pub fn get(&self, key: &UserAddress) -> DBValue {
+        self.db.get(key)
     }
 
     fn get_report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {

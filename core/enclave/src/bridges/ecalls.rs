@@ -2,7 +2,7 @@ use std::vec::Vec;
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
-use anonify_common::{UserAddress, State, stf::Value, Ciphertext, CIPHERTEXT_SIZE, AccessRight};
+use anonify_common::{UserAddress, State, stf::Value, kvs::MemoryDB, Ciphertext, CIPHERTEXT_SIZE, AccessRight};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::kvs::EnclaveDB;
 use crate::state::{UserState, StateValue, Current};
@@ -27,8 +27,10 @@ pub unsafe extern "C" fn ecall_insert_logs(
     assert_eq!(ciphertexts.len() % CIPHERTEXT_SIZE, 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
     for ciphertext in ciphertexts.chunks(CIPHERTEXT_SIZE) {
-        UserState::<Value ,Current>::insert_cipheriv_memdb(Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY, ENCLAVE_CONTEXT.db)
-            .expect("Failed to insert ciphertext into memory database.");
+        UserState::<Value, Current>::insert_cipheriv_memdb::<MemoryDB>(
+            Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY, &*ENCLAVE_CONTEXT,
+        )
+        .expect("Failed to insert ciphertext into memory database.");
     }
 
     sgx_status_t::SGX_SUCCESS
@@ -46,7 +48,7 @@ pub unsafe extern "C" fn ecall_get_state(
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let key = UserAddress::from_sig(&msg[..], &sig, &pubkey).expect("Faild to generate user address.");
 
-    let db_value = ENCLAVE_CONTEXT.db.get(&key);
+    let db_value = ENCLAVE_CONTEXT.get(&key);
     let user_state_value = StateValue::<Value, Current>::from_dbvalue(db_value)
         .expect("Failed to read db_value.");
     let user_state = user_state_value.inner_state();

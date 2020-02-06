@@ -308,6 +308,12 @@ const LOCK_PARAM_SIZE: usize = 32;
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct LockParam([u8; LOCK_PARAM_SIZE]);
 
+impl IntoVec for LockParam {
+    fn into_vec(&self) -> Vec<u8> {
+        self.0.to_vec()
+    }
+}
+
 impl LockParam {
     pub fn from_bytes(bytes: &[u8]) -> Self {
         assert_eq!(bytes.len(), LOCK_PARAM_SIZE);
@@ -327,10 +333,6 @@ impl LockParam {
             buf.copy_from_slice(&b);
             LockParam(buf)
         })
-    }
-
-    pub fn into_vec(self) -> Vec<u8> {
-        self.0.to_vec()
     }
 
     pub fn as_bytes(&self) -> &[u8] {

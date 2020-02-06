@@ -10,6 +10,7 @@ use crate::{
     crypto::*,
     kvs::{EnclaveDB, EnclaveDBTx},
     error::{Result, EnclaveError},
+    context::EnclaveContext,
 };
 use std::{
     prelude::v1::*,
@@ -20,33 +21,30 @@ use std::{
 
 /// Service for state transition operations
 #[derive(Clone, Debug, PartialEq)]
-pub struct StateService<DB: EnclaveDB, S: State>{
+pub struct StateService<S: State>{
     my_state: UserState<S, Current>,
     other_state: UserState<S, Current>,
-    db: DB,
 }
 
-impl<DB, S> StateService<DB, S>
+impl<S> StateService<S>
 where
-    DB: EnclaveDB,
     S: State,
 {
-    pub fn from_access_right(
+    pub fn from_access_right<DB: EnclaveDB>(
         access_right: &AccessRight,
         target_addr: UserAddress,
-        db: DB,
+        ctx: &EnclaveContext<DB>,
     ) -> Result<Self> {
         let my_addr = UserAddress::from_access_right(access_right)?;
 
-        let my_dv = db.get(&my_addr);
+        let my_dv = ctx.get(&my_addr);
         let my_state = UserState::<S, Current>::from_db_value(my_addr, my_dv)?;
-        let other_dv = db.get(&target_addr);
+        let other_dv = ctx.get(&target_addr);
         let other_state = UserState::<S, Current>::from_db_value(target_addr, other_dv)?;
 
         Ok(StateService {
             my_state,
             other_state,
-            db,
         })
     }
 
@@ -164,7 +162,7 @@ impl<S: State> UserState<S, Current> {
     pub fn insert_cipheriv_memdb<DB: EnclaveDB>(
         cipheriv: Ciphertext,
         symm_key: &SymmetricKey,
-        enclave_db: DB,
+        ctx: &EnclaveContext<DB>,
     ) -> Result<()> {
         let user_state = Self::decrypt(cipheriv, &symm_key)?;
         let key = user_state.get_db_key();
@@ -172,7 +170,7 @@ impl<S: State> UserState<S, Current> {
 
         let mut dbtx = EnclaveDBTx::new();
         dbtx.put(&key, &value);
-        enclave_db.write(dbtx);
+        ctx.write(dbtx);
 
         Ok(())
     }

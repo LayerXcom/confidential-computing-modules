@@ -1,6 +1,6 @@
 use std::vec::Vec;
 use anonify_types::{RawRegisterTx, RawStateTransTx, traits::RawEnclaveTx};
-use anonify_common::{State, UserAddress, Ciphertext, LockParam, stf::Value, AccessRight};
+use anonify_common::{State, UserAddress, Ciphertext, LockParam, stf::Value, AccessRight, IntoVec};
 use crate::{
     attestation::{Report, ReportSig, AttestationService},
     error::Result,
@@ -140,7 +140,7 @@ impl StateTransTx {
     {
         let params = S::from_bytes(params)?;
 
-        let service = StateService::from_access_right(access_right, target_address, enclave_ctx.db)?;
+        let service = StateService::from_access_right(access_right, target_address, &enclave_ctx)?;
         let lock_params = service.reveal_lock_params();
         let enclave_sig = enclave_ctx.sign(&lock_params[0])?;
         let ciphertexts = service.apply("transfer", params, &SYMMETRIC_KEY)
@@ -159,8 +159,8 @@ impl EnclaveTx for StateTransTx {
     type R = RawStateTransTx;
 
     fn into_raw(self) -> Result<Self::R> {
-        let ciphertext = save_to_host_memory(&self.ciphertexts.as_bytes())? as *const u8;
-        let lock_param = save_to_host_memory(&self.lock_params.as_bytes())? as *const u8;
+        let ciphertext = save_to_host_memory(&self.ciphertexts.into_vec())? as *const u8;
+        let lock_param = save_to_host_memory(&self.lock_params.into_vec())? as *const u8;
         let enclave_sig = save_to_host_memory(&self.enclave_sig.serialize())? as *const u8;
 
         Ok(RawStateTransTx {
