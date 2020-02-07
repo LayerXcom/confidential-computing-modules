@@ -2,6 +2,7 @@ use crate::localstd::{
     io::{self, Read, Write},
     vec::Vec,
     slice,
+    fmt,
 };
 use crate::{
     stf::STATE_SIZE,
@@ -248,10 +249,16 @@ impl<T: IntoVec> IntoVec for &[T] {
 
 /// The size of initialization vector for AES-256-GCM.
 pub const IV_SIZE: usize = 12;
-pub const CIPHERTEXT_SIZE: usize = STATE_SIZE + IV_SIZE;
+pub const CIPHERTEXT_SIZE: usize = 88;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Ciphertext([u8; CIPHERTEXT_SIZE]);
+
+impl fmt::Debug for Ciphertext {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Ciphertext ")
+    }
+}
 
 impl Default for Ciphertext {
     fn default() -> Self {
