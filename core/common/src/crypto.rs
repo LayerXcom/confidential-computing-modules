@@ -1,14 +1,12 @@
 use crate::localstd::{
     io::{self, Read, Write},
     vec::Vec,
-    slice,
     fmt,
 };
 use crate::{
-    stf::STATE_SIZE,
     serde::{Serialize, Deserialize}
 };
-use ed25519_dalek::{PublicKey, Signature, Keypair, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
+use ed25519_dalek::{PublicKey, Signature, Keypair, SignatureError};
 use tiny_keccak::Keccak;
 use anonify_types::{RawPubkey, RawSig, RawChallenge};
 #[cfg(feature = "std")]
