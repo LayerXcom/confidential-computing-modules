@@ -12,7 +12,7 @@ crate-type = ["staticlib"]
 default = []
 
 [dependencies]
-anonify-types = { path = "../types", default-features = false, features = ["sgx"] }
+anonify-types = { path = "../types", default-features = false }
 anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
 https-enclave = { path = "../../https-enclave" }
 

@@ -62,8 +62,8 @@ fn main() -> io::Result<()> {
         App::new()
             .data(server.clone())
             .route("/deploy", web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
-            .route("/send", web::post().to(handle_send::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
-            .route("/state", web::get().to(handle_state::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/send", web::post().to(handle_state_transition::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/state", web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
     })
     .bind(dotenv!("ANONIFY_URL"))?
     .run()

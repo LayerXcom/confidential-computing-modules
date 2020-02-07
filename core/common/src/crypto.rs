@@ -1,9 +1,14 @@
 use crate::localstd::{
     io::{self, Read, Write},
+    vec::Vec,
+    fmt,
 };
-use ed25519_dalek::{PublicKey, Signature, Keypair};
+use crate::{
+    serde::{Serialize, Deserialize}
+};
+use ed25519_dalek::{PublicKey, Signature, Keypair, SignatureError};
 use tiny_keccak::Keccak;
-use crate::serde::{Serialize, Deserialize};
+use anonify_types::{RawPubkey, RawSig, RawChallenge};
 #[cfg(feature = "std")]
 use rand::Rng;
 #[cfg(feature = "std")]
@@ -40,9 +45,14 @@ impl From<&UserAddress> for web3::types::Address {
 
 impl UserAddress {
     /// Get a user address only if the verification of signature returns true.
-    pub fn from_sig(msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Self {
-        assert!(pubkey.verify(msg, &sig).is_ok());
-        Self::from_pubkey(&pubkey)
+    pub fn from_sig(msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Result<Self, SignatureError> {
+        pubkey.verify(msg, &sig)?;
+        Ok(Self::from_pubkey(&pubkey))
+    }
+
+    pub fn from_access_right(access_right: &AccessRight) -> Result<Self, SignatureError> {
+        access_right.verify_sig()?;
+        Ok(Self::from_pubkey(access_right.pubkey()))
     }
 
     pub fn from_pubkey(pubkey: &PublicKey) -> Self {
@@ -140,45 +150,207 @@ impl Keccak256<[u8; 32]> for [u8] {
     }
 }
 
+const CHALLENGE_SIZE: usize = 32;
+
 /// Access right of Read/Write to anonify's enclave mem db.
 #[derive(Debug, Clone)]
 pub struct AccessRight {
-    pub sig: Signature,
-    pub pubkey: PublicKey,
-    pub nonce: [u8; 32],
+    sig: Signature,
+    pubkey: PublicKey,
+    challenge: [u8; CHALLENGE_SIZE],
 }
 
 impl AccessRight {
     #[cfg(feature = "std")]
     pub fn new_from_rng<R: RngCore + CryptoRng>(rng: &mut R) -> Self {
         let keypair = Keypair::generate(rng);
-        let nonce = rand::thread_rng().gen::<[u8; 32]>();
-        let sig = keypair.sign(&nonce);
+        let challenge = rand::thread_rng().gen::<[u8; 32]>();
+        let sig = keypair.sign(&challenge);
 
-        assert!(keypair.verify(&nonce, &sig).is_ok());
+        assert!(keypair.verify(&challenge, &sig).is_ok());
 
-        Self::new(sig, keypair.public, nonce)
+        Self::new(sig, keypair.public, challenge)
     }
 
     pub fn new(
         sig: Signature,
         pubkey: PublicKey,
-        nonce: [u8; 32],
+        challenge: [u8; 32],
     ) -> Self {
-        assert!(pubkey.verify(&nonce, &sig).is_ok());
+        assert!(pubkey.verify(&challenge, &sig).is_ok());
 
         AccessRight {
             sig,
             pubkey,
-            nonce,
+            challenge,
         }
+    }
+
+    pub fn verify_sig(&self) -> Result<(), SignatureError> {
+        self.pubkey.verify(&self.challenge, &self.sig)?;
+        Ok(())
     }
 
     pub fn user_address(&self) -> UserAddress {
         UserAddress::from_pubkey(&self.pubkey())
     }
 
+    pub fn sig(&self) -> &Signature {
+        &self.sig
+    }
+
     pub fn pubkey(&self) -> &PublicKey {
         &self.pubkey
+    }
+
+    pub fn challenge(&self) -> &[u8] {
+        &self.challenge
+    }
+
+    pub fn into_raw(self) -> (RawPubkey, RawSig, RawChallenge) {
+        (self.pubkey().to_bytes(), self.sig().to_bytes(), self.challenge)
+    }
+
+    pub fn from_raw(
+        raw_pubkey: RawPubkey,
+        raw_sig: RawSig,
+        raw_challenge: RawChallenge,
+    ) -> Result<Self, SignatureError> {
+        let sig = Signature::from_bytes(&raw_sig)?;
+        let pubkey = PublicKey::from_bytes(&raw_pubkey)?;
+
+        Ok(AccessRight::new(sig, pubkey, raw_challenge))
+    }
+}
+
+pub trait IntoVec {
+    fn into_vec(&self) -> Vec<u8>;
+}
+
+impl<T: IntoVec> IntoVec for Vec<T> {
+    fn into_vec(&self) -> Vec<u8> {
+        self.iter().fold(vec![], |mut acc, x| {
+            acc.extend_from_slice(&x.into_vec());
+            acc
+        })
+    }
+}
+
+impl<T: IntoVec> IntoVec for &[T] {
+    fn into_vec(&self) -> Vec<u8> {
+        self.iter().fold(vec![], |mut acc, x| {
+            acc.extend_from_slice(&x.into_vec());
+            acc
+        })
+    }
+}
+
+/// The size of initialization vector for AES-256-GCM.
+pub const IV_SIZE: usize = 12;
+pub const CIPHERTEXT_SIZE: usize = 88;
+
+#[derive(Clone)]
+pub struct Ciphertext([u8; CIPHERTEXT_SIZE]);
+
+impl fmt::Debug for Ciphertext {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Ciphertext ")
+    }
+}
+
+impl Default for Ciphertext {
+    fn default() -> Self {
+        Ciphertext([0u8; CIPHERTEXT_SIZE])
+    }
+}
+
+impl IntoVec for Ciphertext {
+    fn into_vec(&self) -> Vec<u8> {
+        self.0.to_vec()
+    }
+}
+
+impl Ciphertext {
+    pub fn from_bytes(bytes: &[u8]) -> Self {
+        assert_eq!(bytes.len(), CIPHERTEXT_SIZE);
+        let mut buf = [0u8; CIPHERTEXT_SIZE];
+        buf.copy_from_slice(bytes);
+
+        Ciphertext(buf)
+    }
+
+    pub fn from_bytes_iter(bytes: &[u8]) -> impl Iterator<Item=Self> + '_ {
+        assert_eq!(bytes.len() % CIPHERTEXT_SIZE, 0);
+        let iter_num = bytes.len() / CIPHERTEXT_SIZE;
+
+        (0..iter_num).map(move |i| {
+            let mut buf = [0u8; CIPHERTEXT_SIZE];
+            let b = &bytes[i*CIPHERTEXT_SIZE..(i+1)*CIPHERTEXT_SIZE];
+            buf.copy_from_slice(b);
+            Ciphertext(buf)
+        })
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0[..]
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+const LOCK_PARAM_SIZE: usize = 32;
+
+/// To avoid data collision when a transaction is sent to a blockchain.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct LockParam([u8; LOCK_PARAM_SIZE]);
+
+impl IntoVec for LockParam {
+    fn into_vec(&self) -> Vec<u8> {
+        self.0.to_vec()
+    }
+}
+
+impl LockParam {
+    pub fn from_bytes(bytes: &[u8]) -> Self {
+        assert_eq!(bytes.len(), LOCK_PARAM_SIZE);
+        let mut buf = [0u8; LOCK_PARAM_SIZE];
+        buf.copy_from_slice(bytes);
+
+        LockParam(buf)
+    }
+
+    pub fn from_bytes_iter(bytes: &[u8]) -> impl Iterator<Item=Self> + '_ {
+        assert_eq!(bytes.len() % LOCK_PARAM_SIZE, 0);
+        let iter_num = bytes.len() / LOCK_PARAM_SIZE;
+
+        (0..iter_num).map(move |i| {
+            let mut buf = [0u8; LOCK_PARAM_SIZE];
+            let b = &bytes[i*LOCK_PARAM_SIZE..(i+1)*LOCK_PARAM_SIZE];
+            buf.copy_from_slice(&b);
+            LockParam(buf)
+        })
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0[..]
+    }
+
+    pub fn write<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        writer.write_all(&self.0)?;
+        Ok(())
+    }
+
+    pub fn read<R: Read>(reader: &mut R) -> io::Result<Self> {
+        let mut res = [0u8; 32];
+        reader.read_exact(&mut res)?;
+        Ok(LockParam(res))
+    }
+}
+
+impl From<Sha256> for LockParam {
+    fn from(s: Sha256) -> Self {
+        LockParam(s.as_array())
     }
 }

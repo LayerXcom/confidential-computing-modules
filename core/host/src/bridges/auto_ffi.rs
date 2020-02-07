@@ -12,7 +12,6 @@ extern "C" {
         block_number: u64,
         ciphertexts: *const u8,
         ciphertexts_len: usize,
-        ciphertext_size: usize,
     ) -> sgx_status_t;
 }
 extern "C" {
@@ -21,7 +20,7 @@ extern "C" {
         retval: *mut sgx_status_t,
         sig: *mut [u8; 64usize],
         pubkey: *mut [u8; 32usize],
-        msg: *mut [u8; 32usize],
+        challenge: *mut [u8; 32usize],
         state: *mut EnclaveState,
     ) -> sgx_status_t;
 }
@@ -31,11 +30,19 @@ extern "C" {
         retval: *mut sgx_status_t,
         sig: *mut [u8; 64usize],
         pubkey: *mut [u8; 32usize],
-        msg: *mut [u8; 32usize],
+        challenge: *mut [u8; 32usize],
         target: *mut [u8; 20usize],
         state: *const u8,
         state_len: usize,
-        result: *mut RawUnsignedTx,
+        state_id: u64,
+        result: *mut RawStateTransTx,
+    ) -> sgx_status_t;
+}
+extern "C" {
+    pub fn ecall_register(
+        eid: sgx_enclave_id_t,
+        retval: *mut sgx_status_t,
+        result: *mut RawRegisterTx,
     ) -> sgx_status_t;
 }
 extern "C" {
@@ -44,10 +51,11 @@ extern "C" {
         retval: *mut sgx_status_t,
         sig: *mut [u8; 64usize],
         pubkey: *mut [u8; 32usize],
-        msg: *mut [u8; 32usize],
+        challenge: *mut [u8; 32usize],
         state: *const u8,
         state_len: usize,
-        result: *mut RawUnsignedTx,
+        state_id: u64,
+        result: *mut RawStateTransTx,
     ) -> sgx_status_t;
 }
 extern "C" {

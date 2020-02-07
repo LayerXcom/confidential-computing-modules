@@ -16,34 +16,39 @@ enclave {
             [in] uint8_t contract_addr[20],
             uint64_t block_number,
             [in, count=ciphertexts_len] const uint8_t *ciphertexts,
-            size_t ciphertexts_len,
-            size_t ciphertext_size
+            size_t ciphertexts_len
         );
 
         public sgx_status_t ecall_get_state(
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
-            [in] uint8_t msg[32],
+            [in] uint8_t challenge[32],
             [out] EnclaveState* state
         );
 
         public sgx_status_t ecall_state_transition(
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
-            [in] uint8_t msg[32],
+            [in] uint8_t challenge[32],
             [in] uint8_t target[20],
             [in, count=state_len] const uint8_t *state,
             size_t state_len,
-            [out] RawUnsignedTx* result
+            uint64_t state_id,
+            [out] RawStateTransTx* result
+        );
+
+        public sgx_status_t ecall_register(
+            [out] RawRegisterTx* result
         );
 
         public sgx_status_t ecall_init_state(
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
-            [in] uint8_t msg[32],
+            [in] uint8_t challenge[32],
             [in, count=state_len] const uint8_t *state,
             size_t state_len,
-            [out] RawUnsignedTx* result
+            uint64_t state_id,
+            [out] RawStateTransTx* result
         );
 
         public void ecall_run_tests(

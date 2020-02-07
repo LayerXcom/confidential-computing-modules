@@ -4,23 +4,19 @@ use core::{
     ptr,
     mem,
 };
+use crate::traits::RawEnclaveTx;
 
 pub const STATE_SIZE: usize = 8;
 pub const PUBKEY_SIZE: usize = 32;
 pub const ADDRESS_SIZE: usize = 20;
 pub const RANDOMNESS_SIZE: usize = 32;
 pub const SIG_SIZE: usize = 64;
-pub const CIPHERTEXT_SIZE: usize = ADDRESS_SIZE + STATE_SIZE + RANDOMNESS_SIZE; // 60
-pub const PLAINTEXT_SIZE: usize = CIPHERTEXT_SIZE; // 60
 pub const DB_VALUE_SIZE: usize = STATE_SIZE + RANDOMNESS_SIZE;
 
-pub type PubKey = [u8; PUBKEY_SIZE];
 pub type Address = [u8; ADDRESS_SIZE];
-pub type Randomness = [u8; RANDOMNESS_SIZE];
-pub type Ciphertext = [u8; CIPHERTEXT_SIZE];
-pub type Plaintext = [u8; PLAINTEXT_SIZE];
-pub type Sig = [u8; SIG_SIZE];
-pub type Msg = [u8; RANDOMNESS_SIZE];
+pub type RawPubkey = [u8; PUBKEY_SIZE];
+pub type RawSig = [u8; SIG_SIZE];
+pub type RawChallenge = [u8; RANDOMNESS_SIZE];
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -43,39 +39,95 @@ impl fmt::Display for EnclaveReturn {
     }
 }
 
-/// Returned from a contract deploy or state transition ecall.
+/// Bridged type from enclave to host to send a register transaction.
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct RawUnsignedTx {
+pub struct RawRegisterTx {
     /// A pointer to the output of the report using `ocall_save_to_memory()`.
     pub report: *const u8,
     pub report_sig: *const u8,
-    /// The number of ciphertexts.
-    pub ciphertext_num: usize,
-    pub ciphertexts: *const u8,
 }
 
-impl Default for RawUnsignedTx {
+impl RawEnclaveTx for RawRegisterTx { }
+
+impl Default for RawRegisterTx {
     fn default() -> Self {
-        RawUnsignedTx {
+        RawRegisterTx {
             report: ptr::null(),
             report_sig: ptr::null(),
-            ciphertexts: ptr::null(),
+        }
+    }
+}
+
+impl fmt::Debug for RawRegisterTx {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut debug_trait_builder = f.debug_struct("RawRegisterTx");
+        debug_trait_builder.field("report", &(self.report));
+        debug_trait_builder.field("report_sig", &(self.report_sig));
+        debug_trait_builder.finish()
+    }
+}
+
+/// Bridged type from enclave to host to modify state transaction.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RawStateTransTx {
+    pub state_id: u64,
+    pub ciphertext: *const u8,
+    pub lock_param: *const u8,
+    pub enclave_sig: *const u8,
+}
+
+impl RawEnclaveTx for RawStateTransTx { }
+
+impl Default for RawStateTransTx {
+    fn default() -> Self {
+        RawStateTransTx {
+            ciphertext: ptr::null(),
+            lock_param: ptr::null(),
+            enclave_sig: ptr::null(),
             .. unsafe { mem::zeroed() }
         }
     }
 }
 
-impl fmt::Debug for RawUnsignedTx {
+impl fmt::Debug for RawStateTransTx {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut debug_trait_builder = f.debug_struct("RawUnsignedTx");
-        debug_trait_builder.field("report", &(self.report));
-        debug_trait_builder.field("report_sig", &(self.report_sig));
-        debug_trait_builder.field("ciphertext_num", &(self.ciphertext_num));
-        debug_trait_builder.field("ciphertexts", &(self.ciphertexts));
+        let mut debug_trait_builder = f.debug_struct("RawStateTransTx");
+        debug_trait_builder.field("state_id", &(self.state_id));
+        debug_trait_builder.field("ciphertext", &(self.ciphertext));
+        debug_trait_builder.field("lock_param", &(self.lock_param));
+        debug_trait_builder.field("enclave_sig", &(self.enclave_sig));
         debug_trait_builder.finish()
     }
 }
+
+// #[repr(C)]
+// #[derive(Clone, Copy)]
+// pub struct RawAccessRight {
+//     pub sig_first: [u8; 32],
+//     pub sig_latter: [u8; 32],
+//     pub pubkey: [u8; 32],
+//     pub challenge: [u8; 32],
+// }
+
+// impl Default for RawAccessRight {
+//     fn default() -> Self {
+//         RawAccessRight {
+//             .. unsafe { mem::zeroed() }
+//         }
+//     }
+// }
+
+// impl fmt::Debug for RawAccessRight {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         let mut debug_trait_builder = f.debug_struct("RawAccessRight");
+//         // debug_trait_builder.field("sig", &(self.sig));
+//         debug_trait_builder.field("pubkey", &(self.pubkey));
+//         debug_trait_builder.field("challenge", &(self.challenge));
+//         debug_trait_builder.finish()
+//     }
+// }
 
 /// Returned from getting state operations.
 #[repr(C)]

@@ -21,15 +21,15 @@ pub trait KVS: Sync + Send {
 }
 
 #[derive(Debug)]
-pub struct MemoryKVS(RwLock<BTreeMap<Vec<u8>, DBValue>>);
+pub struct MemoryDB(RwLock<BTreeMap<Vec<u8>, DBValue>>);
 
-impl MemoryKVS {
+impl MemoryDB {
     pub fn new() -> Self {
-        MemoryKVS(RwLock::new(BTreeMap::new()))
+        MemoryDB(RwLock::new(BTreeMap::new()))
     }
 }
 
-impl KVS for MemoryKVS {
+impl KVS for MemoryDB {
     fn inner_get(&self, key: &[u8]) -> Option<DBValue> {
         let d = self.0.read().unwrap();
         d.get(key).cloned()

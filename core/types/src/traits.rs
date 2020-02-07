@@ -43,3 +43,6 @@ impl SliceCPtr for str {
         }
     }
 }
+
+/// A marker trait of a transaction data in enclave whose field has raw pointers.
+pub trait RawEnclaveTx { }

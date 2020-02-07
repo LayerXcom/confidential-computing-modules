@@ -15,7 +15,6 @@ use crate::{
 
 pub const DEV_HOSTNAME : &str = "api.trustedservices.intel.com";
 pub const REPORT_PATH : &str = "/sgx/dev/attestation/v3/report";
-pub const IAS_DEFAULT_RETRIES: u32 = 10;
 pub const TEST_SPID: &str = "2C149BFC94A61D306A96211AED155BE9";
 pub const TEST_SUB_KEY: &str = "77e2533de0624df28dc3be3a5b9e50d9";
 
@@ -38,19 +37,26 @@ static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
 pub struct AttestationService<'a> {
     host: &'a str,
     path: &'a str,
-    retries: u32,
 }
 
 impl<'a> AttestationService<'a> {
-    pub fn new(host: &'a str, path: &'a str, retries: u32) -> Self {
+    pub fn new(host: &'a str, path: &'a str) -> Self {
         AttestationService {
             host,
             path,
-            retries,
         }
     }
 
     pub fn get_report_and_sig(&self, quote: &str, ias_api_key: &str) -> Result<(Vec<u8>, Vec<u8>)> {
+        let req = self.raw_report_req(quote, ias_api_key);
+        let res = self.send_raw_req(req)?;
+
+        res.verify_sig_cert()?;
+
+        Ok((res.body.0, res.sig.0)) // TODO
+    }
+
+    pub fn get_report_and_sig_new(&self, quote: &str, ias_api_key: &str) -> Result<(Report, ReportSig)> {
         let req = self.raw_report_req(quote, ias_api_key);
         let res = self.send_raw_req(req)?;
 
@@ -83,11 +89,42 @@ impl<'a> AttestationService<'a> {
     }
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct Report(Vec<u8>);
+
+impl Report {
+    pub fn new(report: Vec<u8>) -> Self {
+        Report(report)
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0[..]
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ReportSig(Vec<u8>);
+
+impl ReportSig {
+    pub fn base64_decode(v: &[u8]) -> Result<Self> {
+        let v = base64::decode(v)?;
+        Ok(ReportSig(v))
+    }
+
+    pub fn new(report_sig: Vec<u8>) -> Self {
+        ReportSig(report_sig)
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0[..]
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Response {
-    sig: Vec<u8>,
+    body: Report,
+    sig: ReportSig,
     cert: Vec<u8>,
-    body: Vec<u8>,
 }
 
 impl Response {
@@ -113,9 +150,9 @@ impl Response {
         println!("    [Enclave] msg = {}", msg);
         let mut len_num : u32 = 0;
 
-        let mut sig = vec![];
+        let mut sig = ReportSig::default();
         let mut cert_str = String::new();
-        let mut body = vec![];
+        let mut body = Report::default();
 
         for i in 0..respp.headers.len() {
             let h = respp.headers[i];
@@ -124,7 +161,7 @@ impl Response {
                     let len_str = String::from_utf8(h.value.to_vec()).unwrap();
                     len_num = len_str.parse::<u32>().unwrap();
                 }
-                "X-IASReport-Signature" => sig = base64::decode(h.value)?,
+                "X-IASReport-Signature" => sig = ReportSig::base64_decode(h.value)?,
                 "X-IASReport-Signing-Certificate" => cert_str = String::from_utf8(h.value.to_vec()).unwrap(),
                 _ => (),
             }
@@ -141,13 +178,13 @@ impl Response {
 
         if len_num != 0 {
             let header_len = result.unwrap().unwrap();
-            body = resp[header_len..].to_vec();
+            body = Report::new(resp[header_len..].to_vec());
         }
 
         Ok(Response {
+            body,
             sig,
             cert,
-            body,
         })
     }
 
@@ -179,8 +216,8 @@ impl Response {
 
         sig_cert.verify_signature(
             &webpki::RSA_PKCS1_2048_8192_SHA256,
-            &self.body,
-            &self.sig
+            &self.body.0,
+            &self.sig.0,
         )?;
 
         Ok(())

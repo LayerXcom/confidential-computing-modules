@@ -22,6 +22,7 @@ use ethabi::{
     decode,
     Hash,
 };
+use anonify_common::{Ciphertext, LockParam, IntoVec};
 use crate::{
     error::*,
     constants::*,
@@ -61,7 +62,6 @@ impl Web3Http {
     pub fn deploy(
         &self,
         deployer: &Address,
-        init_ciphertext: &[u8],
         report: &[u8],
         report_sig: &[u8],
     ) -> Result<Address> {
@@ -75,7 +75,7 @@ impl Web3Http {
             .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
             .execute(
                 bin,
-                (init_ciphertext.to_vec(), report.to_vec(), report_sig.to_vec()), // Parameters are got from ecall, so these have to be allocated.
+                (report.to_vec(), report_sig.to_vec()), // Parameters are got from ecall, so these have to be allocated.
                 *deployer,
             )
             .unwrap() // TODO
@@ -109,18 +109,67 @@ impl Web3Contract {
         })
     }
 
-    pub fn tranfer<G: Into<U256>>(
+    pub fn register<G: Into<U256>>(
         &self,
         from: Address,
-        update_balance1: &[u8],
-        update_balance2: &[u8],
         report: &[u8],
         report_sig: &[u8],
         gas: G,
     ) -> Result<H256> {
         let call = self.contract.call(
-            "transfer",
-            (update_balance1.to_vec(), update_balance2.to_vec(), report.to_vec(), report_sig.to_vec()),
+            "register",
+            (report.to_vec(), report_sig.to_vec()),
+            from,
+            Options::with(|opt| opt.gas = Some(gas.into())),
+        );
+
+        // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253
+        let res = call.wait().unwrap(); //TODO: error handling
+        Ok(res)
+    }
+
+    pub fn init_state<G: Into<U256>>(
+        &self,
+        from: Address,
+        state_id: u64,
+        init_state: &[u8],
+        lock_param: &[u8],
+        enclave_sig: &[u8],
+        gas: G,
+    ) -> Result<H256> {
+        let call = self.contract.call(
+            "initState",
+            (U256::from(state_id), init_state.to_vec(), H256::from_slice(lock_param), enclave_sig.to_vec()),
+            from,
+            Options::with(|opt| opt.gas = Some(gas.into())),
+        );
+
+        // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253
+        let res = call.wait().unwrap(); //TODO: error handling
+        Ok(res)
+    }
+
+    pub fn state_transition(
+        &self,
+        from: Address,
+        state_id: u64,
+        mut ciphertexts: impl Iterator<Item=Ciphertext>,
+        mut lock_params: impl Iterator<Item=LockParam>,
+        enclave_sig: &[u8],
+        gas: u64,
+    ) -> Result<H256> {
+        // iterators have to have its field.
+        let ct1 = ciphertexts.next().unwrap().into_vec();
+        let ct2 = ciphertexts.next().unwrap().into_vec();
+        let lp1 = lock_params.next().unwrap();
+        let lp2 = lock_params.next().unwrap();
+
+        assert!(ciphertexts.next().is_none());
+        assert!(lock_params.next().is_none());
+
+        let call = self.contract.call(
+            "stateTransition",
+            (U256::from(state_id), ct1, ct2,  H256::from_slice(lp1.as_bytes()),  H256::from_slice(lp2.as_bytes()), enclave_sig.to_vec()),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );
@@ -171,7 +220,7 @@ pub struct Web3Logs<D: BlockNumDB>{
 
 impl<D: BlockNumDB> Web3Logs<D> {
     pub fn into_enclave_log(self) -> Result<EnclaveLog<D>> {
-        let mut ciphertexts: Vec<u8> = vec![];
+        let mut ciphertexts: Vec<Ciphertext> = vec![];
 
         // If log data is not fetched currently, return empty EnclaveLog.
         // This case occurs if you fetched data of dupulicated block number.
@@ -211,7 +260,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 }
             }
 
-            ciphertexts.extend_from_slice(&data[..]);
+            ciphertexts.push(Ciphertext::from_bytes(&data[..]));
         }
 
         Ok(EnclaveLog {
@@ -219,7 +268,6 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 contract_addr: contract_addr.to_fixed_bytes(),
                 latest_blc_num: latest_blc_num,
                 ciphertexts,
-                ciphertext_size,
             }),
             db: self.db,
         })

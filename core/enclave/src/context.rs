@@ -1,19 +1,30 @@
 use sgx_types::*;
 use std::prelude::v1::*;
 use sgx_tse::rsgx_create_report;
-use crate::error::{Result, EnclaveError};
-use crate::ocalls::{sgx_init_quote, get_quote};
-use crate::crypto::Eik;
+use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
+use crate::{
+    crypto::Eik,
+    attestation::TEST_SPID,
+    ocalls::{sgx_init_quote, get_quote},
+    error::{Result, EnclaveError},
+    kvs::{EnclaveDB, EnclaveDBTx},
+};
+
+lazy_static! {
+    pub static ref ENCLAVE_CONTEXT: EnclaveContext<MemoryDB>
+        = EnclaveContext::new(TEST_SPID).unwrap();
+}
 
 /// spid: Service procider ID for the ISV.
 #[derive(Clone)]
-pub struct EnclaveContext {
+pub struct EnclaveContext<DB: EnclaveDB> {
     spid: sgx_spid_t,
     identity_key: Eik,
+    db: DB,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
-impl EnclaveContext {
+impl<DB: EnclaveDB> EnclaveContext<DB> {
     pub fn new(spid: &str) -> Result<Self> {
         let spid_vec = hex::decode(spid)?;
         let mut id = [0; 16];
@@ -21,8 +32,13 @@ impl EnclaveContext {
         let spid: sgx_spid_t = sgx_spid_t { id };
 
         let identity_key = Eik::new()?;
+        let db = DB::new();
 
-        Ok(EnclaveContext{ spid, identity_key })
+        Ok(EnclaveContext{
+            spid,
+            identity_key,
+            db,
+        })
     }
 
     pub fn get_quote(&self) -> Result<String> {
@@ -36,9 +52,21 @@ impl EnclaveContext {
         Ok(target_info)
     }
 
+    pub fn sign(&self, msg: &LockParam) -> Result<secp256k1::Signature> {
+        self.identity_key.sign(msg.as_bytes())
+    }
+
+    pub fn write(&self, tx: EnclaveDBTx) {
+        self.db.write(tx)
+    }
+
+    pub fn get(&self, key: &UserAddress) -> DBValue {
+        self.db.get(key)
+    }
+
     fn get_report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {
         let mut report = sgx_report_t::default();
-        let report_data = &self.identity_key.report_date();
+        let report_data = &self.identity_key.report_date()?;
 
         if let Ok(r) = rsgx_create_report(&target_info, &report_data) {
             report = r;

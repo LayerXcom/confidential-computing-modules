@@ -37,7 +37,7 @@ where
     Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr)))
 }
 
-pub fn handle_send<D, S, W, DB>(
+pub fn handle_state_transition<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::send::post::Request>,
 ) -> Result<HttpResponse, Error>
@@ -50,7 +50,7 @@ where
     let access_right = req.into_access_right()?;
     let from_eth_addr = server.dispatcher.get_account(0)?;
 
-    let receipt = server.dispatcher.send_tx(
+    let receipt = server.dispatcher.state_transition(
         &access_right,
         &req.target,
         Value::new(req.amount),
@@ -64,7 +64,7 @@ where
 }
 
 /// Fetch events from blockchain nodes manually, and then get state from enclave.
-pub fn handle_state<D, S, W, DB>(
+pub fn handle_get_state<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::state::get::Request>,
 ) -> Result<HttpResponse, Error>

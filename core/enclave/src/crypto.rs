@@ -6,10 +6,10 @@ use std::{
     io::Read,
 };
 use ring::aead::{self, Aad, BoundKey, Nonce, UnboundKey, AES_256_GCM};
-use secp256k1::{SecretKey, PublicKey, util::{
+use secp256k1::{self, Message, Signature, RecoveryId, SecretKey, PublicKey, util::{
     SECRET_KEY_SIZE,
-    COMPRESSED_PUBLIC_KEY_SIZE,
 }};
+use anonify_common::{Keccak256, IV_SIZE, CIPHERTEXT_SIZE, Ciphertext};
 use crate::error::Result;
 
 lazy_static! {
@@ -18,10 +18,10 @@ lazy_static! {
 
 /// The size of the symmetric 256 bit key we use for encryption in bytes.
 const SYMMETRIC_KEY_SIZE: usize = 32;
-/// The size of initialization vector for AES-256-GCM.
-const IV_SIZE: usize = 12;
-const NONCE_SIZE: usize = 31;
-const REPORT_DATA_SIZE: usize = COMPRESSED_PUBLIC_KEY_SIZE + NONCE_SIZE;
+const NONCE_SIZE: usize = 32;
+const ADDRESS_SIZE: usize = 20;
+const FILLED_REPORT_DATA_SIZE: usize = ADDRESS_SIZE + NONCE_SIZE;
+const REPORT_DATA_SIZE: usize = 64;
 
 /// symmetric key we use for encryption.
 #[derive(Debug, Clone, Copy, Default)]
@@ -40,7 +40,7 @@ impl SymmetricKey {
     }
 
     /// Encryption with AES-256-GCM.
-    pub fn encrypt_aes_256_gcm(&self, msg: Vec<u8>) -> Result<Vec<u8>> {
+    pub fn encrypt_aes_256_gcm(&self, msg: Vec<u8>) -> Result<Ciphertext> {
         let mut iv = [0u8; IV_SIZE];
         sgx_rand_assign(&mut iv)?;
 
@@ -53,13 +53,13 @@ impl SymmetricKey {
         s_key.seal_in_place_append_tag(Aad::empty(), &mut data)?;
         data.extend_from_slice(&iv);
 
-        Ok(data)
+        Ok(Ciphertext::from_bytes(&data))
     }
 
     /// Decryption with AES-256-GCM.
-    pub fn decrypt_aes_256_gcm(&self, cipheriv: Vec<u8>) -> Result<Vec<u8>> {
+    pub fn decrypt_aes_256_gcm(&self, cipheriv: Ciphertext) -> Result<Vec<u8>> {
         let ub_key = UnboundKey::new(&AES_256_GCM, &self.as_bytes())?;
-        let (ciphertext, iv) = cipheriv.split_at(cipheriv.len() - IV_SIZE);
+        let (ciphertext, iv) = cipheriv.as_bytes().split_at(CIPHERTEXT_SIZE - IV_SIZE);
 
         let nonce = Nonce::try_assume_unique_for_key(iv)?;
         let nonce_seq = OneNonceSequence::new(nonce);
@@ -123,6 +123,12 @@ impl Eik {
         })
     }
 
+    pub fn sign(&self, msg: &[u8]) -> Result<Signature> {
+        let msg = Message::parse_slice(msg)?;
+        let sig = secp256k1::sign(&msg, &self.secret)?;
+        Ok(sig.0)
+    }
+
     pub fn public_key(&self) -> PublicKey {
         PublicKey::from_secret_key(&self.secret)
     }
@@ -132,14 +138,25 @@ impl Eik {
     /// The public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
     /// because this enclave identity key is binding to enclave's code.
     /// The nonce is used for prevenring from replay attacks.
-    pub fn report_date(&self) -> sgx_report_data_t {
+    /// 20bytes: address
+    /// 32bytes: nonce
+    /// 12bytes: zero padding
+    pub fn report_date(&self) -> Result<sgx_report_data_t> {
         let mut report_data = [0u8; REPORT_DATA_SIZE];
-        let ser_pubkey = &self.public_key().serialize_compressed();
-        report_data[..COMPRESSED_PUBLIC_KEY_SIZE].copy_from_slice(&ser_pubkey[..]);
-        report_data[COMPRESSED_PUBLIC_KEY_SIZE..].copy_from_slice(&self.nonce[..]);
+        report_data[..ADDRESS_SIZE].copy_from_slice(&self.address()[..]);
+        report_data[ADDRESS_SIZE..FILLED_REPORT_DATA_SIZE].copy_from_slice(&&self.nonce[..]);
 
-        sgx_report_data_t {
+        Ok(sgx_report_data_t {
             d: report_data
-        }
+        })
+    }
+
+    fn address(&self) -> [u8; ADDRESS_SIZE] {
+        let pubkey = &self.public_key().serialize();
+        let address = &pubkey.keccak256()[12..];
+        assert_eq!(address.len(), ADDRESS_SIZE);
+        let mut res = [0u8; ADDRESS_SIZE];
+        res.copy_from_slice(address);
+        res
     }
 }
