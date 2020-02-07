@@ -1,6 +1,6 @@
 use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx};
-use anonify_common::{State, AccessRight, UserAddress, LockParam, Ciphertext};
+use anonify_common::{State, AccessRight, UserAddress, LockParam, Ciphertext, CIPHERTEXT_SIZE};
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
 use crate::transaction::eventdb::InnerEnclaveLog;
@@ -20,7 +20,7 @@ pub(crate) fn insert_logs(
             enclave_log.contract_addr.as_ptr() as _,
             enclave_log.latest_blc_num,
             enclave_log.ciphertexts.as_c_ptr() as *const u8,
-            enclave_log.ciphertexts.len(),
+            enclave_log.ciphertexts.len() * CIPHERTEXT_SIZE,
         )
     };
 
