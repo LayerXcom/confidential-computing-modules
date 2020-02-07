@@ -161,15 +161,15 @@ impl Web3Contract {
         // iterators have to have its field.
         let ct1 = ciphertexts.next().unwrap().into_vec();
         let ct2 = ciphertexts.next().unwrap().into_vec();
-        let lp1 = lock_params.next().unwrap().into_vec();
-        let lp2 = lock_params.next().unwrap().into_vec();
+        let lp1 = lock_params.next().unwrap();
+        let lp2 = lock_params.next().unwrap();
 
-        assert_eq!(ciphertexts.count(), 2);
-        assert_eq!(lock_params.count(), 2);
+        assert!(ciphertexts.next().is_none());
+        assert!(lock_params.next().is_none());
 
         let call = self.contract.call(
             "stateTransition",
-            (state_id, ct1, ct2, lp1, lp2, enclave_sig.to_vec()),
+            (U256::from(state_id), ct1, ct2,  H256::from_slice(lp1.as_bytes()),  H256::from_slice(lp2.as_bytes()), enclave_sig.to_vec()),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );
