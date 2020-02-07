@@ -143,7 +143,9 @@ impl BoxedStateTransTx {
             ecall_init_state(
                 eid,
                 &mut rt,
-                &access_right.into_raw(),
+                access_right.sig().to_bytes().as_ptr() as _,
+                access_right.pubkey().to_bytes().as_ptr() as _,
+                access_right.challenge().as_ptr() as _,
                 state.as_c_ptr() as *const u8,
                 state.len(),
                 state_id,
@@ -177,7 +179,9 @@ impl BoxedStateTransTx {
             ecall_state_transition(
                 eid,
                 &mut rt,
-                &access_right.into_raw(),
+                access_right.sig().to_bytes().as_ptr() as _,
+                access_right.pubkey().to_bytes().as_ptr() as _,
+                access_right.challenge().as_ptr() as _,
                 target.as_bytes().as_ptr() as _,
                 state.as_c_ptr() as *const u8,
                 state.len(),

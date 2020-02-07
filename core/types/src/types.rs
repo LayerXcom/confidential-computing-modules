@@ -15,13 +15,10 @@ pub const CIPHERTEXT_SIZE: usize = ADDRESS_SIZE + STATE_SIZE + RANDOMNESS_SIZE; 
 pub const PLAINTEXT_SIZE: usize = CIPHERTEXT_SIZE; // 60
 pub const DB_VALUE_SIZE: usize = STATE_SIZE + RANDOMNESS_SIZE;
 
-pub type PubKey = [u8; PUBKEY_SIZE];
 pub type Address = [u8; ADDRESS_SIZE];
-pub type Randomness = [u8; RANDOMNESS_SIZE];
-pub type Ciphertext = [u8; CIPHERTEXT_SIZE];
-pub type Plaintext = [u8; PLAINTEXT_SIZE];
-pub type Sig = [u8; SIG_SIZE];
-pub type Msg = [u8; RANDOMNESS_SIZE];
+pub type RawPubkey = [u8; PUBKEY_SIZE];
+pub type RawSig = [u8; SIG_SIZE];
+pub type RawChallenge = [u8; RANDOMNESS_SIZE];
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -107,33 +104,32 @@ impl fmt::Debug for RawStateTransTx {
     }
 }
 
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct RawAccessRight {
-    pub sig: *const u8,
-    pub pubkey: *const u8,
-    pub challenge: *const u8,
-}
+// #[repr(C)]
+// #[derive(Clone, Copy)]
+// pub struct RawAccessRight {
+//     pub sig_first: [u8; 32],
+//     pub sig_latter: [u8; 32],
+//     pub pubkey: [u8; 32],
+//     pub challenge: [u8; 32],
+// }
 
-impl Default for RawAccessRight {
-    fn default() -> Self {
-        RawAccessRight {
-            sig: ptr::null(),
-            pubkey: ptr::null(),
-            challenge: ptr::null(),
-        }
-    }
-}
+// impl Default for RawAccessRight {
+//     fn default() -> Self {
+//         RawAccessRight {
+//             .. unsafe { mem::zeroed() }
+//         }
+//     }
+// }
 
-impl fmt::Debug for RawAccessRight {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut debug_trait_builder = f.debug_struct("RawAccessRight");
-        debug_trait_builder.field("sig", &(self.sig));
-        debug_trait_builder.field("pubkey", &(self.pubkey));
-        debug_trait_builder.field("challenge", &(self.challenge));
-        debug_trait_builder.finish()
-    }
-}
+// impl fmt::Debug for RawAccessRight {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         let mut debug_trait_builder = f.debug_struct("RawAccessRight");
+//         // debug_trait_builder.field("sig", &(self.sig));
+//         debug_trait_builder.field("pubkey", &(self.pubkey));
+//         debug_trait_builder.field("challenge", &(self.challenge));
+//         debug_trait_builder.finish()
+//     }
+// }
 
 /// Returned from getting state operations.
 #[repr(C)]

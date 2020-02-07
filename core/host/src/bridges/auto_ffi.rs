@@ -20,7 +20,7 @@ extern "C" {
         retval: *mut sgx_status_t,
         sig: *mut [u8; 64usize],
         pubkey: *mut [u8; 32usize],
-        msg: *mut [u8; 32usize],
+        challenge: *mut [u8; 32usize],
         state: *mut EnclaveState,
     ) -> sgx_status_t;
 }
@@ -28,7 +28,9 @@ extern "C" {
     pub fn ecall_state_transition(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
-        access_right: *const RawAccessRight,
+        sig: *mut [u8; 64usize],
+        pubkey: *mut [u8; 32usize],
+        challenge: *mut [u8; 32usize],
         target: *mut [u8; 20usize],
         state: *const u8,
         state_len: usize,
@@ -47,7 +49,9 @@ extern "C" {
     pub fn ecall_init_state(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
-        access_right: *const RawAccessRight,
+        sig: *mut [u8; 64usize],
+        pubkey: *mut [u8; 32usize],
+        challenge: *mut [u8; 32usize],
         state: *const u8,
         state_len: usize,
         state_id: u64,

@@ -39,14 +39,14 @@ pub unsafe extern "C" fn ecall_insert_logs(
 /// Get current state of the user represented the given public key from enclave memory database.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_get_state(
-    sig: &Sig,
-    pubkey: &PubKey,
-    msg: &Msg, // 32 bytes randomness for avoiding replay attacks.
+    sig: &RawSig,
+    pubkey: &RawPubkey,
+    challenge: &RawChallenge, // 32 bytes randomness for avoiding replay attacks.
     state: &mut EnclaveState,
 ) -> sgx_status_t {
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
-    let key = UserAddress::from_sig(&msg[..], &sig, &pubkey).expect("Faild to generate user address.");
+    let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey).expect("Faild to generate user address.");
 
     let db_value = ENCLAVE_CONTEXT.get(&key);
     let user_state_value = StateValue::<Value, Current>::from_dbvalue(db_value)
@@ -72,13 +72,15 @@ pub unsafe extern "C" fn ecall_register(
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_init_state(
-    raw_ar: &RawAccessRight,
+    raw_sig: &RawSig,
+    raw_pubkey: &RawPubkey,
+    raw_challenge: &RawChallenge,
     state: *const u8,
     state_len: usize,
     state_id: u64,
     raw_state_tx: &mut RawStateTransTx,
 ) -> sgx_status_t {
-    let ar = AccessRight::from_raw(*raw_ar).expect("Failed to generate access right.");
+    let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge).expect("Failed to generate access right.");
     let user_address = UserAddress::from_access_right(&ar)
         .expect("Failed to generate user address from access right.");
     let params = slice::from_raw_parts(state, state_len);
@@ -94,7 +96,9 @@ pub unsafe extern "C" fn ecall_init_state(
 /// Execute state transition in enclave. It depends on state transition functions and provided inputs.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_state_transition(
-    raw_ar: &RawAccessRight,
+    raw_pubkey: &RawPubkey,
+    raw_sig: &RawSig,
+    raw_challenge: &RawChallenge,
     target: &Address,
     state: *const u8,
     state_len: usize,
@@ -104,7 +108,7 @@ pub unsafe extern "C" fn ecall_state_transition(
     let target_addr = UserAddress::from_array(*target);
     let params = slice::from_raw_parts(state, state_len);
 
-    let ar = AccessRight::from_raw(*raw_ar).expect("Failed to generate access right.");
+    let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge).expect("Failed to generate access right.");
     let state_trans_tx = StateTransTx::construct::<Value, _>(
         state_id, params, &ar, target_addr, &ENCLAVE_CONTEXT
     )

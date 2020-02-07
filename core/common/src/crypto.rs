@@ -9,7 +9,7 @@ use crate::{
 };
 use ed25519_dalek::{PublicKey, Signature, Keypair, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
 use tiny_keccak::Keccak;
-use anonify_types::RawAccessRight;
+use anonify_types::{RawPubkey, RawSig, RawChallenge};
 #[cfg(feature = "std")]
 use rand::Rng;
 #[cfg(feature = "std")]
@@ -208,26 +208,19 @@ impl AccessRight {
         &self.challenge
     }
 
-    pub fn into_raw(self) -> RawAccessRight {
-        RawAccessRight {
-            sig: self.sig.to_bytes().as_ptr(),
-            pubkey: self.pubkey().to_bytes().as_ptr(),
-            challenge: self.challenge.as_ptr(),
-        }
+    pub fn into_raw(self) -> (RawPubkey, RawSig, RawChallenge) {
+        (self.pubkey().to_bytes(), self.sig().to_bytes(), self.challenge)
     }
 
-    pub fn from_raw(raw_ar: RawAccessRight) -> Result<Self, SignatureError> {
-        let sig = Signature::from_bytes(unsafe {
-            slice::from_raw_parts(raw_ar.sig, SIGNATURE_LENGTH)
-        })?;
-        let pubkey = PublicKey::from_bytes(unsafe {
-            slice::from_raw_parts(raw_ar.pubkey, PUBLIC_KEY_LENGTH)
-        })?;
-        let mut challenge = [0u8; CHALLENGE_SIZE];
-        let buf = unsafe { slice::from_raw_parts(raw_ar.challenge, CHALLENGE_SIZE) };
-        challenge.copy_from_slice(&buf);
+    pub fn from_raw(
+        raw_pubkey: RawPubkey,
+        raw_sig: RawSig,
+        raw_challenge: RawChallenge,
+    ) -> Result<Self, SignatureError> {
+        let sig = Signature::from_bytes(&raw_sig)?;
+        let pubkey = PublicKey::from_bytes(&raw_pubkey)?;
 
-        Ok(AccessRight::new(sig, pubkey, challenge))
+        Ok(AccessRight::new(sig, pubkey, raw_challenge))
     }
 }
 
