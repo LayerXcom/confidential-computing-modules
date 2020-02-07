@@ -139,7 +139,7 @@ impl Web3Contract {
     ) -> Result<H256> {
         let call = self.contract.call(
             "initState",
-            (state_id, init_state.to_vec(), lock_param.to_vec(), enclave_sig.to_vec()),
+            (U256::from(state_id), init_state.to_vec(), H256::from_slice(lock_param), enclave_sig.to_vec()),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );
