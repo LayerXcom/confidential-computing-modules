@@ -96,8 +96,8 @@ pub unsafe extern "C" fn ecall_init_state(
 /// Execute state transition in enclave. It depends on state transition functions and provided inputs.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_state_transition(
-    raw_pubkey: &RawPubkey,
     raw_sig: &RawSig,
+    raw_pubkey: &RawPubkey,
     raw_challenge: &RawChallenge,
     target: &Address,
     state: *const u8,
