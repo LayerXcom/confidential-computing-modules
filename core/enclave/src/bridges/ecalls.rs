@@ -1,17 +1,14 @@
-use std::vec::Vec;
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
 use anonify_common::{UserAddress, State, stf::Value, kvs::MemoryDB, Ciphertext, CIPHERTEXT_SIZE, AccessRight};
 use ed25519_dalek::{PublicKey, Signature};
-use crate::kvs::EnclaveDB;
 use crate::state::{UserState, StateValue, Current};
 use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{
-    AttestationService, TEST_SPID, TEST_SUB_KEY,
-    DEV_HOSTNAME, REPORT_PATH,
+    TEST_SUB_KEY, DEV_HOSTNAME, REPORT_PATH,
 };
-use crate::context::{EnclaveContext, ENCLAVE_CONTEXT};
+use crate::context::ENCLAVE_CONTEXT;
 use crate::transaction::{RegisterTx, InitStateTx, EnclaveTx, StateTransTx};
 use super::ocalls::save_to_host_memory;
 

@@ -5,7 +5,6 @@ use anonify_common::{
     kvs::*,
     stf::{Runtime, CallKind},
 };
-use ed25519_dalek::{PublicKey, Signature};
 use crate::{
     crypto::*,
     kvs::{EnclaveDB, EnclaveDBTx},
@@ -14,7 +13,7 @@ use crate::{
 };
 use std::{
     prelude::v1::*,
-    io::{self, Write, Read},
+    io::{Write, Read},
     marker::PhantomData,
     convert::{TryFrom, TryInto},
 };

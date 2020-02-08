@@ -1,14 +1,11 @@
 use std::{
     prelude::v1::*,
-    sync::SgxRwLock as RwLock,
-    collections::BTreeMap,
 };
 use ed25519_dalek::{PublicKey, Signature};
 use anonify_common::{
     UserAddress,
     kvs::*,
 };
-use anonify_types::*;
 use crate::error::Result;
 
 /// Trait of key-value store instrctions restricted by signature verifications.

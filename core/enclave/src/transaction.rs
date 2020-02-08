@@ -1,16 +1,17 @@
 use std::vec::Vec;
 use anonify_types::{RawRegisterTx, RawStateTransTx, traits::RawEnclaveTx};
-use anonify_common::{State, UserAddress, Ciphertext, LockParam, stf::Value, AccessRight, IntoVec};
+use anonify_common::{State, UserAddress, Ciphertext, LockParam, AccessRight, IntoVec};
 use crate::{
     attestation::{Report, ReportSig, AttestationService},
     error::Result,
-    context::{EnclaveContext, ENCLAVE_CONTEXT},
+    context::EnclaveContext,
     bridges::ocalls::save_to_host_memory,
     state::{UserState, StateService},
     crypto::SYMMETRIC_KEY,
     kvs::EnclaveDB,
 };
 
+/// A trait for exporting transacitons to out-enclave.
 pub trait EnclaveTx: Sized {
     type R: RawEnclaveTx;
 
