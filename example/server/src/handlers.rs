@@ -47,7 +47,16 @@ where
     W: Watcher<WatcherDB=DB>,
     DB: BlockNumDB,
 {
-    unimplemented!();
+    let access_right = req.into_access_right()?;
+    let from_eth_addr = server.dispatcher.get_account(0)?;
+    let receipt = server.dispatcher.register(
+        from_eth_addr,
+        DEFAULT_SEND_GAS,
+        &req.contract_addr,
+        &server.abi_path,
+    )?;
+
+    Ok(HttpResponse::Ok().json(api::register::post::Response(receipt)))
 }
 
 pub fn handle_init_state<D, S, W, DB>(
@@ -61,8 +70,16 @@ where
     DB: BlockNumDB,
 {
     let access_right = req.into_access_right()?;
+    let from_eth_addr = server.dispatcher.get_account(0)?;
+    let receipt = server.dispatcher.init_state(
+        access_right,
+        Value::new(req.total_supply),
+        req.state_id,
+        from_eth_addr,
+        DEFAULT_SEND_GAS,
+    )?;
 
-    unimplemented!();
+    Ok(HttpResponse::Ok().json(api::init_state::post::Response(receipt)))
 }
 
 pub fn handle_state_transition<D, S, W, DB>(

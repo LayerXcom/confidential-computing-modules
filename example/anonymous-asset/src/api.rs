@@ -79,7 +79,7 @@ pub mod register {
         use serde::{Deserialize, Serialize};
         use serde_big_array::big_array;
         use rand::Rng;
-        use anonify_common::{UserAddress, AccessRight};
+        use anonify_common::AccessRight;
         use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
 
         big_array! { BigArray; }
@@ -140,7 +140,7 @@ pub mod init_state {
         use serde::{Deserialize, Serialize};
         use serde_big_array::big_array;
         use rand::Rng;
-        use anonify_common::{UserAddress, AccessRight};
+        use anonify_common::AccessRight;
         use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
 
         big_array! { BigArray; }
