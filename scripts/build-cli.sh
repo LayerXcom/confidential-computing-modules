@@ -16,4 +16,4 @@ if [ -n "$1" ]; then
 fi
 
 echo "Build artifacts in debug mode."
-cargo build
+RUST_BACKTRACE=1 cargo build

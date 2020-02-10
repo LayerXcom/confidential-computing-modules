@@ -10,7 +10,7 @@ build = "build.rs"
 [dependencies]
 
 [build-dependencies]
-cbindgen = "0.9"
+cbindgen = "0.13"
 
 [features]
 default = []
