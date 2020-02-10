@@ -1,5 +1,5 @@
 use crate::localstd::{
-    collections::BTreeMap,
+    collections::HashMap,
     vec::Vec,
 };
 #[cfg(feature = "std")]
@@ -20,12 +20,13 @@ pub trait KVS: Sync + Send {
     fn inner_write(&self, tx: DBTx);
 }
 
+/// A key-value database fulfilling the `KVS` trait, living in memory.
 #[derive(Debug)]
-pub struct MemoryDB(RwLock<BTreeMap<Vec<u8>, DBValue>>);
+pub struct MemoryDB(RwLock<HashMap<Vec<u8>, DBValue>>);
 
 impl MemoryDB {
     pub fn new() -> Self {
-        MemoryDB(RwLock::new(BTreeMap::new()))
+        MemoryDB(RwLock::new(HashMap::new()))
     }
 }
 
