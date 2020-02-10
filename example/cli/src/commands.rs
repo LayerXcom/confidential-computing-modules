@@ -20,11 +20,10 @@ pub(crate) fn deploy<R: Rng>(
     rng: &mut R
 ) -> Result<()> {
     let password = prompt_password(term)?;
-    let client = Client::new();
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
     let req = api::deploy::post::Request::new(&keypair, rng);
-    let res = client
+    let res = Client::new()
         .post(&format!("{}/api/v1/deploy", &anonify_url))
         .json(&req)
         .send()?
@@ -43,7 +42,6 @@ pub(crate) fn register<R: Rng>(
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
-    let client = Client::new();
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
     let req = api::register::post::Request::new(&keypair, contract_addr, rng);
@@ -69,7 +67,6 @@ pub(crate) fn init_state<R: Rng>(
     rng: &mut R
 ) -> Result<()> {
     let password = prompt_password(term)?;
-    let client = Client::new();
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
     let req = api::init_state::post::Request::new(&keypair, total_supply, state_id, contract_addr, rng);
