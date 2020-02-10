@@ -61,9 +61,11 @@ fn main() -> io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(server.clone())
-            .route("/deploy", web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
-            .route("/send", web::post().to(handle_state_transition::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
-            .route("/state", web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/deploy", web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/register", web::post().to(handle_register::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/init_state", web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/state_transition", web::post().to(handle_state_transition::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/get_state", web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
     })
     .bind(dotenv!("ANONIFY_URL"))?
     .run()

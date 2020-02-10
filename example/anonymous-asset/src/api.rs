@@ -31,7 +31,7 @@ pub mod deploy {
             #[serde(with = "BigArray")]
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
-            pub nonce: [u8; 32],
+            pub challenge: [u8; 32],
             pub total_supply: u64,
         }
 
@@ -41,14 +41,14 @@ pub mod deploy {
                 total_supply: u64,
                 rng: &mut R
             ) -> Self {
-                let nonce: [u8; 32] = rng.gen();
-                let sig = keypair.sign(&nonce[..]);
-                assert!(keypair.verify(&nonce, &sig).is_ok());
+                let challenge: [u8; 32] = rng.gen();
+                let sig = keypair.sign(&challenge[..]);
+                assert!(keypair.verify(&challenge, &sig).is_ok());
 
                 Request {
                     sig: sig.to_bytes(),
                     pubkey: keypair.public.to_bytes(),
-                    nonce,
+                    challenge,
                     total_supply,
                 }
             }
@@ -57,7 +57,7 @@ pub mod deploy {
                 let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
-                Ok(AccessRight::new(sig, pubkey, self.nonce))
+                Ok(AccessRight::new(sig, pubkey, self.challenge))
             }
         }
 
@@ -65,8 +65,8 @@ pub mod deploy {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, nonce: {:?}, total_supply: {:?} }}",
-                    &self.sig[..], self.pubkey, self.nonce, self.total_supply
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, total_supply: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.total_supply
                 )
             }
         }
@@ -92,9 +92,10 @@ pub mod send {
             #[serde(with = "BigArray")]
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
-            pub nonce: [u8; 32],
+            pub challenge: [u8; 32],
             pub target: UserAddress,
             pub amount: u64,
+            pub state_id: u64,
             pub contract_addr: String,
         }
 
@@ -102,20 +103,22 @@ pub mod send {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
                 amount: u64,
+                state_id: u64,
                 target: UserAddress,
                 contract_addr: String,
                 rng: &mut R,
             ) -> Self {
-                let nonce: [u8; 32] = rng.gen();
-                let sig = keypair.sign(&nonce[..]);
-                assert!(keypair.verify(&nonce, &sig).is_ok());
+                let challenge: [u8; 32] = rng.gen();
+                let sig = keypair.sign(&challenge[..]);
+                assert!(keypair.verify(&challenge, &sig).is_ok());
 
                 Request {
                     sig: sig.to_bytes(),
                     pubkey: keypair.public.to_bytes(),
-                    nonce,
+                    challenge,
                     target,
                     amount,
+                    state_id,
                     contract_addr,
                 }
             }
@@ -124,7 +127,7 @@ pub mod send {
                 let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
-                Ok(AccessRight::new(sig, pubkey, self.nonce))
+                Ok(AccessRight::new(sig, pubkey, self.challenge))
             }
         }
 
@@ -132,8 +135,8 @@ pub mod send {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, nonce: {:?}, target: {:?}, amount: {:?}, contract address: {:?} }}",
-                    &self.sig[..], self.pubkey, self.nonce, self.target, self.amount, self.contract_addr
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, target: {:?}, amount: {:?}, contract address: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.target, self.amount, self.contract_addr
                 )
             }
         }
@@ -159,7 +162,8 @@ pub mod state {
             #[serde(with = "BigArray")]
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
-            pub nonce: [u8; 32],
+            pub challenge: [u8; 32],
+            pub state_id: u64,
             pub contract_addr: String,
         }
 
@@ -167,16 +171,18 @@ pub mod state {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
                 contract_addr: String,
+                state_id: u64,
                 rng: &mut R
             ) -> Self {
-                let nonce: [u8; 32] = rng.gen();
-                let sig = keypair.sign(&nonce[..]);
-                assert!(keypair.verify(&nonce, &sig).is_ok());
+                let challenge: [u8; 32] = rng.gen();
+                let sig = keypair.sign(&challenge[..]);
+                assert!(keypair.verify(&challenge, &sig).is_ok());
 
                 Request {
                     sig: sig.to_bytes(),
                     pubkey: keypair.public.to_bytes(),
-                    nonce,
+                    challenge,
+                    state_id,
                     contract_addr,
                 }
             }
@@ -185,7 +191,7 @@ pub mod state {
                 let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
-                Ok(AccessRight::new(sig, pubkey, self.nonce))
+                Ok(AccessRight::new(sig, pubkey, self.challenge))
             }
         }
 
@@ -193,8 +199,8 @@ pub mod state {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, nonce: {:?}, contract address: {:?} }}",
-                    &self.sig[..], self.pubkey, self.nonce, self.contract_addr
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, contract address: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.contract_addr
                 )
             }
         }

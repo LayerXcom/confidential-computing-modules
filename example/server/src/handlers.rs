@@ -30,11 +30,39 @@ where
     let access_right = req.into_access_right()?;
     let deployer_addr = server.dispatcher.get_account(0)?;
     let contract_addr = server.dispatcher
-        .deploy(&deployer_addr, &access_right, Value::new(req.total_supply))?;
+        .deploy(&deployer_addr, &access_right)?;
 
     debug!("Contract address: {:?}", &contract_addr);
 
     Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr)))
+}
+
+pub fn handle_register<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::deploy::post::Request>,
+) -> Result<HttpResponse, Error>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher<WatcherDB=DB>,
+    DB: BlockNumDB,
+{
+    unimplemented!();
+}
+
+pub fn handle_init_state<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::deploy::post::Request>,
+) -> Result<HttpResponse, Error>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher<WatcherDB=DB>,
+    DB: BlockNumDB,
+{
+    let access_right = req.into_access_right()?;
+
+    unimplemented!();
 }
 
 pub fn handle_state_transition<D, S, W, DB>(
@@ -51,9 +79,10 @@ where
     let from_eth_addr = server.dispatcher.get_account(0)?;
 
     let receipt = server.dispatcher.state_transition(
-        &access_right,
+        access_right,
         &req.target,
         Value::new(req.amount),
+        req.state_id,
         from_eth_addr,
         DEFAULT_SEND_GAS,
         &req.contract_addr,
