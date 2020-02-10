@@ -56,14 +56,25 @@ fn test_integration_eth_transfer() {
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
 
+    
     // 2. init state
-    let receipt = dispatcher.init_state(my_access_right.clone(), total_supply, state_id, deployer_addr.clone(), gas).unwrap();
+    let receipt = dispatcher.init_state(
+        my_access_right.clone(),
+        total_supply,
+        state_id,
+        deployer_addr.clone(),
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
     println!("init state receipt: {}", receipt);
 
-    // 2. Get logs from contract and update state inside enclave.
+
+    // 3. Get logs from contract and update state inside enclave.
     dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
-    // 3. Get state from enclave
+
+    // 4. Get state from enclave
     let my_state = get_state_by_access_right::<MockState>(&my_access_right, eid).unwrap();
     let other_state = get_state_by_access_right::<MockState>(&other_access_right, eid).unwrap();
     let third_state = get_state_by_access_right::<MockState>(&third_access_right, eid).unwrap();
@@ -72,7 +83,7 @@ fn test_integration_eth_transfer() {
     assert_eq!(third_state.into_raw(), 0);
 
 
-    // 4. Send a transaction to contract
+    // 5. Send a transaction to contract
     let amount = MockState::new(30);;
     let other_user_address = other_access_right.user_address();
     let receipt = dispatcher.state_transition(
@@ -88,11 +99,11 @@ fn test_integration_eth_transfer() {
     println!("receipt: {}", receipt);
 
 
-    // 5. Update state inside enclave
+    // 6. Update state inside enclave
     dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
-    // 6. Check the updated states
+    // 7. Check the updated states
     let my_updated_state = get_state_by_access_right::<MockState>(&my_access_right, eid).unwrap();
     let other_updated_state = get_state_by_access_right::<MockState>(&other_access_right, eid).unwrap();
     let third_updated_state = get_state_by_access_right::<MockState>(&third_access_right, eid).unwrap();
