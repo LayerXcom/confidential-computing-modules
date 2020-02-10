@@ -118,15 +118,21 @@ $ ./target/debug/anonify-cli wallet list
 
 - Deploy a anonymous-asset contract
 ```
-$ ./target/debug/anonify-cli anonify deploy -t <TOTAL SUPPLY>
+$ ./target/debug/anonify-cli anonify deploy
+```
+return: a contract address
+
+- Initialize state
+```
+$ ./target/debug/anonify-cli anonify init_state -t <TOTAL SUPPLY> -c <CONTRACT ADDRESS>
+```
+
+- State transition
+```
+$ ./target/debug/anonify-cli anonify state_transition -a <AMOUNT> -t <TARGET_ACCOUNT> -c <CONTRACT ADDRESS>
 ```
 
 - Get state from enclave
 ```
-$ ./target/debug/anonify-cli anonify state -c <CONTRACT ADDRESS w/o "0x">
-```
-
-- Transfer assets
-```
-$ ./target/debug/anonify-cli anonify send -a <AMOUNT> -t <TARGET_ACCOUNT> -c <CONTRACT ADDRESS w/o "0x">
+$ ./target/debug/anonify-cli anonify get_state -c <CONTRACT ADDRESS>
 ```

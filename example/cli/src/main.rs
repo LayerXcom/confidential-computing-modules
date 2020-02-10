@@ -166,7 +166,7 @@ fn subcommand_anonify<R: Rng>(
             )
             .expect("Faild to state_transition command");
         },
-        ("state", Some(matches)) => {
+        ("get_state", Some(matches)) => {
             let keyfile_index: usize = matches.value_of("keyfile-index")
                 .expect("Not found keyfile-index.")
                 .parse()
@@ -284,7 +284,7 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .default_value(DEFAULT_CONTRACT_ADDRESS)
             )
         )
-        .subcommand(SubCommand::with_name("state")
+        .subcommand(SubCommand::with_name("get_state")
             .about("Get state from anonify services.")
             .arg(Arg::with_name("keyfile-index")
                 .short("i")
@@ -297,6 +297,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .takes_value(true)
                 .required(true)
                 .default_value(DEFAULT_CONTRACT_ADDRESS)
+            )
+            .arg(Arg::with_name("state_id")
+                .short("s")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_STATE_ID)
             )
         )
 }
