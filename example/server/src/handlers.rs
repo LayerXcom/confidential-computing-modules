@@ -77,6 +77,8 @@ where
         req.state_id,
         from_eth_addr,
         DEFAULT_SEND_GAS,
+        &req.contract_addr,
+        &server.abi_path,
     )?;
 
     Ok(HttpResponse::Ok().json(api::init_state::post::Response(receipt)))
