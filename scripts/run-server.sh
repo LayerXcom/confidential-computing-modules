@@ -21,7 +21,10 @@ if [ "x$1" == "x--release" ]; then
 fi
 
 make DEBUG=1
-rm -rf ../example/bin && cp -rf bin/ ../example/bin/ && cd ../example/server
+rm -rf ../example/bin && cp -rf bin/ ../example/bin/ && cd ../
+
+solc -o build --bin --abi --optimize --overwrite contracts/AnonymousAsset.sol
+cd example/server
 
 echo "Build artifacts in debug mode."
 RUST_BACKTRACE=1 RUST_LOG=debug cargo run
