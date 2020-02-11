@@ -6,7 +6,7 @@ use crate::localstd::{
 use crate::{
     serde::{Serialize, Deserialize}
 };
-use ed25519_dalek::{PublicKey, Signature, Keypair, SignatureError};
+use ed25519_dalek::{Keypair, PublicKey, Signature, SignatureError};
 use tiny_keccak::Keccak;
 use anonify_types::{RawPubkey, RawSig, RawChallenge};
 #[cfg(feature = "std")]

@@ -30,16 +30,63 @@ where
     let access_right = req.into_access_right()?;
     let deployer_addr = server.dispatcher.get_account(0)?;
     let contract_addr = server.dispatcher
-        .deploy(&deployer_addr, &access_right, Value::new(req.total_supply))?;
+        .deploy(&deployer_addr, &access_right)?;
 
     debug!("Contract address: {:?}", &contract_addr);
 
     Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr)))
 }
 
+pub fn handle_register<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::register::post::Request>,
+) -> Result<HttpResponse, Error>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher<WatcherDB=DB>,
+    DB: BlockNumDB,
+{
+    let access_right = req.into_access_right()?;
+    let from_eth_addr = server.dispatcher.get_account(0)?;
+    let receipt = server.dispatcher.register(
+        from_eth_addr,
+        DEFAULT_SEND_GAS,
+        &req.contract_addr,
+        &server.abi_path,
+    )?;
+
+    Ok(HttpResponse::Ok().json(api::register::post::Response(receipt)))
+}
+
+pub fn handle_init_state<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::init_state::post::Request>,
+) -> Result<HttpResponse, Error>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher<WatcherDB=DB>,
+    DB: BlockNumDB,
+{
+    let access_right = req.into_access_right()?;
+    let from_eth_addr = server.dispatcher.get_account(0)?;
+    let receipt = server.dispatcher.init_state(
+        access_right,
+        Value::new(req.total_supply),
+        req.state_id,
+        from_eth_addr,
+        DEFAULT_SEND_GAS,
+        &req.contract_addr,
+        &server.abi_path,
+    )?;
+
+    Ok(HttpResponse::Ok().json(api::init_state::post::Response(receipt)))
+}
+
 pub fn handle_state_transition<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<api::send::post::Request>,
+    req: web::Json<api::state_transition::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
@@ -51,16 +98,17 @@ where
     let from_eth_addr = server.dispatcher.get_account(0)?;
 
     let receipt = server.dispatcher.state_transition(
-        &access_right,
+        access_right,
         &req.target,
         Value::new(req.amount),
+        req.state_id,
         from_eth_addr,
         DEFAULT_SEND_GAS,
         &req.contract_addr,
         &server.abi_path,
     )?;
 
-    Ok(HttpResponse::Ok().json(api::send::post::Response(receipt)))
+    Ok(HttpResponse::Ok().json(api::state_transition::post::Response(receipt)))
 }
 
 /// Fetch events from blockchain nodes manually, and then get state from enclave.

@@ -17,18 +17,14 @@ pub(crate) fn deploy<R: Rng>(
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
-    total_supply: u64,
     rng: &mut R
 ) -> Result<()> {
     let password = prompt_password(term)?;
-
-    let client = Client::new();
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::deploy::post::Request::new(&keypair, total_supply, rng);
-
-    let res = client
-        .post(&format!("{}/deploy", &anonify_url))
+    let req = api::deploy::post::Request::new(&keypair, rng);
+    let res = Client::new()
+        .post(&format!("{}/api/v1/deploy", &anonify_url))
         .json(&req)
         .send()?
         .text()?;
@@ -37,22 +33,71 @@ pub(crate) fn deploy<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn send<R: Rng>(
+pub(crate) fn register<R: Rng>(
     term: &mut Term,
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
-    target: UserAddress,
-    amount: u64,
+    contract_addr: String,
+    rng: &mut R,
+) -> Result<()> {
+    let password = prompt_password(term)?;
+    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+
+    let req = api::register::post::Request::new(&keypair, contract_addr, rng);
+    let res = Client::new()
+        .post(&format!("{}/api/v1/register", &anonify_url))
+        .json(&req)
+        .send()?
+        .text()?;
+
+    println!("Transaction Receipt: {}", res);
+
+    Ok(())
+}
+
+pub(crate) fn init_state<R: Rng>(
+    term: &mut Term,
+    root_dir: PathBuf,
+    anonify_url: String,
+    index: usize,
+    total_supply: u64,
+    state_id: u64,
     contract_addr: String,
     rng: &mut R
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::send::post::Request::new(&keypair, amount, target, contract_addr, rng);
+    let req = api::init_state::post::Request::new(&keypair, total_supply, state_id, contract_addr, rng);
     let res = Client::new()
-        .post(&format!("{}/send", &anonify_url))
+        .post(&format!("{}/api/v1/init_state", &anonify_url))
+        .json(&req)
+        .send()?
+        .text()?;
+
+    println!("Transaction Receipt: {}", res);
+
+    Ok(())
+}
+
+pub(crate) fn state_transition<R: Rng>(
+    term: &mut Term,
+    root_dir: PathBuf,
+    anonify_url: String,
+    index: usize,
+    target: UserAddress,
+    amount: u64,
+    state_id: u64,
+    contract_addr: String,
+    rng: &mut R
+) -> Result<()> {
+    let password = prompt_password(term)?;
+    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+
+    let req = api::state_transition::post::Request::new(&keypair, amount, state_id, target, contract_addr, rng);
+    let res = Client::new()
+        .post(&format!("{}/api/v1/state_transition", &anonify_url))
         .json(&req)
         .send()?
         .text()?;
@@ -66,15 +111,16 @@ pub(crate) fn get_state<R: Rng>(
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
+    state_id: u64,
     contract_addr: String,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::state::get::Request::new(&keypair, contract_addr, rng);
+    let req = api::state::get::Request::new(&keypair, contract_addr, state_id, rng);
     let res = Client::new()
-        .get(&format!("{}/state", &anonify_url))
+        .get(&format!("{}/api/v1/get_state", &anonify_url))
         .json(&req)
         .send()?
         .text()?;

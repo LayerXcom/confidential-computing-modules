@@ -55,12 +55,12 @@ name = "https-enclave"
 version = "0.1.0"
 dependencies = [
  "http 0.2.0 (git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.0)",
- "mio 0.6.21 (git+https://github.com/mesalock-linux/mio-sgx?rev=sgx_1.1.0)",
- "rustls 0.16.0 (git+https://github.com/mesalock-linux/rustls?rev=sgx_1.1.0)",
- "sgx_tstd 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_types 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "webpki 0.21.0 (git+https://github.com/mesalock-linux/webpki?rev=sgx_1.1.0)",
- "webpki-roots 0.17.0 (git+https://github.com/mesalock-linux/webpki-roots?rev=sgx_1.1.0)",
+ "mio 0.6.21 (git+https://github.com/mesalock-linux/mio-sgx?branch=v0.6_sgx_1.1.0)",
+ "rustls 0.16.0 (git+https://github.com/mesalock-linux/rustls?branch=mesalock_sgx)",
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+ "sgx_types 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "webpki 0.21.2 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)",
+ "webpki-roots 0.19.0 (git+https://github.com/mesalock-linux/webpki-roots?rev=sgx_1.1.0)",
 ]
 
 [[package]]
@@ -91,7 +91,7 @@ dependencies = [
 [[package]]
 name = "mio"
 version = "0.6.21"
-source = "git+https://github.com/mesalock-linux/mio-sgx?rev=sgx_1.1.0#08c71e56d95cf9692a765094494e68c06b641253"
+source = "git+https://github.com/mesalock-linux/mio-sgx?branch=v0.6_sgx_1.1.0#08c71e56d95cf9692a765094494e68c06b641253"
 dependencies = [
  "iovec 0.2.0 (git+https://github.com/mesalock-linux/iovec-sgx)",
  "log 0.4.10 (git+https://github.com/mesalock-linux/log-sgx)",
@@ -114,8 +114,8 @@ dependencies = [
 
 [[package]]
 name = "ring"
-version = "0.16.9"
-source = "git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5#c3636d410222bbe73794bd968c101574587d5c8f"
+version = "0.16.11"
+source = "git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5#3b826c97624b54f0a24bbcd277ea49dadf73a64c"
 dependencies = [
  "cc 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
@@ -126,14 +126,14 @@ dependencies = [
 [[package]]
 name = "rustls"
 version = "0.16.0"
-source = "git+https://github.com/mesalock-linux/rustls?rev=sgx_1.1.0#d9a91f5037f5c85f761279d97b838256285a1314"
+source = "git+https://github.com/mesalock-linux/rustls?branch=mesalock_sgx#d9a91f5037f5c85f761279d97b838256285a1314"
 dependencies = [
  "base64 0.10.1 (git+https://github.com/mesalock-linux/rust-base64-sgx)",
  "log 0.4.10 (git+https://github.com/mesalock-linux/log-sgx)",
- "ring 0.16.9 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)",
+ "ring 0.16.11 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)",
  "sct 0.6.0 (git+https://github.com/mesalock-linux/sct.rs?branch=mesalock_sgx)",
  "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
- "webpki 0.21.0 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)",
+ "webpki 0.21.2 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)",
 ]
 
 [[package]]
@@ -141,7 +141,7 @@ name = "sct"
 version = "0.6.0"
 source = "git+https://github.com/mesalock-linux/sct.rs?branch=mesalock_sgx#606162b2e7319e57ac39958eec74db117e373c1c"
 dependencies = [
- "ring 0.16.9 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)",
+ "ring 0.16.11 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)",
  "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
  "untrusted 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -150,11 +150,6 @@ dependencies = [
 name = "sgx_alloc"
 version = "1.1.0"
 source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
-
-[[package]]
-name = "sgx_alloc"
-version = "1.1.0"
-source = "git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
 
 [[package]]
 name = "sgx_backtrace_sys"
@@ -167,34 +162,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "sgx_backtrace_sys"
-version = "1.1.0"
-source = "git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
-dependencies = [
- "cc 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_build_helper 0.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_libc 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
-]
-
-[[package]]
 name = "sgx_build_helper"
 version = "0.1.0"
 source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
 
 [[package]]
-name = "sgx_build_helper"
-version = "0.1.0"
-source = "git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
-
-[[package]]
 name = "sgx_demangle"
 version = "1.1.0"
 source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
-
-[[package]]
-name = "sgx_demangle"
-version = "1.1.0"
-source = "git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
 
 [[package]]
 name = "sgx_libc"
@@ -205,27 +180,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "sgx_libc"
-version = "1.1.0"
-source = "git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
-dependencies = [
- "sgx_types 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
-]
-
-[[package]]
 name = "sgx_tcrypto"
 version = "1.1.0"
 source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
 dependencies = [
  "sgx_types 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
-]
-
-[[package]]
-name = "sgx_tcrypto"
-version = "1.1.0"
-source = "git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
-dependencies = [
- "sgx_types 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
 ]
 
 [[package]]
@@ -235,15 +194,6 @@ source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0#93c76de8
 dependencies = [
  "sgx_trts 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
  "sgx_types 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
-]
-
-[[package]]
-name = "sgx_tprotected_fs"
-version = "1.1.0"
-source = "git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
-dependencies = [
- "sgx_trts 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_types 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
 ]
 
 [[package]]
@@ -256,28 +206,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "sgx_trts"
-version = "1.1.0"
-source = "git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
-dependencies = [
- "sgx_libc 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_types 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
-]
-
-[[package]]
 name = "sgx_tse"
 version = "1.1.0"
 source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
 dependencies = [
  "sgx_types 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
-]
-
-[[package]]
-name = "sgx_tse"
-version = "1.1.0"
-source = "git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
-dependencies = [
- "sgx_types 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
 ]
 
 [[package]]
@@ -289,17 +222,6 @@ dependencies = [
  "sgx_trts 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
  "sgx_tse 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
  "sgx_types 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
-]
-
-[[package]]
-name = "sgx_tseal"
-version = "1.1.0"
-source = "git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
-dependencies = [
- "sgx_tcrypto 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_trts 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_tse 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_types 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
 ]
 
 [[package]]
@@ -319,22 +241,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sgx_tstd"
-version = "1.1.0"
-source = "git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
-dependencies = [
- "sgx_alloc 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_backtrace_sys 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_demangle 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_libc 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_tprotected_fs 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_trts 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_tseal 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_types 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
- "sgx_unwind 0.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
-]
-
-[[package]]
 name = "sgx_types"
 version = "1.1.0"
 source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
@@ -342,7 +248,7 @@ source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0#93c76de8
 [[package]]
 name = "sgx_types"
 version = "1.1.0"
-source = "git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "sgx_unwind"
@@ -350,14 +256,6 @@ version = "0.1.0"
 source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
 dependencies = [
  "sgx_build_helper 0.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
-]
-
-[[package]]
-name = "sgx_unwind"
-version = "0.1.0"
-source = "git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0#93c76de88befbfc1f483ce8336c7ee1f0c7f7563"
-dependencies = [
- "sgx_build_helper 0.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)",
 ]
 
 [[package]]
@@ -380,31 +278,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "webpki"
-version = "0.21.0"
-source = "git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx#f38107555af955e1717ae232e1488ae14db5b4a4"
+version = "0.21.2"
+source = "git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx#3140b375263232fdb7d64d6a368204e8d1289c28"
 dependencies = [
- "ring 0.16.9 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
- "untrusted 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "webpki"
-version = "0.21.0"
-source = "git+https://github.com/mesalock-linux/webpki?rev=sgx_1.1.0#f38107555af955e1717ae232e1488ae14db5b4a4"
-dependencies = [
- "ring 0.16.9 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)",
+ "ring 0.16.11 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)",
  "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
  "untrusted 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "webpki-roots"
-version = "0.17.0"
-source = "git+https://github.com/mesalock-linux/webpki-roots?rev=sgx_1.1.0#a8598deb6acf78a03ef73879d4e9eb4d375f94cf"
+version = "0.19.0"
+source = "git+https://github.com/mesalock-linux/webpki-roots?rev=sgx_1.1.0#3cdd237236e702e3bc93c960ca48cdfb42bec899"
 dependencies = [
  "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
- "webpki 0.21.0 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)",
+ "webpki 0.21.2 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)",
 ]
 
 [metadata]
@@ -418,40 +306,27 @@ dependencies = [
 "checksum iovec 0.2.0 (git+https://github.com/mesalock-linux/iovec-sgx)" = "<none>"
 "checksum itoa 0.4.5 (git+https://github.com/mesalock-linux/itoa-sgx)" = "<none>"
 "checksum log 0.4.10 (git+https://github.com/mesalock-linux/log-sgx)" = "<none>"
-"checksum mio 0.6.21 (git+https://github.com/mesalock-linux/mio-sgx?rev=sgx_1.1.0)" = "<none>"
+"checksum mio 0.6.21 (git+https://github.com/mesalock-linux/mio-sgx?branch=v0.6_sgx_1.1.0)" = "<none>"
 "checksum net2 0.2.33 (git+https://github.com/mesalock-linux/net2-rs-sgx)" = "<none>"
-"checksum ring 0.16.9 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)" = "<none>"
-"checksum rustls 0.16.0 (git+https://github.com/mesalock-linux/rustls?rev=sgx_1.1.0)" = "<none>"
+"checksum ring 0.16.11 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)" = "<none>"
+"checksum rustls 0.16.0 (git+https://github.com/mesalock-linux/rustls?branch=mesalock_sgx)" = "<none>"
 "checksum sct 0.6.0 (git+https://github.com/mesalock-linux/sct.rs?branch=mesalock_sgx)" = "<none>"
 "checksum sgx_alloc 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_alloc 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_backtrace_sys 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_backtrace_sys 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_build_helper 0.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_build_helper 0.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_demangle 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_demangle 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_libc 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_libc 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_tcrypto 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_tcrypto 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_tprotected_fs 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_tprotected_fs 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_trts 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_trts 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_tse 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_tse 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_tseal 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_tseal 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_tstd 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_types 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_types 1.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)" = "<none>"
+"checksum sgx_types 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "83bbcd1b60b9e47a4b9d5aa73893095b031d89dea8a644bac827f26d829d57a3"
 "checksum sgx_unwind 0.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_unwind 0.1.0 (git+https://github.com/baidu/rust-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum slab 0.4.2 (git+https://github.com/mesalock-linux/slab-sgx)" = "<none>"
 "checksum spin 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 "checksum untrusted 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "60369ef7a31de49bcb3f6ca728d4ba7300d9a1658f94c727d4cab8c8d9f4aece"
-"checksum webpki 0.21.0 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)" = "<none>"
-"checksum webpki 0.21.0 (git+https://github.com/mesalock-linux/webpki?rev=sgx_1.1.0)" = "<none>"
-"checksum webpki-roots 0.17.0 (git+https://github.com/mesalock-linux/webpki-roots?rev=sgx_1.1.0)" = "<none>"
+"checksum webpki 0.21.2 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)" = "<none>"
+"checksum webpki-roots 0.19.0 (git+https://github.com/mesalock-linux/webpki-roots?rev=sgx_1.1.0)" = "<none>"

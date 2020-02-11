@@ -6,11 +6,10 @@ use std::{
     untrusted::time::SystemTimeEx,
     io::BufReader,
 };
-use https_enclave::HttpsClient;
+// use https_enclave::HttpsClient;
 use crate::{
     error::Result,
     ocalls::get_ias_socket,
-    cert::verify_report_cert,
 };
 
 pub const DEV_HOSTNAME : &str = "api.trustedservices.intel.com";

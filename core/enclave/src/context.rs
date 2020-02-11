@@ -6,7 +6,7 @@ use crate::{
     crypto::Eik,
     attestation::TEST_SPID,
     ocalls::{sgx_init_quote, get_quote},
-    error::{Result, EnclaveError},
+    error::Result,
     kvs::{EnclaveDB, EnclaveDBTx},
 };
 
