@@ -12,8 +12,10 @@ use anonify_host::{
 };
 use handlers::*;
 use actix_web::{web, App, HttpServer};
+pub use serde;
 
 mod handlers;
+mod value;
 
 #[derive(Debug)]
 pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {

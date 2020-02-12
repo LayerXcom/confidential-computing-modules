@@ -6,7 +6,7 @@ use anonify_host::transaction::{
     utils::get_state_by_access_right,
 };
 use anonymous_asset::api;
-use anonify_common::{stf::Value, State};
+use anonify_common::{State, stf::StateType};
 use actix_web::{
     web,
     HttpResponse,
@@ -73,7 +73,7 @@ where
     let from_eth_addr = server.dispatcher.get_account(0)?;
     let receipt = server.dispatcher.init_state(
         access_right,
-        Value::new(req.total_supply),
+        StateType::new(req.total_supply),
         req.state_id,
         from_eth_addr,
         DEFAULT_SEND_GAS,
@@ -100,7 +100,7 @@ where
     let receipt = server.dispatcher.state_transition(
         access_right,
         &req.target,
-        Value::new(req.amount),
+        StateType::new(req.amount),
         req.state_id,
         from_eth_addr,
         DEFAULT_SEND_GAS,
@@ -125,7 +125,7 @@ where
     server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path)?;
 
     let access_right = req.into_access_right()?;
-    let state = get_state_by_access_right::<Value>(&access_right, server.eid)?;
+    let state = get_state_by_access_right::<StateType>(&access_right, server.eid)?;
 
     Ok(HttpResponse::Ok().json(api::state::get::Response(state)))
 }
