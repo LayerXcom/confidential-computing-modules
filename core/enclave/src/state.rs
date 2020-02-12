@@ -318,7 +318,7 @@ impl<S: State, N> StateValue<S, N> {
 #[cfg(debug_assertions)]
 pub mod tests {
     use super::*;
-    use anonify_common::stf::Value;
+    use anonify_common::stf::StateType;
     use ed25519_dalek::{SecretKey, PublicKey, Keypair, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH};
 
     const SECRET_KEY_BYTES: [u8; SECRET_KEY_LENGTH] = [
@@ -339,12 +339,12 @@ pub mod tests {
         let keypair = Keypair { secret, public };
 
         let mut buf = vec![];
-        Value::new(100).write_le(&mut buf).expect("Faild to write value.");
+        StateType::new(100).write_le(&mut buf).expect("Faild to write value.");
 
         let sig = keypair.sign(&buf);
         let user_address = UserAddress::from_sig(&buf, &sig, &public).unwrap();
 
-        let state = UserState::<Value, Next>::init(user_address, Value::new(100)).unwrap();
+        let state = UserState::<StateType, Next>::init(user_address, StateType::new(100)).unwrap();
         let state_vec = state.try_into_vec().unwrap();
         let res = UserState::read(&state_vec[..]).unwrap();
 

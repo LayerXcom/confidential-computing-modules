@@ -15,6 +15,7 @@ use serde_std as serde;
 
 mod crypto;
 mod traits;
+mod value;
 pub mod kvs;
 pub mod stf;
 

@@ -9,16 +9,21 @@ use crate::localstd::{
 };
 use byteorder::{ByteOrder, LittleEndian};
 use crate::serde::{Serialize, Deserialize};
+use crate::value::Value;
 
 pub const STATE_SIZE: usize = 8;
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
-pub struct Value(u64);
+pub struct StateType {
+    raw: Value,
+}
 
-impl State for Value {
+impl State for StateType {
     fn new(init: u64) -> Self {
-        Value(init)
+        StateType{
+            raw: Value::new(init),
+        }
     }
 
     fn as_bytes(&self) -> io::Result<Vec<u8>> {
@@ -34,7 +39,7 @@ impl State for Value {
 
     fn write_le<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         let mut buf = [0u8; STATE_SIZE];
-        LittleEndian::write_u64(&mut buf, self.0);
+        LittleEndian::write_u64(&mut buf, self.into_raw());
         writer.write_all(&buf)?;
 
         Ok(())
@@ -45,36 +50,42 @@ impl State for Value {
         reader.read_exact(&mut buf)?;
         let res = LittleEndian::read_u64(&buf);
 
-        Ok(Value(res))
+        Ok(StateType{
+            raw: Value::new(res),
+        })
     }
 }
 
-impl Add for Value {
-    type Output = Value;
+impl Add for StateType {
+    type Output = StateType;
 
     fn add(self, other: Self) -> Self {
-        let res = self.0 + other.0;
-        Value(res)
+        let res = self.into_raw() + other.into_raw();
+        StateType{
+            raw: Value::new(res)
+        }
     }
 }
 
-impl Sub for Value {
-    type Output = Value;
+impl Sub for StateType {
+    type Output = StateType;
 
     fn sub(self, other: Self) -> Self {
-        let res = self.0 - other.0;
-        Value(res)
+        let res = self.into_raw() - other.into_raw();
+        StateType{
+            raw: Value::new(res)
+        }
     }
 }
 
-impl Value {
-    pub fn into_raw(&self) -> u64 {
-        self.0
+impl StateType {
+    pub fn into_raw(self) -> u64 {
+        self.into_raw()
     }
 
     pub fn from_state<T: State>(state: T) -> io::Result<Self>{
         let state = state.as_bytes()?;
-        Value::from_bytes(&state)
+        StateType::from_bytes(&state)
     }
 
     pub fn into_state<T: State>(&self) -> io::Result<T>{
@@ -97,7 +108,7 @@ impl Runtime {
         match self.0 {
             CallKind::Transfer => {
                 let (my_current, other_current, params) =
-                    (Value::from_state(params.0)?, Value::from_state(params.1)?, Value::from_state(params.2)?);
+                    (StateType::from_state(params.0)?, StateType::from_state(params.1)?, StateType::from_state(params.2)?);
                 transfer::<S>(my_current, other_current, params)
             },
         }
@@ -106,7 +117,7 @@ impl Runtime {
 
 // TODO: Replace Error to our own error type.
 /// Devepler defined state transition function for thier applications.
-pub fn transfer<S: State>(my_current: Value, other_current: Value, params: Value) -> io::Result<(S, S)> {
+pub fn transfer<S: State>(my_current: StateType, other_current: StateType, params: StateType) -> io::Result<(S, S)> {
     if my_current < params {
         return Err(Error::new(ErrorKind::InvalidData, "You don't have enough balance."));
     }
