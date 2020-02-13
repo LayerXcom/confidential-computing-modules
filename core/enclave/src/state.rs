@@ -3,7 +3,7 @@
 use anonify_common::{
     UserAddress, Sha256, Hash256, State, Ciphertext, LockParam, AccessRight,
     kvs::*,
-    stf::{Runtime, CallKind},
+    Runtime, CallKind,
 };
 use crate::{
     crypto::*,
@@ -318,7 +318,7 @@ impl<S: State, N> StateValue<S, N> {
 #[cfg(debug_assertions)]
 pub mod tests {
     use super::*;
-    use anonify_common::stf::StateType;
+    use anonify_common::StateType;
     use ed25519_dalek::{SecretKey, PublicKey, Keypair, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH};
 
     const SECRET_KEY_BYTES: [u8; SECRET_KEY_LENGTH] = [

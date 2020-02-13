@@ -7,7 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anonify-types = { path = "../types" }
+anonify-types = { path = "../types", default-features = false }
+anonify-stf = { path = "../../example/stf", default-features = false }
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
 sha2 = { version = "0.8", default-features = false }
 tiny-keccak = "1.4"
@@ -20,11 +21,11 @@ rand = { version = "0.6", optional = true }
 rand_core = { version = "0.3", optional = true }
 sgx-elastic-array = { package = "elastic-array", tag = "sgx_1.1.0", git = "https://github.com/mesalock-linux/elastic-array-sgx.git", optional = true }
 elastic-array = { version = "0.10", optional = true }
-byteorder = { version = "1", default-features = false }
 
 [features]
 default = ["std"]
 std = [
+    "anonify-stf/std",
     "serde-std/std",
     "serde-std/derive",
     "base64",
@@ -34,6 +35,7 @@ std = [
     "elastic-array"
 ]
 sgx = [
+    "anonify-stf/sgx",
     "sgx_tstd",
     "serde-sgx",
     "serde-sgx/derive",
