@@ -7,19 +7,11 @@ extern crate sgx_tstd as localstd;
 use std as localstd;
 #[cfg(all(not(feature = "std"), not(feature = "sgx")))]
 extern crate core as localstd;
-#[cfg(all(feature = "sgx", not(feature = "std")))]
-use serde_sgx as serde;
-#[cfg(feature = "std")]
-use serde_std as serde;
-#[cfg(all(feature = "sgx", not(feature = "std")))]
-use bincode_sgx as bincode;
-#[cfg(feature = "std")]
-use bincode_std as bincode;
 
 use crate::localstd::{
-    io::{self, Read, Write},
     vec::Vec,
 };
+use codec::{Input, Output};
 
 pub mod value;
 pub mod state_type;
@@ -30,11 +22,11 @@ pub use crate::state_type::*;
 pub trait State: Sized + Default + Clone {
     fn new(init: u64) -> Self;
 
-    fn as_bytes(&self) -> io::Result<Vec<u8>>;
+    fn as_bytes(&self) -> Vec<u8>;
 
-    fn from_bytes(bytes: &[u8]) -> io::Result<Self>;
+    fn from_bytes(bytes: &mut [u8]) -> Result<Self, codec::Error>;
 
-    fn write_le<W: Write>(&self, writer: &mut W) -> io::Result<()>;
+    fn write_le<O: Output>(&self, writer: &mut O);
 
-    fn read_le<R: Read>(reader: &mut R) -> io::Result<Self>;
+    fn read_le<I: Input>(reader: &mut I) -> Result<Self, codec::Error>;
 }

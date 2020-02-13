@@ -227,7 +227,7 @@ impl<S: State> UserState<S, Next> {
     pub fn init(address: UserAddress, init_state: S) -> Result<Self> {
         let mut buf = vec![];
         address.write(&mut buf)?;
-        init_state.write_le(&mut buf)?;
+        init_state.write_le(&mut buf);
         let lock_param = Sha256::hash(&buf).into();
         let state_value = StateValue::new(init_state, lock_param);
 
@@ -292,7 +292,7 @@ impl<S: State, N> StateValue<S, N> {
     }
 
     pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
-        self.inner_state.write_le(writer)?;
+        self.inner_state.write_le(writer);
         self.lock_param.write(writer)?;
 
         Ok(())

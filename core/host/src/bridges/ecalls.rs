@@ -62,7 +62,8 @@ pub(crate) fn get_state<S: State>(
 		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_get_state" }.into());
     }
 
-    let res = S::from_bytes(&state_as_bytes(state))?;
+    let mut s = state_as_bytes(state);
+    let res = S::from_bytes(&mut s)?;
     Ok(res)
 }
 
@@ -137,7 +138,7 @@ impl BoxedStateTransTx {
     ) -> Result<Self> {
         let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
         let mut raw_state_tx = RawStateTransTx::default();
-        let state = state.as_bytes()?;
+        let state = state.as_bytes();
 
         let status = unsafe {
             ecall_init_state(
@@ -173,7 +174,7 @@ impl BoxedStateTransTx {
     ) -> Result<Self> {
         let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
         let mut raw_state_tx = RawStateTransTx::default();
-        let state = state.as_bytes()?;
+        let state = state.as_bytes();
 
         let status = unsafe {
             ecall_state_transition(

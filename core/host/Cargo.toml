@@ -25,6 +25,7 @@ rand = "0.6"
 rand_core = "0.3"
 byteorder = "1"
 parking_lot = "0.10"
+codec = { package = "parity-scale-codec", version = "1.1" }
 
 [dev-dependencies]
 rand_os = "0.1"

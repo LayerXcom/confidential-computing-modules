@@ -1,25 +1,48 @@
-use crate::serde::{Serialize, Deserialize};
 use crate::State;
 use crate::state_type::StateType;
 use crate::localstd::{
-    io::{self, Error, ErrorKind},
+    ops::{Add, Sub},
+    boxed::Box,
+    string::ToString,
 };
+use codec::{Encode, Decode};
 
 pub const CIPHERTEXT_SIZE: usize = 88;
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Serialize, Deserialize)]
-#[serde(crate = "crate::serde")]
+// macro_rules! state {
+//     () => {
+
+//     };
+// }
+
+// User defined state
+#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Encode, Decode)]
 pub struct Value(u64);
 
 impl Value {
     pub fn new(raw: u64) -> Self {
         Value(raw)
     }
+}
 
-    pub fn into_raw(self) -> u64 {
-        self.0
+impl Add for Value {
+    type Output = Value;
+
+    fn add(self, other: Self) -> Self {
+        let res = self.0 + other.0;
+        Value(res)
     }
 }
+
+impl Sub for Value {
+    type Output = Value;
+
+    fn sub(self, other: Self) -> Self {
+        let res = self.0 - other.0;
+        Value(res)
+    }
+}
+
 
 pub enum CallKind {
     Transfer,
@@ -30,7 +53,7 @@ pub struct Runtime(pub CallKind);
 
 impl Runtime {
     // TODO: https://docs.rs/web3/0.10.0/src/web3/contract/tokens.rs.html#71-74
-    pub fn exec<S: State>(&self, params: (S, S, S)) -> io::Result<(S, S)> {
+    pub fn exec<S: State>(&self, params: (S, S, S)) -> Result<(S, S), codec::Error> {
         match self.0 {
             CallKind::Transfer => {
                 let (my_current, other_current, params) =
@@ -43,12 +66,12 @@ impl Runtime {
 
 // TODO: Replace Error to our own error type.
 /// Devepler defined state transition function for thier applications.
-pub fn transfer<S: State>(my_current: StateType, other_current: StateType, params: StateType) -> io::Result<(S, S)> {
-    if my_current < params {
-        return Err(Error::new(ErrorKind::InvalidData, "You don't have enough balance."));
-    }
-    let my_update = my_current - params;
-    let other_update = other_current + params;
+pub fn transfer<S: State>(my_current: StateType, other_current: StateType, params: StateType) -> Result<(S, S), codec::Error> {
+    // if my_current < params {
+    //     return Err(Box("You don't have enough balance."));
+    // }
+    let my_update = StateType { raw: my_current.raw - params.raw };
+    let other_update = StateType { raw: other_current.raw + params.raw };
 
     Ok((my_update.into_state()?, other_update.into_state()?))
 }

@@ -18,6 +18,7 @@ pub enum EnclaveError {
     WebpkiError(webpki::Error),
     Base64Error(base64::DecodeError),
     Secp256k1Error(secp256k1::Error),
+    CodecError(codec::Error),
 }
 
 impl From<io::Error> for EnclaveError {
@@ -74,6 +75,12 @@ impl From<secp256k1::Error> for EnclaveError {
     }
 }
 
+impl From<codec::Error> for EnclaveError {
+    fn from(err: codec::Error) -> Self {
+        EnclaveError::CodecError(err)
+    }
+}
+
 impl fmt::Display for EnclaveError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -86,6 +93,7 @@ impl fmt::Display for EnclaveError {
             EnclaveError::WebpkiError(ref err) => write!(f, "Webpki error: {}", err),
             EnclaveError::Base64Error(ref err) => write!(f, "Base64 decode error: {}", err),
             EnclaveError::Secp256k1Error(ref err) => write!(f, "Secp256k1 error"),
+            EnclaveError::CodecError(ref err) => write!(f, "Codec error"),
         }
     }
 }
