@@ -75,7 +75,7 @@ pub struct InitStateTx {
 impl InitStateTx {
     pub fn construct<S, DB>(
         state_id: u64,
-        params: &[u8],
+        params: &mut [u8],
         user_address: UserAddress,
         enclave_ctx: &EnclaveContext<DB>,
     ) -> Result<Self>
@@ -130,7 +130,7 @@ pub struct StateTransTx {
 impl StateTransTx {
     pub fn construct<S, DB>(
         state_id: u64,
-        params: &[u8],
+        params: &mut [u8],
         access_right: &AccessRight,
         target_address: UserAddress,
         enclave_ctx: &EnclaveContext<DB>,

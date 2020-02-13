@@ -5,6 +5,7 @@ use anonify_common::{
     kvs::*,
     Runtime, CallKind,
 };
+use codec::{Input, Output};
 use crate::{
     crypto::*,
     kvs::{EnclaveDB, EnclaveDBTx},
@@ -108,14 +109,14 @@ impl<S: State, N> UserState<S, N> {
         Ok(buf)
     }
 
-    pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
+    pub fn write<W: Write + Output>(&self, writer: &mut W) -> Result<()> {
         self.address.write(writer)?;
         self.state_value.write(writer)?;
 
         Ok(())
     }
 
-    pub fn read<R: Read>(mut reader: R) -> Result<Self> {
+    pub fn read<R: Read + Input>(mut reader: R) -> Result<Self> {
         let address = UserAddress::read(&mut reader)?;
         let state_value = StateValue::read(&mut reader)?;
 
@@ -291,16 +292,16 @@ impl<S: State, N> StateValue<S, N> {
         Ok(StateValue::new(state, lock_param))
     }
 
-    pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
+    pub fn write<W: Write + Output>(&self, writer: &mut W) -> Result<()> {
         self.inner_state.write_le(writer);
         self.lock_param.write(writer)?;
 
         Ok(())
     }
 
-    pub fn read<R: Read>(mut reader: R) -> Result<Self> {
-        let inner_state = S::read_le(&mut reader)?;
-        let lock_param = LockParam::read(&mut reader)?;
+    pub fn read<R: Read + Input>(reader: &mut R) -> Result<Self> {
+        let inner_state = S::read_le(reader)?;
+        let lock_param = LockParam::read(reader)?;
 
         Ok(StateValue::new(inner_state, lock_param))
     }
@@ -338,7 +339,7 @@ pub mod tests {
         let keypair = Keypair { secret, public };
 
         let mut buf = vec![];
-        StateType::new(100).write_le(&mut buf).expect("Faild to write value.");
+        StateType::new(100).write_le(&mut buf);
 
         let sig = keypair.sign(&buf);
         let user_address = UserAddress::from_sig(&buf, &sig, &public).unwrap();

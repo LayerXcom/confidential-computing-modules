@@ -50,7 +50,7 @@ pub unsafe extern "C" fn ecall_get_state(
         .expect("Failed to read db_value.");
     let user_state = user_state_value.inner_state();
 
-    state.0 = save_to_host_memory(&user_state.as_bytes().unwrap()).unwrap() as *const u8;
+    state.0 = save_to_host_memory(&user_state.as_bytes()).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS
 }
@@ -72,7 +72,7 @@ pub unsafe extern "C" fn ecall_init_state(
     raw_sig: &RawSig,
     raw_pubkey: &RawPubkey,
     raw_challenge: &RawChallenge,
-    state: *const u8,
+    state: *mut u8,
     state_len: usize,
     state_id: u64,
     raw_state_tx: &mut RawStateTransTx,
@@ -80,7 +80,7 @@ pub unsafe extern "C" fn ecall_init_state(
     let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge).expect("Failed to generate access right.");
     let user_address = UserAddress::from_access_right(&ar)
         .expect("Failed to generate user address from access right.");
-    let params = slice::from_raw_parts(state, state_len);
+    let params = slice::from_raw_parts_mut(state, state_len);
 
     let init_state_tx = InitStateTx::construct::<StateType, _>(state_id, params, user_address, &ENCLAVE_CONTEXT)
         .expect("Failed to construct init state tx.");
@@ -97,13 +97,13 @@ pub unsafe extern "C" fn ecall_state_transition(
     raw_pubkey: &RawPubkey,
     raw_challenge: &RawChallenge,
     target: &Address,
-    state: *const u8,
+    state: *mut u8,
     state_len: usize,
     state_id: u64,
     raw_state_tx: &mut RawStateTransTx,
 ) -> sgx_status_t {
     let target_addr = UserAddress::from_array(*target);
-    let params = slice::from_raw_parts(state, state_len);
+    let params = slice::from_raw_parts_mut(state, state_len);
 
     let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge).expect("Failed to generate access right.");
     let state_trans_tx = StateTransTx::construct::<StateType, _>(
