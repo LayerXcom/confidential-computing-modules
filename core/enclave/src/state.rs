@@ -19,7 +19,6 @@ use std::{
 };
 
 /// Service for state transition operations
-#[derive(Clone, Debug, PartialEq)]
 pub struct StateService<S: State>{
     my_state: UserState<S, Current>,
     other_state: UserState<S, Current>,

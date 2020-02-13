@@ -6,7 +6,7 @@ use anonify_host::transaction::{
     utils::get_state_by_access_right,
 };
 use anonymous_asset::api;
-use anonify_common::{State, stf::StateType};
+use anonify_common::{State, StateType};
 use actix_web::{
     web,
     HttpResponse,

@@ -3,8 +3,9 @@ use crate::State;
 use crate::state_type::StateType;
 use crate::localstd::{
     io::{self, Error, ErrorKind},
-    vec::Vec,
 };
+
+pub const CIPHERTEXT_SIZE: usize = 88;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]

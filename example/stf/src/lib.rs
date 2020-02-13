@@ -11,6 +11,10 @@ extern crate core as localstd;
 use serde_sgx as serde;
 #[cfg(feature = "std")]
 use serde_std as serde;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
+use bincode_sgx as bincode;
+#[cfg(feature = "std")]
+use bincode_std as bincode;
 
 use crate::localstd::{
     io::{self, Read, Write},

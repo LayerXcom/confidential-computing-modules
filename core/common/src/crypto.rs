@@ -13,6 +13,7 @@ use anonify_types::{RawPubkey, RawSig, RawChallenge};
 use rand::Rng;
 #[cfg(feature = "std")]
 use rand_core::{RngCore, CryptoRng};
+use anonify_stf::CIPHERTEXT_SIZE;
 
 /// Trait for 256-bits hash functions
 pub trait Hash256 {
@@ -247,7 +248,6 @@ impl<T: IntoVec> IntoVec for &[T] {
 
 /// The size of initialization vector for AES-256-GCM.
 pub const IV_SIZE: usize = 12;
-pub const CIPHERTEXT_SIZE: usize = 88;
 
 #[derive(Clone)]
 pub struct Ciphertext([u8; CIPHERTEXT_SIZE]);
