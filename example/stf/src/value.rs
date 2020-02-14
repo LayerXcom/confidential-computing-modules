@@ -1,78 +1,77 @@
 use crate::State;
-use crate::state_type::StateType;
+use crate::state_type::{StateType, U64};
 use crate::localstd::{
-    ops::{Add, Sub},
     boxed::Box,
-    string::ToString,
+    string::String,
+    vec::Vec,
 };
-use codec::{Encode, Decode};
 
 pub const CIPHERTEXT_SIZE: usize = 88;
 
 // macro_rules! state {
-//     () => {
-
+//     ($raw: expr) => {
+//         match (&$raw) {
+//             (raw_val) => {
+//                 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Encode, Decode)]
+//                 pub struct StateType {
+//                     pub raw: raw_val,
+//                 }
+//             }
+//         }
 //     };
 // }
 
-// User defined state
-#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Encode, Decode)]
-pub struct Value(u64);
-
-impl Value {
-    pub fn new(raw: u64) -> Self {
-        Value(raw)
-    }
-}
-
-impl Add for Value {
-    type Output = Value;
-
-    fn add(self, other: Self) -> Self {
-        let res = self.0 + other.0;
-        Value(res)
-    }
-}
-
-impl Sub for Value {
-    type Output = Value;
-
-    fn sub(self, other: Self) -> Self {
-        let res = self.0 - other.0;
-        Value(res)
-    }
-}
-
 
 pub enum CallKind {
-    Transfer,
+    Transfer{amount: U64},
+    Approve{address: String, amount: U64},
+    TransferFrom{amount: U64},
+    Mint{amount: U64},
+    ChangeOwner{new_owner: String},
 }
 
-// TODO: to be more generalized
-pub struct Runtime(pub CallKind);
+#[derive(Clone, Debug)]
+pub enum Erc20 {
+    Balance(U64),
+    // allowed: (String, U64),
+    TotalSupply(U64),
+    Owner(String),
+}
 
+pub struct Runtime;
+
+// TODO: state re-order attack
 impl Runtime {
-    // TODO: https://docs.rs/web3/0.10.0/src/web3/contract/tokens.rs.html#71-74
-    pub fn exec<S: State>(&self, params: (S, S, S)) -> Result<(S, S), codec::Error> {
-        match self.0 {
-            CallKind::Transfer => {
-                let (my_current, other_current, params) =
-                    (StateType::from_state(params.0)?, StateType::from_state(params.1)?, StateType::from_state(params.2)?);
-                transfer::<S>(my_current, other_current, params)
+    pub fn call<S: State>(
+        kind: CallKind,
+        state: Vec<S>,
+    ) -> Result<impl Iterator<Item=impl State>, codec::Error> {
+        match kind {
+            CallKind::Transfer{amount} => {
+                assert_eq!(state.len(), 2);
+                Self::transfer(
+                    U64::from_state(&state[0])?,
+                    U64::from_state(&state[1])?,
+                    amount,
+                )
             },
+            _ => unimplemented!()
         }
     }
+
+    fn transfer(
+        my_current: U64,
+        other_current: U64,
+        amount: U64
+    ) -> Result<impl Iterator<Item=impl State>, codec::Error> {
+        // if my_current < amount {
+        //     return Err(Box("You don't have enough balance."));
+        // }
+        let my_update = my_current - amount;
+        let other_update = other_current + amount;
+
+        // TODO: avoid vec because array doesn't support into_iter(), automatically translated to iter()
+        // which returns &U64.
+        Ok(vec![my_update, other_update].into_iter())
+    }
 }
-
-// TODO: Replace Error to our own error type.
-/// Devepler defined state transition function for thier applications.
-pub fn transfer<S: State>(my_current: StateType, other_current: StateType, params: StateType) -> Result<(S, S), codec::Error> {
-    // if my_current < params {
-    //     return Err(Box("You don't have enough balance."));
-    // }
-    let my_update = StateType { raw: my_current.raw - params.raw };
-    let other_update = StateType { raw: other_current.raw + params.raw };
-
-    Ok((my_update.into_state()?, other_update.into_state()?))
-}
-

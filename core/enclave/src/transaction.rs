@@ -1,6 +1,6 @@
 use std::vec::Vec;
 use anonify_types::{RawRegisterTx, RawStateTransTx, traits::RawEnclaveTx};
-use anonify_common::{State, UserAddress, Ciphertext, LockParam, AccessRight, IntoVec};
+use anonify_common::{State, UserAddress, Ciphertext, LockParam, AccessRight, IntoVec, CallKind};
 use crate::{
     attestation::{Report, ReportSig, AttestationService},
     error::Result,
@@ -86,7 +86,7 @@ impl InitStateTx {
         let params = S::from_bytes(params)?;
         let init_state = UserState::<S, _>::init(user_address, params)
             .expect("Failed to initialize state.");
-        let lock_param = *init_state.lock_param();
+        let lock_param = init_state.lock_param();
         let ciphertext = init_state.encrypt(&SYMMETRIC_KEY)
             .expect("Failed to encrypt init state.");
         let enclave_sig = enclave_ctx.sign(&lock_param)?;
@@ -129,6 +129,7 @@ pub struct StateTransTx {
 
 impl StateTransTx {
     pub fn construct<S, DB>(
+        kind: CallKind,
         state_id: u64,
         params: &mut [u8],
         access_right: &AccessRight,
@@ -144,7 +145,7 @@ impl StateTransTx {
         let service = StateService::from_access_right(access_right, target_address, &enclave_ctx)?;
         let lock_params = service.reveal_lock_params();
         let enclave_sig = enclave_ctx.sign(&lock_params[0])?;
-        let ciphertexts = service.apply("transfer", params, &SYMMETRIC_KEY)
+        let ciphertexts = service.apply(kind, params, &SYMMETRIC_KEY)
             .expect("Faild to execute applying function.");
 
         Ok(StateTransTx {
