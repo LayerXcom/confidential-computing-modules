@@ -21,14 +21,40 @@ pub const CIPHERTEXT_SIZE: usize = 88;
 //     };
 // }
 
+pub struct Call {
+    name: String,
+    kind: CallKind,
+}
+
+
+pub fn call_name_to_id(name: &str) -> u32 {
+    match name {
+        "Transfer" => 0,
+        "Approve" => 1,
+        "TransferFrom" => 2,
+        "Mint" => 3,
+        "ChangeOwner" => 4,
+        _ => panic!("invalid call name"),
+    }
+}
 
 pub enum CallKind {
     Transfer{amount: U64},
-    Approve{address: String, amount: U64},
+    // Approve{address: String, amount: U64},
     TransferFrom{amount: U64},
     Mint{amount: U64},
-    ChangeOwner{new_owner: String},
+    // ChangeOwner{new_owner: String},
 }
+
+// impl CallKind {
+//     pub fn from_call_id<S: State>(id: u32, state: S) -> Result<Self, codec::Error> {
+//         match id {
+//             0 => CallKind::Transfer{amount: U64::from_state(state)?},
+//             _ => panic!("invalid call id"),
+//         }
+//         unimplemented!();
+//     }
+// }
 
 #[derive(Clone, Debug)]
 pub enum Erc20 {
@@ -45,6 +71,7 @@ impl Runtime {
     pub fn call<S: State>(
         kind: CallKind,
         state: Vec<S>,
+        my_addr: [u8; 20],
     ) -> Result<impl Iterator<Item=impl State>, codec::Error> {
         match kind {
             CallKind::Transfer{amount} => {

@@ -2,8 +2,7 @@
 
 use anonify_common::{
     UserAddress, Sha256, Hash256, State, Ciphertext, LockParam, AccessRight,
-    kvs::*,
-    Runtime, CallKind,
+    kvs::*, Runtime, CallKind
 };
 use codec::{Input, Output};
 use crate::{
@@ -20,7 +19,10 @@ use std::{
 };
 
 /// Service for state transition operations
-pub struct StateService<S: State>(Vec<UserState<S, Current>>);
+pub struct StateService<S: State>{
+    state: Vec<UserState<S, Current>>,
+    my_addr: UserAddress,
+}
 
 impl<S> StateService<S>
 where
@@ -41,11 +43,14 @@ where
         let mut res = vec![];
         res.push(my_state);
         res.push(other_state);
-        Ok(StateService(res))
+        Ok(StateService{
+            state: res,
+            my_addr,
+        })
     }
 
     pub fn reveal_lock_params(&self) -> Vec<LockParam> {
-        self.0
+        self.state
             .iter()
             .map(|e| e.lock_param())
             .collect()
@@ -59,13 +64,14 @@ where
     ) -> Result<Vec<Ciphertext>> {
         let res = Runtime::call(
             kind,
-            self.0
+            self.state
                 .iter()
                 .map(|e| e.inner_state().clone()) // TODO
-                .collect()
+                .collect(),
+            self.my_addr.into_array(),
         )?
         .zip(
-            self.0
+            self.state
                 .into_iter()
                 .map(|e| e.into_next().unwrap()) // TODO: Remove unwrap
         )

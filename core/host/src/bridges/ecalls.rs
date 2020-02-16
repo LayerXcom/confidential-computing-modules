@@ -171,6 +171,7 @@ impl BoxedStateTransTx {
         target: &UserAddress,
         state: S,
         state_id: u64,
+        call_name: &str,
     ) -> Result<Self> {
         let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
         let mut raw_state_tx = RawStateTransTx::default();

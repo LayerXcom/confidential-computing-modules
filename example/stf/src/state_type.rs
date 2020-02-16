@@ -12,9 +12,7 @@ pub const STATE_SIZE: usize = 8;
 pub trait RawState: Encode + Decode + Clone + Default {}
 
 #[derive(Clone, Debug, Default, Decode, Encode)]
-pub struct StateType {
-    pub raw: Vec<u8>,
-}
+pub struct StateType(Vec<u8>);
 
 #[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
 pub struct U64(pub u64);

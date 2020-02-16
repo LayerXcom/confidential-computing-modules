@@ -99,6 +99,10 @@ impl UserAddress {
     pub fn from_array(array: [u8; 20]) -> Self {
         UserAddress(array)
     }
+
+    pub fn into_array(self) -> [u8; 20] {
+        self.0
+    }
 }
 
 /// Hash digest of sha256 hash function

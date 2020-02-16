@@ -177,11 +177,13 @@ impl Sender for EthSender {
         target: &UserAddress,
         state: ST,
         state_id: u64,
+        call_name: &str,
         from_eth_addr: SignerAddress,
         gas: u64,
     ) -> Result<String> {
+        // ecall of state transition
         let state_trans_tx = BoxedStateTransTx::state_transition(
-            self.enclave_id, access_right, target, state, state_id
+            self.enclave_id, access_right, target, state, state_id, call_name
         )?;
 
         let ciphers = state_trans_tx.get_ciphertexts();

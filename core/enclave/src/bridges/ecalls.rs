@@ -3,7 +3,7 @@ use sgx_types::*;
 use anonify_types::*;
 use anonify_common::{
     UserAddress, State, StateType, kvs::MemoryDB, Ciphertext,
-    CIPHERTEXT_SIZE, AccessRight, CallKind, U64
+    CIPHERTEXT_SIZE, AccessRight, CallKind, U64,
 };
 use ed25519_dalek::{PublicKey, Signature};
 use crate::state::{UserState, StateValue, Current};
@@ -110,7 +110,7 @@ pub unsafe extern "C" fn ecall_state_transition(
 
     let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge).expect("Failed to generate access right.");
     let state_trans_tx = StateTransTx::construct::<StateType, _>(
-        CallKind::Transfer{amount:U64(5)},  state_id, params, &ar, target_addr, &ENCLAVE_CONTEXT
+        CallKind::Transfer{amount:U64(5)}, state_id, params, &ar, target_addr, &ENCLAVE_CONTEXT
     )
         .expect("Failed to construct init state tx.");
     *raw_state_tx = state_trans_tx.into_raw()
