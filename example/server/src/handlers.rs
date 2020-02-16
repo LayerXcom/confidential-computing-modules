@@ -48,9 +48,9 @@ where
     DB: BlockNumDB,
 {
     let access_right = req.into_access_right()?;
-    let from_eth_addr = server.dispatcher.get_account(0)?;
+    let signer = server.dispatcher.get_account(0)?;
     let receipt = server.dispatcher.register(
-        from_eth_addr,
+        signer,
         DEFAULT_SEND_GAS,
         &req.contract_addr,
         &server.abi_path,
@@ -70,12 +70,12 @@ where
     DB: BlockNumDB,
 {
     let access_right = req.into_access_right()?;
-    let from_eth_addr = server.dispatcher.get_account(0)?;
+    let signer = server.dispatcher.get_account(0)?;
     let receipt = server.dispatcher.init_state(
         access_right,
         StateType::new(req.total_supply),
         req.state_id,
-        from_eth_addr,
+        signer,
         DEFAULT_SEND_GAS,
         &req.contract_addr,
         &server.abi_path,
@@ -95,14 +95,14 @@ where
     DB: BlockNumDB,
 {
     let access_right = req.into_access_right()?;
-    let from_eth_addr = server.dispatcher.get_account(0)?;
+    let signer = server.dispatcher.get_account(0)?;
 
     let receipt = server.dispatcher.state_transition(
         access_right,
         &req.target,
         StateType::new(req.amount),
         req.state_id,
-        from_eth_addr,
+        signer,
         DEFAULT_SEND_GAS,
         &req.contract_addr,
         &server.abi_path,

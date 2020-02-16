@@ -123,11 +123,11 @@ impl Sender for EthSender {
 
     fn register(
         &self,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
         gas: u64,
     ) -> Result<String> {
         let register_tx = BoxedRegisterTx::register(self.enclave_id)?;
-        let receipt = match from_eth_addr {
+        let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
                 self.contract.register(
                     addr,
@@ -146,14 +146,14 @@ impl Sender for EthSender {
         access_right: AccessRight,
         init_state: ST,
         state_id: u64,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
         gas: u64,
     )  -> Result<String> {
         let init_state_tx = BoxedStateTransTx::init_state(
             self.enclave_id, access_right, init_state, state_id
         )?;
 
-        let receipt = match from_eth_addr {
+        let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
                 self.contract.init_state::<u64>(
                     addr,
@@ -176,7 +176,7 @@ impl Sender for EthSender {
         state: ST,
         state_id: u64,
         call_name: &str,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
         gas: u64,
     ) -> Result<String> {
         // ecall of state transition
@@ -187,7 +187,7 @@ impl Sender for EthSender {
         let ciphers = state_trans_tx.get_ciphertexts();
         let locks = state_trans_tx.get_lock_params();
 
-        let receipt = match from_eth_addr {
+        let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
                 self.contract.state_transition(
                     addr,

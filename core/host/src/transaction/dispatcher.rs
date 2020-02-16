@@ -59,14 +59,14 @@ where
 
     pub fn register<P: AsRef<Path> + Copy>(
         &self,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
         gas: u64,
         contract_addr: &str,
         abi_path: P,
     ) -> Result<String> {
         let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
-        inner.register(from_eth_addr, gas, contract_info)
+        inner.register(signer, gas, contract_info)
     }
 
     pub fn init_state<ST, P>(
@@ -74,7 +74,7 @@ where
         access_right: AccessRight,
         init_state: ST,
         state_id: u64,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
         gas: u64,
         contract_addr: &str,
         abi_path: P,
@@ -85,7 +85,7 @@ where
     {
         let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
-        inner.init_state(access_right, init_state, state_id, from_eth_addr, gas, contract_info)
+        inner.init_state(access_right, init_state, state_id, signer, gas, contract_info)
     }
 
     pub fn state_transition<ST, P>(
@@ -95,7 +95,7 @@ where
         state: ST,
         state_id: u64,
         call_name: &str,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
         gas: u64,
         contract_addr: &str,
         abi_path: P,
@@ -106,7 +106,7 @@ where
     {
         let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
-        inner.state_transition(access_right, target, state, state_id, call_name, from_eth_addr, gas, contract_info)
+        inner.state_transition(access_right, target, state, state_id, call_name, signer, gas, contract_info)
     }
 
     pub fn block_on_event<P: AsRef<Path> + Copy>(
@@ -202,7 +202,7 @@ where
 
     fn register<P: AsRef<Path> + Copy>(
         &mut self,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
         gas: u64,
         contract_info: ContractInfo<'_, P>,
     ) -> Result<String> {
@@ -210,7 +210,7 @@ where
 
         self.sender.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .register(from_eth_addr, gas)
+            .register(signer, gas)
     }
 
     fn init_state<ST, P>(
@@ -218,7 +218,7 @@ where
         access_right: AccessRight,
         init_state: ST,
         state_id: u64,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
         gas: u64,
         contract_info: ContractInfo<'_, P>,
     ) -> Result<String>
@@ -230,7 +230,7 @@ where
 
         self.sender.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .init_state(access_right, init_state, state_id, from_eth_addr, gas)
+            .init_state(access_right, init_state, state_id, signer, gas)
     }
 
     fn state_transition<ST, P>(
@@ -240,7 +240,7 @@ where
         state: ST,
         state_id: u64,
         call_name: &str,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
         gas: u64,
         contract_info: ContractInfo<'_, P>,
     ) -> Result<String>
@@ -255,7 +255,7 @@ where
 
         self.sender.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .state_transition(access_right, target, state, state_id, call_name, from_eth_addr, gas)
+            .state_transition(access_right, target, state, state_id, call_name, signer, gas)
     }
 }
 
@@ -314,13 +314,13 @@ pub mod traits {
             state: ST,
             state_id: u64,
             call_name: &str,
-            from_eth_addr: SignerAddress,
+            signer: SignerAddress,
             gas: u64,
         ) -> Result<String>;
 
         fn register(
             &self,
-            from_eth_addr: SignerAddress,
+            signer: SignerAddress,
             gas: u64,
         ) -> Result<String>;
 
@@ -329,7 +329,7 @@ pub mod traits {
             access_right: AccessRight,
             init_state: ST,
             state_id: u64,
-            from_eth_addr: SignerAddress,
+            signer: SignerAddress,
             gas: u64,
         )  -> Result<String> {
             unimplemented!();
