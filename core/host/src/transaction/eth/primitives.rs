@@ -26,7 +26,10 @@ use anonify_common::{Ciphertext, LockParam, IntoVec};
 use crate::{
     error::*,
     constants::*,
-    transaction::eventdb::{BlockNumDB, InnerEnclaveLog, EnclaveLog},
+    transaction::{
+        eventdb::{BlockNumDB, InnerEnclaveLog, EnclaveLog},
+        utils::ContractInfo,
+    },
 };
 
 /// Basic web3 connection components via HTTP.
@@ -99,7 +102,12 @@ pub struct Web3Contract {
 }
 
 impl Web3Contract {
-    pub fn new(web3_conn: Web3Http, address: Address, abi: ContractABI) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(
+        web3_conn: Web3Http,
+        contract_info: ContractInfo<'_, P>
+    ) -> Result<Self> {
+        let abi = contract_info.contract_abi()?;
+        let address = contract_info.address()?;
         let contract = Contract::new(web3_conn.web3.eth(), address, abi);
 
         Ok(Web3Contract {
@@ -286,12 +294,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
     }
 }
 
-pub fn contract_abi_from_path<P: AsRef<Path>>(path: P) -> Result<ContractABI> {
-    let f = File::open(path)?;
-    let reader = BufReader::new(f);
-    let contract_abi = ContractABI::load(reader).expect("Failed to load contract abi.");
-    Ok(contract_abi)
-}
+
 
 /// A type of events from ethererum network.
 pub struct EthEvent(Event);

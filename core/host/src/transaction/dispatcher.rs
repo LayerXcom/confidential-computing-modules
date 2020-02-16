@@ -7,6 +7,7 @@ use anonify_common::{AccessRight, State, UserAddress};
 use super::{
     eth::primitives::Web3Contract,
     eventdb::BlockNumDB,
+    utils::ContractInfo,
 };
 use crate::error::{Result, HostErrorKind};
 use self::traits::*;
@@ -41,7 +42,8 @@ where
         P: AsRef<Path> + Copy,
     {
         let mut inner = self.inner.write();
-        inner.set_contract_addr(contract_addr, abi_path)?;
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        inner.set_contract_addr(contract_info)?;
 
         Ok(())
     }
@@ -63,7 +65,8 @@ where
         abi_path: P,
     ) -> Result<String> {
         let mut inner = self.inner.write();
-        inner.register(from_eth_addr, gas, contract_addr, abi_path)
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        inner.register(from_eth_addr, gas, contract_info)
     }
 
     pub fn init_state<ST, P>(
@@ -81,7 +84,8 @@ where
         P: AsRef<Path> + Copy,
     {
         let mut inner = self.inner.write();
-        inner.init_state(access_right, init_state, state_id, from_eth_addr, gas, contract_addr, abi_path)
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        inner.init_state(access_right, init_state, state_id, from_eth_addr, gas, contract_info)
     }
 
     pub fn state_transition<ST, P>(
@@ -101,7 +105,8 @@ where
         P: AsRef<Path> + Copy,
     {
         let mut inner = self.inner.write();
-        inner.state_transition(access_right, target, state, state_id, call_name, from_eth_addr, gas, contract_addr, abi_path)
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        inner.state_transition(access_right, target, state, state_id, call_name, from_eth_addr, gas, contract_info)
     }
 
     pub fn block_on_event<P: AsRef<Path> + Copy>(
@@ -110,7 +115,8 @@ where
         abi_path: P
     ) -> Result<()> {
         let mut inner = self.inner.write();
-        inner.block_on_event(contract_addr, abi_path)
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        inner.block_on_event(contract_info)
     }
 
     pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
@@ -149,14 +155,17 @@ where
         })
     }
 
-    fn set_contract_addr<P>(&mut self, contract_addr: &str, abi_path: P) -> Result<()>
+    fn set_contract_addr<P>(
+        &mut self,
+        contract_info: ContractInfo<'_, P>,
+    ) -> Result<()>
     where
         P: AsRef<Path> + Copy
     {
         let enclave_id = self.deployer.get_enclave_id();
         let node_url = self.deployer.get_node_url();
-        let sender = S::new(enclave_id, node_url, contract_addr, abi_path)?;
-        let watcher = W::new(node_url, abi_path, contract_addr, self.event_db.clone())?;
+        let sender = S::new(enclave_id, node_url, contract_info)?;
+        let watcher = W::new(node_url, contract_info, self.event_db.clone())?;
 
         self.sender = Some(sender);
         self.watcher = Some(watcher);
@@ -178,12 +187,11 @@ where
 
     fn block_on_event<P: AsRef<Path> + Copy>(
         &mut self,
-        contract_addr: &str,
-        abi_path: P,
+        contract_info: ContractInfo<'_, P>,
     ) -> Result<()> {
         // If contract address is not set, set new contract address and abi path to generate watcher instance.
         // if let None = self.watcher.as_mut() {
-            self.set_contract_addr(contract_addr, abi_path)?;
+            self.set_contract_addr(contract_info)?;
         // }
 
         let eid = self.deployer.get_enclave_id();
@@ -196,10 +204,9 @@ where
         &mut self,
         from_eth_addr: SignerAddress,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
+        contract_info: ContractInfo<'_, P>,
     ) -> Result<String> {
-        self.set_contract_addr(contract_addr, abi_path)?;
+        self.set_contract_addr(contract_info)?;
 
         self.sender.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
@@ -213,14 +220,13 @@ where
         state_id: u64,
         from_eth_addr: SignerAddress,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
+        contract_info: ContractInfo<'_, P>,
     ) -> Result<String>
     where
         ST: State,
         P: AsRef<Path> + Copy,
     {
-        self.set_contract_addr(contract_addr, abi_path)?;
+        self.set_contract_addr(contract_info)?;
 
         self.sender.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
@@ -236,8 +242,7 @@ where
         call_name: &str,
         from_eth_addr: SignerAddress,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
+        contract_info: ContractInfo<'_, P>,
     ) -> Result<String>
     where
         ST: State,
@@ -245,7 +250,7 @@ where
     {
         // If contract address is not set, set new contract address and abi path to generate sender instance.
         // if let None = self.sender.as_mut() {
-            self.set_contract_addr(contract_addr, abi_path)?;
+            self.set_contract_addr(contract_info)?;
         // }
 
         self.sender.as_ref()
@@ -292,8 +297,7 @@ pub mod traits {
         fn new<P: AsRef<Path>>(
             enclave_id: sgx_enclave_id_t,
             node_url: &str,
-            contract_addr: &str,
-            abi_path: P,
+            contract_info: ContractInfo<'_, P>,
         ) -> Result<Self>;
 
         fn from_contract(
@@ -340,8 +344,7 @@ pub mod traits {
 
         fn new<P: AsRef<Path>>(
             node_url: &str,
-            abi_path: P,
-            contract_addr: &str,
+            contract_info: ContractInfo<'_, P>,
             event_db: Arc<Self::WatcherDB>,
         ) -> Result<Self>;
 

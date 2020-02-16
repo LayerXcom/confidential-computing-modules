@@ -13,9 +13,10 @@ use crate::{
     transaction::{
         eventdb::BlockNumDB,
         dispatcher::{SignerAddress, ContractKind, traits::*},
+        utils::ContractInfo,
     },
 };
-use super::primitives::{Web3Http, EthEvent, Web3Contract, contract_abi_from_path};
+use super::primitives::{Web3Http, EthEvent, Web3Contract};
 
 /// Components needed to deploy a contract
 #[derive(Debug)]
@@ -65,10 +66,10 @@ impl Deployer for EthDeployer {
 
     // TODO: generalize, remove abi.
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind> {
-        let abi = contract_abi_from_path(abi_path)?;
-        let adderess = self.address.expect("The contract hasn't be deployed yet.");
+        let addr = self.address.expect("The contract hasn't be deployed yet.").to_string();
+        let contract_info = ContractInfo::new(abi_path, &addr);
         Ok(ContractKind::Web3Contract(
-            Web3Contract::new(self.web3_conn, adderess, abi)?
+            Web3Contract::new(self.web3_conn, contract_info)?
         ))
     }
 
@@ -92,13 +93,10 @@ impl Sender for EthSender {
     fn new<P: AsRef<Path>>(
         enclave_id: sgx_enclave_id_t,
         node_url: &str,
-        contract_addr: &str,
-        abi_path: P,
+        contract_info: ContractInfo<'_, P>,
     ) -> Result<Self> {
         let web3_http = Web3Http::new(node_url)?;
-        let abi = contract_abi_from_path(abi_path)?;
-        let addr = EthAddress::from_str(contract_addr)?;
-        let contract = Web3Contract::new(web3_http, addr, abi)?;
+        let contract = Web3Contract::new(web3_http, contract_info)?;
 
         Ok(EthSender { enclave_id, contract })
     }
@@ -221,14 +219,11 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
 
     fn new<P: AsRef<Path>>(
         node_url: &str,
-        abi_path: P,
-        contract_addr: &str,
+        contract_info: ContractInfo<'_, P>,
         event_db: Arc<DB>,
     ) -> Result<Self> {
         let web3_http = Web3Http::new(node_url)?;
-        let abi = contract_abi_from_path(abi_path)?;
-        let addr = EthAddress::from_str(contract_addr)?;
-        let contract = Web3Contract::new(web3_http, addr, abi)?;
+        let contract = Web3Contract::new(web3_http, contract_info)?;
 
         Ok(EventWatcher { contract, event_db })
     }
