@@ -1,9 +1,12 @@
 use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx};
-use anonify_common::{State, AccessRight, UserAddress, LockParam, Ciphertext, CIPHERTEXT_SIZE, call_name_to_id};
+use anonify_common::{State, AccessRight, UserAddress, LockParam, Ciphertext, CIPHERTEXT_SIZE};
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
-use crate::transaction::eventdb::InnerEnclaveLog;
+use crate::transaction::{
+    eventdb::InnerEnclaveLog,
+    utils::StateInfo,
+};
 use crate::error::{HostErrorKind, Result};
 
 /// Insert event logs from blockchain nodes into enclave memory database.
@@ -169,14 +172,12 @@ impl BoxedStateTransTx {
         eid: sgx_enclave_id_t,
         access_right: AccessRight,
         target: &UserAddress,
-        state: S,
-        state_id: u64,
-        call_name: &str,
+        state_info: StateInfo<'_, S>,
     ) -> Result<Self> {
         let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
         let mut raw_state_tx = RawStateTransTx::default();
-        let state = state.as_bytes();
-        let call_id = call_name_to_id(call_name);
+        let state = state_info.state_as_bytes();
+        let call_id = state_info.call_name_to_id();
 
         let status = unsafe {
             ecall_state_transition(
@@ -188,7 +189,7 @@ impl BoxedStateTransTx {
                 target.as_bytes().as_ptr() as _,
                 state.as_c_ptr() as *mut u8,
                 state.len(),
-                state_id,
+                state_info.state_id(),
                 call_id,
                 &mut raw_state_tx,
             )

@@ -13,7 +13,7 @@ use crate::{
     transaction::{
         eventdb::BlockNumDB,
         dispatcher::{SignerAddress, ContractKind, traits::*},
-        utils::ContractInfo,
+        utils::{ContractInfo, StateInfo},
     },
 };
 use super::primitives::{Web3Http, EthEvent, Web3Contract};
@@ -173,15 +173,13 @@ impl Sender for EthSender {
         &self,
         access_right: AccessRight,
         target: &UserAddress,
-        state: ST,
-        state_id: u64,
-        call_name: &str,
         signer: SignerAddress,
+        state_info: StateInfo<'_, ST>,
         gas: u64,
     ) -> Result<String> {
         // ecall of state transition
         let state_trans_tx = BoxedStateTransTx::state_transition(
-            self.enclave_id, access_right, target, state, state_id, call_name
+            self.enclave_id, access_right, target, state_info
         )?;
 
         let ciphers = state_trans_tx.get_ciphertexts();

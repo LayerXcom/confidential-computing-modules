@@ -7,7 +7,7 @@ use anonify_common::{AccessRight, State, UserAddress};
 use super::{
     eth::primitives::Web3Contract,
     eventdb::BlockNumDB,
-    utils::ContractInfo,
+    utils::{ContractInfo, StateInfo},
 };
 use crate::error::{Result, HostErrorKind};
 use self::traits::*;
@@ -106,7 +106,9 @@ where
     {
         let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
-        inner.state_transition(access_right, target, state, state_id, call_name, signer, gas, contract_info)
+        let state_info = StateInfo::new(state, state_id, call_name);
+
+        inner.state_transition(access_right, target, signer, state_info, contract_info, gas)
     }
 
     pub fn block_on_event<P: AsRef<Path> + Copy>(
@@ -237,12 +239,10 @@ where
         &mut self,
         access_right: AccessRight,
         target: &UserAddress,
-        state: ST,
-        state_id: u64,
-        call_name: &str,
         signer: SignerAddress,
-        gas: u64,
+        state_info: StateInfo<'_, ST>,
         contract_info: ContractInfo<'_, P>,
+        gas: u64,
     ) -> Result<String>
     where
         ST: State,
@@ -255,7 +255,7 @@ where
 
         self.sender.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .state_transition(access_right, target, state, state_id, call_name, signer, gas)
+            .state_transition(access_right, target, signer, state_info, gas)
     }
 }
 
@@ -311,10 +311,8 @@ pub mod traits {
             &self,
             access_right: AccessRight,
             target: &UserAddress,
-            state: ST,
-            state_id: u64,
-            call_name: &str,
             signer: SignerAddress,
+            state_info: StateInfo<'_, ST>,
             gas: u64,
         ) -> Result<String>;
 
