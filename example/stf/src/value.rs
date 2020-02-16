@@ -1,5 +1,5 @@
 use crate::State;
-use crate::state_type::{StateType, U64};
+use crate::state_type::*;
 use crate::localstd::{
     boxed::Box,
     string::String,
@@ -21,10 +21,6 @@ pub const CIPHERTEXT_SIZE: usize = 88;
 //     };
 // }
 
-pub struct Call {
-    name: String,
-    kind: CallKind,
-}
 
 
 pub fn call_name_to_id(name: &str) -> u32 {
@@ -40,28 +36,27 @@ pub fn call_name_to_id(name: &str) -> u32 {
 
 pub enum CallKind {
     Transfer{amount: U64},
-    // Approve{address: String, amount: U64},
+    // Approve{address: Address, amount: U64},
     TransferFrom{amount: U64},
     Mint{amount: U64},
-    // ChangeOwner{new_owner: String},
+    // ChangeOwner{new_owner: Address},
 }
 
-// impl CallKind {
-//     pub fn from_call_id<S: State>(id: u32, state: S) -> Result<Self, codec::Error> {
-//         match id {
-//             0 => CallKind::Transfer{amount: U64::from_state(state)?},
-//             _ => panic!("invalid call id"),
-//         }
-//         unimplemented!();
-//     }
-// }
+impl CallKind {
+    pub fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self, codec::Error> {
+        match id {
+            0 => Ok(CallKind::Transfer{amount: U64::from_bytes(state)?}),
+            _ => return Err("Invalid Call ID".into()),
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub enum Erc20 {
     Balance(U64),
-    // allowed: (String, U64),
+    // allowed: (Address, U64),
     TotalSupply(U64),
-    Owner(String),
+    Owner(Address),
 }
 
 pub struct Runtime;
@@ -91,9 +86,9 @@ impl Runtime {
         other_current: U64,
         amount: U64
     ) -> Result<impl Iterator<Item=impl State>, codec::Error> {
-        // if my_current < amount {
-        //     return Err(Box("You don't have enough balance."));
-        // }
+        if my_current < amount {
+            return Err("You don't have enough balance.".into());
+        }
         let my_update = my_current - amount;
         let other_update = other_current + amount;
 

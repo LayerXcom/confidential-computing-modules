@@ -34,3 +34,6 @@ impl Sub for U64 {
         U64(res)
     }
 }
+
+#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
+pub struct Address(pub [u8; 20]);

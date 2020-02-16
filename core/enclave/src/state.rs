@@ -59,7 +59,6 @@ where
     pub fn apply(
         self,
         kind: CallKind,
-        params: S,
         symm_key: &SymmetricKey
     ) -> Result<Vec<Ciphertext>> {
         let res = Runtime::call(

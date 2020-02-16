@@ -1,6 +1,6 @@
 use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx};
-use anonify_common::{State, AccessRight, UserAddress, LockParam, Ciphertext, CIPHERTEXT_SIZE};
+use anonify_common::{State, AccessRight, UserAddress, LockParam, Ciphertext, CIPHERTEXT_SIZE, call_name_to_id};
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
 use crate::transaction::eventdb::InnerEnclaveLog;
@@ -176,6 +176,7 @@ impl BoxedStateTransTx {
         let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
         let mut raw_state_tx = RawStateTransTx::default();
         let state = state.as_bytes();
+        let call_id = call_name_to_id(call_name);
 
         let status = unsafe {
             ecall_state_transition(
@@ -188,6 +189,7 @@ impl BoxedStateTransTx {
                 state.as_c_ptr() as *mut u8,
                 state.len(),
                 state_id,
+                call_id,
                 &mut raw_state_tx,
             )
         };

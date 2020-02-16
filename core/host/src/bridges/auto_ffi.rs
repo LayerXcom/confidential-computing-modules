@@ -35,6 +35,7 @@ extern "C" {
         state: *mut u8,
         state_len: usize,
         state_id: u64,
+        call_id: u32,
         result: *mut RawStateTransTx,
     ) -> sgx_status_t;
 }

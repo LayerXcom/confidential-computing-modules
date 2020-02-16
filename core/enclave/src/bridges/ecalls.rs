@@ -103,14 +103,16 @@ pub unsafe extern "C" fn ecall_state_transition(
     state: *mut u8,
     state_len: usize,
     state_id: u64,
+    call_id: u32,
     raw_state_tx: &mut RawStateTransTx,
 ) -> sgx_status_t {
     let target_addr = UserAddress::from_array(*target);
     let params = slice::from_raw_parts_mut(state, state_len);
 
     let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge).expect("Failed to generate access right.");
+    let call_kind = CallKind::from_call_id(call_id, params).expect("Failed to generate callkind.");
     let state_trans_tx = StateTransTx::construct::<StateType, _>(
-        CallKind::Transfer{amount:U64(5)}, state_id, params, &ar, target_addr, &ENCLAVE_CONTEXT
+        call_kind, state_id, &ar, target_addr, &ENCLAVE_CONTEXT
     )
         .expect("Failed to construct init state tx.");
     *raw_state_tx = state_trans_tx.into_raw()

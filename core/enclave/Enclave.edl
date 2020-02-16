@@ -34,6 +34,7 @@ enclave {
             [in, count=state_len] uint8_t *state,
             size_t state_len,
             uint64_t state_id,
+            uint32_t call_id,
             [out] RawStateTransTx* result
         );
 
