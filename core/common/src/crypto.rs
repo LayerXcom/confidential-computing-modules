@@ -13,7 +13,6 @@ use anonify_types::{RawPubkey, RawSig, RawChallenge};
 use rand::Rng;
 #[cfg(feature = "std")]
 use rand_core::{RngCore, CryptoRng};
-use anonify_stf::CIPHERTEXT_SIZE;
 
 /// Trait for 256-bits hash functions
 pub trait Hash256 {
@@ -252,57 +251,6 @@ impl<T: IntoVec> IntoVec for &[T] {
 
 /// The size of initialization vector for AES-256-GCM.
 pub const IV_SIZE: usize = 12;
-
-#[derive(Clone)]
-pub struct Ciphertext([u8; CIPHERTEXT_SIZE]);
-
-impl fmt::Debug for Ciphertext {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Ciphertext ")
-    }
-}
-
-impl Default for Ciphertext {
-    fn default() -> Self {
-        Ciphertext([0u8; CIPHERTEXT_SIZE])
-    }
-}
-
-impl IntoVec for Ciphertext {
-    fn into_vec(&self) -> Vec<u8> {
-        self.0.to_vec()
-    }
-}
-
-impl Ciphertext {
-    pub fn from_bytes(bytes: &[u8]) -> Self {
-        assert_eq!(bytes.len(), CIPHERTEXT_SIZE);
-        let mut buf = [0u8; CIPHERTEXT_SIZE];
-        buf.copy_from_slice(bytes);
-
-        Ciphertext(buf)
-    }
-
-    pub fn from_bytes_iter(bytes: &[u8]) -> impl Iterator<Item=Self> + '_ {
-        assert_eq!(bytes.len() % CIPHERTEXT_SIZE, 0);
-        let iter_num = bytes.len() / CIPHERTEXT_SIZE;
-
-        (0..iter_num).map(move |i| {
-            let mut buf = [0u8; CIPHERTEXT_SIZE];
-            let b = &bytes[i*CIPHERTEXT_SIZE..(i+1)*CIPHERTEXT_SIZE];
-            buf.copy_from_slice(b);
-            Ciphertext(buf)
-        })
-    }
-
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.0[..]
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-}
 
 const LOCK_PARAM_SIZE: usize = 32;
 

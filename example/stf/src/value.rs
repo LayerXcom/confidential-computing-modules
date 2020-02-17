@@ -6,8 +6,6 @@ use crate::localstd::{
     vec::Vec,
 };
 
-pub const CIPHERTEXT_SIZE: usize = 88;
-
 // macro_rules! state {
 //     ($raw: expr) => {
 //         match (&$raw) {
@@ -35,11 +33,12 @@ pub fn call_name_to_id(name: &str) -> u32 {
 }
 
 pub enum CallKind {
+    // Transfer{amount: U64, target: Address},
     Transfer{amount: U64},
-    // Approve{address: Address, amount: U64},
+    Approve{allowed: Mapping},
     TransferFrom{amount: U64},
     Mint{amount: U64},
-    // ChangeOwner{new_owner: Address},
+    ChangeOwner{new_owner: Address},
 }
 
 impl CallKind {
@@ -52,11 +51,11 @@ impl CallKind {
 }
 
 #[derive(Clone, Debug)]
-pub enum Erc20 {
+pub enum Storage {
     Balance(U64),
     // allowed: (Address, U64),
-    TotalSupply(U64),
-    Owner(Address),
+    TotalSupply(U64), // global
+    Owner(Address), // global
 }
 
 pub struct Runtime;
@@ -82,6 +81,8 @@ impl Runtime {
     }
 
     fn transfer(
+        // sender: Address,
+        // amount: U64,
         my_current: U64,
         other_current: U64,
         amount: U64

@@ -1,15 +1,24 @@
 use std::{
     prelude::v1::*,
+    collections::HashMap,
+    sync::SgxRwLock
 };
 use ed25519_dalek::{PublicKey, Signature};
 use anonify_common::{
     UserAddress,
     kvs::*,
 };
+use anonify_stf::State;
 use crate::error::Result;
 
+#[derive(Debug)]
+struct StateMap<S: State>(HashMap<u32, S>);
+
+#[derive(Debug)]
+pub struct EnclaveDB<S: State>(SgxRwLock<HashMap<UserAddress, StateMap<S>>>);
+
 /// Trait of key-value store instrctions restricted by signature verifications.
-pub trait EnclaveDB: Sync + Send {
+pub trait EnclaveKVS: Sync + Send {
     fn new() -> Self;
 
     fn get(&self, key: &UserAddress) -> DBValue;
@@ -17,7 +26,11 @@ pub trait EnclaveDB: Sync + Send {
     fn write(&self, tx: EnclaveDBTx);
 }
 
-impl EnclaveDB for MemoryDB {
+// impl<S: State> EnclaveKVS for EnclaveDB<S> {
+
+// }
+
+impl EnclaveKVS for MemoryDB {
     fn new() -> Self {
         MemoryDB::new()
     }
@@ -29,10 +42,6 @@ impl EnclaveDB for MemoryDB {
     fn write(&self, tx: EnclaveDBTx) {
         self.inner_write(tx.into_inner())
     }
-
-    // fn state_hash(&self) -> StateHash {
-
-    // }
 }
 
 /// Batches a sequence of put/delete operations for efficiency.

@@ -1,13 +1,13 @@
 use sgx_types::*;
 use std::prelude::v1::*;
 use sgx_tse::rsgx_create_report;
-use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
+use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress, StateGetter};
 use crate::{
     crypto::Eik,
     attestation::TEST_SPID,
     ocalls::{sgx_init_quote, get_quote},
     error::Result,
-    kvs::{EnclaveDB, EnclaveDBTx},
+    kvs::{EnclaveKVS, EnclaveDBTx},
 };
 
 lazy_static! {
@@ -15,16 +15,22 @@ lazy_static! {
         = EnclaveContext::new(TEST_SPID).unwrap();
 }
 
+impl<DB: EnclaveKVS> StateGetter for EnclaveContext<DB> {
+    fn get(&self, key: &UserAddress) -> DBValue {
+        self.db.get(key)
+    }
+}
+
 /// spid: Service procider ID for the ISV.
 #[derive(Clone)]
-pub struct EnclaveContext<DB: EnclaveDB> {
+pub struct EnclaveContext<DB: EnclaveKVS> {
     spid: sgx_spid_t,
     identity_key: Eik,
     db: DB,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
-impl<DB: EnclaveDB> EnclaveContext<DB> {
+impl<DB: EnclaveKVS> EnclaveContext<DB> {
     pub fn new(spid: &str) -> Result<Self> {
         let spid_vec = hex::decode(spid)?;
         let mut id = [0; 16];
@@ -58,10 +64,6 @@ impl<DB: EnclaveDB> EnclaveContext<DB> {
 
     pub fn write(&self, tx: EnclaveDBTx) {
         self.db.write(tx)
-    }
-
-    pub fn get(&self, key: &UserAddress) -> DBValue {
-        self.db.get(key)
     }
 
     fn get_report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {

@@ -3,7 +3,8 @@
 use std::{path::Path, sync::Arc};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use anonify_common::{AccessRight, State, UserAddress};
+use anonify_common::{AccessRight, UserAddress};
+use anonify_stf::State;
 use super::{
     eth::primitives::Web3Contract,
     eventdb::BlockNumDB,
@@ -126,7 +127,6 @@ where
     }
 }
 
-/// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
 struct InnerDispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
     deployer: D,
@@ -279,6 +279,7 @@ pub mod traits {
 
         fn get_account(&self, index: usize) -> Result<SignerAddress>;
 
+        /// Deploying contract with attestation.
         fn deploy(
             &mut self,
             deploy_user: &SignerAddress,
@@ -307,6 +308,7 @@ pub mod traits {
 
         fn get_account(&self, index: usize) -> Result<SignerAddress>;
 
+        /// Send ciphertexts which is result of the state transition to blockchain nodes.
         fn state_transition<ST: State>(
             &self,
             access_right: AccessRight,
@@ -316,6 +318,7 @@ pub mod traits {
             gas: u64,
         ) -> Result<String>;
 
+        /// Attestation with deployed contract.
         fn register(
             &self,
             signer: SignerAddress,

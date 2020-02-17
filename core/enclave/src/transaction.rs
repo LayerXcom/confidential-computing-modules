@@ -1,6 +1,7 @@
 use std::vec::Vec;
 use anonify_types::{RawRegisterTx, RawStateTransTx, traits::RawEnclaveTx};
-use anonify_common::{State, UserAddress, Ciphertext, LockParam, AccessRight, IntoVec, CallKind};
+use anonify_common::{UserAddress, LockParam, AccessRight, IntoVec};
+use anonify_stf::{State, Ciphertext, CallKind};
 use crate::{
     attestation::{Report, ReportSig, AttestationService},
     error::Result,
@@ -8,7 +9,7 @@ use crate::{
     bridges::ocalls::save_to_host_memory,
     state::{UserState, StateService},
     crypto::SYMMETRIC_KEY,
-    kvs::EnclaveDB,
+    kvs::EnclaveKVS,
 };
 
 /// A trait for exporting transacitons to out-enclave.
@@ -47,7 +48,7 @@ impl RegisterTx {
         }
     }
 
-    pub fn construct<DB: EnclaveDB>(
+    pub fn construct<DB: EnclaveKVS>(
         host: &str,
         path: &str,
         ias_api_key: &str,
@@ -81,7 +82,7 @@ impl InitStateTx {
     ) -> Result<Self>
     where
         S: State,
-        DB: EnclaveDB,
+        DB: EnclaveKVS,
     {
         let params = S::from_bytes(params)?;
         let init_state = UserState::<S, _>::init(user_address, params)
@@ -137,7 +138,7 @@ impl StateTransTx {
     ) -> Result<Self>
     where
         S: State,
-        DB: EnclaveDB,
+        DB: EnclaveKVS,
     {
         let service = StateService::<S>::from_access_right(access_right, target_address, &enclave_ctx)?;
         let lock_params = service.reveal_lock_params();

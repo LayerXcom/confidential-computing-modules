@@ -5,7 +5,8 @@ use std::{
 };
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
-use anonify_common::{UserAddress, AccessRight, State};
+use anonify_common::{UserAddress, AccessRight};
+use anonify_stf::State;
 use web3::types::Address as EthAddress;
 use crate::{
     ecalls::*,

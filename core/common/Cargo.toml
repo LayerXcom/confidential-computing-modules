@@ -8,7 +8,6 @@ edition = "2018"
 
 [dependencies]
 anonify-types = { path = "../types", default-features = false }
-anonify-stf = { path = "../../example/stf", default-features = false }
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
 sha2 = { version = "0.8", default-features = false }
 tiny-keccak = "1.4"
@@ -25,7 +24,6 @@ elastic-array = { version = "0.10", optional = true }
 [features]
 default = ["std"]
 std = [
-    "anonify-stf/std",
     "serde-std/std",
     "serde-std/derive",
     "base64",
@@ -35,7 +33,6 @@ std = [
     "elastic-array"
 ]
 sgx = [
-    "anonify-stf/sgx",
     "sgx_tstd",
     "serde-sgx",
     "serde-sgx/derive",

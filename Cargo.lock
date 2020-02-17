@@ -79,14 +79,16 @@ dependencies = [
 name = "anonify-common"
 version = "0.1.0"
 dependencies = [
- "anonify-stf 0.1.0",
  "anonify-types 0.1.0",
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "elastic-array 0.10.3 (git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.0)",
  "elastic-array 0.10.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_core 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0)",
  "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
  "sha2 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "tiny-keccak 1.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "web3 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -96,6 +98,7 @@ dependencies = [
 name = "anonify-stf"
 version = "0.1.0"
 dependencies = [
+ "anonify-common 0.1.0",
  "parity-scale-codec 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
 ]
@@ -666,6 +669,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "elastic-array"
 version = "0.10.3"
+source = "git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.0#dfcb3b3f419c70f394a3ce2c7a631607910a3112"
+dependencies = [
+ "heapsize 0.4.2 (git+https://github.com/mesalock-linux/heapsize-sgx)",
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+]
+
+[[package]]
+name = "elastic-array"
+version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "heapsize 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -884,6 +896,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "scopeguard 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "heapsize"
+version = "0.4.2"
+source = "git+https://github.com/mesalock-linux/heapsize-sgx#0f42e245847fdb5560826821d17e6be67e394630"
+dependencies = [
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
 ]
 
 [[package]]
@@ -1946,6 +1966,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "serde"
 version = "1.0.104"
+source = "git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0#c945ac9aeb23dc799070f3afaf590a6c3ac2c1a2"
+dependencies = [
+ "serde_derive 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0)",
+]
+
+[[package]]
+name = "serde"
+version = "1.0.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "serde_derive 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1966,6 +1994,16 @@ version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "serde_derive"
+version = "1.0.104"
+source = "git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0#c945ac9aeb23dc799070f3afaf590a6c3ac2c1a2"
+dependencies = [
+ "proc-macro2 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 1.0.14 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2878,6 +2916,7 @@ dependencies = [
 "checksum dtoa 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)" = "4358a9e11b9a09cf52383b451b49a169e8d797b68aa02301ff586d70d9661ea3"
 "checksum ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)" = "845aaacc16f01178f33349e7c992ecd0cee095aa5e577f0f4dee35971bd36455"
 "checksum either 1.5.3 (registry+https://github.com/rust-lang/crates.io-index)" = "bb1f6b1ce1c140482ea30ddd3335fc0024ac7ee112895426e0a629a6c20adfe3"
+"checksum elastic-array 0.10.3 (git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.0)" = "<none>"
 "checksum elastic-array 0.10.3 (registry+https://github.com/rust-lang/crates.io-index)" = "580f3768bd6465780d063f5b8213a2ebd506e139b345e4a81eb301ceae3d61e1"
 "checksum encode_unicode 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "a357d28ed41a50f9c765dbfe56cbc04a64e53e5fc58ba79fbc34c10ef3df831f"
 "checksum encoding_rs 0.8.22 (registry+https://github.com/rust-lang/crates.io-index)" = "cd8d03faa7fe0c1431609dfad7bbe827af30f82e1e2ae6f7ee4fca6bd764bc28"
@@ -2903,6 +2942,7 @@ dependencies = [
 "checksum getrandom 0.1.14 (registry+https://github.com/rust-lang/crates.io-index)" = "7abc8dd8451921606d809ba32e95b6111925cd2906060d2dcc29c070220503eb"
 "checksum h2 0.1.26 (registry+https://github.com/rust-lang/crates.io-index)" = "a5b34c246847f938a410a03c5458c7fee2274436675e76d8b903c08efc29c462"
 "checksum hashbrown 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)" = "3bae29b6653b3412c2e71e9d486db9f9df5d701941d86683005efb9f2d28e3da"
+"checksum heapsize 0.4.2 (git+https://github.com/mesalock-linux/heapsize-sgx)" = "<none>"
 "checksum heapsize 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "1679e6ea370dee694f91f1dc469bf94cf8f52051d147aec3e1f9497c6fc22461"
 "checksum hermit-abi 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "eff2656d88f158ce120947499e971d743c05dbcbed62e5bd2f38f1698bbc3772"
 "checksum hmac 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)" = "5dcb5e64cda4c23119ab41ba960d1e170a774c8e4b9d9e6a9bc18aabf5e59695"
@@ -3018,9 +3058,11 @@ dependencies = [
 "checksum security-framework-sys 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "e31493fc37615debb8c5090a7aeb4a9730bc61e77ab10b9af59f1a202284f895"
 "checksum semver 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1d7eb9ef2c18661902cc47e535f9bc51b78acd254da71d375c2f6720d9a40403"
 "checksum semver-parser 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
+"checksum serde 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0)" = "<none>"
 "checksum serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)" = "414115f25f818d7dfccec8ee535d76949ae78584fc4f79a6f45a904bf8ab4449"
 "checksum serde-big-array 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "883eee5198ea51720eab8be52a36cf6c0164ac90eea0ed95b649d5e35382404e"
 "checksum serde_bytes 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)" = "325a073952621257820e7a3469f55ba4726d8b28657e7e36653d1c36dc2c84ae"
+"checksum serde_derive 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0)" = "<none>"
 "checksum serde_derive 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)" = "128f9e303a5a29922045a830221b8f78ec74a5f544944f3d5984f8ec3895ef64"
 "checksum serde_json 1.0.45 (registry+https://github.com/rust-lang/crates.io-index)" = "eab8f15f15d6c41a154c1b128a22f2dfabe350ef53c40953d84e36155c91192b"
 "checksum serde_urlencoded 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)" = "642dd69105886af2efd227f75a520ec9b44a820d65bc133a9131f7d229fd165a"

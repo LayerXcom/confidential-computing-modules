@@ -13,7 +13,6 @@ dependencies = [
 name = "anonify-common"
 version = "0.1.0"
 dependencies = [
- "anonify-stf 0.1.0",
  "anonify-types 0.1.0",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "elastic-array 0.10.3 (git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.0)",
@@ -28,6 +27,7 @@ name = "anonify-enclave"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
+ "anonify-stf 0.1.0",
  "anonify-types 0.1.0",
  "base64 0.10.1 (git+https://github.com/mesalock-linux/rust-base64-sgx?rev=sgx_1.1.0)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -57,6 +57,7 @@ dependencies = [
 name = "anonify-stf"
 version = "0.1.0"
 dependencies = [
+ "anonify-common 0.1.0",
  "parity-scale-codec 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
 ]

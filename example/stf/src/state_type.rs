@@ -4,6 +4,7 @@
 use crate::State;
 use crate::localstd::{
     vec::Vec,
+    collections::BTreeMap,
     ops::{Add, Sub},
 };
 use codec::{Encode, Decode, Input, Output};
@@ -35,5 +36,13 @@ impl Sub for U64 {
     }
 }
 
-#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
+#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Address(pub [u8; 20]);
+
+// TODO: Mapping!(Address, U64);
+#[derive(Encode, Decode, Clone, Debug, PartialEq, PartialOrd, Default)]
+pub struct Mapping(pub BTreeMap<Address, U64>);
+
+impl Mapping {
+    
+}

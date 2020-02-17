@@ -1,6 +1,7 @@
 use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx};
-use anonify_common::{State, AccessRight, UserAddress, LockParam, Ciphertext, CIPHERTEXT_SIZE};
+use anonify_common::{AccessRight, UserAddress, LockParam};
+use anonify_stf::{State, Ciphertext, CIPHERTEXT_SIZE};
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
 use crate::transaction::{

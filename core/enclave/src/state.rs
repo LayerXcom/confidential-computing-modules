@@ -1,13 +1,14 @@
 //! State transition functions for anonymous asset
 
 use anonify_common::{
-    UserAddress, Sha256, Hash256, State, Ciphertext, LockParam, AccessRight,
-    kvs::*, Runtime, CallKind
+    UserAddress, Sha256, Hash256, LockParam, AccessRight,
+    kvs::*,
 };
+use anonify_stf::{State, Runtime, CallKind, Ciphertext};
 use codec::{Input, Output};
 use crate::{
     crypto::*,
-    kvs::{EnclaveDB, EnclaveDBTx},
+    kvs::{EnclaveKVS, EnclaveDBTx},
     error::{Result, EnclaveError},
     context::EnclaveContext,
 };
@@ -20,7 +21,7 @@ use std::{
 
 /// Service for state transition operations
 pub struct StateService<S: State>{
-    state: Vec<UserState<S, Current>>,
+    current: Vec<UserState<S, Current>>,
     my_addr: UserAddress,
 }
 
@@ -28,7 +29,7 @@ impl<S> StateService<S>
 where
     S: State,
 {
-    pub fn from_access_right<DB: EnclaveDB>(
+    pub fn from_access_right<DB: EnclaveKVS>(
         access_right: &AccessRight,
         target_addr: UserAddress,
         ctx: &EnclaveContext<DB>,
@@ -40,41 +41,42 @@ where
         let other_dv = ctx.get(&target_addr);
         let other_state = UserState::<S, Current>::from_db_value(target_addr, other_dv)?;
 
-        let mut res = vec![];
-        res.push(my_state);
-        res.push(other_state);
+        let mut current = vec![];
+        current.push(my_state);
+        current.push(other_state);
         Ok(StateService{
-            state: res,
+            current,
             my_addr,
         })
     }
 
     pub fn reveal_lock_params(&self) -> Vec<LockParam> {
-        self.state
+        self.current
             .iter()
             .map(|e| e.lock_param())
             .collect()
     }
 
     pub fn apply(
+    // pub fn apply<G: StateGetter>(
         self,
         kind: CallKind,
         symm_key: &SymmetricKey
     ) -> Result<Vec<Ciphertext>> {
         let res = Runtime::call(
             kind,
-            self.state
+            self.current
                 .iter()
                 .map(|e| e.inner_state().clone()) // TODO
                 .collect(),
             self.my_addr.into_array(),
         )?
         .zip(
-            self.state
+            self.current
                 .into_iter()
                 .map(|e| e.into_next().unwrap()) // TODO: Remove unwrap
         )
-        .map(|(state, user)| user.encrypt_with_update(&symm_key, state).unwrap()) // TODO: Remove unwrap
+        .map(|(current, user)| user.encrypt_with_update(&symm_key, current).unwrap()) // TODO: Remove unwrap
         .collect();
 
         Ok(res)
@@ -174,7 +176,7 @@ impl<S: State> UserState<S, Current> {
 
     // Only State with `Current` allows to access to the database to avoid from
     // storing data which have not been considered globally consensused.
-    pub fn insert_cipheriv_memdb<DB: EnclaveDB>(
+    pub fn insert_cipheriv_memdb<DB: EnclaveKVS>(
         cipheriv: Ciphertext,
         symm_key: &SymmetricKey,
         ctx: &EnclaveContext<DB>,
@@ -342,7 +344,7 @@ impl<S: State, N> StateValue<S, N> {
 #[cfg(debug_assertions)]
 pub mod tests {
     use super::*;
-    use anonify_common::StateType;
+    use anonify_stf::StateType;
     use ed25519_dalek::{SecretKey, PublicKey, Keypair, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH};
 
     const SECRET_KEY_BYTES: [u8; SECRET_KEY_LENGTH] = [

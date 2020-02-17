@@ -15,5 +15,5 @@ use serde_std as serde;
 mod crypto;
 pub mod kvs;
 
-pub use anonify_stf::*;
 pub use crate::crypto::*;
+pub use crate::kvs::*;
