@@ -5,6 +5,8 @@ use crate::localstd::{
     string::String,
     vec::Vec,
 };
+use anonify_common::{UserAddress, MemId};
+use codec::{Encode, Decode};
 
 // macro_rules! state {
 //     ($raw: expr) => {
@@ -19,7 +21,17 @@ use crate::localstd::{
 //     };
 // }
 
+/// A getter of state stored in enclave memory.
+pub trait StateGetter {
+    fn get<S: State>(&self, key: &UserAddress, name: &str) -> Result<S, codec::Error>;
+}
 
+pub fn mem_name_to_id(name: &str) -> MemId {
+    match name {
+        "Balance" => MemId(0),
+        _ => panic!("invalid mem name"),
+    }
+}
 
 pub fn call_name_to_id(name: &str) -> u32 {
     match name {
@@ -32,9 +44,15 @@ pub fn call_name_to_id(name: &str) -> u32 {
     }
 }
 
+#[derive(Encode, Decode, Debug, Clone, Default)]
+pub struct Transfer {
+    pub amount: U64,
+    pub target: UserAddress,
+}
+
 pub enum CallKind {
     // Transfer{amount: U64, target: Address},
-    Transfer{amount: U64},
+    Transfer(Transfer),
     Approve{allowed: Mapping},
     TransferFrom{amount: U64},
     Mint{amount: U64},
@@ -44,7 +62,7 @@ pub enum CallKind {
 impl CallKind {
     pub fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self, codec::Error> {
         match id {
-            0 => Ok(CallKind::Transfer{amount: U64::from_bytes(state)?}),
+            0 => Ok(CallKind::Transfer(Transfer::from_bytes(state)?)),
             _ => return Err("Invalid Call ID".into()),
         }
     }
@@ -58,22 +76,30 @@ pub enum Storage {
     Owner(Address), // global
 }
 
-pub struct Runtime;
+pub struct Runtime<G: StateGetter> {
+    db: G,
+}
 
 // TODO: state re-order attack
-impl Runtime {
-    pub fn call<S: State>(
+impl<G: StateGetter> Runtime<G> {
+    pub fn new(db: G) -> Self {
+        Runtime {
+            db,
+        }
+    }
+
+    pub fn call(
+        &self,
         kind: CallKind,
-        state: Vec<S>,
-        my_addr: [u8; 20],
-    ) -> Result<impl Iterator<Item=impl State>, codec::Error> {
+        my_addr: UserAddress,
+    ) -> Result<Vec<UpdatedState<impl State>>, codec::Error> {
         match kind {
-            CallKind::Transfer{amount} => {
-                assert_eq!(state.len(), 2);
+            CallKind::Transfer(transfer) => {
                 Self::transfer(
-                    U64::from_state(&state[0])?,
-                    U64::from_state(&state[1])?,
-                    amount,
+                    &self,
+                    my_addr,
+                    transfer.target,
+                    transfer.amount,
                 )
             },
             _ => unimplemented!()
@@ -81,20 +107,41 @@ impl Runtime {
     }
 
     fn transfer(
-        // sender: Address,
-        // amount: U64,
-        my_current: U64,
-        other_current: U64,
-        amount: U64
-    ) -> Result<impl Iterator<Item=impl State>, codec::Error> {
-        if my_current < amount {
+        &self,
+        sender: UserAddress,
+        target: UserAddress,
+        amount: U64,
+    ) -> Result<Vec<UpdatedState<U64>>, codec::Error> {
+        let my_balance = self.db.get::<U64>(&sender, "Balance")?;
+        let target_balance = self.db.get::<U64>(&target, "Balance")?;
+
+        if my_balance < amount {
             return Err("You don't have enough balance.".into());
         }
-        let my_update = my_current - amount;
-        let other_update = other_current + amount;
+        let my_update = my_balance - amount;
+        let other_update = target_balance + amount;
 
         // TODO: avoid vec because array doesn't support into_iter(), automatically translated to iter()
         // which returns &U64.
-        Ok(vec![my_update, other_update].into_iter())
+        let my = UpdatedState::new(sender, "Balance", my_update);
+        let other = UpdatedState::new(target, "Balance", other_update);
+        Ok(vec![my, other])
+    }
+}
+
+pub struct UpdatedState<S: State> {
+    pub address: UserAddress,
+    pub mem_id: MemId,
+    pub state: S,
+}
+
+impl<S: State> UpdatedState<S> {
+    pub fn new(address: UserAddress, mem_name: &str, state: S) -> Self {
+        let mem_id = mem_name_to_id(mem_name);
+        UpdatedState {
+            address,
+            mem_id,
+            state
+        }
     }
 }

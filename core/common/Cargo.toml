@@ -20,6 +20,7 @@ rand = { version = "0.6", optional = true }
 rand_core = { version = "0.3", optional = true }
 sgx-elastic-array = { package = "elastic-array", tag = "sgx_1.1.0", git = "https://github.com/mesalock-linux/elastic-array-sgx.git", optional = true }
 elastic-array = { version = "0.10", optional = true }
+codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
 
 [features]
 default = ["std"]

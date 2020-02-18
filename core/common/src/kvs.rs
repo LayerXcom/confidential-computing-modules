@@ -11,11 +11,11 @@ use sgx_elastic_array::{ElasticArray128, ElasticArray32};
 #[cfg(feature = "sgx")]
 use crate::localstd::sync::SgxRwLock as RwLock;
 use crate::crypto::UserAddress;
+use codec::{Encode, Decode};
 
-/// A getter of state stored in enclave memory.
-pub trait StateGetter {
-    fn get(&self, key: &UserAddress) -> DBValue;
-}
+/// State identifier stored in memory.
+#[derive(Encode, Decode, Debug, Clone, Copy, PartialOrd, PartialEq, Default, Eq, Ord, Hash)]
+pub struct MemId(pub u32);
 
 /// Inner trait of key-value store instructions
 pub trait KVS: Sync + Send {

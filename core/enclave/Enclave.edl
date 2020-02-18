@@ -30,7 +30,6 @@ enclave {
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
             [in] uint8_t challenge[32],
-            [in] uint8_t target[20],
             [in, count=state_len] uint8_t *state,
             size_t state_len,
             uint64_t state_id,

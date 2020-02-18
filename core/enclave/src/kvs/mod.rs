@@ -1,7 +1,7 @@
 use std::{
     prelude::v1::*,
     collections::HashMap,
-    sync::SgxRwLock
+    sync::{SgxRwLock, Arc},
 };
 use ed25519_dalek::{PublicKey, Signature};
 use anonify_common::{
@@ -9,19 +9,20 @@ use anonify_common::{
     kvs::*,
 };
 use anonify_stf::State;
+use crate::state::{StateValue, Current};
 use crate::error::Result;
 
 #[derive(Debug)]
-struct StateMap<S: State>(HashMap<u32, S>);
+struct StateMap<S: State>(HashMap<MemId, StateValue<S, Current>>);
 
 #[derive(Debug)]
-pub struct EnclaveDB<S: State>(SgxRwLock<HashMap<UserAddress, StateMap<S>>>);
+pub struct EnclaveDB<S: State>(Arc<SgxRwLock<HashMap<UserAddress, StateMap<S>>>>);
 
 /// Trait of key-value store instrctions restricted by signature verifications.
-pub trait EnclaveKVS: Sync + Send {
+pub trait EnclaveKVS {
     fn new() -> Self;
 
-    fn get(&self, key: &UserAddress) -> DBValue;
+    fn get(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> ;
 
     fn write(&self, tx: EnclaveDBTx);
 }
@@ -30,13 +31,21 @@ pub trait EnclaveKVS: Sync + Send {
 
 // }
 
-impl EnclaveKVS for MemoryDB {
+impl<S: State> EnclaveKVS for EnclaveDB<S> {
     fn new() -> Self {
-        MemoryDB::new()
+        EnclaveDB(Arc::new(SgxRwLock::new(HashMap::new())))
     }
 
-    fn get(&self, key: &UserAddress) -> DBValue {
-        self.inner_get(key.as_bytes()).unwrap_or(DBValue::default())
+    fn get(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> {
+        self.0.read().unwrap()
+            .get(key)
+            .unwrap_or(StateValue::default())
+
+            .get(mem_id)
+            .cloned()
+            .unwrap_or(StateValue::default())
+        // self.inner_get(key.as_bytes())
+        //     .unwrap_or(DBValue::default())
     }
 
     fn write(&self, tx: EnclaveDBTx) {

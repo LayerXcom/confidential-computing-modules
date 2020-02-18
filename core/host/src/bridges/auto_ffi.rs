@@ -31,7 +31,6 @@ extern "C" {
         sig: *mut [u8; 64usize],
         pubkey: *mut [u8; 32usize],
         challenge: *mut [u8; 32usize],
-        target: *mut [u8; 20usize],
         state: *mut u8,
         state_len: usize,
         state_id: u64,

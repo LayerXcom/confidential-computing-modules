@@ -92,7 +92,6 @@ where
     pub fn state_transition<ST, P>(
         &self,
         access_right: AccessRight,
-        target: &UserAddress,
         state: ST,
         state_id: u64,
         call_name: &str,
@@ -109,7 +108,7 @@ where
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         let state_info = StateInfo::new(state, state_id, call_name);
 
-        inner.state_transition(access_right, target, signer, state_info, contract_info, gas)
+        inner.state_transition(access_right, signer, state_info, contract_info, gas)
     }
 
     pub fn block_on_event<P: AsRef<Path> + Copy>(
@@ -238,7 +237,6 @@ where
     fn state_transition<ST, P>(
         &mut self,
         access_right: AccessRight,
-        target: &UserAddress,
         signer: SignerAddress,
         state_info: StateInfo<'_, ST>,
         contract_info: ContractInfo<'_, P>,
@@ -255,7 +253,7 @@ where
 
         self.sender.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .state_transition(access_right, target, signer, state_info, gas)
+            .state_transition(access_right, signer, state_info, gas)
     }
 }
 
@@ -312,7 +310,6 @@ pub mod traits {
         fn state_transition<ST: State>(
             &self,
             access_right: AccessRight,
-            target: &UserAddress,
             signer: SignerAddress,
             state_info: StateInfo<'_, ST>,
             gas: u64,

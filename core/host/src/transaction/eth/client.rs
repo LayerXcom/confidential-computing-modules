@@ -173,14 +173,13 @@ impl Sender for EthSender {
     fn state_transition<ST: State>(
         &self,
         access_right: AccessRight,
-        target: &UserAddress,
         signer: SignerAddress,
         state_info: StateInfo<'_, ST>,
         gas: u64,
     ) -> Result<String> {
         // ecall of state transition
         let state_trans_tx = BoxedStateTransTx::state_transition(
-            self.enclave_id, access_right, target, state_info
+            self.enclave_id, access_right, state_info
         )?;
 
         let ciphers = state_trans_tx.get_ciphertexts();

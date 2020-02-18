@@ -8,6 +8,7 @@ use crate::{
 };
 use ed25519_dalek::{Keypair, PublicKey, Signature, SignatureError};
 use tiny_keccak::Keccak;
+use codec::{Encode, Decode};
 use anonify_types::{RawPubkey, RawSig, RawChallenge};
 #[cfg(feature = "std")]
 use rand::Rng;
@@ -23,7 +24,7 @@ pub trait Hash256 {
 
 /// User address represents last 20 bytes of digest of user's public key.
 /// A signature verification must return true to generate a user address.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
 pub struct UserAddress([u8; 20]);
 
@@ -255,7 +256,7 @@ pub const IV_SIZE: usize = 12;
 const LOCK_PARAM_SIZE: usize = 32;
 
 /// To avoid data collision when a transaction is sent to a blockchain.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq)]
 pub struct LockParam([u8; LOCK_PARAM_SIZE]);
 
 impl IntoVec for LockParam {

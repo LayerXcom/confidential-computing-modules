@@ -172,7 +172,6 @@ impl BoxedStateTransTx {
     pub(crate) fn state_transition<S: State>(
         eid: sgx_enclave_id_t,
         access_right: AccessRight,
-        target: &UserAddress,
         state_info: StateInfo<'_, S>,
     ) -> Result<Self> {
         let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
@@ -187,7 +186,6 @@ impl BoxedStateTransTx {
                 access_right.sig().to_bytes().as_ptr() as _,
                 access_right.pubkey().to_bytes().as_ptr() as _,
                 access_right.challenge().as_ptr() as _,
-                target.as_bytes().as_ptr() as _,
                 state.as_c_ptr() as *mut u8,
                 state.len(),
                 state_info.state_id(),

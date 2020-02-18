@@ -4,84 +4,105 @@ use anonify_common::{
     UserAddress, Sha256, Hash256, LockParam, AccessRight,
     kvs::*,
 };
-use anonify_stf::{State, Runtime, CallKind, Ciphertext};
-use codec::{Input, Output};
+use anonify_stf::{State, Runtime, CallKind, Ciphertext, StateGetter, UpdatedState};
+use codec::{Encode, Decode, Input, Output};
 use crate::{
     crypto::*,
     kvs::{EnclaveKVS, EnclaveDBTx},
     error::{Result, EnclaveError},
-    context::EnclaveContext,
+    context::{EnclaveContext, StateGetter},
 };
 use std::{
     prelude::v1::*,
     io::{Write, Read},
     marker::PhantomData,
     convert::{TryFrom, TryInto},
+    collections::HashMap,
 };
 
 /// Service for state transition operations
-pub struct StateService<S: State>{
-    current: Vec<UserState<S, Current>>,
+pub struct StateService<S: State, DB: EnclaveKVS>{
+    ctx: EnclaveContext<DB>,
     my_addr: UserAddress,
+    updates: Option<Vec<UpdatedState<S>>>,
 }
 
-impl<S> StateService<S>
+impl<S, DB> StateService<S, DB>
 where
     S: State,
+    DB: EnclaveKVS,
 {
-    pub fn from_access_right<DB: EnclaveKVS>(
+    pub fn from_access_right(
         access_right: &AccessRight,
-        target_addr: UserAddress,
-        ctx: &EnclaveContext<DB>,
+        ctx: EnclaveContext<DB>,
     ) -> Result<Self> {
         let my_addr = UserAddress::from_access_right(access_right)?;
 
-        let my_dv = ctx.get(&my_addr);
-        let my_state = UserState::<S, Current>::from_db_value(my_addr, my_dv)?;
-        let other_dv = ctx.get(&target_addr);
-        let other_state = UserState::<S, Current>::from_db_value(target_addr, other_dv)?;
+        // let my_dv = ctx.get(&my_addr);
+        // let my_state = UserState::<S, Current>::from_db_value(my_addr, my_dv)?;
+        // let other_dv = ctx.get(&target_addr);
+        // let other_state = UserState::<S, Current>::from_db_value(target_addr, other_dv)?;
 
-        let mut current = vec![];
-        current.push(my_state);
-        current.push(other_state);
-        Ok(StateService{
-            current,
+        // let mut current = vec![];
+        // current.push(my_state);
+        // current.push(other_state);
+        Ok(StateService::<S, _>{
+            ctx,
             my_addr,
+            updates: None,
         })
     }
 
+    pub fn apply(
+        mut self,
+        kind: CallKind,
+    ) -> Result<()> {
+        let res = Runtime::new(self.ctx).call(
+            kind,
+            // self.current
+            //     .iter()
+            //     .map(|e| e.inner_state().clone()) // TODO
+            //     .collect(),
+            self.my_addr,
+        )?;
+        self.updates = Some(res);
+
+        // .zip(
+        //     self.current
+        //         .into_iter()
+        //         .map(|e| e.into_next().unwrap()) // TODO: Remove unwrap
+        // )
+        // .map(|(update, user)| user.encrypt_with_update(&symm_key, update).unwrap()) // TODO: Remove unwrap
+        // .collect();
+
+        Ok(())
+    }
+
     pub fn reveal_lock_params(&self) -> Vec<LockParam> {
-        self.current
-            .iter()
-            .map(|e| e.lock_param())
+        self.updates
+            .into_iter()
+            .map(|e| {
+                let dv = self.ctx.get(&e.address, &e.mem_id);
+                let user = UserState::<S, Current>::from_db_value(e.address, e.mem_id, dv).unwrap();
+                user.lock_param()
+            })
             .collect()
     }
 
-    pub fn apply(
-    // pub fn apply<G: StateGetter>(
-        self,
-        kind: CallKind,
-        symm_key: &SymmetricKey
-    ) -> Result<Vec<Ciphertext>> {
-        let res = Runtime::call(
-            kind,
-            self.current
-                .iter()
-                .map(|e| e.inner_state().clone()) // TODO
-                .collect(),
-            self.my_addr.into_array(),
-        )?
-        .zip(
-            self.current
-                .into_iter()
-                .map(|e| e.into_next().unwrap()) // TODO: Remove unwrap
-        )
-        .map(|(current, user)| user.encrypt_with_update(&symm_key, current).unwrap()) // TODO: Remove unwrap
-        .collect();
-
-        Ok(res)
+    pub fn reveal_ciphertexts(&self, symm_key: &SymmetricKey) -> Vec<Ciphertext> {
+        self.updates
+            .into_iter()
+            .map(|e| {
+                let dv = self.ctx.get(&e.address, &e.mem_id);
+                let user = UserState::<S, Current>::from_db_value(e.address, dv).unwrap();
+                user.update_inner_state(e.state)
+                    .into_next().unwrap()
+                    .encrypt(symm_key).unwrap()
+            })
+            .collect()
     }
 }
+
 
 /// Curret generation of lock parameter for state.
 /// Priventing from race condition of writing ciphertext to blockchain.
@@ -97,52 +118,53 @@ pub enum Next { }
 /// The secret key is shared among all TEE's enclaves.
 /// StateValue field of this struct should be encrypted before it'll store enclave's in-memory db.
 /// [Example]: A size of ciphertext for each user state is 88 bytes, if inner_state is u64 value.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Encode, Decode, Debug, Clone, PartialEq)]
 pub struct UserState<S: State, N> {
     address: UserAddress,
+    mem_id: MemId,
     state_value: StateValue<S, N>,
 }
 
 impl<S: State, N> UserState<S, N> {
-    pub fn try_as_vec(&self) -> Result<Vec<u8>> {
-        let mut buf = vec![];
-        self.write(&mut buf)?;
-        Ok(buf)
-    }
+    // pub fn try_as_vec(&self) -> Result<Vec<u8>> {
+    //     let mut buf = vec![];
+    //     self.write(&mut buf)?;
+    //     Ok(buf)
+    // }
 
-    pub fn try_as_vec_with_update(&self, update: impl State) -> Result<Vec<u8>> {
-        let mut buf = vec![];
-        self.write_with_update(&mut buf, update)?;
-        Ok(buf)
-    }
+    // pub fn try_as_vec_with_update(&self, update: impl State) -> Result<Vec<u8>> {
+    //     let mut buf = vec![];
+    //     self.write_with_update(&mut buf, update)?;
+    //     Ok(buf)
+    // }
 
-    pub fn write<W: Write + Output>(&self, writer: &mut W) -> Result<()> {
-        self.address.write(writer)?;
-        self.state_value.write(writer)?;
+    // pub fn write<W: Write + Output>(&self, writer: &mut W) -> Result<()> {
+    //     self.address.write(writer)?;
+    //     self.state_value.write(writer)?;
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
-    pub fn write_with_update<W: Write + Output>(
-        &self,
-        writer: &mut W,
-        update: impl State,
-    ) -> Result<()> {
-        self.address.write(writer)?;
-        self.state_value.write_with_update(writer, update)?;
+    // pub fn write_with_update<W: Write + Output>(
+    //     &self,
+    //     writer: &mut W,
+    //     update: impl State,
+    // ) -> Result<()> {
+    //     self.address.write(writer)?;
+    //     self.state_value.write_with_update(writer, update)?;
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
-    pub fn read<R: Read + Input>(mut reader: R) -> Result<Self> {
-        let address = UserAddress::read(&mut reader)?;
-        let state_value = StateValue::read(&mut reader)?;
+    // pub fn read<R: Read + Input>(mut reader: R) -> Result<Self> {
+    //     let address = UserAddress::read(&mut reader)?;
+    //     let state_value = StateValue::read(&mut reader)?;
 
-        Ok(UserState {
-            address,
-            state_value,
-        })
-    }
+    //     Ok(UserState {
+    //         address,
+    //         state_value,
+    //     })
+    // }
 
     pub fn inner_state(&self) -> &S {
         &self.state_value.inner_state
@@ -155,21 +177,28 @@ impl<S: State, N> UserState<S, N> {
 
 /// Operations of user state before sending a transaction or after fetching as a ciphertext
 impl<S: State> UserState<S, Current> {
-    pub fn new(address: UserAddress, state_value: StateValue<S, Current>) -> Self {
+    pub fn new(
+        address: UserAddress,
+        mem_id: MemId,
+        state_value: StateValue<S, Current>,
+    ) -> Self {
         UserState {
             address,
+            mem_id,
             state_value,
         }
     }
 
     pub fn from_db_value(
         address: UserAddress,
-        db_value: DBValue
+        mem_id: MemId,
+        db_value: DBValue,
     ) -> Result<Self> {
         let state_value = StateValue::from_dbvalue(db_value)?;
 
         Ok(UserState {
             address,
+            mem_id,
             state_value,
         })
     }
@@ -194,8 +223,10 @@ impl<S: State> UserState<S, Current> {
 
     /// Decrypt Ciphertext which was stored in a shared ledger.
     pub fn decrypt(cipheriv: Ciphertext, key: &SymmetricKey) -> Result<Self> {
-        let res = key.decrypt_aes_256_gcm(cipheriv)?;
-        Self::read(&res[..])
+        let mut buf = key.decrypt_aes_256_gcm(cipheriv)?;
+        let res = UserState::decode(&mut &buf[..])?;
+
+        Ok(res)
     }
 
     /// Get in-memory database key.
@@ -215,6 +246,7 @@ impl<S: State> UserState<S, Current> {
     pub fn update_inner_state(&self, update: S) -> Self {
         UserState {
             address: self.address,
+            mem_id: self.mem_id,
             state_value: StateValue::new(update, self.lock_param()),
         }
     }
@@ -226,14 +258,16 @@ impl<S: State> UserState<S, Current> {
 
         Ok(UserState {
             address: self.address,
+            mem_id: self.mem_id,
             state_value,
         })
     }
 
     /// Compute hash digest of current user state.
     fn hash(&self) -> Result<Sha256> {
-        let mut inp: Vec<u8> = vec![];
-        self.write(&mut inp)?;
+        let inp = self.encode();
+        // let mut inp: Vec<u8> = vec![];
+        // self.write(&mut inp)?;
 
         Ok(Sha256::hash(&inp))
     }
@@ -246,7 +280,11 @@ impl<S: State> UserState<S, Current> {
 
 impl<S: State> UserState<S, Next> {
     /// Initialize userstate. lock_param is defined with `Sha256(address || init_state)`.
-    pub fn init(address: UserAddress, init_state: S) -> Result<Self> {
+    pub fn init(
+        address: UserAddress,
+        mem_id: MemId,
+        init_state: S,
+    ) -> Result<Self> {
         let mut buf = vec![];
         address.write(&mut buf)?;
         init_state.write_le(&mut buf);
@@ -255,29 +293,30 @@ impl<S: State> UserState<S, Next> {
 
         Ok(UserState {
             address,
+            mem_id,
             state_value,
         })
     }
 
     pub fn encrypt(self, key: &SymmetricKey) -> Result<Ciphertext> {
-        let buf = self.try_as_vec()?;
+        let buf = self.encode();
         key.encrypt_aes_256_gcm(buf)
     }
 
-    pub fn encrypt_with_update(
-        self,
-        key: &SymmetricKey,
-        update: impl State,
-    ) -> Result<Ciphertext> {
-        let buf = self.try_as_vec_with_update(update)?;
-        key.encrypt_aes_256_gcm(buf)
-    }
+    // pub fn encrypt_with_update(
+    //     self,
+    //     key: &SymmetricKey,
+    //     update: impl State,
+    // ) -> Result<Ciphertext> {
+    //     let buf = self.try_as_vec_with_update(update)?;
+    //     key.encrypt_aes_256_gcm(buf)
+    // }
 }
 
 /// State value per each user's state.
 /// inner_state depends on the state of your application on anonify system.
 /// LockParam is used to avoid data collisions when TEEs send transactions to blockchain.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Encode, Decode, Debug, Clone, PartialEq, Default)]
 pub struct StateValue<S: State, N> {
     pub inner_state: S,
     pub lock_param: LockParam,
@@ -332,8 +371,12 @@ impl<S: State, N> StateValue<S, N> {
         Ok(StateValue::new(inner_state, lock_param))
     }
 
-    pub fn inner_state(&self) -> &S {
+    pub fn as_inner_state(&self) -> &S {
         &self.inner_state
+    }
+
+    pub fn to_inner_state(&self) -> S {
+        self.inner_state
     }
 
     pub fn lock_param(&self) -> &LockParam {

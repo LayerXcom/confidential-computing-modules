@@ -46,6 +46,7 @@ pub trait State: Sized + Default + Clone + Encode + Decode {
 
 impl<T: Sized + Default + Clone + Encode + Decode> State for T {}
 
+
 pub const CIPHERTEXT_SIZE: usize = 88;
 
 #[derive(Clone)]

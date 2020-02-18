@@ -133,18 +133,19 @@ impl StateTransTx {
         kind: CallKind,
         state_id: u64,
         access_right: &AccessRight,
-        target_address: UserAddress,
-        enclave_ctx: &EnclaveContext<DB>,
+        enclave_ctx: EnclaveContext<DB>,
     ) -> Result<Self>
     where
         S: State,
         DB: EnclaveKVS,
     {
-        let service = StateService::<S>::from_access_right(access_right, target_address, &enclave_ctx)?;
+
+        let mut service = StateService::<S>::from_access_right(access_right, enclave_ctx.clone())?;
+        service.apply(kind)?;
+
         let lock_params = service.reveal_lock_params();
+        let ciphertexts = service.reveal_ciphertexts(&SYMMETRIC_KEY);
         let enclave_sig = enclave_ctx.sign(&lock_params[0])?;
-        let ciphertexts = service.apply(kind, &SYMMETRIC_KEY)
-            .expect("Faild to execute applying function.");
 
         Ok(StateTransTx {
             state_id,

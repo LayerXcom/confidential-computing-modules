@@ -1,23 +1,26 @@
 use sgx_types::*;
 use std::prelude::v1::*;
 use sgx_tse::rsgx_create_report;
-use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress, StateGetter};
+use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
+use anonify_stf::{State, mem_name_to_id, StateGetter, StateType};
 use crate::{
     crypto::Eik,
     attestation::TEST_SPID,
     ocalls::{sgx_init_quote, get_quote},
     error::Result,
-    kvs::{EnclaveKVS, EnclaveDBTx},
+    kvs::{EnclaveDB, EnclaveKVS, EnclaveDBTx},
 };
 
 lazy_static! {
-    pub static ref ENCLAVE_CONTEXT: EnclaveContext<MemoryDB>
+    pub static ref ENCLAVE_CONTEXT: EnclaveContext<EnclaveDB<StateType>>
         = EnclaveContext::new(TEST_SPID).unwrap();
 }
 
 impl<DB: EnclaveKVS> StateGetter for EnclaveContext<DB> {
-    fn get(&self, key: &UserAddress) -> DBValue {
-        self.db.get(key)
+    fn get<S: State>(&self, key: &UserAddress, name: &str) -> std::result::Result<S, codec::Error> {
+        let mem_id = mem_name_to_id(name);
+        let mut buf = self.db.get(key, &mem_id).into_vec();
+        S::from_bytes(&mut buf)
     }
 }
 
