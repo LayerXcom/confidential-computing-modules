@@ -9,7 +9,6 @@ use crate::{
     bridges::ocalls::save_to_host_memory,
     state::{UserState, StateService},
     crypto::SYMMETRIC_KEY,
-    kvs::EnclaveKVS,
 };
 
 /// A trait for exporting transacitons to out-enclave.

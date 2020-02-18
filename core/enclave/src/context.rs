@@ -8,7 +8,7 @@ use crate::{
     attestation::TEST_SPID,
     ocalls::{sgx_init_quote, get_quote},
     error::Result,
-    kvs::{EnclaveDB, EnclaveKVS, EnclaveDBTx},
+    kvs::{EnclaveDB, EnclaveDBTx},
     state::{Current, UserState, StateValue},
 };
 

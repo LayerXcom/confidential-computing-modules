@@ -8,7 +8,7 @@ use anonify_stf::{State, Runtime, CallKind, Ciphertext, StateGetter, UpdatedStat
 use codec::{Encode, Decode, Input, Output};
 use crate::{
     crypto::*,
-    kvs::{EnclaveKVS, EnclaveDBTx},
+    kvs::EnclaveDBTx,
     error::{Result, EnclaveError},
     context::{EnclaveContext},
 };
@@ -21,6 +21,7 @@ use std::{
 };
 
 /// Service for state transition operations
+#[derive(Clone)]
 pub struct StateService<S: State>{
     ctx: EnclaveContext<S>,
     my_addr: UserAddress,
@@ -37,14 +38,6 @@ where
     ) -> Result<Self> {
         let my_addr = UserAddress::from_access_right(access_right)?;
 
-        // let my_dv = ctx.get(&my_addr);
-        // let my_state = UserState::<S, Current>::from_db_value(my_addr, my_dv)?;
-        // let other_dv = ctx.get(&target_addr);
-        // let other_state = UserState::<S, Current>::from_db_value(target_addr, other_dv)?;
-
-        // let mut current = vec![];
-        // current.push(my_state);
-        // current.push(other_state);
         Ok(StateService::<S>{
             ctx,
             my_addr,
@@ -58,33 +51,22 @@ where
     ) -> Result<()> {
         let res = Runtime::new(self.ctx).call(
             kind,
-            // self.current
-            //     .iter()
-            //     .map(|e| e.inner_state().clone()) // TODO
-            //     .collect(),
             self.my_addr,
         )?
         .into_iter()
         .map(|e| into_trait(e).unwrap())
         .collect();
-        self.updates = Some(res);
 
-        // .zip(
-        //     self.current
-        //         .into_iter()
-        //         .map(|e| e.into_next().unwrap()) // TODO: Remove unwrap
-        // )
-        // .map(|(update, user)| user.encrypt_with_update(&symm_key, update).unwrap()) // TODO: Remove unwrap
-        // .collect();
+        self.updates = Some(res);
 
         Ok(())
     }
 
-    pub fn reveal_lock_params(&self) -> Vec<LockParam> {
+    pub fn reveal_lock_params(self) -> Vec<LockParam> {
         self.updates
             .unwrap()
-            .into_iter()
-            .map(|e| {
+            .iter()
+            .map(|ref e| {
                 let sv = self.ctx.get_sv(&e.address, &e.mem_id);
                 let user = UserState::<S, Current>::new(e.address, e.mem_id, sv);
                 user.lock_param()
@@ -92,7 +74,7 @@ where
             .collect()
     }
 
-    pub fn reveal_ciphertexts(&self, symm_key: &SymmetricKey) -> Vec<Ciphertext> {
+    pub fn reveal_ciphertexts(self, symm_key: &SymmetricKey) -> Vec<Ciphertext> {
         self.updates
             .unwrap()
             .into_iter()
@@ -130,46 +112,6 @@ pub struct UserState<S: State, N> {
 }
 
 impl<S: State, N> UserState<S, N> {
-    // pub fn try_as_vec(&self) -> Result<Vec<u8>> {
-    //     let mut buf = vec![];
-    //     self.write(&mut buf)?;
-    //     Ok(buf)
-    // }
-
-    // pub fn try_as_vec_with_update(&self, update: impl State) -> Result<Vec<u8>> {
-    //     let mut buf = vec![];
-    //     self.write_with_update(&mut buf, update)?;
-    //     Ok(buf)
-    // }
-
-    // pub fn write<W: Write + Output>(&self, writer: &mut W) -> Result<()> {
-    //     self.address.write(writer)?;
-    //     self.state_value.write(writer)?;
-
-    //     Ok(())
-    // }
-
-    // pub fn write_with_update<W: Write + Output>(
-    //     &self,
-    //     writer: &mut W,
-    //     update: impl State,
-    // ) -> Result<()> {
-    //     self.address.write(writer)?;
-    //     self.state_value.write_with_update(writer, update)?;
-
-    //     Ok(())
-    // }
-
-    // pub fn read<R: Read + Input>(mut reader: R) -> Result<Self> {
-    //     let address = UserAddress::read(&mut reader)?;
-    //     let state_value = StateValue::read(&mut reader)?;
-
-    //     Ok(UserState {
-    //         address,
-    //         state_value,
-    //     })
-    // }
-
     pub fn inner_state(&self) -> &S {
         &self.state_value.inner_state
     }
@@ -237,9 +179,6 @@ impl<S: State> UserState<S, Current> {
     /// Compute hash digest of current user state.
     fn hash(&self) -> Result<Sha256> {
         let inp = self.encode();
-        // let mut inp: Vec<u8> = vec![];
-        // self.write(&mut inp)?;
-
         Ok(Sha256::hash(&inp))
     }
 
@@ -273,15 +212,6 @@ impl<S: State> UserState<S, Next> {
         let buf = self.encode();
         key.encrypt_aes_256_gcm(buf)
     }
-
-    // pub fn encrypt_with_update(
-    //     self,
-    //     key: &SymmetricKey,
-    //     update: impl State,
-    // ) -> Result<Ciphertext> {
-    //     let buf = self.try_as_vec_with_update(update)?;
-    //     key.encrypt_aes_256_gcm(buf)
-    // }
 }
 
 /// State value per each user's state.

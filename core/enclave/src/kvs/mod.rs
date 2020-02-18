@@ -18,19 +18,6 @@ struct StateMap<S: State>(HashMap<MemId, StateValue<S, Current>>);
 #[derive(Debug, Clone)]
 pub struct EnclaveDB<S: State>(Arc<SgxRwLock<HashMap<UserAddress, StateMap<S>>>>);
 
-/// Trait of key-value store instrctions restricted by signature verifications.
-pub trait EnclaveKVS {
-    fn new() -> Self;
-
-    fn get<S: State>(&self, address: &UserAddress, mem_id: &MemId) -> StateValue<S, Current>;
-
-    fn write<S: State>(&self, address: UserAddress, mem_id: MemId, sv: StateValue<S, Current>);
-}
-
-// impl<S: State> EnclaveKVS for EnclaveDB<S> {
-
-// }
-
 impl<S: State> EnclaveDB<S> {
     pub fn new() -> Self {
         EnclaveDB(Arc::new(SgxRwLock::new(HashMap::new())))
