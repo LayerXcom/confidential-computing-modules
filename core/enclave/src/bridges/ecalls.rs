@@ -26,7 +26,7 @@ pub unsafe extern "C" fn ecall_insert_logs(
     assert_eq!(ciphertexts.len() % CIPHERTEXT_SIZE, 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
     for ciphertext in ciphertexts.chunks(CIPHERTEXT_SIZE) {
-        UserState::<StateType, Current>::insert_cipheriv_memdb::<EnclaveDB::<StateType>>(
+        UserState::<StateType, Current>::insert_cipheriv_memdb(
             Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY, &*ENCLAVE_CONTEXT,
         )
         .expect("Failed to insert ciphertext into memory database.");
@@ -47,7 +47,7 @@ pub unsafe extern "C" fn ecall_get_state(
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey).expect("Faild to generate user address.");
 
-    let db_value = &ENCLAVE_CONTEXT.get(&key);
+    let db_value = &ENCLAVE_CONTEXT.get(&key, 0); // todo;
     let user_state_value = StateValue::<StateType, Current>::from_dbvalue(db_value)
         .expect("Failed to read db_value.");
     let user_state = user_state_value.as_inner_state();
@@ -84,7 +84,7 @@ pub unsafe extern "C" fn ecall_init_state(
         .expect("Failed to generate user address from access right.");
     let params = slice::from_raw_parts_mut(state, state_len);
 
-    let init_state_tx = InitStateTx::construct::<StateType>(state_id, params, user_address, &*ENCLAVE_CONTEXT)
+    let init_state_tx = InitStateTx::construct::<StateType>(state_id, 0, params, user_address, &*ENCLAVE_CONTEXT)
         .expect("Failed to construct init state tx.");
     *raw_state_tx = init_state_tx.into_raw()
         .expect("Failed to convert into raw init state transaction.");

@@ -1,6 +1,6 @@
 use std::vec::Vec;
 use anonify_types::{RawRegisterTx, RawStateTransTx, traits::RawEnclaveTx};
-use anonify_common::{UserAddress, LockParam, AccessRight, IntoVec};
+use anonify_common::{UserAddress, LockParam, AccessRight, IntoVec, MemId};
 use anonify_stf::{State, Ciphertext, CallKind};
 use crate::{
     attestation::{Report, ReportSig, AttestationService},
@@ -76,6 +76,7 @@ pub struct InitStateTx {
 impl InitStateTx {
     pub fn construct<S>(
         state_id: u64,
+        mem_id: u32,
         params: &mut [u8],
         user_address: UserAddress,
         enclave_ctx: &EnclaveContext<S>,
@@ -84,7 +85,7 @@ impl InitStateTx {
         S: State,
     {
         let params = S::from_bytes(params)?;
-        let init_state = UserState::<S, _>::init(user_address, params)
+        let init_state = UserState::<S, _>::init(user_address, MemId(mem_id), params)
             .expect("Failed to initialize state.");
         let lock_param = init_state.lock_param();
         let ciphertext = init_state.encrypt(&SYMMETRIC_KEY)
@@ -137,7 +138,6 @@ impl StateTransTx {
     where
         S: State,
     {
-
         let mut service = StateService::<S>::from_access_right(access_right, enclave_ctx.clone())?;
         service.apply(kind)?;
 
