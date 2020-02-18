@@ -48,11 +48,11 @@ impl RegisterTx {
         }
     }
 
-    pub fn construct<DB: EnclaveKVS>(
+    pub fn construct<S: State>(
         host: &str,
         path: &str,
         ias_api_key: &str,
-        ctx: &EnclaveContext<DB>,
+        ctx: &EnclaveContext<S>,
     ) -> Result<Self> {
         let service = AttestationService::new(host, path);
         let quote = ctx.get_quote()?;
@@ -74,15 +74,14 @@ pub struct InitStateTx {
 }
 
 impl InitStateTx {
-    pub fn construct<S, DB>(
+    pub fn construct<S>(
         state_id: u64,
         params: &mut [u8],
         user_address: UserAddress,
-        enclave_ctx: &EnclaveContext<DB>,
+        enclave_ctx: &EnclaveContext<S>,
     ) -> Result<Self>
     where
         S: State,
-        DB: EnclaveKVS,
     {
         let params = S::from_bytes(params)?;
         let init_state = UserState::<S, _>::init(user_address, params)
@@ -129,15 +128,14 @@ pub struct StateTransTx {
 }
 
 impl StateTransTx {
-    pub fn construct<S, DB>(
+    pub fn construct<S>(
         kind: CallKind,
         state_id: u64,
         access_right: &AccessRight,
-        enclave_ctx: EnclaveContext<DB>,
+        enclave_ctx: EnclaveContext<S>,
     ) -> Result<Self>
     where
         S: State,
-        DB: EnclaveKVS,
     {
 
         let mut service = StateService::<S>::from_access_right(access_right, enclave_ctx.clone())?;

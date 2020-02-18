@@ -12,11 +12,11 @@ use crate::{
 };
 
 lazy_static! {
-    pub static ref ENCLAVE_CONTEXT: EnclaveContext<EnclaveDB<StateType>>
+    pub static ref ENCLAVE_CONTEXT: EnclaveContext<StateType>
         = EnclaveContext::new(TEST_SPID).unwrap();
 }
 
-impl<DB: EnclaveKVS> StateGetter for EnclaveContext<DB> {
+impl<ST: State> StateGetter for EnclaveContext<ST> {
     fn get<S: State>(&self, key: &UserAddress, name: &str) -> std::result::Result<S, codec::Error> {
         let mem_id = mem_name_to_id(name);
         let mut buf = self.db.get(key, &mem_id).into_vec();
@@ -26,14 +26,14 @@ impl<DB: EnclaveKVS> StateGetter for EnclaveContext<DB> {
 
 /// spid: Service procider ID for the ISV.
 #[derive(Clone)]
-pub struct EnclaveContext<DB: EnclaveKVS> {
+pub struct EnclaveContext<S: State> {
     spid: sgx_spid_t,
     identity_key: Eik,
-    db: DB,
+    db: EnclaveDB<S>,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
-impl<DB: EnclaveKVS> EnclaveContext<DB> {
+impl<S: State> EnclaveContext<S> {
     pub fn new(spid: &str) -> Result<Self> {
         let spid_vec = hex::decode(spid)?;
         let mut id = [0; 16];
@@ -41,7 +41,7 @@ impl<DB: EnclaveKVS> EnclaveContext<DB> {
         let spid: sgx_spid_t = sgx_spid_t { id };
 
         let identity_key = Eik::new()?;
-        let db = DB::new();
+        let db = EnclaveDB::new();
 
         Ok(EnclaveContext{
             spid,

@@ -21,20 +21,19 @@ use std::{
 };
 
 /// Service for state transition operations
-pub struct StateService<S: State, DB: EnclaveKVS>{
-    ctx: EnclaveContext<DB>,
+pub struct StateService<S: State>{
+    ctx: EnclaveContext<S>,
     my_addr: UserAddress,
     updates: Option<Vec<UpdatedState<S>>>,
 }
 
-impl<S, DB> StateService<S, DB>
+impl<S> StateService<S>
 where
     S: State,
-    DB: EnclaveKVS,
 {
     pub fn from_access_right(
         access_right: &AccessRight,
-        ctx: EnclaveContext<DB>,
+        ctx: EnclaveContext<S>,
     ) -> Result<Self> {
         let my_addr = UserAddress::from_access_right(access_right)?;
 
@@ -46,7 +45,7 @@ where
         // let mut current = vec![];
         // current.push(my_state);
         // current.push(other_state);
-        Ok(StateService::<S, _>{
+        Ok(StateService::<S>{
             ctx,
             my_addr,
             updates: None,
@@ -80,6 +79,7 @@ where
 
     pub fn reveal_lock_params(&self) -> Vec<LockParam> {
         self.updates
+            .unwrap()
             .into_iter()
             .map(|e| {
                 let dv = self.ctx.get(&e.address, &e.mem_id);
@@ -91,6 +91,7 @@ where
 
     pub fn reveal_ciphertexts(&self, symm_key: &SymmetricKey) -> Vec<Ciphertext> {
         self.updates
+            .unwrap()
             .into_iter()
             .map(|e| {
                 let dv = self.ctx.get(&e.address, &e.mem_id);
@@ -205,10 +206,10 @@ impl<S: State> UserState<S, Current> {
 
     // Only State with `Current` allows to access to the database to avoid from
     // storing data which have not been considered globally consensused.
-    pub fn insert_cipheriv_memdb<DB: EnclaveKVS>(
+    pub fn insert_cipheriv_memdb(
         cipheriv: Ciphertext,
         symm_key: &SymmetricKey,
-        ctx: &EnclaveContext<DB>,
+        ctx: &EnclaveContext<S>,
     ) -> Result<()> {
         let user_state = Self::decrypt(cipheriv, &symm_key)?;
         let key = user_state.get_db_key();

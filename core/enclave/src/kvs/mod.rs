@@ -22,7 +22,7 @@ pub struct EnclaveDB<S: State>(Arc<SgxRwLock<HashMap<UserAddress, StateMap<S>>>>
 pub trait EnclaveKVS {
     fn new() -> Self;
 
-    fn get(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> ;
+    fn get<S: State>(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> ;
 
     fn write(&self, tx: EnclaveDBTx);
 }
@@ -31,7 +31,7 @@ pub trait EnclaveKVS {
 
 // }
 
-impl<S: State> EnclaveKVS for EnclaveDB<S> {
+impl<S: State> EnclaveDB<S> {
     fn new() -> Self {
         EnclaveDB(Arc::new(SgxRwLock::new(HashMap::new())))
     }
