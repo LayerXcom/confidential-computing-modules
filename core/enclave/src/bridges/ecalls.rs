@@ -84,7 +84,7 @@ pub unsafe extern "C" fn ecall_init_state(
         .expect("Failed to generate user address from access right.");
     let params = slice::from_raw_parts_mut(state, state_len);
 
-    let init_state_tx = InitStateTx::construct::<StateType, _>(state_id, params, user_address, &*ENCLAVE_CONTEXT)
+    let init_state_tx = InitStateTx::construct::<StateType>(state_id, params, user_address, &*ENCLAVE_CONTEXT)
         .expect("Failed to construct init state tx.");
     *raw_state_tx = init_state_tx.into_raw()
         .expect("Failed to convert into raw init state transaction.");
@@ -108,7 +108,7 @@ pub unsafe extern "C" fn ecall_state_transition(
 
     let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge).expect("Failed to generate access right.");
     let call_kind = CallKind::from_call_id(call_id, params).expect("Failed to generate callkind.");
-    let state_trans_tx = StateTransTx::construct::<StateType, _>(
+    let state_trans_tx = StateTransTx::construct::<StateType>(
         call_kind, state_id, &ar, *ENCLAVE_CONTEXT
     )
         .expect("Failed to construct init state tx.");

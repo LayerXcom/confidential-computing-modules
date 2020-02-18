@@ -4,13 +4,13 @@ use anonify_common::{
     UserAddress, Sha256, Hash256, LockParam, AccessRight,
     kvs::*,
 };
-use anonify_stf::{State, Runtime, CallKind, Ciphertext, StateGetter, UpdatedState};
+use anonify_stf::{State, Runtime, CallKind, Ciphertext, StateGetter, UpdatedState, into_trait};
 use codec::{Encode, Decode, Input, Output};
 use crate::{
     crypto::*,
     kvs::{EnclaveKVS, EnclaveDBTx},
     error::{Result, EnclaveError},
-    context::{EnclaveContext, StateGetter},
+    context::{EnclaveContext},
 };
 use std::{
     prelude::v1::*,
@@ -63,7 +63,10 @@ where
             //     .map(|e| e.inner_state().clone()) // TODO
             //     .collect(),
             self.my_addr,
-        )?;
+        )?
+        .into_iter()
+        .map(|e| into_trait(e).unwrap())
+        .collect();
         self.updates = Some(res);
 
         // .zip(
@@ -82,7 +85,7 @@ where
             .unwrap()
             .into_iter()
             .map(|e| {
-                let dv = self.ctx.get(&e.address, &e.mem_id);
+                let dv = self.ctx.get_by_id(&e.address, &e.mem_id).unwrap();
                 let user = UserState::<S, Current>::from_db_value(e.address, e.mem_id, dv).unwrap();
                 user.lock_param()
             })
@@ -94,8 +97,8 @@ where
             .unwrap()
             .into_iter()
             .map(|e| {
-                let dv = self.ctx.get(&e.address, &e.mem_id);
-                let user = UserState::<S, Current>::from_db_value(e.address, dv).unwrap();
+                let dv = self.ctx.get_by_id(&e.address, &e.mem_id);
+                let user = UserState::<S, Current>::from_db_value(e.address, e.mem_id, dv).unwrap();
                 user.update_inner_state(e.state)
                     .into_next().unwrap()
                     .encrypt(symm_key).unwrap()

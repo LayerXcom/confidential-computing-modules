@@ -24,6 +24,8 @@ use codec::{Encode, Decode};
 /// A getter of state stored in enclave memory.
 pub trait StateGetter {
     fn get<S: State>(&self, key: &UserAddress, name: &str) -> Result<S, codec::Error>;
+
+    fn get_by_id<S: State>(&self, key: &UserAddress, mem_id: &MemId) -> Result<S, codec::Error>;
 }
 
 pub fn mem_name_to_id(name: &str) -> MemId {
@@ -129,6 +131,7 @@ impl<G: StateGetter> Runtime<G> {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct UpdatedState<S: State> {
     pub address: UserAddress,
     pub mem_id: MemId,
@@ -145,3 +148,13 @@ impl<S: State> UpdatedState<S> {
         }
     }
 }
+
+pub fn into_trait<S: State>(s: UpdatedState<impl State>) -> Result<UpdatedState<S>, codec::Error> {
+    let state = S::from_state(&s.state)?;
+    Ok(UpdatedState {
+        address: s.address,
+        mem_id: s.mem_id,
+        state,
+    })
+}
+

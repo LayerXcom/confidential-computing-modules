@@ -15,7 +15,7 @@ use crate::error::Result;
 #[derive(Debug)]
 struct StateMap<S: State>(HashMap<MemId, StateValue<S, Current>>);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EnclaveDB<S: State>(Arc<SgxRwLock<HashMap<UserAddress, StateMap<S>>>>);
 
 /// Trait of key-value store instrctions restricted by signature verifications.
@@ -32,11 +32,11 @@ pub trait EnclaveKVS {
 // }
 
 impl<S: State> EnclaveDB<S> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         EnclaveDB(Arc::new(SgxRwLock::new(HashMap::new())))
     }
 
-    fn get(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> {
+    pub fn get(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> {
         self.0.read().unwrap()
             .get(key)
             .unwrap_or(StateValue::default())
@@ -48,7 +48,7 @@ impl<S: State> EnclaveDB<S> {
         //     .unwrap_or(DBValue::default())
     }
 
-    fn write(&self, tx: EnclaveDBTx) {
+    pub fn write(&self, tx: EnclaveDBTx) {
         self.inner_write(tx.into_inner())
     }
 }
