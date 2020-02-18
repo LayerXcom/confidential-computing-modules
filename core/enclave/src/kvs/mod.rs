@@ -37,15 +37,14 @@ impl<S: State> EnclaveDB<S> {
     }
 
     pub fn get(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> {
-        self.0.read().unwrap()
-            .get(key)
-            .unwrap_or(StateValue::default())
-
-            .get(mem_id)
-            .cloned()
-            .unwrap_or(StateValue::default())
-        // self.inner_get(key.as_bytes())
-        //     .unwrap_or(DBValue::default())
+        match self.0.read().unwrap().get(key) {
+            Some(v) => {
+                v.0.get(mem_id)
+                .cloned()
+                .unwrap_or(StateValue::default())
+            },
+            None => return StateValue::default()
+        }
     }
 
     pub fn write(&self, tx: EnclaveDBTx) {

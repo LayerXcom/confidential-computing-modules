@@ -110,13 +110,13 @@ where
 
 /// Curret generation of lock parameter for state.
 /// Priventing from race condition of writing ciphertext to blockchain.
-#[derive(Debug, Clone, PartialEq)]
-pub enum Current { }
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct Current;
 
 /// Next generation of lock parameter for state.
 /// It'll be defined deterministically as `next_lock_param = Hash(address, current_state, current_lock_param)`.
-#[derive(Debug, Clone, PartialEq)]
-pub enum Next { }
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct Next;
 
 /// This struct can be got by decrypting ciphertexts which is stored on blockchain.
 /// The secret key is shared among all TEE's enclaves.

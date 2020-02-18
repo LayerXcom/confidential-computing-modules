@@ -47,7 +47,7 @@ pub unsafe extern "C" fn ecall_get_state(
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey).expect("Faild to generate user address.");
 
-    let db_value = &ENCLAVE_CONTEXT.get(&key, 0); // todo;
+    let db_value = &ENCLAVE_CONTEXT.get(&key, ""); // todo;
     let user_state_value = StateValue::<StateType, Current>::from_dbvalue(db_value)
         .expect("Failed to read db_value.");
     let user_state = user_state_value.as_inner_state();
