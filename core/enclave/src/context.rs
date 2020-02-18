@@ -2,13 +2,14 @@ use sgx_types::*;
 use std::prelude::v1::*;
 use sgx_tse::rsgx_create_report;
 use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress, MemId};
-use anonify_stf::{State, mem_name_to_id, StateGetter, StateType};
+use anonify_stf::{State, mem_name_to_id, StateGetter, StateType, Ciphertext};
 use crate::{
-    crypto::Eik,
+    crypto::{Eik, SymmetricKey},
     attestation::TEST_SPID,
     ocalls::{sgx_init_quote, get_quote},
     error::Result,
     kvs::{EnclaveDB, EnclaveKVS, EnclaveDBTx},
+    state::{Current, UserState, StateValue},
 };
 
 lazy_static! {
@@ -19,11 +20,6 @@ lazy_static! {
 impl<ST: State> StateGetter for EnclaveContext<ST> {
     fn get<S: State>(&self, key: &UserAddress, name: &str) -> std::result::Result<S, codec::Error> {
         let mem_id = mem_name_to_id(name);
-        let mut buf = self.db.get(key, &mem_id).to_inner_state().as_bytes();
-        S::from_bytes(&mut buf)
-    }
-
-    fn get_by_id<S: State>(&self, key: &UserAddress, mem_id: &MemId) -> std::result::Result<S, codec::Error> {
         let mut buf = self.db.get(key, &mem_id).to_inner_state().as_bytes();
         S::from_bytes(&mut buf)
     }
@@ -70,8 +66,25 @@ impl<S: State> EnclaveContext<S> {
         self.identity_key.sign(msg.as_bytes())
     }
 
-    pub fn write(&self, tx: EnclaveDBTx) {
-        self.db.write(tx)
+    // Only State with `Current` allows to access to the database to avoid from
+    // storing data which have not been considered globally consensused.
+    pub fn write_cipheriv(
+        &self,
+        cipheriv: Ciphertext,
+        symm_key: &SymmetricKey
+    ) -> Result<()> {
+        let user_state = UserState::<S, Current>::decrypt(cipheriv, &symm_key)?;
+        let address = user_state.get_address();
+        let mem_id = user_state.get_mem_id();
+        let sv = user_state.get_sv();
+
+        self.db.write(address, mem_id, sv);
+
+        Ok(())
+    }
+
+    pub fn get_sv(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> {
+        self.db.get(key, &mem_id)
     }
 
     fn get_report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {

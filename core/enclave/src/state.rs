@@ -85,8 +85,8 @@ where
             .unwrap()
             .into_iter()
             .map(|e| {
-                let dv = self.ctx.get_by_id(&e.address, &e.mem_id).unwrap();
-                let user = UserState::<S, Current>::from_db_value(e.address, e.mem_id, dv).unwrap();
+                let sv = self.ctx.get_sv(&e.address, &e.mem_id);
+                let user = UserState::<S, Current>::new(e.address, e.mem_id, sv);
                 user.lock_param()
             })
             .collect()
@@ -97,8 +97,8 @@ where
             .unwrap()
             .into_iter()
             .map(|e| {
-                let dv = self.ctx.get_by_id(&e.address, &e.mem_id);
-                let user = UserState::<S, Current>::from_db_value(e.address, e.mem_id, dv).unwrap();
+                let sv = self.ctx.get_sv(&e.address, &e.mem_id);
+                let user = UserState::<S, Current>::new(e.address, e.mem_id, sv);
                 user.update_inner_state(e.state)
                     .into_next().unwrap()
                     .encrypt(symm_key).unwrap()
@@ -193,38 +193,6 @@ impl<S: State> UserState<S, Current> {
         }
     }
 
-    pub fn from_db_value(
-        address: UserAddress,
-        mem_id: MemId,
-        db_value: DBValue,
-    ) -> Result<Self> {
-        let state_value = StateValue::from_dbvalue(db_value)?;
-
-        Ok(UserState {
-            address,
-            mem_id,
-            state_value,
-        })
-    }
-
-    // Only State with `Current` allows to access to the database to avoid from
-    // storing data which have not been considered globally consensused.
-    pub fn insert_cipheriv_memdb(
-        cipheriv: Ciphertext,
-        symm_key: &SymmetricKey,
-        ctx: &EnclaveContext<S>,
-    ) -> Result<()> {
-        let user_state = Self::decrypt(cipheriv, &symm_key)?;
-        let key = user_state.get_db_key();
-        let value = user_state.get_db_value()?;
-
-        let mut dbtx = EnclaveDBTx::new();
-        dbtx.put(&key, &value);
-        ctx.write(dbtx);
-
-        Ok(())
-    }
-
     /// Decrypt Ciphertext which was stored in a shared ledger.
     pub fn decrypt(cipheriv: Ciphertext, key: &SymmetricKey) -> Result<Self> {
         let mut buf = key.decrypt_aes_256_gcm(cipheriv)?;
@@ -233,18 +201,17 @@ impl<S: State> UserState<S, Current> {
         Ok(res)
     }
 
-    /// Get in-memory database key.
-    pub fn get_db_key(&self) -> &UserAddress {
-        &self.address
+    pub fn get_mem_id(&self) -> MemId {
+        self.mem_id
     }
 
-    /// Get in-memory database value.
-    // TODO: Encrypt with sealing key.
-    pub fn get_db_value(&self) -> Result<Vec<u8>> {
-        let mut buf = vec![];
-        self.state_value.write(&mut buf)?;
+    /// Get in-memory database key.
+    pub fn get_address(&self) -> UserAddress {
+        self.address
+    }
 
-        Ok(buf)
+    pub fn get_sv(&self) -> StateValue<S, Current> {
+        self.state_value
     }
 
     pub fn update_inner_state(&self, update: S) -> Self {

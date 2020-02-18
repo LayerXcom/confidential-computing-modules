@@ -26,10 +26,8 @@ pub unsafe extern "C" fn ecall_insert_logs(
     assert_eq!(ciphertexts.len() % CIPHERTEXT_SIZE, 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
     for ciphertext in ciphertexts.chunks(CIPHERTEXT_SIZE) {
-        UserState::<StateType, Current>::insert_cipheriv_memdb(
-            Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY, &*ENCLAVE_CONTEXT,
-        )
-        .expect("Failed to insert ciphertext into memory database.");
+        ENCLAVE_CONTEXT
+            .write_cipheriv(Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY);
     }
 
     sgx_status_t::SGX_SUCCESS
@@ -47,11 +45,7 @@ pub unsafe extern "C" fn ecall_get_state(
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey).expect("Faild to generate user address.");
 
-    let db_value = &ENCLAVE_CONTEXT.get(&key, ""); // todo;
-    let user_state_value = StateValue::<StateType, Current>::from_dbvalue(db_value)
-        .expect("Failed to read db_value.");
-    let user_state = user_state_value.as_inner_state();
-
+    let user_state = &ENCLAVE_CONTEXT.get::<StateType>(&key, "").unwrap(); // todo;
     state.0 = save_to_host_memory(&user_state.as_bytes()).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS

@@ -24,8 +24,6 @@ use codec::{Encode, Decode};
 /// A getter of state stored in enclave memory.
 pub trait StateGetter {
     fn get<S: State>(&self, key: &UserAddress, name: &str) -> Result<S, codec::Error>;
-
-    fn get_by_id<S: State>(&self, key: &UserAddress, mem_id: &MemId) -> Result<S, codec::Error>;
 }
 
 pub fn mem_name_to_id(name: &str) -> MemId {
