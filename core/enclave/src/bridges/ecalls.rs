@@ -103,7 +103,7 @@ pub unsafe extern "C" fn ecall_state_transition(
     let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge).expect("Failed to generate access right.");
     let call_kind = CallKind::from_call_id(call_id, params).expect("Failed to generate callkind.");
     let state_trans_tx = StateTransTx::construct::<StateType>(
-        call_kind, state_id, &ar, *ENCLAVE_CONTEXT
+        call_kind, state_id, &ar, &*ENCLAVE_CONTEXT
     )
         .expect("Failed to construct init state tx.");
     *raw_state_tx = state_trans_tx.into_raw()

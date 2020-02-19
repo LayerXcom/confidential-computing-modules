@@ -46,7 +46,7 @@ impl<'a> AttestationService<'a> {
         }
     }
 
-    pub fn get_report_and_sig(&self, quote: &str, ias_api_key: &str) -> Result<(Vec<u8>, Vec<u8>)> {
+    pub fn report_and_sig(&self, quote: &str, ias_api_key: &str) -> Result<(Vec<u8>, Vec<u8>)> {
         let req = self.raw_report_req(quote, ias_api_key);
         let res = self.send_raw_req(req)?;
 
@@ -55,7 +55,7 @@ impl<'a> AttestationService<'a> {
         Ok((res.body.0, res.sig.0)) // TODO
     }
 
-    pub fn get_report_and_sig_new(&self, quote: &str, ias_api_key: &str) -> Result<(Report, ReportSig)> {
+    pub fn report_and_sig_new(&self, quote: &str, ias_api_key: &str) -> Result<(Report, ReportSig)> {
         let req = self.raw_report_req(quote, ias_api_key);
         let res = self.send_raw_req(req)?;
 

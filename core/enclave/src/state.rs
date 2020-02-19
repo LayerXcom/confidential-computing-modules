@@ -34,9 +34,10 @@ where
 {
     pub fn from_access_right(
         access_right: &AccessRight,
-        ctx: EnclaveContext<S>,
+        ctx: &EnclaveContext<S>,
     ) -> Result<Self> {
         let my_addr = UserAddress::from_access_right(access_right)?;
+        let ctx = ctx.clone();
 
         Ok(StateService::<S>{
             ctx,
@@ -62,24 +63,26 @@ where
         Ok(())
     }
 
-    pub fn reveal_lock_params(self) -> Vec<LockParam> {
+    pub fn reveal_lock_params(&self) -> Vec<LockParam> {
         self.updates
+            .clone()
             .unwrap()
-            .iter()
-            .map(|ref e| {
-                let sv = self.ctx.get_sv(&e.address, &e.mem_id);
+            .into_iter()
+            .map(|e| {
+                let sv = self.ctx.sv(&e.address, &e.mem_id);
                 let user = UserState::<S, Current>::new(e.address, e.mem_id, sv);
                 user.lock_param()
             })
             .collect()
     }
 
-    pub fn reveal_ciphertexts(self, symm_key: &SymmetricKey) -> Vec<Ciphertext> {
+    pub fn reveal_ciphertexts(&self, symm_key: &SymmetricKey) -> Vec<Ciphertext> {
         self.updates
+            .clone()
             .unwrap()
             .into_iter()
             .map(|e| {
-                let sv = self.ctx.get_sv(&e.address, &e.mem_id);
+                let sv = self.ctx.sv(&e.address, &e.mem_id);
                 let user = UserState::<S, Current>::new(e.address, e.mem_id, sv);
                 user.update_inner_state(e.state)
                     .into_next().unwrap()
@@ -143,16 +146,16 @@ impl<S: State> UserState<S, Current> {
         Ok(res)
     }
 
-    pub fn get_mem_id(&self) -> MemId {
+    pub fn mem_id(&self) -> MemId {
         self.mem_id
     }
 
     /// Get in-memory database key.
-    pub fn get_address(&self) -> UserAddress {
+    pub fn address(&self) -> UserAddress {
         self.address
     }
 
-    pub fn get_sv(&self) -> StateValue<S, Current> {
+    pub fn into_sv(self) -> StateValue<S, Current> {
         self.state_value
     }
 
@@ -276,7 +279,7 @@ impl<S: State, N> StateValue<S, N> {
         &self.inner_state
     }
 
-    pub fn to_inner_state(&self) -> S {
+    pub fn into_inner_state(self) -> S {
         self.inner_state
     }
 

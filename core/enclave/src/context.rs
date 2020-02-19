@@ -20,7 +20,7 @@ lazy_static! {
 impl<ST: State> StateGetter for EnclaveContext<ST> {
     fn get<S: State>(&self, key: &UserAddress, name: &str) -> std::result::Result<S, codec::Error> {
         let mem_id = mem_name_to_id(name);
-        let mut buf = self.db.get(key, &mem_id).to_inner_state().as_bytes();
+        let mut buf = self.db.get(key, &mem_id).into_inner_state().as_bytes();
         S::from_bytes(&mut buf)
     }
 }
@@ -51,10 +51,10 @@ impl<S: State> EnclaveContext<S> {
         })
     }
 
-    pub fn get_quote(&self) -> Result<String> {
+    pub fn quote(&self) -> Result<String> {
         let target_info = self.init_quote()?;
-        let report = self.get_report(&target_info)?;
-        self.get_encoded_quote(report)
+        let report = self.report(&target_info)?;
+        self.encoded_quote(report)
     }
 
     pub(crate) fn init_quote(&self) -> Result<sgx_target_info_t> {
@@ -74,20 +74,20 @@ impl<S: State> EnclaveContext<S> {
         symm_key: &SymmetricKey
     ) -> Result<()> {
         let user_state = UserState::<S, Current>::decrypt(cipheriv, &symm_key)?;
-        let address = user_state.get_address();
-        let mem_id = user_state.get_mem_id();
-        let sv = user_state.get_sv();
+        let address = user_state.address();
+        let mem_id = user_state.mem_id();
+        let sv = user_state.into_sv();
 
         self.db.write(address, mem_id, sv);
 
         Ok(())
     }
 
-    pub fn get_sv(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> {
+    pub fn sv(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> {
         self.db.get(key, &mem_id)
     }
 
-    fn get_report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {
+    fn report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {
         let mut report = sgx_report_t::default();
         let report_data = &self.identity_key.report_date()?;
 
@@ -98,7 +98,7 @@ impl<S: State> EnclaveContext<S> {
         Ok(report)
     }
 
-    fn get_encoded_quote(&self, report: sgx_report_t) -> Result<String> {
+    fn encoded_quote(&self, report: sgx_report_t) -> Result<String> {
         let quote = get_quote(report, &self.spid)?;
 
         // Use base64-encoded QUOTE structure to communicate via defined API.

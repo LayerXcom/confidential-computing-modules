@@ -54,8 +54,8 @@ impl RegisterTx {
         ctx: &EnclaveContext<S>,
     ) -> Result<Self> {
         let service = AttestationService::new(host, path);
-        let quote = ctx.get_quote()?;
-        let (report, report_sig) = service.get_report_and_sig_new(&quote, ias_api_key)?;
+        let quote = ctx.quote()?;
+        let (report, report_sig) = service.report_and_sig_new(&quote, ias_api_key)?;
 
         Ok(RegisterTx {
             report,
@@ -132,13 +132,13 @@ impl StateTransTx {
         kind: CallKind,
         state_id: u64,
         access_right: &AccessRight,
-        enclave_ctx: EnclaveContext<S>,
+        enclave_ctx: &EnclaveContext<S>,
     ) -> Result<Self>
     where
         S: State,
     {
-        let mut service = StateService::<S>::from_access_right(access_right, enclave_ctx.clone())?;
-        service.apply(kind)?;
+        let service = StateService::<S>::from_access_right(access_right, enclave_ctx)?;
+        service.clone().apply(kind)?;
 
         let lock_params = service.reveal_lock_params();
         let ciphertexts = service.reveal_ciphertexts(&SYMMETRIC_KEY);

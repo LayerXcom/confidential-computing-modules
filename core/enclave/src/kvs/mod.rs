@@ -35,7 +35,7 @@ impl<S: State> EnclaveDB<S> {
     }
 
     pub fn write(&self, address: UserAddress, mem_id: MemId, sv: StateValue<S, Current>) {
-        let tmp = self.0.write().unwrap();
+        let mut tmp = self.0.write().unwrap();
         match tmp.get_mut(&address) {
             Some(c) => {
                 c.0.insert(mem_id, sv);
