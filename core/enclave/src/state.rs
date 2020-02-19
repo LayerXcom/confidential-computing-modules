@@ -20,7 +20,7 @@ use std::{
     collections::HashMap,
 };
 
-/// Service for state transition operations
+/// An collection of state transition operations
 #[derive(Clone)]
 pub struct StateService<S: State>{
     ctx: EnclaveContext<S>,
@@ -32,6 +32,7 @@ impl<S> StateService<S>
 where
     S: State,
 {
+    /// Only way to generate StateService is given by access right.
     pub fn from_access_right(
         access_right: &AccessRight,
         ctx: &EnclaveContext<S>,
@@ -46,6 +47,8 @@ where
         })
     }
 
+    /// Apply calling function parameters and call name to
+    /// state transition functions.
     pub fn apply(
         mut self,
         kind: CallKind,
@@ -63,26 +66,29 @@ where
         Ok(())
     }
 
+    /// Return current state's lock parameters of each user.
+    // TODO: Consider; is it OK that init_lock_param = H(address||mem_id||zero_sv)
     pub fn reveal_lock_params(&self) -> Vec<LockParam> {
         self.updates
             .clone()
             .unwrap()
             .into_iter()
             .map(|e| {
-                let sv = self.ctx.sv(&e.address, &e.mem_id);
+                let sv = self.ctx.state_value(&e.address, &e.mem_id);
                 let user = UserState::<S, Current>::new(e.address, e.mem_id, sv);
                 user.lock_param()
             })
             .collect()
     }
 
+    /// Return ciphertexts data which is generates by encrypting updated user's state.
     pub fn reveal_ciphertexts(&self, symm_key: &SymmetricKey) -> Vec<Ciphertext> {
         self.updates
             .clone()
             .unwrap()
             .into_iter()
             .map(|e| {
-                let sv = self.ctx.sv(&e.address, &e.mem_id);
+                let sv = self.ctx.state_value(&e.address, &e.mem_id);
                 let user = UserState::<S, Current>::new(e.address, e.mem_id, sv);
                 user.update_inner_state(e.state)
                     .into_next().unwrap()
@@ -191,26 +197,10 @@ impl<S: State> UserState<S, Current> {
     }
 }
 
+/// A UserState which has a lock parameter of next generation has only encrypt function
+/// so that it allows us to do nothing other than generating ciphertexts which will be sent
+/// to blockchain node.
 impl<S: State> UserState<S, Next> {
-    /// Initialize userstate. lock_param is defined with `Sha256(address || init_state)`.
-    pub fn init(
-        address: UserAddress,
-        mem_id: MemId,
-        init_state: S,
-    ) -> Result<Self> {
-        let mut buf = vec![];
-        address.write(&mut buf)?;
-        init_state.write_le(&mut buf);
-        let lock_param = Sha256::hash(&buf).into();
-        let state_value = StateValue::new(init_state, lock_param);
-
-        Ok(UserState {
-            address,
-            mem_id,
-            state_value,
-        })
-    }
-
     pub fn encrypt(self, key: &SymmetricKey) -> Result<Ciphertext> {
         let buf = self.encode();
         key.encrypt_aes_256_gcm(buf)

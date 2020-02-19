@@ -10,7 +10,7 @@ use crate::attestation::{
     TEST_SUB_KEY, DEV_HOSTNAME, REPORT_PATH,
 };
 use crate::context::{ENCLAVE_CONTEXT};
-use crate::transaction::{RegisterTx, InitStateTx, EnclaveTx, StateTransTx};
+use crate::transaction::{RegisterTx, EnclaveTx, StateTransTx};
 use crate::kvs::EnclaveDB;
 use super::ocalls::save_to_host_memory;
 
@@ -63,29 +63,6 @@ pub unsafe extern "C" fn ecall_register(
     sgx_status_t::SGX_SUCCESS
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn ecall_init_state(
-    raw_sig: &RawSig,
-    raw_pubkey: &RawPubkey,
-    raw_challenge: &RawChallenge,
-    state: *mut u8,
-    state_len: usize,
-    state_id: u64,
-    raw_state_tx: &mut RawStateTransTx,
-) -> sgx_status_t {
-    let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge).expect("Failed to generate access right.");
-    let user_address = UserAddress::from_access_right(&ar)
-        .expect("Failed to generate user address from access right.");
-    let params = slice::from_raw_parts_mut(state, state_len);
-
-    let init_state_tx = InitStateTx::construct::<StateType>(state_id, 0, params, user_address, &*ENCLAVE_CONTEXT)
-        .expect("Failed to construct init state tx.");
-    *raw_state_tx = init_state_tx.into_raw()
-        .expect("Failed to convert into raw init state transaction.");
-
-    sgx_status_t::SGX_SUCCESS
-}
-
 /// Execute state transition in enclave. It depends on state transition functions and provided inputs.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_state_transition(
@@ -105,9 +82,9 @@ pub unsafe extern "C" fn ecall_state_transition(
     let state_trans_tx = StateTransTx::construct::<StateType>(
         call_kind, state_id, &ar, &*ENCLAVE_CONTEXT
     )
-        .expect("Failed to construct init state tx.");
+        .expect("Failed to construct state tx.");
     *raw_state_tx = state_trans_tx.into_raw()
-        .expect("Failed to convert into raw init state transaction.");
+        .expect("Failed to convert into raw state transaction.");
 
     sgx_status_t::SGX_SUCCESS
 }

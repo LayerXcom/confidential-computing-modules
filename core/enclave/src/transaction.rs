@@ -65,59 +65,6 @@ impl RegisterTx {
 }
 
 #[derive(Debug, Clone)]
-pub struct InitStateTx {
-    state_id: u64,
-    ciphertext: Ciphertext,
-    lock_param: LockParam,
-    enclave_sig: secp256k1::Signature,
-}
-
-impl InitStateTx {
-    pub fn construct<S>(
-        state_id: u64,
-        mem_id: u32,
-        params: &mut [u8],
-        user_address: UserAddress,
-        enclave_ctx: &EnclaveContext<S>,
-    ) -> Result<Self>
-    where
-        S: State,
-    {
-        let params = S::from_bytes(params)?;
-        let init_state = UserState::<S, _>::init(user_address, MemId(mem_id), params)
-            .expect("Failed to initialize state.");
-        let lock_param = init_state.lock_param();
-        let ciphertext = init_state.encrypt(&SYMMETRIC_KEY)
-            .expect("Failed to encrypt init state.");
-        let enclave_sig = enclave_ctx.sign(&lock_param)?;
-
-        Ok(InitStateTx {
-            state_id,
-            ciphertext,
-            lock_param,
-            enclave_sig,
-        })
-    }
-}
-
-impl EnclaveTx for InitStateTx {
-    type R = RawStateTransTx;
-
-    fn into_raw(self) -> Result<Self::R> {
-        let ciphertext = save_to_host_memory(&self.ciphertext.as_bytes())? as *const u8;
-        let lock_param = save_to_host_memory(&self.lock_param.as_bytes())? as *const u8;
-        let enclave_sig = save_to_host_memory(&self.enclave_sig.serialize())? as *const u8;
-
-        Ok(RawStateTransTx {
-            state_id: self.state_id,
-            ciphertext,
-            lock_param,
-            enclave_sig,
-        })
-    }
-}
-
-#[derive(Debug, Clone)]
 pub struct StateTransTx {
     state_id: u64,
     ciphertexts: Vec<Ciphertext>,

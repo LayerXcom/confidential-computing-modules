@@ -133,41 +133,6 @@ pub(crate) struct BoxedStateTransTx {
 }
 
 impl BoxedStateTransTx {
-    /// Initialize a state when a new contract is deployed.
-    pub(crate) fn init_state<S: State>(
-        eid: sgx_enclave_id_t,
-        access_right: AccessRight,
-        state: S,
-        state_id: u64,
-    ) -> Result<Self> {
-        let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-        let mut raw_state_tx = RawStateTransTx::default();
-        let state = state.as_bytes();
-
-        let status = unsafe {
-            ecall_init_state(
-                eid,
-                &mut rt,
-                access_right.sig().to_bytes().as_ptr() as _,
-                access_right.pubkey().to_bytes().as_ptr() as _,
-                access_right.challenge().as_ptr() as _,
-                state.as_c_ptr() as *mut u8,
-                state.len(),
-                state_id,
-                &mut raw_state_tx,
-            )
-        };
-
-        if status != sgx_status_t::SGX_SUCCESS {
-            return Err(HostErrorKind::Sgx{ status, function: "ecall_init_state" }.into());
-        }
-        if rt != sgx_status_t::SGX_SUCCESS {
-            return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_init_state" }.into());
-        }
-
-        Ok(raw_state_tx.into())
-    }
-
     /// Update states when a transaction is sent to blockchain.
     pub(crate) fn state_transition<S: State>(
         eid: sgx_enclave_id_t,

@@ -83,10 +83,12 @@ impl<S: State> EnclaveContext<S> {
         Ok(())
     }
 
-    pub fn sv(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> {
+    /// Get the user's state value for the specified memory id.
+    pub fn state_value(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> {
         self.db.get(key, &mem_id)
     }
 
+    /// Return Attestation report
     fn report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {
         let mut report = sgx_report_t::default();
         let report_data = &self.identity_key.report_date()?;
