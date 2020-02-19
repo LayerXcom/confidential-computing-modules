@@ -137,48 +137,28 @@ impl Web3Contract {
         Ok(res)
     }
 
-    pub fn init_state<G: Into<U256>>(
-        &self,
-        from: Address,
-        state_id: u64,
-        init_state: &[u8],
-        lock_param: &[u8],
-        enclave_sig: &[u8],
-        gas: G,
-    ) -> Result<H256> {
-        let call = self.contract.call(
-            "initState",
-            (U256::from(state_id), init_state.to_vec(), H256::from_slice(lock_param), enclave_sig.to_vec()),
-            from,
-            Options::with(|opt| opt.gas = Some(gas.into())),
-        );
-
-        // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253
-        let res = call.wait().unwrap(); //TODO: error handling
-        Ok(res)
-    }
-
     pub fn state_transition(
         &self,
         from: Address,
         state_id: u64,
-        mut ciphertexts: impl Iterator<Item=Ciphertext>,
-        mut lock_params: impl Iterator<Item=LockParam>,
+        ciphertexts: impl Iterator<Item=Ciphertext>,
+        lock_params: impl Iterator<Item=LockParam>,
         enclave_sig: &[u8],
         gas: u64,
     ) -> Result<H256> {
-        // iterators have to have its field.
-        let ct1 = ciphertexts.next().unwrap().into_vec();
-        let ct2 = ciphertexts.next().unwrap().into_vec();
-        let lp1 = lock_params.next().unwrap();
-        let lp2 = lock_params.next().unwrap();
+        let mut ct = vec![];
+        ciphertexts
+            .map(|e| e.into_vec())
+            .for_each(|e| ct.push(e));
 
-        assert!(ciphertexts.next().is_none());
-        assert!(lock_params.next().is_none());
+        let mut lp = vec![];
+        lock_params
+            .map(|e| H256::from_slice(e.as_bytes()))
+            .for_each(|e| lp.push(e));
 
         let call = self.contract.call(
             "stateTransition",
-            (U256::from(state_id), ct1, ct2,  H256::from_slice(lp1.as_bytes()),  H256::from_slice(lp2.as_bytes()), enclave_sig.to_vec()),
+            (U256::from(state_id), ct, lp, enclave_sig.to_vec()),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );

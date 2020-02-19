@@ -142,34 +142,6 @@ impl Sender for EthSender {
         Ok(hex::encode(receipt.as_bytes()))
     }
 
-    fn init_state<ST: State>(
-        &self,
-        access_right: AccessRight,
-        init_state: ST,
-        state_id: u64,
-        signer: SignerAddress,
-        gas: u64,
-    )  -> Result<String> {
-        let init_state_tx = BoxedStateTransTx::init_state(
-            self.enclave_id, access_right, init_state, state_id
-        )?;
-
-        let receipt = match signer {
-            SignerAddress::EthAddress(addr) => {
-                self.contract.init_state::<u64>(
-                    addr,
-                    init_state_tx.state_id,
-                    &init_state_tx.ciphertext,
-                    &init_state_tx.lock_param,
-                    &init_state_tx.enclave_sig,
-                    gas,
-                )?
-            }
-        };
-
-        Ok(hex::encode(receipt.as_bytes()))
-    }
-
     fn state_transition<ST: State>(
         &self,
         access_right: AccessRight,
