@@ -142,10 +142,9 @@ impl<G: StateGetter> Runtime<G> {
         let my_update = my_balance - amount;
         let other_update = target_balance + amount;
 
-        // TODO: avoid vec because array doesn't support into_iter(), automatically translated to iter()
-        // which returns &U64.
         let my = UpdatedState::new(sender, "Balance", my_update);
         let other = UpdatedState::new(target, "Balance", other_update);
+
         Ok(vec![my, other])
     }
 }
