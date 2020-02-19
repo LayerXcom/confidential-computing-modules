@@ -5,7 +5,7 @@ use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use rand_os::OsRng;
 use anonify_common::AccessRight;
-use anonify_stf::{State, U64, Transfer};
+use anonify_stf::{State, U64, Transfer, Constructor};
 use crate::auto_ffi::ecall_run_tests;
 use crate::init_enclave::EnclaveDir;
 use crate::transaction::{
@@ -43,7 +43,6 @@ fn test_integration_eth_transfer() {
     let other_access_right = AccessRight::new_from_rng(&mut csprng);
     let third_access_right = AccessRight::new_from_rng(&mut csprng);
 
-    let total_supply = U64(100);
     let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
@@ -58,15 +57,19 @@ fn test_integration_eth_transfer() {
 
 
     // 2. init state
-    let receipt = dispatcher.init_state(
+    let init = U64(100);
+    let construc_state = Constructor{ init };
+    let receipt = dispatcher.state_transition(
         my_access_right.clone(),
-        total_supply,
+        construc_state,
         state_id,
+        "Constructor",
         deployer_addr.clone(),
         gas,
         &contract_addr,
         ANONYMOUS_ASSET_ABI_PATH,
     ).unwrap();
+
     println!("init state receipt: {}", receipt);
 
 
@@ -78,7 +81,7 @@ fn test_integration_eth_transfer() {
     let my_state = get_state_by_access_right::<U64>(&my_access_right, eid).unwrap();
     let other_state = get_state_by_access_right::<U64>(&other_access_right, eid).unwrap();
     let third_state = get_state_by_access_right::<U64>(&third_access_right, eid).unwrap();
-    assert_eq!(my_state, total_supply);
+    assert_eq!(my_state, init);
     assert_eq!(other_state, U64(0));
     assert_eq!(third_state, U64(0));
 
@@ -87,12 +90,11 @@ fn test_integration_eth_transfer() {
     let amount = U64(30);
     let target = other_access_right.user_address();
     let transfer_state = Transfer{ amount, target };
-    let call_name = "Transfer";
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
         transfer_state,
         state_id,
-        call_name,
+        "Transfer",
         deployer_addr,
         gas,
         &contract_addr,
