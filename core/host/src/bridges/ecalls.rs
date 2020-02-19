@@ -240,7 +240,6 @@ mod tests {
     use rand::Rng;
     use ed25519_dalek::Keypair;
     use crate::init_enclave::EnclaveDir;
-    use crate::mock::MockState;
 
     #[test]
     #[ignore]

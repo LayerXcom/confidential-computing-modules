@@ -4,7 +4,8 @@ use std::{
 use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use rand_os::OsRng;
-use anonify_common::{AccessRight, State};
+use anonify_common::AccessRight;
+use anonify_stf::{State, U64, Transfer};
 use crate::auto_ffi::ecall_run_tests;
 use crate::init_enclave::EnclaveDir;
 use crate::transaction::{
@@ -13,7 +14,6 @@ use crate::transaction::{
     eth::client::*,
     utils::get_state_by_access_right,
 };
-use crate::mock::*;
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
 const ANONYMOUS_ASSET_ABI_PATH: &str = "../../build/AnonymousAsset.abi";
@@ -43,7 +43,7 @@ fn test_integration_eth_transfer() {
     let other_access_right = AccessRight::new_from_rng(&mut csprng);
     let third_access_right = AccessRight::new_from_rng(&mut csprng);
 
-    let total_supply = MockState::new(100);
+    let total_supply = U64(100);
     let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
@@ -56,7 +56,7 @@ fn test_integration_eth_transfer() {
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
 
-    
+
     // 2. init state
     let receipt = dispatcher.init_state(
         my_access_right.clone(),
@@ -75,22 +75,24 @@ fn test_integration_eth_transfer() {
 
 
     // 4. Get state from enclave
-    let my_state = get_state_by_access_right::<MockState>(&my_access_right, eid).unwrap();
-    let other_state = get_state_by_access_right::<MockState>(&other_access_right, eid).unwrap();
-    let third_state = get_state_by_access_right::<MockState>(&third_access_right, eid).unwrap();
+    let my_state = get_state_by_access_right::<U64>(&my_access_right, eid).unwrap();
+    let other_state = get_state_by_access_right::<U64>(&other_access_right, eid).unwrap();
+    let third_state = get_state_by_access_right::<U64>(&third_access_right, eid).unwrap();
     assert_eq!(my_state, total_supply);
-    assert_eq!(other_state.into_raw(), 0);
-    assert_eq!(third_state.into_raw(), 0);
+    assert_eq!(other_state, U64(0));
+    assert_eq!(third_state, U64(0));
 
 
     // 5. Send a transaction to contract
-    let amount = MockState::new(30);;
-    let other_user_address = other_access_right.user_address();
+    let amount = U64(30);
+    let target = other_access_right.user_address();
+    let transfer_state = Transfer{ amount, target };
+    let call_name = "Transfer";
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
-        &other_user_address,
-        amount,
+        transfer_state,
         state_id,
+        call_name,
         deployer_addr,
         gas,
         &contract_addr,
@@ -104,11 +106,11 @@ fn test_integration_eth_transfer() {
 
 
     // 7. Check the updated states
-    let my_updated_state = get_state_by_access_right::<MockState>(&my_access_right, eid).unwrap();
-    let other_updated_state = get_state_by_access_right::<MockState>(&other_access_right, eid).unwrap();
-    let third_updated_state = get_state_by_access_right::<MockState>(&third_access_right, eid).unwrap();
+    let my_updated_state = get_state_by_access_right::<U64>(&my_access_right, eid).unwrap();
+    let other_updated_state = get_state_by_access_right::<U64>(&other_access_right, eid).unwrap();
+    let third_updated_state = get_state_by_access_right::<U64>(&third_access_right, eid).unwrap();
 
-    assert_eq!(my_updated_state, MockState::new(70));
+    assert_eq!(my_updated_state, U64(70));
     assert_eq!(other_updated_state, amount);
-    assert_eq!(third_updated_state.into_raw(), 0);
+    assert_eq!(third_updated_state, U64(0));
 }
