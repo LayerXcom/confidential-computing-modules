@@ -35,13 +35,19 @@ pub fn mem_name_to_id(name: &str) -> MemId {
 
 pub fn call_name_to_id(name: &str) -> u32 {
     match name {
-        "Transfer" => 0,
-        "Approve" => 1,
-        "TransferFrom" => 2,
-        "Mint" => 3,
-        "ChangeOwner" => 4,
+        "Constructor" => 0,
+        "Transfer" => 1,
+        "Approve" => 2,
+        "TransferFrom" => 3,
+        "Mint" => 4,
+        "ChangeOwner" => 5,
         _ => panic!("invalid call name"),
     }
+}
+
+#[derive(Encode, Decode, Debug, Clone, Default)]
+pub struct Constructor {
+    pub init: U64,
 }
 
 #[derive(Encode, Decode, Debug, Clone, Default)]
@@ -51,7 +57,7 @@ pub struct Transfer {
 }
 
 pub enum CallKind {
-    // Transfer{amount: U64, target: Address},
+    Constructor(Constructor),
     Transfer(Transfer),
     Approve{allowed: Mapping},
     TransferFrom{amount: U64},
@@ -94,9 +100,14 @@ impl<G: StateGetter> Runtime<G> {
         my_addr: UserAddress,
     ) -> Result<Vec<UpdatedState<impl State>>, codec::Error> {
         match kind {
+            CallKind::Constructor(constructor) => {
+                self.constructor(
+                    my_addr,
+                    constructor.init,
+                )
+            },
             CallKind::Transfer(transfer) => {
-                Self::transfer(
-                    &self,
+                self.transfer(
                     my_addr,
                     transfer.target,
                     transfer.amount,
@@ -104,6 +115,16 @@ impl<G: StateGetter> Runtime<G> {
             },
             _ => unimplemented!()
         }
+    }
+
+    fn constructor(
+        &self,
+        sender: UserAddress,
+        total_supply: U64,
+    ) -> Result<Vec<UpdatedState<U64>>, codec::Error> {
+        let init = UpdatedState::new(sender, "Balance", total_supply);
+
+        Ok(vec![init])
     }
 
     fn transfer(
@@ -155,4 +176,3 @@ pub fn into_trait<S: State>(s: UpdatedState<impl State>) -> Result<UpdatedState<
         state,
     })
 }
-
