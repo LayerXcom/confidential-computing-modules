@@ -70,25 +70,6 @@ where
         inner.register(signer, gas, contract_info)
     }
 
-    pub fn init_state<ST, P>(
-        &self,
-        access_right: AccessRight,
-        init_state: ST,
-        state_id: u64,
-        signer: SignerAddress,
-        gas: u64,
-        contract_addr: &str,
-        abi_path: P,
-    ) -> Result<String>
-    where
-        ST: State,
-        P: AsRef<Path> + Copy,
-    {
-        let mut inner = self.inner.write();
-        let contract_info = ContractInfo::new(abi_path, contract_addr);
-        inner.init_state(access_right, init_state, state_id, signer, gas, contract_info)
-    }
-
     pub fn state_transition<ST, P>(
         &self,
         access_right: AccessRight,
@@ -214,26 +195,6 @@ where
             .register(signer, gas)
     }
 
-    fn init_state<ST, P>(
-        &mut self,
-        access_right: AccessRight,
-        init_state: ST,
-        state_id: u64,
-        signer: SignerAddress,
-        gas: u64,
-        contract_info: ContractInfo<'_, P>,
-    ) -> Result<String>
-    where
-        ST: State,
-        P: AsRef<Path> + Copy,
-    {
-        self.set_contract_addr(contract_info)?;
-
-        self.sender.as_ref()
-            .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .init_state(access_right, init_state, state_id, signer, gas)
-    }
-
     fn state_transition<ST, P>(
         &mut self,
         access_right: AccessRight,
@@ -321,17 +282,6 @@ pub mod traits {
             signer: SignerAddress,
             gas: u64,
         ) -> Result<String>;
-
-        fn init_state<ST: State>(
-            &self,
-            access_right: AccessRight,
-            init_state: ST,
-            state_id: u64,
-            signer: SignerAddress,
-            gas: u64,
-        )  -> Result<String> {
-            unimplemented!();
-        }
 
         fn get_contract(self) -> ContractKind;
     }
