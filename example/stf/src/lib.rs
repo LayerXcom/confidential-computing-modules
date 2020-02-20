@@ -47,7 +47,8 @@ pub trait State: Sized + Default + Clone + Encode + Decode + fmt::Debug {
 impl<T: Sized + Default + Clone + Encode + Decode + fmt::Debug> State for T {}
 
 
-pub const CIPHERTEXT_SIZE: usize = 88;
+// TODO: calc ciphertext size dynamically
+pub const CIPHERTEXT_SIZE: usize = 93;
 
 #[derive(Clone)]
 pub struct Ciphertext([u8; CIPHERTEXT_SIZE]);

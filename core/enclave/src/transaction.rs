@@ -82,8 +82,8 @@ impl StateTransTx {
         enclave_ctx: &EnclaveContext<StateType>,
     ) -> Result<Self>
     {
-        let service = StateService::<StateType>::from_access_right(access_right, enclave_ctx)?;
-        service.clone().apply(kind)?;
+        let mut service = StateService::<StateType>::from_access_right(access_right, enclave_ctx)?;
+        service.apply(kind)?;
 
         let lock_params = service.reveal_lock_params();
         let ciphertexts = service.reveal_ciphertexts(&SYMMETRIC_KEY);

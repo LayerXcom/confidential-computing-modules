@@ -48,10 +48,10 @@ impl StateService<StateType>
     /// Apply calling function parameters and call name to
     /// state transition functions.
     pub fn apply(
-        mut self,
+        &mut self,
         kind: CallKind,
     ) -> Result<()> {
-        let res = Runtime::new(self.ctx).call(
+        let res = Runtime::new(self.ctx.clone()).call(
             kind,
             self.my_addr,
         )?;
