@@ -4,7 +4,7 @@ use anonify_common::{
     UserAddress, Sha256, Hash256, LockParam, AccessRight,
     kvs::*,
 };
-use anonify_stf::{State, Runtime, CallKind, Ciphertext, StateGetter, UpdatedState, into_trait};
+use anonify_stf::{StateType, State, Runtime, CallKind, Ciphertext, StateGetter, UpdatedState, into_trait};
 use codec::{Encode, Decode, Input, Output};
 use crate::{
     crypto::*,
@@ -25,22 +25,20 @@ use std::{
 pub struct StateService<S: State>{
     ctx: EnclaveContext<S>,
     my_addr: UserAddress,
-    updates: Option<Vec<UpdatedState<S>>>,
+    updates: Option<Vec<UpdatedState<StateType>>>,
 }
 
-impl<S> StateService<S>
-where
-    S: State,
+impl StateService<StateType>
 {
     /// Only way to generate StateService is given by access right.
     pub fn from_access_right(
         access_right: &AccessRight,
-        ctx: &EnclaveContext<S>,
+        ctx: &EnclaveContext<StateType>,
     ) -> Result<Self> {
         let my_addr = UserAddress::from_access_right(access_right)?;
         let ctx = ctx.clone();
 
-        Ok(StateService::<S>{
+        Ok(StateService::<StateType>{
             ctx,
             my_addr,
             updates: None,
@@ -56,10 +54,10 @@ where
         let res = Runtime::new(self.ctx).call(
             kind,
             self.my_addr,
-        )?
-        .into_iter()
-        .map(|e| into_trait(e).unwrap())
-        .collect();
+        )?;
+        // .into_iter()
+        // .map(|e| into_trait(e).unwrap())
+        // .collect();
 
         self.updates = Some(res);
 
@@ -75,7 +73,7 @@ where
             .into_iter()
             .map(|e| {
                 let sv = self.ctx.state_value(&e.address, &e.mem_id);
-                let user = UserState::<S, Current>::new(e.address, e.mem_id, sv);
+                let user = UserState::<StateType, Current>::new(e.address, e.mem_id, sv);
                 user.lock_param()
             })
             .collect()
@@ -89,7 +87,7 @@ where
             .into_iter()
             .map(|e| {
                 let sv = self.ctx.state_value(&e.address, &e.mem_id);
-                let user = UserState::<S, Current>::new(e.address, e.mem_id, sv);
+                let user = UserState::<StateType, Current>::new(e.address, e.mem_id, sv);
                 user.update_inner_state(e.state)
                     .into_next().unwrap()
                     .encrypt(symm_key).unwrap()
@@ -120,8 +118,8 @@ pub struct UserState<S: State, N> {
     state_value: StateValue<S, N>,
 }
 
-impl<S: State, N> UserState<S, N> {
-    pub fn inner_state(&self) -> &S {
+impl<N> UserState<StateType, N> {
+    pub fn inner_state(&self) -> &StateType {
         &self.state_value.inner_state
     }
 
@@ -131,11 +129,11 @@ impl<S: State, N> UserState<S, N> {
 }
 
 /// Operations of user state before sending a transaction or after fetching as a ciphertext
-impl<S: State> UserState<S, Current> {
+impl UserState<StateType, Current> {
     pub fn new(
         address: UserAddress,
         mem_id: MemId,
-        state_value: StateValue<S, Current>,
+        state_value: StateValue<StateType, Current>,
     ) -> Self {
         UserState {
             address,
@@ -161,11 +159,11 @@ impl<S: State> UserState<S, Current> {
         self.address
     }
 
-    pub fn into_sv(self) -> StateValue<S, Current> {
+    pub fn into_sv(self) -> StateValue<StateType, Current> {
         self.state_value
     }
 
-    pub fn update_inner_state(&self, update: S) -> Self {
+    pub fn update_inner_state(&self, update: StateType) -> Self {
         UserState {
             address: self.address,
             mem_id: self.mem_id,
@@ -173,7 +171,7 @@ impl<S: State> UserState<S, Current> {
         }
     }
 
-    pub fn into_next(self) -> Result<UserState<S, Next>> {
+    pub fn into_next(self) -> Result<UserState<StateType, Next>> {
         let next_lock_param = self.next_lock_param()?;
         let inner_state = self.state_value.inner_state;
         let state_value = StateValue::new(inner_state, next_lock_param);
@@ -200,7 +198,7 @@ impl<S: State> UserState<S, Current> {
 /// A UserState which has a lock parameter of next generation has only encrypt function
 /// so that it allows us to do nothing other than generating ciphertexts which will be sent
 /// to blockchain node.
-impl<S: State> UserState<S, Next> {
+impl UserState<StateType, Next> {
     pub fn encrypt(self, key: &SymmetricKey) -> Result<Ciphertext> {
         let buf = self.encode();
         key.encrypt_aes_256_gcm(buf)
@@ -217,8 +215,8 @@ pub struct StateValue<S: State, N> {
     _marker: PhantomData<N>,
 }
 
-impl<S: State, N> StateValue<S, N> {
-    pub fn new(inner_state: S, lock_param: LockParam) -> Self {
+impl<N> StateValue<StateType, N> {
+    pub fn new(inner_state: StateType, lock_param: LockParam) -> Self {
         StateValue {
             inner_state,
             lock_param,
@@ -233,7 +231,7 @@ impl<S: State, N> StateValue<S, N> {
 
         if db_value != Default::default() {
             let reader = db_value.into_vec();
-            state = S::read_le(&mut &reader[..])?;
+            state = StateType::read_le(&mut &reader[..])?;
             lock_param = LockParam::read(&mut &reader[..])?;
         }
 
@@ -259,17 +257,17 @@ impl<S: State, N> StateValue<S, N> {
     }
 
     pub fn read<R: Read + Input>(reader: &mut R) -> Result<Self> {
-        let inner_state = S::read_le(reader)?;
+        let inner_state = StateType::read_le(reader)?;
         let lock_param = LockParam::read(reader)?;
 
         Ok(StateValue::new(inner_state, lock_param))
     }
 
-    pub fn as_inner_state(&self) -> &S {
+    pub fn as_inner_state(&self) -> &StateType {
         &self.inner_state
     }
 
-    pub fn into_inner_state(self) -> S {
+    pub fn into_inner_state(self) -> StateType {
         self.inner_state
     }
 

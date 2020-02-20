@@ -1,7 +1,7 @@
 use std::vec::Vec;
 use anonify_types::{RawRegisterTx, RawStateTransTx, traits::RawEnclaveTx};
 use anonify_common::{UserAddress, LockParam, AccessRight, IntoVec, MemId};
-use anonify_stf::{State, Ciphertext, CallKind};
+use anonify_stf::{StateType, State, Ciphertext, CallKind};
 use crate::{
     attestation::{Report, ReportSig, AttestationService},
     error::Result,
@@ -47,11 +47,11 @@ impl RegisterTx {
         }
     }
 
-    pub fn construct<S: State>(
+    pub fn construct(
         host: &str,
         path: &str,
         ias_api_key: &str,
-        ctx: &EnclaveContext<S>,
+        ctx: &EnclaveContext<StateType>,
     ) -> Result<Self> {
         let service = AttestationService::new(host, path);
         let quote = ctx.quote()?;
@@ -75,16 +75,14 @@ pub struct StateTransTx {
 }
 
 impl StateTransTx {
-    pub fn construct<S>(
+    pub fn construct(
         kind: CallKind,
         state_id: u64,
         access_right: &AccessRight,
-        enclave_ctx: &EnclaveContext<S>,
+        enclave_ctx: &EnclaveContext<StateType>,
     ) -> Result<Self>
-    where
-        S: State,
     {
-        let service = StateService::<S>::from_access_right(access_right, enclave_ctx)?;
+        let service = StateService::<StateType>::from_access_right(access_right, enclave_ctx)?;
         service.clone().apply(kind)?;
 
         let lock_params = service.reveal_lock_params();

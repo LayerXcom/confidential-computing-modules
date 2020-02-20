@@ -99,7 +99,7 @@ impl<G: StateGetter> Runtime<G> {
         &self,
         kind: CallKind,
         my_addr: UserAddress,
-    ) -> Result<Vec<UpdatedState<impl State>>, codec::Error> {
+    ) -> Result<Vec<UpdatedState<StateType>>, codec::Error> {
         match kind {
             CallKind::Constructor(constructor) => {
                 self.constructor(
@@ -122,8 +122,8 @@ impl<G: StateGetter> Runtime<G> {
         &self,
         sender: UserAddress,
         total_supply: U64,
-    ) -> Result<Vec<UpdatedState<U64>>, codec::Error> {
-        let init = UpdatedState::new(sender, "Balance", total_supply);
+    ) -> Result<Vec<UpdatedState<StateType>>, codec::Error> {
+        let init = UpdatedState::new(sender, "Balance", total_supply.into());
 
         Ok(vec![init])
     }
@@ -133,7 +133,7 @@ impl<G: StateGetter> Runtime<G> {
         sender: UserAddress,
         target: UserAddress,
         amount: U64,
-    ) -> Result<Vec<UpdatedState<U64>>, codec::Error> {
+    ) -> Result<Vec<UpdatedState<StateType>>, codec::Error> {
         let my_balance = self.db.get::<U64>(&sender, "Balance")?;
         let target_balance = self.db.get::<U64>(&target, "Balance")?;
 
@@ -143,8 +143,8 @@ impl<G: StateGetter> Runtime<G> {
         let my_update = my_balance - amount;
         let other_update = target_balance + amount;
 
-        let my = UpdatedState::new(sender, "Balance", my_update);
-        let other = UpdatedState::new(target, "Balance", other_update);
+        let my = UpdatedState::new(sender, "Balance", my_update.into());
+        let other = UpdatedState::new(target, "Balance", other_update.into());
 
         Ok(vec![my, other])
     }

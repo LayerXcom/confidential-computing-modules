@@ -17,7 +17,7 @@ lazy_static! {
         = EnclaveContext::new(TEST_SPID).unwrap();
 }
 
-impl<ST: State> StateGetter for EnclaveContext<ST> {
+impl StateGetter for EnclaveContext<StateType> {
     fn get<S: State>(&self, key: &UserAddress, name: &str) -> std::result::Result<S, codec::Error> {
         let mem_id = mem_name_to_id(name);
         let mut buf = self.db.get(key, &mem_id).into_inner_state().as_bytes();
@@ -34,7 +34,7 @@ pub struct EnclaveContext<S: State> {
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
-impl<S: State> EnclaveContext<S> {
+impl EnclaveContext<StateType> {
     pub fn new(spid: &str) -> Result<Self> {
         let spid_vec = hex::decode(spid)?;
         let mut id = [0; 16];
@@ -73,7 +73,7 @@ impl<S: State> EnclaveContext<S> {
         cipheriv: Ciphertext,
         symm_key: &SymmetricKey
     ) -> Result<()> {
-        let user_state = UserState::<S, Current>::decrypt(cipheriv, &symm_key)?;
+        let user_state = UserState::<StateType, Current>::decrypt(cipheriv, &symm_key)?;
         let address = user_state.address();
         let mem_id = user_state.mem_id();
         let sv = user_state.into_sv();
@@ -84,7 +84,7 @@ impl<S: State> EnclaveContext<S> {
     }
 
     /// Get the user's state value for the specified memory id.
-    pub fn state_value(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> {
+    pub fn state_value(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<StateType, Current> {
         self.db.get(key, &mem_id)
     }
 
