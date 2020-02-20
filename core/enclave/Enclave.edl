@@ -23,6 +23,7 @@ enclave {
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
             [in] uint8_t challenge[32],
+            uint32_t mem_id,
             [out] EnclaveState* state
         );
 

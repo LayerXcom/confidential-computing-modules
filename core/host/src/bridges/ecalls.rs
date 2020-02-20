@@ -1,7 +1,12 @@
+use std::{
+    convert::{TryInto, TryFrom},
+    fmt::Debug,
+    boxed::Box,
+};
 use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx};
 use anonify_common::{AccessRight, UserAddress, LockParam};
-use anonify_stf::{State, Ciphertext, CIPHERTEXT_SIZE};
+use anonify_stf::{State, Ciphertext, CIPHERTEXT_SIZE, mem_name_to_id};
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
 use crate::transaction::{
@@ -39,14 +44,17 @@ pub(crate) fn insert_logs(
 }
 
 /// Get state only if the signature verification returns true.
-pub(crate) fn get_state<S: State>(
+pub(crate) fn get_state(
     eid: sgx_enclave_id_t,
     sig: &Signature,
     pubkey: &PublicKey,
     msg: &[u8],
-) -> Result<S> {
+    mem_name: &str,
+) -> Result<Vec<u8>>
+{
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut state = EnclaveState::default();
+    let mem_id = mem_name_to_id(mem_name).0;
 
     let status = unsafe {
         ecall_get_state(
@@ -55,6 +63,7 @@ pub(crate) fn get_state<S: State>(
             sig.to_bytes().as_ptr() as _,
             pubkey.to_bytes().as_ptr() as _,
             msg.as_ptr() as _,
+            mem_id,
             &mut state,
         )
     };
@@ -66,9 +75,12 @@ pub(crate) fn get_state<S: State>(
 		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_get_state" }.into());
     }
 
-    let mut s = state_as_bytes(state);
-    let res = S::from_bytes(&mut s)?;
-    Ok(res)
+    Ok(state_as_bytes(state).into())
+
+    // let res = (&mut *s).try_into().expect("Failed to convert bytes to state trait.");
+
+    // let res = S::from_bytes(&mut s)?;
+    // Ok(res)
 }
 
 fn state_as_bytes(state: EnclaveState) -> Box<[u8]> {

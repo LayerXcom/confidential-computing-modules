@@ -38,11 +38,11 @@ where
         })
     }
 
-    pub fn set_contract_addr<P>(&self, contract_addr: &str, abi_path: P) -> Result<()>
+    pub fn set_contract_addr<P>(&mut self, contract_addr: &str, abi_path: P) -> Result<()>
     where
         P: AsRef<Path> + Copy,
     {
-        let mut inner = self.inner.write();
+        let inner = &mut self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         inner.set_contract_addr(contract_info)?;
 

@@ -78,9 +78,9 @@ fn test_integration_eth_transfer() {
 
 
     // 4. Get state from enclave
-    let my_state = get_state_by_access_right::<U64>(&my_access_right, eid).unwrap();
-    let other_state = get_state_by_access_right::<U64>(&other_access_right, eid).unwrap();
-    let third_state = get_state_by_access_right::<U64>(&third_access_right, eid).unwrap();
+    let my_state = get_state_by_access_right::<U64>(&my_access_right, eid, "Balance").unwrap();
+    let other_state = get_state_by_access_right::<U64>(&other_access_right, eid, "Balance").unwrap();
+    let third_state = get_state_by_access_right::<U64>(&third_access_right, eid, "Balance").unwrap();
     assert_eq!(my_state, init);
     assert_eq!(other_state, U64(0));
     assert_eq!(third_state, U64(0));
@@ -108,9 +108,9 @@ fn test_integration_eth_transfer() {
 
 
     // 7. Check the updated states
-    let my_updated_state = get_state_by_access_right::<U64>(&my_access_right, eid).unwrap();
-    let other_updated_state = get_state_by_access_right::<U64>(&other_access_right, eid).unwrap();
-    let third_updated_state = get_state_by_access_right::<U64>(&third_access_right, eid).unwrap();
+    let my_updated_state = get_state_by_access_right::<U64>(&my_access_right, eid, "Balance").unwrap();
+    let other_updated_state = get_state_by_access_right::<U64>(&other_access_right, eid, "Balance").unwrap();
+    let third_updated_state = get_state_by_access_right::<U64>(&third_access_right, eid, "Balance").unwrap();
 
     assert_eq!(my_updated_state, U64(70));
     assert_eq!(other_updated_state, amount);

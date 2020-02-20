@@ -6,6 +6,7 @@ use crate::localstd::{
     vec::Vec,
     collections::BTreeMap,
     ops::{Add, Sub},
+    convert::TryFrom,
 };
 use codec::{Encode, Decode, Input, Output};
 pub const STATE_SIZE: usize = 8;
@@ -20,7 +21,33 @@ pub struct U64(pub u64);
 
 impl From<U64> for StateType {
     fn from(u: U64) -> Self {
-        StateType(u.encode())
+        StateType(u.as_bytes())
+    }
+}
+
+impl TryFrom<StateType> for U64 {
+    type Error = codec::Error;
+
+    fn try_from(s: StateType) -> Result<Self, Self::Error> {
+        let mut buf = s.0;
+        U64::from_bytes(&mut buf)
+    }
+}
+
+impl TryFrom<Vec<u8>> for U64 {
+    type Error = codec::Error;
+
+    fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
+        let mut buf = s;
+        U64::from_bytes(&mut buf)
+    }
+}
+
+impl TryFrom<&mut [u8]> for U64 {
+    type Error = codec::Error;
+
+    fn try_from(s: &mut [u8]) -> Result<Self, Self::Error> {
+        U64::from_bytes(s)
     }
 }
 

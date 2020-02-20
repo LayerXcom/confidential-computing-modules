@@ -23,6 +23,10 @@ impl StateGetter for EnclaveContext<StateType> {
         let mut buf = self.db.get(key, &mem_id).into_inner_state().as_bytes();
         S::from_bytes(&mut buf)
     }
+
+    fn get_by_id(&self, key: &UserAddress, mem_id: MemId) -> StateType {
+        self.db.get(key, &mem_id).into_inner_state()
+    }
 }
 
 /// spid: Service procider ID for the ISV.

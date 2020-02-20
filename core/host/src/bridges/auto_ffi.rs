@@ -21,6 +21,7 @@ extern "C" {
         sig: *mut [u8; 64usize],
         pubkey: *mut [u8; 32usize],
         challenge: *mut [u8; 32usize],
+        mem_id: u32,
         state: *mut EnclaveState,
     ) -> sgx_status_t;
 }

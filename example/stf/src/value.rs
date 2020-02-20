@@ -23,7 +23,13 @@ use codec::{Encode, Decode};
 
 /// A getter of state stored in enclave memory.
 pub trait StateGetter {
+    /// Get dstate using memory name.
+    /// Assumed this is called in user-defined state transition functions.
     fn get<S: State>(&self, key: &UserAddress, name: &str) -> Result<S, codec::Error>;
+
+    /// Get state using memory id.
+    /// Assumed this is called by state getting operations from outside enclave.
+    fn get_by_id(&self, key: &UserAddress, mem_id: MemId) -> StateType;
 }
 
 pub fn mem_name_to_id(name: &str) -> MemId {

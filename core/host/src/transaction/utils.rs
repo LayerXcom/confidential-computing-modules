@@ -3,6 +3,8 @@ use std::{
     io::BufReader,
     fs::File,
     str::FromStr,
+    convert::{TryInto, TryFrom},
+    fmt::Debug,
 };
 use web3::types::Address;
 use ethabi::Contract as ContractABI;
@@ -71,16 +73,24 @@ impl<'a, ST: State> StateInfo<'a, ST> {
     }
 }
 
-pub fn get_state_by_access_right<S: State>(
+pub fn get_state_by_access_right<S>(
     access_right: &AccessRight,
     enclave_id: sgx_enclave_id_t,
-) -> Result<S> {
+    mem_name: &str,
+) -> Result<S>
+where
+    S: State + TryFrom<Vec<u8>>,
+    <S as TryFrom<Vec<u8>>>::Error: Debug,
+{
     let state = get_state(
         enclave_id,
         &access_right.sig(),
         &access_right.pubkey(),
         &access_right.challenge(),
-    )?;
+        mem_name,
+    )?
+    .try_into()
+    .expect("Failed to convert into State trait.");
 
     Ok(state)
 }
