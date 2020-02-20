@@ -20,7 +20,11 @@ lazy_static! {
 impl StateGetter for EnclaveContext<StateType> {
     fn get<S: State>(&self, key: &UserAddress, name: &str) -> std::result::Result<S, codec::Error> {
         let mem_id = mem_name_to_id(name);
-        let mut buf = self.db.get(key, &mem_id).into_inner_state().as_bytes();
+        let mut buf = self.db.get(key, &mem_id).into_inner_state().0;
+        if buf.len() == 0 {
+            return Ok(Default::default());
+        }
+
         S::from_bytes(&mut buf)
     }
 

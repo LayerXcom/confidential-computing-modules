@@ -55,9 +55,6 @@ impl StateService<StateType>
             kind,
             self.my_addr,
         )?;
-        // .into_iter()
-        // .map(|e| into_trait(e).unwrap())
-        // .collect();
 
         self.updates = Some(res);
 

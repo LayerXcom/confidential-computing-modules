@@ -30,6 +30,9 @@ impl TryFrom<StateType> for U64 {
     type Error = codec::Error;
 
     fn try_from(s: StateType) -> Result<Self, Self::Error> {
+        if s.0.len() == 0 {
+            return Ok(Default::default());
+        }
         let mut buf = s.0;
         U64::from_bytes(&mut buf)
     }
@@ -39,6 +42,9 @@ impl TryFrom<Vec<u8>> for U64 {
     type Error = codec::Error;
 
     fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
+        if s.len() == 0 {
+            return Ok(Default::default());
+        }
         let mut buf = s;
         U64::from_bytes(&mut buf)
     }
@@ -48,6 +54,9 @@ impl TryFrom<&mut [u8]> for U64 {
     type Error = codec::Error;
 
     fn try_from(s: &mut [u8]) -> Result<Self, Self::Error> {
+        if s.len() == 0 {
+            return Ok(Default::default());
+        }
         U64::from_bytes(s)
     }
 }
