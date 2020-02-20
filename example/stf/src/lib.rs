@@ -21,7 +21,7 @@ pub use crate::value::*;
 pub use crate::state_type::*;
 
 /// Trait of each user's state.
-pub trait State: Sized + Default + Clone + Encode + Decode {
+pub trait State: Sized + Default + Clone + Encode + Decode + fmt::Debug {
     fn as_bytes(&self) -> Vec<u8> {
         self.encode()
     }
@@ -44,7 +44,7 @@ pub trait State: Sized + Default + Clone + Encode + Decode {
     }
 }
 
-impl<T: Sized + Default + Clone + Encode + Decode> State for T {}
+impl<T: Sized + Default + Clone + Encode + Decode + fmt::Debug> State for T {}
 
 
 pub const CIPHERTEXT_SIZE: usize = 88;

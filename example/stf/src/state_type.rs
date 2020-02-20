@@ -18,6 +18,12 @@ pub struct StateType(Vec<u8>);
 #[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
 pub struct U64(pub u64);
 
+impl From<U64> for StateType {
+    fn from(u: U64) -> Self {
+        StateType(u.encode())
+    }
+}
+
 impl Add for U64 {
     type Output = U64;
 
@@ -44,5 +50,22 @@ pub struct Address(pub [u8; 20]);
 pub struct Mapping(pub BTreeMap<Address, U64>);
 
 impl Mapping {
-    
+
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_from_as_bytes() {
+        let mut v = U64(10).as_bytes();
+        assert_eq!(U64(10), U64::from_bytes(&mut v).unwrap());
+    }
+
+    #[test]
+    fn test_from_state() {
+        assert_eq!(U64(100), U64::from_state(&U64(100)).unwrap());
+    }
 }

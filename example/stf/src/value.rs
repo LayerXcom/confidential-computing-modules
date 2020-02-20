@@ -68,7 +68,8 @@ pub enum CallKind {
 impl CallKind {
     pub fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self, codec::Error> {
         match id {
-            0 => Ok(CallKind::Transfer(Transfer::from_bytes(state)?)),
+            0 => Ok(CallKind::Constructor(Constructor::from_bytes(state)?)),
+            1 => Ok(CallKind::Transfer(Transfer::from_bytes(state)?)),
             _ => return Err("Invalid Call ID".into()),
         }
     }
