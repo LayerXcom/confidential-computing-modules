@@ -275,8 +275,6 @@ impl<D: BlockNumDB> Web3Logs<D> {
     }
 }
 
-
-
 /// A type of events from ethererum network.
 pub struct EthEvent(Event);
 

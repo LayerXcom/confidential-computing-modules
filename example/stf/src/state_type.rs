@@ -13,8 +13,9 @@ pub const STATE_SIZE: usize = 8;
 
 pub trait RawState: Encode + Decode + Clone + Default {}
 
+/// Do not use `as_bytes()` to get raw bytes from `StateType`, just use `StateType.0`.
 #[derive(Clone, Debug, Default, Decode, Encode)]
-pub struct StateType(Vec<u8>);
+pub struct StateType(pub Vec<u8>);
 
 #[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
 pub struct U64(pub u64);
