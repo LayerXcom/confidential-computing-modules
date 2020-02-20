@@ -6,7 +6,7 @@ import "./utils/Secp256k1.sol";
 
 // Consider: Avoid inheritting
 contract AnonymousAsset is ReportsHandle {
-    event StoreCiphertext(bytes[] ciphertext);
+    event StoreCiphertext(bytes ciphertext);
 
     // Encrypted states
     mapping(uint256 => bytes[]) private _ciphertexts;
@@ -30,22 +30,20 @@ contract AnonymousAsset is ReportsHandle {
         bytes32[] memory _newLockParams,
         bytes memory _enclaveSig
     ) public {
-        require(_ciphertexts[_stateId].length != 0, "The state id has not been initialized yet.");
         uint256 param_len = _newLockParams.length;
         require(param_len == _newCiphertexts.length, "Invalid parameter length.");
-
-        for (uint32 i = 0; i < param_len; i++) {
-            require(_lockParams[_stateId][_newLockParams[i]] == 0, "The state has already been modified.");
-        }
 
         address inpEnclaveAddr = Secp256k1.recover(_newLockParams[0], _enclaveSig);
         require(enclaveAddress[inpEnclaveAddr] == inpEnclaveAddr, "Invalid enclave signature.");
 
         for (uint32 i = 0; i < param_len; i++) {
-            _lockParams[_stateId][_newLockParams[i]] = _newLockParams[i];
-            _ciphertexts[_stateId].push(_newCiphertexts[i]);
-        }
+            require(_lockParams[_stateId][_newLockParams[i]] == 0, "The state has already been modified.");
 
-        emit StoreCiphertext(_newCiphertexts);
+             _lockParams[_stateId][_newLockParams[i]] = _newLockParams[i];
+            _ciphertexts[_stateId].push(_newCiphertexts[i]);
+
+            // Emit event over iterations because ABIEncoderV2 is not supported web3-rust.
+            emit StoreCiphertext(_newCiphertexts[i]);
+        }
     }
 }
