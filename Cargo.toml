@@ -4,6 +4,7 @@ members = [
     "core/types",
     "example/cli",
     "example/anonymous-asset",
+    "example/stf",
 ]
 exclude = [
     "core/enclave",

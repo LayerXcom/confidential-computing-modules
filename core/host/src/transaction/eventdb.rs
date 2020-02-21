@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use anonify_common::{
-    Ciphertext,
     kvs::{KVS, MemoryDB, DBTx}
 };
+use anonify_stf::Ciphertext;
 use ethabi::Hash;
 use sgx_types::sgx_enclave_id_t;
 use byteorder::{LittleEndian, ByteOrder};

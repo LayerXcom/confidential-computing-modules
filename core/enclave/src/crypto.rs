@@ -6,7 +6,8 @@ use ring::aead::{self, Aad, BoundKey, Nonce, UnboundKey, AES_256_GCM};
 use secp256k1::{self, Message, Signature, SecretKey, PublicKey, util::{
     SECRET_KEY_SIZE,
 }};
-use anonify_common::{Keccak256, IV_SIZE, CIPHERTEXT_SIZE, Ciphertext};
+use anonify_common::{Keccak256, IV_SIZE};
+use anonify_stf::{CIPHERTEXT_SIZE, Ciphertext};
 use crate::error::Result;
 
 lazy_static! {

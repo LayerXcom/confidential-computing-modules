@@ -21,6 +21,7 @@ extern "C" {
         sig: *mut [u8; 64usize],
         pubkey: *mut [u8; 32usize],
         challenge: *mut [u8; 32usize],
+        mem_id: u32,
         state: *mut EnclaveState,
     ) -> sgx_status_t;
 }
@@ -31,10 +32,10 @@ extern "C" {
         sig: *mut [u8; 64usize],
         pubkey: *mut [u8; 32usize],
         challenge: *mut [u8; 32usize],
-        target: *mut [u8; 20usize],
-        state: *const u8,
+        state: *mut u8,
         state_len: usize,
         state_id: u64,
+        call_id: u32,
         result: *mut RawStateTransTx,
     ) -> sgx_status_t;
 }
@@ -43,19 +44,6 @@ extern "C" {
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
         result: *mut RawRegisterTx,
-    ) -> sgx_status_t;
-}
-extern "C" {
-    pub fn ecall_init_state(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        sig: *mut [u8; 64usize],
-        pubkey: *mut [u8; 32usize],
-        challenge: *mut [u8; 32usize],
-        state: *const u8,
-        state_len: usize,
-        state_id: u64,
-        result: *mut RawStateTransTx,
     ) -> sgx_status_t;
 }
 extern "C" {

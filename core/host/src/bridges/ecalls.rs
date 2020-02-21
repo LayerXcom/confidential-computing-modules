@@ -1,9 +1,18 @@
+use std::{
+    convert::{TryInto, TryFrom},
+    fmt::Debug,
+    boxed::Box,
+};
 use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx};
-use anonify_common::{State, AccessRight, UserAddress, LockParam, Ciphertext, CIPHERTEXT_SIZE};
+use anonify_common::{AccessRight, UserAddress, LockParam};
+use anonify_stf::{State, Ciphertext, CIPHERTEXT_SIZE, mem_name_to_id};
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
-use crate::transaction::eventdb::InnerEnclaveLog;
+use crate::transaction::{
+    eventdb::InnerEnclaveLog,
+    utils::StateInfo,
+};
 use crate::error::{HostErrorKind, Result};
 
 /// Insert event logs from blockchain nodes into enclave memory database.
@@ -35,14 +44,17 @@ pub(crate) fn insert_logs(
 }
 
 /// Get state only if the signature verification returns true.
-pub(crate) fn get_state<S: State>(
+pub(crate) fn get_state(
     eid: sgx_enclave_id_t,
     sig: &Signature,
     pubkey: &PublicKey,
     msg: &[u8],
-) -> Result<S> {
+    mem_name: &str,
+) -> Result<Vec<u8>>
+{
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut state = EnclaveState::default();
+    let mem_id = mem_name_to_id(mem_name).as_raw();
 
     let status = unsafe {
         ecall_get_state(
@@ -51,6 +63,7 @@ pub(crate) fn get_state<S: State>(
             sig.to_bytes().as_ptr() as _,
             pubkey.to_bytes().as_ptr() as _,
             msg.as_ptr() as _,
+            mem_id,
             &mut state,
         )
     };
@@ -62,8 +75,12 @@ pub(crate) fn get_state<S: State>(
 		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_get_state" }.into());
     }
 
-    let res = S::from_bytes(&state_as_bytes(state))?;
-    Ok(res)
+    Ok(state_as_bytes(state).into())
+
+    // let res = (&mut *s).try_into().expect("Failed to convert bytes to state trait.");
+
+    // let res = S::from_bytes(&mut s)?;
+    // Ok(res)
 }
 
 fn state_as_bytes(state: EnclaveState) -> Box<[u8]> {
@@ -128,52 +145,16 @@ pub(crate) struct BoxedStateTransTx {
 }
 
 impl BoxedStateTransTx {
-    /// Initialize a state when a new contract is deployed.
-    pub(crate) fn init_state<S: State>(
-        eid: sgx_enclave_id_t,
-        access_right: AccessRight,
-        state: S,
-        state_id: u64,
-    ) -> Result<Self> {
-        let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-        let mut raw_state_tx = RawStateTransTx::default();
-        let state = state.as_bytes()?;
-
-        let status = unsafe {
-            ecall_init_state(
-                eid,
-                &mut rt,
-                access_right.sig().to_bytes().as_ptr() as _,
-                access_right.pubkey().to_bytes().as_ptr() as _,
-                access_right.challenge().as_ptr() as _,
-                state.as_c_ptr() as *const u8,
-                state.len(),
-                state_id,
-                &mut raw_state_tx,
-            )
-        };
-
-        if status != sgx_status_t::SGX_SUCCESS {
-            return Err(HostErrorKind::Sgx{ status, function: "ecall_init_state" }.into());
-        }
-        if rt != sgx_status_t::SGX_SUCCESS {
-            return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_init_state" }.into());
-        }
-
-        Ok(raw_state_tx.into())
-    }
-
     /// Update states when a transaction is sent to blockchain.
     pub(crate) fn state_transition<S: State>(
         eid: sgx_enclave_id_t,
         access_right: AccessRight,
-        target: &UserAddress,
-        state: S,
-        state_id: u64,
+        state_info: StateInfo<'_, S>,
     ) -> Result<Self> {
         let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
         let mut raw_state_tx = RawStateTransTx::default();
-        let state = state.as_bytes()?;
+        let state = state_info.state_as_bytes();
+        let call_id = state_info.call_name_to_id();
 
         let status = unsafe {
             ecall_state_transition(
@@ -182,10 +163,10 @@ impl BoxedStateTransTx {
                 access_right.sig().to_bytes().as_ptr() as _,
                 access_right.pubkey().to_bytes().as_ptr() as _,
                 access_right.challenge().as_ptr() as _,
-                target.as_bytes().as_ptr() as _,
-                state.as_c_ptr() as *const u8,
+                state.as_c_ptr() as *mut u8,
                 state.len(),
-                state_id,
+                state_info.state_id(),
+                call_id,
                 &mut raw_state_tx,
             )
         };
@@ -236,7 +217,6 @@ mod tests {
     use rand::Rng;
     use ed25519_dalek::Keypair;
     use crate::init_enclave::EnclaveDir;
-    use crate::mock::MockState;
 
     #[test]
     #[ignore]

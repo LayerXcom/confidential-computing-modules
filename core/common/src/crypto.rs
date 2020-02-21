@@ -8,6 +8,7 @@ use crate::{
 };
 use ed25519_dalek::{Keypair, PublicKey, Signature, SignatureError};
 use tiny_keccak::Keccak;
+use codec::{Encode, Decode};
 use anonify_types::{RawPubkey, RawSig, RawChallenge};
 #[cfg(feature = "std")]
 use rand::Rng;
@@ -23,7 +24,7 @@ pub trait Hash256 {
 
 /// User address represents last 20 bytes of digest of user's public key.
 /// A signature verification must return true to generate a user address.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
 pub struct UserAddress([u8; 20]);
 
@@ -97,6 +98,10 @@ impl UserAddress {
 
     pub fn from_array(array: [u8; 20]) -> Self {
         UserAddress(array)
+    }
+
+    pub fn into_array(self) -> [u8; 20] {
+        self.0
     }
 }
 
@@ -247,63 +252,11 @@ impl<T: IntoVec> IntoVec for &[T] {
 
 /// The size of initialization vector for AES-256-GCM.
 pub const IV_SIZE: usize = 12;
-pub const CIPHERTEXT_SIZE: usize = 88;
-
-#[derive(Clone)]
-pub struct Ciphertext([u8; CIPHERTEXT_SIZE]);
-
-impl fmt::Debug for Ciphertext {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Ciphertext ")
-    }
-}
-
-impl Default for Ciphertext {
-    fn default() -> Self {
-        Ciphertext([0u8; CIPHERTEXT_SIZE])
-    }
-}
-
-impl IntoVec for Ciphertext {
-    fn into_vec(&self) -> Vec<u8> {
-        self.0.to_vec()
-    }
-}
-
-impl Ciphertext {
-    pub fn from_bytes(bytes: &[u8]) -> Self {
-        assert_eq!(bytes.len(), CIPHERTEXT_SIZE);
-        let mut buf = [0u8; CIPHERTEXT_SIZE];
-        buf.copy_from_slice(bytes);
-
-        Ciphertext(buf)
-    }
-
-    pub fn from_bytes_iter(bytes: &[u8]) -> impl Iterator<Item=Self> + '_ {
-        assert_eq!(bytes.len() % CIPHERTEXT_SIZE, 0);
-        let iter_num = bytes.len() / CIPHERTEXT_SIZE;
-
-        (0..iter_num).map(move |i| {
-            let mut buf = [0u8; CIPHERTEXT_SIZE];
-            let b = &bytes[i*CIPHERTEXT_SIZE..(i+1)*CIPHERTEXT_SIZE];
-            buf.copy_from_slice(b);
-            Ciphertext(buf)
-        })
-    }
-
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.0[..]
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-}
 
 const LOCK_PARAM_SIZE: usize = 32;
 
 /// To avoid data collision when a transaction is sent to a blockchain.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq)]
 pub struct LockParam([u8; LOCK_PARAM_SIZE]);
 
 impl IntoVec for LockParam {

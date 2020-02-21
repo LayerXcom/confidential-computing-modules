@@ -3,10 +3,12 @@
 use std::{path::Path, sync::Arc};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use anonify_common::{AccessRight, State, UserAddress};
+use anonify_common::{AccessRight, UserAddress};
+use anonify_stf::State;
 use super::{
     eth::primitives::Web3Contract,
     eventdb::BlockNumDB,
+    utils::{ContractInfo, StateInfo},
 };
 use crate::error::{Result, HostErrorKind};
 use self::traits::*;
@@ -36,12 +38,13 @@ where
         })
     }
 
-    pub fn set_contract_addr<P>(&self, contract_addr: &str, abi_path: P) -> Result<()>
+    pub fn set_contract_addr<P>(&mut self, contract_addr: &str, abi_path: P) -> Result<()>
     where
         P: AsRef<Path> + Copy,
     {
-        let mut inner = self.inner.write();
-        inner.set_contract_addr(contract_addr, abi_path)?;
+        let inner = &mut self.inner.write();
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        inner.set_contract_addr(contract_info)?;
 
         Ok(())
     }
@@ -57,40 +60,23 @@ where
 
     pub fn register<P: AsRef<Path> + Copy>(
         &self,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
         gas: u64,
         contract_addr: &str,
         abi_path: P,
     ) -> Result<String> {
         let mut inner = self.inner.write();
-        inner.register(from_eth_addr, gas, contract_addr, abi_path)
-    }
-
-    pub fn init_state<ST, P>(
-        &self,
-        access_right: AccessRight,
-        init_state: ST,
-        state_id: u64,
-        from_eth_addr: SignerAddress,
-        gas: u64,
-        contract_addr: &str,
-        abi_path: P,
-    ) -> Result<String>
-    where
-        ST: State,
-        P: AsRef<Path> + Copy,
-    {
-        let mut inner = self.inner.write();
-        inner.init_state(access_right, init_state, state_id, from_eth_addr, gas, contract_addr, abi_path)
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        inner.register(signer, gas, contract_info)
     }
 
     pub fn state_transition<ST, P>(
         &self,
         access_right: AccessRight,
-        target: &UserAddress,
         state: ST,
         state_id: u64,
-        from_eth_addr: SignerAddress,
+        call_name: &str,
+        signer: SignerAddress,
         gas: u64,
         contract_addr: &str,
         abi_path: P,
@@ -100,7 +86,10 @@ where
         P: AsRef<Path> + Copy,
     {
         let mut inner = self.inner.write();
-        inner.state_transition(access_right, target, state, state_id, from_eth_addr, gas, contract_addr, abi_path)
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        let state_info = StateInfo::new(state, state_id, call_name);
+
+        inner.state_transition(access_right, signer, state_info, contract_info, gas)
     }
 
     pub fn block_on_event<P: AsRef<Path> + Copy>(
@@ -109,7 +98,8 @@ where
         abi_path: P
     ) -> Result<()> {
         let mut inner = self.inner.write();
-        inner.block_on_event(contract_addr, abi_path)
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        inner.block_on_event(contract_info)
     }
 
     pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
@@ -117,7 +107,6 @@ where
     }
 }
 
-/// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
 struct InnerDispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
     deployer: D,
@@ -148,14 +137,17 @@ where
         })
     }
 
-    fn set_contract_addr<P>(&mut self, contract_addr: &str, abi_path: P) -> Result<()>
+    fn set_contract_addr<P>(
+        &mut self,
+        contract_info: ContractInfo<'_, P>,
+    ) -> Result<()>
     where
         P: AsRef<Path> + Copy
     {
         let enclave_id = self.deployer.get_enclave_id();
         let node_url = self.deployer.get_node_url();
-        let sender = S::new(enclave_id, node_url, contract_addr, abi_path)?;
-        let watcher = W::new(node_url, abi_path, contract_addr, self.event_db.clone())?;
+        let sender = S::new(enclave_id, node_url, contract_info)?;
+        let watcher = W::new(node_url, contract_info, self.event_db.clone())?;
 
         self.sender = Some(sender);
         self.watcher = Some(watcher);
@@ -177,12 +169,11 @@ where
 
     fn block_on_event<P: AsRef<Path> + Copy>(
         &mut self,
-        contract_addr: &str,
-        abi_path: P,
+        contract_info: ContractInfo<'_, P>,
     ) -> Result<()> {
         // If contract address is not set, set new contract address and abi path to generate watcher instance.
         // if let None = self.watcher.as_mut() {
-            self.set_contract_addr(contract_addr, abi_path)?;
+            self.set_contract_addr(contract_info)?;
         // }
 
         let eid = self.deployer.get_enclave_id();
@@ -193,49 +184,24 @@ where
 
     fn register<P: AsRef<Path> + Copy>(
         &mut self,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
+        contract_info: ContractInfo<'_, P>,
     ) -> Result<String> {
-        self.set_contract_addr(contract_addr, abi_path)?;
+        self.set_contract_addr(contract_info)?;
 
         self.sender.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .register(from_eth_addr, gas)
-    }
-
-    fn init_state<ST, P>(
-        &mut self,
-        access_right: AccessRight,
-        init_state: ST,
-        state_id: u64,
-        from_eth_addr: SignerAddress,
-        gas: u64,
-        contract_addr: &str,
-        abi_path: P,
-    ) -> Result<String>
-    where
-        ST: State,
-        P: AsRef<Path> + Copy,
-    {
-        self.set_contract_addr(contract_addr, abi_path)?;
-
-        self.sender.as_ref()
-            .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .init_state(access_right, init_state, state_id, from_eth_addr, gas)
+            .register(signer, gas)
     }
 
     fn state_transition<ST, P>(
         &mut self,
         access_right: AccessRight,
-        target: &UserAddress,
-        state: ST,
-        state_id: u64,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
+        state_info: StateInfo<'_, ST>,
+        contract_info: ContractInfo<'_, P>,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
     ) -> Result<String>
     where
         ST: State,
@@ -243,12 +209,12 @@ where
     {
         // If contract address is not set, set new contract address and abi path to generate sender instance.
         // if let None = self.sender.as_mut() {
-            self.set_contract_addr(contract_addr, abi_path)?;
+            self.set_contract_addr(contract_info)?;
         // }
 
         self.sender.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .state_transition(access_right, target, state, state_id, from_eth_addr, gas)
+            .state_transition(access_right, signer, state_info, gas)
     }
 }
 
@@ -272,6 +238,7 @@ pub mod traits {
 
         fn get_account(&self, index: usize) -> Result<SignerAddress>;
 
+        /// Deploying contract with attestation.
         fn deploy(
             &mut self,
             deploy_user: &SignerAddress,
@@ -290,8 +257,7 @@ pub mod traits {
         fn new<P: AsRef<Path>>(
             enclave_id: sgx_enclave_id_t,
             node_url: &str,
-            contract_addr: &str,
-            abi_path: P,
+            contract_info: ContractInfo<'_, P>,
         ) -> Result<Self>;
 
         fn from_contract(
@@ -301,32 +267,21 @@ pub mod traits {
 
         fn get_account(&self, index: usize) -> Result<SignerAddress>;
 
+        /// Send ciphertexts which is result of the state transition to blockchain nodes.
         fn state_transition<ST: State>(
             &self,
             access_right: AccessRight,
-            target: &UserAddress,
-            state: ST,
-            state_id: u64,
-            from_eth_addr: SignerAddress,
+            signer: SignerAddress,
+            state_info: StateInfo<'_, ST>,
             gas: u64,
         ) -> Result<String>;
 
+        /// Attestation with deployed contract.
         fn register(
             &self,
-            from_eth_addr: SignerAddress,
+            signer: SignerAddress,
             gas: u64,
         ) -> Result<String>;
-
-        fn init_state<ST: State>(
-            &self,
-            access_right: AccessRight,
-            init_state: ST,
-            state_id: u64,
-            from_eth_addr: SignerAddress,
-            gas: u64,
-        )  -> Result<String> {
-            unimplemented!();
-        }
 
         fn get_contract(self) -> ContractKind;
     }
@@ -337,8 +292,7 @@ pub mod traits {
 
         fn new<P: AsRef<Path>>(
             node_url: &str,
-            abi_path: P,
-            contract_addr: &str,
+            contract_info: ContractInfo<'_, P>,
             event_db: Arc<Self::WatcherDB>,
         ) -> Result<Self>;
 

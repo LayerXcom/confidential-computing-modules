@@ -5,7 +5,8 @@ use std::{
 };
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
-use anonify_common::{UserAddress, AccessRight, State};
+use anonify_common::{UserAddress, AccessRight};
+use anonify_stf::State;
 use web3::types::Address as EthAddress;
 use crate::{
     ecalls::*,
@@ -13,9 +14,10 @@ use crate::{
     transaction::{
         eventdb::BlockNumDB,
         dispatcher::{SignerAddress, ContractKind, traits::*},
+        utils::{ContractInfo, StateInfo},
     },
 };
-use super::primitives::{Web3Http, EthEvent, Web3Contract, contract_abi_from_path};
+use super::primitives::{Web3Http, EthEvent, Web3Contract};
 
 /// Components needed to deploy a contract
 #[derive(Debug)]
@@ -65,10 +67,10 @@ impl Deployer for EthDeployer {
 
     // TODO: generalize, remove abi.
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind> {
-        let abi = contract_abi_from_path(abi_path)?;
-        let adderess = self.address.expect("The contract hasn't be deployed yet.");
+        let addr = self.address.expect("The contract hasn't be deployed yet.").to_string();
+        let contract_info = ContractInfo::new(abi_path, &addr);
         Ok(ContractKind::Web3Contract(
-            Web3Contract::new(self.web3_conn, adderess, abi)?
+            Web3Contract::new(self.web3_conn, contract_info)?
         ))
     }
 
@@ -92,13 +94,10 @@ impl Sender for EthSender {
     fn new<P: AsRef<Path>>(
         enclave_id: sgx_enclave_id_t,
         node_url: &str,
-        contract_addr: &str,
-        abi_path: P,
+        contract_info: ContractInfo<'_, P>,
     ) -> Result<Self> {
         let web3_http = Web3Http::new(node_url)?;
-        let abi = contract_abi_from_path(abi_path)?;
-        let addr = EthAddress::from_str(contract_addr)?;
-        let contract = Web3Contract::new(web3_http, addr, abi)?;
+        let contract = Web3Contract::new(web3_http, contract_info)?;
 
         Ok(EthSender { enclave_id, contract })
     }
@@ -125,11 +124,11 @@ impl Sender for EthSender {
 
     fn register(
         &self,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
         gas: u64,
     ) -> Result<String> {
         let register_tx = BoxedRegisterTx::register(self.enclave_id)?;
-        let receipt = match from_eth_addr {
+        let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
                 self.contract.register(
                     addr,
@@ -143,51 +142,22 @@ impl Sender for EthSender {
         Ok(hex::encode(receipt.as_bytes()))
     }
 
-    fn init_state<ST: State>(
-        &self,
-        access_right: AccessRight,
-        init_state: ST,
-        state_id: u64,
-        from_eth_addr: SignerAddress,
-        gas: u64,
-    )  -> Result<String> {
-        let init_state_tx = BoxedStateTransTx::init_state(
-            self.enclave_id, access_right, init_state, state_id
-        )?;
-
-        let receipt = match from_eth_addr {
-            SignerAddress::EthAddress(addr) => {
-                self.contract.init_state::<u64>(
-                    addr,
-                    init_state_tx.state_id,
-                    &init_state_tx.ciphertext,
-                    &init_state_tx.lock_param,
-                    &init_state_tx.enclave_sig,
-                    gas,
-                )?
-            }
-        };
-
-        Ok(hex::encode(receipt.as_bytes()))
-    }
-
     fn state_transition<ST: State>(
         &self,
         access_right: AccessRight,
-        target: &UserAddress,
-        state: ST,
-        state_id: u64,
-        from_eth_addr: SignerAddress,
+        signer: SignerAddress,
+        state_info: StateInfo<'_, ST>,
         gas: u64,
     ) -> Result<String> {
+        // ecall of state transition
         let state_trans_tx = BoxedStateTransTx::state_transition(
-            self.enclave_id, access_right, target, state, state_id
+            self.enclave_id, access_right, state_info
         )?;
 
         let ciphers = state_trans_tx.get_ciphertexts();
         let locks = state_trans_tx.get_lock_params();
 
-        let receipt = match from_eth_addr {
+        let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
                 self.contract.state_transition(
                     addr,
@@ -219,14 +189,11 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
 
     fn new<P: AsRef<Path>>(
         node_url: &str,
-        abi_path: P,
-        contract_addr: &str,
+        contract_info: ContractInfo<'_, P>,
         event_db: Arc<DB>,
     ) -> Result<Self> {
         let web3_http = Web3Http::new(node_url)?;
-        let abi = contract_abi_from_path(abi_path)?;
-        let addr = EthAddress::from_str(contract_addr)?;
-        let contract = Web3Contract::new(web3_http, addr, abi)?;
+        let contract = Web3Contract::new(web3_http, contract_info)?;
 
         Ok(EventWatcher { contract, event_db })
     }

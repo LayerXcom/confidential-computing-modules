@@ -19,7 +19,7 @@ $ cp example/server/.env.template example/server/.env
 
 ## Building contracts
 ```
-$ solc -o build --bin --abi --optimize --overwrite contracts/AnonymousAsset.sol
+$ solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
 ```
 
 ## Running

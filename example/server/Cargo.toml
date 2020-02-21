@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 anonymous-asset = { path = "../anonymous-asset" }
+anonify-stf = { path = "../stf" }
 anonify-common = { path = "../../core/common" }
 anonify-host = { path = "../../core/host" }
 sgx_types = "1.1.0"

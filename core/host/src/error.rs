@@ -47,6 +47,8 @@ pub enum HostErrorKind {
     },
     #[fail(display = "{}", _0)]
     Msg(&'static str),
+    #[fail(display = "Codec error")]
+    Codec,
 }
 
 impl Fail for HostError {
@@ -135,6 +137,14 @@ impl From<web3::Error> for HostError {
     fn from(error: web3::Error) -> Self {
         HostError {
             inner: error.context(HostErrorKind::Web3),
+        }
+    }
+}
+
+impl From<codec::Error> for HostError {
+    fn from(error: codec::Error) -> Self {
+        HostError {
+            inner: error.context(HostErrorKind::Codec),
         }
     }
 }

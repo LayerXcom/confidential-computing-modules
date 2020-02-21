@@ -23,6 +23,7 @@ enclave {
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
             [in] uint8_t challenge[32],
+            uint32_t mem_id,
             [out] EnclaveState* state
         );
 
@@ -30,25 +31,15 @@ enclave {
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
             [in] uint8_t challenge[32],
-            [in] uint8_t target[20],
-            [in, count=state_len] const uint8_t *state,
+            [in, count=state_len] uint8_t *state,
             size_t state_len,
             uint64_t state_id,
+            uint32_t call_id,
             [out] RawStateTransTx* result
         );
 
         public sgx_status_t ecall_register(
             [out] RawRegisterTx* result
-        );
-
-        public sgx_status_t ecall_init_state(
-            [in] uint8_t sig[64],
-            [in] uint8_t pubkey[32],
-            [in] uint8_t challenge[32],
-            [in, count=state_len] const uint8_t *state,
-            size_t state_len,
-            uint64_t state_id,
-            [out] RawStateTransTx* result
         );
 
         public void ecall_run_tests(

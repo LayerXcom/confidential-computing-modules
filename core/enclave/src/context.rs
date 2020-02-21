@@ -2,29 +2,47 @@ use sgx_types::*;
 use std::prelude::v1::*;
 use sgx_tse::rsgx_create_report;
 use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
+use anonify_stf::{State, mem_name_to_id, StateGetter, StateType, Ciphertext, MemId};
 use crate::{
-    crypto::Eik,
+    crypto::{Eik, SymmetricKey},
     attestation::TEST_SPID,
     ocalls::{sgx_init_quote, get_quote},
     error::Result,
     kvs::{EnclaveDB, EnclaveDBTx},
+    state::{Current, UserState, StateValue},
 };
 
 lazy_static! {
-    pub static ref ENCLAVE_CONTEXT: EnclaveContext<MemoryDB>
+    pub static ref ENCLAVE_CONTEXT: EnclaveContext<StateType>
         = EnclaveContext::new(TEST_SPID).unwrap();
+}
+
+impl StateGetter for EnclaveContext<StateType> {
+    fn get<S: State>(&self, key: &UserAddress, name: &str) -> std::result::Result<S, codec::Error> {
+        let mem_id = mem_name_to_id(name);
+        let mut buf = self.db.get(key, &mem_id).into_inner_state().into_bytes();
+        if buf.len() == 0 {
+            return Ok(Default::default());
+        }
+
+        S::from_bytes(&mut buf)
+    }
+
+    fn get_by_id(&self, key: &UserAddress, mem_id: MemId) -> StateType {
+        self.db.get(key, &mem_id).into_inner_state()
+    }
 }
 
 /// spid: Service procider ID for the ISV.
 #[derive(Clone)]
-pub struct EnclaveContext<DB: EnclaveDB> {
+pub struct EnclaveContext<S: State> {
     spid: sgx_spid_t,
     identity_key: Eik,
-    db: DB,
+    db: EnclaveDB<S>,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
-impl<DB: EnclaveDB> EnclaveContext<DB> {
+impl EnclaveContext<StateType> {
     pub fn new(spid: &str) -> Result<Self> {
         let spid_vec = hex::decode(spid)?;
         let mut id = [0; 16];
@@ -32,7 +50,7 @@ impl<DB: EnclaveDB> EnclaveContext<DB> {
         let spid: sgx_spid_t = sgx_spid_t { id };
 
         let identity_key = Eik::new()?;
-        let db = DB::new();
+        let db = EnclaveDB::new();
 
         Ok(EnclaveContext{
             spid,
@@ -41,10 +59,13 @@ impl<DB: EnclaveDB> EnclaveContext<DB> {
         })
     }
 
-    pub fn get_quote(&self) -> Result<String> {
+    /// Generate Base64-encoded QUOTE data structure.
+    /// QUOTE will be sent to Attestation Serivce to verify SGX's status.
+    /// For more information: https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf
+    pub fn quote(&self) -> Result<String> {
         let target_info = self.init_quote()?;
-        let report = self.get_report(&target_info)?;
-        self.get_encoded_quote(report)
+        let report = self.report(&target_info)?;
+        self.encoded_quote(report)
     }
 
     pub(crate) fn init_quote(&self) -> Result<sgx_target_info_t> {
@@ -52,19 +73,37 @@ impl<DB: EnclaveDB> EnclaveContext<DB> {
         Ok(target_info)
     }
 
+    /// Generate a signature using enclave's identity key.
+    /// This signature is used to verify enclacve's program dependencies and
+    /// should be verified in the public available place such as smart contracr on blokchain.
     pub fn sign(&self, msg: &LockParam) -> Result<secp256k1::Signature> {
         self.identity_key.sign(msg.as_bytes())
     }
 
-    pub fn write(&self, tx: EnclaveDBTx) {
-        self.db.write(tx)
+    // Only State with `Current` allows to access to the database to avoid from
+    // storing data which have not been considered globally consensused.
+    pub fn write_cipheriv(
+        &self,
+        cipheriv: Ciphertext,
+        symm_key: &SymmetricKey
+    ) -> Result<()> {
+        let user_state = UserState::<StateType, Current>::decrypt(cipheriv, &symm_key)?;
+        let address = user_state.address();
+        let mem_id = user_state.mem_id();
+        let sv = user_state.into_sv();
+
+        self.db.write(address, mem_id, sv);
+
+        Ok(())
     }
 
-    pub fn get(&self, key: &UserAddress) -> DBValue {
-        self.db.get(key)
+    /// Get the user's state value for the specified memory id.
+    pub fn state_value(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<StateType, Current> {
+        self.db.get(key, &mem_id)
     }
 
-    fn get_report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {
+    /// Return Attestation report
+    fn report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {
         let mut report = sgx_report_t::default();
         let report_data = &self.identity_key.report_date()?;
 
@@ -75,7 +114,7 @@ impl<DB: EnclaveDB> EnclaveContext<DB> {
         Ok(report)
     }
 
-    fn get_encoded_quote(&self, report: sgx_report_t) -> Result<String> {
+    fn encoded_quote(&self, report: sgx_report_t) -> Result<String> {
         let quote = get_quote(report, &self.spid)?;
 
         // Use base64-encoded QUOTE structure to communicate via defined API.

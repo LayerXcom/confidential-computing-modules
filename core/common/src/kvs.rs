@@ -10,6 +10,8 @@ use crate::localstd::sync::RwLock;
 use sgx_elastic_array::{ElasticArray128, ElasticArray32};
 #[cfg(feature = "sgx")]
 use crate::localstd::sync::SgxRwLock as RwLock;
+use crate::crypto::UserAddress;
+use codec::{Encode, Decode};
 
 /// Inner trait of key-value store instructions
 pub trait KVS: Sync + Send {

@@ -278,7 +278,8 @@ pub mod state {
         use serde_big_array::big_array;
         use rand::Rng;
         use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
-        use anonify_common::{AccessRight, State};
+        use anonify_common::{AccessRight};
+        use anonify_stf::State;
 
         big_array! { BigArray; }
 

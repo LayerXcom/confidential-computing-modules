@@ -1,15 +1,17 @@
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
-use anonify_common::{UserAddress, State, stf::Value, kvs::MemoryDB, Ciphertext, CIPHERTEXT_SIZE, AccessRight};
+use anonify_common::{UserAddress, AccessRight};
+use anonify_stf::{StateGetter, State, StateType, CIPHERTEXT_SIZE, Ciphertext, CallKind, MemId};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::state::{UserState, StateValue, Current};
 use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{
     TEST_SUB_KEY, DEV_HOSTNAME, REPORT_PATH,
 };
-use crate::context::ENCLAVE_CONTEXT;
-use crate::transaction::{RegisterTx, InitStateTx, EnclaveTx, StateTransTx};
+use crate::context::{ENCLAVE_CONTEXT};
+use crate::transaction::{RegisterTx, EnclaveTx, StateTransTx};
+use crate::kvs::EnclaveDB;
 use super::ocalls::save_to_host_memory;
 
 /// Insert event logs from blockchain nodes into enclave's memory database.
@@ -24,10 +26,9 @@ pub unsafe extern "C" fn ecall_insert_logs(
     assert_eq!(ciphertexts.len() % CIPHERTEXT_SIZE, 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
     for ciphertext in ciphertexts.chunks(CIPHERTEXT_SIZE) {
-        UserState::<Value, Current>::insert_cipheriv_memdb::<MemoryDB>(
-            Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY, &*ENCLAVE_CONTEXT,
-        )
-        .expect("Failed to insert ciphertext into memory database.");
+        ENCLAVE_CONTEXT
+            .write_cipheriv(Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY)
+            .expect("Failed to wirte cihpertexts.");
     }
 
     sgx_status_t::SGX_SUCCESS
@@ -39,18 +40,15 @@ pub unsafe extern "C" fn ecall_get_state(
     sig: &RawSig,
     pubkey: &RawPubkey,
     challenge: &RawChallenge, // 32 bytes randomness for avoiding replay attacks.
+    mem_id: u32,
     state: &mut EnclaveState,
 ) -> sgx_status_t {
     let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey).expect("Faild to generate user address.");
 
-    let db_value = ENCLAVE_CONTEXT.get(&key);
-    let user_state_value = StateValue::<Value, Current>::from_dbvalue(db_value)
-        .expect("Failed to read db_value.");
-    let user_state = user_state_value.inner_state();
-
-    state.0 = save_to_host_memory(&user_state.as_bytes().unwrap()).unwrap() as *const u8;
+    let user_state = &ENCLAVE_CONTEXT.get_by_id(&key, MemId::from_raw(mem_id));
+    state.0 = save_to_host_memory(user_state.as_bytes()).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS
 }
@@ -59,33 +57,10 @@ pub unsafe extern "C" fn ecall_get_state(
 pub unsafe extern "C" fn ecall_register(
     raw_register_tx: &mut RawRegisterTx,
 ) -> sgx_status_t {
-    let register_tx = RegisterTx::construct(DEV_HOSTNAME, REPORT_PATH, TEST_SUB_KEY, &ENCLAVE_CONTEXT)
+    let register_tx = RegisterTx::construct(DEV_HOSTNAME, REPORT_PATH, TEST_SUB_KEY, &*ENCLAVE_CONTEXT)
         .expect("Faild to constract register transaction.");
     *raw_register_tx = register_tx.into_raw()
         .expect("Faild to convert into raw register transaction.");
-
-    sgx_status_t::SGX_SUCCESS
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn ecall_init_state(
-    raw_sig: &RawSig,
-    raw_pubkey: &RawPubkey,
-    raw_challenge: &RawChallenge,
-    state: *const u8,
-    state_len: usize,
-    state_id: u64,
-    raw_state_tx: &mut RawStateTransTx,
-) -> sgx_status_t {
-    let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge).expect("Failed to generate access right.");
-    let user_address = UserAddress::from_access_right(&ar)
-        .expect("Failed to generate user address from access right.");
-    let params = slice::from_raw_parts(state, state_len);
-
-    let init_state_tx = InitStateTx::construct::<Value, _>(state_id, params, user_address, &ENCLAVE_CONTEXT)
-        .expect("Failed to construct init state tx.");
-    *raw_state_tx = init_state_tx.into_raw()
-        .expect("Failed to convert into raw init state transaction.");
 
     sgx_status_t::SGX_SUCCESS
 }
@@ -96,22 +71,22 @@ pub unsafe extern "C" fn ecall_state_transition(
     raw_sig: &RawSig,
     raw_pubkey: &RawPubkey,
     raw_challenge: &RawChallenge,
-    target: &Address,
-    state: *const u8,
+    state: *mut u8,
     state_len: usize,
     state_id: u64,
+    call_id: u32,
     raw_state_tx: &mut RawStateTransTx,
 ) -> sgx_status_t {
-    let target_addr = UserAddress::from_array(*target);
-    let params = slice::from_raw_parts(state, state_len);
+    let params = slice::from_raw_parts_mut(state, state_len);
 
     let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge).expect("Failed to generate access right.");
-    let state_trans_tx = StateTransTx::construct::<Value, _>(
-        state_id, params, &ar, target_addr, &ENCLAVE_CONTEXT
+    let call_kind = CallKind::from_call_id(call_id, params).expect("Failed to generate callkind.");
+    let state_trans_tx = StateTransTx::construct(
+        call_kind, state_id, &ar, &*ENCLAVE_CONTEXT
     )
-        .expect("Failed to construct init state tx.");
+        .expect("Failed to construct state tx.");
     *raw_state_tx = state_trans_tx.into_raw()
-        .expect("Failed to convert into raw init state transaction.");
+        .expect("Failed to convert into raw state transaction.");
 
     sgx_status_t::SGX_SUCCESS
 }

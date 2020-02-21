@@ -1,38 +1,52 @@
 use std::{
     prelude::v1::*,
+    collections::HashMap,
+    sync::{SgxRwLock, Arc},
 };
 use ed25519_dalek::{PublicKey, Signature};
 use anonify_common::{
     UserAddress,
     kvs::*,
 };
+use anonify_stf::{State, MemId};
+use crate::state::{StateValue, Current};
 use crate::error::Result;
 
-/// Trait of key-value store instrctions restricted by signature verifications.
-pub trait EnclaveDB: Sync + Send {
-    fn new() -> Self;
+#[derive(Debug)]
+struct StateMap<S: State>(HashMap<MemId, StateValue<S, Current>>);
 
-    fn get(&self, key: &UserAddress) -> DBValue;
+#[derive(Debug, Clone)]
+pub struct EnclaveDB<S: State>(Arc<SgxRwLock<HashMap<UserAddress, StateMap<S>>>>);
 
-    fn write(&self, tx: EnclaveDBTx);
-}
-
-impl EnclaveDB for MemoryDB {
-    fn new() -> Self {
-        MemoryDB::new()
+impl<S: State> EnclaveDB<S> {
+    pub fn new() -> Self {
+        EnclaveDB(Arc::new(SgxRwLock::new(HashMap::new())))
     }
 
-    fn get(&self, key: &UserAddress) -> DBValue {
-        self.inner_get(key.as_bytes()).unwrap_or(DBValue::default())
+    pub fn get(&self, address: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> {
+        match self.0.read().unwrap().get(address) {
+            Some(v) => {
+                v.0.get(mem_id)
+                .cloned()
+                .unwrap_or(StateValue::default())
+            },
+            None => return StateValue::default()
+        }
     }
 
-    fn write(&self, tx: EnclaveDBTx) {
-        self.inner_write(tx.into_inner())
+    pub fn write(&self, address: UserAddress, mem_id: MemId, sv: StateValue<S, Current>) {
+        let mut tmp = self.0.write().unwrap();
+        match tmp.get_mut(&address) {
+            Some(c) => {
+                c.0.insert(mem_id, sv);
+            },
+            None => {
+                let mut c = HashMap::new();
+                c.insert(mem_id, sv);
+                tmp.insert(address, StateMap(c));
+            }
+        }
     }
-
-    // fn state_hash(&self) -> StateHash {
-
-    // }
 }
 
 /// Batches a sequence of put/delete operations for efficiency.

@@ -12,7 +12,7 @@ sleep 1
 
 dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/.."
-solc -o build --bin --abi --optimize --overwrite contracts/AnonymousAsset.sol
+solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
 
 cp .env.template .env && cp example/server/.env.template example/server/.env
 
@@ -33,7 +33,7 @@ RUST_BACKTRACE=1 cargo test -- --nocapture
 
 cd ../../example/server
 echo "Build server."
-RUST_BACKTRACE=1 RUST_LOG=debug cargo build
+# RUST_BACKTRACE=1 RUST_LOG=debug cargo build
 
 echo "Build in root dir."
 cd ../../
