@@ -23,7 +23,7 @@ fi
 make DEBUG=1
 rm -rf ../example/bin && cp -rf bin/ ../example/bin/ && cd ../
 
-solc -o build --bin --abi --optimize --overwrite contracts/AnonymousAsset.sol
+solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
 cd example/server
 
 echo "Build artifacts in debug mode."
