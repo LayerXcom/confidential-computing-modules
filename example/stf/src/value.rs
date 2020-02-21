@@ -93,7 +93,6 @@ pub struct Runtime<G: StateGetter> {
     db: G,
 }
 
-// TODO: state re-order attack
 impl<G: StateGetter> Runtime<G> {
     pub fn new(db: G) -> Self {
         Runtime {

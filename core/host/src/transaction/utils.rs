@@ -16,6 +16,7 @@ use crate::{
     error::Result,
 };
 
+/// Needed information to handle smart contracts.
 #[derive(Debug, Clone, Copy)]
 pub struct ContractInfo<'a, P: AsRef<Path>> {
     abi_path: P,

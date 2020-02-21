@@ -20,7 +20,7 @@ lazy_static! {
 impl StateGetter for EnclaveContext<StateType> {
     fn get<S: State>(&self, key: &UserAddress, name: &str) -> std::result::Result<S, codec::Error> {
         let mem_id = mem_name_to_id(name);
-        let mut buf = self.db.get(key, &mem_id).into_inner_state().0;
+        let mut buf = self.db.get(key, &mem_id).into_inner_state().into_bytes();
         if buf.len() == 0 {
             return Ok(Default::default());
         }
@@ -59,6 +59,9 @@ impl EnclaveContext<StateType> {
         })
     }
 
+    /// Generate Base64-encoded QUOTE data structure.
+    /// QUOTE will be sent to Attestation Serivce to verify SGX's status.
+    /// For more information: https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf
     pub fn quote(&self) -> Result<String> {
         let target_info = self.init_quote()?;
         let report = self.report(&target_info)?;
@@ -70,6 +73,9 @@ impl EnclaveContext<StateType> {
         Ok(target_info)
     }
 
+    /// Generate a signature using enclave's identity key.
+    /// This signature is used to verify enclacve's program dependencies and
+    /// should be verified in the public available place such as smart contracr on blokchain.
     pub fn sign(&self, msg: &LockParam) -> Result<secp256k1::Signature> {
         self.identity_key.sign(msg.as_bytes())
     }

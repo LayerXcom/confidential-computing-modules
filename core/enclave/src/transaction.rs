@@ -12,12 +12,14 @@ use crate::{
 };
 
 /// A trait for exporting transacitons to out-enclave.
+/// For calculated transaction in enclacve which is ready to sending outside.
 pub trait EnclaveTx: Sized {
     type R: RawEnclaveTx;
 
     fn into_raw(self) -> Result<Self::R>;
  }
 
+/// A transaction components for register operations.
 #[derive(Debug, Clone)]
 pub struct RegisterTx {
     report: Report,
@@ -64,6 +66,7 @@ impl RegisterTx {
     }
 }
 
+/// A transaction components for state transition operations.
 #[derive(Debug, Clone)]
 pub struct StateTransTx {
     state_id: u64,
@@ -72,6 +75,23 @@ pub struct StateTransTx {
     enclave_sig: secp256k1::Signature,
 //     blc_num: u64,
 //     state_hash: Vec<u8>,
+}
+
+impl EnclaveTx for StateTransTx {
+    type R = RawStateTransTx;
+
+    fn into_raw(self) -> Result<Self::R> {
+        let ciphertext = save_to_host_memory(&self.ciphertexts.into_vec())? as *const u8;
+        let lock_param = save_to_host_memory(&self.lock_params.into_vec())? as *const u8;
+        let enclave_sig = save_to_host_memory(&self.enclave_sig.serialize())? as *const u8;
+
+        Ok(RawStateTransTx {
+            state_id: self.state_id,
+            ciphertext,
+            lock_param,
+            enclave_sig,
+        })
+    }
 }
 
 impl StateTransTx {
@@ -93,23 +113,6 @@ impl StateTransTx {
             state_id,
             ciphertexts,
             lock_params,
-            enclave_sig,
-        })
-    }
-}
-
-impl EnclaveTx for StateTransTx {
-    type R = RawStateTransTx;
-
-    fn into_raw(self) -> Result<Self::R> {
-        let ciphertext = save_to_host_memory(&self.ciphertexts.into_vec())? as *const u8;
-        let lock_param = save_to_host_memory(&self.lock_params.into_vec())? as *const u8;
-        let enclave_sig = save_to_host_memory(&self.enclave_sig.serialize())? as *const u8;
-
-        Ok(RawStateTransTx {
-            state_id: self.state_id,
-            ciphertext,
-            lock_param,
             enclave_sig,
         })
     }

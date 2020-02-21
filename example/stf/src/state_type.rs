@@ -9,16 +9,34 @@ use crate::localstd::{
     convert::TryFrom,
 };
 use codec::{Encode, Decode, Input, Output};
+
+// macro_rules! impl_uint {
+//     (&name: ident) => {
+//         #[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
+
+//     };
+// }
+
 pub const STATE_SIZE: usize = 8;
 
 pub trait RawState: Encode + Decode + Clone + Default {}
 
 /// Do not use `as_bytes()` to get raw bytes from `StateType`, just use `StateType.0`.
 #[derive(Clone, Debug, Default, Decode, Encode)]
-pub struct StateType(pub Vec<u8>);
+pub struct StateType(Vec<u8>);
 
-#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
-pub struct U64(pub u64);
+impl StateType {
+    pub fn into_bytes(self) -> Vec<u8> {
+        self.0
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0[..]
+    }
+}
+
+#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct U64(u64);
 
 impl From<U64> for StateType {
     fn from(u: U64) -> Self {
@@ -78,6 +96,13 @@ impl Sub for U64 {
         U64(res)
     }
 }
+
+impl U64 {
+    pub fn as_raw(&self) -> u64 {
+        self.0
+    }
+}
+
 
 #[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Address(pub [u8; 20]);

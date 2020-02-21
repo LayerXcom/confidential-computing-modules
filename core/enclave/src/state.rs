@@ -93,7 +93,6 @@ impl StateService<StateType>
     }
 }
 
-
 /// Curret generation of lock parameter for state.
 /// Priventing from race condition of writing ciphertext to blockchain.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -141,7 +140,7 @@ impl UserState<StateType, Current> {
 
     /// Decrypt Ciphertext which was stored in a shared ledger.
     pub fn decrypt(cipheriv: Ciphertext, key: &SymmetricKey) -> Result<Self> {
-        let mut buf = key.decrypt_aes_256_gcm(cipheriv)?;
+        let buf = key.decrypt_aes_256_gcm(cipheriv)?;
         let res = UserState::decode(&mut &buf[..])?;
 
         Ok(res)

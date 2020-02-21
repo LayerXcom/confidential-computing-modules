@@ -9,13 +9,6 @@ import "./utils/Secp256k1.sol";
 contract ReportsHandle {
     using SafeMath for uint256;
 
-    // extracted data from REPORT
-    // struct ReportData {
-    //     bytes32 mrenclave;
-    //     address enclaveAddress;
-    //     bytes32 reportNonce;
-    // }
-
     // A cryptographic hash of the measurement.
     // Different builds/versions of an enclave will result in a different MRENCLAVE value.
     bytes32 private _mrEnclave;
