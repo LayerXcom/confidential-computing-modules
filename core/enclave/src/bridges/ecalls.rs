@@ -27,7 +27,8 @@ pub unsafe extern "C" fn ecall_insert_logs(
 
     for ciphertext in ciphertexts.chunks(CIPHERTEXT_SIZE) {
         ENCLAVE_CONTEXT
-            .write_cipheriv(Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY);
+            .write_cipheriv(Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY)
+            .expect("Failed to wirte cihpertexts.");
     }
 
     sgx_status_t::SGX_SUCCESS

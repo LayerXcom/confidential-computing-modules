@@ -77,17 +77,17 @@ impl StateService<StateType>
     }
 
     /// Return ciphertexts data which is generates by encrypting updated user's state.
-    pub fn reveal_ciphertexts(&self, symm_key: &SymmetricKey) -> Vec<Ciphertext> {
+    pub fn reveal_ciphertexts(&self, symm_key: &SymmetricKey) -> Result<Vec<Ciphertext>> {
         self.updates
             .clone()
             .unwrap()
             .into_iter()
             .map(|e| {
                 let sv = self.ctx.state_value(&e.address, &e.mem_id);
-                let user = UserState::<StateType, Current>::new(e.address, e.mem_id, sv);
-                user.update_inner_state(e.state)
-                    .into_next().unwrap()
-                    .encrypt(symm_key).unwrap()
+                UserState::<StateType, Current>::new(e.address, e.mem_id, sv)
+                    .update_inner_state(e.state)
+                    .into_next()
+                    .encrypt(symm_key)
             })
             .collect()
     }
@@ -168,27 +168,31 @@ impl UserState<StateType, Current> {
         }
     }
 
-    pub fn into_next(self) -> Result<UserState<StateType, Next>> {
-        let next_lock_param = self.next_lock_param()?;
+    /// Convert into userstate of next lock parameter generation.
+    /// This is called when it's ready to encrypt state which will be sent to outside.
+    /// Basically, this allows us to prevent from data collisions in the public shared database.
+    pub fn into_next(self) -> UserState<StateType, Next> {
+        let next_lock_param = self.next_lock_param();
         let inner_state = self.state_value.inner_state;
         let state_value = StateValue::new(inner_state, next_lock_param);
 
-        Ok(UserState {
+        UserState {
             address: self.address,
             mem_id: self.mem_id,
             state_value,
-        })
+        }
+    }
+
+    /// Generate lock parameters of next generations based on current user's state.
+    fn next_lock_param(&self) -> LockParam {
+        let next_lock_param = self.hash();
+        next_lock_param.into()
     }
 
     /// Compute hash digest of current user state.
-    fn hash(&self) -> Result<Sha256> {
+    fn hash(&self) -> Sha256 {
         let inp = self.encode();
-        Ok(Sha256::hash(&inp))
-    }
-
-    fn next_lock_param(&self) -> Result<LockParam> {
-        let next_lock_param = self.hash()?;
-        Ok(next_lock_param.into())
+        Sha256::hash(&inp)
     }
 }
 

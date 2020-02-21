@@ -86,7 +86,7 @@ impl StateTransTx {
         service.apply(kind)?;
 
         let lock_params = service.reveal_lock_params();
-        let ciphertexts = service.reveal_ciphertexts(&SYMMETRIC_KEY);
+        let ciphertexts = service.reveal_ciphertexts(&SYMMETRIC_KEY)?;
         let enclave_sig = enclave_ctx.sign(&lock_params[0])?;
 
         Ok(StateTransTx {
