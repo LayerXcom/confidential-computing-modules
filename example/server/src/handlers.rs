@@ -6,7 +6,7 @@ use anonify_host::transaction::{
     utils::get_state_by_access_right,
 };
 use anonymous_asset::api;
-use anonify_common::{State, StateType};
+use anonify_stf::{State, StateType, U64};
 use actix_web::{
     web,
     HttpResponse,
@@ -125,7 +125,7 @@ where
     server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path)?;
 
     let access_right = req.into_access_right()?;
-    let state = get_state_by_access_right::<StateType>(&access_right, server.eid)?;
+    let state = get_state_by_access_right::<U64>(&access_right, server.eid)?;
 
     Ok(HttpResponse::Ok().json(api::state::get::Response(state)))
 }

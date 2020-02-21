@@ -101,6 +101,14 @@ impl U64 {
     pub fn as_raw(&self) -> u64 {
         self.0
     }
+
+    pub fn from_raw(u: u64) -> Self {
+        U64(u)
+    }
+
+    pub fn zero() -> Self {
+        U64(0)
+    }
 }
 
 
