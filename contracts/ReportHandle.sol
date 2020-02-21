@@ -6,7 +6,7 @@ import "./utils/Base64.sol";
 import "./utils/BytesUtils.sol";
 import "./utils/Secp256k1.sol";
 
-contract ReportsHandle {
+contract ReportHandle {
     using SafeMath for uint256;
 
     // A cryptographic hash of the measurement.

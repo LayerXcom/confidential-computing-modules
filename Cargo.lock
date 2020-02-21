@@ -131,6 +131,7 @@ name = "anonymous-asset"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
+ "anonify-stf 0.1.0",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",

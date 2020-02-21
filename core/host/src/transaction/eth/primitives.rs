@@ -69,8 +69,8 @@ impl Web3Http {
         report: &[u8],
         report_sig: &[u8],
     ) -> Result<Address> {
-        let abi = include_bytes!("../../../../../build/AnonymousAsset.abi");
-        let bin = include_str!("../../../../../build/AnonymousAsset.bin");
+        let abi = include_bytes!("../../../../../build/Anonify.abi");
+        let bin = include_str!("../../../../../build/Anonify.bin");
 
         let contract = Contract::deploy(self.web3.eth(), abi)
             .unwrap() // TODO

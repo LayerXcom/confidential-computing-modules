@@ -1,11 +1,11 @@
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
-import "./ReportsHandle.sol";
+import "./ReportHandle.sol";
 import "./utils/Secp256k1.sol";
 
 // Consider: Avoid inheritting
-contract AnonymousAsset is ReportsHandle {
+contract Anonify is ReportHandle {
     event StoreCiphertext(bytes ciphertext);
 
     // Encrypted states
@@ -16,7 +16,7 @@ contract AnonymousAsset is ReportsHandle {
     constructor(
         bytes memory _report,
         bytes memory _reportSig
-    ) ReportsHandle(_report, _reportSig) public { }
+    ) ReportHandle(_report, _reportSig) public { }
 
     // Register a new TEE participant.
     function register(bytes memory _report, bytes memory _reportSig) public {
