@@ -108,6 +108,7 @@ macro_rules! impl_uint {
     };
 }
 
+impl_uint!(U16, u16);
 impl_uint!(U32, u32);
 impl_uint!(U64, u64);
 

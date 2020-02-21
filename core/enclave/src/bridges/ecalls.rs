@@ -1,8 +1,8 @@
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
-use anonify_common::{UserAddress, AccessRight, MemId};
-use anonify_stf::{StateGetter, State, StateType, CIPHERTEXT_SIZE, Ciphertext, CallKind, U64};
+use anonify_common::{UserAddress, AccessRight};
+use anonify_stf::{StateGetter, State, StateType, CIPHERTEXT_SIZE, Ciphertext, CallKind, MemId};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::state::{UserState, StateValue, Current};
 use crate::crypto::SYMMETRIC_KEY;
@@ -47,7 +47,7 @@ pub unsafe extern "C" fn ecall_get_state(
     let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
     let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey).expect("Faild to generate user address.");
 
-    let user_state = &ENCLAVE_CONTEXT.get_by_id(&key, MemId(mem_id));
+    let user_state = &ENCLAVE_CONTEXT.get_by_id(&key, MemId::from_raw(mem_id));
     state.0 = save_to_host_memory(user_state.as_bytes()).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS

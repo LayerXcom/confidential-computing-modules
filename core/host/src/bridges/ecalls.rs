@@ -54,7 +54,7 @@ pub(crate) fn get_state(
 {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut state = EnclaveState::default();
-    let mem_id = mem_name_to_id(mem_name).0;
+    let mem_id = mem_name_to_id(mem_name).as_raw();
 
     let status = unsafe {
         ecall_get_state(

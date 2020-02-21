@@ -5,21 +5,22 @@ use crate::localstd::{
     string::String,
     vec::Vec,
 };
-use anonify_common::{UserAddress, MemId};
+use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
-// macro_rules! state {
-//     ($raw: expr) => {
-//         match (&$raw) {
-//             (raw_val) => {
-//                 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Encode, Decode)]
-//                 pub struct StateType {
-//                     pub raw: raw_val,
-//                 }
-//             }
-//         }
-//     };
-// }
+/// State identifier stored in memory.
+#[derive(Encode, Decode, Debug, Clone, Copy, PartialOrd, PartialEq, Default, Eq, Ord, Hash)]
+pub struct MemId(u32);
+
+impl MemId {
+    pub fn as_raw(&self) -> u32 {
+        self.0
+    }
+
+    pub fn from_raw(u: u32) -> Self {
+        MemId(u)
+    }
+}
 
 /// A getter of state stored in enclave memory.
 pub trait StateGetter {

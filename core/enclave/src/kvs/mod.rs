@@ -8,7 +8,7 @@ use anonify_common::{
     UserAddress,
     kvs::*,
 };
-use anonify_stf::State;
+use anonify_stf::{State, MemId};
 use crate::state::{StateValue, Current};
 use crate::error::Result;
 

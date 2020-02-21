@@ -16,7 +16,7 @@ use crate::transaction::{
 };
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
-const ANONYMOUS_ASSET_ABI_PATH: &str = "../../build/AnonymousAsset.abi";
+const ANONYMOUS_ASSET_ABI_PATH: &str = "../../build/Anonify.abi";
 
 #[test]
 fn test_in_enclave() {

@@ -4,7 +4,9 @@ use anonify_common::{
     UserAddress, Sha256, Hash256, LockParam, AccessRight,
     kvs::*,
 };
-use anonify_stf::{StateType, State, Runtime, CallKind, Ciphertext, StateGetter, UpdatedState, into_trait};
+use anonify_stf::{StateType, State, Runtime, CallKind,
+    Ciphertext, StateGetter, UpdatedState, into_trait, MemId
+};
 use codec::{Encode, Decode, Input, Output};
 use crate::{
     crypto::*,

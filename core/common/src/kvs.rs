@@ -13,10 +13,6 @@ use crate::localstd::sync::SgxRwLock as RwLock;
 use crate::crypto::UserAddress;
 use codec::{Encode, Decode};
 
-/// State identifier stored in memory.
-#[derive(Encode, Decode, Debug, Clone, Copy, PartialOrd, PartialEq, Default, Eq, Ord, Hash)]
-pub struct MemId(pub u32);
-
 /// Inner trait of key-value store instructions
 pub trait KVS: Sync + Send {
     fn tx(&self) -> DBTx { DBTx::new() }
