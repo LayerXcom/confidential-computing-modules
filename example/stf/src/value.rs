@@ -8,6 +8,22 @@ use crate::localstd::{
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
+macro_rules! impl_mem {
+    ( $($id:expr, $name:expr, Address => $value:ty);* ;) => {
+        pub fn mem_name_to_id(name: &str) -> MemId {
+            match name {
+                $( $name => MemId::from_raw($id) ),* ,
+                _ => panic!("invalid mem name"),
+            }
+        }
+    };
+}
+
+impl_mem!{
+    0, "Balance", Address => U64;
+    1, "Balance2", Address => U64;
+}
+
 /// State identifier stored in memory.
 #[derive(Encode, Decode, Debug, Clone, Copy, PartialOrd, PartialEq, Default, Eq, Ord, Hash)]
 pub struct MemId(u32);
@@ -31,13 +47,6 @@ pub trait StateGetter {
     /// Get state using memory id.
     /// Assumed this is called by state getting operations from outside enclave.
     fn get_by_id(&self, key: &UserAddress, mem_id: MemId) -> StateType;
-}
-
-pub fn mem_name_to_id(name: &str) -> MemId {
-    match name {
-        "Balance" => MemId(0),
-        _ => panic!("invalid mem name"),
-    }
 }
 
 pub fn call_name_to_id(name: &str) -> u32 {
@@ -69,7 +78,7 @@ pub enum CallKind {
     Approve{allowed: Mapping},
     TransferFrom{amount: U64},
     Mint{amount: U64},
-    ChangeOwner{new_owner: Address},
+    ChangeOwner{new_owner: UserAddress},
 }
 
 impl CallKind {
@@ -80,6 +89,10 @@ impl CallKind {
             _ => return Err("Invalid Call ID".into()),
         }
     }
+
+    pub fn max_size(&self) -> usize {
+        unimplemented!();
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -87,8 +100,41 @@ pub enum Storage {
     Balance(U64),
     // allowed: (Address, U64),
     TotalSupply(U64), // global
-    Owner(Address), // global
+    Owner(UserAddress), // global
 }
+
+// impl_runtime!{
+//     fn constructor(
+//         &self,
+//         sender: UserAddress,
+//         total_supply: U64
+//     ) {
+//         let init = UpdatedState::new(sender, "Balance", total_supply.into());
+
+//         Ok(vec![init])
+//     },
+
+//     fn transfer(
+//         &self,
+//         sender: UserAddress,
+//         target: UserAddress,
+//         amount: U64,
+//     ) {
+//         let my_balance = self.db.get::<U64>(&sender, "Balance")?;
+//         let target_balance = self.db.get::<U64>(&target, "Balance")?;
+
+//         if my_balance < amount {
+//             return Err("You don't have enough balance.".into());
+//         }
+//         let my_update = my_balance - amount;
+//         let other_update = target_balance + amount;
+
+//         let my = UpdatedState::new(sender, "Balance", my_update.into());
+//         let other = UpdatedState::new(target, "Balance", other_update.into());
+
+//         Ok(vec![my, other])
+//     }
+// }
 
 pub struct Runtime<G: StateGetter> {
     db: G,

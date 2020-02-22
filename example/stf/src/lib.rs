@@ -47,7 +47,8 @@ pub trait State: Sized + Default + Clone + Encode + Decode + fmt::Debug {
 impl<T: Sized + Default + Clone + Encode + Decode + fmt::Debug> State for T {}
 
 
-// TODO: calc ciphertext size dynamically
+// Ciphertext size without state.
+const BASE_CIPHERTEXT_SIZE: usize = 85;
 pub const CIPHERTEXT_SIZE: usize = 93;
 
 #[derive(Clone)]
@@ -88,6 +89,7 @@ impl Ciphertext {
             let mut buf = [0u8; CIPHERTEXT_SIZE];
             let b = &bytes[i*CIPHERTEXT_SIZE..(i+1)*CIPHERTEXT_SIZE];
             buf.copy_from_slice(b);
+            
             Ciphertext(buf)
         })
     }

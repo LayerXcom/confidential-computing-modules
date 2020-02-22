@@ -8,6 +8,7 @@ use crate::localstd::{
     ops::{Add, Sub, Mul, Div, Neg},
     convert::TryFrom,
 };
+use anonify_common::UserAddress;
 use codec::{Encode, Decode, Input, Output};
 
 macro_rules! impl_uint {
@@ -130,13 +131,9 @@ impl StateType {
     }
 }
 
-
-#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Address(pub [u8; 20]);
-
 // TODO: Mapping!(Address, U64);
 #[derive(Encode, Decode, Clone, Debug, PartialEq, PartialOrd, Default)]
-pub struct Mapping(pub BTreeMap<Address, U64>);
+pub struct Mapping(pub BTreeMap<UserAddress, U64>);
 
 impl Mapping {
 
