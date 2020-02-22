@@ -61,40 +61,6 @@ pub fn call_name_to_id(name: &str) -> u32 {
     }
 }
 
-#[derive(Encode, Decode, Debug, Clone, Default)]
-pub struct Constructor {
-    pub init: U64,
-}
-
-#[derive(Encode, Decode, Debug, Clone, Default)]
-pub struct Transfer {
-    pub amount: U64,
-    pub target: UserAddress,
-}
-
-pub enum CallKind {
-    Constructor(Constructor),
-    Transfer(Transfer),
-    Approve{allowed: Mapping},
-    TransferFrom{amount: U64},
-    Mint{amount: U64},
-    ChangeOwner{new_owner: UserAddress},
-}
-
-impl CallKind {
-    pub fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self, codec::Error> {
-        match id {
-            0 => Ok(CallKind::Constructor(Constructor::from_bytes(state)?)),
-            1 => Ok(CallKind::Transfer(Transfer::from_bytes(state)?)),
-            _ => return Err("Invalid Call ID".into()),
-        }
-    }
-
-    pub fn max_size(&self) -> usize {
-        unimplemented!();
-    }
-}
-
 #[macro_export]
 macro_rules! impl_runtime {
     (
@@ -109,14 +75,40 @@ macro_rules! impl_runtime {
 macro_rules! impl_inner_runtime {
     (@imp
         $(
+            #[fn_id=$fn_id:expr]
             pub fn $fn_name:ident(
-                $runtime:ident
+                $runtime:ident,
+                $sender:ident : $address:ty
                 $(, $param_name:ident : $param:ty )*
             ) -> Result<Vec<UpdatedState<StateType>>,codec::Error> {
                 $( $impl:tt )*
             }
         )*
     ) => {
+        $(
+            #[derive(Encode, Decode, Debug, Clone, Default)]
+            pub struct $fn_name {
+                $( pub $param_name: $param, )*
+            }
+        )*
+
+        pub enum CallKind {
+            $( $fn_name($fn_name), )*
+        }
+
+        impl CallKind {
+            pub fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self, codec::Error> {
+                match id {
+                    $( $fn_id => Ok(CallKind::$fn_name($fn_name::from_bytes(state)?)), )*
+                    _ => return Err("Invalid Call ID".into()),
+                }
+            }
+
+            pub fn max_size(&self) -> usize {
+                unimplemented!();
+            }
+        }
+
         pub struct Runtime<G: StateGetter> {
             db: G,
         }
@@ -134,27 +126,20 @@ macro_rules! impl_inner_runtime {
                 my_addr: UserAddress,
             ) -> Result<Vec<UpdatedState<StateType>>, codec::Error> {
                 match kind {
-                    CallKind::Constructor(constructor) => {
-                        self.constructor(
+                    $( CallKind::$fn_name($fn_name) => {
+                        self.$fn_name(
                             my_addr,
-                            constructor.init,
+                            $( $fn_name.$param_name, )*
                         )
-                    },
-                    CallKind::Transfer(transfer) => {
-                        self.transfer(
-                            my_addr,
-                            transfer.target,
-                            transfer.amount,
-                        )
-                    },
+                    }, )*
                     _ => unimplemented!()
                 }
             }
 
             $(
                 pub fn $fn_name (
-                    $runtime
-                    // sender: UserAddress
+                    $runtime,
+                    $sender: $address
                     $(, $param_name : $param )*
                 ) -> Result<Vec<UpdatedState<StateType>>,codec::Error> {
                     $( $impl )*
@@ -165,6 +150,7 @@ macro_rules! impl_inner_runtime {
 }
 
 impl_runtime!{
+    #[fn_id=0]
     pub fn constructor(
         self,
         sender: UserAddress,
@@ -175,6 +161,7 @@ impl_runtime!{
         Ok(vec![init])
     }
 
+    #[fn_id=1]
     pub fn transfer(
         self,
         sender: UserAddress,
