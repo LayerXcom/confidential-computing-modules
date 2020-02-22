@@ -49,18 +49,6 @@ pub trait StateGetter {
     fn get_by_id(&self, key: &UserAddress, mem_id: MemId) -> StateType;
 }
 
-pub fn call_name_to_id(name: &str) -> u32 {
-    match name {
-        "Constructor" => 0,
-        "Transfer" => 1,
-        "Approve" => 2,
-        "TransferFrom" => 3,
-        "Mint" => 4,
-        "ChangeOwner" => 5,
-        _ => panic!("invalid call name"),
-    }
-}
-
 #[macro_export]
 macro_rules! impl_runtime {
     (
@@ -106,6 +94,13 @@ macro_rules! impl_inner_runtime {
 
             pub fn max_size(&self) -> usize {
                 unimplemented!();
+            }
+        }
+
+        pub fn call_name_to_id(name: &str) -> u32 {
+            match name {
+                $( $fn_name => $fn_id, )*
+                _ => panic!("invalid call name"),
             }
         }
 
