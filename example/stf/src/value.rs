@@ -95,97 +95,92 @@ impl CallKind {
     }
 }
 
-#[derive(Clone, Debug)]
-pub enum Storage {
-    Balance(U64),
-    // allowed: (Address, U64),
-    TotalSupply(U64), // global
-    Owner(UserAddress), // global
+#[macro_export]
+macro_rules! impl_runtime {
+    (
+        $( $t:tt )*
+    ) => {
+        impl_inner_runtime!(@imp
+            $($t)*
+        );
+    };
 }
 
-// impl_runtime!{
-//     fn constructor(
-//         &self,
-//         sender: UserAddress,
-//         total_supply: U64
-//     ) {
-//         let init = UpdatedState::new(sender, "Balance", total_supply.into());
+macro_rules! impl_inner_runtime {
+    (@imp
+        $(
+            pub fn $fn_name:ident(
+                $runtime:ident
+                $(, $param_name:ident : $param:ty )*
+            ) -> Result<Vec<UpdatedState<StateType>>,codec::Error> {
+                $( $impl:tt )*
+            }
+        )*
+    ) => {
+        pub struct Runtime<G: StateGetter> {
+            db: G,
+        }
 
-//         Ok(vec![init])
-//     },
+        impl<G: StateGetter> Runtime<G> {
+            pub fn new(db: G) -> Self {
+                Runtime {
+                    db,
+                }
+            }
 
-//     fn transfer(
-//         &self,
-//         sender: UserAddress,
-//         target: UserAddress,
-//         amount: U64,
-//     ) {
-//         let my_balance = self.db.get::<U64>(&sender, "Balance")?;
-//         let target_balance = self.db.get::<U64>(&target, "Balance")?;
+            pub fn call(
+                self,
+                kind: CallKind,
+                my_addr: UserAddress,
+            ) -> Result<Vec<UpdatedState<StateType>>, codec::Error> {
+                match kind {
+                    CallKind::Constructor(constructor) => {
+                        self.constructor(
+                            my_addr,
+                            constructor.init,
+                        )
+                    },
+                    CallKind::Transfer(transfer) => {
+                        self.transfer(
+                            my_addr,
+                            transfer.target,
+                            transfer.amount,
+                        )
+                    },
+                    _ => unimplemented!()
+                }
+            }
 
-//         if my_balance < amount {
-//             return Err("You don't have enough balance.".into());
-//         }
-//         let my_update = my_balance - amount;
-//         let other_update = target_balance + amount;
-
-//         let my = UpdatedState::new(sender, "Balance", my_update.into());
-//         let other = UpdatedState::new(target, "Balance", other_update.into());
-
-//         Ok(vec![my, other])
-//     }
-// }
-
-pub struct Runtime<G: StateGetter> {
-    db: G,
+            $(
+                pub fn $fn_name (
+                    $runtime
+                    // sender: UserAddress
+                    $(, $param_name : $param )*
+                ) -> Result<Vec<UpdatedState<StateType>>,codec::Error> {
+                    $( $impl )*
+                }
+            )*
+        }
+    };
 }
 
-impl<G: StateGetter> Runtime<G> {
-    pub fn new(db: G) -> Self {
-        Runtime {
-            db,
-        }
-    }
-
-    pub fn call(
-        &self,
-        kind: CallKind,
-        my_addr: UserAddress,
-    ) -> Result<Vec<UpdatedState<StateType>>, codec::Error> {
-        match kind {
-            CallKind::Constructor(constructor) => {
-                self.constructor(
-                    my_addr,
-                    constructor.init,
-                )
-            },
-            CallKind::Transfer(transfer) => {
-                self.transfer(
-                    my_addr,
-                    transfer.target,
-                    transfer.amount,
-                )
-            },
-            _ => unimplemented!()
-        }
-    }
-
-    fn constructor(
-        &self,
+impl_runtime!{
+    pub fn constructor(
+        self,
         sender: UserAddress,
-        total_supply: U64,
-    ) -> Result<Vec<UpdatedState<StateType>>, codec::Error> {
+        total_supply: U64
+    ) -> Result<Vec<UpdatedState<StateType>>,codec::Error> {
         let init = UpdatedState::new(sender, "Balance", total_supply.into());
 
         Ok(vec![init])
     }
 
-    fn transfer(
-        &self,
+    pub fn transfer(
+        self,
         sender: UserAddress,
         target: UserAddress,
-        amount: U64,
-    ) -> Result<Vec<UpdatedState<StateType>>, codec::Error> {
+        amount: U64
+    ) -> Result<Vec<UpdatedState<StateType>>,codec::Error> {
         let my_balance = self.db.get::<U64>(&sender, "Balance")?;
         let target_balance = self.db.get::<U64>(&target, "Balance")?;
 
