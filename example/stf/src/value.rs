@@ -80,6 +80,7 @@ macro_rules! impl_inner_runtime {
             }
         )*
 
+        #[derive(Debug)]
         pub enum CallKind {
             $( $fn_name($fn_name), )*
         }
@@ -99,7 +100,7 @@ macro_rules! impl_inner_runtime {
 
         pub fn call_name_to_id(name: &str) -> u32 {
             match name {
-                $( $fn_name => $fn_id, )*
+                $( stringify!($fn_name) => $fn_id, )*
                 _ => panic!("invalid call name"),
             }
         }

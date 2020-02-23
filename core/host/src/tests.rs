@@ -12,7 +12,7 @@ use crate::transaction::{
     dispatcher::*,
     eventdb::{EventDB, BlockNumDB},
     eth::client::*,
-    utils::get_state_by_access_right,
+    utils::get_state,
 };
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
@@ -78,9 +78,9 @@ fn test_integration_eth_transfer() {
 
 
     // 4. Get state from enclave
-    let my_state = get_state_by_access_right::<U64>(&my_access_right, eid, "Balance").unwrap();
-    let other_state = get_state_by_access_right::<U64>(&other_access_right, eid, "Balance").unwrap();
-    let third_state = get_state_by_access_right::<U64>(&third_access_right, eid, "Balance").unwrap();
+    let my_state = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
+    let other_state = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
+    let third_state = get_state::<U64>(&third_access_right, eid, "Balance").unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, U64::zero());
     assert_eq!(third_state, U64::zero());
@@ -108,9 +108,9 @@ fn test_integration_eth_transfer() {
 
 
     // 7. Check the updated states
-    let my_updated_state = get_state_by_access_right::<U64>(&my_access_right, eid, "Balance").unwrap();
-    let other_updated_state = get_state_by_access_right::<U64>(&other_access_right, eid, "Balance").unwrap();
-    let third_updated_state = get_state_by_access_right::<U64>(&third_access_right, eid, "Balance").unwrap();
+    let my_updated_state = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
+    let other_updated_state = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
+    let third_updated_state = get_state::<U64>(&third_access_right, eid, "Balance").unwrap();
 
     assert_eq!(my_updated_state, U64::from_raw(70));
     assert_eq!(other_updated_state, amount);

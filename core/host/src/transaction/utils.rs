@@ -12,7 +12,7 @@ use anonify_common::AccessRight;
 use anonify_stf::{State, call_name_to_id};
 use sgx_types::sgx_enclave_id_t;
 use crate::{
-    bridges::ecalls::get_state,
+    bridges::ecalls::get_state_from_enclave,
     error::Result,
 };
 
@@ -74,7 +74,7 @@ impl<'a, ST: State> StateInfo<'a, ST> {
     }
 }
 
-pub fn get_state_by_access_right<S>(
+pub fn get_state<S>(
     access_right: &AccessRight,
     enclave_id: sgx_enclave_id_t,
     mem_name: &str,
@@ -83,7 +83,7 @@ where
     S: State + TryFrom<Vec<u8>>,
     <S as TryFrom<Vec<u8>>>::Error: Debug,
 {
-    let state = get_state(
+    let state = get_state_from_enclave(
         enclave_id,
         &access_right.sig(),
         &access_right.pubkey(),
