@@ -1,5 +1,7 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 
+#[macro_use]
+extern crate lazy_static;
 #[cfg(feature = "sgx")]
 #[macro_use]
 extern crate sgx_tstd as localstd;
@@ -46,25 +48,25 @@ pub trait State: Sized + Default + Clone + Encode + Decode + fmt::Debug {
 
 impl<T: Sized + Default + Clone + Encode + Decode + fmt::Debug> State for T {}
 
-
 // Ciphertext size without state.
-const BASE_CIPHERTEXT_SIZE: usize = 85;
-pub const CIPHERTEXT_SIZE: usize = 93;
+// static BASE_CIPHERTEXT_SIZE: usize = 85;
 
-#[derive(Clone)]
-pub struct Ciphertext([u8; CIPHERTEXT_SIZE]);
+// pub static CIPHERTEXT_SIZE: usize = BASE_CIPHERTEXT_SIZE + *MAX_MEM_SIZE;
 
-impl fmt::Debug for Ciphertext {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Ciphertext ")
-    }
-}
+#[derive(Clone, Debug, Default)]
+pub struct Ciphertext(Vec<u8>);
 
-impl Default for Ciphertext {
-    fn default() -> Self {
-        Ciphertext([0u8; CIPHERTEXT_SIZE])
-    }
-}
+// impl fmt::Debug for Ciphertext {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(f, "Ciphertext ")
+//     }
+// }
+
+// impl Default for Ciphertext {
+//     fn default() -> Self {
+//         Ciphertext([0u8; CIPHERTEXT_SIZE])
+//     }
+// }
 
 impl IntoVec for Ciphertext {
     fn into_vec(&self) -> Vec<u8> {
@@ -74,23 +76,23 @@ impl IntoVec for Ciphertext {
 
 impl Ciphertext {
     pub fn from_bytes(bytes: &[u8]) -> Self {
-        assert_eq!(bytes.len(), CIPHERTEXT_SIZE);
-        let mut buf = [0u8; CIPHERTEXT_SIZE];
-        buf.copy_from_slice(bytes);
+        assert_eq!(bytes.len(), *CIPHERTEXT_SIZE);
+        // let mut buf = [0u8; CIPHERTEXT_SIZE];
+        // buf.copy_from_slice(bytes);
 
-        Ciphertext(buf)
+        Ciphertext(bytes.to_vec())
     }
 
     pub fn from_bytes_iter(bytes: &[u8]) -> impl Iterator<Item=Self> + '_ {
-        assert_eq!(bytes.len() % CIPHERTEXT_SIZE, 0);
-        let iter_num = bytes.len() / CIPHERTEXT_SIZE;
+        assert_eq!(bytes.len() % (*CIPHERTEXT_SIZE), 0);
+        let iter_num = bytes.len() / (*CIPHERTEXT_SIZE);
 
         (0..iter_num).map(move |i| {
-            let mut buf = [0u8; CIPHERTEXT_SIZE];
-            let b = &bytes[i*CIPHERTEXT_SIZE..(i+1)*CIPHERTEXT_SIZE];
-            buf.copy_from_slice(b);
-            
-            Ciphertext(buf)
+            // let mut buf = [0u8; CIPHERTEXT_SIZE];
+            let buf = &bytes[i*(*CIPHERTEXT_SIZE)..(i+1)*(*CIPHERTEXT_SIZE)];
+            // buf.copy_from_slice(b);
+
+            Ciphertext(buf.to_vec())
         })
     }
 

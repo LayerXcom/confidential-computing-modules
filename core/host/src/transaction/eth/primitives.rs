@@ -222,7 +222,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
 
         let contract_addr = self.logs[0].address;
         let mut latest_blc_num = 0;
-        // let ciphertext_size = Self::decode_data(&self.logs[0]).len();
+        let ciphertext_size = Self::decode_data(&self.logs[0]).len();
 
         for (i, log) in self.logs.iter().enumerate() {
             debug!("log: {:?}, \nindex: {:?}", log, i);
@@ -236,13 +236,12 @@ impl<D: BlockNumDB> Web3Logs<D> {
 
             let data = Self::decode_data(&log);
 
-            // TODO: Get fixed ciphertext size.
-            // if ciphertext_size != data.len() && data.len() != 0  {
-            //     return Err(HostErrorKind::Web3Log {
-            //         msg: "Each log should have same size of data.",
-            //         index: i,
-            //     }.into());
-            // }
+            if ciphertext_size != data.len() && data.len() != 0  {
+                return Err(HostErrorKind::Web3Log {
+                    msg: "Each log should have same size of data.",
+                    index: i,
+                }.into());
+            }
 
             if let Some(blc_num) = log.block_number {
                 let blc_num = blc_num.as_u64();

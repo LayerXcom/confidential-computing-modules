@@ -8,6 +8,12 @@ use crate::localstd::{
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
+lazy_static! {
+    pub static ref MAX_MEM_SIZE: usize = max_size();
+
+    pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 85;
+}
+
 macro_rules! impl_mem {
     ( $($id:expr, $name:expr, Address => $value:ty);* ;) => {
         pub fn mem_name_to_id(name: &str) -> MemId {
@@ -17,7 +23,8 @@ macro_rules! impl_mem {
             }
         }
 
-        pub fn max_size() -> usize {
+        /// Return maximum size of mem values
+        fn max_size() -> usize {
             *[$( <$value>::size(), )*]
                 .into_iter()
                 .max()

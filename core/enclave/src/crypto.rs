@@ -57,7 +57,7 @@ impl SymmetricKey {
     /// Decryption with AES-256-GCM.
     pub fn decrypt_aes_256_gcm(&self, cipheriv: Ciphertext) -> Result<Vec<u8>> {
         let ub_key = UnboundKey::new(&AES_256_GCM, &self.as_bytes())?;
-        let (ciphertext, iv) = cipheriv.as_bytes().split_at(CIPHERTEXT_SIZE - IV_SIZE);
+        let (ciphertext, iv) = cipheriv.as_bytes().split_at(*CIPHERTEXT_SIZE - IV_SIZE);
 
         let nonce = Nonce::try_assume_unique_for_key(iv)?;
         let nonce_seq = OneNonceSequence::new(nonce);

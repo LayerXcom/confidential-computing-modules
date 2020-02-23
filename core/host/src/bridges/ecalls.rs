@@ -29,7 +29,7 @@ pub(crate) fn insert_logs(
             enclave_log.contract_addr.as_ptr() as _,
             enclave_log.latest_blc_num,
             enclave_log.ciphertexts.as_c_ptr() as *const u8,
-            enclave_log.ciphertexts.len() * CIPHERTEXT_SIZE,
+            enclave_log.ciphertexts.len() * (*CIPHERTEXT_SIZE),
         )
     };
 

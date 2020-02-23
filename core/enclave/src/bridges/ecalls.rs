@@ -23,9 +23,9 @@ pub unsafe extern "C" fn ecall_insert_logs(
     ciphertexts_len: usize,
 ) -> sgx_status_t {
     let ciphertexts = slice::from_raw_parts(ciphertexts, ciphertexts_len);
-    assert_eq!(ciphertexts.len() % CIPHERTEXT_SIZE, 0, "Ciphertexts must be divisible by ciphertexts_num.");
+    assert_eq!(ciphertexts.len() % (*CIPHERTEXT_SIZE), 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
-    for ciphertext in ciphertexts.chunks(CIPHERTEXT_SIZE) {
+    for ciphertext in ciphertexts.chunks(*CIPHERTEXT_SIZE) {
         ENCLAVE_CONTEXT
             .write_cipheriv(Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY)
             .expect("Failed to wirte cihpertexts.");
