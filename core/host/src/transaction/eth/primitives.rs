@@ -212,7 +212,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
         let mut ciphertexts: Vec<Ciphertext> = vec![];
 
         // If log data is not fetched currently, return empty EnclaveLog.
-        // This case occurs if you fetched data of dupulicated block number.
+        // This is occurred when it fetched data of dupulicated block number.
         if self.logs.len() == 0 {
             return Ok(EnclaveLog{
                 inner: None,
@@ -222,7 +222,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
 
         let contract_addr = self.logs[0].address;
         let mut latest_blc_num = 0;
-        let ciphertext_size = Self::decode_data(&self.logs[0]).len();
+        // let ciphertext_size = Self::decode_data(&self.logs[0]).len();
 
         for (i, log) in self.logs.iter().enumerate() {
             debug!("log: {:?}, \nindex: {:?}", log, i);
@@ -235,12 +235,14 @@ impl<D: BlockNumDB> Web3Logs<D> {
             }
 
             let data = Self::decode_data(&log);
-            if ciphertext_size != data.len() && data.len() != 0  {
-                return Err(HostErrorKind::Web3Log {
-                    msg: "Each log should have same size of data.",
-                    index: i,
-                }.into());
-            }
+
+            // TODO: Get fixed ciphertext size.
+            // if ciphertext_size != data.len() && data.len() != 0  {
+            //     return Err(HostErrorKind::Web3Log {
+            //         msg: "Each log should have same size of data.",
+            //         index: i,
+            //     }.into());
+            // }
 
             if let Some(blc_num) = log.block_number {
                 let blc_num = blc_num.as_u64();

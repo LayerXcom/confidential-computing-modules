@@ -16,6 +16,13 @@ macro_rules! impl_mem {
                 _ => panic!("invalid mem name"),
             }
         }
+
+        pub fn max_size() -> usize {
+            *[$( <$value>::size(), )*]
+                .into_iter()
+                .max()
+                .expect("Iterator should not be empty.")
+        }
     };
 }
 
@@ -91,10 +98,6 @@ macro_rules! impl_inner_runtime {
                     $( $fn_id => Ok(CallKind::$fn_name($fn_name::from_bytes(state)?)), )*
                     _ => return Err("Invalid Call ID".into()),
                 }
-            }
-
-            pub fn max_size(&self) -> usize {
-                unimplemented!();
             }
         }
 

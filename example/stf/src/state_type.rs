@@ -12,7 +12,7 @@ use anonify_common::UserAddress;
 use codec::{Encode, Decode, Input, Output};
 
 macro_rules! impl_uint {
-    ($name: ident, $raw: ident) => {
+    ($name:ident, $raw:ident, $size:expr) => {
         #[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
         pub struct $name($raw);
 
@@ -105,13 +105,17 @@ macro_rules! impl_uint {
             pub fn zero() -> Self {
                 $name(0)
             }
+
+            pub fn size() -> usize {
+                $size as usize
+            }
         }
     };
 }
 
-impl_uint!(U16, u16);
-impl_uint!(U32, u32);
-impl_uint!(U64, u64);
+impl_uint!(U16, u16, 2);
+impl_uint!(U32, u32, 4);
+impl_uint!(U64, u64, 8);
 
 pub const STATE_SIZE: usize = 8;
 
