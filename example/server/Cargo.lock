@@ -306,6 +306,7 @@ dependencies = [
  "actix-web 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "anonify-common 0.1.0",
  "anonify-host 0.1.0",
+ "anonify-stf 0.1.0",
  "anonymous-asset 0.1.0",
  "dotenv 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "dotenv_codegen 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
