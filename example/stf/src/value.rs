@@ -11,6 +11,8 @@ use codec::{Encode, Decode};
 lazy_static! {
     pub static ref MAX_MEM_SIZE: usize = max_size();
 
+    // 85 = user_address(20bytes) + lock_param(32bytes) + mem_id(8bytes) + iv(12bytes)
+    // 1 bytes: base padding to represent a empty vec
     pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 85 + 1;
 }
 

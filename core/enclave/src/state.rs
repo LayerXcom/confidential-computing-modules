@@ -240,7 +240,7 @@ impl<N> StateValue<StateType, N> {
 
     /// Get padding size to fix the ciphertext size of all state types.
     pub fn padding_size(&self) -> usize {
-        *MAX_MEM_SIZE - self.inner_state.size_hint()
+        *MAX_MEM_SIZE - self.inner_state.len()
     }
 
     /// Get inner state and lock_param from database value.
