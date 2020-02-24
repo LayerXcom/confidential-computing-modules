@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "anonify-ciphertext"
+name = "anonify-app-preluder"
 version = "0.1.0"
 dependencies = [
  "anonify-app 0.1.0",
@@ -48,7 +48,7 @@ dependencies = [
 name = "anonify-enclave"
 version = "0.1.0"
 dependencies = [
- "anonify-ciphertext 0.1.0",
+ "anonify-app-preluder 0.1.0",
  "anonify-common 0.1.0",
  "anonify-runtime 0.1.0",
  "anonify-types 0.1.0",

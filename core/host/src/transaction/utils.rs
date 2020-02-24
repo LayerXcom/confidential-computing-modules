@@ -10,7 +10,7 @@ use web3::types::Address;
 use ethabi::Contract as ContractABI;
 use anonify_common::AccessRight;
 use anonify_runtime::State;
-use anonify_ciphertext::call_name_to_id;
+use anonify_app_preluder::call_name_to_id;
 use sgx_types::sgx_enclave_id_t;
 use crate::{
     bridges::ecalls::get_state_from_enclave,

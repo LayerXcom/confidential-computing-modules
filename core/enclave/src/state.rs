@@ -4,7 +4,7 @@ use anonify_common::{
     UserAddress, Sha256, Hash256, LockParam, AccessRight,
     kvs::*,
 };
-use anonify_ciphertext::{CallKind, MAX_MEM_SIZE, Ciphertext, Runtime};
+use anonify_app_preluder::{CallKind, MAX_MEM_SIZE, Ciphertext, Runtime};
 use anonify_runtime::{StateType, State, StateGetter, UpdatedState, into_trait, MemId};
 use codec::{Encode, Decode, Input, Output};
 use crate::{

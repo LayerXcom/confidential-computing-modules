@@ -23,7 +23,7 @@ use ethabi::{
     Hash,
 };
 use anonify_common::{LockParam, IntoVec};
-use anonify_ciphertext::Ciphertext;
+use anonify_app_preluder::Ciphertext;
 use crate::{
     error::*,
     constants::*,

@@ -6,7 +6,7 @@ use std::{
 use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx};
 use anonify_common::{AccessRight, UserAddress, LockParam};
-use anonify_ciphertext::{mem_name_to_id, Ciphertext, CIPHERTEXT_SIZE};
+use anonify_app_preluder::{mem_name_to_id, Ciphertext, CIPHERTEXT_SIZE};
 use anonify_runtime::State;
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
