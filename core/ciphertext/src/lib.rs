@@ -1,3 +1,6 @@
+//! `CIPHERTEXT_SIZE` is dynamically changed, depending on each applications
+//! ,so the ciphertext type is defined in a library inhereted from app library.
+
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 
 #[cfg(feature = "sgx")]
@@ -9,19 +12,8 @@ use std as localstd;
 extern crate core as localstd;
 
 use crate::localstd::vec::Vec;
-
 pub use anonify_app::*;
-pub use anonify_common::*;
-pub use anonify_runtime::*;
-// pub use anonify_app as app;
-// pub use anonify_common as common;
-// pub use anonify_runtime as runtime;
-pub use anonify_app::CIPHERTEXT_SIZE;
-pub use anonify_common::IntoVec;
-pub use anonify_runtime::{
-    state_type::StateType,
-    utils::{UpdatedState, MemId, into_trait},
-};
+use anonify_common::IntoVec;
 
 #[derive(Clone, Debug, Default)]
 pub struct Ciphertext(pub Vec<u8>);

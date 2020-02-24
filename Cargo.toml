@@ -3,7 +3,7 @@ members = [
     "wallet",
     "core/types",
     "core/runtime",
-    "core/preluder",
+    "core/ciphertext",
     "example/cli",
     "example/anonymous-asset",
     "example/app",

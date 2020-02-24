@@ -21,6 +21,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "anonify-ciphertext"
+version = "0.1.0"
+dependencies = [
+ "anonify-app 0.1.0",
+ "anonify-common 0.1.0",
+ "anonify-runtime 0.1.0",
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+]
+
+[[package]]
 name = "anonify-common"
 version = "0.1.0"
 dependencies = [
@@ -38,8 +48,9 @@ dependencies = [
 name = "anonify-enclave"
 version = "0.1.0"
 dependencies = [
+ "anonify-ciphertext 0.1.0",
  "anonify-common 0.1.0",
- "anonify-preluder 0.1.0",
+ "anonify-runtime 0.1.0",
  "anonify-types 0.1.0",
  "base64 0.10.1 (git+https://github.com/mesalock-linux/rust-base64-sgx?rev=sgx_1.1.0)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -63,16 +74,6 @@ dependencies = [
  "sgx_types 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha2 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "webpki 0.21.2 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)",
-]
-
-[[package]]
-name = "anonify-preluder"
-version = "0.1.0"
-dependencies = [
- "anonify-app 0.1.0",
- "anonify-common 0.1.0",
- "anonify-runtime 0.1.0",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
 ]
 
 [[package]]

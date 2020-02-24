@@ -4,10 +4,8 @@ use anonify_common::{
     UserAddress, Sha256, Hash256, LockParam, AccessRight,
     kvs::*,
 };
-use anonify_preluder::{
-    StateType, State, Runtime, CallKind, MAX_MEM_SIZE,
-    Ciphertext, StateGetter, UpdatedState, into_trait, MemId,
-};
+use anonify_ciphertext::{CallKind, MAX_MEM_SIZE, Ciphertext, Runtime};
+use anonify_runtime::{StateType, State, StateGetter, UpdatedState, into_trait, MemId};
 use codec::{Encode, Decode, Input, Output};
 use crate::{
     crypto::*,
@@ -298,7 +296,7 @@ impl<N> StateValue<StateType, N> {
 #[cfg(debug_assertions)]
 pub mod tests {
     use super::*;
-    use anonify_preluder::StateType;
+    use anonify_runtime::StateType;
     use ed25519_dalek::{SecretKey, PublicKey, Keypair, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH};
 
     const SECRET_KEY_BYTES: [u8; SECRET_KEY_LENGTH] = [

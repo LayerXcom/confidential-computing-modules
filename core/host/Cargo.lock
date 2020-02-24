@@ -24,6 +24,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "anonify-ciphertext"
+version = "0.1.0"
+dependencies = [
+ "anonify-app 0.1.0",
+ "anonify-common 0.1.0",
+ "anonify-runtime 0.1.0",
+]
+
+[[package]]
 name = "anonify-common"
 version = "0.1.0"
 dependencies = [
@@ -44,8 +53,9 @@ dependencies = [
 name = "anonify-host"
 version = "0.1.0"
 dependencies = [
+ "anonify-ciphertext 0.1.0",
  "anonify-common 0.1.0",
- "anonify-preluder 0.1.0",
+ "anonify-runtime 0.1.0",
  "anonify-types 0.1.0",
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bindgen 0.51.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -69,15 +79,6 @@ dependencies = [
  "sgx_types 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_urts 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "web3 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "anonify-preluder"
-version = "0.1.0"
-dependencies = [
- "anonify-app 0.1.0",
- "anonify-common 0.1.0",
- "anonify-runtime 0.1.0",
 ]
 
 [[package]]

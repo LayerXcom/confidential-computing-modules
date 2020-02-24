@@ -10,8 +10,8 @@ extern crate core as localstd;
 
 use codec::{Input, Output, Encode, Decode};
 use anonify_common::UserAddress;
-use crate::utils::MemId;
-use crate::state_type::StateType;
+pub use crate::utils::*;
+pub use crate::state_type::StateType;
 use crate::localstd::{
     fmt,
     vec::Vec,
