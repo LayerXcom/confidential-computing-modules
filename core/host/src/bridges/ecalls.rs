@@ -21,6 +21,8 @@ pub(crate) fn insert_logs(
     enclave_log: &InnerEnclaveLog,
 ) -> Result<()> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let len = enclave_log.ciphertexts.len() * (*CIPHERTEXT_SIZE);
+    let buf = enclave_log.ciphertexts.clone().into_iter().flat_map(|e| e.0).collect::<Vec<u8>>();
 
     let status = unsafe {
         ecall_insert_logs(
@@ -28,8 +30,8 @@ pub(crate) fn insert_logs(
             &mut rt,
             enclave_log.contract_addr.as_ptr() as _,
             enclave_log.latest_blc_num,
-            enclave_log.ciphertexts.as_c_ptr() as *const u8,
-            enclave_log.ciphertexts.len() * (*CIPHERTEXT_SIZE),
+            buf.as_c_ptr() as *const u8,
+            len,
         )
     };
 
@@ -76,11 +78,6 @@ pub(crate) fn get_state_from_enclave(
     }
 
     Ok(state_as_bytes(state).into())
-
-    // let res = (&mut *s).try_into().expect("Failed to convert bytes to state trait.");
-
-    // let res = S::from_bytes(&mut s)?;
-    // Ok(res)
 }
 
 fn state_as_bytes(state: EnclaveState) -> Box<[u8]> {

@@ -116,7 +116,7 @@ pub struct UserState<S: State, N> {
     address: UserAddress,
     mem_id: MemId,
     state_value: StateValue<S, N>,
-    padding: Vec<u8>,
+    padding: Vec<bool>,
 }
 
 impl<N> UserState<StateType, N> {
@@ -136,8 +136,7 @@ impl UserState<StateType, Current> {
         mem_id: MemId,
         state_value: StateValue<StateType, Current>,
     ) -> Self {
-        let padding_size = state_value.padding_size();
-        let padding = vec![1u8; padding_size];
+        let padding = vec![];
 
         UserState {
             address,
@@ -169,11 +168,15 @@ impl UserState<StateType, Current> {
     }
 
     pub fn update_inner_state(self, update: StateType) -> Self {
+        let state_value = StateValue::new(update, self.lock_param());
+        let padding_size = state_value.padding_size();
+        let padding = vec![true; padding_size];
+
         UserState {
             address: self.address,
             mem_id: self.mem_id,
-            state_value: StateValue::new(update, self.lock_param()),
-            padding: self.padding,
+            state_value,
+            padding,
         }
     }
 

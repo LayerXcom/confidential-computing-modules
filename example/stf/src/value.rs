@@ -11,7 +11,7 @@ use codec::{Encode, Decode};
 lazy_static! {
     pub static ref MAX_MEM_SIZE: usize = max_size();
 
-    pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 85;
+    pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 85 + 1;
 }
 
 macro_rules! impl_mem {

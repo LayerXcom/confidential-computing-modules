@@ -48,25 +48,8 @@ pub trait State: Sized + Default + Clone + Encode + Decode + fmt::Debug {
 
 impl<T: Sized + Default + Clone + Encode + Decode + fmt::Debug> State for T {}
 
-// Ciphertext size without state.
-// static BASE_CIPHERTEXT_SIZE: usize = 85;
-
-// pub static CIPHERTEXT_SIZE: usize = BASE_CIPHERTEXT_SIZE + *MAX_MEM_SIZE;
-
 #[derive(Clone, Debug, Default)]
-pub struct Ciphertext(Vec<u8>);
-
-// impl fmt::Debug for Ciphertext {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-//         write!(f, "Ciphertext ")
-//     }
-// }
-
-// impl Default for Ciphertext {
-//     fn default() -> Self {
-//         Ciphertext([0u8; CIPHERTEXT_SIZE])
-//     }
-// }
+pub struct Ciphertext(pub Vec<u8>);
 
 impl IntoVec for Ciphertext {
     fn into_vec(&self) -> Vec<u8> {
@@ -77,8 +60,6 @@ impl IntoVec for Ciphertext {
 impl Ciphertext {
     pub fn from_bytes(bytes: &[u8]) -> Self {
         assert_eq!(bytes.len(), *CIPHERTEXT_SIZE);
-        // let mut buf = [0u8; CIPHERTEXT_SIZE];
-        // buf.copy_from_slice(bytes);
 
         Ciphertext(bytes.to_vec())
     }
@@ -88,9 +69,7 @@ impl Ciphertext {
         let iter_num = bytes.len() / (*CIPHERTEXT_SIZE);
 
         (0..iter_num).map(move |i| {
-            // let mut buf = [0u8; CIPHERTEXT_SIZE];
             let buf = &bytes[i*(*CIPHERTEXT_SIZE)..(i+1)*(*CIPHERTEXT_SIZE)];
-            // buf.copy_from_slice(b);
 
             Ciphertext(buf.to_vec())
         })
