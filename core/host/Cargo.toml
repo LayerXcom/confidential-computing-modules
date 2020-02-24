@@ -8,7 +8,7 @@ build = "build.rs"
 [dependencies]
 anonify-types = { path = "../types" }
 anonify-common = { path = "../common" }
-anonify-stf = { path = "../../example/stf" }
+anonify-preluder = { path = "../preluder" }
 sgx_types = "1.1.0"
 sgx_urts = "1.1.0"
 dirs = "2.0"

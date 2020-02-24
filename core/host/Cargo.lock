@@ -14,6 +14,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "anonify-app"
+version = "0.1.0"
+dependencies = [
+ "anonify-common 0.1.0",
+ "anonify-runtime 0.1.0",
+ "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parity-scale-codec 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "anonify-common"
 version = "0.1.0"
 dependencies = [
@@ -35,7 +45,7 @@ name = "anonify-host"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
- "anonify-stf 0.1.0",
+ "anonify-preluder 0.1.0",
  "anonify-types 0.1.0",
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bindgen 0.51.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -62,11 +72,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "anonify-stf"
+name = "anonify-preluder"
+version = "0.1.0"
+dependencies = [
+ "anonify-app 0.1.0",
+ "anonify-common 0.1.0",
+ "anonify-runtime 0.1.0",
+]
+
+[[package]]
+name = "anonify-runtime"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
- "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

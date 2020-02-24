@@ -4,7 +4,7 @@ use anonify_common::{
     UserAddress, Sha256, Hash256, LockParam, AccessRight,
     kvs::*,
 };
-use anonify_stf::{
+use anonify_preluder::{
     StateType, State, Runtime, CallKind, MAX_MEM_SIZE,
     Ciphertext, StateGetter, UpdatedState, into_trait, MemId,
 };
@@ -298,7 +298,7 @@ impl<N> StateValue<StateType, N> {
 #[cfg(debug_assertions)]
 pub mod tests {
     use super::*;
-    use anonify_stf::StateType;
+    use anonify_preluder::StateType;
     use ed25519_dalek::{SecretKey, PublicKey, Keypair, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH};
 
     const SECRET_KEY_BYTES: [u8; SECRET_KEY_LENGTH] = [

@@ -9,6 +9,17 @@ pub struct UpdatedState<S: State> {
     pub state: S,
 }
 
+impl<S: State> UpdatedState<S> {
+    pub fn new(address: UserAddress, mem_id: MemId, state: S) -> Self {
+        // let mem_id = mem_name_to_id(mem_name);
+        UpdatedState {
+            address,
+            mem_id,
+            state
+        }
+    }
+}
+
 pub fn into_trait<S: State>(s: UpdatedState<impl State>) -> Result<UpdatedState<S>, codec::Error> {
     let state = S::from_state(&s.state)?;
     Ok(UpdatedState {

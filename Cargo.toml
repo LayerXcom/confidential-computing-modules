@@ -3,9 +3,9 @@ members = [
     "wallet",
     "core/types",
     "core/runtime",
+    "core/preluder",
     "example/cli",
     "example/anonymous-asset",
-    "example/stf",
     "example/app",
 ]
 exclude = [

@@ -29,6 +29,7 @@ macro_rules! impl_runtime {
     };
 }
 
+#[macro_export]
 macro_rules! impl_inner_runtime {
     (@imp
         $(

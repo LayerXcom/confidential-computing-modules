@@ -2,7 +2,7 @@ use std::slice;
 use sgx_types::*;
 use anonify_types::*;
 use anonify_common::{UserAddress, AccessRight};
-use anonify_stf::{StateGetter, State, StateType, CIPHERTEXT_SIZE, Ciphertext, CallKind, MemId};
+use anonify_preluder::{StateGetter, State, StateType, CIPHERTEXT_SIZE, Ciphertext, CallKind, MemId};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::state::{UserState, StateValue, Current};
 use crate::crypto::SYMMETRIC_KEY;

@@ -1,7 +1,7 @@
 use std::vec::Vec;
 use anonify_types::{RawRegisterTx, RawStateTransTx, traits::RawEnclaveTx};
 use anonify_common::{UserAddress, LockParam, AccessRight, IntoVec};
-use anonify_stf::{StateType, State, Ciphertext, CallKind, MemId};
+use anonify_preluder::{StateType, State, Ciphertext, CallKind, MemId};
 use crate::{
     attestation::{Report, ReportSig, AttestationService},
     error::Result,

@@ -4,7 +4,7 @@ use std::{path::Path, sync::Arc};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use anonify_common::{AccessRight, UserAddress};
-use anonify_stf::State;
+use anonify_preluder::State;
 use super::{
     eth::primitives::Web3Contract,
     eventdb::BlockNumDB,

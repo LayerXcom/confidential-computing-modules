@@ -2,7 +2,7 @@ use std::sync::Arc;
 use anonify_common::{
     kvs::{KVS, MemoryDB, DBTx}
 };
-use anonify_stf::Ciphertext;
+use anonify_preluder::Ciphertext;
 use ethabi::Hash;
 use sgx_types::sgx_enclave_id_t;
 use byteorder::{LittleEndian, ByteOrder};

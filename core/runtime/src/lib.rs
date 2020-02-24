@@ -1,3 +1,5 @@
+#![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
+
 #[cfg(feature = "sgx")]
 #[macro_use]
 extern crate sgx_tstd as localstd;
@@ -10,11 +12,14 @@ use codec::{Input, Output, Encode, Decode};
 use anonify_common::UserAddress;
 use crate::utils::MemId;
 use crate::state_type::StateType;
-use crate::localstd::fmt;
+use crate::localstd::{
+    fmt,
+    vec::Vec,
+};
 
-mod impls;
-mod state_type;
-mod utils;
+pub mod impls;
+pub mod state_type;
+pub mod utils;
 
 /// Trait of each user's state.
 pub trait State: Sized + Default + Clone + Encode + Decode + fmt::Debug {

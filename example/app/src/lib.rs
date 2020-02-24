@@ -1,5 +1,20 @@
-use crate::State;
-use crate::state_type::*;
+#![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
+
+#[macro_use]
+extern crate lazy_static;
+#[cfg(feature = "sgx")]
+#[macro_use]
+extern crate sgx_tstd as localstd;
+#[cfg(feature = "std")]
+use std as localstd;
+#[cfg(all(not(feature = "std"), not(feature = "sgx")))]
+extern crate core as localstd;
+
+use anonify_runtime::{
+    State, StateGetter, impl_mem, impl_runtime, impl_inner_runtime,
+    state_type::*,
+    utils::{MemId, UpdatedState},
+};
 use crate::localstd::{
     boxed::Box,
     string::String,
@@ -28,7 +43,7 @@ impl_runtime!{
         sender: UserAddress,
         total_supply: U64
     ) -> Result<Vec<UpdatedState<StateType>>,codec::Error> {
-        let init = UpdatedState::new(sender, "Balance", total_supply.into());
+        let init = UpdatedState::new(sender, mem_name_to_id("Balance"), total_supply.into());
 
         Ok(vec![init])
     }
@@ -49,8 +64,8 @@ impl_runtime!{
         let my_update = my_balance - amount;
         let other_update = target_balance + amount;
 
-        let my = UpdatedState::new(sender, "Balance", my_update.into());
-        let other = UpdatedState::new(target, "Balance", other_update.into());
+        let my = UpdatedState::new(sender, mem_name_to_id("Balance"), my_update.into());
+        let other = UpdatedState::new(target, mem_name_to_id("Balance"), other_update.into());
 
         Ok(vec![my, other])
     }

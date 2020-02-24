@@ -1,7 +1,5 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 
-#[macro_use]
-extern crate lazy_static;
 #[cfg(feature = "sgx")]
 #[macro_use]
 extern crate sgx_tstd as localstd;
@@ -10,28 +8,20 @@ use std as localstd;
 #[cfg(all(not(feature = "std"), not(feature = "sgx")))]
 extern crate core as localstd;
 
-use crate::localstd::{
-    vec::Vec,
-    fmt,
+use crate::localstd::vec::Vec;
+
+pub use anonify_app::*;
+pub use anonify_common::*;
+pub use anonify_runtime::*;
+// pub use anonify_app as app;
+// pub use anonify_common as common;
+// pub use anonify_runtime as runtime;
+pub use anonify_app::CIPHERTEXT_SIZE;
+pub use anonify_common::IntoVec;
+pub use anonify_runtime::{
+    state_type::StateType,
+    utils::{UpdatedState, MemId, into_trait},
 };
-use codec::{Input, Output, Encode, Decode};
-use anonify_common::IntoVec;
-
-pub mod value;
-pub mod state_type;
-pub use crate::value::*;
-pub use crate::state_type::*;
-
-impl<S: State> UpdatedState<S> {
-    pub fn new(address: UserAddress, mem_name: &str, state: S) -> Self {
-        let mem_id = mem_name_to_id(mem_name);
-        UpdatedState {
-            address,
-            mem_id,
-            state
-        }
-    }
-}
 
 #[derive(Clone, Debug, Default)]
 pub struct Ciphertext(pub Vec<u8>);
