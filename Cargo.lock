@@ -66,12 +66,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "anonify-app-preluder"
+version = "0.1.0"
+dependencies = [
+ "anonify-app 0.1.0",
+ "anonify-common 0.1.0",
+ "anonify-runtime 0.1.0",
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+]
+
+[[package]]
 name = "anonify-cli"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
  "anonify-wallet 0.1.0",
- "anonymous-asset 0.1.0",
+ "api 0.1.0",
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "console 0.7.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "dialoguer 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -116,17 +126,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anonify-stf"
-version = "0.1.0"
-dependencies = [
- "anonify-common 0.1.0",
- "anonify-runtime 0.1.0",
- "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
-]
-
-[[package]]
 name = "anonify-types"
 version = "0.1.0"
 dependencies = [
@@ -149,19 +148,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anonymous-asset"
-version = "0.1.0"
-dependencies = [
- "anonify-common 0.1.0",
- "anonify-stf 0.1.0",
- "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde-big-array 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "web3 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "ansi_term"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -170,12 +156,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "app-preluder"
+name = "api"
 version = "0.1.0"
 dependencies = [
- "anonify-app 0.1.0",
  "anonify-common 0.1.0",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+ "anonify-runtime 0.1.0",
+ "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde-big-array 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "web3 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

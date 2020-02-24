@@ -5,13 +5,13 @@ members = [
     "core/runtime",
     "core/app-preluder",
     "example/cli",
-    "example/anonymous-asset",
+    "example/api",
     "example/app",
 ]
 exclude = [
     "core/enclave",
     "core/host",
     "core/common",
-    "https-enclave",
+    "core/https-enclacve",
     "example/server",
 ]

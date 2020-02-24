@@ -5,7 +5,6 @@ use anonify_host::transaction::{
     BlockNumDB, traits::*,
     utils::get_state,
 };
-use anonymous_asset::api;
 use anonify_stf::{State, StateType, U64, transfer, constructor};
 use actix_web::{
     web,
