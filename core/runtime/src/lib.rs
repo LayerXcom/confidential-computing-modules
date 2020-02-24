@@ -11,7 +11,7 @@ extern crate core as localstd;
 use codec::{Input, Output, Encode, Decode};
 use anonify_common::UserAddress;
 pub use crate::utils::*;
-pub use crate::state_type::StateType;
+pub use crate::state_type::*;
 use crate::localstd::{
     fmt,
     vec::Vec,

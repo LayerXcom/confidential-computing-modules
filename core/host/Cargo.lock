@@ -14,22 +14,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "anonify-app"
-version = "0.1.0"
-dependencies = [
- "anonify-common 0.1.0",
- "anonify-runtime 0.1.0",
- "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "anonify-app-preluder"
 version = "0.1.0"
 dependencies = [
- "anonify-app 0.1.0",
  "anonify-common 0.1.0",
  "anonify-runtime 0.1.0",
+ "app 0.1.0",
 ]
 
 [[package]]
@@ -102,6 +92,16 @@ version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "winapi 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "app"
+version = "0.1.0"
+dependencies = [
+ "anonify-common 0.1.0",
+ "anonify-runtime 0.1.0",
+ "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parity-scale-codec 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

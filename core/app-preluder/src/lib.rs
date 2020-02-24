@@ -12,7 +12,7 @@ use std as localstd;
 extern crate core as localstd;
 
 use crate::localstd::vec::Vec;
-pub use anonify_app::*;
+pub use app::*;
 use anonify_common::IntoVec;
 
 #[derive(Clone, Debug, Default)]

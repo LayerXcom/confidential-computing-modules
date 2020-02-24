@@ -8,7 +8,9 @@ edition = "2018"
 
 [dependencies]
 api = { path = "../api" }
+app = { path = "../app" }
 anonify-common = { path = "../../core/common" }
+anonify-runtime = { path = "../../core/runtime" }
 anonify-host = { path = "../../core/host" }
 sgx_types = "1.1.0"
 actix-web = "1.0"
