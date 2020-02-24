@@ -5,11 +5,11 @@ use crate::State;
 use crate::localstd::{
     vec::Vec,
     collections::BTreeMap,
-    ops::{Add, Sub, Mul, Div, Neg},
+    ops::{Add, Sub, Mul, Div},
     convert::TryFrom,
 };
 use anonify_common::UserAddress;
-use codec::{Encode, Decode, Input, Output};
+use codec::{Encode, Decode};
 
 macro_rules! impl_uint {
     ($name:ident, $raw:ident, $size:expr) => {
@@ -116,8 +116,6 @@ macro_rules! impl_uint {
 impl_uint!(U16, u16, 2);
 impl_uint!(U32, u32, 4);
 impl_uint!(U64, u64, 8);
-
-pub const STATE_SIZE: usize = 8;
 
 pub trait RawState: Encode + Decode + Clone + Default {}
 

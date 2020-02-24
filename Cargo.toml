@@ -2,9 +2,11 @@
 members = [
     "wallet",
     "core/types",
+    "core/runtime",
     "example/cli",
     "example/anonymous-asset",
     "example/stf",
+    "example/app",
 ]
 exclude = [
     "core/enclave",

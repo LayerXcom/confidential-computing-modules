@@ -22,31 +22,16 @@ pub mod state_type;
 pub use crate::value::*;
 pub use crate::state_type::*;
 
-/// Trait of each user's state.
-pub trait State: Sized + Default + Clone + Encode + Decode + fmt::Debug {
-    fn as_bytes(&self) -> Vec<u8> {
-        self.encode()
-    }
-
-    fn from_bytes(bytes: &mut [u8]) -> Result<Self, codec::Error> {
-        Self::decode(&mut &bytes[..])
-    }
-
-    fn write_le<O: Output>(&self, writer: &mut O) {
-        self.encode_to(writer)
-    }
-
-    fn read_le<I: Input>(reader: &mut I) -> Result<Self, codec::Error> {
-        Self::decode(reader)
-    }
-
-    fn from_state(state: &impl State) -> Result<Self, codec::Error> {
-        let mut state = state.as_bytes();
-        Self::from_bytes(&mut state)
+impl<S: State> UpdatedState<S> {
+    pub fn new(address: UserAddress, mem_name: &str, state: S) -> Self {
+        let mem_id = mem_name_to_id(mem_name);
+        UpdatedState {
+            address,
+            mem_id,
+            state
+        }
     }
 }
-
-impl<T: Sized + Default + Clone + Encode + Decode + fmt::Debug> State for T {}
 
 #[derive(Clone, Debug, Default)]
 pub struct Ciphertext(pub Vec<u8>);
