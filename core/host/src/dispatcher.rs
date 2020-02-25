@@ -11,18 +11,14 @@ use crate::bridges::ecalls::{
     insert_logs as insert_fn,
     get_state_from_enclave,
 };
-use crate::error::{HostError, Result};
 use anonify_rpc_handler::{
     traits::*,
     utils::*,
     eventdb::BlockNumDB,
+    error::{Result, HostError},
 };
 use anonify_common::AccessRight;
 use anonify_runtime::State;
-use anonify_types::{RawRegisterTx, RawStateTransTx};
-use anonify_rpc_handler::{
-    traits::*,
-};
 use parking_lot::RwLock;
 
 /// This dispatcher communicates with a blockchain node.
@@ -64,10 +60,9 @@ where
     pub fn deploy(
         &self,
         deploy_user: &SignerAddress,
-        access_right: &AccessRight,
     ) -> Result<String> {
         let mut inner = self.inner.write();
-        inner.deploy(deploy_user, access_right)
+        inner.deploy(deploy_user)
     }
 
     pub fn register<P: AsRef<Path> + Copy>(
@@ -170,18 +165,14 @@ where
     fn deploy(
         &mut self,
         deploy_user: &SignerAddress,
-        access_right: &AccessRight,
     ) -> Result<String> {
-        let res = self.deployer
-            .deploy(deploy_user, access_right, reg_fn)
-            .map_err(Into::into)?;
-        Ok(res)
+        self.deployer
+            .deploy(deploy_user, reg_fn)
     }
 
     fn get_account(&self, index: usize) -> Result<SignerAddress> {
         self.deployer
             .get_account(index)
-            .map_err(Into::into)
     }
 
     fn block_on_event<P: AsRef<Path> + Copy>(
@@ -197,7 +188,6 @@ where
         self.watcher.as_ref()
             .ok_or(HostError::AddressNotSet)?
             .block_on_event(eid, insert_fn)
-            .map_err(Into::into)
     }
 
     fn register<P: AsRef<Path> + Copy>(
@@ -211,7 +201,6 @@ where
         self.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
             .register(signer, gas, reg_fn)
-            .map_err(Into::into)
     }
 
     fn state_transition<ST, P>(
@@ -234,7 +223,6 @@ where
         self.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
             .state_transition(access_right, signer, state_info, gas, st_fn)
-            .map_err(Into::into)
     }
 }
 

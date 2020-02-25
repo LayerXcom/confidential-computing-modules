@@ -4,7 +4,6 @@ use std::{
     boxed::Box,
 };
 use sgx_types::sgx_enclave_id_t;
-use log::debug;
 use anonify_types::{RawRegisterTx, RawStateTransTx};
 use anonify_common::{AccessRight, LockParam};
 use anonify_runtime::State;
@@ -46,7 +45,6 @@ impl Deployer for EthDeployer {
     fn deploy<F>(
         &mut self,
         deploy_user: &SignerAddress,
-        access_right: &AccessRight,
         reg_fn: F,
     ) -> Result<String>
     where

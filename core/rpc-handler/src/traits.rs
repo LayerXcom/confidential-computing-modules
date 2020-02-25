@@ -24,7 +24,6 @@ pub trait Deployer: Sized {
     fn deploy<F>(
         &mut self,
         deploy_user: &SignerAddress,
-        access_right: &AccessRight,
         reg_fn: F,
     ) -> Result<String>
     where

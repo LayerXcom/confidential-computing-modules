@@ -1,12 +1,8 @@
-use std::{
-    convert::{TryInto, TryFrom},
-    fmt::Debug,
-    boxed::Box,
-};
+use std::boxed::Box;
 use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx};
-use anonify_common::{AccessRight, UserAddress, LockParam};
-use anonify_app_preluder::{mem_name_to_id, Ciphertext, CIPHERTEXT_SIZE};
+use anonify_common::AccessRight;
+use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
 use anonify_runtime::State;
 use anonify_rpc_handler::{
     eventdb::InnerEnclaveLog,
@@ -14,7 +10,7 @@ use anonify_rpc_handler::{
 };
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
-use crate::error::{HostError, Result};
+use anonify_rpc_handler::error::{HostError, Result};
 
 /// Insert event logs from blockchain nodes into enclave memory database.
 pub(crate) fn insert_logs(
