@@ -11,14 +11,10 @@ use crate::bridges::ecalls::{
     insert_logs as insert_fn,
     get_state_from_enclave,
 };
-use crate::error::{HostErrorKind, Result};
-use super::{
-    dispatcher::{
-        SignerAddress,
-        ContractKind,
-        traits::*,
-    },
-    utils::{ContractInfo, StateInfo},
+use crate::error::HostError;
+use anonify_rpc_handler::{
+    traits::*,
+    utils::*,
     eventdb::BlockNumDB,
 };
 use anonify_common::AccessRight;
@@ -27,6 +23,7 @@ use anonify_types::{RawRegisterTx, RawStateTransTx};
 use anonify_rpc_handler::{
     traits::*,
 };
+use parking_lot::RwLock;
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
@@ -45,7 +42,7 @@ where
         enclave_id: sgx_enclave_id_t,
         node_url: &str,
         event_db: Arc<DB>,
-    ) -> Result<Self> {
+    ) -> anyhow::Result<Self> {
         let inner = SgxDispatcher::new_with_deployer(enclave_id, node_url, event_db)?;
 
         Ok(Dispatcher {
@@ -53,7 +50,7 @@ where
         })
     }
 
-    pub fn set_contract_addr<P>(&mut self, contract_addr: &str, abi_path: P) -> Result<()>
+    pub fn set_contract_addr<P>(&mut self, contract_addr: &str, abi_path: P) -> anyhow::Result<()>
     where
         P: AsRef<Path> + Copy,
     {
@@ -68,7 +65,7 @@ where
         &self,
         deploy_user: &SignerAddress,
         access_right: &AccessRight,
-    ) -> Result<String> {
+    ) -> anyhow::Result<String> {
         let mut inner = self.inner.write();
         inner.deploy(deploy_user, access_right)
     }
@@ -79,7 +76,7 @@ where
         gas: u64,
         contract_addr: &str,
         abi_path: P,
-    ) -> Result<String> {
+    ) -> anyhow::Result<String> {
         let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         inner.register(signer, gas, contract_info)
@@ -95,7 +92,7 @@ where
         gas: u64,
         contract_addr: &str,
         abi_path: P,
-    ) -> Result<String>
+    ) -> anyhow::Result<String>
     where
         ST: State,
         P: AsRef<Path> + Copy,
@@ -111,13 +108,13 @@ where
         &self,
         contract_addr: &str,
         abi_path: P
-    ) -> Result<()> {
+    ) -> anyhow::Result<()> {
         let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         inner.block_on_event(contract_info)
     }
 
-    pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
+    pub fn get_account(&self, index: usize) -> anyhow::Result<SignerAddress> {
         self.inner.read().get_account(index)
     }
 }
@@ -141,7 +138,7 @@ where
         enclave_id: sgx_enclave_id_t,
         node_url: &str,
         event_db: Arc<DB>,
-    ) -> Result<Self> {
+    ) -> anyhow::Result<Self> {
         let deployer = D::new(enclave_id, node_url)?;
 
         Ok(SgxDispatcher {
@@ -155,7 +152,7 @@ where
     fn set_contract_addr<P>(
         &mut self,
         contract_info: ContractInfo<'_, P>,
-    ) -> Result<()>
+    ) -> anyhow::Result<()>
     where
         P: AsRef<Path> + Copy
     {
@@ -174,18 +171,18 @@ where
         &mut self,
         deploy_user: &SignerAddress,
         access_right: &AccessRight,
-    ) -> Result<String> {
+    ) -> anyhow::Result<String> {
         self.deployer.deploy(deploy_user, access_right, reg_fn)
     }
 
-    fn get_account(&self, index: usize) -> Result<SignerAddress> {
+    fn get_account(&self, index: usize) -> anyhow::Result<SignerAddress> {
         self.deployer.get_account(index)
     }
 
     fn block_on_event<P: AsRef<Path> + Copy>(
         &mut self,
         contract_info: ContractInfo<'_, P>,
-    ) -> Result<()> {
+    ) -> anyhow::Result<()> {
         // If contract address is not set, set new contract address and abi path to generate watcher instance.
         // if let None = self.watcher.as_mut() {
             self.set_contract_addr(contract_info)?;
@@ -193,7 +190,7 @@ where
 
         let eid = self.deployer.get_enclave_id();
         self.watcher.as_ref()
-            .ok_or(HostErrorKind::Msg("Contract address have not been set."))?
+            .ok_or(HostError::AddressNotSet)?
             .block_on_event(eid, insert_fn)
     }
 
@@ -202,11 +199,11 @@ where
         signer: SignerAddress,
         gas: u64,
         contract_info: ContractInfo<'_, P>,
-    ) -> Result<String> {
+    ) -> anyhow::Result<String> {
         self.set_contract_addr(contract_info)?;
 
         self.sender.as_ref()
-            .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
+            .ok_or(HostError::AddressNotSet)?
             .register(signer, gas, reg_fn)
     }
 
@@ -217,7 +214,7 @@ where
         state_info: StateInfo<'_, ST>,
         contract_info: ContractInfo<'_, P>,
         gas: u64,
-    ) -> Result<String>
+    ) -> anyhow::Result<String>
     where
         ST: State,
         P: AsRef<Path> + Copy,
@@ -228,7 +225,7 @@ where
         // }
 
         self.sender.as_ref()
-            .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
+            .ok_or(HostError::AddressNotSet)?
             .state_transition(access_right, signer, state_info, gas, st_fn)
     }
 }
@@ -237,7 +234,7 @@ pub fn get_state_sgx<S>(
     access_right: &AccessRight,
     enclave_id: sgx_enclave_id_t,
     mem_name: &str,
-) -> Result<S>
+) -> anyhow::Result<S>
 where
     S: State + TryFrom<Vec<u8>>,
     <S as TryFrom<Vec<u8>>>::Error: Debug,

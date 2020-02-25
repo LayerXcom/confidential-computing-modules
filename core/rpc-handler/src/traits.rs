@@ -10,11 +10,11 @@ use sgx_types::sgx_enclave_id_t;
 use anonify_types::{RawRegisterTx, RawStateTransTx};
 use anonify_common::{AccessRight, UserAddress};
 use anonify_runtime::State;
+use anyhow::Result;
 use crate::{
     eth::primitives::Web3Contract,
     eventdb::{BlockNumDB, InnerEnclaveLog},
     utils::*,
-    error::{Result, RpcErrorKind},
 };
 
 /// A trait for deploying contracts

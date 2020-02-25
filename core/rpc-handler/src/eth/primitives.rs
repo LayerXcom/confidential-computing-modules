@@ -24,8 +24,8 @@ use ethabi::{
 };
 use anonify_common::{LockParam, IntoVec};
 use anonify_app_preluder::Ciphertext;
+use anyhow::{Result, anyhow};
 use crate::{
-    error::*,
     eventdb::{BlockNumDB, InnerEnclaveLog, EnclaveLog},
     utils::ContractInfo,
 };
@@ -228,19 +228,13 @@ impl<D: BlockNumDB> Web3Logs<D> {
             debug!("log: {:?}, \nindex: {:?}", log, i);
 
             if contract_addr != log.address {
-                return Err(RpcErrorKind::Web3Log{
-                    msg: "Each log should have same contract address.",
-                    index: i,
-                }.into());
+                return Err(anyhow!("Each log should have same contract address.: index: {}", i));
             }
 
             let data = Self::decode_data(&log);
 
             if ciphertext_size != data.len() && data.len() != 0  {
-                return Err(RpcErrorKind::Web3Log {
-                    msg: "Each log should have same size of data.",
-                    index: i,
-                }.into());
+                return Err(anyhow!("Each log should have same size of data.: index: {}", i));
             }
 
             if let Some(blc_num) = log.block_number {

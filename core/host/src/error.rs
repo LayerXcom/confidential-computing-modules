@@ -1,15 +1,27 @@
+use thiserror::Error;
 use sgx_types::sgx_status_t;
-use failure::{Backtrace, Context, Fail};
-use std::io;
-use std::fmt;
-use std::fmt::Display;
+use std::{
+    io,
+    fmt::{self, Display},
+};
 
-pub type Result<T> = std::result::Result<T, HostError>;
-
-#[derive(Debug)]
-pub struct HostError {
-    inner: Context<HostErrorKind>,
+#[derive(Error, Debug)]
+pub enum HostError {
+    #[error("SGX ecall failed function: {function:?}, status: {status:?}")]
+    Sgx {
+        status: sgx_status_t,
+        function: &'static str,
+    },
+    #[error("Contract address have not been set.")]
+    AddressNotSet,
 }
+
+// pub type Result<T> = std::result::Result<T, HostError>;
+
+// #[derive(Debug)]
+// pub struct HostError {
+//     inner: Context<HostErrorKind>,
+// }
 
 #[derive(Debug, Fail)]
 pub enum HostErrorKind {

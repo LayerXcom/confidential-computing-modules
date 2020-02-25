@@ -8,19 +8,19 @@ use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTran
 use anonify_common::{AccessRight, UserAddress, LockParam};
 use anonify_app_preluder::{mem_name_to_id, Ciphertext, CIPHERTEXT_SIZE};
 use anonify_runtime::State;
-use ed25519_dalek::{Signature, PublicKey};
-use crate::auto_ffi::*;
-use crate::transaction::{
+use anonify_rpc_handler::{
     eventdb::InnerEnclaveLog,
     utils::StateInfo,
 };
-use crate::error::{HostErrorKind, Result};
+use ed25519_dalek::{Signature, PublicKey};
+use crate::auto_ffi::*;
+use crate::error::HostError;
 
 /// Insert event logs from blockchain nodes into enclave memory database.
 pub(crate) fn insert_logs(
     eid: sgx_enclave_id_t,
     enclave_log: &InnerEnclaveLog,
-) -> Result<()> {
+) -> anyhow::Result<()> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let len = enclave_log.ciphertexts.len() * (*CIPHERTEXT_SIZE);
     let buf = enclave_log.ciphertexts.clone().into_iter().flat_map(|e| e.0).collect::<Vec<u8>>();
@@ -37,10 +37,10 @@ pub(crate) fn insert_logs(
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(HostErrorKind::Sgx{ status, function: "ecall_insert_logs" }.into());
+		return Err(HostError::Sgx{ status, function: "ecall_insert_logs" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_insert_logs" }.into());
+		return Err(HostError::Sgx{ status: rt, function: "ecall_insert_logs" }.into());
     }
 
     Ok(())
@@ -53,7 +53,7 @@ pub(crate) fn get_state_from_enclave(
     pubkey: &PublicKey,
     msg: &[u8],
     mem_name: &str,
-) -> Result<Vec<u8>>
+) -> anyhow::Result<Vec<u8>>
 {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut state = EnclaveState::default();
@@ -72,10 +72,10 @@ pub(crate) fn get_state_from_enclave(
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(HostErrorKind::Sgx{ status, function: "ecall_get_state" }.into());
+		return Err(HostError::Sgx{ status, function: "ecall_get_state" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_get_state" }.into());
+		return Err(HostError::Sgx{ status: rt, function: "ecall_get_state" }.into());
     }
 
     Ok(state_as_bytes(state).into())
@@ -88,7 +88,7 @@ fn state_as_bytes(state: EnclaveState) -> Box<[u8]> {
     *box_state
 }
 
-pub(crate) fn register(eid: sgx_enclave_id_t) -> Result<RawRegisterTx> {
+pub(crate) fn register(eid: sgx_enclave_id_t) -> anyhow::Result<RawRegisterTx> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut raw_reg_tx = RawRegisterTx::default();
 
@@ -101,10 +101,10 @@ pub(crate) fn register(eid: sgx_enclave_id_t) -> Result<RawRegisterTx> {
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostErrorKind::Sgx{ status, function: "ecall_register" }.into());
+        return Err(HostError::Sgx{ status, function: "ecall_register" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_register" }.into());
+        return Err(HostError::Sgx{ status: rt, function: "ecall_register" }.into());
     }
 
     Ok(raw_reg_tx)
@@ -115,7 +115,7 @@ pub(crate) fn state_transition<S: State>(
     eid: sgx_enclave_id_t,
     access_right: AccessRight,
     state_info: StateInfo<'_, S>,
-) -> Result<RawStateTransTx> {
+) -> anyhow::Result<RawStateTransTx> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut raw_state_tx = RawStateTransTx::default();
     let state = state_info.state_as_bytes();
@@ -137,10 +137,10 @@ pub(crate) fn state_transition<S: State>(
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostErrorKind::Sgx{ status, function: "ecall_contract_deploy" }.into());
+        return Err(HostError::Sgx{ status, function: "ecall_contract_deploy" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_contract_deploy" }.into());
+        return Err(HostError::Sgx{ status: rt, function: "ecall_contract_deploy" }.into());
     }
 
     Ok(raw_state_tx)

@@ -1,6 +1,5 @@
 
-mod eth;
-mod traits;
-mod eventdb;
-mod utils;
-mod error;
+pub mod eth;
+pub mod traits;
+pub mod eventdb;
+pub mod utils;

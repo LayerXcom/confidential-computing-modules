@@ -6,7 +6,7 @@ use anonify_app_preluder::Ciphertext;
 use ethabi::Hash;
 use sgx_types::sgx_enclave_id_t;
 use byteorder::{LittleEndian, ByteOrder};
-use crate::error::Result;
+use anyhow::Result;
 
 pub trait BlockNumDB {
     fn new() -> Self;
