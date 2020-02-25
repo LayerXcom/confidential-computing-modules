@@ -1,8 +1,6 @@
 use log::debug;
 use std::{
     path::Path,
-    io::BufReader,
-    fs::File,
     sync::Arc,
 };
 use web3::{
@@ -13,7 +11,6 @@ use web3::{
     futures::Future,
 };
 use ethabi::{
-    Contract as ContractABI,
     Topic,
     TopicFilter,
     Event,

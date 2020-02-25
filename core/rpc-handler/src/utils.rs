@@ -6,10 +6,8 @@ use std::{
 };
 use web3::types::Address;
 use ethabi::Contract as ContractABI;
-use anonify_common::AccessRight;
 use anonify_runtime::State;
 use anonify_app_preluder::call_name_to_id;
-use sgx_types::sgx_enclave_id_t;
 use anyhow::anyhow;
 use crate::{
     error::Result,
@@ -32,12 +30,12 @@ impl<'a, P: AsRef<Path>> ContractInfo<'a, P> {
     }
 
     pub fn contract_abi(&self) -> Result<ContractABI> {
-         let f = File::open(&self.abi_path)?;
+        let f = File::open(&self.abi_path)?;
         let reader = BufReader::new(f);
-        let contract_abi = ContractABI::load(reader)
-            .expect("Failed to load contract abi.");
 
-        Ok(contract_abi)
+        ContractABI::load(reader)
+            .map_err(|e| anyhow!("Failed to load contract abi.: {:?}", e))
+            .map_err(Into::into)
     }
 
     pub fn address(&self) -> Result<Address> {

@@ -1,13 +1,12 @@
 use std::{
     path::Path,
-    str::FromStr,
     sync::Arc,
     boxed::Box,
 };
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
 use anonify_types::{RawRegisterTx, RawStateTransTx};
-use anonify_common::{UserAddress, AccessRight, LockParam};
+use anonify_common::{AccessRight, LockParam};
 use anonify_runtime::State;
 use anonify_app_preluder::Ciphertext;
 use web3::types::Address as EthAddress;

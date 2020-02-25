@@ -3,16 +3,13 @@
 use std::{
     path::Path,
     sync::Arc,
-    convert::{TryInto, TryFrom},
-    fmt::Debug,
 };
 use sgx_types::sgx_enclave_id_t;
 use anonify_types::{RawRegisterTx, RawStateTransTx};
-use anonify_common::{AccessRight, UserAddress};
+use anonify_common::AccessRight;
 use anonify_runtime::State;
 use crate::{
     error::Result,
-    eth::primitives::Web3Contract,
     eventdb::{BlockNumDB, InnerEnclaveLog},
     utils::*,
 };
