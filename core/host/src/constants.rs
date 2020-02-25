@@ -7,6 +7,3 @@ pub const DEV_HOSTNAME: &str = "api.trustedservices.intel.com";
 pub const HTTPS_PORT: u16 = 443;
 
 pub const IAS_DEFAULT_RETRIES: u32 = 10;
-
-pub const CONFIRMATIONS: usize = 0;
-pub const DEPLOY_GAS: u64 = 5_000_000;

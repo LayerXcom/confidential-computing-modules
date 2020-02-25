@@ -1,7 +1,7 @@
 #![crate_type = "lib"]
 
 pub use error::HostError as Error;
-pub mod transaction;
+pub mod dispatcher;
 mod bridges;
 mod init_enclave;
 mod constants;

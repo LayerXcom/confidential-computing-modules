@@ -24,9 +24,106 @@ use super::{
 use anonify_common::AccessRight;
 use anonify_runtime::State;
 use anonify_types::{RawRegisterTx, RawStateTransTx};
+use anonify_rpc_handler::{
+    traits::*,
+};
+
+/// This dispatcher communicates with a blockchain node.
+#[derive(Debug)]
+pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
+    inner: RwLock<SgxDispatcher<D,S,W,DB>>,
+}
+
+impl<D, S, W, DB> Dispatcher<D, S, W, DB>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher<WatcherDB=DB>,
+    DB: BlockNumDB,
+{
+    pub fn new(
+        enclave_id: sgx_enclave_id_t,
+        node_url: &str,
+        event_db: Arc<DB>,
+    ) -> Result<Self> {
+        let inner = SgxDispatcher::new_with_deployer(enclave_id, node_url, event_db)?;
+
+        Ok(Dispatcher {
+            inner: RwLock::new(inner)
+        })
+    }
+
+    pub fn set_contract_addr<P>(&mut self, contract_addr: &str, abi_path: P) -> Result<()>
+    where
+        P: AsRef<Path> + Copy,
+    {
+        let inner = &mut self.inner.write();
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        inner.set_contract_addr(contract_info)?;
+
+        Ok(())
+    }
+
+    pub fn deploy(
+        &self,
+        deploy_user: &SignerAddress,
+        access_right: &AccessRight,
+    ) -> Result<String> {
+        let mut inner = self.inner.write();
+        inner.deploy(deploy_user, access_right)
+    }
+
+    pub fn register<P: AsRef<Path> + Copy>(
+        &self,
+        signer: SignerAddress,
+        gas: u64,
+        contract_addr: &str,
+        abi_path: P,
+    ) -> Result<String> {
+        let mut inner = self.inner.write();
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        inner.register(signer, gas, contract_info)
+    }
+
+    pub fn state_transition<ST, P>(
+        &self,
+        access_right: AccessRight,
+        state: ST,
+        state_id: u64,
+        call_name: &str,
+        signer: SignerAddress,
+        gas: u64,
+        contract_addr: &str,
+        abi_path: P,
+    ) -> Result<String>
+    where
+        ST: State,
+        P: AsRef<Path> + Copy,
+    {
+        let mut inner = self.inner.write();
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        let state_info = StateInfo::new(state, state_id, call_name);
+
+        inner.state_transition(access_right, signer, state_info, contract_info, gas)
+    }
+
+    pub fn block_on_event<P: AsRef<Path> + Copy>(
+        &self,
+        contract_addr: &str,
+        abi_path: P
+    ) -> Result<()> {
+        let mut inner = self.inner.write();
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        inner.block_on_event(contract_info)
+    }
+
+    pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
+        self.inner.read().get_account(index)
+    }
+}
 
 #[derive(Debug)]
-pub struct SgxDispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
+struct SgxDispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
     deployer: D,
     sender: Option<S>,
     watcher: Option<W>,
@@ -40,7 +137,7 @@ where
     W: Watcher<WatcherDB=DB>,
     DB: BlockNumDB,
 {
-    pub fn new_with_deployer(
+    fn new_with_deployer(
         enclave_id: sgx_enclave_id_t,
         node_url: &str,
         event_db: Arc<DB>,
@@ -55,7 +152,7 @@ where
         })
     }
 
-    pub fn set_contract_addr<P>(
+    fn set_contract_addr<P>(
         &mut self,
         contract_info: ContractInfo<'_, P>,
     ) -> Result<()>
@@ -73,7 +170,7 @@ where
         Ok(())
     }
 
-    pub fn deploy(
+    fn deploy(
         &mut self,
         deploy_user: &SignerAddress,
         access_right: &AccessRight,
@@ -81,11 +178,11 @@ where
         self.deployer.deploy(deploy_user, access_right, reg_fn)
     }
 
-    pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
+    fn get_account(&self, index: usize) -> Result<SignerAddress> {
         self.deployer.get_account(index)
     }
 
-    pub fn block_on_event<P: AsRef<Path> + Copy>(
+    fn block_on_event<P: AsRef<Path> + Copy>(
         &mut self,
         contract_info: ContractInfo<'_, P>,
     ) -> Result<()> {
@@ -100,7 +197,7 @@ where
             .block_on_event(eid, insert_fn)
     }
 
-    pub fn register<P: AsRef<Path> + Copy>(
+    fn register<P: AsRef<Path> + Copy>(
         &mut self,
         signer: SignerAddress,
         gas: u64,
@@ -113,7 +210,7 @@ where
             .register(signer, gas, reg_fn)
     }
 
-    pub fn state_transition<ST, P>(
+    fn state_transition<ST, P>(
         &mut self,
         access_right: AccessRight,
         signer: SignerAddress,

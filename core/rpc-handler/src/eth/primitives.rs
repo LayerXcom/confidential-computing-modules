@@ -26,12 +26,12 @@ use anonify_common::{LockParam, IntoVec};
 use anonify_app_preluder::Ciphertext;
 use crate::{
     error::*,
-    constants::*,
-    transaction::{
-        eventdb::{BlockNumDB, InnerEnclaveLog, EnclaveLog},
-        utils::ContractInfo,
-    },
+    eventdb::{BlockNumDB, InnerEnclaveLog, EnclaveLog},
+    utils::ContractInfo,
 };
+
+pub const CONFIRMATIONS: usize = 0;
+pub const DEPLOY_GAS: u64 = 5_000_000;
 
 /// Basic web3 connection components via HTTP.
 #[derive(Debug)]
@@ -69,8 +69,8 @@ impl Web3Http {
         report: &[u8],
         report_sig: &[u8],
     ) -> Result<Address> {
-        let abi = include_bytes!("../../../../../build/Anonify.abi");
-        let bin = include_str!("../../../../../build/Anonify.bin");
+        let abi = include_bytes!("../../../../build/Anonify.abi");
+        let bin = include_str!("../../../../build/Anonify.bin");
 
         let contract = Contract::deploy(self.web3.eth(), abi)
             .unwrap() // TODO
@@ -228,7 +228,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
             debug!("log: {:?}, \nindex: {:?}", log, i);
 
             if contract_addr != log.address {
-                return Err(HostErrorKind::Web3Log{
+                return Err(RpcErrorKind::Web3Log{
                     msg: "Each log should have same contract address.",
                     index: i,
                 }.into());
@@ -237,7 +237,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
             let data = Self::decode_data(&log);
 
             if ciphertext_size != data.len() && data.len() != 0  {
-                return Err(HostErrorKind::Web3Log {
+                return Err(RpcErrorKind::Web3Log {
                     msg: "Each log should have same size of data.",
                     index: i,
                 }.into());

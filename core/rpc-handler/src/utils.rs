@@ -10,7 +10,10 @@ use anonify_common::AccessRight;
 use anonify_runtime::State;
 use anonify_app_preluder::call_name_to_id;
 use sgx_types::sgx_enclave_id_t;
-use crate::error::Result;
+use crate::{
+    error::Result,
+    eth::primitives::Web3Contract,
+};
 
 /// Needed information to handle smart contracts.
 #[derive(Debug, Clone, Copy)]
@@ -68,4 +71,15 @@ impl<'a, ST: State> StateInfo<'a, ST> {
     pub fn state_id(&self) -> u64 {
         self.state_id
     }
+}
+
+/// A type of transaction signing address
+#[derive(Debug, Clone)]
+pub enum SignerAddress {
+    EthAddress(web3::types::Address)
+}
+
+/// A type of contract
+pub enum ContractKind {
+    Web3Contract(Web3Contract)
 }

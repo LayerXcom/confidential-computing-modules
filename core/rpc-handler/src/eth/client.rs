@@ -13,11 +13,9 @@ use anonify_app_preluder::Ciphertext;
 use web3::types::Address as EthAddress;
 use crate::{
     error::Result,
-    transaction::{
-        eventdb::{BlockNumDB, InnerEnclaveLog},
-        dispatcher::{SignerAddress, ContractKind, traits::*},
-        utils::{ContractInfo, StateInfo},
-    },
+    eventdb::{BlockNumDB, InnerEnclaveLog},
+    traits::*,
+    utils::*,
 };
 use super::primitives::{Web3Http, EthEvent, Web3Contract};
 
