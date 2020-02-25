@@ -10,8 +10,9 @@ use anonify_common::AccessRight;
 use anonify_runtime::State;
 use anonify_app_preluder::call_name_to_id;
 use sgx_types::sgx_enclave_id_t;
-use anyhow::Result;
+use anyhow::anyhow;
 use crate::{
+    error::Result,
     eth::primitives::Web3Contract,
 };
 
@@ -40,8 +41,9 @@ impl<'a, P: AsRef<Path>> ContractInfo<'a, P> {
     }
 
     pub fn address(&self) -> Result<Address> {
-        let res = Address::from_str(self.addr)?;
-        Ok(res)
+        Address::from_str(self.addr)
+            .map_err(|e| anyhow!("{:?}", e))
+            .map_err(Into::into)
     }
 }
 

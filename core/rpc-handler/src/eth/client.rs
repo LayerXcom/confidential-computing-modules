@@ -11,8 +11,8 @@ use anonify_common::{UserAddress, AccessRight, LockParam};
 use anonify_runtime::State;
 use anonify_app_preluder::Ciphertext;
 use web3::types::Address as EthAddress;
-use anyhow::Result;
 use crate::{
+    error::Result,
     eventdb::{BlockNumDB, InnerEnclaveLog},
     traits::*,
     utils::*,

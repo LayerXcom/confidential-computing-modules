@@ -16,5 +16,6 @@ ethabi = "8.0.0"
 byteorder = "1"
 sgx_types = "1.1.0" # TODO: Remove
 anyhow = "1.0"
+thiserror = "1.0"
 log = "0.4"
 hex = "0.4"

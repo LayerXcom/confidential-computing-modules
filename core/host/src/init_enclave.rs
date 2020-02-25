@@ -6,7 +6,7 @@ use sgx_types::*;
 use sgx_urts::SgxEnclave;
 use crate::{
     constants::*,
-    error::*,
+    error::Result,
 };
 
 pub struct EnclaveDir(PathBuf);
@@ -25,7 +25,7 @@ impl EnclaveDir {
         EnclaveDir(enclave_dir)
     }
 
-    pub fn init_enclave(&self, is_debug: bool) -> anyhow::Result<SgxEnclave> {
+    pub fn init_enclave(&self, is_debug: bool) -> Result<SgxEnclave> {
         let token_file_path = self.get_token_file_path();
         let mut launch_token = Self::get_launch_token(&token_file_path)?;
 
@@ -48,7 +48,7 @@ impl EnclaveDir {
         self.0.join(ENCLAVE_TOKEN)
     }
 
-    fn get_launch_token<P: AsRef<Path>>(path: P) -> anyhow::Result<sgx_launch_token_t> {
+    fn get_launch_token<P: AsRef<Path>>(path: P) -> Result<sgx_launch_token_t> {
         let mut buf = vec![];
         let mut res = [0u8; 1024];
 
@@ -68,7 +68,7 @@ impl EnclaveDir {
     fn save_launch_token<P: AsRef<Path>>(
         path: P,
         launch_token: sgx_launch_token_t,
-    ) -> anyhow::Result<()> {
+    ) -> Result<()> {
         let f = fs::File::create(path)?;
         let mut writer = BufWriter::new(f);
         writer.write_all(&launch_token[..])?;

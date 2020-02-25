@@ -6,7 +6,7 @@ use anonify_app_preluder::Ciphertext;
 use ethabi::Hash;
 use sgx_types::sgx_enclave_id_t;
 use byteorder::{LittleEndian, ByteOrder};
-use anyhow::Result;
+use crate::error::Result;
 
 pub trait BlockNumDB {
     fn new() -> Self;
@@ -54,16 +54,16 @@ impl EventDBTx {
 /// A log which is sent to enclave. Each log containes ciphertexts data of a given contract address and a given block number.
 #[derive(Debug, Clone)]
 pub struct InnerEnclaveLog {
-    pub(crate) contract_addr: [u8; 20],
-    pub(crate) latest_blc_num: u64,
-    pub(crate) ciphertexts: Vec<Ciphertext>, // Concatenated all fetched ciphertexts
+    pub contract_addr: [u8; 20],
+    pub latest_blc_num: u64,
+    pub ciphertexts: Vec<Ciphertext>, // Concatenated all fetched ciphertexts
 }
 
 /// A wrapper type of enclave logs.
 #[derive(Debug, Clone)]
 pub struct EnclaveLog<DB: BlockNumDB> {
-    pub(crate) inner: Option<InnerEnclaveLog>,
-    pub(crate) db: Arc<DB>,
+    pub inner: Option<InnerEnclaveLog>,
+    pub db: Arc<DB>,
 }
 
 impl<DB: BlockNumDB> EnclaveLog<DB> {

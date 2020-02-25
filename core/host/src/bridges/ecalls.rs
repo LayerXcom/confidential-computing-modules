@@ -14,13 +14,13 @@ use anonify_rpc_handler::{
 };
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
-use crate::error::HostError;
+use crate::error::{HostError, Result};
 
 /// Insert event logs from blockchain nodes into enclave memory database.
 pub(crate) fn insert_logs(
     eid: sgx_enclave_id_t,
     enclave_log: &InnerEnclaveLog,
-) -> anyhow::Result<()> {
+) -> Result<()> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let len = enclave_log.ciphertexts.len() * (*CIPHERTEXT_SIZE);
     let buf = enclave_log.ciphertexts.clone().into_iter().flat_map(|e| e.0).collect::<Vec<u8>>();
@@ -53,7 +53,7 @@ pub(crate) fn get_state_from_enclave(
     pubkey: &PublicKey,
     msg: &[u8],
     mem_name: &str,
-) -> anyhow::Result<Vec<u8>>
+) -> Result<Vec<u8>>
 {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut state = EnclaveState::default();
@@ -88,7 +88,7 @@ fn state_as_bytes(state: EnclaveState) -> Box<[u8]> {
     *box_state
 }
 
-pub(crate) fn register(eid: sgx_enclave_id_t) -> anyhow::Result<RawRegisterTx> {
+pub(crate) fn register(eid: sgx_enclave_id_t) -> Result<RawRegisterTx> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut raw_reg_tx = RawRegisterTx::default();
 
@@ -115,7 +115,7 @@ pub(crate) fn state_transition<S: State>(
     eid: sgx_enclave_id_t,
     access_right: AccessRight,
     state_info: StateInfo<'_, S>,
-) -> anyhow::Result<RawStateTransTx> {
+) -> Result<RawStateTransTx> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut raw_state_tx = RawStateTransTx::default();
     let state = state_info.state_as_bytes();
