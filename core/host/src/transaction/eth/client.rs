@@ -14,7 +14,7 @@ use web3::types::Address as EthAddress;
 use crate::{
     error::Result,
     transaction::{
-        eventdb::BlockNumDB,
+        eventdb::{BlockNumDB, InnerEnclaveLog},
         dispatcher::{SignerAddress, ContractKind, traits::*},
         utils::{ContractInfo, StateInfo},
     },
@@ -211,17 +211,21 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
         Ok(EventWatcher { contract, event_db })
     }
 
-    fn block_on_event(
+    fn block_on_event<F>(
         &self,
         eid: sgx_enclave_id_t,
-    ) -> Result<()> {
+        insert_fn: F,
+    ) -> Result<()>
+    where
+        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<()>,
+    {
         let event = EthEvent::build_event();
         let key = event.signature();
 
         self.contract
             .get_event(self.event_db.clone(), key)?
             .into_enclave_log()?
-            .insert_enclave(eid)?
+            .insert_enclave(eid, insert_fn)?
             .set_to_db(key);
 
         Ok(())

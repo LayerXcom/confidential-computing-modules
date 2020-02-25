@@ -3,13 +3,17 @@
 use std::{path::Path, sync::Arc};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use crate::bridges::ecalls::{register as reg_fn, state_transition as st_fn};
+use crate::bridges::ecalls::{
+    register as reg_fn,
+    state_transition as st_fn,
+    insert_logs as insert_fn,
+};
 use anonify_types::{RawRegisterTx, RawStateTransTx};
 use anonify_common::{AccessRight, UserAddress};
 use anonify_runtime::State;
 use super::{
     eth::primitives::Web3Contract,
-    eventdb::BlockNumDB,
+    eventdb::{BlockNumDB, InnerEnclaveLog},
     utils::{ContractInfo, StateInfo},
 };
 use crate::error::{Result, HostErrorKind};
@@ -181,7 +185,7 @@ where
         let eid = self.deployer.get_enclave_id();
         self.watcher.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set."))?
-            .block_on_event(eid)
+            .block_on_event(eid, insert_fn)
     }
 
     fn register<P: AsRef<Path> + Copy>(
@@ -309,10 +313,13 @@ pub mod traits {
         ) -> Result<Self>;
 
         /// Blocking event fetch from blockchain nodes.
-        fn block_on_event(
+        fn block_on_event<F>(
             &self,
             eid: sgx_enclave_id_t,
-        ) -> Result<()>;
+            insert_fn: F,
+        ) -> Result<()>
+        where
+            F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<()>;
 
         fn get_contract(self) -> ContractKind;
     }

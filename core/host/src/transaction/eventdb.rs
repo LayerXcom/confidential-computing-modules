@@ -53,7 +53,7 @@ impl EventDBTx {
 
 /// A log which is sent to enclave. Each log containes ciphertexts data of a given contract address and a given block number.
 #[derive(Debug, Clone)]
-pub(crate) struct InnerEnclaveLog {
+pub struct InnerEnclaveLog {
     pub(crate) contract_addr: [u8; 20],
     pub(crate) latest_blc_num: u64,
     pub(crate) ciphertexts: Vec<Ciphertext>, // Concatenated all fetched ciphertexts
@@ -69,11 +69,17 @@ pub struct EnclaveLog<DB: BlockNumDB> {
 impl<DB: BlockNumDB> EnclaveLog<DB> {
     /// Store logs into enclave in-memory.
     /// This returns a latest block number specified by fetched logs.
-    pub fn insert_enclave(self, eid: sgx_enclave_id_t) -> Result<EnclaveBlockNumber<DB>> {
-        use crate::ecalls::insert_logs;
+    pub fn insert_enclave<F>(
+        self,
+        eid: sgx_enclave_id_t,
+        insert_fn: F,
+    ) -> Result<EnclaveBlockNumber<DB>>
+    where
+        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<()>,
+    {
         match &self.inner {
             Some(log) => {
-                insert_logs(eid, log)?;
+                insert_fn(eid, log)?;
                 let next_blc_num = log.latest_blc_num + 1;
 
                 return Ok(EnclaveBlockNumber {
