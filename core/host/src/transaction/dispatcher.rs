@@ -3,6 +3,8 @@
 use std::{path::Path, sync::Arc};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
+use crate::bridges::ecalls::{register as reg_fn};
+use anonify_types::RawRegisterTx;
 use anonify_common::{AccessRight, UserAddress};
 use anonify_runtime::State;
 use super::{
@@ -160,7 +162,7 @@ where
         deploy_user: &SignerAddress,
         access_right: &AccessRight,
     ) -> Result<String> {
-        self.deployer.deploy(deploy_user, access_right)
+        self.deployer.deploy(deploy_user, access_right, reg_fn)
     }
 
     fn get_account(&self, index: usize) -> Result<SignerAddress> {
@@ -192,7 +194,7 @@ where
 
         self.sender.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .register(signer, gas)
+            .register(signer, gas, reg_fn)
     }
 
     fn state_transition<ST, P>(
@@ -239,11 +241,14 @@ pub mod traits {
         fn get_account(&self, index: usize) -> Result<SignerAddress>;
 
         /// Deploying contract with attestation.
-        fn deploy(
+        fn deploy<F>(
             &mut self,
             deploy_user: &SignerAddress,
             access_right: &AccessRight,
-        ) -> Result<String>;
+            reg_fn: F,
+        ) -> Result<String>
+        where
+            F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>;
 
         fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;
 
@@ -277,11 +282,14 @@ pub mod traits {
         ) -> Result<String>;
 
         /// Attestation with deployed contract.
-        fn register(
+        fn register<F>(
             &self,
             signer: SignerAddress,
             gas: u64,
-        ) -> Result<String>;
+            reg_fn: F,
+        ) -> Result<String>
+        where
+            F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>;
 
         fn get_contract(self) -> ContractKind;
     }

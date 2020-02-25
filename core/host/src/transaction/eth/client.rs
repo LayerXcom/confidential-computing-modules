@@ -2,14 +2,16 @@ use std::{
     path::Path,
     str::FromStr,
     sync::Arc,
+    boxed::Box,
 };
 use sgx_types::sgx_enclave_id_t;
 use log::debug;
+use anonify_types::{RawRegisterTx, RawStateTransTx};
 use anonify_common::{UserAddress, AccessRight};
 use anonify_runtime::State;
 use web3::types::Address as EthAddress;
 use crate::{
-    ecalls::*,
+    ecalls::{BoxedStateTransTx},
     error::Result,
     transaction::{
         eventdb::BlockNumDB,
@@ -44,12 +46,16 @@ impl Deployer for EthDeployer {
         ))
     }
 
-    fn deploy(
+    fn deploy<F>(
         &mut self,
         deploy_user: &SignerAddress,
         access_right: &AccessRight,
-    ) -> Result<String> {
-        let register_tx = BoxedRegisterTx::register(self.enclave_id)?;
+        reg_fn: F,
+    ) -> Result<String>
+    where
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>,
+    {
+        let register_tx: BoxedRegisterTx = reg_fn(self.enclave_id)?.into();
 
         let contract_addr = match deploy_user {
             SignerAddress::EthAddress(address) => {
@@ -122,12 +128,16 @@ impl Sender for EthSender {
         ))
     }
 
-    fn register(
+    fn register<F>(
         &self,
         signer: SignerAddress,
         gas: u64,
-    ) -> Result<String> {
-        let register_tx = BoxedRegisterTx::register(self.enclave_id)?;
+        reg_fn: F,
+    ) -> Result<String>
+    where
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>,
+    {
+        let register_tx: BoxedRegisterTx = reg_fn(self.enclave_id)?.into();
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
                 self.contract.register(
@@ -216,5 +226,27 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
 
     fn get_contract(self) -> ContractKind {
         ContractKind::Web3Contract(self.contract)
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub(crate) struct BoxedRegisterTx {
+    pub report: Box<[u8]>,
+    pub report_sig: Box<[u8]>,
+}
+
+impl From<RawRegisterTx> for BoxedRegisterTx {
+    fn from(raw_reg_tx: RawRegisterTx) -> Self {
+        let mut res_tx = BoxedRegisterTx::default();
+
+        let box_report = raw_reg_tx.report as *mut Box<[u8]>;
+        let report = unsafe { Box::from_raw(box_report) };
+        let box_report_sig = raw_reg_tx.report_sig as *mut Box<[u8]>;
+        let report_sig = unsafe { Box::from_raw(box_report_sig) };
+
+        res_tx.report = *report;
+        res_tx.report_sig = *report_sig;
+
+        res_tx
     }
 }
