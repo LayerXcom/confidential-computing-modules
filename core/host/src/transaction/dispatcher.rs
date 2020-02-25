@@ -3,8 +3,8 @@
 use std::{path::Path, sync::Arc};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use crate::bridges::ecalls::{register as reg_fn};
-use anonify_types::RawRegisterTx;
+use crate::bridges::ecalls::{register as reg_fn, state_transition as st_fn};
+use anonify_types::{RawRegisterTx, RawStateTransTx};
 use anonify_common::{AccessRight, UserAddress};
 use anonify_runtime::State;
 use super::{
@@ -216,7 +216,7 @@ where
 
         self.sender.as_ref()
             .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .state_transition(access_right, signer, state_info, gas)
+            .state_transition(access_right, signer, state_info, gas, st_fn)
     }
 }
 
@@ -273,13 +273,17 @@ pub mod traits {
         fn get_account(&self, index: usize) -> Result<SignerAddress>;
 
         /// Send ciphertexts which is result of the state transition to blockchain nodes.
-        fn state_transition<ST: State>(
+        fn state_transition<ST, F>(
             &self,
             access_right: AccessRight,
             signer: SignerAddress,
             state_info: StateInfo<'_, ST>,
             gas: u64,
-        ) -> Result<String>;
+            st_fn: F,
+        ) -> Result<String>
+        where
+            ST: State,
+            F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST>) -> Result<RawStateTransTx>;
 
         /// Attestation with deployed contract.
         fn register<F>(
