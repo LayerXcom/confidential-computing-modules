@@ -3,7 +3,8 @@ use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use rand_os::OsRng;
 use anonify_common::AccessRight;
-use anonify_preluder::{State, U64, transfer, constructor};
+use anonify_runtime::{State, U64};
+use anonify_app_preluder::{transfer, constructor};
 use crate::auto_ffi::ecall_run_tests;
 use crate::init_enclave::EnclaveDir;
 use crate::transaction::{
