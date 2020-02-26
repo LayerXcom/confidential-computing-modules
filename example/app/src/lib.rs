@@ -38,10 +38,10 @@ impl_runtime!{
         self,
         sender: UserAddress,
         total_supply: U64
-    ) -> Result<Vec<UpdatedState<StateType>>> {
-        let init = UpdatedState::new(sender, mem_name_to_id("Balance"), total_supply.into());
+    ) {
+        let init = update!(sender, "Balance", total_supply);
 
-        Ok(vec![init])
+        insert![init]
     }
 
     #[fn_id=1]
@@ -50,11 +50,11 @@ impl_runtime!{
         sender: UserAddress,
         target: UserAddress,
         amount: U64
-    ) -> Result<Vec<UpdatedState<StateType>>> {
-        let my_balance = self.db.get::<U64>(&sender, "Balance")?;
-        let target_balance = self.db.get::<U64>(&target, "Balance")?;
+    ) {
+        let my_balance = self.get::<U64>(&sender, "Balance")?;
+        let target_balance = self.get::<U64>(&target, "Balance")?;
 
-        ensure!(my_balance < amount, "You don't have enough balance.");
+        ensure!(my_balance > amount, "You don't have enough balance.");
 
         let my_update = my_balance - amount;
         let target_update = target_balance + amount;
@@ -62,9 +62,6 @@ impl_runtime!{
         let my = update!(sender, "Balance", my_update);
         let target = update!(target, "Balance", target_update);
 
-        // let my = UpdatedState::new(sender, mem_name_to_id("Balance"), my_update.into());
-        // let other = UpdatedState::new(target, mem_name_to_id("Balance"), other_update.into());
-
-        Ok(vec![my, target])
+        insert![my, target]
     }
 }

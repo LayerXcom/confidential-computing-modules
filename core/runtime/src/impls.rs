@@ -38,7 +38,7 @@ macro_rules! impl_inner_runtime {
                 $runtime:ident,
                 $sender:ident : $address:ty
                 $(, $param_name:ident : $param:ty )*
-            ) -> Result<Vec<UpdatedState<StateType>>> {
+            ) {
                 $( $impl:tt )*
             }
         )*
@@ -82,6 +82,10 @@ macro_rules! impl_inner_runtime {
                 }
             }
 
+            pub fn get<S: State>(&self, key: &UserAddress, name: &str) -> Result<S> {
+                self.db.get(&key, name)
+            }
+
             pub fn call(
                 self,
                 kind: CallKind,
@@ -115,5 +119,12 @@ macro_rules! impl_inner_runtime {
 macro_rules! update {
     ($addr:expr, $mem_name:expr, $value:expr) => {
         UpdatedState::new($addr, mem_name_to_id($mem_name), $value.into())
+    };
+}
+
+#[macro_export]
+macro_rules! insert {
+    ( $($update:expr),* ) => {
+        Ok(vec![$( $update),* ])
     };
 }
