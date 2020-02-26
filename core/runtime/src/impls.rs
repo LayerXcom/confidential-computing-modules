@@ -110,3 +110,10 @@ macro_rules! impl_inner_runtime {
         }
     };
 }
+
+#[macro_export]
+macro_rules! update {
+    ($addr:expr, $mem_name:expr, $value:expr) => {
+        UpdatedState::new($addr, mem_name_to_id($mem_name), $value.into())
+    };
+}

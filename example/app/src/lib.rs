@@ -29,6 +29,7 @@ lazy_static! {
 impl_mem!{
     0, "Balance", Address => U64;
     1, "Balance2", Address => U64;
+    // 2, "TotalSupply", U64;
 }
 
 impl_runtime!{
@@ -56,11 +57,14 @@ impl_runtime!{
         ensure!(my_balance < amount, "You don't have enough balance.");
 
         let my_update = my_balance - amount;
-        let other_update = target_balance + amount;
+        let target_update = target_balance + amount;
 
-        let my = UpdatedState::new(sender, mem_name_to_id("Balance"), my_update.into());
-        let other = UpdatedState::new(target, mem_name_to_id("Balance"), other_update.into());
+        let my = update!(sender, "Balance", my_update);
+        let target = update!(target, "Balance", target_update);
 
-        Ok(vec![my, other])
+        // let my = UpdatedState::new(sender, mem_name_to_id("Balance"), my_update.into());
+        // let other = UpdatedState::new(target, mem_name_to_id("Balance"), other_update.into());
+
+        Ok(vec![my, target])
     }
 }

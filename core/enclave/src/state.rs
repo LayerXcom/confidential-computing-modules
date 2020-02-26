@@ -1,4 +1,4 @@
-//! This module defines each user's state features.
+//! This module defines operations for each user's state.
 
 use anonify_common::{
     UserAddress, Sha256, Hash256, LockParam, AccessRight,
