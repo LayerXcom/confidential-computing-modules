@@ -1,10 +1,11 @@
-use crate::State;
+use crate::traits::State;
 use crate::localstd::{
     vec::Vec,
     collections::BTreeMap,
     ops::{Add, Sub, Mul, Div},
     convert::TryFrom,
 };
+use crate::local_anyhow::{Result, Error};
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
@@ -14,7 +15,7 @@ macro_rules! impl_uint {
         pub struct $name($raw);
 
         impl TryFrom<Vec<u8>> for $name {
-            type Error = codec::Error;
+            type Error = Error;
 
             fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
                 if s.len() == 0 {
@@ -26,7 +27,7 @@ macro_rules! impl_uint {
         }
 
         impl TryFrom<&mut [u8]> for $name {
-            type Error = codec::Error;
+            type Error = Error;
 
             fn try_from(s: &mut [u8]) -> Result<Self, Self::Error> {
                 if s.len() == 0 {
@@ -43,7 +44,7 @@ macro_rules! impl_uint {
         }
 
         impl TryFrom<StateType> for $name {
-            type Error = codec::Error;
+            type Error = Error;
 
             fn try_from(s: StateType) -> Result<Self, Self::Error> {
                 if s.0.len() == 0 {

@@ -1,7 +1,6 @@
 use crate::localstd::{
     io::{self, Read, Write},
     vec::Vec,
-    fmt,
 };
 use crate::{
     serde::{Serialize, Deserialize}

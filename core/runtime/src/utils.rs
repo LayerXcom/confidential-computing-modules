@@ -1,4 +1,5 @@
-use crate::State;
+use crate::traits::State;
+use crate::local_anyhow::Result;
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
@@ -20,7 +21,7 @@ impl<S: State> UpdatedState<S> {
     }
 }
 
-pub fn into_trait<S: State>(s: UpdatedState<impl State>) -> Result<UpdatedState<S>, codec::Error> {
+pub fn into_trait<S: State>(s: UpdatedState<impl State>) -> Result<UpdatedState<S>> {
     let state = S::from_state(&s.state)?;
     Ok(UpdatedState {
         address: s.address,

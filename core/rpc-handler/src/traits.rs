@@ -7,7 +7,7 @@ use std::{
 use sgx_types::sgx_enclave_id_t;
 use anonify_types::{RawRegisterTx, RawStateTransTx};
 use anonify_common::AccessRight;
-use anonify_runtime::State;
+use anonify_runtime::traits::State;
 use crate::{
     error::Result,
     eventdb::{BlockNumDB, InnerEnclaveLog},

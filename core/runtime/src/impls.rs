@@ -38,7 +38,7 @@ macro_rules! impl_inner_runtime {
                 $runtime:ident,
                 $sender:ident : $address:ty
                 $(, $param_name:ident : $param:ty )*
-            ) -> Result<Vec<UpdatedState<StateType>>,codec::Error> {
+            ) -> Result<Vec<UpdatedState<StateType>>> {
                 $( $impl:tt )*
             }
         )*
@@ -56,10 +56,10 @@ macro_rules! impl_inner_runtime {
         }
 
         impl CallKind {
-            pub fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self, codec::Error> {
+            pub fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self> {
                 match id {
                     $( $fn_id => Ok(CallKind::$fn_name($fn_name::from_bytes(state)?)), )*
-                    _ => return Err("Invalid Call ID".into()),
+                    _ => return Err(anyhow!("Invalid Call ID")),
                 }
             }
         }
@@ -86,7 +86,7 @@ macro_rules! impl_inner_runtime {
                 self,
                 kind: CallKind,
                 my_addr: UserAddress,
-            ) -> Result<Vec<UpdatedState<StateType>>, codec::Error> {
+            ) -> Result<Vec<UpdatedState<StateType>>> {
                 match kind {
                     $( CallKind::$fn_name($fn_name) => {
                         self.$fn_name(
@@ -103,7 +103,7 @@ macro_rules! impl_inner_runtime {
                     $runtime,
                     $sender: $address
                     $(, $param_name : $param )*
-                ) -> Result<Vec<UpdatedState<StateType>>,codec::Error> {
+                ) -> Result<Vec<UpdatedState<StateType>>> {
                     $( $impl )*
                 }
             )*

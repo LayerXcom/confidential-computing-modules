@@ -11,9 +11,8 @@ use std as localstd;
 extern crate core as localstd;
 
 use anonify_runtime::{
-    State, StateGetter, impl_mem, impl_runtime, impl_inner_runtime,
+    prelude::*,
     state_type::*,
-    utils::{MemId, UpdatedState},
 };
 use crate::localstd::{
     boxed::Box,
@@ -42,7 +41,7 @@ impl_runtime!{
         self,
         sender: UserAddress,
         total_supply: U64
-    ) -> Result<Vec<UpdatedState<StateType>>,codec::Error> {
+    ) -> Result<Vec<UpdatedState<StateType>>> {
         let init = UpdatedState::new(sender, mem_name_to_id("Balance"), total_supply.into());
 
         Ok(vec![init])
@@ -54,13 +53,14 @@ impl_runtime!{
         sender: UserAddress,
         target: UserAddress,
         amount: U64
-    ) -> Result<Vec<UpdatedState<StateType>>,codec::Error> {
+    ) -> Result<Vec<UpdatedState<StateType>>> {
         let my_balance = self.db.get::<U64>(&sender, "Balance")?;
         let target_balance = self.db.get::<U64>(&target, "Balance")?;
 
-        if my_balance < amount {
-            return Err("You don't have enough balance.".into());
-        }
+        ensure!(my_balance < amount, "You don't have enough balance.");
+        // if  {
+        //     return Err("You don't have enough balance.".into());
+        // }
         let my_update = my_balance - amount;
         let other_update = target_balance + amount;
 

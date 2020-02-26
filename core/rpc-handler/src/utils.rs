@@ -6,7 +6,7 @@ use std::{
 };
 use web3::types::Address;
 use ethabi::Contract as ContractABI;
-use anonify_runtime::State;
+use anonify_runtime::traits::State;
 use anonify_app_preluder::call_name_to_id;
 use anyhow::anyhow;
 use crate::{
