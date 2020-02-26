@@ -1,11 +1,12 @@
 use std::sync::Arc;
 use failure::Error;
 use log::debug;
-use anonify_host::transaction::{
-    BlockNumDB, traits::*,
-    utils::get_state,
+use anonify_host::dispatcher::get_state;
+use anonify_rpc_handler::{
+    BlockNumDB,
+    traits::*,
 };
-use anonify_runtime::{State, StateType, U64};
+use anonify_runtime::U64;
 use app::{transfer, constructor};
 use actix_web::{
     web,
@@ -27,10 +28,9 @@ where
 {
     debug!("Starting deploy a contract...");
 
-    let access_right = req.into_access_right()?;
     let deployer_addr = server.dispatcher.get_account(0)?;
     let contract_addr = server.dispatcher
-        .deploy(&deployer_addr, &access_right)?;
+        .deploy(&deployer_addr)?;
 
     debug!("Contract address: {:?}", &contract_addr);
 
@@ -47,7 +47,6 @@ where
     W: Watcher<WatcherDB=DB>,
     DB: BlockNumDB,
 {
-    let access_right = req.into_access_right()?;
     let signer = server.dispatcher.get_account(0)?;
     let receipt = server.dispatcher.register(
         signer,

@@ -1,6 +1,3 @@
-//! This module containes application specific components.
-//! Following code is an example of simple state transtion for transferable assets.
-
 use crate::State;
 use crate::localstd::{
     vec::Vec,

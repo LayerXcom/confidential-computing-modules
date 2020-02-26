@@ -5,14 +5,13 @@ use rand_os::OsRng;
 use anonify_common::AccessRight;
 use anonify_runtime::{State, U64};
 use anonify_app_preluder::{transfer, constructor};
+use anonify_rpc_handler::{
+    eventdb::{EventDB, BlockNumDB},
+    eth::*,
+};
 use crate::auto_ffi::ecall_run_tests;
 use crate::init_enclave::EnclaveDir;
-use crate::transaction::{
-    dispatcher::*,
-    eventdb::{EventDB, BlockNumDB},
-    eth::client::*,
-    utils::get_state,
-};
+use crate::dispatcher::*;
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
 const ANONYMOUS_ASSET_ABI_PATH: &str = "../../build/Anonify.abi";
@@ -49,7 +48,7 @@ fn test_integration_eth_transfer() {
 
     // 1. Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(&deployer_addr, &my_access_right).unwrap();
+    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);

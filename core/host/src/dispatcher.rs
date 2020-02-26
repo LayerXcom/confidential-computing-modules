@@ -226,7 +226,7 @@ where
     }
 }
 
-pub fn get_state_sgx<S>(
+pub fn get_state<S>(
     access_right: &AccessRight,
     enclave_id: sgx_enclave_id_t,
     mem_name: &str,

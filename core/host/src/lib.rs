@@ -9,3 +9,4 @@ mod tests;
 
 use bridges::auto_ffi;
 pub use init_enclave::EnclaveDir;
+pub use dispatcher::Dispatcher;
