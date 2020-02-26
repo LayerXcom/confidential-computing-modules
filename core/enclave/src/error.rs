@@ -1,11 +1,24 @@
 use std::{
-    prelude::v1::*,
     io,
     fmt,
     error::Error,
 };
+// use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, EnclaveError>;
+
+// #[derive(Error, Debug)]
+// pub enum EnclaveError {
+//     #[error("Error: {0}")]
+//     Error(#[from] anyhow::Error),
+//     #[error("IO error: {0}")]
+//     IoError(#[from] io::Error),
+//     #[error("SGX ocall failed function: {function:?}, status: {status:?}")]
+//     Sgx {
+//         status: sgx_status_t,
+//         function: &'static str,
+//     },
+// }
 
 #[derive(Debug)]
 pub enum EnclaveError {
@@ -19,6 +32,7 @@ pub enum EnclaveError {
     Base64Error(base64::DecodeError),
     Secp256k1Error(secp256k1::Error),
     CodecError(codec::Error),
+    AnyhowError(anyhow::Error),
 }
 
 impl From<io::Error> for EnclaveError {
@@ -81,6 +95,12 @@ impl From<codec::Error> for EnclaveError {
     }
 }
 
+impl From<anyhow::Error> for EnclaveError {
+    fn from(err: anyhow::Error) -> Self {
+        EnclaveError::AnyhowError(err)
+    }
+}
+
 impl fmt::Display for EnclaveError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -94,6 +114,7 @@ impl fmt::Display for EnclaveError {
             EnclaveError::Base64Error(ref err) => write!(f, "Base64 decode error: {}", err),
             EnclaveError::Secp256k1Error(ref err) => write!(f, "Secp256k1 error"),
             EnclaveError::CodecError(ref err) => write!(f, "Codec error"),
+            EnclaveError::AnyhowError(ref err) => write!(f, "Anyhow error"),
         }
     }
 }

@@ -15,8 +15,6 @@ use anonify_runtime::{
     state_type::*,
 };
 use crate::localstd::{
-    boxed::Box,
-    string::String,
     vec::Vec,
 };
 use anonify_common::UserAddress;

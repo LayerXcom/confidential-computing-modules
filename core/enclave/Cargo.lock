@@ -41,6 +41,7 @@ dependencies = [
  "anonify-common 0.1.0",
  "anonify-runtime 0.1.0",
  "anonify-types 0.1.0",
+ "anyhow 1.0.26 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.0)",
  "base64 0.10.1 (git+https://github.com/mesalock-linux/rust-base64-sgx?rev=sgx_1.1.0)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.7.1 (git+https://github.com/mesalock-linux/env_logger-sgx?rev=sgx_1.1.0)",
