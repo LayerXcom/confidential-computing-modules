@@ -8,7 +8,7 @@ use crate::{
     error::Result,
     context::EnclaveContext,
     bridges::ocalls::save_to_host_memory,
-    state::{UserState, StateService},
+    state::{UserState, StateTransService},
     crypto::SYMMETRIC_KEY,
 };
 
@@ -103,7 +103,7 @@ impl StateTransTx {
         enclave_ctx: &EnclaveContext<StateType>,
     ) -> Result<Self>
     {
-        let mut service = StateService::<StateType>::from_access_right(access_right, enclave_ctx)?;
+        let mut service = StateTransService::<StateType>::from_access_right(access_right, enclave_ctx)?;
         service.apply(kind)?;
 
         let lock_params = service.reveal_lock_params();

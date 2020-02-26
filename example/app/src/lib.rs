@@ -14,9 +14,7 @@ use anonify_runtime::{
     prelude::*,
     state_type::*,
 };
-use crate::localstd::{
-    vec::Vec,
-};
+use crate::localstd::vec::Vec;
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
@@ -56,9 +54,7 @@ impl_runtime!{
         let target_balance = self.db.get::<U64>(&target, "Balance")?;
 
         ensure!(my_balance < amount, "You don't have enough balance.");
-        // if  {
-        //     return Err("You don't have enough balance.".into());
-        // }
+
         let my_update = my_balance - amount;
         let other_update = target_balance + amount;
 
