@@ -1,8 +1,6 @@
 use log::debug;
 use std::{
     path::Path,
-    io::BufReader,
-    fs::File,
     sync::Arc,
 };
 use web3::{
@@ -13,7 +11,6 @@ use web3::{
     futures::Future,
 };
 use ethabi::{
-    Contract as ContractABI,
     Topic,
     TopicFilter,
     Event,
@@ -23,15 +20,16 @@ use ethabi::{
     Hash,
 };
 use anonify_common::{LockParam, IntoVec};
-use anonify_stf::Ciphertext;
+use anonify_app_preluder::Ciphertext;
+use anyhow::anyhow;
 use crate::{
-    error::*,
-    constants::*,
-    transaction::{
-        eventdb::{BlockNumDB, InnerEnclaveLog, EnclaveLog},
-        utils::ContractInfo,
-    },
+    error::Result,
+    eventdb::{BlockNumDB, InnerEnclaveLog, EnclaveLog},
+    utils::ContractInfo,
 };
+
+pub const CONFIRMATIONS: usize = 0;
+pub const DEPLOY_GAS: u64 = 5_000_000;
 
 /// Basic web3 connection components via HTTP.
 #[derive(Debug)]
@@ -69,8 +67,8 @@ impl Web3Http {
         report: &[u8],
         report_sig: &[u8],
     ) -> Result<Address> {
-        let abi = include_bytes!("../../../../../build/Anonify.abi");
-        let bin = include_str!("../../../../../build/Anonify.bin");
+        let abi = include_bytes!("../../../../build/Anonify.abi");
+        let bin = include_str!("../../../../build/Anonify.bin");
 
         let contract = Contract::deploy(self.web3.eth(), abi)
             .unwrap() // TODO
@@ -212,7 +210,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
         let mut ciphertexts: Vec<Ciphertext> = vec![];
 
         // If log data is not fetched currently, return empty EnclaveLog.
-        // This case occurs if you fetched data of dupulicated block number.
+        // This is occurred when it fetched data of dupulicated block number.
         if self.logs.len() == 0 {
             return Ok(EnclaveLog{
                 inner: None,
@@ -228,18 +226,13 @@ impl<D: BlockNumDB> Web3Logs<D> {
             debug!("log: {:?}, \nindex: {:?}", log, i);
 
             if contract_addr != log.address {
-                return Err(HostErrorKind::Web3Log{
-                    msg: "Each log should have same contract address.",
-                    index: i,
-                }.into());
+                return Err(anyhow!("Each log should have same contract address.: index: {}", i).into());
             }
 
             let data = Self::decode_data(&log);
+
             if ciphertext_size != data.len() && data.len() != 0  {
-                return Err(HostErrorKind::Web3Log {
-                    msg: "Each log should have same size of data.",
-                    index: i,
-                }.into());
+                return Err(anyhow!("Each log should have same size of data.: index: {}", i).into());
             }
 
             if let Some(blc_num) = log.block_number {

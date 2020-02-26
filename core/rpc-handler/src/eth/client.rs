@@ -1,21 +1,19 @@
 use std::{
     path::Path,
-    str::FromStr,
     sync::Arc,
+    boxed::Box,
 };
 use sgx_types::sgx_enclave_id_t;
-use log::debug;
-use anonify_common::{UserAddress, AccessRight};
-use anonify_stf::State;
+use anonify_types::{RawRegisterTx, RawStateTransTx};
+use anonify_common::{AccessRight, LockParam};
+use anonify_runtime::State;
+use anonify_app_preluder::Ciphertext;
 use web3::types::Address as EthAddress;
 use crate::{
-    ecalls::*,
     error::Result,
-    transaction::{
-        eventdb::BlockNumDB,
-        dispatcher::{SignerAddress, ContractKind, traits::*},
-        utils::{ContractInfo, StateInfo},
-    },
+    eventdb::{BlockNumDB, InnerEnclaveLog},
+    traits::*,
+    utils::*,
 };
 use super::primitives::{Web3Http, EthEvent, Web3Contract};
 
@@ -44,12 +42,15 @@ impl Deployer for EthDeployer {
         ))
     }
 
-    fn deploy(
+    fn deploy<F>(
         &mut self,
         deploy_user: &SignerAddress,
-        access_right: &AccessRight,
-    ) -> Result<String> {
-        let register_tx = BoxedRegisterTx::register(self.enclave_id)?;
+        reg_fn: F,
+    ) -> Result<String>
+    where
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>,
+    {
+        let register_tx: BoxedRegisterTx = reg_fn(self.enclave_id)?.into();
 
         let contract_addr = match deploy_user {
             SignerAddress::EthAddress(address) => {
@@ -122,12 +123,16 @@ impl Sender for EthSender {
         ))
     }
 
-    fn register(
+    fn register<F>(
         &self,
         signer: SignerAddress,
         gas: u64,
-    ) -> Result<String> {
-        let register_tx = BoxedRegisterTx::register(self.enclave_id)?;
+        reg_fn: F,
+    ) -> Result<String>
+    where
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>,
+    {
+        let register_tx: BoxedRegisterTx = reg_fn(self.enclave_id)?.into();
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
                 self.contract.register(
@@ -142,17 +147,20 @@ impl Sender for EthSender {
         Ok(hex::encode(receipt.as_bytes()))
     }
 
-    fn state_transition<ST: State>(
+    fn state_transition<ST, F>(
         &self,
         access_right: AccessRight,
         signer: SignerAddress,
         state_info: StateInfo<'_, ST>,
         gas: u64,
-    ) -> Result<String> {
+        st_fn: F,
+    ) -> Result<String>
+    where
+        ST: State,
+        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST>) -> Result<RawStateTransTx>,
+    {
         // ecall of state transition
-        let state_trans_tx = BoxedStateTransTx::state_transition(
-            self.enclave_id, access_right, state_info
-        )?;
+        let state_trans_tx: BoxedStateTransTx = st_fn(self.enclave_id, access_right, state_info)?.into();
 
         let ciphers = state_trans_tx.get_ciphertexts();
         let locks = state_trans_tx.get_lock_params();
@@ -198,17 +206,21 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
         Ok(EventWatcher { contract, event_db })
     }
 
-    fn block_on_event(
+    fn block_on_event<F>(
         &self,
         eid: sgx_enclave_id_t,
-    ) -> Result<()> {
+        insert_fn: F,
+    ) -> Result<()>
+    where
+        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<()>,
+    {
         let event = EthEvent::build_event();
         let key = event.signature();
 
         self.contract
             .get_event(self.event_db.clone(), key)?
             .into_enclave_log()?
-            .insert_enclave(eid)?
+            .insert_enclave(eid, insert_fn)?
             .set_to_db(key);
 
         Ok(())
@@ -216,5 +228,65 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
 
     fn get_contract(self) -> ContractKind {
         ContractKind::Web3Contract(self.contract)
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub(crate) struct BoxedRegisterTx {
+    pub report: Box<[u8]>,
+    pub report_sig: Box<[u8]>,
+}
+
+impl From<RawRegisterTx> for BoxedRegisterTx {
+    fn from(raw_reg_tx: RawRegisterTx) -> Self {
+        let mut res_tx = BoxedRegisterTx::default();
+
+        let box_report = raw_reg_tx.report as *mut Box<[u8]>;
+        let report = unsafe { Box::from_raw(box_report) };
+        let box_report_sig = raw_reg_tx.report_sig as *mut Box<[u8]>;
+        let report_sig = unsafe { Box::from_raw(box_report_sig) };
+
+        res_tx.report = *report;
+        res_tx.report_sig = *report_sig;
+
+        res_tx
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub(crate) struct BoxedStateTransTx {
+    pub state_id: u64,
+    pub ciphertext: Box<[u8]>,
+    pub lock_param: Box<[u8]>,
+    pub enclave_sig: Box<[u8]>,
+}
+
+impl BoxedStateTransTx {
+    pub fn get_ciphertexts(&self) -> impl Iterator<Item=Ciphertext> + '_ {
+        Ciphertext::from_bytes_iter(&self.ciphertext)
+    }
+
+    pub fn get_lock_params(&self) -> impl Iterator<Item=LockParam> + '_ {
+        LockParam::from_bytes_iter(&self.lock_param)
+    }
+}
+
+impl From<RawStateTransTx> for BoxedStateTransTx {
+    fn from(raw_state_tx: RawStateTransTx) -> Self {
+        let mut res_tx = BoxedStateTransTx::default();
+
+        let box_ciphertext = raw_state_tx.ciphertext as *mut Box<[u8]>;
+        let ciphertext = unsafe { Box::from_raw(box_ciphertext) };
+        let box_lock_param = raw_state_tx.lock_param as *mut Box<[u8]>;
+        let lock_param = unsafe { Box::from_raw(box_lock_param) };
+        let box_enclave_sig = raw_state_tx.enclave_sig as *mut Box<[u8]>;
+        let enclave_sig = unsafe { Box::from_raw(box_enclave_sig) };
+
+        res_tx.state_id = raw_state_tx.state_id;
+        res_tx.ciphertext = *ciphertext;
+        res_tx.lock_param = *lock_param;
+        res_tx.enclave_sig = *enclave_sig;
+
+        res_tx
     }
 }

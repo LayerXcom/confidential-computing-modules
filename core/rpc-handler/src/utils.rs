@@ -3,17 +3,15 @@ use std::{
     io::BufReader,
     fs::File,
     str::FromStr,
-    convert::{TryInto, TryFrom},
-    fmt::Debug,
 };
 use web3::types::Address;
 use ethabi::Contract as ContractABI;
-use anonify_common::AccessRight;
-use anonify_stf::{State, call_name_to_id};
-use sgx_types::sgx_enclave_id_t;
+use anonify_runtime::State;
+use anonify_app_preluder::call_name_to_id;
+use anyhow::anyhow;
 use crate::{
-    bridges::ecalls::get_state,
     error::Result,
+    eth::primitives::Web3Contract,
 };
 
 /// Needed information to handle smart contracts.
@@ -32,17 +30,18 @@ impl<'a, P: AsRef<Path>> ContractInfo<'a, P> {
     }
 
     pub fn contract_abi(&self) -> Result<ContractABI> {
-         let f = File::open(&self.abi_path)?;
+        let f = File::open(&self.abi_path)?;
         let reader = BufReader::new(f);
-        let contract_abi = ContractABI::load(reader)
-            .expect("Failed to load contract abi.");
 
-        Ok(contract_abi)
+        ContractABI::load(reader)
+            .map_err(|e| anyhow!("Failed to load contract abi.: {:?}", e))
+            .map_err(Into::into)
     }
 
     pub fn address(&self) -> Result<Address> {
-        let res = Address::from_str(self.addr)?;
-        Ok(res)
+        Address::from_str(self.addr)
+            .map_err(|e| anyhow!("{:?}", e))
+            .map_err(Into::into)
     }
 }
 
@@ -74,24 +73,13 @@ impl<'a, ST: State> StateInfo<'a, ST> {
     }
 }
 
-pub fn get_state_by_access_right<S>(
-    access_right: &AccessRight,
-    enclave_id: sgx_enclave_id_t,
-    mem_name: &str,
-) -> Result<S>
-where
-    S: State + TryFrom<Vec<u8>>,
-    <S as TryFrom<Vec<u8>>>::Error: Debug,
-{
-    let state = get_state(
-        enclave_id,
-        &access_right.sig(),
-        &access_right.pubkey(),
-        &access_right.challenge(),
-        mem_name,
-    )?
-    .try_into()
-    .expect("Failed to convert into State trait.");
+/// A type of transaction signing address
+#[derive(Debug, Clone)]
+pub enum SignerAddress {
+    EthAddress(web3::types::Address)
+}
 
-    Ok(state)
+/// A type of contract
+pub enum ContractKind {
+    Web3Contract(Web3Contract)
 }

@@ -1,22 +1,30 @@
-#![allow(dead_code)]
-
-use std::{path::Path, sync::Arc};
-use parking_lot::RwLock;
-use sgx_types::sgx_enclave_id_t;
-use anonify_common::{AccessRight, UserAddress};
-use anonify_stf::State;
-use super::{
-    eth::primitives::Web3Contract,
-    eventdb::BlockNumDB,
-    utils::{ContractInfo, StateInfo},
+use std::{
+    path::Path,
+    sync::Arc,
+    convert::{TryInto, TryFrom},
+    fmt::Debug,
 };
-use crate::error::{Result, HostErrorKind};
-use self::traits::*;
+use sgx_types::sgx_enclave_id_t;
+use crate::bridges::ecalls::{
+    register as reg_fn,
+    state_transition as st_fn,
+    insert_logs as insert_fn,
+    get_state_from_enclave,
+};
+use anonify_rpc_handler::{
+    traits::*,
+    utils::*,
+    eventdb::BlockNumDB,
+    error::{Result, HostError},
+};
+use anonify_common::AccessRight;
+use anonify_runtime::State;
+use parking_lot::RwLock;
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
 pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
-    inner: RwLock<InnerDispatcher<D,S,W,DB>>,
+    inner: RwLock<SgxDispatcher<D,S,W,DB>>,
 }
 
 impl<D, S, W, DB> Dispatcher<D, S, W, DB>
@@ -31,7 +39,7 @@ where
         node_url: &str,
         event_db: Arc<DB>,
     ) -> Result<Self> {
-        let inner = InnerDispatcher::new_with_deployer(enclave_id, node_url, event_db)?;
+        let inner = SgxDispatcher::new_with_deployer(enclave_id, node_url, event_db)?;
 
         Ok(Dispatcher {
             inner: RwLock::new(inner)
@@ -52,10 +60,9 @@ where
     pub fn deploy(
         &self,
         deploy_user: &SignerAddress,
-        access_right: &AccessRight,
     ) -> Result<String> {
         let mut inner = self.inner.write();
-        inner.deploy(deploy_user, access_right)
+        inner.deploy(deploy_user)
     }
 
     pub fn register<P: AsRef<Path> + Copy>(
@@ -99,7 +106,7 @@ where
     ) -> Result<()> {
         let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
-        inner.block_on_event(contract_info)
+        inner.block_on_event(contract_info).into()
     }
 
     pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
@@ -108,14 +115,14 @@ where
 }
 
 #[derive(Debug)]
-struct InnerDispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
+struct SgxDispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
     deployer: D,
     sender: Option<S>,
     watcher: Option<W>,
     event_db: Arc<DB>,
 }
 
-impl<D, S, W, DB> InnerDispatcher<D, S, W, DB>
+impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
 where
     D: Deployer,
     S: Sender,
@@ -129,7 +136,7 @@ where
     ) -> Result<Self> {
         let deployer = D::new(enclave_id, node_url)?;
 
-        Ok(InnerDispatcher {
+        Ok(SgxDispatcher {
             deployer,
             event_db,
             sender: None,
@@ -158,13 +165,14 @@ where
     fn deploy(
         &mut self,
         deploy_user: &SignerAddress,
-        access_right: &AccessRight,
     ) -> Result<String> {
-        self.deployer.deploy(deploy_user, access_right)
+        self.deployer
+            .deploy(deploy_user, reg_fn)
     }
 
     fn get_account(&self, index: usize) -> Result<SignerAddress> {
-        self.deployer.get_account(index)
+        self.deployer
+            .get_account(index)
     }
 
     fn block_on_event<P: AsRef<Path> + Copy>(
@@ -178,8 +186,8 @@ where
 
         let eid = self.deployer.get_enclave_id();
         self.watcher.as_ref()
-            .ok_or(HostErrorKind::Msg("Contract address have not been set."))?
-            .block_on_event(eid)
+            .ok_or(HostError::AddressNotSet)?
+            .block_on_event(eid, insert_fn)
     }
 
     fn register<P: AsRef<Path> + Copy>(
@@ -191,8 +199,8 @@ where
         self.set_contract_addr(contract_info)?;
 
         self.sender.as_ref()
-            .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .register(signer, gas)
+            .ok_or(HostError::AddressNotSet)?
+            .register(signer, gas, reg_fn)
     }
 
     fn state_transition<ST, P>(
@@ -213,95 +221,29 @@ where
         // }
 
         self.sender.as_ref()
-            .ok_or(HostErrorKind::Msg("Contract address have not been set collectly."))?
-            .state_transition(access_right, signer, state_info, gas)
+            .ok_or(HostError::AddressNotSet)?
+            .state_transition(access_right, signer, state_info, gas, st_fn)
     }
 }
 
-/// A type of transaction signing address
-#[derive(Debug, Clone)]
-pub enum SignerAddress {
-    EthAddress(web3::types::Address)
-}
+pub fn get_state<S>(
+    access_right: &AccessRight,
+    enclave_id: sgx_enclave_id_t,
+    mem_name: &str,
+) -> Result<S>
+where
+    S: State + TryFrom<Vec<u8>>,
+    <S as TryFrom<Vec<u8>>>::Error: Debug,
+{
+    let state = get_state_from_enclave(
+        enclave_id,
+        &access_right.sig(),
+        &access_right.pubkey(),
+        &access_right.challenge(),
+        mem_name,
+    )?
+    .try_into()
+    .expect("Failed to convert into State trait.");
 
-/// A type of contract
-pub enum ContractKind {
-    Web3Contract(Web3Contract)
-}
-
-pub mod traits {
-    use super::*;
-
-    /// A trait for deploying contracts
-    pub trait Deployer: Sized {
-        fn new(enclave_id: sgx_enclave_id_t, node_url: &str) -> Result<Self>;
-
-        fn get_account(&self, index: usize) -> Result<SignerAddress>;
-
-        /// Deploying contract with attestation.
-        fn deploy(
-            &mut self,
-            deploy_user: &SignerAddress,
-            access_right: &AccessRight,
-        ) -> Result<String>;
-
-        fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;
-
-        fn get_enclave_id(&self) -> sgx_enclave_id_t;
-
-        fn get_node_url(&self) -> &str;
-    }
-
-    /// A trait for sending transactions to blockchain nodes
-    pub trait Sender: Sized {
-        fn new<P: AsRef<Path>>(
-            enclave_id: sgx_enclave_id_t,
-            node_url: &str,
-            contract_info: ContractInfo<'_, P>,
-        ) -> Result<Self>;
-
-        fn from_contract(
-            enclave_id: sgx_enclave_id_t,
-            contract: ContractKind,
-        ) -> Self;
-
-        fn get_account(&self, index: usize) -> Result<SignerAddress>;
-
-        /// Send ciphertexts which is result of the state transition to blockchain nodes.
-        fn state_transition<ST: State>(
-            &self,
-            access_right: AccessRight,
-            signer: SignerAddress,
-            state_info: StateInfo<'_, ST>,
-            gas: u64,
-        ) -> Result<String>;
-
-        /// Attestation with deployed contract.
-        fn register(
-            &self,
-            signer: SignerAddress,
-            gas: u64,
-        ) -> Result<String>;
-
-        fn get_contract(self) -> ContractKind;
-    }
-
-    /// A trait of fetching event from blockchian nodes
-    pub trait Watcher: Sized {
-        type WatcherDB: BlockNumDB;
-
-        fn new<P: AsRef<Path>>(
-            node_url: &str,
-            contract_info: ContractInfo<'_, P>,
-            event_db: Arc<Self::WatcherDB>,
-        ) -> Result<Self>;
-
-        /// Blocking event fetch from blockchain nodes.
-        fn block_on_event(
-            &self,
-            eid: sgx_enclave_id_t,
-        ) -> Result<()>;
-
-        fn get_contract(self) -> ContractKind;
-    }
+    Ok(state)
 }

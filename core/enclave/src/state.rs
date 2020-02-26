@@ -4,9 +4,8 @@ use anonify_common::{
     UserAddress, Sha256, Hash256, LockParam, AccessRight,
     kvs::*,
 };
-use anonify_stf::{StateType, State, Runtime, CallKind,
-    Ciphertext, StateGetter, UpdatedState, into_trait, MemId
-};
+use anonify_app_preluder::{CallKind, MAX_MEM_SIZE, Ciphertext, Runtime};
+use anonify_runtime::{StateType, State, StateGetter, UpdatedState, into_trait, MemId};
 use codec::{Encode, Decode, Input, Output};
 use crate::{
     crypto::*,
@@ -107,13 +106,15 @@ pub struct Next;
 
 /// This struct can be got by decrypting ciphertexts which is stored on blockchain.
 /// The secret key is shared among all TEE's enclaves.
-/// StateValue field of this struct should be encrypted before it'll store enclave's in-memory db.
-/// [Example]: A size of ciphertext for each user state is 88 bytes, if inner_state is u64 value.
+/// The padding works for fixing the ciphertext size so that
+/// other people cannot distinguish what state is encrypted based on the size.
+/// [Example]: A size of ciphertext is 95 bytes, if inner_state is u64 value.
 #[derive(Encode, Decode, Debug, Clone, PartialEq)]
 pub struct UserState<S: State, N> {
     address: UserAddress,
     mem_id: MemId,
     state_value: StateValue<S, N>,
+    padding: Vec<bool>,
 }
 
 impl<N> UserState<StateType, N> {
@@ -133,10 +134,13 @@ impl UserState<StateType, Current> {
         mem_id: MemId,
         state_value: StateValue<StateType, Current>,
     ) -> Self {
+        let padding = vec![];
+
         UserState {
             address,
             mem_id,
             state_value,
+            padding,
         }
     }
 
@@ -161,11 +165,16 @@ impl UserState<StateType, Current> {
         self.state_value
     }
 
-    pub fn update_inner_state(&self, update: StateType) -> Self {
+    pub fn update_inner_state(self, update: StateType) -> Self {
+        let state_value = StateValue::new(update, self.lock_param());
+        let padding_size = state_value.padding_size();
+        let padding = vec![true; padding_size];
+
         UserState {
             address: self.address,
             mem_id: self.mem_id,
-            state_value: StateValue::new(update, self.lock_param()),
+            state_value,
+            padding,
         }
     }
 
@@ -181,6 +190,7 @@ impl UserState<StateType, Current> {
             address: self.address,
             mem_id: self.mem_id,
             state_value,
+            padding: self.padding,
         }
     }
 
@@ -224,6 +234,11 @@ impl<N> StateValue<StateType, N> {
             lock_param,
             _marker: PhantomData,
         }
+    }
+
+    /// Get padding size to fix the ciphertext size of all state types.
+    pub fn padding_size(&self) -> usize {
+        *MAX_MEM_SIZE - self.inner_state.len()
     }
 
     /// Get inner state and lock_param from database value.
@@ -281,7 +296,7 @@ impl<N> StateValue<StateType, N> {
 #[cfg(debug_assertions)]
 pub mod tests {
     use super::*;
-    use anonify_stf::StateType;
+    use anonify_runtime::StateType;
     use ed25519_dalek::{SecretKey, PublicKey, Keypair, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH};
 
     const SECRET_KEY_BYTES: [u8; SECRET_KEY_LENGTH] = [

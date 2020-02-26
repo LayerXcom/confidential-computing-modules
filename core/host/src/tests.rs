@@ -1,19 +1,17 @@
-use std::{
-    sync::Arc,
-};
+use std::sync::Arc;
 use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use rand_os::OsRng;
 use anonify_common::AccessRight;
-use anonify_stf::{State, U64, Transfer, Constructor};
+use anonify_runtime::{State, U64};
+use anonify_app_preluder::{transfer, constructor};
+use anonify_rpc_handler::{
+    eventdb::{EventDB, BlockNumDB},
+    eth::*,
+};
 use crate::auto_ffi::ecall_run_tests;
 use crate::init_enclave::EnclaveDir;
-use crate::transaction::{
-    dispatcher::*,
-    eventdb::{EventDB, BlockNumDB},
-    eth::client::*,
-    utils::get_state_by_access_right,
-};
+use crate::dispatcher::*;
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
 const ANONYMOUS_ASSET_ABI_PATH: &str = "../../build/Anonify.abi";
@@ -50,20 +48,20 @@ fn test_integration_eth_transfer() {
 
     // 1. Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(&deployer_addr, &my_access_right).unwrap();
+    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
 
 
     // 2. init state
-    let init = U64::from_raw(100);
-    let init_state = Constructor{ init };
+    let total_supply = U64::from_raw(100);
+    let init_state = constructor{ total_supply };
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
         init_state,
         state_id,
-        "Constructor",
+        "constructor",
         deployer_addr.clone(),
         gas,
         &contract_addr,
@@ -78,10 +76,10 @@ fn test_integration_eth_transfer() {
 
 
     // 4. Get state from enclave
-    let my_state = get_state_by_access_right::<U64>(&my_access_right, eid, "Balance").unwrap();
-    let other_state = get_state_by_access_right::<U64>(&other_access_right, eid, "Balance").unwrap();
-    let third_state = get_state_by_access_right::<U64>(&third_access_right, eid, "Balance").unwrap();
-    assert_eq!(my_state, init);
+    let my_state = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
+    let other_state = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
+    let third_state = get_state::<U64>(&third_access_right, eid, "Balance").unwrap();
+    assert_eq!(my_state, total_supply);
     assert_eq!(other_state, U64::zero());
     assert_eq!(third_state, U64::zero());
 
@@ -89,12 +87,12 @@ fn test_integration_eth_transfer() {
     // 5. Send a transaction to contract
     let amount = U64::from_raw(30);
     let target = other_access_right.user_address();
-    let transfer_state = Transfer{ amount, target };
+    let transfer_state = transfer{ amount, target };
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
         transfer_state,
         state_id,
-        "Transfer",
+        "transfer",
         deployer_addr,
         gas,
         &contract_addr,
@@ -108,9 +106,9 @@ fn test_integration_eth_transfer() {
 
 
     // 7. Check the updated states
-    let my_updated_state = get_state_by_access_right::<U64>(&my_access_right, eid, "Balance").unwrap();
-    let other_updated_state = get_state_by_access_right::<U64>(&other_access_right, eid, "Balance").unwrap();
-    let third_updated_state = get_state_by_access_right::<U64>(&third_access_right, eid, "Balance").unwrap();
+    let my_updated_state = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
+    let other_updated_state = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
+    let third_updated_state = get_state::<U64>(&third_access_right, eid, "Balance").unwrap();
 
     assert_eq!(my_updated_state, U64::from_raw(70));
     assert_eq!(other_updated_state, amount);

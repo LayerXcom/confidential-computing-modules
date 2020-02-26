@@ -2,7 +2,6 @@ use std::path::PathBuf;
 use rand::Rng;
 use anonify_wallet::{WalletDirectory, KeystoreDirectory, KeyFile, DirOperations};
 use anonify_common::UserAddress;
-use anonymous_asset::api;
 use bip39::{Mnemonic, Language, MnemonicType, Seed};
 use reqwest::Client;
 use ed25519_dalek::Keypair;

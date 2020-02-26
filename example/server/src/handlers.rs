@@ -1,12 +1,13 @@
 use std::sync::Arc;
 use failure::Error;
 use log::debug;
-use anonify_host::transaction::{
-    BlockNumDB, traits::*,
-    utils::get_state_by_access_right,
+use anonify_host::dispatcher::get_state;
+use anonify_rpc_handler::{
+    BlockNumDB,
+    traits::*,
 };
-use anonymous_asset::api;
-use anonify_stf::{State, StateType, U64};
+use anonify_runtime::U64;
+use app::{transfer, constructor};
 use actix_web::{
     web,
     HttpResponse,
@@ -27,10 +28,9 @@ where
 {
     debug!("Starting deploy a contract...");
 
-    let access_right = req.into_access_right()?;
     let deployer_addr = server.dispatcher.get_account(0)?;
     let contract_addr = server.dispatcher
-        .deploy(&deployer_addr, &access_right)?;
+        .deploy(&deployer_addr)?;
 
     debug!("Contract address: {:?}", &contract_addr);
 
@@ -47,7 +47,6 @@ where
     W: Watcher<WatcherDB=DB>,
     DB: BlockNumDB,
 {
-    let access_right = req.into_access_right()?;
     let signer = server.dispatcher.get_account(0)?;
     let receipt = server.dispatcher.register(
         signer,
@@ -71,10 +70,14 @@ where
 {
     let access_right = req.into_access_right()?;
     let signer = server.dispatcher.get_account(0)?;
-    let receipt = server.dispatcher.init_state(
+    let total_supply = U64::from_raw(req.total_supply);
+    let init_state = constructor{ total_supply };
+
+    let receipt = server.dispatcher.state_transition(
         access_right,
-        StateType::new(req.total_supply),
+        init_state,
         req.state_id,
+        "constructor",
         signer,
         DEFAULT_SEND_GAS,
         &req.contract_addr,
@@ -96,12 +99,15 @@ where
 {
     let access_right = req.into_access_right()?;
     let signer = server.dispatcher.get_account(0)?;
+    let amount = U64::from_raw(req.amount);
+    let target = req.target;
+    let transfer_state = transfer{ amount, target };
 
     let receipt = server.dispatcher.state_transition(
         access_right,
-        &req.target,
-        StateType::new(req.amount),
+        transfer_state,
         req.state_id,
+        "transfer",
         signer,
         DEFAULT_SEND_GAS,
         &req.contract_addr,
@@ -125,7 +131,7 @@ where
     server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path)?;
 
     let access_right = req.into_access_right()?;
-    let state = get_state_by_access_right::<U64>(&access_right, server.eid)?;
+    let state = get_state::<U64>(&access_right, server.eid, "Balance")?;
 
-    Ok(HttpResponse::Ok().json(api::state::get::Response(state)))
+    Ok(HttpResponse::Ok().json(api::state::get::Response(state.as_raw())))
 }

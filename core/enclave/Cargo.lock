@@ -10,6 +10,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "anonify-app-preluder"
+version = "0.1.0"
+dependencies = [
+ "anonify-common 0.1.0",
+ "anonify-runtime 0.1.0",
+ "app 0.1.0",
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+]
+
+[[package]]
 name = "anonify-common"
 version = "0.1.0"
 dependencies = [
@@ -27,8 +37,9 @@ dependencies = [
 name = "anonify-enclave"
 version = "0.1.0"
 dependencies = [
+ "anonify-app-preluder 0.1.0",
  "anonify-common 0.1.0",
- "anonify-stf 0.1.0",
+ "anonify-runtime 0.1.0",
  "anonify-types 0.1.0",
  "base64 0.10.1 (git+https://github.com/mesalock-linux/rust-base64-sgx?rev=sgx_1.1.0)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -55,7 +66,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "anonify-stf"
+name = "anonify-runtime"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
@@ -76,6 +87,17 @@ version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "winapi 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "app"
+version = "0.1.0"
+dependencies = [
+ "anonify-common 0.1.0",
+ "anonify-runtime 0.1.0",
+ "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parity-scale-codec 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
 ]
 
 [[package]]

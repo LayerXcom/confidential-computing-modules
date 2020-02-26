@@ -2,7 +2,8 @@ use sgx_types::*;
 use std::prelude::v1::*;
 use sgx_tse::rsgx_create_report;
 use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
-use anonify_stf::{State, mem_name_to_id, StateGetter, StateType, Ciphertext, MemId};
+use anonify_app_preluder::{mem_name_to_id, Ciphertext};
+use anonify_runtime::{State, StateGetter, StateType, MemId};
 use crate::{
     crypto::{Eik, SymmetricKey},
     attestation::TEST_SPID,

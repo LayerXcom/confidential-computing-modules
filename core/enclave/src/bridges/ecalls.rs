@@ -2,7 +2,8 @@ use std::slice;
 use sgx_types::*;
 use anonify_types::*;
 use anonify_common::{UserAddress, AccessRight};
-use anonify_stf::{StateGetter, State, StateType, CIPHERTEXT_SIZE, Ciphertext, CallKind, MemId};
+use anonify_app_preluder::{CIPHERTEXT_SIZE, Ciphertext, CallKind};
+use anonify_runtime::{StateGetter, State, StateType, MemId};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::state::{UserState, StateValue, Current};
 use crate::crypto::SYMMETRIC_KEY;
@@ -23,9 +24,9 @@ pub unsafe extern "C" fn ecall_insert_logs(
     ciphertexts_len: usize,
 ) -> sgx_status_t {
     let ciphertexts = slice::from_raw_parts(ciphertexts, ciphertexts_len);
-    assert_eq!(ciphertexts.len() % CIPHERTEXT_SIZE, 0, "Ciphertexts must be divisible by ciphertexts_num.");
+    assert_eq!(ciphertexts.len() % (*CIPHERTEXT_SIZE), 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
-    for ciphertext in ciphertexts.chunks(CIPHERTEXT_SIZE) {
+    for ciphertext in ciphertexts.chunks(*CIPHERTEXT_SIZE) {
         ENCLAVE_CONTEXT
             .write_cipheriv(Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY)
             .expect("Failed to wirte cihpertexts.");

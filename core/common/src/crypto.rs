@@ -24,7 +24,7 @@ pub trait Hash256 {
 
 /// User address represents last 20 bytes of digest of user's public key.
 /// A signature verification must return true to generate a user address.
-#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
 pub struct UserAddress([u8; 20]);
 

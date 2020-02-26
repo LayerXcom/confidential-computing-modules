@@ -1,16 +1,4 @@
 
-// ------------------
-//  Response type
-// ------------------
-
-
-
-// ------------------
-//  Query type
-// ------------------
-
-
-
 // ----------------------
 //  GET and POST types
 // ----------------------
@@ -279,7 +267,7 @@ pub mod state {
         use rand::Rng;
         use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
         use anonify_common::{AccessRight};
-        use anonify_stf::State;
+        use anonify_runtime::State;
 
         big_array! { BigArray; }
 

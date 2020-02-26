@@ -14,8 +14,9 @@ default = []
 [dependencies]
 anonify-types = { path = "../types", default-features = false }
 anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
-anonify-stf = { path = "../../example/stf", default-features = false, features = ["sgx"] }
-https-enclave = { path = "../../https-enclave" }
+anonify-app-preluder = { path = "../app-preluder", default-features = false, features = ["sgx"] }
+anonify-runtime = { path = "../runtime", default-features = false, features = ["sgx"] }
+https-enclave = { path = "../https-enclave" }
 
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
 lazy_static = { version = "1.4", features = ["spin_no_std"] }

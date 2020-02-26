@@ -5,10 +5,12 @@ use std::{sync::Arc, io};
 use sgx_types::sgx_enclave_id_t;
 use anonify_host::{
     EnclaveDir,
-    transaction::{
-        Dispatcher, EventDB, BlockNumDB, traits::*,
-        eth::{EthDeployer, EthSender, EventWatcher},
-    },
+    Dispatcher,
+};
+use anonify_rpc_handler::{
+    EventDB, BlockNumDB,
+    traits::*,
+    eth::*,
 };
 use handlers::*;
 use actix_web::{web, App, HttpServer};

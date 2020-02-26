@@ -1,15 +1,18 @@
 [workspace]
 members = [
-    "wallet",
     "core/types",
+    "core/runtime",
+    "core/app-preluder",
+    "core/rpc-handler",
+    "core/common",
+    "core/https-enclave",
     "example/cli",
-    "example/anonymous-asset",
-    "example/stf",
+    "example/api",
+    "example/app",
+    "wallet",
 ]
 exclude = [
     "core/enclave",
     "core/host",
-    "core/common",
-    "https-enclave",
     "example/server",
 ]

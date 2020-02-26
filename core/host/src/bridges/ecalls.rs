@@ -1,19 +1,16 @@
-use std::{
-    convert::{TryInto, TryFrom},
-    fmt::Debug,
-    boxed::Box,
-};
+use std::boxed::Box;
 use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx};
-use anonify_common::{AccessRight, UserAddress, LockParam};
-use anonify_stf::{State, Ciphertext, CIPHERTEXT_SIZE, mem_name_to_id};
-use ed25519_dalek::{Signature, PublicKey};
-use crate::auto_ffi::*;
-use crate::transaction::{
+use anonify_common::AccessRight;
+use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
+use anonify_runtime::State;
+use anonify_rpc_handler::{
     eventdb::InnerEnclaveLog,
     utils::StateInfo,
 };
-use crate::error::{HostErrorKind, Result};
+use ed25519_dalek::{Signature, PublicKey};
+use crate::auto_ffi::*;
+use anonify_rpc_handler::error::{HostError, Result};
 
 /// Insert event logs from blockchain nodes into enclave memory database.
 pub(crate) fn insert_logs(
@@ -21,6 +18,8 @@ pub(crate) fn insert_logs(
     enclave_log: &InnerEnclaveLog,
 ) -> Result<()> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let len = enclave_log.ciphertexts.len() * (*CIPHERTEXT_SIZE);
+    let buf = enclave_log.ciphertexts.clone().into_iter().flat_map(|e| e.0).collect::<Vec<u8>>();
 
     let status = unsafe {
         ecall_insert_logs(
@@ -28,23 +27,23 @@ pub(crate) fn insert_logs(
             &mut rt,
             enclave_log.contract_addr.as_ptr() as _,
             enclave_log.latest_blc_num,
-            enclave_log.ciphertexts.as_c_ptr() as *const u8,
-            enclave_log.ciphertexts.len() * CIPHERTEXT_SIZE,
+            buf.as_c_ptr() as *const u8,
+            len,
         )
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(HostErrorKind::Sgx{ status, function: "ecall_insert_logs" }.into());
+		return Err(HostError::Sgx{ status, function: "ecall_insert_logs" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_insert_logs" }.into());
+		return Err(HostError::Sgx{ status: rt, function: "ecall_insert_logs" }.into());
     }
 
     Ok(())
 }
 
 /// Get state only if the signature verification returns true.
-pub(crate) fn get_state(
+pub(crate) fn get_state_from_enclave(
     eid: sgx_enclave_id_t,
     sig: &Signature,
     pubkey: &PublicKey,
@@ -69,18 +68,13 @@ pub(crate) fn get_state(
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(HostErrorKind::Sgx{ status, function: "ecall_get_state" }.into());
+		return Err(HostError::Sgx{ status, function: "ecall_get_state" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_get_state" }.into());
+		return Err(HostError::Sgx{ status: rt, function: "ecall_get_state" }.into());
     }
 
     Ok(state_as_bytes(state).into())
-
-    // let res = (&mut *s).try_into().expect("Failed to convert bytes to state trait.");
-
-    // let res = S::from_bytes(&mut s)?;
-    // Ok(res)
 }
 
 fn state_as_bytes(state: EnclaveState) -> Box<[u8]> {
@@ -90,124 +84,62 @@ fn state_as_bytes(state: EnclaveState) -> Box<[u8]> {
     *box_state
 }
 
-#[derive(Debug, Clone, Default)]
-pub(crate) struct BoxedRegisterTx {
-    pub report: Box<[u8]>,
-    pub report_sig: Box<[u8]>,
+pub(crate) fn register(eid: sgx_enclave_id_t) -> Result<RawRegisterTx> {
+    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut raw_reg_tx = RawRegisterTx::default();
+
+    let status = unsafe {
+        ecall_register(
+            eid,
+            &mut rt,
+            &mut raw_reg_tx,
+        )
+    };
+
+    if status != sgx_status_t::SGX_SUCCESS {
+        return Err(HostError::Sgx{ status, function: "ecall_register" }.into());
+    }
+    if rt != sgx_status_t::SGX_SUCCESS {
+        return Err(HostError::Sgx{ status: rt, function: "ecall_register" }.into());
+    }
+
+    Ok(raw_reg_tx)
 }
 
-impl BoxedRegisterTx {
-    pub(crate) fn register(eid: sgx_enclave_id_t) -> Result<Self> {
-        let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-        let mut raw_reg_tx = RawRegisterTx::default();
+/// Update states when a transaction is sent to blockchain.
+pub(crate) fn state_transition<S: State>(
+    eid: sgx_enclave_id_t,
+    access_right: AccessRight,
+    state_info: StateInfo<'_, S>,
+) -> Result<RawStateTransTx> {
+    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut raw_state_tx = RawStateTransTx::default();
+    let state = state_info.state_as_bytes();
+    let call_id = state_info.call_name_to_id();
 
-        let status = unsafe {
-            ecall_register(
-                eid,
-                &mut rt,
-                &mut raw_reg_tx,
-            )
-        };
+    let status = unsafe {
+        ecall_state_transition(
+            eid,
+            &mut rt,
+            access_right.sig().to_bytes().as_ptr() as _,
+            access_right.pubkey().to_bytes().as_ptr() as _,
+            access_right.challenge().as_ptr() as _,
+            state.as_c_ptr() as *mut u8,
+            state.len(),
+            state_info.state_id(),
+            call_id,
+            &mut raw_state_tx,
+        )
+    };
 
-        if status != sgx_status_t::SGX_SUCCESS {
-            return Err(HostErrorKind::Sgx{ status, function: "ecall_register" }.into());
-        }
-        if rt != sgx_status_t::SGX_SUCCESS {
-            return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_register" }.into());
-        }
-
-        Ok(raw_reg_tx.into())
+    if status != sgx_status_t::SGX_SUCCESS {
+        return Err(HostError::Sgx{ status, function: "ecall_contract_deploy" }.into());
     }
-}
-
-impl From<RawRegisterTx> for BoxedRegisterTx {
-    fn from(raw_reg_tx: RawRegisterTx) -> Self {
-        let mut res_tx = BoxedRegisterTx::default();
-
-        let box_report = raw_reg_tx.report as *mut Box<[u8]>;
-        let report = unsafe { Box::from_raw(box_report) };
-        let box_report_sig = raw_reg_tx.report_sig as *mut Box<[u8]>;
-        let report_sig = unsafe { Box::from_raw(box_report_sig) };
-
-        res_tx.report = *report;
-        res_tx.report_sig = *report_sig;
-
-        res_tx
-    }
-}
-
-#[derive(Debug, Clone, Default)]
-pub(crate) struct BoxedStateTransTx {
-    pub state_id: u64,
-    pub ciphertext: Box<[u8]>,
-    pub lock_param: Box<[u8]>,
-    pub enclave_sig: Box<[u8]>,
-}
-
-impl BoxedStateTransTx {
-    /// Update states when a transaction is sent to blockchain.
-    pub(crate) fn state_transition<S: State>(
-        eid: sgx_enclave_id_t,
-        access_right: AccessRight,
-        state_info: StateInfo<'_, S>,
-    ) -> Result<Self> {
-        let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-        let mut raw_state_tx = RawStateTransTx::default();
-        let state = state_info.state_as_bytes();
-        let call_id = state_info.call_name_to_id();
-
-        let status = unsafe {
-            ecall_state_transition(
-                eid,
-                &mut rt,
-                access_right.sig().to_bytes().as_ptr() as _,
-                access_right.pubkey().to_bytes().as_ptr() as _,
-                access_right.challenge().as_ptr() as _,
-                state.as_c_ptr() as *mut u8,
-                state.len(),
-                state_info.state_id(),
-                call_id,
-                &mut raw_state_tx,
-            )
-        };
-
-        if status != sgx_status_t::SGX_SUCCESS {
-            return Err(HostErrorKind::Sgx{ status, function: "ecall_contract_deploy" }.into());
-        }
-        if rt != sgx_status_t::SGX_SUCCESS {
-            return Err(HostErrorKind::Sgx{ status: rt, function: "ecall_contract_deploy" }.into());
-        }
-
-        Ok(raw_state_tx.into())
+    if rt != sgx_status_t::SGX_SUCCESS {
+        return Err(HostError::Sgx{ status: rt, function: "ecall_contract_deploy" }.into());
     }
 
-    pub fn get_ciphertexts(&self) -> impl Iterator<Item=Ciphertext> + '_ {
-        Ciphertext::from_bytes_iter(&self.ciphertext)
-    }
-
-    pub fn get_lock_params(&self) -> impl Iterator<Item=LockParam> + '_ {
-        LockParam::from_bytes_iter(&self.lock_param)
-    }
-}
-
-impl From<RawStateTransTx> for BoxedStateTransTx {
-    fn from(raw_state_tx: RawStateTransTx) -> Self {
-        let mut res_tx = BoxedStateTransTx::default();
-
-        let box_ciphertext = raw_state_tx.ciphertext as *mut Box<[u8]>;
-        let ciphertext = unsafe { Box::from_raw(box_ciphertext) };
-        let box_lock_param = raw_state_tx.lock_param as *mut Box<[u8]>;
-        let lock_param = unsafe { Box::from_raw(box_lock_param) };
-        let box_enclave_sig = raw_state_tx.enclave_sig as *mut Box<[u8]>;
-        let enclave_sig = unsafe { Box::from_raw(box_enclave_sig) };
-
-        res_tx.state_id = raw_state_tx.state_id;
-        res_tx.ciphertext = *ciphertext;
-        res_tx.lock_param = *lock_param;
-        res_tx.enclave_sig = *enclave_sig;
-
-        res_tx
-    }
+    Ok(raw_state_tx)
 }
 
 #[cfg(test)]
@@ -277,7 +209,7 @@ mod tests {
         let sig = keypair.sign(&msg);
         assert!(keypair.verify(&msg, &sig).is_ok());
 
-        // let state = get_state::<Value>(enclave.geteid(), &sig, &keypair.public, &msg);
+        // let state = get_state_from_enclave::<Value>(enclave.geteid(), &sig, &keypair.public, &msg);
         // assert_eq!(state, 0);
     }
 }

@@ -153,7 +153,6 @@ $(Host_Name): $(Host_Enclave_u_Object) $(Host_SRC_Files)
 	@cd host && SGX_SDK_RUST=$(SGX_SDK_RUST) SGX_SDK=$(SGX_SDK) $(CARGO) build $(Host_Rust_Flags)
 	@echo "Cargo  =>  $@"
 	mkdir -p $(CUSTOM_BIN_PATH)
-	# cp $(Host_Rust_Path)/$(Host_Name) $(CUSTOM_BIN_PATH)/$(Host_Name)
 
 ######## Enclave Objects ########
 

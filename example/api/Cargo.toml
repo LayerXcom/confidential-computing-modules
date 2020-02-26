@@ -1,5 +1,5 @@
 [package]
-name = "anonymous-asset"
+name = "api"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 anonify-common = { path = "../../core/common" }
-anonify-stf = { path = "../stf" }
+anonify-runtime = { path = "../../core/runtime" }
 serde = { version = "1", features = ["derive"] }
 ed25519-dalek = { version = "1.0.0-pre.2", features = ["serde"] }
 rand = "0.7"

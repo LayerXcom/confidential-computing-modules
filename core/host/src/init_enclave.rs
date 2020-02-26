@@ -4,10 +4,8 @@ use std::{
 };
 use sgx_types::*;
 use sgx_urts::SgxEnclave;
-use crate::{
-    constants::*,
-    error::*,
-};
+use anonify_rpc_handler::error::Result;
+use crate::constants::*;
 
 pub struct EnclaveDir(PathBuf);
 
