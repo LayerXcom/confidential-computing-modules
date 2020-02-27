@@ -115,6 +115,15 @@ impl_uint!(U16, u16, 2);
 impl_uint!(U32, u32, 4);
 impl_uint!(U64, u64, 8);
 
+#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct Bytes(Vec<u8>);
+
+impl From<Vec<u8>> for Bytes {
+    fn from(v: Vec<u8>) -> Self {
+        Bytes(v)
+    }
+}
+
 pub trait RawState: Encode + Decode + Clone + Default {}
 
 /// Do not use `as_bytes()` to get raw bytes from `StateType`, just use `StateType.0`.

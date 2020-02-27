@@ -3,40 +3,6 @@ macro_rules! impl_mem {
     ( $( $t:tt )* ) => {
         $crate::__impl_inner_mem!(@normalize $( $t )* );
     };
-
-    // ( $($id:expr, $name:expr, Address => $value:ty);* ;) => {
-    //     pub fn mem_name_to_id(name: &str) -> MemId {
-    //         match name {
-    //             $( $name => MemId::from_raw($id) ),* ,
-    //             _ => panic!("invalid mem name"),
-    //         }
-    //     }
-
-    //     /// Return maximum size of mem values
-    //     fn max_size() -> usize {
-    //         *[$( <$value>::size(), )*]
-    //             .into_iter()
-    //             .max()
-    //             .expect("Iterator should not be empty.")
-    //     }
-    // };
-
-    // ( $($id:expr, $name:expr, $value:ty);* ;) => {
-    //     pub fn mem_name_to_id(name: &str) -> MemId {
-    //         match name {
-    //             $( $name => MemId::from_raw($id) ),* ,
-    //             _ => panic!("invalid mem name"),
-    //         }
-    //     }
-
-    //     /// Return maximum size of mem values
-    //     fn max_size() -> usize {
-    //         *[$( <$value>::size(), )*]
-    //             .into_iter()
-    //             .max()
-    //             .expect("Iterator should not be empty.")
-    //     }
-    // };
 }
 
 #[macro_export]

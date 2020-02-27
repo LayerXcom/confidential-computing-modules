@@ -21,15 +21,23 @@ use codec::{Encode, Decode};
 lazy_static! {
     pub static ref MAX_MEM_SIZE: usize = max_size();
 
-    // 85 = user_address(20bytes) + lock_param(32bytes) + mem_id(8bytes) + iv(12bytes)
+    // 85 bytes: the size of base state without inner state
     // 1 bytes: base padding to represent a empty vec
     pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 85 + 1;
 }
 
-impl_mem!{
-    (0, "Balance", Address => U64)
-    // (1, "TotalSupply", U64)
+#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
+struct CustomType {
+    address: UserAddress,
+    balance: U64,
 }
+
+impl_mem! {
+    (0, "Balance", Address => U64)
+}
+// impl_mem! {
+//     (1, "TotalSupply", U64)
+// }
 
 impl_runtime!{
     #[fn_id=0]
@@ -39,9 +47,9 @@ impl_runtime!{
         total_supply: U64
     ) {
         let sender_balance = update!(sender, "Balance", total_supply);
-        let init = update!("TotalSupply", total_supply);
+        // let init = update!("TotalSupply", total_supply);
 
-        insert![sender_balance, init]
+        insert![sender_balance]
     }
 
     #[fn_id=1]
