@@ -3,8 +3,11 @@ use std::{
     ptr,
     untrusted::time::SystemTimeEx,
     time::SystemTime,
-    io::BufReader
+    io::BufReader,
+    time::UNIX_EPOCH,
 };
+use serde_json::Value;
+use chrono::DateTime;
 use sgx_types::*;
 use log::{info, error, debug};
 
@@ -117,18 +120,18 @@ pub fn verify_report_cert(cert_der: &[u8]) -> Result<(Vec<u8>, Vec<u8>), sgx_sta
         },
     }
 
-    // // Verify attestation report
-    // // 1. Check timestamp is within 24H (90day is recommended by Intel)
-    // let attn_report: Value = serde_json::from_slice(attn_report_raw).unwrap();
-    // if let Value::String(time) = &attn_report["timestamp"] {
-    //     let time_fixed = time.clone() + "+0000";
-    //     let ts = DateTime::parse_from_str(&time_fixed, "%Y-%m-%dT%H:%M:%S%.f%z").unwrap().timestamp();
-    //     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
-    //     info!("Time diff = {}", now - ts);
-    // } else {
-    //     error!("Failed to fetch timestamp from attestation report");
-    //     return Err(sgx_status_t::SGX_ERROR_UNEXPECTED);
-    // }
+    // Verify attestation report
+    // 1. Check timestamp is within 24H (90day is recommended by Intel)
+    let attn_report: Value = serde_json::from_slice(attn_report_raw).unwrap();
+    if let Value::String(time) = &attn_report["timestamp"] {
+        let time_fixed = time.clone() + "+0000";
+        let ts = DateTime::parse_from_str(&time_fixed, "%Y-%m-%dT%H:%M:%S%.f%z").unwrap().timestamp();
+        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
+        info!("Time diff = {}", now - ts);
+    } else {
+        error!("Failed to fetch timestamp from attestation report");
+        return Err(sgx_status_t::SGX_ERROR_UNEXPECTED);
+    }
 
     // // 2. Verify quote status (mandatory field)
     // if let Value::String(quote_status) = &attn_report["isvEnclaveQuoteStatus"] {
