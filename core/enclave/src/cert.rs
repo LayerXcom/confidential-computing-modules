@@ -168,7 +168,7 @@ pub fn verify_report_cert(cert_der: &[u8]) -> Result<(Vec<u8>, Vec<u8>)> {
         return Err(EnclaveError::SgxError{err: sgx_status_t::SGX_ERROR_UNEXPECTED});
     }
 
-    // // 3. Verify quote body
+    // 3. Verify quote body
     // if let Value::String(quote_raw) = &attn_report["isvEnclaveQuoteBody"] {
     //     let quote = base64::decode(&quote_raw).unwrap();
     //     debug!("Quote = {:?}", quote);

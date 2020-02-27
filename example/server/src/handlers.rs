@@ -100,8 +100,8 @@ where
     let access_right = req.into_access_right()?;
     let signer = server.dispatcher.get_account(0)?;
     let amount = U64::from_raw(req.amount);
-    let target = req.target;
-    let transfer_state = transfer{ amount, target };
+    let recipient = req.target;
+    let transfer_state = transfer{ amount, recipient };
 
     let receipt = server.dispatcher.state_transition(
         access_right,
