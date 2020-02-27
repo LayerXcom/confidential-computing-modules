@@ -1,6 +1,7 @@
 use crate::localstd::{
     io::{self, Read, Write},
     vec::Vec,
+    string::String,
 };
 use crate::{
     serde::{Serialize, Deserialize}
@@ -40,6 +41,24 @@ impl From<&UserAddress> for web3::types::Address {
     fn from(address: &UserAddress) -> Self {
         let bytes = address.as_bytes();
         web3::types::Address::from_slice(bytes)
+    }
+}
+
+impl From<&str> for UserAddress {
+    fn from(s: &str) -> Self {
+        let mut res = [0u8; 20];
+        res.copy_from_slice(&s.as_bytes()[..20]);
+
+        Self::from_array(res)
+    }
+}
+
+impl From<String> for UserAddress {
+    fn from(s: String) -> Self {
+        let mut res = [0u8; 20];
+        res.copy_from_slice(&s.as_bytes()[..20]);
+
+        Self::from_array(res)
     }
 }
 

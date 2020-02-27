@@ -28,8 +28,6 @@ lazy_static! {
 
 impl_mem!{
     0, "Balance", Address => U64;
-    1, "Balance2", Address => U64;
-    // 2, "TotalSupply", U64;
 }
 
 impl_runtime!{
@@ -48,20 +46,17 @@ impl_runtime!{
     pub fn transfer(
         self,
         sender: UserAddress,
-        target: UserAddress,
+        recipient: UserAddress,
         amount: U64
     ) {
-        let my_balance = self.get::<U64>(&sender, "Balance")?;
-        let target_balance = self.get::<U64>(&target, "Balance")?;
+        let sender_balance = self.get::<U64>(&sender, "Balance")?;
+        let recipient_balance = self.get::<U64>(&recipient, "Balance")?;
 
-        ensure!(my_balance > amount, "You don't have enough balance.");
+        ensure!(sender_balance > amount, "transfer amount exceeds balance.");
 
-        let my_update = my_balance - amount;
-        let target_update = target_balance + amount;
+        let sender_update = update!(sender, "Balance", sender_balance - amount);
+        let recipient_update = update!(recipient, "Balance", recipient_balance + amount);
 
-        let my = update!(sender, "Balance", my_update);
-        let target = update!(target, "Balance", target_update);
-
-        insert![my, target]
+        insert![sender_update, recipient_update]
     }
 }
