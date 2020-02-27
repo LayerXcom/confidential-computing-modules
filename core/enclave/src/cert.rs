@@ -9,7 +9,11 @@ use std::{
 use serde_json::Value;
 use chrono::DateTime;
 use sgx_types::*;
-use log::{info, error, debug};
+use log::{info, error, debug, warn};
+use crate::{
+    ocalls::get_update_info,
+    error::{Result, EnclaveError},
+};
 
 pub const IAS_REPORT_CA:&[u8] = include_bytes!("../AttestationReportSigningCACert.pem");
 
@@ -28,7 +32,7 @@ static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
     &webpki::RSA_PKCS1_3072_8192_SHA384,
 ];
 
-pub fn verify_report_cert(cert_der: &[u8]) -> Result<(Vec<u8>, Vec<u8>), sgx_status_t> {
+pub fn verify_report_cert(cert_der: &[u8]) -> Result<(Vec<u8>, Vec<u8>)> {
     // Before we reach here, Webpki already verifed the cert is properly signed
 
     // Search for Public Key prime256v1 OID
@@ -130,59 +134,39 @@ pub fn verify_report_cert(cert_der: &[u8]) -> Result<(Vec<u8>, Vec<u8>), sgx_sta
         info!("Time diff = {}", now - ts);
     } else {
         error!("Failed to fetch timestamp from attestation report");
-        return Err(sgx_status_t::SGX_ERROR_UNEXPECTED);
+        return Err(EnclaveError::SgxError{err: sgx_status_t::SGX_ERROR_UNEXPECTED});
     }
 
-    // // 2. Verify quote status (mandatory field)
-    // if let Value::String(quote_status) = &attn_report["isvEnclaveQuoteStatus"] {
-    //     debug!("isvEnclaveQuoteStatus = {}", quote_status);
-    //     match quote_status.as_ref() {
-    //         "OK" => (),
-    //         "GROUP_OUT_OF_DATE" | "GROUP_REVOKED" | "CONFIGURATION_NEEDED" => {
-    //             // Verify platformInfoBlob for further info if status not OK
-    //             if let Value::String(pib) = &attn_report["platformInfoBlob"] {
-    //                 let mut buf = Vec::new();
+    // 2. Verify quote status (mandatory field)
+    if let Value::String(quote_status) = &attn_report["isvEnclaveQuoteStatus"] {
+        debug!("isvEnclaveQuoteStatus = {}", quote_status);
+        match quote_status.as_ref() {
+            "OK" => (),
+            "GROUP_OUT_OF_DATE" | "GROUP_REVOKED" | "CONFIGURATION_NEEDED" => {
+                // Verify platformInfoBlob for further info if status not OK
+                if let Value::String(pib) = &attn_report["platformInfoBlob"] {
+                    let mut buf = Vec::new();
 
-    //                 // the TLV Header (4 bytes/8 hexes) should be skipped
-    //                 let n = (pib.len() - 8)/2;
-    //                 for i in 0..n {
-    //                     buf.push(u8::from_str_radix(&pib[(i*2+8)..(i*2+10)], 16).unwrap());
-    //                 }
+                    // the TLV Header (4 bytes/8 hexes) should be skipped
+                    let n = (pib.len() - 8)/2;
+                    for i in 0..n {
+                        buf.push(u8::from_str_radix(&pib[(i*2+8)..(i*2+10)], 16).unwrap());
+                    }
 
-    //                 let mut update_info = sgx_update_info_bit_t::default();
-    //                 let mut rt : sgx_status_t = sgx_status_t::SGX_ERROR_UNEXPECTED;
-    //                 let res = unsafe{
-    //                     ocall_get_update_info(&mut rt as *mut sgx_status_t,
-    //                                           buf.as_slice().as_ptr() as * const sgx_platform_info_t,
-    //                                           1,
-    //                                           &mut update_info as * mut sgx_update_info_bit_t)
-    //                 };
-    //                 if res != sgx_status_t::SGX_SUCCESS {
-    //                     error!("ocall_get_update_info failed. res={:?}", res);
-    //                     return Err(res);
-    //                 }
-
-    //                 if rt != sgx_status_t::SGX_SUCCESS {
-    //                     warn!("ocall_get_update_info unsuccessful. rt={:?}", rt);
-    //                     // Borrow of packed field is unsafe in future Rust releases
-    //                     unsafe{
-    //                         debug!("update_info.pswUpdate: {}", update_info.pswUpdate);
-    //                         debug!("update_info.csmeFwUpdate: {}", update_info.csmeFwUpdate);
-    //                         debug!("update_info.ucodeUpdate: {}", update_info.ucodeUpdate);
-    //                     }
-    //                     return Err(rt);
-    //                 }
-    //             } else {
-    //                 error!("Failed to fetch platformInfoBlob from attestation report");
-    //                 return Err(sgx_status_t::SGX_ERROR_UNEXPECTED);
-    //             }
-    //         }
-    //         _ => return Err(sgx_status_t::SGX_ERROR_UNEXPECTED),
-    //     }
-    // } else {
-    //     error!("Failed to fetch isvEnclaveQuoteStatus from attestation report");
-    //     return Err(sgx_status_t::SGX_ERROR_UNEXPECTED);
-    // }
+                    if get_update_info(buf).is_err() {
+                        return Err(EnclaveError::SgxError{err: sgx_status_t::SGX_ERROR_UNEXPECTED});
+                    }
+                } else {
+                    error!("Failed to fetch platformInfoBlob from attestation report");
+                    return Err(EnclaveError::SgxError{err: sgx_status_t::SGX_ERROR_UNEXPECTED});
+                }
+            }
+            _ => return Err(EnclaveError::SgxError{err: sgx_status_t::SGX_ERROR_UNEXPECTED}),
+        }
+    } else {
+        error!("Failed to fetch isvEnclaveQuoteStatus from attestation report");
+        return Err(EnclaveError::SgxError{err: sgx_status_t::SGX_ERROR_UNEXPECTED});
+    }
 
     // // 3. Verify quote body
     // if let Value::String(quote_raw) = &attn_report["isvEnclaveQuoteBody"] {

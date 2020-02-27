@@ -93,3 +93,15 @@ pub unsafe extern "C" fn ocall_save_to_memory(data_ptr: *const u8, data_len: usi
     let ptr = Box::into_raw(Box::new(data.into_boxed_slice())) as *const u8;
     ptr as u64
 }
+
+#[no_mangle]
+pub extern "C"
+fn ocall_get_update_info(
+    platform_blob: * const sgx_platform_info_t,
+    enclave_trusted: i32,
+    update_info: * mut sgx_update_info_bit_t
+) -> sgx_status_t {
+    unsafe{
+        sgx_report_attestation_status(platform_blob, enclave_trusted, update_info)
+    }
+}
