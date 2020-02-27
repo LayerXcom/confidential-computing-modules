@@ -11,12 +11,16 @@ pub struct UpdatedState<S: State> {
 }
 
 impl<S: State> UpdatedState<S> {
-    pub fn new(address: UserAddress, mem_id: MemId, state: S) -> Self {
+    pub fn new(
+        address: impl Into<UserAddress>,
+        mem_id: MemId,
+        state: impl Into<S>,
+    ) -> Self {
         // let mem_id = mem_name_to_id(mem_name);
         UpdatedState {
-            address,
+            address: address.into(),
             mem_id,
-            state
+            state: state.into(),
         }
     }
 }

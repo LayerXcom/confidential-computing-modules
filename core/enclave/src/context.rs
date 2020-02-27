@@ -19,9 +19,12 @@ lazy_static! {
 }
 
 impl StateGetter for EnclaveContext<StateType> {
-    fn get<S: State>(&self, key: &UserAddress, name: &str) -> anyhow::Result<S> {
+    fn get<S: State>(&self, key: impl Into<UserAddress>, name: &str) -> anyhow::Result<S> {
         let mem_id = mem_name_to_id(name);
-        let mut buf = self.db.get(key, &mem_id).into_inner_state().into_bytes();
+        let mut buf = self.db
+            .get(&key.into(), &mem_id)
+            .into_inner_state()
+            .into_bytes();
         if buf.len() == 0 {
             return Ok(Default::default());
         }

@@ -27,7 +27,8 @@ lazy_static! {
 }
 
 impl_mem!{
-    0, "Balance", Address => U64;
+    (0, "Balance", Address => U64)
+    // (1, "TotalSupply", U64)
 }
 
 impl_runtime!{
@@ -37,9 +38,10 @@ impl_runtime!{
         sender: UserAddress,
         total_supply: U64
     ) {
-        let init = update!(sender, "Balance", total_supply);
+        let sender_balance = update!(sender, "Balance", total_supply);
+        let init = update!("TotalSupply", total_supply);
 
-        insert![init]
+        insert![sender_balance, init]
     }
 
     #[fn_id=1]
@@ -49,8 +51,8 @@ impl_runtime!{
         recipient: UserAddress,
         amount: U64
     ) {
-        let sender_balance = self.get::<U64>(&sender, "Balance")?;
-        let recipient_balance = self.get::<U64>(&recipient, "Balance")?;
+        let sender_balance = self.get_map::<U64>(sender, "Balance")?;
+        let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
 
         ensure!(sender_balance > amount, "transfer amount exceeds balance.");
 

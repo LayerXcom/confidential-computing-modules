@@ -1,6 +1,61 @@
 #[macro_export]
 macro_rules! impl_mem {
-    ( $($id:expr, $name:expr, Address => $value:ty);* ;) => {
+    ( $( $t:tt )* ) => {
+        $crate::__impl_inner_mem!(@normalize $( $t )* );
+    };
+
+    // ( $($id:expr, $name:expr, Address => $value:ty);* ;) => {
+    //     pub fn mem_name_to_id(name: &str) -> MemId {
+    //         match name {
+    //             $( $name => MemId::from_raw($id) ),* ,
+    //             _ => panic!("invalid mem name"),
+    //         }
+    //     }
+
+    //     /// Return maximum size of mem values
+    //     fn max_size() -> usize {
+    //         *[$( <$value>::size(), )*]
+    //             .into_iter()
+    //             .max()
+    //             .expect("Iterator should not be empty.")
+    //     }
+    // };
+
+    // ( $($id:expr, $name:expr, $value:ty);* ;) => {
+    //     pub fn mem_name_to_id(name: &str) -> MemId {
+    //         match name {
+    //             $( $name => MemId::from_raw($id) ),* ,
+    //             _ => panic!("invalid mem name"),
+    //         }
+    //     }
+
+    //     /// Return maximum size of mem values
+    //     fn max_size() -> usize {
+    //         *[$( <$value>::size(), )*]
+    //             .into_iter()
+    //             .max()
+    //             .expect("Iterator should not be empty.")
+    //     }
+    // };
+}
+
+#[macro_export]
+macro_rules! __impl_inner_mem {
+    (@normalize
+        $(($id:expr, $name:expr, Address => $value:ty))*
+    ) => {
+        $crate::__impl_inner_mem!(@normalize $(($id, $name, $value))* );
+    };
+
+    (@normalize
+        $(($id:expr, $name:expr, $value:ty))*
+    ) => {
+        $crate::__impl_inner_mem!(@imp $(($id, $name, $value))* );
+    };
+
+    (@imp
+        $(($id:expr, $name:expr, $value:ty))*
+    ) => {
         pub fn mem_name_to_id(name: &str) -> MemId {
             match name {
                 $( $name => MemId::from_raw($id) ),* ,
@@ -23,14 +78,14 @@ macro_rules! impl_runtime {
     (
         $( $t:tt )*
     ) => {
-        impl_inner_runtime!(@imp
+        $crate::__impl_inner_runtime!(@imp
             $($t)*
         );
     };
 }
 
 #[macro_export]
-macro_rules! impl_inner_runtime {
+macro_rules! __impl_inner_runtime {
     (@imp
         $(
             #[fn_id=$fn_id:expr]
@@ -82,12 +137,16 @@ macro_rules! impl_inner_runtime {
                 }
             }
 
-            pub fn get<S: State>(&self, key: &UserAddress, name: &str) -> Result<S> {
-                self.db.get(&key, name)
+            pub fn get_map<S: State>(
+                &self,
+                key: UserAddress,
+                name: &str
+            ) -> Result<S> {
+                self.db.get(key, name)
             }
 
-            pub fn get_global<S: State>(&self, name: &str) -> Result<S> {
-                self.db.get(&name.into(), name)
+            pub fn get<S: State>(&self, name: &str) -> Result<S> {
+                self.db.get(name, name)
             }
 
             pub fn call(
@@ -122,11 +181,11 @@ macro_rules! impl_inner_runtime {
 #[macro_export]
 macro_rules! update {
     ($addr:expr, $mem_name:expr, $value:expr) => {
-        UpdatedState::new($addr, mem_name_to_id($mem_name), $value.into())
+        UpdatedState::new($addr, mem_name_to_id($mem_name), $value)
     };
 
     ($mem_name:expr, $value:expr) => {
-        UpdatedState::new($mem_name.into(), mem_name_to_id($mem_name), $value.into())
+        UpdatedState::new($mem_name, mem_name_to_id($mem_name), $value)
     };
 }
 
