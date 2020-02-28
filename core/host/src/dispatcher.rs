@@ -18,7 +18,7 @@ use anonify_rpc_handler::{
     error::{Result, HostError},
 };
 use anonify_common::AccessRight;
-use anonify_runtime::State;
+use anonify_runtime::traits::State;
 use parking_lot::RwLock;
 
 /// This dispatcher communicates with a blockchain node.

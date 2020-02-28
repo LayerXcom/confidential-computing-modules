@@ -44,9 +44,12 @@ pub unsafe extern "C" fn ecall_get_state(
     mem_id: u32,
     state: &mut EnclaveState,
 ) -> sgx_status_t {
-    let sig = Signature::from_bytes(&sig[..]).expect("Failed to read signatures.");
-    let pubkey = PublicKey::from_bytes(&pubkey[..]).expect("Failed to read public key.");
-    let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey).expect("Faild to generate user address.");
+    let sig = Signature::from_bytes(&sig[..])
+        .expect("Failed to read signatures.");
+    let pubkey = PublicKey::from_bytes(&pubkey[..])
+        .expect("Failed to read public key.");
+    let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey)
+        .expect("Faild to generate user address.");
 
     let user_state = &ENCLAVE_CONTEXT.get_by_id(&key, MemId::from_raw(mem_id));
     state.0 = save_to_host_memory(user_state.as_bytes()).unwrap() as *const u8;
@@ -58,8 +61,14 @@ pub unsafe extern "C" fn ecall_get_state(
 pub unsafe extern "C" fn ecall_register(
     raw_register_tx: &mut RawRegisterTx,
 ) -> sgx_status_t {
-    let register_tx = RegisterTx::construct(DEV_HOSTNAME, REPORT_PATH, TEST_SUB_KEY, &*ENCLAVE_CONTEXT)
+    let register_tx = RegisterTx::construct(
+            DEV_HOSTNAME,
+            REPORT_PATH,
+            TEST_SUB_KEY,
+            &*ENCLAVE_CONTEXT,
+        )
         .expect("Faild to constract register transaction.");
+
     *raw_register_tx = register_tx.into_raw()
         .expect("Faild to convert into raw register transaction.");
 
@@ -80,12 +89,18 @@ pub unsafe extern "C" fn ecall_state_transition(
 ) -> sgx_status_t {
     let params = slice::from_raw_parts_mut(state, state_len);
 
-    let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge).expect("Failed to generate access right.");
-    let call_kind = CallKind::from_call_id(call_id, params).expect("Failed to generate callkind.");
+    let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge)
+        .expect("Failed to generate access right.");
+    let call_kind = CallKind::from_call_id(call_id, params)
+        .expect("Failed to generate callkind.");
     let state_trans_tx = StateTransTx::construct(
-        call_kind, state_id, &ar, &*ENCLAVE_CONTEXT
-    )
+            call_kind,
+            state_id,
+            &ar,
+            &*ENCLAVE_CONTEXT,
+        )
         .expect("Failed to construct state tx.");
+
     *raw_state_tx = state_trans_tx.into_raw()
         .expect("Failed to convert into raw state transaction.");
 

@@ -89,3 +89,26 @@ pub fn save_to_host_memory(data: &[u8]) -> Result<u64> {
         e => Err(e.into()),
     }
 }
+
+pub fn get_update_info(mut buf: Vec<u8>) -> Result<()> {
+    let mut update_info = sgx_update_info_bit_t::default();
+    let mut rt : sgx_status_t = sgx_status_t::SGX_ERROR_UNEXPECTED;
+
+    let status = unsafe {
+        ocall_get_update_info(
+            &mut rt as *mut sgx_status_t,
+            buf.as_slice().as_ptr() as *mut sgx_platform_info_t,
+            1,
+            &mut update_info as *mut sgx_update_info_bit_t
+        )
+    };
+
+    if status != sgx_status_t::SGX_SUCCESS {
+		return Err(EnclaveError::SgxError{ err: status });
+	}
+	if rt != sgx_status_t::SGX_SUCCESS {
+		return Err(EnclaveError::SgxError{ err: rt });
+    }
+
+    Ok(())
+}

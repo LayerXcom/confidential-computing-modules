@@ -86,8 +86,8 @@ fn test_integration_eth_transfer() {
 
     // 5. Send a transaction to contract
     let amount = U64::from_raw(30);
-    let target = other_access_right.user_address();
-    let transfer_state = transfer{ amount, target };
+    let recipient = other_access_right.user_address();
+    let transfer_state = transfer{ amount, recipient };
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
         transfer_state,

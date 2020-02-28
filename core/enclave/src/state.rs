@@ -1,4 +1,4 @@
-//! State transition functions for anonymous asset
+//! This module defines operations for each user's state.
 
 use anonify_common::{
     UserAddress, Sha256, Hash256, LockParam, AccessRight,
@@ -14,7 +14,7 @@ use crate::{
     context::{EnclaveContext},
 };
 use std::{
-    prelude::v1::*,
+    vec::Vec,
     io::{Write, Read},
     marker::PhantomData,
     convert::{TryFrom, TryInto},
@@ -23,15 +23,15 @@ use std::{
 
 /// An collection of state transition operations
 #[derive(Clone)]
-pub struct StateService<S: State>{
+pub struct StateTransService<S: State>{
     ctx: EnclaveContext<S>,
     my_addr: UserAddress,
     updates: Option<Vec<UpdatedState<StateType>>>,
 }
 
-impl StateService<StateType>
+impl StateTransService<StateType>
 {
-    /// Only way to generate StateService is given by access right.
+    /// Only way to generate StateTransService is given by access right.
     pub fn from_access_right(
         access_right: &AccessRight,
         ctx: &EnclaveContext<StateType>,
@@ -39,7 +39,7 @@ impl StateService<StateType>
         let my_addr = UserAddress::from_access_right(access_right)?;
         let ctx = ctx.clone();
 
-        Ok(StateService::<StateType>{
+        Ok(StateTransService::<StateType>{
             ctx,
             my_addr,
             updates: None,
@@ -67,12 +67,12 @@ impl StateService<StateType>
     pub fn reveal_lock_params(&self) -> Vec<LockParam> {
         self.updates
             .clone()
-            .unwrap()
+            .expect("State transitions are not applied.")
             .into_iter()
             .map(|e| {
                 let sv = self.ctx.state_value(&e.address, &e.mem_id);
-                let user = UserState::<StateType, Current>::new(e.address, e.mem_id, sv);
-                user.lock_param()
+                UserState::<StateType, Current>::new(e.address, e.mem_id, sv)
+                    .lock_param()
             })
             .collect()
     }
@@ -81,7 +81,7 @@ impl StateService<StateType>
     pub fn reveal_ciphertexts(&self, symm_key: &SymmetricKey) -> Result<Vec<Ciphertext>> {
         self.updates
             .clone()
-            .unwrap()
+            .expect("State transitions are not applied.")
             .into_iter()
             .map(|e| {
                 let sv = self.ctx.state_value(&e.address, &e.mem_id);
@@ -147,9 +147,8 @@ impl UserState<StateType, Current> {
     /// Decrypt Ciphertext which was stored in a shared ledger.
     pub fn decrypt(cipheriv: Ciphertext, key: &SymmetricKey) -> Result<Self> {
         let buf = key.decrypt_aes_256_gcm(cipheriv)?;
-        let res = UserState::decode(&mut &buf[..])?;
-
-        Ok(res)
+        UserState::decode(&mut &buf[..])
+            .map_err(Into::into)
     }
 
     pub fn mem_id(&self) -> MemId {

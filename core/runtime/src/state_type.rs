@@ -1,10 +1,11 @@
-use crate::State;
+use crate::traits::State;
 use crate::localstd::{
     vec::Vec,
     collections::BTreeMap,
     ops::{Add, Sub, Mul, Div},
     convert::TryFrom,
 };
+use crate::local_anyhow::{Result, Error};
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
@@ -14,7 +15,7 @@ macro_rules! impl_uint {
         pub struct $name($raw);
 
         impl TryFrom<Vec<u8>> for $name {
-            type Error = codec::Error;
+            type Error = Error;
 
             fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
                 if s.len() == 0 {
@@ -26,7 +27,7 @@ macro_rules! impl_uint {
         }
 
         impl TryFrom<&mut [u8]> for $name {
-            type Error = codec::Error;
+            type Error = Error;
 
             fn try_from(s: &mut [u8]) -> Result<Self, Self::Error> {
                 if s.len() == 0 {
@@ -43,7 +44,7 @@ macro_rules! impl_uint {
         }
 
         impl TryFrom<StateType> for $name {
-            type Error = codec::Error;
+            type Error = Error;
 
             fn try_from(s: StateType) -> Result<Self, Self::Error> {
                 if s.0.len() == 0 {
@@ -113,6 +114,15 @@ macro_rules! impl_uint {
 impl_uint!(U16, u16, 2);
 impl_uint!(U32, u32, 4);
 impl_uint!(U64, u64, 8);
+
+#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct Bytes(Vec<u8>);
+
+impl From<Vec<u8>> for Bytes {
+    fn from(v: Vec<u8>) -> Self {
+        Bytes(v)
+    }
+}
 
 pub trait RawState: Encode + Decode + Clone + Default {}
 

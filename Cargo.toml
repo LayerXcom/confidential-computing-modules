@@ -6,6 +6,7 @@ members = [
     "core/rpc-handler",
     "core/common",
     "core/https-enclave",
+    "core/treekem",
     "example/cli",
     "example/api",
     "example/app",

@@ -3,7 +3,7 @@ use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx};
 use anonify_common::AccessRight;
 use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
-use anonify_runtime::State;
+use anonify_runtime::traits::State;
 use anonify_rpc_handler::{
     eventdb::InnerEnclaveLog,
     utils::StateInfo,

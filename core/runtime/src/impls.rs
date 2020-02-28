@@ -1,6 +1,27 @@
 #[macro_export]
 macro_rules! impl_mem {
-    ( $($id:expr, $name:expr, Address => $value:ty);* ;) => {
+    ( $( $t:tt )* ) => {
+        $crate::__impl_inner_mem!(@normalize $( $t )* );
+    };
+}
+
+#[macro_export]
+macro_rules! __impl_inner_mem {
+    (@normalize
+        $(($id:expr, $name:expr, Address => $value:ty))*
+    ) => {
+        $crate::__impl_inner_mem!(@normalize $(($id, $name, $value))* );
+    };
+
+    (@normalize
+        $(($id:expr, $name:expr, $value:ty))*
+    ) => {
+        $crate::__impl_inner_mem!(@imp $(($id, $name, $value))* );
+    };
+
+    (@imp
+        $(($id:expr, $name:expr, $value:ty))*
+    ) => {
         pub fn mem_name_to_id(name: &str) -> MemId {
             match name {
                 $( $name => MemId::from_raw($id) ),* ,
@@ -23,14 +44,14 @@ macro_rules! impl_runtime {
     (
         $( $t:tt )*
     ) => {
-        impl_inner_runtime!(@imp
+        $crate::__impl_inner_runtime!(@imp
             $($t)*
         );
     };
 }
 
 #[macro_export]
-macro_rules! impl_inner_runtime {
+macro_rules! __impl_inner_runtime {
     (@imp
         $(
             #[fn_id=$fn_id:expr]
@@ -38,7 +59,7 @@ macro_rules! impl_inner_runtime {
                 $runtime:ident,
                 $sender:ident : $address:ty
                 $(, $param_name:ident : $param:ty )*
-            ) -> Result<Vec<UpdatedState<StateType>>,codec::Error> {
+            ) {
                 $( $impl:tt )*
             }
         )*
@@ -56,10 +77,10 @@ macro_rules! impl_inner_runtime {
         }
 
         impl CallKind {
-            pub fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self, codec::Error> {
+            pub fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self> {
                 match id {
                     $( $fn_id => Ok(CallKind::$fn_name($fn_name::from_bytes(state)?)), )*
-                    _ => return Err("Invalid Call ID".into()),
+                    _ => return Err(anyhow!("Invalid Call ID")),
                 }
             }
         }
@@ -82,11 +103,23 @@ macro_rules! impl_inner_runtime {
                 }
             }
 
+            pub fn get_map<S: State>(
+                &self,
+                key: UserAddress,
+                name: &str
+            ) -> Result<S> {
+                self.db.get(key, name)
+            }
+
+            pub fn get<S: State>(&self, name: &str) -> Result<S> {
+                self.db.get(name, name)
+            }
+
             pub fn call(
                 self,
                 kind: CallKind,
                 my_addr: UserAddress,
-            ) -> Result<Vec<UpdatedState<StateType>>, codec::Error> {
+            ) -> Result<Vec<UpdatedState<StateType>>> {
                 match kind {
                     $( CallKind::$fn_name($fn_name) => {
                         self.$fn_name(
@@ -103,10 +136,28 @@ macro_rules! impl_inner_runtime {
                     $runtime,
                     $sender: $address
                     $(, $param_name : $param )*
-                ) -> Result<Vec<UpdatedState<StateType>>,codec::Error> {
+                ) -> Result<Vec<UpdatedState<StateType>>> {
                     $( $impl )*
                 }
             )*
         }
+    };
+}
+
+#[macro_export]
+macro_rules! update {
+    ($addr:expr, $mem_name:expr, $value:expr) => {
+        UpdatedState::new($addr, mem_name_to_id($mem_name), $value)
+    };
+
+    ($mem_name:expr, $value:expr) => {
+        UpdatedState::new($mem_name, mem_name_to_id($mem_name), $value)
+    };
+}
+
+#[macro_export]
+macro_rules! insert {
+    ( $($update:expr),* ) => {
+        Ok(vec![$( $update),* ])
     };
 }

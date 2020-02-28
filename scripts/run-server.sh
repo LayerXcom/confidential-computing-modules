@@ -21,6 +21,7 @@ if [ "x$1" == "x--release" ]; then
 fi
 
 make DEBUG=1
+# enclave.signed.so is need to initialize enclave.
 rm -rf ../example/bin && cp -rf bin/ ../example/bin/ && cd ../
 
 solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol

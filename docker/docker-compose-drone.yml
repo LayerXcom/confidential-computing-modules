@@ -25,22 +25,6 @@ services:
       drone_net:
         ipv4_address: 172.16.238.2
 
-
-  # drone-runner:
-  #   image: drone/drone-runner-docker:1
-  #   command: runner
-  #   restart: always
-  #   depends_on:
-  #     - drone
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - /dev/isgx:/dev/isgx
-  #   environment:
-  #     - DRONE_RPC_HOST=drone
-  #     - DRONE_RPC_SECRET=${DRONE_RPC_SECRET}
-  #     - DRONE_RUNNER_CAPACITY=2
-  #     - DRONE_RUNNER_DEVICES=/dev/isgx
-
 networks:
   drone_net:
     driver: bridge

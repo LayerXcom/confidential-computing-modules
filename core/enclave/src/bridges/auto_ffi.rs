@@ -39,3 +39,11 @@ extern "C" {
         data_len: usize,
     ) -> sgx_status_t;
 }
+extern "C" {
+    pub fn ocall_get_update_info(
+        retval: *mut sgx_status_t,
+        platformBlob: *mut sgx_platform_info_t,
+        enclaveTrusted: i32,
+        update_info: *mut sgx_update_info_bit_t,
+    ) -> sgx_status_t;
+}

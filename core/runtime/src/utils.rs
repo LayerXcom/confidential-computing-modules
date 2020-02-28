@@ -1,4 +1,5 @@
-use crate::State;
+use crate::traits::State;
+use crate::local_anyhow::Result;
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
@@ -10,17 +11,21 @@ pub struct UpdatedState<S: State> {
 }
 
 impl<S: State> UpdatedState<S> {
-    pub fn new(address: UserAddress, mem_id: MemId, state: S) -> Self {
+    pub fn new(
+        address: impl Into<UserAddress>,
+        mem_id: MemId,
+        state: impl Into<S>,
+    ) -> Self {
         // let mem_id = mem_name_to_id(mem_name);
         UpdatedState {
-            address,
+            address: address.into(),
             mem_id,
-            state
+            state: state.into(),
         }
     }
 }
 
-pub fn into_trait<S: State>(s: UpdatedState<impl State>) -> Result<UpdatedState<S>, codec::Error> {
+pub fn into_trait<S: State>(s: UpdatedState<impl State>) -> Result<UpdatedState<S>> {
     let state = S::from_state(&s.state)?;
     Ok(UpdatedState {
         address: s.address,
