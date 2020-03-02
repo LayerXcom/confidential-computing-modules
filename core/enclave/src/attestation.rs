@@ -80,7 +80,7 @@ impl<'a> AttestationService<'a> {
         let mut socket = TcpStream::new(fd)?;
 
         // TODO: Fix to call `HttpsClient` to use non-blocking communications.
-        let raw_res = https_enclave::get_report_response(&mut socket, req)?;
+        let raw_res = anonify_attestation::get_report_response(&mut socket, req)?;
         // let mut client = HttpsClient::new(socket, &self.host)?;
         // let res = client.send_from_raw_req(&req)?;
 

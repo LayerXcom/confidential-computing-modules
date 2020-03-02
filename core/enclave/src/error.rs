@@ -26,7 +26,7 @@ pub enum EnclaveError {
     Ed25519Error(ed25519_dalek::SignatureError),
     RingError{ err: ring::error::Unspecified},
     SgxError{ err: sgx_types::sgx_status_t },
-    HttpsEnclaveError(https_enclave::Error),
+    HttpsEnclaveError(anonify_attestation::Error),
     HexError(hex::FromHexError),
     WebpkiError(webpki::Error),
     Base64Error(base64::DecodeError),
@@ -59,8 +59,8 @@ impl From<ring::error::Unspecified> for EnclaveError {
     }
 }
 
-impl From<https_enclave::Error> for EnclaveError {
-    fn from(err: https_enclave::Error) -> Self {
+impl From<anonify_attestation::Error> for EnclaveError {
+    fn from(err: anonify_attestation::Error) -> Self {
         EnclaveError::HttpsEnclaveError(err)
     }
 }
