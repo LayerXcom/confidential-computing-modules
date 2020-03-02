@@ -10,7 +10,7 @@ anonify-types = { path = "../types" }
 anonify-common = { path = "../common" }
 anonify-app-preluder = { path = "../app-preluder" }
 anonify-runtime = { path = "../runtime" }
-anonify-rpc-handler = { path = "../rpc-handler"}
+anonify-event-watcher = { path = "../event-watcher"}
 sgx_types = "1.1.0"
 sgx_urts = "1.1.0"
 anyhow = "1.0"

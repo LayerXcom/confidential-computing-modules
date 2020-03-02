@@ -4,13 +4,13 @@ use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTran
 use anonify_common::AccessRight;
 use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
 use anonify_runtime::traits::State;
-use anonify_rpc_handler::{
+use anonify_event_watcher::{
     eventdb::InnerEnclaveLog,
     utils::StateInfo,
+    error::{HostError, Result},
 };
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
-use anonify_rpc_handler::error::{HostError, Result};
 
 /// Insert event logs from blockchain nodes into enclave memory database.
 pub(crate) fn insert_logs(

@@ -3,7 +3,7 @@ members = [
     "core/types",
     "core/runtime",
     "core/app-preluder",
-    "core/rpc-handler",
+    "core/event-watcher",
     "core/common",
     "core/https-enclave",
     "core/treekem",
