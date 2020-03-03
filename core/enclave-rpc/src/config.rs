@@ -40,6 +40,10 @@ impl ClientConfig {
 
         ClientConfig { config }
     }
+
+    pub fn config_arc(&self) -> Arc<rustls::ClientConfig> {
+        Arc::new(self.config.clone())
+    }
 }
 
 pub struct RuntimeConfig {
