@@ -7,3 +7,4 @@ mod client;
 mod config;
 mod server;
 mod transport;
+mod service;
