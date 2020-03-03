@@ -771,6 +771,9 @@ dependencies = [
 [[package]]
 name = "enclave-rpc"
 version = "0.1.0"
+dependencies = [
+ "rustls 0.16.0 (git+https://github.com/mesalock-linux/rustls?branch=mesalock_sgx)",
+]
 
 [[package]]
 name = "encode_unicode"
