@@ -3,13 +3,17 @@ use std::io::{Read, Write};
 use std::mem::transmute;
 use std::vec::Vec;
 use anyhow::{Result, ensure};
+use log::debug;
+use crate::EnclaveHandler;
 
 pub trait ClientTransport {
     fn send(&mut self, req: &[u8]) -> Result<Vec<u8>>;
 }
 
 pub trait ServerTransport {
-    fn serve(&mut self) -> Result<()>;
+    fn serve<T>(&mut self, handler: T) -> Result<()>
+    where
+        T: EnclaveHandler;
 }
 
 pub struct TlsTransport<S: rustls::Session> {
@@ -31,7 +35,23 @@ impl<S: rustls::Session> ClientTransport for TlsTransport<S> {
 }
 
 impl<S: rustls::Session> ServerTransport for TlsTransport<S> {
-    fn serve(&mut self) -> Result<()> {
+    fn serve<T>(&mut self, handler: T) -> Result<()>
+    where
+        T: EnclaveHandler,
+    {
+        let mut msg = Message::new(&mut self.stream);
+        loop {
+            let req = match msg.read() {
+                Ok(r) => r,
+                Err(e) => {
+                    debug!("Connection disconnected: {:?}", e);
+                    return Ok(());
+                }
+            };
+
+            let res = handler.handle_req(&req)?;
+            msg.write(&res)?;
+        }
         Ok(())
     }
 }

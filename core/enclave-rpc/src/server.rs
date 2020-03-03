@@ -3,6 +3,7 @@ use anyhow::{Result, anyhow};
 use log::{debug, error, warn};
 use crate::config::ServerConfig;
 use crate::transport::{TlsTransport, ServerTransport};
+use crate::EnclaveHandler;
 
 pub struct Server {
     addr: SocketAddr,
@@ -16,7 +17,10 @@ impl Server {
         }
     }
 
-    pub fn start(&mut self) -> Result<()> {
+    pub fn start<T>(&mut self, handler: T) -> Result<()>
+    where
+        T: EnclaveHandler + Clone + core::marker::Send + 'static,
+    {
         let listener = TcpListener::bind(self.addr)?;
         let tls_config = self.config.tls_config();
         let pool = threadpool::ThreadPool::new(1);
@@ -26,13 +30,13 @@ impl Server {
                     let session = rustls::ServerSession::new(&tls_config);
                     let stream = rustls::StreamOwned::new(session, stream);
                     let mut transport = TlsTransport::new(stream);
-
-                    pool.execute(move || match transport.serve() {
+                    let handler = handler.clone();
+                    pool.execute(move || match transport.serve(handler) {
                         Ok(_) => (),
                         Err(e) => debug!("serve error: {:?}", e),
                     });
                 }
-                Err(e) => error!("Incoming error: {:}", e),
+                Err(e) => error!("Incoming error: {:?}", e),
             }
         }
         Ok(())
