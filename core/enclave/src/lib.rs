@@ -20,6 +20,7 @@ mod attestation;
 mod context;
 mod transaction;
 mod cert;
+mod rpc;
 #[cfg(debug_assertions)]
 mod tests;
 

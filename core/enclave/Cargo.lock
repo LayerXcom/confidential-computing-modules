@@ -53,6 +53,7 @@ dependencies = [
  "anonify-app-preluder 0.1.0",
  "anonify-attestation 0.1.0",
  "anonify-common 0.1.0",
+ "anonify-enclave-rpc 0.1.0",
  "anonify-runtime 0.1.0",
  "anonify-types 0.1.0",
  "anyhow 1.0.26 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.0)",
@@ -78,6 +79,21 @@ dependencies = [
  "sgx_tunittest 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
  "sgx_types 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha2 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "webpki 0.21.2 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)",
+]
+
+[[package]]
+name = "anonify-enclave-rpc"
+version = "0.1.0"
+dependencies = [
+ "anyhow 1.0.26 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.0)",
+ "http 0.2.0 (git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.0)",
+ "log 0.4.10 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.0)",
+ "rustls 0.16.0 (git+https://github.com/mesalock-linux/rustls?branch=mesalock_sgx)",
+ "serde 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0)",
+ "serde_json 1.0.40 (git+https://github.com/mesalock-linux/serde-json-sgx?rev=sgx_1.1.0)",
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+ "threadpool 1.8.0 (git+https://github.com/mesalock-linux/rust-threadpool-sgx)",
  "webpki 0.21.2 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)",
 ]
 
@@ -834,6 +850,7 @@ version = "1.0.104"
 source = "git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0#c945ac9aeb23dc799070f3afaf590a6c3ac2c1a2"
 dependencies = [
  "serde_derive 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0)",
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
 ]
 
 [[package]]
@@ -1212,6 +1229,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "threadpool"
+version = "1.8.0"
+source = "git+https://github.com/mesalock-linux/rust-threadpool-sgx#9ccaf827f374684fe1e95791a20a1a14faa769cb"
+dependencies = [
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+]
+
+[[package]]
 name = "tiny-keccak"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1430,6 +1455,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum termcolor 1.0.5 (git+https://github.com/mesalock-linux/termcolor-sgx)" = "<none>"
 "checksum textwrap 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d326610f408c7a4eb6f51c37c330e496b08506c9457c9d34287ecc38809fb060"
 "checksum thread_local 1.0.0 (git+https://github.com/mesalock-linux/thread_local-rs-sgx)" = "<none>"
+"checksum threadpool 1.8.0 (git+https://github.com/mesalock-linux/rust-threadpool-sgx)" = "<none>"
 "checksum tiny-keccak 1.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1d8a021c69bb74a44ccedb824a046447e2c84a01df9e5c20779750acb38e11b2"
 "checksum toml 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)" = "ffc92d160b1eef40665be3a05630d003936a3bc7da7421277846c2613e92c71a"
 "checksum typenum 1.11.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6d2783fe2d6b8c1101136184eb41be8b1ad379e4657050b8aaff0c79ee7575f9"
