@@ -1,14 +1,15 @@
 use std::net::TcpStream;
 use std::io::{Read, Write};
-use serde::{Serialize, Deserialize};
-use anyhow::Result;
+use std::mem::transmute;
+use std::vec::Vec;
+use anyhow::{Result, ensure};
 
 pub trait ClientTransport {
-    fn send(&mut self, request)
+    fn send(&mut self, req: &[u8]) -> Result<Vec<u8>>;
 }
 
 pub trait ServerTransport {
-
+    fn serve(&mut self) -> Result<()>;
 }
 
 pub struct TlsTransport<S: rustls::Session> {
@@ -21,12 +22,26 @@ impl<S: rustls::Session> TlsTransport<S> {
     }
 }
 
+impl<S: rustls::Session> ClientTransport for TlsTransport<S> {
+    fn send(&mut self, req: &[u8]) -> Result<Vec<u8>> {
+        let mut msg = Message::new(&mut self.stream);
+        msg.write(req)?;
+        msg.read()
+    }
+}
+
+impl<S: rustls::Session> ServerTransport for TlsTransport<S> {
+    fn serve(&mut self) -> Result<()> {
+        Ok(())
+    }
+}
+
 pub struct Message<'a, T>
 where
     T: Read + Write,
 {
     transport: &'a mut T,
-    max_frame_len: u64,
+    max_frame_len: usize,
 }
 
 impl<T> Message<'_, T>
@@ -40,7 +55,20 @@ where
         }
     }
 
-    // pub fn read<D>(&mut self) -> Result<D> {
+    pub fn read(&mut self) -> Result<Vec<u8>> {
+        let mut buf = vec![];
+        self.transport.read_exact(&mut buf)?;
 
-    // }
+        ensure!(buf.len() < self.max_frame_len, "Exceed max frame length");
+
+        Ok(buf)
+    }
+
+    pub fn write(&mut self, buf: &[u8]) -> Result<()>
+    {
+        self.transport.write_all(&buf)?;
+        self.transport.flush()?;
+
+        Ok(())
+    }
 }
