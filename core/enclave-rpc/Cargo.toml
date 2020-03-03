@@ -8,3 +8,7 @@ edition = "2018"
 
 [dependencies]
 rustls = { branch = "mesalock_sgx", git = "https://github.com/mesalock-linux/rustls" }
+sgx_tstd = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net"] }
+anyhow = { rev = "sgx_1.1.0", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
+serde_json = { rev = "sgx_1.1.0", git = "https://github.com/mesalock-linux/serde-json-sgx" }
+serde = { rev = "sgx_1.1.0", git = "https://github.com/mesalock-linux/serde-sgx.git" }
