@@ -2852,6 +2852,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "treekem"
 version = "0.1.0"
+dependencies = [
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+]
 
 [[package]]
 name = "try-lock"
