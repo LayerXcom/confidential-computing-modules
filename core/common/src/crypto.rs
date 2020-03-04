@@ -124,7 +124,7 @@ impl UserAddress {
 }
 
 /// Hash digest of sha256 hash function
-#[derive(Clone, Default, Debug, PartialEq)]
+#[derive(Clone, Default, Debug, PartialEq, Eq, Hash)]
 pub struct Sha256([u8; 32]);
 
 impl Hash256 for Sha256 {

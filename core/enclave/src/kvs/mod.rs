@@ -7,16 +7,29 @@ use ed25519_dalek::{PublicKey, Signature};
 use anonify_common::{
     UserAddress,
     kvs::*,
+    Hash256, Sha256,
 };
 use anonify_runtime::{State, MemId};
+use codec::Encode;
 use crate::state::{StateValue, Current};
 use crate::error::Result;
 
-#[derive(Debug)]
-struct StateMap<S: State>(HashMap<MemId, StateValue<S, Current>>);
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
+pub struct DBKey(Sha256);
+
+// TODO: UserAddress+MemId is not sufficient size for hash digest in terms of collision resistance.
+// TODO: Consider if the hashing is needed.
+impl DBKey {
+    pub fn new(addr: &UserAddress, mem_id: &MemId) -> Self {
+        let mut inp = vec![];
+        inp.extend_from_slice(&addr.encode());
+        inp.extend_from_slice(&mem_id.encode());
+        DBKey(Sha256::hash(&inp))
+    }
+}
 
 #[derive(Debug, Clone)]
-pub struct EnclaveDB<S: State>(Arc<SgxRwLock<HashMap<UserAddress, StateMap<S>>>>);
+pub struct EnclaveDB<S: State>(Arc<SgxRwLock<HashMap<DBKey, StateValue<S, Current>>>>);
 
 impl<S: State> EnclaveDB<S> {
     pub fn new() -> Self {
@@ -24,28 +37,17 @@ impl<S: State> EnclaveDB<S> {
     }
 
     pub fn get(&self, address: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> {
-        match self.0.read().unwrap().get(address) {
-            Some(v) => {
-                v.0.get(mem_id)
-                .cloned()
-                .unwrap_or(StateValue::default())
-            },
+        let key = DBKey::new(address, mem_id);
+        match self.0.read().unwrap().get(&key) {
+            Some(v) => v.clone(),
             None => return StateValue::default()
         }
     }
 
     pub fn write(&self, address: UserAddress, mem_id: MemId, sv: StateValue<S, Current>) {
         let mut tmp = self.0.write().unwrap();
-        match tmp.get_mut(&address) {
-            Some(c) => {
-                c.0.insert(mem_id, sv);
-            },
-            None => {
-                let mut c = HashMap::new();
-                c.insert(mem_id, sv);
-                tmp.insert(address, StateMap(c));
-            }
-        }
+        let key = DBKey::new(&address, &mem_id);
+        tmp.insert(key, sv);
     }
 }
 

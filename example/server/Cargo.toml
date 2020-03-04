@@ -12,7 +12,7 @@ app = { path = "../app" }
 anonify-common = { path = "../../core/common" }
 anonify-runtime = { path = "../../core/runtime" }
 anonify-host = { path = "../../core/host" }
-anonify-rpc-handler = { path = "../../core/rpc-handler" }
+anonify-event-watcher = { path = "../../core/event-watcher" }
 sgx_types = "1.1.0"
 actix-web = "1.0"
 dotenv = "0.13"
