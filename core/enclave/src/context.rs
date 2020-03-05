@@ -95,7 +95,7 @@ impl EnclaveContext<StateType> {
         let mem_id = user_state.mem_id();
         let sv = user_state.into_sv();
 
-        self.db.write(address, mem_id, sv);
+        self.db.insert(address, mem_id, sv);
 
         Ok(())
     }

@@ -44,10 +44,16 @@ impl<S: State> EnclaveDB<S> {
         }
     }
 
-    pub fn write(&self, address: UserAddress, mem_id: MemId, sv: StateValue<S, Current>) {
+    pub fn insert(&self, address: UserAddress, mem_id: MemId, sv: StateValue<S, Current>) {
         let mut tmp = self.0.write().unwrap();
         let key = DBKey::new(&address, &mem_id);
         tmp.insert(key, sv);
+    }
+
+    pub fn delete(&self, address: &UserAddress, mem_id: &MemId) {
+        let mut tmp = self.0.write().unwrap();
+        let key = DBKey::new(&address, &mem_id);
+        tmp.remove(&key);
     }
 }
 
