@@ -11,7 +11,6 @@ use chrono::DateTime;
 use sgx_types::*;
 use log::{info, error, debug, warn};
 use crate::{
-    ocalls::get_update_info,
     error::{Result, EnclaveError},
 };
 
@@ -142,25 +141,6 @@ pub fn verify_report_cert(cert_der: &[u8]) -> Result<(Vec<u8>, Vec<u8>)> {
         debug!("isvEnclaveQuoteStatus = {}", quote_status);
         match quote_status.as_ref() {
             "OK" => (),
-            "GROUP_OUT_OF_DATE" | "GROUP_REVOKED" | "CONFIGURATION_NEEDED" => {
-                // Verify platformInfoBlob for further info if status not OK
-                if let Value::String(pib) = &attn_report["platformInfoBlob"] {
-                    let mut buf = Vec::new();
-
-                    // the TLV Header (4 bytes/8 hexes) should be skipped
-                    let n = (pib.len() - 8)/2;
-                    for i in 0..n {
-                        buf.push(u8::from_str_radix(&pib[(i*2+8)..(i*2+10)], 16).unwrap());
-                    }
-
-                    if get_update_info(buf).is_err() {
-                        return Err(EnclaveError::SgxError{err: sgx_status_t::SGX_ERROR_UNEXPECTED});
-                    }
-                } else {
-                    error!("Failed to fetch platformInfoBlob from attestation report");
-                    return Err(EnclaveError::SgxError{err: sgx_status_t::SGX_ERROR_UNEXPECTED});
-                }
-            }
             _ => return Err(EnclaveError::SgxError{err: sgx_status_t::SGX_ERROR_UNEXPECTED}),
         }
     } else {

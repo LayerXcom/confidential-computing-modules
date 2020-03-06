@@ -2,7 +2,7 @@ use std::sync::Arc;
 use failure::Error;
 use log::debug;
 use anonify_host::dispatcher::get_state;
-use anonify_rpc_handler::{
+use anonify_event_watcher::{
     BlockNumDB,
     traits::*,
 };

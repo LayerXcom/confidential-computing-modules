@@ -11,7 +11,7 @@ use crate::bridges::ecalls::{
     insert_logs as insert_fn,
     get_state_from_enclave,
 };
-use anonify_rpc_handler::{
+use anonify_event_watcher::{
     traits::*,
     utils::*,
     eventdb::BlockNumDB,

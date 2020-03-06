@@ -7,7 +7,7 @@ use anonify_host::{
     EnclaveDir,
     Dispatcher,
 };
-use anonify_rpc_handler::{
+use anonify_event_watcher::{
     EventDB, BlockNumDB,
     traits::*,
     eth::*,

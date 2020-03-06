@@ -5,7 +5,7 @@ use rand_os::OsRng;
 use anonify_common::AccessRight;
 use anonify_runtime::{State, U64};
 use anonify_app_preluder::{transfer, constructor};
-use anonify_rpc_handler::{
+use anonify_event_watcher::{
     eventdb::{EventDB, BlockNumDB},
     eth::*,
 };
