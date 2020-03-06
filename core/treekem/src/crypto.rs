@@ -1,8 +1,17 @@
 use std::vec::Vec;
-use secp256k1::PublicKey;
+use secp256k1::{PublicKey, SecretKey};
+
+#[derive(Debug, Clone)]
+pub struct DhPrivateKey(SecretKey);
 
 #[derive(Debug, Clone)]
 pub struct DhPubKey(PublicKey);
+
+impl DhPubKey {
+    pub fn from_private_key(private_key: &DhPrivateKey) -> Self {
+        DhPubKey(PublicKey::from_secret_key(&private_key.0))
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);

@@ -1,24 +1,29 @@
 use crate::crypto::{DhPubKey, GroupEpochSecret, AppSecret};
 use crate::application::AppKeyChain;
 use crate::handshake::{GroupAdd, GroupOperation, Handshake};
+use crate::ratchet_tree::RatchetTree;
 use anyhow::{Result, anyhow};
 
 #[derive(Clone, Debug)]
 pub struct GroupState {
     /// The current version of the group key
     epoch: u32,
-
     my_roster_index: Option<u32>,
+    tree: RatchetTree,
 }
 
 impl GroupState {
     pub fn apply_add_handshake(
         &self,
-        roster_index: u32,
+        new_roster_index: u32,
         pub_key: DhPubKey,
     ) -> Result<(Handshake, GroupState, AppKeyChain)> {
+        let (new_group_state, app_key_chain, add_op) =
+            self.update_by_add_op(new_roster_index, pub_key)?;
+        let prior_epoch = self.epoch;
+        let handshake = new_group_state.create_handshake(prior_epoch, add_op)?;
 
-        unimplemented!();
+        Ok((handshake, new_group_state, app_key_chain))
     }
 
     fn update_by_add_op(
@@ -32,8 +37,9 @@ impl GroupState {
 
         new_group_state.increment_epoch()?;
         let app_secret = new_group_state.update_epoch_secret(&new_epoch_secret)?;
+        let app_key_chain = AppKeyChain::from_app_secret(&new_group_state, app_secret);
 
-        unimplemented!();
+        Ok((new_group_state, app_key_chain, GroupOperation::Add(add_op)))
     }
 
     fn create_handshake(
@@ -44,7 +50,14 @@ impl GroupState {
         unimplemented!();
     }
 
+    /// Add a new member to group state.
     fn process_add_op(&mut self, add: &GroupAdd) -> Result<GroupEpochSecret> {
+        let add_roster_index = add.roster_index;
+
+        if add_roster_index as usize > self.tree.size() {
+            return Err(anyhow!("Invalid roster index in add operation."));
+        }
+
         unimplemented!();
     }
 
@@ -57,6 +70,7 @@ impl GroupState {
         Ok(())
     }
 
+    /// Set the next generation of Group Epoch Secret.
     fn update_epoch_secret(
         &mut self,
         update_secret: &GroupEpochSecret

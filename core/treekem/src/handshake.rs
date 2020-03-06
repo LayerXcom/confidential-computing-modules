@@ -15,8 +15,8 @@ pub enum GroupOperation {
 #[derive(Debug, Clone)]
 pub struct GroupAdd {
     /// Indicates where to add the new member.
-    roster_index: u32,
-    pub_key: DhPubKey,
+    pub roster_index: u32,
+    pub pub_key: DhPubKey,
 }
 
 impl GroupAdd {
