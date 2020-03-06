@@ -1,8 +1,8 @@
 use crate::crypto::{CryptoRng, HmacKey, DhPubKey, GroupEpochSecret, AppSecret, UpdateSecret, SHA256_OUTPUT_LEN};
 use crate::application::AppKeyChain;
 use crate::handshake::{GroupAdd, GroupOperation, Handshake};
-use crate::ratchet_tree::{RatchetTree, PathSecret};
-use anyhow::{Result, anyhow};
+use crate::ratchet_tree::{RatchetTree, RachetTreeNode, PathSecret};
+use anyhow::{Result, anyhow, ensure};
 
 /// Process the received handshake from a global ledger.
 pub trait HandshakeApplier: Sized {
@@ -29,7 +29,7 @@ pub trait UpdateOperator: Sized {
 pub struct GroupState {
     /// The current version of the group key
     epoch: u32,
-    my_roster_index: Option<u32>,
+    my_roster_index: u32,
     tree: RatchetTree,
     /// The initial secret used to derive app_secret.
     /// It works as a salt of HKDF.
@@ -118,7 +118,7 @@ impl GroupState {
         }
 
         let tree_index = RatchetTree::roster_idx_to_tree_idx(add_roster_index)?;
-
+        self.tree.add_leaf_node(RachetTreeNode::Blank);
 
         Ok(UpdateSecret::from_zeros(SHA256_OUTPUT_LEN))
     }
@@ -138,5 +138,13 @@ impl GroupState {
         update_secret: &UpdateSecret
     ) -> Result<AppSecret> {
         unimplemented!();
+    }
+
+    pub fn epoch(&self) -> u32 {
+        self.epoch
+    }
+
+    pub fn my_roster_index(&self) -> u32 {
+        self.my_roster_index
     }
 }

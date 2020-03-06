@@ -13,6 +13,16 @@ impl RatchetTree {
         self.nodes.len()
     }
 
+    pub fn add_leaf_node(&mut self, node: RachetTreeNode) {
+        match self.nodes.is_empty() {
+            true => self.nodes.push(node),
+            false => {
+                self.nodes.push(RachetTreeNode::Blank);
+                self.nodes.push(node);
+            },
+        }
+    }
+
     /// Convert a roster index into a ratchet tree index.
     /// tree index is just two times of roster index.
     pub fn roster_idx_to_tree_idx(roster_idx: u32) -> Result<usize> {
