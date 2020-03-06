@@ -13,8 +13,14 @@ pub enum GroupOperation {
 }
 
 #[derive(Debug, Clone)]
-struct GroupAdd {
+pub struct GroupAdd {
     /// Indicates where to add the new member.
     roster_index: u32,
     pub_key: DhPubKey,
+}
+
+impl GroupAdd {
+    pub fn new(roster_index: u32, pub_key: DhPubKey) -> Self {
+        GroupAdd { roster_index, pub_key }
+    }
 }
