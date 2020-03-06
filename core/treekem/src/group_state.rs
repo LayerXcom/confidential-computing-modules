@@ -1,4 +1,4 @@
-use crate::crypto::{DhPubKey, GroupEpochSecret, AppSecret, UpdateSecret};
+use crate::crypto::{HmacKey, DhPubKey, GroupEpochSecret, AppSecret, UpdateSecret, SHA256_OUTPUT_LEN};
 use crate::application::AppKeyChain;
 use crate::handshake::{GroupAdd, GroupOperation, Handshake};
 use crate::ratchet_tree::RatchetTree;
@@ -39,6 +39,9 @@ pub struct GroupState {
     epoch: u32,
     my_roster_index: Option<u32>,
     tree: RatchetTree,
+    /// The initial secret used to derive app_secret.
+    /// It works as a salt of HKDF.
+    init_secret: HmacKey,
 }
 
 impl GroupState {
@@ -86,9 +89,10 @@ impl GroupState {
             return Err(anyhow!("Invalid roster index in add operation."));
         }
 
+        let tree_index = RatchetTree::roster_idx_to_tree_idx(add_roster_index)?;
+        
 
-
-        unimplemented!();
+        Ok(UpdateSecret::from_zeros(SHA256_OUTPUT_LEN))
     }
 
     fn increment_epoch(&mut self) -> Result<()> {

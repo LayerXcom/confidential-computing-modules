@@ -1,6 +1,8 @@
 use std::vec::Vec;
 use secp256k1::{PublicKey, SecretKey};
 
+pub const SHA256_OUTPUT_LEN: usize = 256 / 8;
+
 #[derive(Debug, Clone)]
 pub struct DhPrivateKey(SecretKey);
 
@@ -41,7 +43,7 @@ impl UpdateSecret {
         &self.0
     }
 
-    fn from_zeros(len: usize) -> Self {
+    pub fn from_zeros(len: usize) -> Self {
         UpdateSecret(vec![0u8; len])
     }
 }

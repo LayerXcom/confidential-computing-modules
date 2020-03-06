@@ -7,4 +7,5 @@ mod application;
 mod group_state;
 mod handshake;
 mod ratchet_tree;
+mod tree_math;
 mod crypto;
