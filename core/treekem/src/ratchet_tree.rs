@@ -1,5 +1,6 @@
 use std::vec::Vec;
 use crate::crypto::{DhPrivateKey, DhPubKey};
+use anyhow::{Result, anyhow};
 
 #[derive(Clone, Debug)]
 pub struct RatchetTree {
@@ -9,6 +10,15 @@ pub struct RatchetTree {
 impl RatchetTree {
     pub fn size(&self) -> usize {
         self.nodes.len()
+    }
+
+    /// Convert a roster index into a ratchet tree index.
+    /// tree index is just two times of roster index.
+    pub fn roster_idx_to_tree_idx(roster_idx: u32) -> Result<usize> {
+        roster_idx
+            .checked_mul(2)
+            .map(|i| i as usize)
+            .ok_or(anyhow!("Invalid roster or tree index."))
     }
 }
 

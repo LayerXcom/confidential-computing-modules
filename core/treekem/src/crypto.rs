@@ -33,3 +33,15 @@ impl From<AppSecret> for HmacKey {
         secret.0
     }
 }
+
+pub struct UpdateSecret(Vec<u8>);
+
+impl UpdateSecret {
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0
+    }
+
+    fn from_zeros(len: usize) -> Self {
+        UpdateSecret(vec![0u8; len])
+    }
+}

@@ -1,10 +1,22 @@
 use crate::crypto::DhPubKey;
 
 // TODO: Does need signature over the group's history?
+/// This `Handshake` is sent to global ledger.
 #[derive(Clone, Debug)]
 pub struct Handshake {
-    prior_epoch: u32,
-    op: GroupOperation,
+    /// This is equal to the epoch of the current groupstate
+    /// at the time of receicing and applying the handshake.
+    pub prior_epoch: u32,
+    /// The performing operation
+    pub op: GroupOperation,
+}
+
+impl Handshake {
+    pub fn roster_index(&self) -> u32 {
+        match self.op {
+            GroupOperation::Add(ref add) => add.roster_index,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
