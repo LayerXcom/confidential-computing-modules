@@ -1,4 +1,5 @@
-use secp256k1::{PublicKey;
+use std::vec::Vec;
+use secp256k1::PublicKey;
 
 #[derive(Debug, Clone)]
 pub struct DhPubKey(PublicKey);

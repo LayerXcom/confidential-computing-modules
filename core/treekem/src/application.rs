@@ -8,6 +8,10 @@ pub struct AppMsg {
 }
 
 pub struct AppKeyChain {
+
+}
+
+impl AppKeyChain {
     pub fn from_app_secret(group_state: &GroupState, ) -> Self {
         unimplemented!();
     }
