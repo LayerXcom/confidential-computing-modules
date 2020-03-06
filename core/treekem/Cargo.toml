@@ -8,3 +8,4 @@ edition = "2018"
 sgx_tstd = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net"] }
 anyhow = { rev = "sgx_1.1.0", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
 libsecp256k1 = { version = "0.2", default-features = false }
+rand = { rev = "v0.6.5_sgx1.1.0", git = "https://github.com/mesalock-linux/rand-sgx"}

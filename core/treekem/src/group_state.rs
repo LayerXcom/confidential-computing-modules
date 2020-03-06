@@ -1,12 +1,39 @@
-use crate::crypto::{HmacKey, DhPubKey, GroupEpochSecret, AppSecret, UpdateSecret, SHA256_OUTPUT_LEN};
+use crate::crypto::{CryptoRng, HmacKey, DhPubKey, GroupEpochSecret, AppSecret, UpdateSecret, SHA256_OUTPUT_LEN};
 use crate::application::AppKeyChain;
 use crate::handshake::{GroupAdd, GroupOperation, Handshake};
-use crate::ratchet_tree::RatchetTree;
+use crate::ratchet_tree::{RatchetTree, PathSecret};
 use anyhow::{Result, anyhow};
 
 /// Process the received handshake from a global ledger.
 pub trait HandshakeApplier: Sized {
     fn apply_handshake(&self, handshake: &Handshake) -> Result<(GroupState, AppKeyChain)>;
+}
+
+pub trait AddOperator: Sized {
+    fn create_add_handshake(
+        &self,
+        new_roster_index: u32,
+        pub_key: DhPubKey,
+    ) -> Result<(Handshake, GroupState, AppKeyChain)>;
+}
+
+pub trait UpdateOperator: Sized {
+    fn create_update_handshake<R: CryptoRng>(
+        &self,
+        new_path_secret: PathSecret,
+        csprng: &mut R,
+    ) -> Result<(Handshake, GroupState, AppKeyChain)>;
+}
+
+#[derive(Clone, Debug)]
+pub struct GroupState {
+    /// The current version of the group key
+    epoch: u32,
+    my_roster_index: Option<u32>,
+    tree: RatchetTree,
+    /// The initial secret used to derive app_secret.
+    /// It works as a salt of HKDF.
+    init_secret: HmacKey,
 }
 
 impl HandshakeApplier for GroupState {
@@ -33,19 +60,8 @@ impl HandshakeApplier for GroupState {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct GroupState {
-    /// The current version of the group key
-    epoch: u32,
-    my_roster_index: Option<u32>,
-    tree: RatchetTree,
-    /// The initial secret used to derive app_secret.
-    /// It works as a salt of HKDF.
-    init_secret: HmacKey,
-}
-
-impl GroupState {
-    pub fn create_add_handshake(
+impl AddOperator for GroupState {
+    fn create_add_handshake(
         &self,
         new_roster_index: u32,
         pub_key: DhPubKey,
@@ -57,7 +73,19 @@ impl GroupState {
 
         Ok((handshake, new_group_state, app_key_chain))
     }
+}
 
+impl UpdateOperator for GroupState {
+    fn create_update_handshake<R: CryptoRng>(
+        &self,
+        new_path_secret: PathSecret,
+        csprng: &mut R,
+    ) -> Result<(Handshake, GroupState, AppKeyChain)> {
+        unimplemented!();
+    }
+}
+
+impl GroupState {
     fn update_by_add_op(
         &self,
         new_roster_index: u32,
@@ -90,7 +118,7 @@ impl GroupState {
         }
 
         let tree_index = RatchetTree::roster_idx_to_tree_idx(add_roster_index)?;
-        
+
 
         Ok(UpdateSecret::from_zeros(SHA256_OUTPUT_LEN))
     }

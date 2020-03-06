@@ -3,6 +3,10 @@ use secp256k1::{PublicKey, SecretKey};
 
 pub const SHA256_OUTPUT_LEN: usize = 256 / 8;
 
+pub trait CryptoRng: rand::RngCore + rand::CryptoRng {}
+impl<T> CryptoRng for T
+    where T: rand::RngCore + rand::CryptoRng {}
+
 #[derive(Debug, Clone)]
 pub struct DhPrivateKey(SecretKey);
 
