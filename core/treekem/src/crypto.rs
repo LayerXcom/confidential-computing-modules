@@ -25,6 +25,12 @@ pub struct GroupEpochSecret(Vec<u8>);
 #[derive(Debug, Clone)]
 pub struct HmacKey(Vec<u8>);
 
+impl HmacKey {
+    pub fn zero(len: usize) -> Self {
+        HmacKey(vec![0u8; len])
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct AppSecret(HmacKey);
 
@@ -47,7 +53,7 @@ impl UpdateSecret {
         &self.0
     }
 
-    pub fn from_zeros(len: usize) -> Self {
+    pub fn zero(len: usize) -> Self {
         UpdateSecret(vec![0u8; len])
     }
 }

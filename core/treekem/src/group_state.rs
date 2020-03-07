@@ -1,4 +1,7 @@
-use crate::crypto::{CryptoRng, HmacKey, DhPubKey, GroupEpochSecret, AppSecret, UpdateSecret, SHA256_OUTPUT_LEN};
+use crate::crypto::{
+    CryptoRng, HmacKey, DhPrivateKey, DhPubKey, GroupEpochSecret,
+    AppSecret, UpdateSecret, SHA256_OUTPUT_LEN,
+};
 use crate::application::AppKeyChain;
 use crate::handshake::{GroupAdd, GroupOperation, Handshake};
 use crate::ratchet_tree::{RatchetTree, RachetTreeNode, PathSecret};
@@ -13,7 +16,7 @@ pub trait AddOperator: Sized {
     fn create_add_handshake(
         &self,
         new_roster_index: u32,
-        pub_key: DhPubKey,
+        public_key: DhPubKey,
     ) -> Result<(Handshake, GroupState, AppKeyChain)>;
 }
 
@@ -64,10 +67,10 @@ impl AddOperator for GroupState {
     fn create_add_handshake(
         &self,
         new_roster_index: u32,
-        pub_key: DhPubKey,
+        public_key: DhPubKey,
     ) -> Result<(Handshake, GroupState, AppKeyChain)> {
         let (new_group_state, app_key_chain, add_op) =
-            self.update_by_add_op(new_roster_index, pub_key)?;
+            self.update_by_add_op(new_roster_index, public_key)?;
         let prior_epoch = self.epoch;
         let handshake = new_group_state.create_handshake(prior_epoch, add_op)?;
 
@@ -86,13 +89,28 @@ impl UpdateOperator for GroupState {
 }
 
 impl GroupState {
+    pub fn new(private_key: DhPrivateKey) -> Self {
+        let my_roster_index = 0;
+        let epoch = 0;
+        let init_secret = HmacKey::zero(SHA256_OUTPUT_LEN);
+        let my_node = RachetTreeNode::from_private_key(private_key);
+        let tree = RatchetTree::new(vec![my_node]);
+
+        GroupState {
+            epoch,
+            my_roster_index,
+            tree,
+            init_secret,
+        }
+    }
+
     fn update_by_add_op(
         &self,
         new_roster_index: u32,
-        pub_key: DhPubKey,
+        public_key: DhPubKey,
     ) -> Result<(GroupState, AppKeyChain, GroupOperation)> {
         let mut new_group_state = self.clone();
-        let add_op = GroupAdd::new(new_roster_index, pub_key);
+        let add_op = GroupAdd::new(new_roster_index, public_key);
         let update_secret = new_group_state.process_add_op(&add_op)?;
 
         new_group_state.increment_epoch()?;
@@ -120,7 +138,7 @@ impl GroupState {
         let tree_index = RatchetTree::roster_idx_to_tree_idx(add_roster_index)?;
         self.tree.add_leaf_node(RachetTreeNode::Blank);
 
-        Ok(UpdateSecret::from_zeros(SHA256_OUTPUT_LEN))
+        Ok(UpdateSecret::zero(SHA256_OUTPUT_LEN))
     }
 
     fn increment_epoch(&mut self) -> Result<()> {

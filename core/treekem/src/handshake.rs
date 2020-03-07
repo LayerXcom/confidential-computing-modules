@@ -28,11 +28,11 @@ pub enum GroupOperation {
 pub struct GroupAdd {
     /// Indicates where to add the new member.
     pub roster_index: u32,
-    pub pub_key: DhPubKey,
+    pub public_key: DhPubKey,
 }
 
 impl GroupAdd {
-    pub fn new(roster_index: u32, pub_key: DhPubKey) -> Self {
-        GroupAdd { roster_index, pub_key }
+    pub fn new(roster_index: u32, public_key: DhPubKey) -> Self {
+        GroupAdd { roster_index, public_key }
     }
 }

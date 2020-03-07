@@ -9,6 +9,10 @@ pub struct RatchetTree {
 }
 
 impl RatchetTree {
+    pub fn new(nodes: Vec<RachetTreeNode>) -> Self {
+        RatchetTree { nodes }
+    }
+
     pub fn size(&self) -> usize {
         self.nodes.len()
     }
@@ -47,16 +51,16 @@ impl RatchetTree {
 pub enum RachetTreeNode {
     Blank,
     Filled {
-        pub_key: DhPubKey,
+        public_key: DhPubKey,
         private_key: Option<DhPrivateKey>,
     },
 }
 
 impl RachetTreeNode {
     pub fn from_private_key(private_key: DhPrivateKey) -> Self {
-        let pub_key = DhPubKey::from_private_key(&private_key);
+        let public_key = DhPubKey::from_private_key(&private_key);
         RachetTreeNode::Filled {
-            pub_key,
+            public_key,
             private_key: Some(private_key),
         }
     }
