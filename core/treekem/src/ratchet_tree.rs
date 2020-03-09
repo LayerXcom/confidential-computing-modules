@@ -1,5 +1,7 @@
 use std::vec::Vec;
-use crate::crypto::{DhPrivateKey, DhPubKey, HmacKey};
+use crate::crypto::{
+    DhPrivateKey, DhPubKey, secrets::HmacKey,
+};
 use crate::tree_math;
 use anyhow::{Result, anyhow};
 
@@ -67,14 +69,5 @@ impl RachetTreeNode {
             public_key,
             private_key: Some(private_key),
         }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct PathSecret(HmacKey);
-
-impl From<PathSecret> for HmacKey {
-    fn from(path: PathSecret) -> Self {
-        path.0
     }
 }

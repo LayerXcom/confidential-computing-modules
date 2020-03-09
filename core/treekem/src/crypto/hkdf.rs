@@ -1,4 +1,4 @@
-use super::HmacKey;
+use super::secrets::HmacKey;
 use anyhow::Result;
 use codec::Encode;
 

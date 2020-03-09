@@ -1,10 +1,10 @@
 use crate::crypto::{
-    CryptoRng, HmacKey, DhPrivateKey, DhPubKey, GroupEpochSecret,
-    AppSecret, UpdateSecret, SHA256_OUTPUT_LEN,
+    CryptoRng, DhPrivateKey, DhPubKey, SHA256_OUTPUT_LEN,
+    secrets::{HmacKey, GroupEpochSecret, AppSecret, UpdateSecret, PathSecret},
 };
 use crate::application::AppKeyChain;
 use crate::handshake::{GroupAdd, GroupOperation, Handshake};
-use crate::ratchet_tree::{RatchetTree, RachetTreeNode, PathSecret};
+use crate::ratchet_tree::{RatchetTree, RachetTreeNode};
 use anyhow::{Result, anyhow, ensure};
 
 /// Process the received handshake from a global ledger.

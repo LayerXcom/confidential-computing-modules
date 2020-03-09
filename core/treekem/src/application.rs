@@ -1,7 +1,10 @@
 use std::vec::Vec;
 use std::convert::TryFrom;
 use crate::group_state::GroupState;
-use crate::crypto::{AppSecret, AppMemberSecret, hkdf, HmacKey, SHA256_OUTPUT_LEN};
+use crate::crypto::{
+    secrets::{AppSecret, AppMemberSecret, HmacKey},
+    hkdf, SHA256_OUTPUT_LEN,
+};
 use anyhow::{Result, anyhow};
 use codec::{Encode};
 
