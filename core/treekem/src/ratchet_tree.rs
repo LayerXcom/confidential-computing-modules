@@ -1,9 +1,11 @@
 use std::vec::Vec;
 use crate::crypto::{
-    DhPrivateKey, DhPubKey, secrets::HmacKey,
+    DhPrivateKey, DhPubKey,
+    secrets::{HmacKey, PathSecret},
+    ecies::EciesCiphertext,
 };
 use crate::tree_math;
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, ensure};
 
 #[derive(Clone, Debug)]
 pub struct RatchetTree {
@@ -46,8 +48,16 @@ impl RatchetTree {
         }
     }
 
-    pub fn encrypt_direct_path_secret() {
+    pub fn encrypt_direct_path_secret(
+        &self,
+        leaf_idx: usize,
+        path_secret: PathSecret,
+    ) -> Result<()> {
+        ensure!(leaf_idx % 2 == 0, "index must be leaf's one.");
+        let num_leaves = tree_math::num_leaves_in_tree(self.size());
+        let direct_path = tree_math::node_direct_path(leaf_idx, num_leaves);
 
+        unimplemented!();
     }
 }
 
@@ -70,4 +80,14 @@ impl RachetTreeNode {
             private_key: Some(private_key),
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct DirectPathMsg {
+    node_msg: Vec<DirectPathNodeMsg>,
+}
+
+#[derive(Debug, Clone)]
+pub struct DirectPathNodeMsg {
+    node_secrets: Vec<EciesCiphertext>,
 }

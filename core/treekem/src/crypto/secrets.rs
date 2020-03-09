@@ -1,7 +1,20 @@
 use std::vec::Vec;
+use super::{SHA256_OUTPUT_LEN, hkdf};
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);
+
+impl From<Vec<u8>> for GroupEpochSecret {
+    fn from(vec: Vec<u8>) -> Self {
+        GroupEpochSecret(vec.into())
+    }
+}
+
+impl From<&[u8]> for GroupEpochSecret {
+    fn from(bytes: &[u8]) -> Self {
+        GroupEpochSecret(bytes.into())
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct AppSecret(HmacKey);
@@ -52,6 +65,23 @@ impl UpdateSecret {
     }
 }
 
+/// node_secret[n] = HKDF-Expand-Label(path_secret[n], "node", "", Hash.Length)
+#[derive(Debug, Clone)]
+pub struct NodeSecret(Vec<u8>);
+
+impl From<Vec<u8>> for NodeSecret {
+    fn from(vec: Vec<u8>) -> Self {
+        NodeSecret(vec.into())
+    }
+}
+
+impl From<&[u8]> for NodeSecret {
+    fn from(bytes: &[u8]) -> Self {
+        NodeSecret(bytes.into())
+    }
+}
+
+
 #[derive(Debug, Clone)]
 pub struct PathSecret(HmacKey);
 
@@ -63,7 +93,9 @@ impl From<PathSecret> for HmacKey {
 
 impl PathSecret {
     pub fn derive_node_values(&self) {
-        
+        let mut node_secret_buf = vec![0u8; SHA256_OUTPUT_LEN];
+        // hkdf::expand_label(&self.into(), b"node", b"", &mut node_secret_buf);
+
     }
 }
 

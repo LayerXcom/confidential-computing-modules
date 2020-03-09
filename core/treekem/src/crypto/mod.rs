@@ -1,5 +1,6 @@
 use secp256k1::{PublicKey, SecretKey};
 
+pub mod ecies;
 pub mod hkdf;
 pub mod secrets;
 
