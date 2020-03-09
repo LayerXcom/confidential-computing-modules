@@ -1,5 +1,5 @@
 use std::vec::Vec;
-use super::DhPubKey;
+use super::dh::DhPubKey;
 
 #[derive(Debug, Clone)]
 pub struct EciesCiphertext {

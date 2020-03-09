@@ -1,6 +1,6 @@
 use std::vec::Vec;
 use crate::crypto::{
-    DhPrivateKey, DhPubKey,
+    dh::{DhPrivateKey, DhPubKey},
     secrets::{HmacKey, PathSecret},
     ecies::EciesCiphertext,
 };
@@ -56,6 +56,12 @@ impl RatchetTree {
         ensure!(leaf_idx % 2 == 0, "index must be leaf's one.");
         let num_leaves = tree_math::num_leaves_in_tree(self.size());
         let direct_path = tree_math::node_direct_path(leaf_idx, num_leaves);
+
+        // let mut node_msgs = vec![];
+
+        for path_node_idx in direct_path {
+
+        }
 
         unimplemented!();
     }

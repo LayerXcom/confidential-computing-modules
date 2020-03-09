@@ -1,5 +1,6 @@
 use crate::crypto::{
-    CryptoRng, DhPrivateKey, DhPubKey, SHA256_OUTPUT_LEN,
+    CryptoRng, SHA256_OUTPUT_LEN,
+    dh::{DhPrivateKey, DhPubKey},
     secrets::{HmacKey, GroupEpochSecret, AppSecret, UpdateSecret, PathSecret},
 };
 use crate::application::AppKeyChain;

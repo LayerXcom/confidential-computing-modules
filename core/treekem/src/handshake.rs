@@ -1,4 +1,4 @@
-use crate::crypto::DhPubKey;
+use crate::crypto::dh::DhPubKey;
 
 // TODO: Does need signature over the group's history?
 /// This `Handshake` is sent to global ledger.

@@ -92,10 +92,13 @@ impl From<PathSecret> for HmacKey {
 }
 
 impl PathSecret {
-    pub fn derive_node_values(&self) {
+    pub fn derive_node_values(self) {
+        let prk = HmacKey::from(self);
         let mut node_secret_buf = vec![0u8; SHA256_OUTPUT_LEN];
-        // hkdf::expand_label(&self.into(), b"node", b"", &mut node_secret_buf);
+        hkdf::expand_label(&prk, b"node", b"", &mut node_secret_buf);
 
+        let mut path_secret_buf = vec![0u8; SHA256_OUTPUT_LEN];
+        hkdf::expand_label(&prk, b"path", b"", &mut path_secret_buf);
     }
 }
 
