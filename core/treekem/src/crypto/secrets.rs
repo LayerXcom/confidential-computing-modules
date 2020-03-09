@@ -1,5 +1,9 @@
 use std::vec::Vec;
-use super::{SHA256_OUTPUT_LEN, hkdf};
+use super::{
+    SHA256_OUTPUT_LEN, hkdf,
+    dh::{DhPrivateKey, DhPubKey},
+};
+use anyhow::Result;
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);
@@ -91,14 +95,36 @@ impl From<PathSecret> for HmacKey {
     }
 }
 
+impl From<Vec<u8>> for PathSecret {
+    fn from(vec: Vec<u8>) -> Self {
+        PathSecret(vec.into())
+    }
+}
+
+impl From<&[u8]> for PathSecret {
+    fn from(bytes: &[u8]) -> Self {
+        PathSecret(bytes.into())
+    }
+}
+
 impl PathSecret {
-    pub fn derive_node_values(self) {
+    /// See sec 5.4.
+    pub fn derive_node_values(self) -> Result<(DhPubKey, DhPrivateKey, NodeSecret, PathSecret)> {
         let prk = HmacKey::from(self);
         let mut node_secret_buf = vec![0u8; SHA256_OUTPUT_LEN];
         hkdf::expand_label(&prk, b"node", b"", &mut node_secret_buf);
 
         let mut path_secret_buf = vec![0u8; SHA256_OUTPUT_LEN];
         hkdf::expand_label(&prk, b"path", b"", &mut path_secret_buf);
+
+        // TODO: Consider whether node_secret_buf is supposed to be hashed or not.
+        let node_private_key = DhPrivateKey::from_bytes(&node_secret_buf)?;
+        let node_public_key = DhPubKey::from_private_key(&node_private_key);
+
+        let node_secret = NodeSecret::from(node_secret_buf);
+        let new_path_secret = PathSecret::from(path_secret_buf);
+
+        Ok((node_public_key, node_private_key, node_secret, new_path_secret))
     }
 }
 
