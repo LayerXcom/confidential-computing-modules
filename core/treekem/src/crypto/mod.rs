@@ -41,6 +41,18 @@ impl HmacKey {
     }
 }
 
+impl From<Vec<u8>> for HmacKey {
+    fn from(vec: Vec<u8>) -> Self {
+        HmacKey(vec)
+    }
+}
+
+impl From<&[u8]> for HmacKey {
+    fn from(bytes: &[u8]) -> Self {
+        HmacKey(bytes.to_vec())
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct AppSecret(HmacKey);
 
@@ -59,6 +71,18 @@ impl From<AppSecret> for HmacKey {
 /// A secret hat is unique to a member of the group.
 #[derive(Debug, Clone)]
 pub struct AppMemberSecret(HmacKey);
+
+impl From<Vec<u8>> for AppMemberSecret {
+    fn from(vec: Vec<u8>) -> Self {
+        AppMemberSecret(vec.into())
+    }
+}
+
+impl From<&[u8]> for AppMemberSecret {
+    fn from(bytes: &[u8]) -> Self {
+        AppMemberSecret(bytes.into())
+    }
+}
 
 impl From<AppMemberSecret> for HmacKey {
     fn from(secret: AppMemberSecret) -> Self {

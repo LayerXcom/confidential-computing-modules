@@ -115,7 +115,7 @@ impl GroupState {
 
         new_group_state.increment_epoch()?;
         let app_secret = new_group_state.update_epoch_secret(&update_secret)?;
-        let app_key_chain = AppKeyChain::from_app_secret(&new_group_state, app_secret)?;
+        let app_key_chain = AppKeyChain::from_app_secret(&new_group_state, app_secret);
 
         Ok((new_group_state, app_key_chain, GroupOperation::Add(add_op)))
     }
