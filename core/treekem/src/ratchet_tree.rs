@@ -43,6 +43,10 @@ impl RatchetTree {
             self.nodes[i] = RachetTreeNode::Blank;
         }
     }
+
+    pub fn encrypt_direct_path_secret() {
+
+    }
 }
 
 /// A node in RatchetTree. Every node must have a DH public key.

@@ -46,6 +46,16 @@ impl From<AppSecret> for HmacKey {
     }
 }
 
+/// A secret hat is unique to a member of the group.
+#[derive(Debug, Clone)]
+pub struct AppMemberSecret(HmacKey);
+
+impl From<AppMemberSecret> for HmacKey {
+    fn from(secret: AppMemberSecret) -> Self {
+        secret.0
+    }
+}
+
 pub struct UpdateSecret(Vec<u8>);
 
 impl UpdateSecret {

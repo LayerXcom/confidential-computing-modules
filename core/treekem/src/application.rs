@@ -1,6 +1,6 @@
 use std::vec::Vec;
 use crate::group_state::GroupState;
-use crate::crypto::AppSecret;
+use crate::crypto::{AppSecret, AppMemberSecret};
 use anyhow::{Result, anyhow};
 
 #[derive(Clone, Debug)]
@@ -10,7 +10,7 @@ pub struct AppMsg {
 }
 
 pub struct AppKeyChain {
-
+    member_secrets_and_gens: Vec<(AppMemberSecret, u32)>,
 }
 
 impl AppKeyChain {
