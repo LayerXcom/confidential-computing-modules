@@ -115,7 +115,7 @@ impl GroupState {
 
         new_group_state.increment_epoch()?;
         let app_secret = new_group_state.update_epoch_secret(&update_secret)?;
-        let app_key_chain = AppKeyChain::from_app_secret(&new_group_state, app_secret);
+        let app_key_chain = AppKeyChain::from_app_secret(&new_group_state, app_secret)?;
 
         Ok((new_group_state, app_key_chain, GroupOperation::Add(add_op)))
     }
@@ -164,5 +164,12 @@ impl GroupState {
 
     pub fn my_roster_index(&self) -> u32 {
         self.my_roster_index
+    }
+
+    pub fn roster_len(&self) -> Result<usize> {
+        let tree_size = self.tree.size();
+        tree_size
+            .checked_div(2)
+            .ok_or(anyhow!("Invalid tree size."))
     }
 }

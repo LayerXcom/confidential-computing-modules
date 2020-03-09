@@ -1,6 +1,8 @@
 use std::vec::Vec;
 use secp256k1::{PublicKey, SecretKey};
 
+pub mod hkdf;
+
 pub const SHA256_OUTPUT_LEN: usize = 256 / 8;
 
 pub trait CryptoRng: rand::RngCore + rand::CryptoRng {}
@@ -28,6 +30,14 @@ pub struct HmacKey(Vec<u8>);
 impl HmacKey {
     pub fn zero(len: usize) -> Self {
         HmacKey(vec![0u8; len])
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0[..]
+    }
+
+    pub fn into_bytes(self) -> Vec<u8> {
+        self.0
     }
 }
 

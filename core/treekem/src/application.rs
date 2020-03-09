@@ -1,7 +1,9 @@
 use std::vec::Vec;
+use std::convert::TryFrom;
 use crate::group_state::GroupState;
-use crate::crypto::{AppSecret, AppMemberSecret};
+use crate::crypto::{AppSecret, AppMemberSecret, hkdf};
 use anyhow::{Result, anyhow};
+use codec::{Encode};
 
 #[derive(Clone, Debug)]
 pub struct AppMsg {
@@ -14,7 +16,14 @@ pub struct AppKeyChain {
 }
 
 impl AppKeyChain {
-    pub fn from_app_secret(group_state: &GroupState, app_secret: AppSecret) -> Self {
+    pub fn from_app_secret(group_state: &GroupState, app_secret: AppSecret) -> Result<Self> {
+        let roster_len = u32::try_from(group_state.roster_len()?)
+                .expect("roster length exceeds u32::MAX");
+
+            // let member_secrets_and_gens = (0..roster_len)
+            //     .map(|roster_idx| {
+            //         hkdf::extract_and_expand()
+            //     })
         unimplemented!();
     }
 
