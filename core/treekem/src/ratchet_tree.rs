@@ -48,22 +48,52 @@ impl RatchetTree {
         }
     }
 
+    /// Construct a Direct Path Message containing encrypted ratcheted path secrets.
     pub fn encrypt_direct_path_secret(
         &self,
         leaf_idx: usize,
         path_secret: PathSecret,
-    ) -> Result<()> {
+    ) -> Result<DirectPathMsg> {
         ensure!(leaf_idx % 2 == 0, "index must be leaf's one.");
         let num_leaves = tree_math::num_leaves_in_tree(self.size());
         let direct_path = tree_math::node_direct_path(leaf_idx, num_leaves);
 
-        // let mut node_msgs = vec![];
+        let mut node_msgs = vec![];
+        let (leaf_public_key, _, _, mut parent_path_secret) = path_secret.derive_node_values()?;
+        node_msgs.push(DirectPathNodeMsg::new(leaf_public_key, vec![]));
 
         for path_node_idx in direct_path {
+            let (parent_public_key, _, _, grandparent_path_secret) =
+                parent_path_secret.clone().derive_node_values()?;
+
+                // let mut encrypted_path_secrets = vec![];
+                let copath_node_idx = tree_math::node_sibling(path_node_idx, num_leaves);
 
         }
 
         unimplemented!();
+    }
+
+    /// The ordering is ascending by node index.
+    pub fn resolution(&self, idx: usize) -> Vec<usize> {
+        fn helper(tree: &RatchetTree, idx: usize, acc: &mut Vec<usize>) {
+            if let RachetTreeNode::Blank = tree.nodes[idx] {
+                match tree_math::node_level(idx) {
+                    0 => return,
+                    _ => {
+                        let num_leaves = tree_math::num_leaves_in_tree(tree.size());
+                        helper(tree, tree_math::node_left_child(idx), acc);
+                        helper(tree, tree_math::node_right_child(idx, num_leaves), acc);
+                    }
+                }
+            } else {
+                acc.push(idx);
+            }
+        }
+
+        let mut acc = vec![];
+        helper(self, idx, &mut acc);
+        acc
     }
 }
 
@@ -88,12 +118,21 @@ impl RachetTreeNode {
     }
 }
 
+/// Encrypted
 #[derive(Debug, Clone)]
 pub struct DirectPathMsg {
     node_msg: Vec<DirectPathNodeMsg>,
 }
 
+/// Containes a direc
 #[derive(Debug, Clone)]
 pub struct DirectPathNodeMsg {
+    public_key: DhPubKey,
     node_secrets: Vec<EciesCiphertext>,
+}
+
+impl DirectPathNodeMsg {
+    pub fn new(public_key: DhPubKey, node_secrets: Vec<EciesCiphertext>) -> Self {
+        DirectPathNodeMsg { public_key, node_secrets }
+    }
 }
