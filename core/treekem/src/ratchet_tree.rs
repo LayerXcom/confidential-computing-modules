@@ -21,6 +21,14 @@ impl RatchetTree {
         self.nodes.len()
     }
 
+    pub fn get(&self, idx: usize) -> Option<&RachetTreeNode> {
+        self.nodes.get(idx)
+    }
+
+    pub fn get_mut(&mut self, idx: usize) -> Option<&mut RachetTreeNode> {
+        self.nodes.get_mut(idx)
+    }
+
     pub fn add_leaf_node(&mut self, node: RachetTreeNode) {
         match self.nodes.is_empty() {
             true => self.nodes.push(node),
@@ -68,12 +76,20 @@ impl RatchetTree {
 
                 // let mut encrypted_path_secrets = vec![];
                 let copath_node_idx = tree_math::node_sibling(path_node_idx, num_leaves);
+                for res_node in self.resolution(copath_node_idx).iter().map(|&i| &self.nodes[i]) {
+                    let others_pub_key = res_node
+                        .public_key()
+                        .ok_or(anyhow!("The resoluted node doesn't contain public key"));
 
+                }
         }
 
         unimplemented!();
     }
 
+    /// See: section 5.2
+    /// Return an ordered list of non-blank nodes that collectively cover all non-blank descendants
+    /// of the node.
     /// The ordering is ascending by node index.
     pub fn resolution(&self, idx: usize) -> Vec<usize> {
         fn helper(tree: &RatchetTree, idx: usize, acc: &mut Vec<usize>) {
@@ -95,6 +111,34 @@ impl RatchetTree {
         helper(self, idx, &mut acc);
         acc
     }
+
+    /// Set the public keys.
+    pub fn set_public_keys<'a, I>(
+        &mut self,
+        start_idx: usize,
+        stop_idx: usize,
+        mut public_keys: I,
+    ) -> Result<()>
+    where
+        I: Iterator<Item = &'a DhPubKey>
+    {
+        let num_leaves = tree_math::num_leaves_in_tree(self.size());
+        // direct path including a root
+        let direct_path = tree_math::node_extended_direct_path(start_idx, num_leaves);
+        for path_node_idx in direct_path {
+            let pubkey = public_keys.next()
+                .ok_or(anyhow!("length of direct path is longer than public key iterator"))?;
+            if path_node_idx == stop_idx {
+                break;
+            } else {
+                let node = self.get_mut(path_node_idx)
+                    .ok_or(anyhow!("Direct path node is out of range"))?;
+                node.update_pub_key(pubkey.clone());
+            }
+        }
+
+        Ok(())
+    }
 }
 
 /// A node in RatchetTree. Every node must have a DH public key.
@@ -114,6 +158,31 @@ impl RachetTreeNode {
         RachetTreeNode::Filled {
             public_key,
             private_key: Some(private_key),
+        }
+    }
+
+    pub fn update_pub_key(&mut self, new_pub_key: DhPubKey) {
+        match self {
+            RachetTreeNode::Blank => {
+                *self = RachetTreeNode::Filled {
+                    public_key: new_pub_key,
+                    private_key: None,
+                };
+            }
+            RachetTreeNode::Filled {
+                ref mut public_key,
+                ..
+            } => *public_key = new_pub_key,
+        }
+    }
+
+    pub fn public_key(&self) -> Option<&DhPubKey> {
+        match self {
+            RachetTreeNode::Blank => None,
+            RachetTreeNode::Filled {
+                ref public_key,
+                ..
+            } => Some(public_key),
         }
     }
 }
