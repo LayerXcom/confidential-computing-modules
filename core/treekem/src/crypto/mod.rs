@@ -1,6 +1,5 @@
 use anyhow::{Result, anyhow};
 
-pub mod aead;
 pub mod dh;
 pub mod ecies;
 pub mod hkdf;

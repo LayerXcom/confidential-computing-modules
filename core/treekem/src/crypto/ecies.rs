@@ -1,7 +1,6 @@
 use std::vec::Vec;
 use super::{
     dh::{DhPubKey, DhPrivateKey, diffie_hellman},
-    aead::{OneNonceSequence, AES_128_GCM_KEY_SIZE, AES_128_GCM_NONCE_SIZE, AES_128_GCM_TAG_SIZE},
     secrets::HmacKey,
     hkdf,
     CryptoRng,
@@ -42,6 +41,18 @@ impl EciesCiphertext {
             ciphertext,
         })
     }
+
+    pub fn decrypt(self, my_priv_key: &DhPrivateKey) -> Result<Vec<u8>> {
+        let shared_secret = diffie_hellman(&my_priv_key, &self.ephemeral_public_key)?;
+        let (ub_key, nonce_seq) = derive_ecies_key_nonce(&shared_secret)?;
+        let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
+
+        let mut ciphertext = self.ciphertext;
+        opening_key.open_in_place(Aad::empty(), &mut ciphertext)?;
+        let plaintext = ciphertext;
+
+        Ok(plaintext)
+    }
 }
 
 #[derive(Debug, Encode)]
@@ -77,4 +88,24 @@ fn derive_ecies_key_nonce(
     let nonce_seq = OneNonceSequence::new(nonce);
 
     Ok((ub_key, nonce_seq))
+}
+
+pub const AES_128_GCM_KEY_SIZE: usize = 128 / 8;
+pub const AES_128_GCM_TAG_SIZE: usize = 128 / 8;
+pub const AES_128_GCM_NONCE_SIZE: usize = 96 / 8;
+
+/// A sequences of unique nonces.
+/// See: https://briansmith.org/rustdoc/ring/aead/trait.NonceSequence.html
+pub struct OneNonceSequence(Option<Nonce>);
+
+impl OneNonceSequence {
+    pub fn new(nonce: Nonce) -> Self {
+        OneNonceSequence(Some(nonce))
+    }
+}
+
+impl NonceSequence for OneNonceSequence {
+    fn advance(&mut self) -> std::result::Result<Nonce, ring::error::Unspecified> {
+        self.0.take().ok_or(ring::error::Unspecified).into()
+    }
 }

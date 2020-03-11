@@ -112,10 +112,10 @@ impl PathSecret {
     pub fn derive_node_values(self) -> Result<(DhPubKey, DhPrivateKey, NodeSecret, PathSecret)> {
         let prk = HmacKey::from(self);
         let mut node_secret_buf = vec![0u8; SHA256_OUTPUT_LEN];
-        hkdf::expand_label(&prk, b"node", b"", &mut node_secret_buf);
+        hkdf::expand_label(&prk, b"node", b"", &mut node_secret_buf)?;
 
         let mut path_secret_buf = vec![0u8; SHA256_OUTPUT_LEN];
-        hkdf::expand_label(&prk, b"path", b"", &mut path_secret_buf);
+        hkdf::expand_label(&prk, b"path", b"", &mut path_secret_buf)?;
 
         // TODO: Consider whether node_secret_buf is supposed to be hashed or not.
         let node_private_key = DhPrivateKey::from_bytes(&node_secret_buf)?;
