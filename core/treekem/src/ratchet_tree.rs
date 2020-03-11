@@ -76,17 +76,25 @@ impl RatchetTree {
             let (parent_public_key, _, _, grandparent_path_secret) =
                 parent_path_secret.clone().derive_node_values()?;
 
-                // let mut encrypted_path_secrets = vec![];
+                let mut encrypted_path_secrets = vec![];
                 let copath_node_idx = tree_math::node_sibling(path_node_idx, num_leaves);
                 for res_node in self.resolution(copath_node_idx).iter().map(|&i| &self.nodes[i]) {
                     let others_pub_key = res_node
                         .public_key()
-                        .ok_or(anyhow!("The resoluted node doesn't contain public key"));
+                        .ok_or(anyhow!("The resoluted node doesn't contain public key"))?;
 
+                    let ciphertext = EciesCiphertext::encrypt(
+                        &others_pub_key,
+                        parent_path_secret.as_bytes().to_vec(), // TODO:
+                    )?;
+                    encrypted_path_secrets.push(ciphertext);
                 }
+
+                node_msgs.push(DirectPathNodeMsg::new(parent_public_key.clone(), encrypted_path_secrets));
+                parent_path_secret = grandparent_path_secret;
         }
 
-        unimplemented!();
+        Ok(DirectPathMsg::new(node_msgs))
     }
 
     /// See: section 5.2
@@ -192,7 +200,13 @@ impl RachetTreeNode {
 /// Encrypted
 #[derive(Debug, Clone)]
 pub struct DirectPathMsg {
-    node_msg: Vec<DirectPathNodeMsg>,
+    node_msgs: Vec<DirectPathNodeMsg>,
+}
+
+impl DirectPathMsg {
+    pub fn new(node_msgs: Vec<DirectPathNodeMsg>) -> Self {
+        DirectPathMsg { node_msgs }
+    }
 }
 
 /// Containes a direc

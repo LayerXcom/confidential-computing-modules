@@ -126,6 +126,10 @@ impl PathSecret {
 
         Ok((node_public_key, node_private_key, node_secret, new_path_secret))
     }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        self.as_bytes()
+    }
 }
 
 #[derive(Debug, Clone)]
