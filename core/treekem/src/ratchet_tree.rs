@@ -97,6 +97,16 @@ impl RatchetTree {
         Ok(DirectPathMsg::new(node_msgs))
     }
 
+    pub fn decrypt_direct_path_msg(
+        &self,
+        direct_path_msg: &DirectPathMsg,
+        others_leaf_idx: usize,
+        my_leaf_idx: usize,
+    ) -> Result<(PathSecret, usize)> {
+
+        unimplemented!();
+    }
+
     /// See: section 5.2
     /// Return an ordered list of non-blank nodes that collectively cover all non-blank descendants
     /// of the node.
