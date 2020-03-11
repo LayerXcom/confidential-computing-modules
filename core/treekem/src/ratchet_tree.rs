@@ -3,6 +3,7 @@ use crate::crypto::{
     dh::{DhPrivateKey, DhPubKey},
     secrets::{HmacKey, PathSecret},
     ecies::EciesCiphertext,
+    CryptoRng,
 };
 use crate::tree_math;
 use anyhow::{Result, anyhow, ensure};
@@ -57,10 +58,11 @@ impl RatchetTree {
     }
 
     /// Construct a Direct Path Message containing encrypted ratcheted path secrets.
-    pub fn encrypt_direct_path_secret(
+    pub fn encrypt_direct_path_secret<R: CryptoRng>(
         &self,
         leaf_idx: usize,
         path_secret: PathSecret,
+        csprng: &mut R,
     ) -> Result<DirectPathMsg> {
         ensure!(leaf_idx % 2 == 0, "index must be leaf's one.");
         let num_leaves = tree_math::num_leaves_in_tree(self.size());

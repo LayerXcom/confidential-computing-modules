@@ -1,5 +1,6 @@
 use secp256k1::{PublicKey, SecretKey};
 use anyhow::{anyhow, Result};
+use super::CryptoRng;
 
 #[derive(Debug, Clone)]
 pub struct DhPrivateKey(SecretKey);
@@ -10,6 +11,10 @@ impl DhPrivateKey {
             .map_err(|e| anyhow!("error: {:?}", e))?;
 
         Ok(DhPrivateKey(secret_key))
+    }
+
+    pub fn from_random<R: rand::Rng>(csprng: &mut R) -> Self {
+        DhPrivateKey(SecretKey::random(csprng))
     }
 }
 
