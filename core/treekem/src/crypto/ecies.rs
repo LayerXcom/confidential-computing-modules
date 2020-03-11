@@ -1,12 +1,12 @@
 use std::vec::Vec;
 use super::{
-    dh::{DhPubKey, DhPrivateKey},
+    dh::{DhPubKey, DhPrivateKey, diffie_hellman},
     aead::{OneNonceSequence, AES_128_GCM_KEY_SIZE, AES_128_GCM_NONCE_SIZE, AES_128_GCM_TAG_SIZE},
     secrets::HmacKey,
     hkdf,
     CryptoRng,
 };
-use ring::aead::{Nonce, NonceSequence, UnboundKey, AES_256_GCM};
+use ring::aead::{Nonce, NonceSequence, UnboundKey, BoundKey, OpeningKey, Aad, SealingKey, AES_256_GCM};
 use anyhow::Result;
 use codec::Encode;
 
@@ -18,7 +18,7 @@ pub struct EciesCiphertext {
 
 impl EciesCiphertext {
     pub fn encrypt(
-        pub_key: &DhPubKey,
+        others_pub_key: &DhPubKey,
         mut plaintext: Vec<u8>,
     ) -> Result<Self> {
         let mut my_ephemeral_secret = DhPrivateKey::from_random()?;
@@ -30,11 +30,17 @@ impl EciesCiphertext {
         plaintext.resize(tagged_plaintext_size, 0u8);
 
         let my_ephemeral_pub_key = DhPubKey::from_private_key(&my_ephemeral_secret);
+        let shared_secret = diffie_hellman(&my_ephemeral_secret, &others_pub_key)?;
+        let (ub_key, nonce_seq) = derive_ecies_key_nonce(&shared_secret)?;
+        let mut sealing_key = SealingKey::new(ub_key, nonce_seq);
+        sealing_key.seal_in_place_append_tag(Aad::empty(), &mut plaintext)?;
 
-        // let (ub_key, nonce) = derive_ecies_key_nonce()
+        let ciphertext = plaintext;
 
-
-        unimplemented!();
+        Ok(EciesCiphertext {
+            ephemeral_public_key: my_ephemeral_pub_key,
+            ciphertext,
+        })
     }
 }
 
