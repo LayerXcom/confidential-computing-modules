@@ -17,12 +17,11 @@ pub struct EciesCiphertext {
 }
 
 impl EciesCiphertext {
-    pub fn encrypt<R: CryptoRng>(
+    pub fn encrypt(
         pub_key: &DhPubKey,
-        plaintext: Vec<u8>,
-        csprng: &mut R,
+        mut plaintext: Vec<u8>,
     ) -> Result<Self> {
-        let mut my_ephemeral_secret = DhPrivateKey::from_random(csprng);
+        let mut my_ephemeral_secret = DhPrivateKey::from_random()?;
 
         let tagged_plaintext_size = plaintext
             .len()

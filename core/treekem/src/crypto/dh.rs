@@ -1,6 +1,6 @@
-use secp256k1::{PublicKey, SecretKey};
+use secp256k1::{PublicKey, SecretKey, util::SECRET_KEY_SIZE};
 use anyhow::{anyhow, Result};
-use super::CryptoRng;
+use super::{CryptoRng, sgx_rand_assign};
 
 #[derive(Debug, Clone)]
 pub struct DhPrivateKey(SecretKey);
@@ -13,8 +13,19 @@ impl DhPrivateKey {
         Ok(DhPrivateKey(secret_key))
     }
 
-    pub fn from_random<R: rand::Rng>(csprng: &mut R) -> Self {
-        DhPrivateKey(SecretKey::random(csprng))
+    pub fn from_random() -> Result<Self> {
+        let secret = loop {
+            let mut ret = [0u8; SECRET_KEY_SIZE];
+            sgx_rand_assign(&mut ret)
+                .map_err(|e| anyhow!("error sgx_rand_assign: {:?}", e))?;
+
+            match SecretKey::parse(&ret) {
+                Ok(key) => break key,
+                Err(_) => (),
+            }
+        };
+
+        Ok(DhPrivateKey(secret))
     }
 }
 

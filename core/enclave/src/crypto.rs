@@ -3,9 +3,9 @@
 use sgx_types::sgx_report_data_t;
 use std::prelude::v1::Vec;
 use ring::aead::{self, Aad, BoundKey, Nonce, UnboundKey, AES_256_GCM};
-use secp256k1::{self, Message, Signature, SecretKey, PublicKey, util::{
-    SECRET_KEY_SIZE,
-}};
+use secp256k1::{self, Message, Signature, SecretKey, PublicKey,
+    util::SECRET_KEY_SIZE,
+};
 use anonify_common::{Keccak256, IV_SIZE};
 use anonify_app_preluder::{CIPHERTEXT_SIZE, Ciphertext};
 use crate::error::Result;
