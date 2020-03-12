@@ -6,13 +6,14 @@ use crate::crypto::{
     ecies::{OneNonceSequence, AES_128_GCM_KEY_SIZE, AES_128_GCM_NONCE_SIZE, AES_128_GCM_TAG_SIZE},
     hkdf, SHA256_OUTPUT_LEN,
 };
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, ensure};
 use codec::Encode;
 use ring::aead::{
     OpeningKey, SealingKey, Nonce, UnboundKey, BoundKey,
     Aad, AES_256_GCM,
 };
 
+/// Application message broadcasted to other members.
 #[derive(Clone, Debug)]
 pub struct AppMsg {
     generation: u32,
@@ -27,8 +28,10 @@ impl AppMsg {
     }
 }
 
+/// Application Keychain manages each member's `AppMemberSecret' and generation.
 pub struct AppKeyChain {
     member_secrets_and_gens: Vec<(AppMemberSecret, u32)>,
+    epoch: u32,
 }
 
 impl AppKeyChain {
@@ -53,7 +56,46 @@ impl AppKeyChain {
         })
         .collect();
 
-        AppKeyChain { member_secrets_and_gens }
+        AppKeyChain {
+            member_secrets_and_gens,
+            epoch: group_state.epoch(),
+        }
+    }
+
+    /// Encrypt message with current member's application secret.
+    pub fn encrypt_msg(
+        &mut self,
+        mut plaintext: Vec<u8>,
+        group_state: &GroupState
+    ) -> Result<AppMsg> {
+        plaintext.extend(vec![0u8; AES_128_GCM_TAG_SIZE]);
+        let my_roster_index = group_state.my_roster_index();
+
+        let (ub_key, nonce_seq, generation) = self.key_nonce_gen(my_roster_index as usize)?;
+        let mut sealing_key = SealingKey::new(ub_key, nonce_seq);
+        sealing_key.seal_in_place_append_tag(Aad::empty(), &mut plaintext)?;
+
+        let ciphertext = plaintext;
+        Ok(AppMsg::new(generation, group_state.epoch(), my_roster_index, ciphertext))
+    }
+
+    /// Decrypt messag with current member's application secret.
+    pub fn decrypt_msg(
+        &mut self,
+        mut app_msg: AppMsg,
+        group_state: &GroupState,
+    ) -> Result<Vec<u8>> {
+        ensure!(app_msg.epoch == self.epoch, "application messages's epoch differs from the app key chain's");
+
+        let (ub_key, nonce_seq, generation) = self.key_nonce_gen(app_msg.roster_idx as usize)?;
+        ensure!(app_msg.generation == generation, "application messages's generation differs from the AppMmeberSecret's");
+
+        let mut plaintext = app_msg.encrypted_msg.clone();
+        let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
+        opening_key.open_in_place(Aad::empty(), &mut plaintext)?;
+
+        self.ratchet(app_msg.roster_idx as usize)?;
+        Ok(plaintext)
     }
 
     /// Ratchets a specific roster's AppMemberSecret forward.
@@ -76,6 +118,7 @@ impl AppKeyChain {
         Ok(())
     }
 
+    /// Compute UnboundKey, Nonce, and member's generation.
     fn key_nonce_gen(&self, roster_idx: usize) -> Result<(UnboundKey, OneNonceSequence, u32)> {
         let (member_secret, gen) = self.member_secrets_and_gens
             .get(roster_idx)
@@ -92,31 +135,5 @@ impl AppKeyChain {
         let nonce_seq = OneNonceSequence::new(nonce);
 
         Ok((ub_key, nonce_seq, *gen))
-    }
-
-    pub fn encrypt_msg(
-        &mut self,
-        mut plaintext: Vec<u8>,
-        group_state: &GroupState
-    ) -> Result<AppMsg> {
-        plaintext.extend(vec![0u8; AES_128_GCM_TAG_SIZE]);
-        let my_roster_index = group_state.my_roster_index();
-
-        let (ub_key, nonce_seq, generation) = self.key_nonce_gen(my_roster_index as usize)?;
-        let mut sealing_key = SealingKey::new(ub_key, nonce_seq);
-        sealing_key.seal_in_place_append_tag(Aad::empty(), &mut plaintext)?;
-
-        let ciphertext = plaintext;
-        Ok(AppMsg::new(generation, group_state.epoch(), my_roster_index, ciphertext))
-    }
-
-    pub fn decrypt_msg(
-        &mut self,
-        mut app_msg: AppMsg,
-        group_state: &GroupState,
-    ) -> Result<Vec<u8>> {
-        let my_roster_index = group_state.my_roster_index();
-        self.ratchet(my_roster_index as usize)?;
-        unimplemented!();
     }
 }
