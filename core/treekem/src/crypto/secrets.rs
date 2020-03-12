@@ -57,6 +57,12 @@ impl From<AppMemberSecret> for HmacKey {
     }
 }
 
+impl From<&AppMemberSecret> for HmacKey {
+    fn from(secret: &AppMemberSecret) -> Self {
+        secret.0.clone()
+    }
+}
+
 impl AppMemberSecret {
     pub fn as_mut_bytes(&mut self) -> &mut [u8] {
         (self.0).0.as_mut_slice()

@@ -21,12 +21,7 @@ impl EciesCiphertext {
         mut plaintext: Vec<u8>,
     ) -> Result<Self> {
         let mut my_ephemeral_secret = DhPrivateKey::from_random()?;
-
-        let tagged_plaintext_size = plaintext
-            .len()
-            .checked_add(AES_128_GCM_TAG_SIZE)
-            .expect("plaintext is too large to be encrypted.");
-        plaintext.resize(tagged_plaintext_size, 0u8);
+        plaintext.extend(vec![0u8; AES_128_GCM_TAG_SIZE]);
 
         let my_ephemeral_pub_key = DhPubKey::from_private_key(&my_ephemeral_secret);
         let shared_secret = diffie_hellman(&my_ephemeral_secret, &others_pub_key)?;
