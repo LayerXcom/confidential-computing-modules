@@ -146,14 +146,17 @@ impl RatchetTree {
                 tree_math::is_ancestor(idx, my_leaf_idx, num_leaves)
             {
                 let decryption_key = res_node.private_key().unwrap();
-                let ciphertext = node_msg.node_secrets.get(pos)
-                    .ok_or(anyhow!("Invalid direcr path message"))?;
+                let plaintext = node_msg.node_secrets.get(pos)
+                    .ok_or(anyhow!("Invalid direcr path message"))?
+                    .clone()
+                    .decrypt(&decryption_key)?;
+                let path_secret = PathSecret::from(plaintext);
 
-
+                return Ok((path_secret, common_ancestor_idx));
             }
         }
 
-        unimplemented!();
+        Err(anyhow!("Cannot find node in the resolution."))
     }
 
     /// See: section 5.2

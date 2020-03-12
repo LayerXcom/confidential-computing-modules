@@ -43,6 +43,25 @@ impl AppKeyChain {
         AppKeyChain { member_secrets_and_gens }
     }
 
+    pub fn ratchet(&mut self, roster_idx: usize) -> Result<()> {
+        let (member_secret, gen) = self.member_secrets_and_gens
+            .get_mut(roster_idx)
+            .ok_or(anyhow!("Roster index is out of range of application key chain"))?;
+        let current_secret = member_secret.clone();
+
+        let roster_idx = u32::try_from(roster_idx)?;
+        hkdf::expand_label(
+            &current_secret.into(),
+            b"app sender",
+            &roster_idx.encode(),
+            member_secret.as_mut_bytes(),
+        );
+
+        *gen = gen.checked_add(1).ok_or(anyhow!("geenration is over u32::MAX"))?;
+
+        Ok(())
+    }
+
     pub fn encrypt_msg(
         &mut self,
         plaintext: Vec<u8>,
