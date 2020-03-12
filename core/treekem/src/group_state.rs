@@ -5,7 +5,7 @@ use crate::crypto::{
 };
 use crate::application::AppKeyChain;
 use crate::handshake::{GroupAdd, GroupOperation, Handshake};
-use crate::ratchet_tree::{RatchetTree, RachetTreeNode};
+use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use anyhow::{Result, anyhow, ensure};
 
 /// Process the received handshake from a global ledger.
@@ -94,7 +94,7 @@ impl GroupState {
         let my_roster_index = 0;
         let epoch = 0;
         let init_secret = HmacKey::zero(SHA256_OUTPUT_LEN);
-        let my_node = RachetTreeNode::from_private_key(private_key);
+        let my_node = RatchetTreeNode::from_private_key(private_key);
         let tree = RatchetTree::new(vec![my_node]);
 
         GroupState {
@@ -137,7 +137,7 @@ impl GroupState {
         }
 
         let tree_index = RatchetTree::roster_idx_to_tree_idx(add_roster_index)?;
-        self.tree.add_leaf_node(RachetTreeNode::Blank);
+        self.tree.add_leaf_node(RatchetTreeNode::Blank);
 
         Ok(UpdateSecret::zero(SHA256_OUTPUT_LEN))
     }
