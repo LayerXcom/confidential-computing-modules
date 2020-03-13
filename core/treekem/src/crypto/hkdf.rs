@@ -1,4 +1,4 @@
-use super::secrets::HmacKey;
+use super::hmac::HmacKey;
 use anyhow::Result;
 use codec::Encode;
 
@@ -9,6 +9,11 @@ struct HkdfLabel<'a> {
     length: u16,
     label: &'a [u8],
     context: &'a [u8],
+}
+
+/// An implementation of HKDF-extract.
+pub fn extract(salt: &HmacKey, secret: &[u8]) -> HmacKey {
+    unimplemented!();
 }
 
 pub fn expand_label(

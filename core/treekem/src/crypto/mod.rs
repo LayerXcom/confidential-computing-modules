@@ -3,6 +3,7 @@ use anyhow::{Result, anyhow};
 pub mod dh;
 pub mod ecies;
 pub mod hkdf;
+pub mod hmac;
 pub mod secrets;
 
 pub const SHA256_OUTPUT_LEN: usize = 256 / 8;

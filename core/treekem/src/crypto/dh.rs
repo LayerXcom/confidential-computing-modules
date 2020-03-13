@@ -3,7 +3,7 @@ use secp256k1::{PublicKey, SecretKey, util::{SECRET_KEY_SIZE, FULL_PUBLIC_KEY_SI
 use anyhow::{anyhow, Result};
 use super::{
     CryptoRng, sgx_rand_assign, hkdf,
-    secrets::HmacKey,
+    hmac::HmacKey,
 };
 
 #[derive(Debug, Clone)]

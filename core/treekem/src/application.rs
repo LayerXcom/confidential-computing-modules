@@ -2,7 +2,8 @@ use std::vec::Vec;
 use std::convert::TryFrom;
 use crate::group_state::GroupState;
 use crate::crypto::{
-    secrets::{AppSecret, AppMemberSecret, HmacKey},
+    hmac::HmacKey,
+    secrets::{AppSecret, AppMemberSecret},
     ecies::{OneNonceSequence, AES_128_GCM_KEY_SIZE, AES_128_GCM_NONCE_SIZE, AES_128_GCM_TAG_SIZE},
     hkdf, SHA256_OUTPUT_LEN,
 };

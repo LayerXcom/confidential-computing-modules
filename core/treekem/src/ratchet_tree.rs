@@ -1,7 +1,8 @@
 use std::vec::Vec;
 use crate::crypto::{
     dh::{DhPrivateKey, DhPubKey},
-    secrets::{HmacKey, PathSecret},
+    secrets::PathSecret,
+    hmac::HmacKey,
     ecies::EciesCiphertext,
     CryptoRng,
 };

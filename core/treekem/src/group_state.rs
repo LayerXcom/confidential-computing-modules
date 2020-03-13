@@ -1,7 +1,9 @@
 use crate::crypto::{
     CryptoRng, SHA256_OUTPUT_LEN,
+    hkdf,
     dh::{DhPrivateKey, DhPubKey},
-    secrets::{HmacKey, GroupEpochSecret, AppSecret, UpdateSecret, PathSecret},
+    secrets::{GroupEpochSecret, AppSecret, UpdateSecret, PathSecret},
+    hmac::HmacKey,
 };
 use crate::application::AppKeyChain;
 use crate::handshake::{GroupAdd, GroupOperation, Handshake};
@@ -144,6 +146,7 @@ impl GroupState {
         &mut self,
         update_secret: &UpdateSecret
     ) -> Result<AppSecret> {
+
         unimplemented!();
     }
 

@@ -1,7 +1,7 @@
 use std::vec::Vec;
 use super::{
     dh::{DhPubKey, DhPrivateKey, diffie_hellman},
-    secrets::HmacKey,
+    hmac::HmacKey,
     hkdf,
     CryptoRng,
 };
