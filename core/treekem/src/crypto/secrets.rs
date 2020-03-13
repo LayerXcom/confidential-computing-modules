@@ -66,7 +66,7 @@ impl From<&AppMemberSecret> for HmacKey {
 
 impl AppMemberSecret {
     pub fn as_mut_bytes(&mut self) -> &mut [u8] {
-        (self.0).into_bytes().as_mut_slice()
+        (self.0).as_mut_bytes()
     }
 }
 

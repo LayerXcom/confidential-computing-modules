@@ -12,6 +12,10 @@ impl HmacKey {
         &self.0[..]
     }
 
+    pub fn as_mut_bytes(&mut self) -> &mut [u8] {
+        &mut self.0[..]
+    }
+
     pub fn into_bytes(self) -> Vec<u8> {
         self.0
     }
