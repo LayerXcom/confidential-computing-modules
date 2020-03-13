@@ -12,6 +12,10 @@ pub struct Handshake {
 }
 
 impl Handshake {
+    pub fn new(prior_epoch: u32, op: GroupOperation) -> Self {
+        Handshake { prior_epoch, op }
+    }
+
     pub fn roster_index(&self) -> u32 {
         match self.op {
             GroupOperation::Add(ref add) => add.roster_index,

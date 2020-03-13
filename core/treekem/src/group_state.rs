@@ -9,8 +9,8 @@ use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use anyhow::{Result, anyhow, ensure};
 
 /// Process the received handshake from a global ledger.
-pub trait HandshakeApplier: Sized {
-    fn apply_handshake(&self, handshake: &Handshake) -> Result<(GroupState, AppKeyChain)>;
+pub trait HandshakeProcessor: Sized {
+    fn process_handshake(&self, handshake: &Handshake) -> Result<(GroupState, AppKeyChain)>;
 }
 
 pub trait AddOperator: Sized {
@@ -40,22 +40,18 @@ pub struct GroupState {
     init_secret: HmacKey,
 }
 
-impl HandshakeApplier for GroupState {
-    fn apply_handshake(&self, handshake: &Handshake) -> Result<(GroupState, AppKeyChain)> {
-        if handshake.prior_epoch != self.epoch {
-            return Err(anyhow!("Handshake's prior epoch isn't the current epoch."));
-        }
+impl HandshakeProcessor for GroupState {
+    fn process_handshake(&self, handshake: &Handshake) -> Result<(GroupState, AppKeyChain)> {
+        ensure!(handshake.prior_epoch == self.epoch, "Handshake's prior epoch isn't the current epoch.");
 
         let sender_tree_idx = RatchetTree::roster_idx_to_tree_idx(handshake.roster_index())?;
-        if sender_tree_idx > self.tree.size() {
-            return Err(anyhow!("Handshake's roster index is out of range."));
-        }
+        ensure!(sender_tree_idx < self.tree.size(), "Handshake's roster index is out of range.");
 
         let mut new_group_state = self.clone();
         new_group_state.increment_epoch()?;
 
         let new_group_epoch_secret = match handshake.op {
-            GroupOperation::Add(ref add) => new_group_state.process_add_op(add)?
+            GroupOperation::Add(ref add) => new_group_state.apply_add_op(add)?
         };
 
 
@@ -73,7 +69,7 @@ impl AddOperator for GroupState {
         let (new_group_state, app_key_chain, add_op) =
             self.update_by_add_op(new_roster_index, public_key)?;
         let prior_epoch = self.epoch;
-        let handshake = new_group_state.create_handshake(prior_epoch, add_op)?;
+        let handshake = Handshake::new(prior_epoch, add_op);
 
         Ok((handshake, new_group_state, app_key_chain))
     }
@@ -112,7 +108,7 @@ impl GroupState {
     ) -> Result<(GroupState, AppKeyChain, GroupOperation)> {
         let mut new_group_state = self.clone();
         let add_op = GroupAdd::new(new_roster_index, public_key);
-        let update_secret = new_group_state.process_add_op(&add_op)?;
+        let update_secret = new_group_state.apply_add_op(&add_op)?;
 
         new_group_state.increment_epoch()?;
         let app_secret = new_group_state.update_epoch_secret(&update_secret)?;
@@ -121,16 +117,8 @@ impl GroupState {
         Ok((new_group_state, app_key_chain, GroupOperation::Add(add_op)))
     }
 
-    fn create_handshake(
-        &self,
-        prior_epoch: u32,
-        op: GroupOperation,
-    ) -> Result<Handshake> {
-        unimplemented!();
-    }
-
     /// Add a new member to group state.
-    fn process_add_op(&mut self, add: &GroupAdd) -> Result<UpdateSecret> {
+    fn apply_add_op(&mut self, add: &GroupAdd) -> Result<UpdateSecret> {
         let add_roster_index = add.roster_index;
         if add_roster_index as usize > self.tree.size() {
             return Err(anyhow!("Invalid roster index in add operation."));
