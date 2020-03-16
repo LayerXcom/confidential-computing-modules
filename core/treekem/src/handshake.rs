@@ -23,7 +23,7 @@ impl Handshake {
     pub fn roster_index(&self) -> u32 {
         match self.op {
             GroupOperation::Add(ref add) => add.roster_index,
-            _ => unimplemented!(),
+            _ => unreachable!(),
         }
     }
 }

@@ -23,75 +23,6 @@ impl RatchetTree {
         RatchetTree { nodes }
     }
 
-    pub fn size(&self) -> usize {
-        self.nodes.len()
-    }
-
-    pub fn get(&self, idx: usize) -> Option<&RatchetTreeNode> {
-        self.nodes.get(idx)
-    }
-
-    pub fn get_mut(&mut self, idx: usize) -> Option<&mut RatchetTreeNode> {
-        self.nodes.get_mut(idx)
-    }
-
-    pub fn add_leaf_node(&mut self, node: RatchetTreeNode) {
-        match self.nodes.is_empty() {
-            true => self.nodes.push(node),
-            false => {
-                self.nodes.push(RatchetTreeNode::Blank);
-                self.nodes.push(node);
-            },
-        }
-    }
-
-    /// Convert a roster index into a ratchet tree index.
-    /// tree index is just two times of roster index.
-    pub fn roster_idx_to_tree_idx(roster_idx: u32) -> Result<usize> {
-        roster_idx
-            .checked_mul(2)
-            .map(|i| i as usize)
-            .ok_or(anyhow!("Invalid roster or tree index."))
-    }
-
-    pub fn propagate_blank(&mut self, leaf_idx: usize) {
-        let num_leaves = tree_math::num_leaves_in_tree(self.size());
-        let direct_path = tree_math::node_extended_direct_path(leaf_idx, num_leaves);
-        for i in direct_path {
-            self.nodes[i] = RatchetTreeNode::Blank;
-        }
-    }
-
-    /// Propagate new path secret from leaf node to root node.
-    pub fn propagate_new_path_secret(
-        &mut self,
-        mut path_secret: PathSecret,
-        leaf_idx: usize,
-    ) -> Result<NodeSecret> {
-        let num_leaves = tree_math::num_leaves_in_tree(self.size());
-        let root_node_idx = tree_math::root_idx(num_leaves);
-        let mut current_node_idx = leaf_idx;
-
-        let root_node_secret = loop {
-            let current_node = self.get_mut(current_node_idx)
-                .expect("Invalid node index.");
-            let (node_pubkey, node_privkey, node_secret, parent_path_secret)
-                = path_secret.derive_node_values()?;
-
-            current_node.update_pub_key(node_pubkey);
-            current_node.update_priv_key(node_privkey);
-
-            if current_node_idx == root_node_idx {
-                break node_secret;
-            } else {
-                current_node_idx = tree_math::node_parent(current_node_idx, num_leaves);
-                path_secret = parent_path_secret;
-            }
-        };
-
-        Ok(root_node_secret)
-    }
-
     /// Construct a Direct Path Message containing encrypted ratcheted path secrets.
     pub fn encrypt_direct_path_secret(
         &self,
@@ -193,29 +124,52 @@ impl RatchetTree {
         Err(anyhow!("Cannot find node in the resolution."))
     }
 
-    /// See: section 5.2
-    /// Return an ordered list of non-blank nodes that collectively cover all non-blank descendants
-    /// of the node.
-    /// The ordering is ascending by node index.
-    pub fn resolution(&self, idx: usize) -> Vec<usize> {
-        fn helper(tree: &RatchetTree, idx: usize, acc: &mut Vec<usize>) {
-            if let RatchetTreeNode::Blank = tree.nodes[idx] {
-                match tree_math::node_level(idx) {
-                    0 => return,
-                    _ => {
-                        let num_leaves = tree_math::num_leaves_in_tree(tree.size());
-                        helper(tree, tree_math::node_left_child(idx), acc);
-                        helper(tree, tree_math::node_right_child(idx, num_leaves), acc);
-                    }
-                }
-            } else {
-                acc.push(idx);
-            }
+    pub fn add_leaf_node(&mut self, node: RatchetTreeNode) {
+        match self.nodes.is_empty() {
+            true => self.nodes.push(node),
+            false => {
+                self.nodes.push(RatchetTreeNode::Blank);
+                self.nodes.push(node);
+            },
         }
+    }
 
-        let mut acc = vec![];
-        helper(self, idx, &mut acc);
-        acc
+    pub fn propagate_blank(&mut self, leaf_idx: usize) {
+        let num_leaves = tree_math::num_leaves_in_tree(self.size());
+        let direct_path = tree_math::node_extended_direct_path(leaf_idx, num_leaves);
+        for i in direct_path {
+            self.nodes[i] = RatchetTreeNode::Blank;
+        }
+    }
+
+    /// Propagate new path secret from leaf node to root node.
+    pub fn propagate_new_path_secret(
+        &mut self,
+        mut path_secret: PathSecret,
+        leaf_idx: usize,
+    ) -> Result<NodeSecret> {
+        let num_leaves = tree_math::num_leaves_in_tree(self.size());
+        let root_node_idx = tree_math::root_idx(num_leaves);
+        let mut current_node_idx = leaf_idx;
+
+        let root_node_secret = loop {
+            let current_node = self.get_mut(current_node_idx)
+                .expect("Invalid node index.");
+            let (node_pubkey, node_privkey, node_secret, parent_path_secret)
+                = path_secret.derive_node_values()?;
+
+            current_node.update_pub_key(node_pubkey);
+            current_node.update_priv_key(node_privkey);
+
+            if current_node_idx == root_node_idx {
+                break node_secret;
+            } else {
+                current_node_idx = tree_math::node_parent(current_node_idx, num_leaves);
+                path_secret = parent_path_secret;
+            }
+        };
+
+        Ok(root_node_secret)
     }
 
     /// Set the public keys.
@@ -244,6 +198,52 @@ impl RatchetTree {
         }
 
         Ok(())
+    }
+
+    /// Convert a roster index into a ratchet tree index.
+    /// tree index is just two times of roster index.
+    pub fn roster_idx_to_tree_idx(roster_idx: u32) -> Result<usize> {
+        roster_idx
+            .checked_mul(2)
+            .map(|i| i as usize)
+            .ok_or(anyhow!("Invalid roster or tree index."))
+    }
+
+    pub fn size(&self) -> usize {
+        self.nodes.len()
+    }
+
+    pub fn get(&self, idx: usize) -> Option<&RatchetTreeNode> {
+        self.nodes.get(idx)
+    }
+
+    pub fn get_mut(&mut self, idx: usize) -> Option<&mut RatchetTreeNode> {
+        self.nodes.get_mut(idx)
+    }
+
+    /// See: section 5.2
+    /// Return an ordered list of non-blank nodes that collectively cover all non-blank descendants
+    /// of the node.
+    /// The ordering is ascending by node index.
+    fn resolution(&self, idx: usize) -> Vec<usize> {
+        fn helper(tree: &RatchetTree, idx: usize, acc: &mut Vec<usize>) {
+            if let RatchetTreeNode::Blank = tree.nodes[idx] {
+                match tree_math::node_level(idx) {
+                    0 => return,
+                    _ => {
+                        let num_leaves = tree_math::num_leaves_in_tree(tree.size());
+                        helper(tree, tree_math::node_left_child(idx), acc);
+                        helper(tree, tree_math::node_right_child(idx, num_leaves), acc);
+                    }
+                }
+            } else {
+                acc.push(idx);
+            }
+        }
+
+        let mut acc = vec![];
+        helper(self, idx, &mut acc);
+        acc
     }
 }
 

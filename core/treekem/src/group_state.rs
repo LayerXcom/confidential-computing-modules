@@ -6,7 +6,7 @@ use crate::crypto::{
     hmac::HmacKey,
 };
 use crate::application::AppKeyChain;
-use crate::handshake::{GroupAdd, GroupOperation, Handshake};
+use crate::handshake::{GroupAdd, GroupUpdate, GroupOperation, Handshake};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use anyhow::{Result, anyhow, ensure};
 use codec::Encode;
@@ -25,10 +25,9 @@ pub trait AddOperator: Sized {
 }
 
 pub trait UpdateOperator: Sized {
-    fn create_update_handshake<R: CryptoRng>(
+    fn create_update_handshake(
         &self,
         new_path_secret: PathSecret,
-        csprng: &mut R,
     ) -> Result<(Handshake, GroupState, AppKeyChain)>;
 }
 
@@ -55,7 +54,7 @@ impl HandshakeProcessor for GroupState {
 
         let update_secret = match handshake.op {
             GroupOperation::Add(ref add) => new_group_state.apply_add_op(add)?,
-            _ => unimplemented!(),
+            GroupOperation::Update(ref update) => new_group_state.apply_update_op(update, sender_tree_idx)?,
         };
 
         let app_secret = new_group_state.update_epoch_secret(&update_secret)?;
@@ -79,10 +78,9 @@ impl AddOperator for GroupState {
 }
 
 impl UpdateOperator for GroupState {
-    fn create_update_handshake<R: CryptoRng>(
+    fn create_update_handshake(
         &self,
         new_path_secret: PathSecret,
-        csprng: &mut R,
     ) -> Result<(Handshake, GroupState, AppKeyChain)> {
         let mut new_group_state = self.clone();
 
@@ -91,9 +89,13 @@ impl UpdateOperator for GroupState {
         new_group_state.increment_epoch()?;
 
         let direct_path_msg = new_group_state.tree.encrypt_direct_path_secret(my_tree_idx, new_path_secret)?;
+        let op = GroupOperation::Update(GroupUpdate::new(direct_path_msg));
+        let app_secret = new_group_state.update_epoch_secret(&update_secret)?;
+        let app_key_chain = AppKeyChain::from_app_secret(&new_group_state, app_secret);
 
+        let handshake = Handshake::new(self.epoch, op);
 
-        unimplemented!();
+        Ok((handshake, new_group_state, app_key_chain))
     }
 }
 
@@ -140,6 +142,15 @@ impl GroupState {
         self.tree.add_leaf_node(RatchetTreeNode::Blank);
 
         Ok(UpdateSecret::zero(SHA256_OUTPUT_LEN))
+    }
+
+    fn apply_update_op(
+        &mut self,
+        update: &GroupUpdate,
+        sender_tree_idx: usize,
+    ) -> Result<UpdateSecret> {
+
+        unimplemented!();
     }
 
     /// Set new path secret to group state.
