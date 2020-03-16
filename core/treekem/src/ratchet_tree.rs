@@ -8,8 +8,9 @@ use crate::crypto::{
 };
 use crate::tree_math;
 use anyhow::{Result, anyhow, ensure};
+use codec::Encode;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Encode)]
 pub struct RatchetTree {
     nodes: Vec<RatchetTreeNode>,
 }
@@ -216,7 +217,7 @@ impl RatchetTree {
 
 /// A node in RatchetTree. Every node must have a DH public key.
 /// It may also optionally contain the corresponding private key.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Encode)]
 pub enum RatchetTreeNode {
     Blank,
     Filled {

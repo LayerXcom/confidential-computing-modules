@@ -2,8 +2,9 @@ use std::vec::Vec;
 use ring::{
     hmac::{SigningKey, SigningContext, HMAC_SHA256},
 };
+use codec::Encode;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Encode)]
 pub struct HmacKey(Vec<u8>);
 
 impl HmacKey {

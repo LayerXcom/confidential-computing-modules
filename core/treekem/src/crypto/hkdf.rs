@@ -1,4 +1,8 @@
-use super::hmac::HmacKey;
+use super::{
+    hmac::HmacKey,
+    hash::hash_encodable,
+    SHA256_OUTPUT_LEN,
+};
 use anyhow::Result;
 use codec::Encode;
 
@@ -52,4 +56,20 @@ pub fn expand<E: Encode>(
         .expand(&[&encoded_info], ring::hkdf::HKDF_SHA256)?
         .fill(out_buf)
         .map_err(Into::into)
+}
+
+/// Derive-Secret(Secret, Label, Context) =
+///  HKDF-Expand-Label(Secret, Label, Hash(Context), Hash.length)
+pub fn derive_secret<E: Encode>(
+    secret: &HmacKey,
+    label_info: &[u8],
+    context: &E,
+) -> Result<HmacKey> {
+    let key = {
+        let hashed_ctx = hash_encodable(context);
+        let mut key_buf = vec![0u8; SHA256_OUTPUT_LEN];
+        expand_label(secret, label_info, hashed_ctx.as_ref(), &mut key_buf);
+        HmacKey::from(key_buf)
+    };
+    Ok(key)
 }

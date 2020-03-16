@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow};
 
 pub mod dh;
 pub mod ecies;
+pub mod hash;
 pub mod hkdf;
 pub mod hmac;
 pub mod secrets;

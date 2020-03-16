@@ -9,6 +9,7 @@ use crate::application::AppKeyChain;
 use crate::handshake::{GroupAdd, GroupOperation, Handshake};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use anyhow::{Result, anyhow, ensure};
+use codec::Encode;
 
 /// Process the received handshake from a global ledger.
 pub trait HandshakeProcessor: Sized {
@@ -31,7 +32,7 @@ pub trait UpdateOperator: Sized {
     ) -> Result<(Handshake, GroupState, AppKeyChain)>;
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Encode)]
 pub struct GroupState {
     /// The current version of the group key
     epoch: u32,
@@ -146,6 +147,8 @@ impl GroupState {
         &mut self,
         update_secret: &UpdateSecret
     ) -> Result<AppSecret> {
+        let epoch_secret = hkdf::extract(&self.init_secret, update_secret.as_bytes());
+        self.init_secret = hkdf::derive_secret(&epoch_secret, b"init", self)?;
         
         unimplemented!();
     }

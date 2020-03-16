@@ -1,6 +1,7 @@
 use std::vec::Vec;
-use secp256k1::{PublicKey, SecretKey, util::{SECRET_KEY_SIZE, FULL_PUBLIC_KEY_SIZE}};
+use secp256k1::{PublicKey, SecretKey, util::{SECRET_KEY_SIZE, COMPRESSED_PUBLIC_KEY_SIZE}};
 use anyhow::{anyhow, Result};
+use codec::Encode;
 use super::{
     CryptoRng, sgx_rand_assign, hkdf,
     hmac::HmacKey,
@@ -8,6 +9,16 @@ use super::{
 
 #[derive(Debug, Clone)]
 pub struct DhPrivateKey(SecretKey);
+
+impl Encode for DhPrivateKey {
+    fn using_encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {
+        self.0.serialize().using_encoded(f)
+    }
+
+    fn size_hint(&self) -> usize {
+        SECRET_KEY_SIZE
+    }
+}
 
 impl DhPrivateKey {
     pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
@@ -36,6 +47,16 @@ impl DhPrivateKey {
 #[derive(Debug, Clone)]
 pub struct DhPubKey(PublicKey);
 
+impl Encode for DhPubKey {
+    fn using_encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {
+        self.0.serialize_compressed().using_encoded(f)
+    }
+
+    fn size_hint(&self) -> usize {
+        COMPRESSED_PUBLIC_KEY_SIZE
+    }
+}
+
 impl DhPubKey {
     pub fn from_private_key(private_key: &DhPrivateKey) -> Self {
         DhPubKey(PublicKey::from_secret_key(&private_key.0))
@@ -51,9 +72,9 @@ pub fn diffie_hellman(
         .tweak_mul_assign(&privkey.0)
         .map_err(|e| anyhow!("error: {:?}", e))?;
 
-    let mut master = Vec::with_capacity(FULL_PUBLIC_KEY_SIZE * 2);
-    master.extend(PublicKey::from_secret_key(&privkey.0).serialize().iter());
-    master.extend(shared_point.0.serialize().iter());
+    let mut master = Vec::with_capacity(COMPRESSED_PUBLIC_KEY_SIZE * 2);
+    master.extend(PublicKey::from_secret_key(&privkey.0).serialize_compressed().iter());
+    master.extend(shared_point.0.serialize_compressed().iter());
 
     let mut out_buf = [0u8; 32];
     hkdf::expand(&HmacKey::from(master), b"dh", &mut out_buf)?;

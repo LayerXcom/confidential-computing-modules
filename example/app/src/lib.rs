@@ -47,7 +47,6 @@ impl_runtime!{
         total_supply: U64
     ) {
         let sender_balance = update!(sender, "Balance", total_supply);
-        // let init = update!("TotalSupply", total_supply);
 
         insert![sender_balance]
     }
