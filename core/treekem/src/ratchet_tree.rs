@@ -6,7 +6,10 @@ use crate::crypto::{
     ecies::EciesCiphertext,
     CryptoRng,
 };
-use crate::tree_math;
+use crate::{
+    tree_math,
+    handshake::{DirectPathMsg, DirectPathNodeMsg},
+};
 use anyhow::{Result, anyhow, ensure};
 use codec::Encode;
 
@@ -90,11 +93,10 @@ impl RatchetTree {
     }
 
     /// Construct a Direct Path Message containing encrypted ratcheted path secrets.
-    pub fn encrypt_direct_path_secret<R: CryptoRng>(
+    pub fn encrypt_direct_path_secret(
         &self,
         leaf_idx: usize,
         path_secret: PathSecret,
-        csprng: &mut R,
     ) -> Result<DirectPathMsg> {
         ensure!(leaf_idx % 2 == 0, "index must be leaf's one.");
         let num_leaves = tree_math::num_leaves_in_tree(self.size());
@@ -310,30 +312,5 @@ impl RatchetTreeNode {
                 ..
             } => Some(public_key),
         }
-    }
-}
-
-/// Encrypted
-#[derive(Debug, Clone)]
-pub struct DirectPathMsg {
-    node_msgs: Vec<DirectPathNodeMsg>,
-}
-
-impl DirectPathMsg {
-    pub fn new(node_msgs: Vec<DirectPathNodeMsg>) -> Self {
-        DirectPathMsg { node_msgs }
-    }
-}
-
-/// Containes a direc
-#[derive(Debug, Clone)]
-pub struct DirectPathNodeMsg {
-    public_key: DhPubKey,
-    node_secrets: Vec<EciesCiphertext>,
-}
-
-impl DirectPathNodeMsg {
-    pub fn new(public_key: DhPubKey, node_secrets: Vec<EciesCiphertext>) -> Self {
-        DirectPathNodeMsg { public_key, node_secrets }
     }
 }

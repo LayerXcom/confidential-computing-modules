@@ -54,7 +54,8 @@ impl HandshakeProcessor for GroupState {
         new_group_state.increment_epoch()?;
 
         let update_secret = match handshake.op {
-            GroupOperation::Add(ref add) => new_group_state.apply_add_op(add)?
+            GroupOperation::Add(ref add) => new_group_state.apply_add_op(add)?,
+            _ => unimplemented!(),
         };
 
         let app_secret = new_group_state.update_epoch_secret(&update_secret)?;
@@ -87,6 +88,10 @@ impl UpdateOperator for GroupState {
 
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(new_group_state.my_roster_index())?;
         let update_secret = new_group_state.set_new_path_secret(new_path_secret.clone(), my_tree_idx)?;
+        new_group_state.increment_epoch()?;
+
+        let direct_path_msg = new_group_state.tree.encrypt_direct_path_secret(my_tree_idx, new_path_secret)?;
+
 
         unimplemented!();
     }
@@ -137,13 +142,17 @@ impl GroupState {
         Ok(UpdateSecret::zero(SHA256_OUTPUT_LEN))
     }
 
+    /// Set new path secret to group state.
+    /// This updates direct path node's keypair and return updatesecret.
     fn set_new_path_secret(
         &mut self,
         new_path_secret: PathSecret,
         leaf_idx: usize
     ) -> Result<UpdateSecret> {
-        // let root_node_secret
-        unimplemented!();
+        self
+            .tree
+            .propagate_new_path_secret(new_path_secret, leaf_idx)
+            .map(Into::into)
     }
 
     fn increment_epoch(&mut self) -> Result<()> {

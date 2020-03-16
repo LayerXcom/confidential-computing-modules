@@ -82,6 +82,12 @@ impl UpdateSecret {
     }
 }
 
+impl From<NodeSecret> for UpdateSecret {
+    fn from(n: NodeSecret) -> Self {
+        UpdateSecret(n.0)
+    }
+}
+
 /// node_secret[n] = HKDF-Expand-Label(path_secret[n], "node", "", Hash.Length)
 #[derive(Debug, Clone)]
 pub struct NodeSecret(Vec<u8>);
@@ -141,6 +147,6 @@ impl PathSecret {
     }
 
     pub fn as_bytes(&self) -> &[u8] {
-        self.as_bytes()
+        self.0.as_bytes()
     }
 }
