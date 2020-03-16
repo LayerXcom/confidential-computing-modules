@@ -53,13 +53,14 @@ impl HandshakeProcessor for GroupState {
         let mut new_group_state = self.clone();
         new_group_state.increment_epoch()?;
 
-        let new_group_epoch_secret = match handshake.op {
+        let update_secret = match handshake.op {
             GroupOperation::Add(ref add) => new_group_state.apply_add_op(add)?
         };
 
+        let app_secret = new_group_state.update_epoch_secret(&update_secret)?;
+        let app_key_chain = AppKeyChain::from_app_secret(&new_group_state, app_secret);
 
-
-        unimplemented!();
+        Ok((new_group_state, app_key_chain))
     }
 }
 
@@ -69,10 +70,8 @@ impl AddOperator for GroupState {
         new_roster_index: u32,
         public_key: DhPubKey,
     ) -> Result<(Handshake, GroupState, AppKeyChain)> {
-        let (new_group_state, app_key_chain, add_op) =
-            self.update_by_add_op(new_roster_index, public_key)?;
-        let prior_epoch = self.epoch;
-        let handshake = Handshake::new(prior_epoch, add_op);
+        let (new_group_state, app_key_chain, add_op) = self.apply_pubkey(new_roster_index, public_key)?;
+        let handshake = Handshake::new(self.epoch, add_op);
 
         Ok((handshake, new_group_state, app_key_chain))
     }
@@ -84,6 +83,11 @@ impl UpdateOperator for GroupState {
         new_path_secret: PathSecret,
         csprng: &mut R,
     ) -> Result<(Handshake, GroupState, AppKeyChain)> {
+        let mut new_group_state = self.clone();
+
+        let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(new_group_state.my_roster_index())?;
+        let update_secret = new_group_state.set_new_path_secret(new_path_secret.clone(), my_tree_idx)?;
+
         unimplemented!();
     }
 }
@@ -104,7 +108,7 @@ impl GroupState {
         }
     }
 
-    fn update_by_add_op(
+    fn apply_pubkey(
         &self,
         new_roster_index: u32,
         public_key: DhPubKey,
@@ -133,6 +137,15 @@ impl GroupState {
         Ok(UpdateSecret::zero(SHA256_OUTPUT_LEN))
     }
 
+    fn set_new_path_secret(
+        &mut self,
+        new_path_secret: PathSecret,
+        leaf_idx: usize
+    ) -> Result<UpdateSecret> {
+        // let root_node_secret
+        unimplemented!();
+    }
+
     fn increment_epoch(&mut self) -> Result<()> {
         let new_epoch = self.epoch
             .checked_add(1)
@@ -149,8 +162,9 @@ impl GroupState {
     ) -> Result<AppSecret> {
         let epoch_secret = hkdf::extract(&self.init_secret, update_secret.as_bytes());
         self.init_secret = hkdf::derive_secret(&epoch_secret, b"init", self)?;
-        
-        unimplemented!();
+        let app_secret = hkdf::derive_secret(&epoch_secret, b"app", self)?;
+
+        Ok(app_secret.into())
     }
 
     pub fn epoch(&self) -> u32 {
