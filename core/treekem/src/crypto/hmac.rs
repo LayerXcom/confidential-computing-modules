@@ -1,4 +1,7 @@
 use std::vec::Vec;
+use ring::{
+    hmac::{SigningKey, SigningContext, HMAC_SHA256},
+};
 
 #[derive(Debug, Clone)]
 pub struct HmacKey(Vec<u8>);
@@ -18,6 +21,13 @@ impl HmacKey {
 
     pub fn into_bytes(self) -> Vec<u8> {
         self.0
+    }
+
+    pub fn sign(&self, msg: &[u8]) -> Vec<u8> {
+        let signing_key = SigningKey::new(HMAC_SHA256, &self.0);
+        let mut ctx = SigningContext::with_key(&signing_key);
+        ctx.update(&msg);
+        ctx.sign().as_ref().to_vec()
     }
 }
 

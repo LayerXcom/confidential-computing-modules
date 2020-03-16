@@ -146,7 +146,7 @@ impl GroupState {
         &mut self,
         update_secret: &UpdateSecret
     ) -> Result<AppSecret> {
-
+        
         unimplemented!();
     }
 

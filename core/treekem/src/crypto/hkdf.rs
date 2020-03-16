@@ -13,7 +13,8 @@ struct HkdfLabel<'a> {
 
 /// An implementation of HKDF-extract.
 pub fn extract(salt: &HmacKey, secret: &[u8]) -> HmacKey {
-    unimplemented!();
+    let prk = salt.sign(secret);
+    HmacKey::from(prk)
 }
 
 pub fn expand_label(
