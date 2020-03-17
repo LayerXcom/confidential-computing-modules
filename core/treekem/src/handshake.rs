@@ -47,10 +47,9 @@ impl GroupAdd {
     }
 }
 
-
 #[derive(Debug, Clone)]
 pub struct GroupUpdate {
-    path: DirectPathMsg,
+    pub path: DirectPathMsg,
 }
 
 impl GroupUpdate {
@@ -74,7 +73,7 @@ impl DirectPathMsg {
 /// Containes a direc
 #[derive(Debug, Clone)]
 pub struct DirectPathNodeMsg {
-    public_key: DhPubKey,
+    pub public_key: DhPubKey,
     pub node_secrets: Vec<EciesCiphertext>,
 }
 

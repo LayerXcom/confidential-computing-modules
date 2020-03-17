@@ -149,8 +149,18 @@ impl GroupState {
         update: &GroupUpdate,
         sender_tree_idx: usize,
     ) -> Result<UpdateSecret> {
+        let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_index())?;
+        let (path_secret, common_ancestor) = self.tree.decrypt_direct_path_msg(
+            &update.path,
+            sender_tree_idx,
+            my_tree_idx,
+        )?;
+        let update_secret = self.set_new_path_secret(path_secret, common_ancestor)?;
 
-        unimplemented!();
+        let direct_path_pub_keys = update.path.node_msgs.iter().map(|m| &m.public_key);
+        self.tree.set_public_keys(sender_tree_idx, common_ancestor, direct_path_pub_keys.clone())?;
+
+        Ok(update_secret)
     }
 
     /// Set new path secret to group state.
