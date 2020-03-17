@@ -38,7 +38,7 @@ impl<T: Sized + Default + Clone + Encode + Decode + fmt::Debug> State for T {}
 
 /// A getter of state stored in enclave memory.
 pub trait StateGetter {
-    /// Get dstate using memory name.
+    /// Get state using memory name.
     /// Assumed this is called in user-defined state transition functions.
     fn get<S: State>(&self, key: impl Into<UserAddress>, name: &str) -> Result<S>;
 

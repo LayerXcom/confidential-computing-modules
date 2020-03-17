@@ -12,15 +12,9 @@ contract ReportHandle {
     // A cryptographic hash of the measurement.
     // Different builds/versions of an enclave will result in a different MRENCLAVE value.
     bytes32 private _mrEnclave;
-
-    // Compact formatted secp256k1 public key. The size is 33 bytes.
+    // The address-formated identity public key.
     mapping(address => address) public enclaveAddress;
     // Nonce data which is included `reportdata` field and used to prevent from replay attacks.
-    // The size is 31 bytes because `reportdata` field is 64 bytes size. We use it for Enclave Public key to rest of the field.
-    // This Report Nonce is not actually needed because the existing check of enclave public key provides replay protection features.
-    // We, however, check additional replay checks because the size of `reportdata` is fixed to 64 bytes size,
-    // so we have the left over of 31 bytes data field.
-    // We may remove this feature for perfomance.
     mapping(bytes32 => bytes32) private _reportNonce;
 
     // this is the modulus and the exponent of intel's certificate, you can extract it using:

@@ -1,3 +1,10 @@
+use std::fmt;
+use serde::{Deserialize, Serialize};
+use serde_big_array::big_array;
+use rand::Rng;
+use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
+use anonify_common::{AccessRight, UserAddress};
+use anonify_runtime::State;
 
 // ----------------------
 //  GET and POST types
@@ -5,13 +12,7 @@
 
 pub mod deploy {
     pub mod post {
-        use std::fmt;
-        use serde::{Deserialize, Serialize};
-        use serde_big_array::big_array;
-        use rand::Rng;
-        use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
-        use anonify_common::AccessRight;
-
+        use super::super::*;
         big_array! { BigArray; }
 
         #[derive(Clone, Deserialize, Serialize)]
@@ -63,13 +64,7 @@ pub mod deploy {
 
 pub mod register {
     pub mod post {
-        use std::fmt;
-        use serde::{Deserialize, Serialize};
-        use serde_big_array::big_array;
-        use rand::Rng;
-        use anonify_common::AccessRight;
-        use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
-
+        use super::super::*;
         big_array! { BigArray; }
 
         #[derive(Clone, Deserialize, Serialize)]
@@ -124,13 +119,7 @@ pub mod register {
 
 pub mod init_state {
     pub mod post {
-        use std::fmt;
-        use serde::{Deserialize, Serialize};
-        use serde_big_array::big_array;
-        use rand::Rng;
-        use anonify_common::AccessRight;
-        use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
-
+        use super::super::*;
         big_array! { BigArray; }
 
         #[derive(Clone, Deserialize, Serialize)]
@@ -191,13 +180,7 @@ pub mod init_state {
 
 pub mod state_transition {
     pub mod post {
-        use std::fmt;
-        use serde::{Deserialize, Serialize};
-        use serde_big_array::big_array;
-        use rand::Rng;
-        use anonify_common::{UserAddress, AccessRight};
-        use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
-
+        use super::super::*;
         big_array! { BigArray; }
 
         #[derive(Clone, Deserialize, Serialize)]
@@ -261,14 +244,7 @@ pub mod state_transition {
 
 pub mod state {
     pub mod get {
-        use std::fmt;
-        use serde::{Deserialize, Serialize};
-        use serde_big_array::big_array;
-        use rand::Rng;
-        use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
-        use anonify_common::{AccessRight};
-        use anonify_runtime::State;
-
+        use super::super::*;
         big_array! { BigArray; }
 
         #[derive(Clone, Deserialize, Serialize)]
