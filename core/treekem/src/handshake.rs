@@ -70,7 +70,7 @@ impl DirectPathMsg {
     }
 }
 
-/// Containes a direc
+/// Containes a direct path node's public key and encrypted secrets
 #[derive(Debug, Clone)]
 pub struct DirectPathNodeMsg {
     pub public_key: DhPubKey,
