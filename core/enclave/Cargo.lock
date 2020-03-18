@@ -79,6 +79,7 @@ dependencies = [
  "sgx_tunittest 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
  "sgx_types 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha2 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror 1.0.9 (git+https://github.com/mesalock-linux/thiserror-sgx.git)",
  "webpki 0.21.2 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)",
 ]
 
@@ -1220,6 +1221,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "thiserror"
+version = "1.0.9"
+source = "git+https://github.com/mesalock-linux/thiserror-sgx.git#5869b9b1032390ceb73d77ff64f7b7bdd9dacf29"
+dependencies = [
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+ "thiserror-impl 1.0.9 (git+https://github.com/mesalock-linux/thiserror-sgx.git)",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.9"
+source = "git+https://github.com/mesalock-linux/thiserror-sgx.git#5869b9b1032390ceb73d77ff64f7b7bdd9dacf29"
+dependencies = [
+ "proc-macro2 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 1.0.14 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "thread_local"
 version = "1.0.0"
 source = "git+https://github.com/mesalock-linux/thread_local-rs-sgx#b95e13d4f7808f35efc5f84dda380e299c0ee1f3"
@@ -1454,6 +1474,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum tempfile 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7a6e24d9338a0a5be79593e2fa15a648add6138caa803e2d5bc782c371732ca9"
 "checksum termcolor 1.0.5 (git+https://github.com/mesalock-linux/termcolor-sgx)" = "<none>"
 "checksum textwrap 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d326610f408c7a4eb6f51c37c330e496b08506c9457c9d34287ecc38809fb060"
+"checksum thiserror 1.0.9 (git+https://github.com/mesalock-linux/thiserror-sgx.git)" = "<none>"
+"checksum thiserror-impl 1.0.9 (git+https://github.com/mesalock-linux/thiserror-sgx.git)" = "<none>"
 "checksum thread_local 1.0.0 (git+https://github.com/mesalock-linux/thread_local-rs-sgx)" = "<none>"
 "checksum threadpool 1.8.0 (git+https://github.com/mesalock-linux/rust-threadpool-sgx)" = "<none>"
 "checksum tiny-keccak 1.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1d8a021c69bb74a44ccedb824a046447e2c84a01df9e5c20779750acb38e11b2"
