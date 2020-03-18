@@ -70,6 +70,7 @@ impl AppMemberSecret {
     }
 }
 
+#[derive(Debug, Clone, Default)]
 pub struct UpdateSecret(Vec<u8>);
 
 impl UpdateSecret {
@@ -141,9 +142,9 @@ impl PathSecret {
         let node_public_key = DhPubKey::from_private_key(&node_private_key);
 
         let node_secret = NodeSecret::from(node_secret_buf);
-        let new_path_secret = PathSecret::from(path_secret_buf);
+        let parent_path_secret = PathSecret::from(path_secret_buf);
 
-        Ok((node_public_key, node_private_key, node_secret, new_path_secret))
+        Ok((node_public_key, node_private_key, node_secret, parent_path_secret))
     }
 
     pub fn as_bytes(&self) -> &[u8] {
