@@ -27,6 +27,7 @@ libsecp256k1 = { version = "0.2", default-features = false }
 hex = { version = "0.4", default-features = false }
 codec = { package = "parity-scale-codec", version = "1.1", default-features = false }
 anyhow = { rev = "sgx_1.1.0", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
+thiserror = { git = "https://github.com/mesalock-linux/thiserror-sgx.git" }
 serde_json = { rev = "sgx_1.1.0", git = "https://github.com/mesalock-linux/serde-json-sgx" }
 chrono = { rev = "sgx_1.1.0", git = "https://github.com/mesalock-linux/chrono-sgx" }
 ring = { git = "https://github.com/mesalock-linux/ring-sgx", tag = "v0.16.5" }
