@@ -68,7 +68,7 @@ pub fn derive_secret<E: Encode>(
     let key = {
         let hashed_ctx = hash_encodable(context);
         let mut key_buf = vec![0u8; SHA256_OUTPUT_LEN];
-        expand_label(secret, label_info, hashed_ctx.as_ref(), &mut key_buf);
+        expand_label(secret, label_info, hashed_ctx.as_ref(), &mut key_buf)?;
         HmacKey::from(key_buf)
     };
     Ok(key)

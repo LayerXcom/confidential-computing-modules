@@ -35,7 +35,6 @@ pub struct GroupState {
 impl Handshake for GroupState {
     fn create_add_handshake(&self) -> Result<HandshakeParams> {
         let roster_idx = self.my_roster_idx;
-        let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(roster_idx)?;
         let path_secret = Self::request_new_path_secret(roster_idx, self.epoch)?;
 
         let (pubkey,_,_,_) = path_secret.derive_node_values()?;
