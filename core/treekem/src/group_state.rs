@@ -25,7 +25,7 @@ pub struct GroupState {
     epoch: u32,
     /// Only if a member has a leaf node contained DhPrivKey, this indicates the roster index.
     /// Otherwise, this field is None.
-    my_roster_idx: u32,
+    pub my_roster_idx: u32,
     tree: RatchetTree,
     /// The initial secret used to derive app_secret.
     /// It works as a salt of HKDF.
@@ -101,7 +101,7 @@ impl Handshake for GroupState {
 }
 
 impl GroupState {
-    pub fn new(my_roster_idx: u32, sender_tree_idx: usize) -> Result<Self> {
+    pub fn new(my_roster_idx: u32) -> Result<Self> {
         let epoch = 0;
         let path_secret = Self::request_new_path_secret(my_roster_idx, epoch)?;
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(my_roster_idx)?;

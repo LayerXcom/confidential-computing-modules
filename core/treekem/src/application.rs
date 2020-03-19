@@ -139,14 +139,35 @@ impl AppKeyChain {
     }
 }
 
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use quickcheck_macros::quickcheck;
-//     use rand::{self, SeedableRng};
+#[cfg(debug_assertions)]
+pub mod test {
+    use super::*;
+    use crate::test_utils;
+    use rand::{self, SeedableRng};
 
-//     #[quickcheck]
-//     fn app_msg_correctness(rng_seed: u64) {
+    fn encrypt_decrypt_helper(
+        msg: &[u8],
+        group1: &GroupState,
+        app_key_chain1: &mut AppKeyChain,
+        group2: &GroupState,
+        app_key_chain2: &mut AppKeyChain,
+    ) {
+        let app_msg = app_key_chain1.encrypt_msg(msg.to_vec(), group1).unwrap();
+        let plaintext = app_key_chain2.decrypt_msg(app_msg, group2).unwrap();
 
-//     }
-// }
+        assert_eq!(plaintext.as_slice(), msg);
+    }
+
+    pub fn app_msg_correctness() {
+        let mut rng = rand::rngs::StdRng::seed_from_u64(1);
+        let msg = b"app msg correctnesss test";
+        let mut group_state1 = test_utils::random_group_state();
+
+        let new_roster_idx = 1;
+        let mut group_state2 = test_utils::change_group_state_idx(&group_state1, new_roster_idx);
+
+        // encrypt_decrypt_helper(
+        //     msg,
+        // )
+    }
+}

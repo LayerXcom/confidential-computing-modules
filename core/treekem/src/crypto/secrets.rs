@@ -3,6 +3,7 @@ use super::{
     SHA256_OUTPUT_LEN, hkdf,
     dh::{DhPrivateKey, DhPubKey},
     hmac::HmacKey,
+    CryptoRng,
 };
 use anyhow::Result;
 
@@ -145,6 +146,11 @@ impl PathSecret {
         let parent_path_secret = PathSecret::from(path_secret_buf);
 
         Ok((node_public_key, node_private_key, node_secret, parent_path_secret))
+    }
+
+    pub fn new_from_random<R: CryptoRng>(csprng: &mut R) -> PathSecret {
+        let key = HmacKey::new_from_random(csprng);
+        PathSecret(key)
     }
 
     pub fn as_bytes(&self) -> &[u8] {
