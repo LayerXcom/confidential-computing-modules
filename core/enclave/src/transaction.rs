@@ -98,7 +98,7 @@ impl EnclaveTx for StateTransTx {
 impl StateTransTx {
     pub fn construct(
         kind: CallKind,
-        state_id: u64,
+        state_id: u64, // TODO: future works for separeting smart contracts
         access_right: &AccessRight,
         enclave_ctx: &EnclaveContext<StateType>,
     ) -> Result<Self>

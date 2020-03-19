@@ -4,7 +4,7 @@ use ring::{
 };
 use codec::Encode;
 
-#[derive(Debug, Clone, Encode)]
+#[derive(Debug, Clone, Encode, Default)]
 pub struct HmacKey(Vec<u8>);
 
 impl HmacKey {

@@ -6,19 +6,17 @@ use crate::crypto::{
     hmac::HmacKey,
 };
 use crate::application::AppKeyChain;
-use crate::handshake::HandshakeParams;
+use crate::handshake::{HandshakeParams, GroupOperation, GroupAdd, GroupUpdate};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use anyhow::{Result, anyhow, ensure};
 use codec::Encode;
 
-
 pub trait Handshake: Sized {
-    fn create_handshake(
-        &self,
-        new_path_secret: PathSecret,
-    ) -> Result<(HandshakeParams, GroupState, AppKeyChain)>;
+    fn create_add_handshake(&self) -> Result<HandshakeParams>;
 
-    fn process_handshake(&self, handshake: &HandshakeParams) -> Result<(GroupState, AppKeyChain)>;
+    fn create_update_handshake(&self) -> Result<(HandshakeParams, GroupState, AppKeyChain)>;
+
+    fn process_handshake(&self, handshake: &HandshakeParams) -> Result<(GroupState, Option<AppKeyChain>)>;
 }
 
 #[derive(Clone, Debug, Encode)]
@@ -27,7 +25,7 @@ pub struct GroupState {
     epoch: u32,
     /// Only if a member has a leaf node contained DhPrivKey, this indicates the roster index.
     /// Otherwise, this field is None.
-    my_roster_index: Option<u32>,
+    my_roster_idx: u32,
     tree: RatchetTree,
     /// The initial secret used to derive app_secret.
     /// It works as a salt of HKDF.
@@ -35,106 +33,154 @@ pub struct GroupState {
 }
 
 impl Handshake for GroupState {
-    fn create_handshake(
-        &self,
-        new_path_secret: PathSecret,
-    ) -> Result<(HandshakeParams, GroupState, AppKeyChain)> {
+    fn create_add_handshake(&self) -> Result<HandshakeParams> {
+        let roster_idx = self.my_roster_idx;
+        let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(roster_idx)?;
+        let path_secret = self.tree.get(my_tree_idx).unwrap();
+
+        let (pubkey,_,_,_) = path_secret.derive_node_values()?;
+        let add_op = GroupAdd::new(roster_idx, pubkey);
+
+        let handshake = HandshakeParams {
+            prior_epoch: self.epoch,
+            roster_idx,
+            op: GroupOperation::Add(add_op),
+        };
+
+        Ok(handshake)
+    }
+
+    fn create_update_handshake(&self) -> Result<(HandshakeParams, GroupState, AppKeyChain)> {
+        let roster_idx = self.my_roster_idx;
         let mut new_group_state = self.clone();
 
-        let my_roster_idx = match new_group_state.my_roster_index() {
-            // update operation
-            Some(idx) => idx as u32,
-            // add operation
-            None => {
-                let current_roster_len = self.roster_len()? as u32;
-                new_group_state.my_roster_index = Some(current_roster_len);
-                current_roster_len
-            }
-        };
-        let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(my_roster_idx)?;
+        let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(roster_idx)?;
+        let path_secret = self.tree.get(my_tree_idx).unwrap();
 
-        let update_secret = new_group_state.set_new_path_secret(new_path_secret.clone(), my_tree_idx)?;
+        let update_secret = new_group_state.set_new_path_secret(path_secret.clone(), my_tree_idx)?;
         new_group_state.increment_epoch()?;
 
-        let direct_path_msg = new_group_state.tree.encrypt_direct_path_secret(my_tree_idx, new_path_secret.clone())?;
+        let direct_path_msg = new_group_state.tree.encrypt_direct_path_secret(my_tree_idx, path_secret.clone())?;
 
         let app_secret = new_group_state.update_epoch_secret(&update_secret)?;
         let app_key_chain = AppKeyChain::from_app_secret(&new_group_state, app_secret);
 
-        // TODO: get pubkey from `set_new_path_secret` or `encrypt_direct_path_secret`
-        let (pubkey,_,_,_) = new_path_secret.derive_node_values()?;
+        let update_op = GroupUpdate::new(direct_path_msg);
 
         let handshake = HandshakeParams {
             prior_epoch: self.epoch,
-            roster_index: my_roster_idx,
-            public_key: pubkey,
-            path: direct_path_msg,
+            roster_idx,
+            op: GroupOperation::Update(update_op),
         };
 
         Ok((handshake, new_group_state, app_key_chain))
     }
 
-    fn process_handshake(&self, handshake: &HandshakeParams) -> Result<(GroupState, AppKeyChain)> {
+    fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<(GroupState, Option<AppKeyChain>)> {
         ensure!(handshake.prior_epoch == self.epoch, "Handshake's prior epoch isn't the current epoch.");
+        let sender_tree_idx = RatchetTree::roster_idx_to_tree_idx(handshake.roster_idx)?;
 
         let mut new_group_state = self.clone();
-        new_group_state.increment_epoch()?;
 
-        let update_secret = new_group_state.apply_handshake(handshake)?;
+        match handshake.op {
+            GroupOperation::Add(ref add) => {
+                new_group_state.apply_add_operation(add, handshake.roster_idx)?;
 
-        let app_secret = new_group_state.update_epoch_secret(&update_secret)?;
-        let app_key_chain = AppKeyChain::from_app_secret(&new_group_state, app_secret);
+                Ok((new_group_state, None))
+            },
+            GroupOperation::Update(ref update) => {
+                let update_secret = new_group_state.apply_update_operation(update, sender_tree_idx)?;
+                new_group_state.increment_epoch()?;
+                let app_secret = new_group_state.update_epoch_secret(&update_secret)?;
+                let app_key_chain = AppKeyChain::from_app_secret(&new_group_state, app_secret);
 
-        Ok((new_group_state, app_key_chain))
+                Ok((new_group_state, Some(app_key_chain)))
+            },
+        }
     }
 }
 
 impl GroupState {
-    fn apply_handshake(&mut self, handshake: &HandshakeParams) -> Result<UpdateSecret> {
-        let sender_tree_idx = RatchetTree::roster_idx_to_tree_idx(handshake.roster_index)?;
-        let next_roster_idx = self.roster_len()?;
+    pub fn new(my_roster_idx: u32, sender_tree_idx: usize) -> Result<Self> {
+        let epoch = 0;
+        let path_secret = self.request_new_path_secret(my_roster_idx, epoch)?;
+        let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(my_roster_idx)?;
+        let tree = RatchetTree::init_path_secret_idx(path_secret, my_tree_idx)?;
+        let init_secret = HmacKey::default();
 
-        let mut res = UpdateSecret::default();
-        // If handshake's roster index is equal to the incremented index of max current roster index,
-        // apply the handshake as an add operation.
-        if sender_tree_idx == next_roster_idx {
-            self.tree.add_leaf_node(RatchetTreeNode::Blank);
-            self.tree.propagate_blank(sender_tree_idx);
-            res = self.apply_operation(&handshake, sender_tree_idx)?;
-
-        // If handshake's roster index is within the bounds of current roster index,
-        // apply the handshake as an update operation.
-        } else if sender_tree_idx < next_roster_idx {
-            res = self.apply_operation(&handshake, sender_tree_idx)?;
-        } else {
-            return Err(anyhow!("Handshake's roster index is out of bounds."));
-        }
-
-        Ok(res)
+        Ok(GroupState {
+            epoch,
+            my_roster_idx,
+            tree,
+            init_secret,
+        })
     }
 
-    fn apply_operation(
-        &mut self,
-        handshake: &HandshakeParams,
-        sender_tree_idx: usize,
-    ) -> Result<UpdateSecret> {
-        // TODO: Currently, each member must not send handshake before setting path secrets.
-        let my_roster_idx = self.my_roster_index()
-            .ok_or(anyhow!("my_roster index must exist when receiving a handshake"))?;
+    fn apply_add_operation(&mut self, add_op: &GroupAdd, roster_idx: u32) -> Result<()> {
+        let sender_tree_idx = RatchetTree::roster_idx_to_tree_idx(roster_idx)?;
+        self.tree.set_single_public_key(sender_tree_idx, add_op.public_key)?;
 
-        let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(my_roster_idx)?;
+        Ok(())
+    }
+
+    fn apply_update_operation(&mut self, update_opp: &GroupUpdate, sender_tree_idx: usize) -> Result<UpdateSecret> {
+        ensure!(sender_tree_idx < next_roster_idx, "Handshake's roster index is out of bounds");
+
+        let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
         let (path_secret, common_ancestor) = self.tree.decrypt_direct_path_msg(
-            &handshake.path,
+            &update_opp.path,
             sender_tree_idx,
             my_tree_idx,
         )?;
         let update_secret = self.set_new_path_secret(path_secret, common_ancestor)?;
 
-        let direct_path_pub_keys = handshake.path.node_msgs.iter().map(|m| &m.public_key);
+        let direct_path_pub_keys = update_opp.path.node_msgs.iter().map(|m| &m.public_key);
         self.tree.set_public_keys(sender_tree_idx, common_ancestor, direct_path_pub_keys.clone())?;
 
         Ok(update_secret)
     }
+
+    // fn apply_handshake(&mut self, handshake: &HandshakeParams) -> Result<UpdateSecret> {
+    //     let sender_tree_idx = RatchetTree::roster_idx_to_tree_idx(handshake.roster_idx)?;
+    //     let next_roster_idx = self.roster_len()?;
+
+    //     let mut res = UpdateSecret::default();
+    //     // If handshake's roster index is equal to the incremented index of max current roster index,
+    //     // apply the handshake as an add operation.
+    //     if sender_tree_idx == next_roster_idx {
+    //         self.tree.add_leaf_node(RatchetTreeNode::Blank);
+    //         self.tree.propagate_blank(sender_tree_idx);
+    //         res = self.apply_operation(&handshake, sender_tree_idx)?;
+
+    //     // If handshake's roster index is within the bounds of current roster index,
+    //     // apply the handshake as an update operation.
+    //     } else if sender_tree_idx < next_roster_idx {
+    //         res = self.apply_operation(&handshake, sender_tree_idx)?;
+    //     } else {
+    //         return Err(anyhow!("Handshake's roster index is out of bounds."));
+    //     }
+
+    //     Ok(res)
+    // }
+
+    // fn apply_operation(
+    //     &mut self,
+    //     handshake: &HandshakeParams,
+    //     sender_tree_idx: usize,
+    // ) -> Result<UpdateSecret> {
+    //     let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
+    //     let (path_secret, common_ancestor) = self.tree.decrypt_direct_path_msg(
+    //         &handshake.path,
+    //         sender_tree_idx,
+    //         my_tree_idx,
+    //     )?;
+    //     let update_secret = self.set_new_path_secret(path_secret, common_ancestor)?;
+
+    //     let direct_path_pub_keys = handshake.path.node_msgs.iter().map(|m| &m.public_key);
+    //     self.tree.set_public_keys(sender_tree_idx, common_ancestor, direct_path_pub_keys.clone())?;
+
+    //     Ok(update_secret)
+    // }
 
     /// Set new path secret to group state.
     /// This updates direct path node's keypair and return updatesecret.
@@ -179,8 +225,8 @@ impl GroupState {
         self.epoch
     }
 
-    pub fn my_roster_index(&self) -> Option<u32> {
-        self.my_roster_index
+    pub fn my_roster_idx(&self) -> u32 {
+        self.my_roster_idx
     }
 
     pub fn roster_len(&self) -> Result<usize> {

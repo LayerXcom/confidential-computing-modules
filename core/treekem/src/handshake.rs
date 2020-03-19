@@ -11,9 +11,36 @@ pub struct HandshakeParams {
     /// This is equal to the epoch of the current groupstate
     /// at the time of receicing and applying the handshake.
     pub prior_epoch: u32,
-    pub roster_index: u32,
+    pub roster_idx: u32,
+    pub op: GroupOperation,
+}
+
+#[derive(Debug, Clone)]
+pub enum GroupOperation {
+    Add(GroupAdd),
+    Update(GroupUpdate),
+}
+
+#[derive(Debug, Clone)]
+pub struct GroupAdd {
     pub public_key: DhPubKey,
+}
+
+impl GroupAdd {
+    pub fn new(public_key: DhPubKey) -> Self {
+        GroupAdd { public_key }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct GroupUpdate {
     pub path: DirectPathMsg,
+}
+
+impl GroupUpdate {
+    pub fn new(path: DirectPathMsg) -> Self {
+        GroupUpdate { path }
+    }
 }
 
 /// Encrypted direct path

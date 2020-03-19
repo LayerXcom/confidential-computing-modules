@@ -23,6 +23,16 @@ impl RatchetTree {
         RatchetTree { nodes }
     }
 
+    /// Set my leaf node derived from path secret to the provided tree index.
+    pub fn init_path_secret_idx(path_secret: PathSecret, my_tree_idx: usize) -> Result<Self> {
+        let (_, privkey, _, _) = path_secret.derive_node_values()?;
+        let my_leaf = RatchetTreeNode::from_private_key(privkey);
+        let mut nodes = vec![RatchetTreeNode::Blank; my_tree_idx];
+        nodes.push(my_leaf);
+
+        Ok(RatchetTree::new(nodes))
+    }
+
     /// Construct a Direct Path Message containing encrypted ratcheted path secrets.
     pub fn encrypt_direct_path_secret(
         &self,
@@ -170,6 +180,14 @@ impl RatchetTree {
         };
 
         Ok(root_node_secret)
+    }
+
+    pub fn set_single_public_key(&mut self, tree_idx: usize, pubkey: DhPubKey) -> Result<()> {
+        let node = self.get_mut(tree_idx)
+            .ok_or(anyhow!("Invalid tree index. Cannot set a public key to ratchet tree by add operation"))?;
+        node.update_pub_key(pubkey);
+
+        Ok(())
     }
 
     /// Set the public keys.
