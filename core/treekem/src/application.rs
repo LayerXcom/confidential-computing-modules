@@ -138,3 +138,15 @@ impl AppKeyChain {
         Ok((ub_key, nonce_seq, *gen))
     }
 }
+
+// #[cfg(test)]
+// mod test {
+//     use super::*;
+//     use quickcheck_macros::quickcheck;
+//     use rand::{self, SeedableRng};
+
+//     #[quickcheck]
+//     fn app_msg_correctness(rng_seed: u64) {
+
+//     }
+// }

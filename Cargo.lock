@@ -163,6 +163,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "anonify-treekem"
+version = "0.1.0"
+dependencies = [
+ "anyhow 1.0.26 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.0)",
+ "libsecp256k1 0.3.1 (git+https://github.com/mesalock-linux/libsecp256k1-rs-sgx?rev=sgx_1.1.0)",
+ "parity-scale-codec 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.7.3 (git+https://github.com/mesalock-linux/rand-sgx?rev=v0.6.5_sgx1.1.0)",
+ "rand_core 0.5.1 (git+https://github.com/mesalock-linux/rand-sgx?rev=v0.6.5_sgx1.1.0)",
+ "ring 0.16.11 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)",
+ "sgx_trts 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+]
+
+[[package]]
 name = "anonify-types"
 version = "0.1.0"
 dependencies = [
@@ -3077,20 +3091,6 @@ dependencies = [
 name = "traitobject"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "treekem"
-version = "0.1.0"
-dependencies = [
- "anyhow 1.0.26 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.0)",
- "libsecp256k1 0.3.1 (git+https://github.com/mesalock-linux/libsecp256k1-rs-sgx?rev=sgx_1.1.0)",
- "parity-scale-codec 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.7.3 (git+https://github.com/mesalock-linux/rand-sgx?rev=v0.6.5_sgx1.1.0)",
- "rand_core 0.5.1 (git+https://github.com/mesalock-linux/rand-sgx?rev=v0.6.5_sgx1.1.0)",
- "ring 0.16.11 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)",
- "sgx_trts 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
-]
 
 [[package]]
 name = "try-lock"
