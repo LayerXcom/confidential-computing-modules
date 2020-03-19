@@ -70,7 +70,7 @@ impl AppKeyChain {
         group_state: &GroupState
     ) -> Result<AppMsg> {
         plaintext.extend(vec![0u8; AES_128_GCM_TAG_SIZE]);
-        let my_roster_idx = group_state.my_roster_idx().unwrap(); // TODO
+        let my_roster_idx = group_state.my_roster_idx();
 
         let (ub_key, nonce_seq, generation) = self.key_nonce_gen(my_roster_idx as usize)?;
         let mut sealing_key = SealingKey::new(ub_key, nonce_seq);
