@@ -166,8 +166,19 @@ pub mod test {
         let new_roster_idx = 1;
         let mut group_state2 = test_utils::change_group_state_idx(&group_state1, new_roster_idx);
 
-        // encrypt_decrypt_helper(
-        //     msg,
-        // )
+        let (mut key_chain1_epoch1, mut key_chain2_epoch1) = test_utils::do_update_operation(
+            &mut group_state1,
+            &mut group_state2,
+            &mut rng
+        );
+
+        // 1 --> 2
+        encrypt_decrypt_helper(
+            msg,
+            &group_state1,
+            &mut key_chain1_epoch1,
+            &group_state2,
+            &mut key_chain2_epoch1,
+        );
     }
 }
