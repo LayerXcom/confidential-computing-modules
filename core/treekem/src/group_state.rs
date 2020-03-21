@@ -2,7 +2,7 @@ use crate::crypto::{
     CryptoRng, SHA256_OUTPUT_LEN,
     hkdf,
     dh::{DhPrivateKey, DhPubKey},
-    secrets::{GroupEpochSecret, AppSecret, UpdateSecret, PathSecret},
+    secrets::*,
     hmac::HmacKey,
 };
 use crate::application::AppKeyChain;
@@ -12,9 +12,9 @@ use anyhow::{Result, anyhow, ensure};
 use codec::Encode;
 
 pub trait Handshake: Sized {
-    fn create_add_handshake(&self) -> Result<HandshakeParams>;
+    fn create_add_handshake(&self, req: &PathSecretRequest) -> Result<HandshakeParams>;
 
-    fn create_update_handshake(&self) -> Result<(HandshakeParams, GroupState, AppKeyChain)>;
+    fn create_update_handshake(&self, req: &PathSecretRequest) -> Result<(HandshakeParams, GroupState, AppKeyChain)>;
 
     fn process_handshake(&self, handshake: &HandshakeParams) -> Result<(GroupState, Option<AppKeyChain>)>;
 }
@@ -33,9 +33,9 @@ pub struct GroupState {
 }
 
 impl Handshake for GroupState {
-    fn create_add_handshake(&self) -> Result<HandshakeParams> {
+    fn create_add_handshake(&self, req: &PathSecretRequest) -> Result<HandshakeParams> {
         let roster_idx = self.my_roster_idx;
-        let path_secret = Self::request_new_path_secret(roster_idx, self.epoch)?;
+        let path_secret = Self::request_new_path_secret(req, roster_idx, self.epoch)?;
 
         let (pubkey,_,_,_) = path_secret.derive_node_values()?;
         let add_op = GroupAdd::new(pubkey);
@@ -49,12 +49,12 @@ impl Handshake for GroupState {
         Ok(handshake)
     }
 
-    fn create_update_handshake(&self) -> Result<(HandshakeParams, GroupState, AppKeyChain)> {
+    fn create_update_handshake(&self, req: &PathSecretRequest) -> Result<(HandshakeParams, GroupState, AppKeyChain)> {
         let roster_idx = self.my_roster_idx;
         let mut new_group_state = self.clone();
 
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(roster_idx)?;
-        let path_secret = Self::request_new_path_secret(roster_idx, self.epoch)?;
+        let path_secret = Self::request_new_path_secret(req, roster_idx, self.epoch)?;
 
         let update_secret = new_group_state.set_new_path_secret(path_secret.clone(), my_tree_idx)?;
         new_group_state.increment_epoch()?;
@@ -101,9 +101,9 @@ impl Handshake for GroupState {
 }
 
 impl GroupState {
-    pub fn new(my_roster_idx: u32) -> Result<Self> {
+    pub fn new(my_roster_idx: u32, req: &PathSecretRequest) -> Result<Self> {
         let epoch = 0;
-        let path_secret = Self::request_new_path_secret(my_roster_idx, epoch)?;
+        let path_secret = Self::request_new_path_secret(req, my_roster_idx, epoch)?;
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(my_roster_idx)?;
         let tree = RatchetTree::init_path_secret_idx(path_secret, my_tree_idx)?;
         let init_secret = HmacKey::default();
@@ -175,8 +175,13 @@ impl GroupState {
     }
 
     /// Request own new path secret to external key vault
-    pub fn request_new_path_secret(roster_idx: u32, epoch: u32) -> Result<PathSecret> {
-        unimplemented!();
+    pub fn request_new_path_secret(req: &PathSecretRequest, roster_idx: u32, epoch: u32) -> Result<PathSecret> {
+        match req {
+            PathSecretRequest::Local(db) => {
+                db.get(roster_idx, epoch).cloned().ok_or(anyhow!("Not found Path Secret from local PathSecretKVS with provided roster_idx and epoch"))
+            },
+            PathSecretRequest::Remote(url) => unimplemented!(),
+        }
     }
 
     pub fn epoch(&self) -> u32 {
