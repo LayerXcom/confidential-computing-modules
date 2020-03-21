@@ -206,6 +206,7 @@ impl RatchetTree {
         for path_node_idx in direct_path {
             let pubkey = public_keys.next()
                 .ok_or(anyhow!("length of direct path is longer than public key iterator"))?;
+
             if path_node_idx == stop_idx {
                 break;
             } else {

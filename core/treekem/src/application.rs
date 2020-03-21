@@ -162,16 +162,15 @@ pub mod test {
     pub fn app_msg_correctness() {
         let mut rng = rand::rngs::StdRng::seed_from_u64(1);
         let msg = b"app msg correctnesss test";
+
         let mut kvs = PathSecretKVS::new();
         test_utils::init_path_secret_kvs(&mut kvs, 3, 3, &mut rng);
         let req = PathSecretRequest::Local(kvs);
 
         let mut group_state1 = test_utils::random_group_state(&req, 0);
+        let mut group_state2 = test_utils::random_group_state(&req, 1);
 
-        let new_roster_idx = 1;
-        let mut group_state2 = test_utils::change_group_state_idx(&group_state1, new_roster_idx);
-
-        let (mut key_chain1_epoch1, mut key_chain2_epoch1) = test_utils::do_update_operation(
+        let (mut key_chain1_epoch1, mut key_chain2_epoch1) = test_utils::do_handshake(
             &mut group_state1,
             &mut group_state2,
             &req,

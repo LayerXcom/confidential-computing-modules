@@ -29,18 +29,18 @@ pub fn change_group_state_idx(
     new_group_state
 }
 
-pub fn do_update_operation<R: CryptoRng>(
+pub fn do_handshake<R: CryptoRng>(
     group1: &mut GroupState,
     group2: &mut GroupState,
     req: &PathSecretRequest,
     csprng: &mut R,
 ) -> (AppKeyChain, AppKeyChain) {
     let new_path_secret = PathSecret::new_from_random(csprng);
-    let (handshake, new_group1, keychain1) =  group1.create_update_handshake(req).unwrap();
+    let (handshake, new_group1, keychain1) = group1.create_handshake(req).unwrap();
     *group1 = new_group1;
 
     let (new_group2, keychain2) = group2.process_handshake(&handshake).unwrap();
     *group2 = new_group2;
 
-    (keychain1, keychain2.unwrap())
+    (keychain1, keychain2)
 }
