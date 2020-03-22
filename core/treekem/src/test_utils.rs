@@ -33,8 +33,8 @@ pub fn do_handshake<R: CryptoRng>(
 ) -> (AppKeyChain, AppKeyChain) {
     let new_path_secret = PathSecret::new_from_random(csprng);
     let (handshake, new_group1, keychain1) = group1.create_handshake(req).unwrap();
-    *group1 = new_group1;
-
+    
+    let keychain1 = group1.process_handshake(&handshake, req).unwrap();
     let keychain2 = group2.process_handshake(&handshake, req).unwrap();
 
     (keychain1, keychain2)

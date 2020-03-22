@@ -76,18 +76,22 @@ impl Handshake for GroupState {
         }
 
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
+        let mut my_path_secret: Option<PathSecret> = None;
         if let Some(my_leaf) = self.tree.get_mut(my_tree_idx) {
-            if my_leaf.private_key().is_none() {
+            if sender_tree_idx == my_tree_idx {
                 let path_secret = Self::request_new_path_secret(req, self.my_roster_idx, self.epoch)?;
-                let (node_pubkey, node_privkey, _, _)
-                    = path_secret.derive_node_values()?;
+                let (node_pubkey, node_privkey, _, _) = path_secret.clone().derive_node_values()?;
 
                 my_leaf.update_pub_key(node_pubkey);
                 my_leaf.update_priv_key(node_privkey);
+
+                my_path_secret = Some(path_secret);
             }
         }
 
-        let update_secret = self.apply_handshake(handshake, sender_tree_idx)?;
+        let (update_secret, common_ancestor) = self.apply_handshake(handshake, sender_tree_idx, my_path_secret)?;
+        let direct_path_pub_keys = handshake.path.node_msgs.iter().map(|m| &m.public_key);
+        self.tree.set_public_keys(sender_tree_idx, common_ancestor, direct_path_pub_keys.clone())?;
         self.increment_epoch()?;
 
         let app_secret = self.update_epoch_secret(&update_secret)?;
@@ -111,28 +115,30 @@ impl GroupState {
         })
     }
 
-    fn apply_handshake(&mut self, handshake: &HandshakeParams, sender_tree_idx: usize) -> Result<UpdateSecret> {
+    fn apply_handshake(&mut self, handshake: &HandshakeParams, sender_tree_idx: usize, path_secret: Option<PathSecret>) -> Result<(UpdateSecret, usize)> {
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
 
         match self.tree.get(0).unwrap() {
             &RatchetTreeNode::Blank => {
-                let common_ancestor = 1;
-                let direct_path_pub_keys = handshake.path.node_msgs.iter().map(|m| &m.public_key);
-                self.tree.set_public_keys(sender_tree_idx, common_ancestor, direct_path_pub_keys.clone())?;
-                Ok(UpdateSecret::default())
+                let common_ancestor = 0;
+                Ok((UpdateSecret::default(), common_ancestor))
             }
             _ => {
-                let (path_secret, common_ancestor) = self.tree.decrypt_direct_path_msg(
-                    &handshake.path,
-                    sender_tree_idx,
-                    my_tree_idx,
-                )?;
-                let update_secret = self.set_new_path_secret(path_secret, common_ancestor)?;
-
-                let direct_path_pub_keys = handshake.path.node_msgs.iter().map(|m| &m.public_key);
-                self.tree.set_public_keys(sender_tree_idx, common_ancestor, direct_path_pub_keys.clone())?;
-
-                Ok(update_secret)
+                match sender_tree_idx == my_tree_idx {
+                    true => {
+                        let update_secret = self.set_new_path_secret(path_secret.unwrap(), my_tree_idx)?;
+                        return Ok((update_secret, my_tree_idx))
+                    },
+                    false => {
+                        let (path_secret, common_ancestor) = self.tree.decrypt_direct_path_msg(
+                            &handshake.path,
+                            sender_tree_idx,
+                            my_tree_idx,
+                        )?;
+                        let update_secret = self.set_new_path_secret(path_secret, common_ancestor)?;
+                        Ok((update_secret, common_ancestor))
+                    }
+                }
             }
         }
     }

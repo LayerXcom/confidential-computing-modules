@@ -180,7 +180,7 @@ impl RatchetTree {
             current_node.update_pub_key(node_pubkey);
             current_node.update_priv_key(node_privkey);
 
-            if current_node_idx == root_node_idx && num_leaves != 1 {
+            if current_node_idx == root_node_idx {
                 break node_secret;
             } else {
                 current_node_idx = tree_math::node_parent(current_node_idx, num_leaves);
