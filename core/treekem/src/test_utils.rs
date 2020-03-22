@@ -35,8 +35,7 @@ pub fn do_handshake<R: CryptoRng>(
     let (handshake, new_group1, keychain1) = group1.create_handshake(req).unwrap();
     *group1 = new_group1;
 
-    let (new_group2, keychain2) = group2.process_handshake(&handshake).unwrap();
-    *group2 = new_group2;
+    let keychain2 = group2.process_handshake(&handshake, req).unwrap();
 
     (keychain1, keychain2)
 }

@@ -93,7 +93,7 @@ impl From<NodeSecret> for UpdateSecret {
 }
 
 /// node_secret[n] = HKDF-Expand-Label(path_secret[n], "node", "", Hash.Length)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct NodeSecret(Vec<u8>);
 
 impl From<Vec<u8>> for NodeSecret {

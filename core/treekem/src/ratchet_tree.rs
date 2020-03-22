@@ -15,7 +15,7 @@ use codec::Encode;
 
 #[derive(Clone, Debug, Encode)]
 pub struct RatchetTree {
-    nodes: Vec<RatchetTreeNode>,
+    pub nodes: Vec<RatchetTreeNode>,
 }
 
 impl RatchetTree {
@@ -50,6 +50,9 @@ impl RatchetTree {
         let mut node_msgs = vec![];
         let (leaf_public_key, _, _, mut parent_path_secret) = path_secret.derive_node_values()?;
         node_msgs.push(DirectPathNodeMsg::new(leaf_public_key, vec![]));
+        if num_leaves == 1 {
+            return Ok(DirectPathMsg::new(node_msgs));
+        }
 
         for path_node_idx in direct_path {
             let (parent_public_key, _, _, grandparent_path_secret) =
@@ -140,7 +143,9 @@ impl RatchetTree {
 
     pub fn add_leaf_node(&mut self, node: RatchetTreeNode) {
         match self.nodes.is_empty() {
-            true => self.nodes.push(node),
+            true => {
+                self.nodes.push(node);
+            },
             false => {
                 self.nodes.push(RatchetTreeNode::Blank);
                 self.nodes.push(node);
@@ -182,6 +187,10 @@ impl RatchetTree {
                 path_secret = parent_path_secret;
             }
         };
+
+        if num_leaves == 1 {
+            return Ok(NodeSecret::default());
+        }
 
         Ok(root_node_secret)
     }
