@@ -130,6 +130,7 @@ pub mod enclave_tests {
 
             // anonify_treekem
             core_unitests(&mut ctr, &mut failures, app_msg_correctness, "app_msg_correctness");
+            core_unitests(&mut ctr, &mut failures, ecies_correctness, "ecies_correctness");
 
             let result = failures.is_empty();
             rsgx_unit_test_end(ctr, failures);

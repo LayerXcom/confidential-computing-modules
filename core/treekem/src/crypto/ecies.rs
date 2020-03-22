@@ -104,3 +104,19 @@ impl NonceSequence for OneNonceSequence {
         self.0.take().ok_or(ring::error::Unspecified).into()
     }
 }
+
+#[cfg(debug_assertions)]
+pub mod tests {
+    use super::*;
+
+    pub fn ecies_correctness() {
+        let mut plaintext = b"ecies correctness test";
+        let priv_key = DhPrivateKey::from_random().unwrap();
+        let pub_key = DhPubKey::from_private_key(&priv_key);
+
+        let ciphertext = EciesCiphertext::encrypt(&pub_key, plaintext.to_vec()).unwrap();
+        let recovered_plaintext = ciphertext.decrypt(&priv_key).unwrap();
+
+        assert_eq!(recovered_plaintext, plaintext);
+    }
+}

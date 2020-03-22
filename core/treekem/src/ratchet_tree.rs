@@ -217,8 +217,10 @@ impl RatchetTree {
         // direct path including a root
         let direct_path = tree_math::node_extended_direct_path(start_idx, num_leaves);
         for path_node_idx in direct_path {
-            let pubkey = public_keys.next()
-                .ok_or(anyhow!("length of direct path is longer than public key iterator"))?;
+            let pubkey = match public_keys.next() {
+                Some(p) => p,
+                None => break,
+            };
 
             if path_node_idx == stop_idx {
                 break;

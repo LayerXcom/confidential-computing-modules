@@ -15,5 +15,6 @@ mod test_utils;
 #[cfg(debug_assertions)]
 pub mod tests {
     use super::*;
-    pub use application::test::*;
+    pub use application::tests::*;
+    pub use crypto::ecies::tests::*;
 }

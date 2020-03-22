@@ -140,7 +140,7 @@ impl AppKeyChain {
 }
 
 #[cfg(debug_assertions)]
-pub mod test {
+pub mod tests {
     use super::*;
     use crate::test_utils;
     use rand::{self, SeedableRng};
@@ -170,6 +170,7 @@ pub mod test {
         let mut group_state1 = GroupState::new(0).unwrap();
         let mut group_state2 = GroupState::new(1).unwrap();
 
+        // Add group1
         let (mut key_chain1_epoch1, mut key_chain2_epoch1) = test_utils::do_handshake(
             &mut group_state1,
             &mut group_state2,
@@ -177,13 +178,21 @@ pub mod test {
             &mut rng
         );
 
-        // 1 --> 2
-        encrypt_decrypt_helper(
-            msg,
-            &group_state1,
-            &mut key_chain1_epoch1,
-            &group_state2,
-            &mut key_chain2_epoch1,
+        // Add group2
+        let (mut key_chain1_epoch1, mut key_chain2_epoch1) = test_utils::do_handshake(
+            &mut group_state2,
+            &mut group_state1,
+            &req,
+            &mut rng
         );
+
+        // 1 --> 2
+        // encrypt_decrypt_helper(
+        //     msg,
+        //     &group_state1,
+        //     &mut key_chain1_epoch1,
+        //     &group_state2,
+        //     &mut key_chain2_epoch1,
+        // );
     }
 }
