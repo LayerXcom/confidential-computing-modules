@@ -23,6 +23,10 @@ impl RatchetTree {
         RatchetTree { nodes }
     }
 
+    pub fn new_empty() -> Self {
+        RatchetTree { nodes: vec![] }
+    }
+
     /// Set my leaf node derived from path secret to the provided tree index.
     pub fn init_path_secret_idx(path_secret: PathSecret, my_tree_idx: usize) -> Result<Self> {
         let (_, privkey, _, _) = path_secret.derive_node_values()?;
@@ -171,7 +175,7 @@ impl RatchetTree {
             current_node.update_pub_key(node_pubkey);
             current_node.update_priv_key(node_privkey);
 
-            if current_node_idx == root_node_idx {
+            if current_node_idx == root_node_idx && num_leaves != 1 {
                 break node_secret;
             } else {
                 current_node_idx = tree_math::node_parent(current_node_idx, num_leaves);

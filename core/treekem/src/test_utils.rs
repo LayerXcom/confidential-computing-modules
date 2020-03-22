@@ -13,10 +13,6 @@ pub fn init_path_secret_kvs<R: CryptoRng>(kvs: &mut PathSecretKVS, until_roster_
     }
 }
 
-pub fn random_group_state(req: &PathSecretRequest, roster_idx: u32) -> GroupState {
-    GroupState::new(roster_idx, req).unwrap()
-}
-
 pub fn change_group_state_idx(
     group_state: &GroupState,
     new_idx: u32,

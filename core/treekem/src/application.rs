@@ -167,8 +167,8 @@ pub mod test {
         test_utils::init_path_secret_kvs(&mut kvs, 3, 3, &mut rng);
         let req = PathSecretRequest::Local(kvs);
 
-        let mut group_state1 = test_utils::random_group_state(&req, 0);
-        let mut group_state2 = test_utils::random_group_state(&req, 1);
+        let mut group_state1 = GroupState::new(0).unwrap();
+        let mut group_state2 = GroupState::new(1).unwrap();
 
         let (mut key_chain1_epoch1, mut key_chain2_epoch1) = test_utils::do_handshake(
             &mut group_state1,

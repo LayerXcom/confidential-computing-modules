@@ -62,7 +62,7 @@ impl Handshake for GroupState {
         ensure!(sender_tree_idx <= current_tree_idx, "Invalid tree index");
 
         let mut new_group_state = self.clone();
-        if sender_tree_idx == current_tree_idx {
+        if handshake.roster_idx as usize == self.roster_len()? {
             new_group_state.tree.add_leaf_node(RatchetTreeNode::Blank);
             new_group_state.tree.propagate_blank(sender_tree_idx);
         }
@@ -78,11 +78,9 @@ impl Handshake for GroupState {
 }
 
 impl GroupState {
-    pub fn new(my_roster_idx: u32, req: &PathSecretRequest) -> Result<Self> {
+    pub fn new(my_roster_idx: u32) -> Result<Self> {
         let epoch = 0;
-        let path_secret = Self::request_new_path_secret(req, my_roster_idx, epoch)?;
-        let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(my_roster_idx)?;
-        let tree = RatchetTree::init_path_secret_idx(path_secret, my_tree_idx)?;
+        let tree = RatchetTree::new_empty();
         let init_secret = HmacKey::default();
 
         Ok(GroupState {
