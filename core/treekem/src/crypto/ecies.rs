@@ -1,6 +1,6 @@
 use std::vec::Vec;
 use super::{
-    dh::{DhPubKey, DhPrivateKey, diffie_hellman},
+    dh::{DhPubKey, DhPrivateKey, encapsulate, decapsulate},
     hmac::HmacKey,
     hkdf,
     CryptoRng,
@@ -25,7 +25,7 @@ impl EciesCiphertext {
 
         let my_ephemeral_pub_key = DhPubKey::from_private_key(&my_ephemeral_secret);
 
-        let aes_key = diffie_hellman(&my_ephemeral_secret, &others_pub_key)?;
+        let aes_key = encapsulate(&my_ephemeral_secret, &others_pub_key)?;
         let (ub_key, nonce_seq) = derive_ecies_key_nonce(&aes_key)?;
         let mut sealing_key = SealingKey::new(ub_key, nonce_seq);
         sealing_key.seal_in_place_append_tag(Aad::empty(), &mut plaintext)?;
@@ -39,7 +39,7 @@ impl EciesCiphertext {
     }
 
     pub fn decrypt(self, my_priv_key: &DhPrivateKey) -> Result<Vec<u8>> {
-        let aes_key = diffie_hellman(&my_priv_key, &self.ephemeral_public_key)?;
+        let aes_key = decapsulate(&my_priv_key, &self.ephemeral_public_key)?;
         let (ub_key, nonce_seq) = derive_ecies_key_nonce(&aes_key)?;
         let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
 
