@@ -99,6 +99,12 @@ impl From<NodeSecret> for UpdateSecret {
     }
 }
 
+impl From<&UpdateSecret> for HmacKey {
+    fn from(s: &UpdateSecret) -> Self {
+        s.as_bytes().into()
+    }
+}
+
 /// node_secret[n] = HKDF-Expand-Label(path_secret[n], "node", "", Hash.Length)
 #[derive(Debug, Clone, Default)]
 pub struct NodeSecret(Vec<u8>);

@@ -92,12 +92,12 @@ impl AppKeyChain {
         let (ub_key, nonce_seq, generation) = self.key_nonce_gen(app_msg.roster_idx as usize)?;
         ensure!(app_msg.generation == generation, "application messages's generation differs from the AppMmeberSecret's");
 
-        let mut plaintext = app_msg.encrypted_msg.clone();
+        let mut ciphertext = app_msg.encrypted_msg.clone();
         let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
-        opening_key.open_in_place(Aad::empty(), &mut plaintext)?;
+        let plaintext = opening_key.open_in_place(Aad::empty(), &mut ciphertext)?;
 
         self.ratchet(app_msg.roster_idx as usize)?;
-        Ok(plaintext)
+        Ok(plaintext[..(plaintext.len() - 32)].to_vec())
     }
 
     /// Ratchets a specific roster's AppMemberSecret forward.

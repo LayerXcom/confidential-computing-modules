@@ -24,10 +24,12 @@ pub struct GroupState {
     epoch: u32,
     /// Only if a member has a leaf node contained DhPrivKey, this indicates the roster index.
     /// Otherwise, this field is None.
+    #[codec(skip)]
     pub my_roster_idx: u32,
     tree: RatchetTree,
     /// The initial secret used to derive app_secret.
     /// It works as a salt of HKDF.
+    #[codec(skip)]
     init_secret: HmacKey,
 }
 
@@ -166,9 +168,9 @@ impl GroupState {
         &mut self,
         update_secret: &UpdateSecret
     ) -> Result<AppSecret> {
-        let epoch_secret = hkdf::extract(&self.init_secret, update_secret.as_bytes());
-        self.init_secret = hkdf::derive_secret(&epoch_secret, b"init", self)?;
-        let app_secret = hkdf::derive_secret(&epoch_secret, b"app", self)?;
+        // let epoch_secret = hkdf::extract(&self.init_secret, update_secret.as_bytes());
+        self.init_secret = hkdf::derive_secret(&update_secret.into(), b"init", self)?;
+        let app_secret = hkdf::derive_secret(&update_secret.into(), b"app", self)?;
 
         Ok(app_secret.into())
     }

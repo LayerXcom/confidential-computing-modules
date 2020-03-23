@@ -288,6 +288,7 @@ pub enum RatchetTreeNode {
     Blank,
     Filled {
         public_key: DhPubKey,
+        #[codec(skip)]
         private_key: Option<DhPrivateKey>,
     },
 }
