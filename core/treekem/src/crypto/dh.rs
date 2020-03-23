@@ -77,6 +77,6 @@ pub fn diffie_hellman(
     master.extend(shared_point.0.serialize_compressed().iter());
 
     let mut out_buf = [0u8; 32];
-    hkdf::expand(&HmacKey::from(master), b"dh", &mut out_buf)?;
+    hkdf::expand(&HmacKey::from(master), b"dh", &mut out_buf, hkdf::Aes256GcmKey)?;
     Ok(out_buf)
 }

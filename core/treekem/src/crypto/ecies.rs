@@ -21,11 +21,12 @@ impl EciesCiphertext {
         mut plaintext: Vec<u8>,
     ) -> Result<Self> {
         let mut my_ephemeral_secret = DhPrivateKey::from_random()?;
-        plaintext.extend(vec![0u8; AES_128_GCM_TAG_SIZE]);
+        plaintext.extend(vec![0u8; AES_256_GCM_TAG_SIZE]);
 
         let my_ephemeral_pub_key = DhPubKey::from_private_key(&my_ephemeral_secret);
-        let shared_secret = diffie_hellman(&my_ephemeral_secret, &others_pub_key)?;
-        let (ub_key, nonce_seq) = derive_ecies_key_nonce(&shared_secret)?;
+
+        let aes_key = diffie_hellman(&my_ephemeral_secret, &others_pub_key)?;
+        let (ub_key, nonce_seq) = derive_ecies_key_nonce(&aes_key)?;
         let mut sealing_key = SealingKey::new(ub_key, nonce_seq);
         sealing_key.seal_in_place_append_tag(Aad::empty(), &mut plaintext)?;
 
@@ -38,8 +39,8 @@ impl EciesCiphertext {
     }
 
     pub fn decrypt(self, my_priv_key: &DhPrivateKey) -> Result<Vec<u8>> {
-        let shared_secret = diffie_hellman(&my_priv_key, &self.ephemeral_public_key)?;
-        let (ub_key, nonce_seq) = derive_ecies_key_nonce(&shared_secret)?;
+        let aes_key = diffie_hellman(&my_priv_key, &self.ephemeral_public_key)?;
+        let (ub_key, nonce_seq) = derive_ecies_key_nonce(&aes_key)?;
         let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
 
         let mut ciphertext = self.ciphertext;
@@ -68,15 +69,15 @@ impl EciesLabel {
 fn derive_ecies_key_nonce(
     shared_secret_bytes: &[u8],
 ) -> Result<(UnboundKey, OneNonceSequence)> {
-    let key_label = EciesLabel::new(b"key", AES_128_GCM_KEY_SIZE as u16);
-    let nonce_label = EciesLabel::new(b"nonce", AES_128_GCM_NONCE_SIZE as u16);
+    let key_label = EciesLabel::new(b"key", AES_256_GCM_KEY_SIZE as u16);
+    let nonce_label = EciesLabel::new(b"nonce", AES_256_GCM_NONCE_SIZE as u16);
 
     let prk = HmacKey::from(shared_secret_bytes);
-    let mut key_buf = [0u8; AES_128_GCM_KEY_SIZE];
-    let mut nonce_buf = [0u8; AES_128_GCM_NONCE_SIZE];
+    let mut key_buf = [0u8; AES_256_GCM_KEY_SIZE];
+    let mut nonce_buf = [0u8; AES_256_GCM_NONCE_SIZE];
 
-    hkdf::expand(&prk, &key_label, &mut key_buf[..])?;
-    hkdf::expand(&prk, &nonce_label, &mut nonce_buf[..])?;
+    hkdf::expand(&prk, &key_label, &mut key_buf[..], hkdf::Aes256GcmKey)?;
+    hkdf::expand(&prk, &nonce_label, &mut nonce_buf[..], hkdf::Aes256GcmNonce)?;
 
     let ub_key = UnboundKey::new(&AES_256_GCM, &key_buf)?;
     let nonce = Nonce::assume_unique_for_key(nonce_buf);
@@ -85,9 +86,10 @@ fn derive_ecies_key_nonce(
     Ok((ub_key, nonce_seq))
 }
 
-pub const AES_128_GCM_KEY_SIZE: usize = 128 / 8;
-pub const AES_128_GCM_TAG_SIZE: usize = 128 / 8;
-pub const AES_128_GCM_NONCE_SIZE: usize = 96 / 8;
+pub const AES_256_GCM_KEY_SIZE: usize = 256 / 8;
+pub const AES_256_GCM_TAG_SIZE: usize = 256 / 8;
+pub const AES_256_GCM_NONCE_SIZE: usize = 96 / 8;
+
 
 /// A sequences of unique nonces.
 /// See: https://briansmith.org/rustdoc/ring/aead/trait.NonceSequence.html

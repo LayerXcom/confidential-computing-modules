@@ -4,7 +4,7 @@ use crate::group_state::GroupState;
 use crate::crypto::{
     hmac::HmacKey,
     secrets::{AppSecret, AppMemberSecret},
-    ecies::{OneNonceSequence, AES_128_GCM_KEY_SIZE, AES_128_GCM_NONCE_SIZE, AES_128_GCM_TAG_SIZE},
+    ecies::{OneNonceSequence, AES_256_GCM_KEY_SIZE, AES_256_GCM_NONCE_SIZE, AES_256_GCM_TAG_SIZE},
     hkdf, SHA256_OUTPUT_LEN,
 };
 use anyhow::{Result, anyhow, ensure};
@@ -69,7 +69,7 @@ impl AppKeyChain {
         mut plaintext: Vec<u8>,
         group_state: &GroupState
     ) -> Result<AppMsg> {
-        plaintext.extend(vec![0u8; AES_128_GCM_TAG_SIZE]);
+        plaintext.extend(vec![0u8; AES_256_GCM_TAG_SIZE]);
         let my_roster_idx = group_state.my_roster_idx();
 
         let (ub_key, nonce_seq, generation) = self.key_nonce_gen(my_roster_idx as usize)?;
@@ -126,8 +126,8 @@ impl AppKeyChain {
             .ok_or(anyhow!("Roster index is out of range of application key chain"))?;
 
         let prk = HmacKey::from(member_secret);
-        let mut key_buf = [0u8; AES_128_GCM_KEY_SIZE];
-        let mut nonce_buf = [0u8; AES_128_GCM_NONCE_SIZE];
+        let mut key_buf = [0u8; AES_256_GCM_KEY_SIZE];
+        let mut nonce_buf = [0u8; AES_256_GCM_NONCE_SIZE];
         hkdf::expand_label(&prk, b"key", b"", &mut key_buf)?;
         hkdf::expand_label(&prk, b"nonce", b"", &mut key_buf)?;
 
