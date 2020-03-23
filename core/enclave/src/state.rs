@@ -64,7 +64,7 @@ impl StateTransService<StateType>
 
     /// Return current state's lock parameters of each user.
     // TODO: Consider; is it OK that init_lock_param = H(address||mem_id||zero_sv)
-    pub fn reveal_lock_params(&self) -> Vec<LockParam> {
+    pub fn create_lock_params(&self) -> Vec<LockParam> {
         self.updates
             .clone()
             .expect("State transitions are not applied.")

@@ -106,8 +106,8 @@ impl StateTransTx {
         let mut service = StateTransService::<StateType>::from_access_right(access_right, enclave_ctx)?;
         service.apply(kind)?;
 
-        let lock_params = service.reveal_lock_params();
-        let ciphertexts = service.reveal_ciphertexts(&SYMMETRIC_KEY)?;
+        let lock_params = service.create_lock_params();
+        let ciphertexts = service.create_ciphertexts(&SYMMETRIC_KEY)?;
         let enclave_sig = enclave_ctx.sign(&lock_params[0])?;
 
         Ok(StateTransTx {
