@@ -101,7 +101,7 @@ impl UserAddress {
 
     #[cfg(feature = "std")]
     pub fn base64_decode(encoded_str: &str) -> Self {
-        let decoded_vec = base64::decode(encoded_str).expect("Faild to decode base64.");
+        let decoded_vec = base64::decode(encoded_str).expect("Failed to decode base64.");
         assert_eq!(decoded_vec.len(), 20);
 
         let mut arr = [0u8; 20];
