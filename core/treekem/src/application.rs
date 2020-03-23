@@ -30,6 +30,7 @@ impl AppMsg {
 }
 
 /// Application Keychain manages each member's `AppMemberSecret' and generation.
+#[derive(Debug, Clone)]
 pub struct AppKeyChain {
     member_secrets_and_gens: Vec<(AppMemberSecret, u32)>,
     epoch: u32,
@@ -146,19 +147,6 @@ pub mod tests {
     use rand::{self, SeedableRng};
     use crate::crypto::secrets::{PathSecretKVS, PathSecretRequest};
 
-    fn encrypt_decrypt_helper(
-        msg: &[u8],
-        group1: &GroupState,
-        app_key_chain1: &mut AppKeyChain,
-        group2: &GroupState,
-        app_key_chain2: &mut AppKeyChain,
-    ) {
-        let app_msg = app_key_chain1.encrypt_msg(msg.to_vec(), group1).unwrap();
-        let plaintext = app_key_chain2.decrypt_msg(app_msg, group2).unwrap();
-
-        assert_eq!(plaintext.as_slice(), msg);
-    }
-
     pub fn app_msg_correctness() {
         let mut rng = rand::rngs::StdRng::seed_from_u64(1);
         let msg = b"app msg correctnesss test";
@@ -187,12 +175,12 @@ pub mod tests {
         );
 
         // 1 --> 2
-        // encrypt_decrypt_helper(
-        //     msg,
-        //     &group_state1,
-        //     &mut key_chain1_epoch1,
-        //     &group_state2,
-        //     &mut key_chain2_epoch1,
-        // );
+        test_utils::encrypt_decrypt_helper(
+            msg,
+            &group_state1,
+            &mut key_chain1_epoch1,
+            &group_state2,
+            &mut key_chain2_epoch1,
+        );
     }
 }

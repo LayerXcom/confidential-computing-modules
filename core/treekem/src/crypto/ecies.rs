@@ -44,10 +44,9 @@ impl EciesCiphertext {
         let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
 
         let mut ciphertext = self.ciphertext;
-        opening_key.open_in_place(Aad::empty(), &mut ciphertext)?;
-        let plaintext = ciphertext;
+        let plaintext = opening_key.open_in_place(Aad::empty(), &mut ciphertext)?;
 
-        Ok(plaintext)
+        Ok(plaintext[..(plaintext.len() - 32)].to_vec())
     }
 }
 

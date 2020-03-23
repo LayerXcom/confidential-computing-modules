@@ -1,3 +1,10 @@
+//! Secrets for key schedule
+//! path_secret
+//! -> node_secret
+//! -> update_secret
+//! -> app_secret
+//! -> app_keychain
+
 use std::vec::Vec;
 use std::collections::HashMap;
 use std::string::String;

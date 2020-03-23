@@ -39,3 +39,16 @@ pub fn do_handshake<R: CryptoRng>(
 
     (my_keychain, others_keychain)
 }
+
+pub fn encrypt_decrypt_helper(
+        msg: &[u8],
+        group1: &GroupState,
+        app_key_chain1: &mut AppKeyChain,
+        group2: &GroupState,
+        app_key_chain2: &mut AppKeyChain,
+    ) {
+    let app_msg = app_key_chain1.encrypt_msg(msg.to_vec(), group1).unwrap();
+    let plaintext = app_key_chain2.decrypt_msg(app_msg, group2).unwrap();
+
+    assert_eq!(plaintext.as_slice(), msg);
+}
