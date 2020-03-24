@@ -38,8 +38,11 @@ pub struct AppKeyChain {
 
 impl AppKeyChain {
     pub fn from_app_secret(group_state: &GroupState, app_secret: AppSecret) -> Self {
-        let roster_len = u32::try_from(group_state.roster_len().expect("Invalid roster length"))
-                .expect("roster length exceeds u32::MAX");
+        let roster_len = match group_state.epoch() {
+            0 => 1,
+            _ => u32::try_from(group_state.roster_len().expect("Invalid roster length"))
+                .expect("roster length exceeds u32::MAX") + 1,
+        };
         let prk = HmacKey::from(app_secret);
 
         let member_secrets_and_gens = (0..roster_len).map(|roster_idx: u32| {
@@ -104,7 +107,7 @@ impl AppKeyChain {
     fn ratchet(&mut self, roster_idx: usize) -> Result<()> {
         let (member_secret, gen) = self.member_secrets_and_gens
             .get_mut(roster_idx)
-            .ok_or(anyhow!("Roster index is out of range of application key chain"))?;
+            .ok_or(anyhow!("ratchet: Roster index is out of range of application key chain"))?;
         let current_secret = member_secret.clone();
 
         let roster_idx = u32::try_from(roster_idx)?;
@@ -124,7 +127,7 @@ impl AppKeyChain {
     fn key_nonce_gen(&self, roster_idx: usize) -> Result<(UnboundKey, OneNonceSequence, u32)> {
         let (member_secret, gen) = self.member_secrets_and_gens
             .get(roster_idx)
-            .ok_or(anyhow!("Roster index is out of range of application key chain"))?;
+            .ok_or(anyhow!("key_nonce_gen: Roster index is out of range of application key chain"))?;
 
         let prk = HmacKey::from(member_secret);
         let mut key_buf = [0u8; AES_256_GCM_KEY_SIZE];

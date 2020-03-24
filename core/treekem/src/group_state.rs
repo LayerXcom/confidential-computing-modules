@@ -26,7 +26,7 @@ pub struct GroupState {
     /// Otherwise, this field is None.
     #[codec(skip)]
     pub my_roster_idx: u32,
-    tree: RatchetTree,
+    pub tree: RatchetTree,
     /// The initial secret used to derive app_secret.
     /// It works as a salt of HKDF.
     #[codec(skip)]

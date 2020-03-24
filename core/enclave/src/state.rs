@@ -78,7 +78,7 @@ impl StateTransService<StateType>
     }
 
     /// Return ciphertexts data which is generates by encrypting updated user's state.
-    pub fn reveal_ciphertexts(&self, symm_key: &SymmetricKey) -> Result<Vec<Ciphertext>> {
+    pub fn create_ciphertexts(&self, symm_key: &SymmetricKey) -> Result<Vec<Ciphertext>> {
         self.updates
             .clone()
             .expect("State transitions are not applied.")
