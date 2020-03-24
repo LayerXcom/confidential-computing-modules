@@ -25,21 +25,6 @@ pub fn change_group_state_idx(
     new_group_state
 }
 
-pub fn do_handshake_two_party<R: CryptoRng>(
-    my_group: &mut GroupState,
-    others_group: &mut GroupState,
-    req: &PathSecretRequest,
-    csprng: &mut R,
-) -> (AppKeyChain, AppKeyChain) {
-    let new_path_secret = PathSecret::new_from_random(csprng);
-    let handshake = my_group.create_handshake(req).unwrap();
-
-    let my_keychain = my_group.process_handshake(&handshake, req).unwrap();
-    let others_keychain = others_group.process_handshake(&handshake, req).unwrap();
-
-    (my_keychain, others_keychain)
-}
-
 pub fn do_handshake_three_party<R: CryptoRng>(
     my_group: &mut GroupState,
     others_group1: &mut GroupState,
@@ -63,9 +48,16 @@ pub fn encrypt_decrypt_helper(
         app_key_chain1: &mut AppKeyChain,
         group2: &GroupState,
         app_key_chain2: &mut AppKeyChain,
+        group3: &GroupState,
+        app_key_chain3: &mut AppKeyChain,
     ) {
     let app_msg = app_key_chain1.encrypt_msg(msg.to_vec(), group1).unwrap();
-    let plaintext = app_key_chain2.decrypt_msg(app_msg, group2).unwrap();
 
-    assert_eq!(plaintext.as_slice(), msg);
+    let plaintext1 = app_key_chain1.decrypt_msg(app_msg.clone(), group1).unwrap();
+    let plaintext2 = app_key_chain2.decrypt_msg(app_msg.clone(), group2).unwrap();
+    let plaintext3 = app_key_chain3.decrypt_msg(app_msg, group3).unwrap();
+
+    assert_eq!(plaintext1, plaintext2);
+    assert_eq!(plaintext1, plaintext3);
+    assert_eq!(plaintext1.as_slice(), msg);
 }

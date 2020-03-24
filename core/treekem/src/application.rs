@@ -93,7 +93,7 @@ impl AppKeyChain {
         ensure!(app_msg.epoch == self.epoch, "application messages's epoch differs from the app key chain's");
 
         let (ub_key, nonce_seq, generation) = self.key_nonce_gen(app_msg.roster_idx as usize)?;
-        ensure!(app_msg.generation == generation, "application messages's generation differs from the AppMmeberSecret's");
+        ensure!(app_msg.generation == generation, "application messages's generation differs from the AppMeberSecret's");
 
         let mut ciphertext = app_msg.encrypted_msg.clone();
         let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
@@ -160,19 +160,22 @@ pub mod tests {
 
         let mut group_state1 = GroupState::new(0).unwrap();
         let mut group_state2 = GroupState::new(1).unwrap();
+        let mut group_state3 = GroupState::new(2).unwrap();
 
         // Add group1
-        let (mut key_chain1_epoch1, mut key_chain2_epoch1) = test_utils::do_handshake_two_party(
+        let (mut key_chain1_epoch1, mut key_chain2_epoch1, mut key_chain3_epoch1) = test_utils::do_handshake_three_party(
             &mut group_state1,
             &mut group_state2,
+            &mut group_state3,
             &req,
             &mut rng
         );
 
         // Add group2
-        let (mut key_chain1_epoch1, mut key_chain2_epoch1) = test_utils::do_handshake_two_party(
+        let (mut key_chain1_epoch1, mut key_chain2_epoch1, mut key_chain3_epoch1) = test_utils::do_handshake_three_party(
             &mut group_state2,
             &mut group_state1,
+            &mut group_state3,
             &req,
             &mut rng
         );
@@ -184,6 +187,8 @@ pub mod tests {
             &mut key_chain1_epoch1,
             &group_state2,
             &mut key_chain2_epoch1,
+            &group_state3,
+            &mut key_chain3_epoch1,
         );
 
         // 2 --> 1
@@ -193,6 +198,8 @@ pub mod tests {
             &mut key_chain2_epoch1,
             &group_state1,
             &mut key_chain1_epoch1,
+            &group_state3,
+            &mut key_chain3_epoch1,
         );
 
         // 2 --> 1
@@ -202,6 +209,8 @@ pub mod tests {
             &mut key_chain2_epoch1,
             &group_state1,
             &mut key_chain1_epoch1,
+            &group_state3,
+            &mut key_chain3_epoch1,
         );
 
         // 1 --> 2
@@ -211,12 +220,15 @@ pub mod tests {
             &mut key_chain1_epoch1,
             &group_state2,
             &mut key_chain2_epoch1,
+            &group_state3,
+            &mut key_chain3_epoch1,
         );
 
         // Update group2
-        let (mut key_chain1_epoch2, mut key_chain2_epoch2) = test_utils::do_handshake_two_party(
+        let (mut key_chain1_epoch2, mut key_chain2_epoch2, mut key_chain3_epoch2) = test_utils::do_handshake_three_party(
             &mut group_state1,
             &mut group_state2,
+            &mut group_state3,
             &req,
             &mut rng
         );
@@ -228,6 +240,8 @@ pub mod tests {
             &mut key_chain1_epoch2,
             &group_state2,
             &mut key_chain2_epoch2,
+            &group_state3,
+            &mut key_chain3_epoch2,
         );
 
         // 1 --> 2
@@ -237,6 +251,8 @@ pub mod tests {
             &mut key_chain1_epoch2,
             &group_state2,
             &mut key_chain2_epoch2,
+            &group_state3,
+            &mut key_chain3_epoch2,
         );
 
         // 2 --> 1
@@ -246,10 +262,11 @@ pub mod tests {
             &mut key_chain2_epoch2,
             &group_state1,
             &mut key_chain1_epoch2,
+            &group_state3,
+            &mut key_chain3_epoch2,
         );
 
         // Add group3
-        let mut group_state3 = GroupState::new(2).unwrap();
         let (mut key_chain1_epoch3, mut key_chain2_epoch3, mut key_chain3_epoch3) = test_utils::do_handshake_three_party(
             &mut group_state1,
             &mut group_state2,
