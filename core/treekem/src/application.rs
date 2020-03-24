@@ -7,6 +7,7 @@ use crate::crypto::{
     ecies::{OneNonceSequence, AES_256_GCM_KEY_SIZE, AES_256_GCM_NONCE_SIZE, AES_256_GCM_TAG_SIZE},
     hkdf, SHA256_OUTPUT_LEN,
 };
+use crate::ratchet_tree::RatchetTreeNode;
 use anyhow::{Result, anyhow, ensure};
 use codec::Encode;
 use ring::aead::{
@@ -89,18 +90,23 @@ impl AppKeyChain {
         &mut self,
         mut app_msg: AppMsg,
         group_state: &GroupState,
-    ) -> Result<Vec<u8>> {
-        ensure!(app_msg.epoch == self.epoch, "application messages's epoch differs from the app key chain's");
+    ) -> Result<Option<Vec<u8>>> {
+        match group_state.my_node()? {
+            RatchetTreeNode::Blank => Ok(None),
+            _ => {
+                ensure!(app_msg.epoch == self.epoch, "application messages's epoch differs from the app key chain's");
 
-        let (ub_key, nonce_seq, generation) = self.key_nonce_gen(app_msg.roster_idx as usize)?;
-        ensure!(app_msg.generation == generation, "application messages's generation differs from the AppMeberSecret's");
+                let (ub_key, nonce_seq, generation) = self.key_nonce_gen(app_msg.roster_idx as usize)?;
+                ensure!(app_msg.generation == generation, "application messages's generation differs from the AppMeberSecret's");
 
-        let mut ciphertext = app_msg.encrypted_msg.clone();
-        let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
-        let plaintext = opening_key.open_in_place(Aad::empty(), &mut ciphertext)?;
+                let mut ciphertext = app_msg.encrypted_msg.clone();
+                let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
+                let plaintext = opening_key.open_in_place(Aad::empty(), &mut ciphertext)?;
 
-        self.ratchet(app_msg.roster_idx as usize)?;
-        Ok(plaintext[..(plaintext.len() - 32)].to_vec())
+                self.ratchet(app_msg.roster_idx as usize)?;
+                Ok(Some(plaintext[..(plaintext.len() - 32)].to_vec()))
+            }
+        }
     }
 
     /// Ratchets a specific roster's AppMemberSecret forward.

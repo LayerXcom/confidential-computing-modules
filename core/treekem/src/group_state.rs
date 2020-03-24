@@ -198,6 +198,13 @@ impl GroupState {
         }
     }
 
+    pub fn my_node(&self) -> Result<&RatchetTreeNode> {
+        let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
+        self.tree
+            .get(my_tree_idx)
+            .ok_or(anyhow!("Not found my node"))
+    }
+
     pub fn epoch(&self) -> u32 {
         self.epoch
     }
