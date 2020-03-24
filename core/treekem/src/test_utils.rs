@@ -25,7 +25,7 @@ pub fn change_group_state_idx(
     new_group_state
 }
 
-pub fn do_handshake<R: CryptoRng>(
+pub fn do_handshake_two_party<R: CryptoRng>(
     my_group: &mut GroupState,
     others_group: &mut GroupState,
     req: &PathSecretRequest,
@@ -38,6 +38,23 @@ pub fn do_handshake<R: CryptoRng>(
     let others_keychain = others_group.process_handshake(&handshake, req).unwrap();
 
     (my_keychain, others_keychain)
+}
+
+pub fn do_handshake_three_party<R: CryptoRng>(
+    my_group: &mut GroupState,
+    others_group1: &mut GroupState,
+    others_group2: &mut GroupState,
+    req: &PathSecretRequest,
+    csprng: &mut R,
+) -> (AppKeyChain, AppKeyChain, AppKeyChain) {
+    let new_path_secret = PathSecret::new_from_random(csprng);
+    let handshake = my_group.create_handshake(req).unwrap();
+
+    let my_keychain = my_group.process_handshake(&handshake, req).unwrap();
+    let others_keychain1 = others_group1.process_handshake(&handshake, req).unwrap();
+    let others_keychain2 = others_group2.process_handshake(&handshake, req).unwrap();
+
+    (my_keychain, others_keychain1, others_keychain2)
 }
 
 pub fn encrypt_decrypt_helper(

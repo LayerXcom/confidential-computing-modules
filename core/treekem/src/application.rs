@@ -155,14 +155,14 @@ pub mod tests {
         let msg = b"app msg correctnesss test";
 
         let mut kvs = PathSecretKVS::new();
-        test_utils::init_path_secret_kvs(&mut kvs, 3, 3, &mut rng);
+        test_utils::init_path_secret_kvs(&mut kvs, 5, 5, &mut rng);
         let req = PathSecretRequest::Local(kvs);
 
         let mut group_state1 = GroupState::new(0).unwrap();
         let mut group_state2 = GroupState::new(1).unwrap();
 
         // Add group1
-        let (mut key_chain1_epoch1, mut key_chain2_epoch1) = test_utils::do_handshake(
+        let (mut key_chain1_epoch1, mut key_chain2_epoch1) = test_utils::do_handshake_two_party(
             &mut group_state1,
             &mut group_state2,
             &req,
@@ -170,7 +170,7 @@ pub mod tests {
         );
 
         // Add group2
-        let (mut key_chain1_epoch1, mut key_chain2_epoch1) = test_utils::do_handshake(
+        let (mut key_chain1_epoch1, mut key_chain2_epoch1) = test_utils::do_handshake_two_party(
             &mut group_state2,
             &mut group_state1,
             &req,
@@ -214,7 +214,7 @@ pub mod tests {
         );
 
         // Update group2
-        let (mut key_chain1_epoch2, mut key_chain2_epoch2) = test_utils::do_handshake(
+        let (mut key_chain1_epoch2, mut key_chain2_epoch2) = test_utils::do_handshake_two_party(
             &mut group_state1,
             &mut group_state2,
             &req,
@@ -246,6 +246,16 @@ pub mod tests {
             &mut key_chain2_epoch2,
             &group_state1,
             &mut key_chain1_epoch2,
+        );
+
+        // Add group3
+        let mut group_state3 = GroupState::new(2).unwrap();
+        let (mut key_chain1_epoch3, mut key_chain2_epoch3, mut key_chain3_epoch3) = test_utils::do_handshake_three_party(
+            &mut group_state1,
+            &mut group_state2,
+            &mut group_state3,
+            &req,
+            &mut rng
         );
     }
 }
