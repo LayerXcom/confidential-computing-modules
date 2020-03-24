@@ -69,7 +69,7 @@ impl AppKeyChain {
 
     /// Encrypt message with current member's application secret.
     pub fn encrypt_msg(
-        &mut self,
+        &self,
         mut plaintext: Vec<u8>,
         group_state: &GroupState
     ) -> Result<AppMsg> {
@@ -184,6 +184,68 @@ pub mod tests {
             &mut key_chain1_epoch1,
             &group_state2,
             &mut key_chain2_epoch1,
+        );
+
+        // 2 --> 1
+        test_utils::encrypt_decrypt_helper(
+            msg,
+            &group_state2,
+            &mut key_chain2_epoch1,
+            &group_state1,
+            &mut key_chain1_epoch1,
+        );
+
+        // 2 --> 1
+        test_utils::encrypt_decrypt_helper(
+            msg,
+            &group_state2,
+            &mut key_chain2_epoch1,
+            &group_state1,
+            &mut key_chain1_epoch1,
+        );
+
+        // 1 --> 2
+        test_utils::encrypt_decrypt_helper(
+            msg,
+            &group_state1,
+            &mut key_chain1_epoch1,
+            &group_state2,
+            &mut key_chain2_epoch1,
+        );
+
+        // Update group2
+        let (mut key_chain1_epoch2, mut key_chain2_epoch2) = test_utils::do_handshake(
+            &mut group_state1,
+            &mut group_state2,
+            &req,
+            &mut rng
+        );
+
+        // 1 --> 2
+        test_utils::encrypt_decrypt_helper(
+            msg,
+            &group_state1,
+            &mut key_chain1_epoch2,
+            &group_state2,
+            &mut key_chain2_epoch2,
+        );
+
+        // 1 --> 2
+        test_utils::encrypt_decrypt_helper(
+            msg,
+            &group_state1,
+            &mut key_chain1_epoch2,
+            &group_state2,
+            &mut key_chain2_epoch2,
+        );
+
+        // 2 --> 1
+        test_utils::encrypt_decrypt_helper(
+            msg,
+            &group_state2,
+            &mut key_chain2_epoch2,
+            &group_state1,
+            &mut key_chain1_epoch2,
         );
     }
 }
