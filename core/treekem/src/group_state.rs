@@ -15,7 +15,12 @@ use codec::Encode;
 pub trait Handshake: Sized {
     fn create_handshake(&self, req: &PathSecretRequest) -> Result<HandshakeParams>;
 
-    fn process_handshake(&mut self, handshake: &HandshakeParams, req: &PathSecretRequest) -> Result<AppKeyChain>;
+    fn process_handshake(
+        &mut self,
+        handshake: &HandshakeParams,
+        req: &PathSecretRequest,
+        max_roster_idx: u32
+    ) -> Result<AppKeyChain>;
 }
 
 #[derive(Clone, Debug, Encode)]
@@ -59,20 +64,28 @@ impl Handshake for GroupState {
         Ok(handshake)
     }
 
-    fn process_handshake(&mut self, handshake: &HandshakeParams, req: &PathSecretRequest) -> Result<AppKeyChain> {
+    fn process_handshake(
+        &mut self,
+        handshake: &HandshakeParams,
+        req: &PathSecretRequest,
+        max_roster_idx: u32,
+    ) -> Result<AppKeyChain> {
         ensure!(handshake.prior_epoch == self.epoch, "Handshake's prior epoch isn't the current epoch.");
         let sender_tree_idx = RatchetTree::roster_idx_to_tree_idx(handshake.roster_idx)?;
         ensure!(sender_tree_idx <= self.tree.size(), "Invalid tree index");
+        let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
+        let max_tree_size = RatchetTree::roster_idx_to_tree_idx(max_roster_idx)?;
 
         if sender_tree_idx == self.tree.size() {
             if self.tree.nodes.is_empty() {
                 self.tree.add_leaf_node(RatchetTreeNode::Blank);
             }
-            self.tree.add_leaf_node(RatchetTreeNode::Blank);
-            self.tree.propagate_blank(sender_tree_idx);
+            for _ in 0..=(max_tree_size - self.tree.size()) / 2 {
+                self.tree.add_leaf_node(RatchetTreeNode::Blank);
+                self.tree.propagate_blank(sender_tree_idx);
+            }
         }
 
-        let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
         let mut my_path_secret: Option<PathSecret> = None;
         if let Some(my_leaf) = self.tree.get_mut(my_tree_idx) {
             if sender_tree_idx == my_tree_idx {
@@ -115,27 +128,27 @@ impl GroupState {
     fn apply_handshake(&mut self, handshake: &HandshakeParams, sender_tree_idx: usize, path_secret: Option<PathSecret>) -> Result<(UpdateSecret, usize)> {
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
 
-        match self.tree.get(0).unwrap() {
-            &RatchetTreeNode::Blank => {
-                let num_leaves = tree_math::num_leaves_in_tree(self.tree.size());
-                let common_ancestor = tree_math::common_ancestor(sender_tree_idx, my_tree_idx, num_leaves);
-                Ok((UpdateSecret::default(), common_ancestor))
-            }
-            _ => {
-                match sender_tree_idx == my_tree_idx {
-                    true => {
-                        let update_secret = self.set_new_path_secret(path_secret.unwrap(), my_tree_idx)?;
-                        return Ok((update_secret, my_tree_idx))
-                    },
-                    false => {
-                        let (path_secret, common_ancestor) = self.tree.decrypt_direct_path_msg(
-                            &handshake.path,
-                            sender_tree_idx,
-                            my_tree_idx,
-                        )?;
-                        let update_secret = self.set_new_path_secret(path_secret, common_ancestor)?;
-                        Ok((update_secret, common_ancestor))
-                    }
+        if sender_tree_idx == my_tree_idx {
+                let update_secret = self.set_new_path_secret(path_secret.unwrap(), my_tree_idx)?;
+
+                Ok((update_secret, my_tree_idx))
+        } else {
+            match self.tree.get(my_tree_idx).unwrap() {
+                RatchetTreeNode::Blank => {
+                    let num_leaves = tree_math::num_leaves_in_tree(self.tree.size());
+                    let common_ancestor = tree_math::common_ancestor(sender_tree_idx, my_tree_idx, num_leaves);
+
+                    Ok((UpdateSecret::default(), common_ancestor))
+                },
+                _ => {
+                    let (path_secret, common_ancestor) = self.tree.decrypt_direct_path_msg(
+                        &handshake.path,
+                        sender_tree_idx,
+                        my_tree_idx,
+                    )?;
+                    let update_secret = self.set_new_path_secret(path_secret, common_ancestor)?;
+
+                    Ok((update_secret, common_ancestor))
                 }
             }
         }
