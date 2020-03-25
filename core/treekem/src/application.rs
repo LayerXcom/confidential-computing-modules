@@ -14,21 +14,7 @@ use ring::aead::{
     OpeningKey, SealingKey, Nonce, UnboundKey, BoundKey,
     Aad, AES_256_GCM,
 };
-
-/// Application message broadcasted to other members.
-#[derive(Clone, Debug, Encode, Decode)]
-pub struct AppMsg {
-    generation: u32,
-    epoch: u32,
-    roster_idx: u32,
-    encrypted_msg: Vec<u8>,
-}
-
-impl AppMsg {
-    pub fn new(generation: u32, epoch: u32, roster_idx: u32, encrypted_msg: Vec<u8>) -> Self {
-        AppMsg { generation, epoch, roster_idx, encrypted_msg }
-    }
-}
+use anonify_app_preluder::Ciphertext;
 
 /// Application Keychain manages each member's `AppMemberSecret' and generation.
 #[derive(Debug, Clone, Default)]
@@ -43,7 +29,7 @@ impl AppKeyChain {
         &self,
         mut plaintext: Vec<u8>,
         group_state: &GroupState
-    ) -> Result<AppMsg> {
+    ) -> Result<Ciphertext> {
         plaintext.extend(vec![0u8; AES_256_GCM_TAG_SIZE]);
         let my_roster_idx = group_state.my_roster_idx();
 
@@ -52,13 +38,13 @@ impl AppKeyChain {
         sealing_key.seal_in_place_append_tag(Aad::empty(), &mut plaintext)?;
 
         let ciphertext = plaintext;
-        Ok(AppMsg::new(generation, group_state.epoch(), my_roster_idx, ciphertext))
+        Ok(Ciphertext::new(generation, group_state.epoch(), my_roster_idx, ciphertext))
     }
 
     /// Decrypt messag with current member's application secret.
     pub fn decrypt_msg(
         &mut self,
-        mut app_msg: AppMsg,
+        mut app_msg: Ciphertext,
         group_state: &GroupState,
     ) -> Result<Option<Vec<u8>>> {
         match group_state.my_node()? {

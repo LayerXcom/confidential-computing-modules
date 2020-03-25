@@ -4,13 +4,12 @@ version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 anonify-common = { path = "../common", default-features = false }
 anonify-runtime = { path = "../runtime", default-features = false }
 app = { path = "../../example/app", default-features = false }
 sgx_tstd = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
+codec = { package = "parity-scale-codec", version = "1.1", default-features = false }
 
 [features]
 default = ["std"]

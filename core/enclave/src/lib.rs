@@ -21,7 +21,6 @@ mod context;
 mod transaction;
 mod cert;
 mod group_key;
-mod rpc;
 #[cfg(debug_assertions)]
 mod tests;
 

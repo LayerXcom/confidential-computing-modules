@@ -15,6 +15,7 @@ dependencies = [
  "anonify-common 0.1.0",
  "anonify-runtime 0.1.0",
  "app 0.1.0",
+ "parity-scale-codec 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

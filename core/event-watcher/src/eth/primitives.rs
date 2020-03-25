@@ -229,7 +229,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 return Err(anyhow!("Each log should have same contract address.: index: {}", i).into());
             }
 
-            let data = Self::decode_data(&log);
+            let mut data = Self::decode_data(&log);
 
             if ciphertext_size != data.len() && data.len() != 0  {
                 return Err(anyhow!("Each log should have same size of data.: index: {}", i).into());
@@ -242,7 +242,8 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 }
             }
 
-            ciphertexts.push(Ciphertext::from_bytes(&data[..]));
+            let res = Ciphertext::from_bytes(&mut data[..]);
+            ciphertexts.push(res);
         }
 
         Ok(EnclaveLog {
