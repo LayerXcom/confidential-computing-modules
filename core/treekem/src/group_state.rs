@@ -6,25 +6,11 @@ use crate::crypto::{
     hmac::HmacKey,
 };
 use crate::application::AppKeyChain;
-use crate::handshake::{HandshakeParams, PathSecretRequest};
+use crate::handshake::{Handshake, HandshakeParams, PathSecretRequest};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use crate::tree_math;
 use anyhow::{Result, anyhow, ensure};
 use codec::Encode;
-
-/// A handshake operates sharing a group key to each member.
-pub trait Handshake: Sized {
-    /// Create a handshake to broadcast other members.
-    fn create_handshake(&self, req: &PathSecretRequest) -> Result<HandshakeParams>;
-
-    /// Process a received handshake from other members.
-    fn process_handshake(
-        &mut self,
-        handshake: &HandshakeParams,
-        req: &PathSecretRequest,
-        max_roster_idx: u32
-    ) -> Result<AppKeyChain>;
-}
 
 #[derive(Clone, Debug, Encode)]
 pub struct GroupState {
@@ -133,6 +119,16 @@ impl GroupState {
         })
     }
 
+    /// Request own new path secret to external key vault
+    pub fn request_new_path_secret(req: &PathSecretRequest, roster_idx: u32, epoch: u32) -> Result<PathSecret> {
+        match req {
+            PathSecretRequest::Local(db) => {
+                db.get(roster_idx, epoch).cloned().ok_or(anyhow!("Not found Path Secret from local PathSecretKVS with provided roster_idx and epoch"))
+            },
+            PathSecretRequest::Remote(url) => unimplemented!(),
+        }
+    }
+
     fn apply_handshake(
         &mut self,
         handshake: &HandshakeParams,
@@ -206,21 +202,18 @@ impl GroupState {
         Ok(app_secret.into())
     }
 
-    /// Request own new path secret to external key vault
-    pub fn request_new_path_secret(req: &PathSecretRequest, roster_idx: u32, epoch: u32) -> Result<PathSecret> {
-        match req {
-            PathSecretRequest::Local(db) => {
-                db.get(roster_idx, epoch).cloned().ok_or(anyhow!("Not found Path Secret from local PathSecretKVS with provided roster_idx and epoch"))
-            },
-            PathSecretRequest::Remote(url) => unimplemented!(),
-        }
-    }
-
-    pub fn my_node(&self) -> Result<&RatchetTreeNode> {
+    pub(crate) fn my_node(&self) -> Result<&RatchetTreeNode> {
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
         self.tree
             .get(my_tree_idx)
             .ok_or(anyhow!("Not found my node"))
+    }
+
+    pub(crate) fn roster_len(&self) -> Result<usize> {
+        let tree_size = self.tree.size();
+        tree_size
+            .checked_div(2)
+            .ok_or(anyhow!("Invalid tree size."))
     }
 
     pub fn epoch(&self) -> u32 {
@@ -229,12 +222,5 @@ impl GroupState {
 
     pub fn my_roster_idx(&self) -> u32 {
         self.my_roster_idx
-    }
-
-    pub fn roster_len(&self) -> Result<usize> {
-        let tree_size = self.tree.size();
-        tree_size
-            .checked_div(2)
-            .ok_or(anyhow!("Invalid tree size."))
     }
 }

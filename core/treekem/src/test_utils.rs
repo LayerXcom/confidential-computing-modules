@@ -1,6 +1,6 @@
-use crate::group_state::{GroupState, Handshake};
+use crate::group_state::GroupState;
 use crate::application::AppKeyChain;
-use crate::handshake::{PathSecretRequest, PathSecretKVS};
+use crate::handshake::{Handshake, PathSecretRequest, PathSecretKVS};
 use crate::crypto::{
     CryptoRng,
     secrets::PathSecret,

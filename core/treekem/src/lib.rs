@@ -13,7 +13,8 @@ mod crypto;
 mod test_utils;
 
 pub use crate::application::{AppKeyChain, AppMsg};
-pub use crate::group_state::{GroupState, Handshake};
+pub use crate::group_state::GroupState;
+pub use crate::handshake::Handshake;
 
 #[cfg(debug_assertions)]
 pub mod tests {

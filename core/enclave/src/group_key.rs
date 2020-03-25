@@ -1,4 +1,7 @@
-use anonify_treekem::{GroupState, AppKeyChain, handshake::PathSecretRequest};
+use anonify_treekem::{
+    GroupState, AppKeyChain, Handshake,
+    handshake::{PathSecretRequest, HandshakeParams},
+};
 use anyhow::Result;
 
 #[derive(Clone, Debug)]
@@ -24,6 +27,17 @@ impl GroupKey {
             max_roster_idx,
             path_secret_req,
         })
+    }
+
+    pub fn create_handshake(&self) -> Result<HandshakeParams> {
+        self.group_state.create_handshake(self.path_secret_req)
+    }
+
+    pub fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()> {
+        let keychain = self.process_handshake(handshake, self.max_roster_idx)?;
+        self.keychain = keychain;
+
+        Ok(())
     }
 
     

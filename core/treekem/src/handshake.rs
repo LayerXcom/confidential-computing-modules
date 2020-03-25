@@ -1,12 +1,28 @@
 use std::vec::Vec;
 use std::collections::HashMap;
 use std::string::String;
+use crate::application::AppKeyChain;
 use crate::crypto::{
     CryptoRng,
     dh::DhPubKey,
     ecies::EciesCiphertext,
     secrets::PathSecret,
 };
+use anyhow::Result;
+
+/// A handshake operates sharing a group key to each member.
+pub trait Handshake: Sized {
+    /// Create a handshake to broadcast other members.
+    fn create_handshake(&self, req: &PathSecretRequest) -> Result<HandshakeParams>;
+
+    /// Process a received handshake from other members.
+    fn process_handshake(
+        &mut self,
+        handshake: &HandshakeParams,
+        req: &PathSecretRequest,
+        max_roster_idx: u32
+    ) -> Result<AppKeyChain>;
+}
 
 // TODO: Does need signature over the group's history?
 /// This `Handshake` is sent to global ledger.
