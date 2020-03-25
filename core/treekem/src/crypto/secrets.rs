@@ -1,8 +1,18 @@
+//! Secrets for key schedule
+//! path_secret
+//! -> node_secret
+//! -> update_secret
+//! -> app_secret
+//! -> app_keychain
+
 use std::vec::Vec;
+use std::collections::HashMap;
+use std::string::String;
 use super::{
     SHA256_OUTPUT_LEN, hkdf,
     dh::{DhPrivateKey, DhPubKey},
     hmac::HmacKey,
+    CryptoRng,
 };
 use anyhow::Result;
 
@@ -70,6 +80,7 @@ impl AppMemberSecret {
     }
 }
 
+#[derive(Debug, Clone, Default)]
 pub struct UpdateSecret(Vec<u8>);
 
 impl UpdateSecret {
@@ -88,8 +99,14 @@ impl From<NodeSecret> for UpdateSecret {
     }
 }
 
+impl From<&UpdateSecret> for HmacKey {
+    fn from(s: &UpdateSecret) -> Self {
+        s.as_bytes().into()
+    }
+}
+
 /// node_secret[n] = HKDF-Expand-Label(path_secret[n], "node", "", Hash.Length)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct NodeSecret(Vec<u8>);
 
 impl From<Vec<u8>> for NodeSecret {
@@ -141,12 +158,48 @@ impl PathSecret {
         let node_public_key = DhPubKey::from_private_key(&node_private_key);
 
         let node_secret = NodeSecret::from(node_secret_buf);
-        let new_path_secret = PathSecret::from(path_secret_buf);
+        let parent_path_secret = PathSecret::from(path_secret_buf);
 
-        Ok((node_public_key, node_private_key, node_secret, new_path_secret))
+        Ok((node_public_key, node_private_key, node_secret, parent_path_secret))
+    }
+
+    pub fn new_from_random<R: CryptoRng>(csprng: &mut R) -> PathSecret {
+        let key = HmacKey::new_from_random(csprng);
+        PathSecret(key)
     }
 
     pub fn as_bytes(&self) -> &[u8] {
         self.0.as_bytes()
+    }
+}
+
+pub enum PathSecretRequest {
+    Local(PathSecretKVS),
+    Remote(String),
+}
+
+pub struct PathSecretKVS(HashMap<AccessKey, PathSecret>);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
+pub struct AccessKey{
+    roster_idx: u32,
+    epoch: u32,
+}
+
+impl PathSecretKVS {
+    pub fn new() -> Self {
+        let map: HashMap<AccessKey, PathSecret> = HashMap::new();
+        PathSecretKVS(map)
+    }
+
+    pub fn get(&self, roster_idx: u32, epoch: u32) -> Option<&PathSecret> {
+        let key = AccessKey{roster_idx, epoch};
+        self.0.get(&key)
+    }
+
+    pub fn insert_random_path_secret<R: CryptoRng>(&mut self, roster_idx: u32, epoch: u32, csprng: &mut R) {
+        let key = AccessKey{roster_idx, epoch};
+        let value = PathSecret::new_from_random(csprng);
+        self.0.insert(key, value);
     }
 }

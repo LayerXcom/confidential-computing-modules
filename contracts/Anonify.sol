@@ -42,7 +42,7 @@ contract Anonify is ReportHandle {
              _lockParams[_stateId][_newLockParams[i]] = _newLockParams[i];
             _ciphertexts[_stateId].push(_newCiphertexts[i]);
 
-            // Emit event over iterations because ABIEncoderV2 is not supported web3-rust.
+            // Emit event over iterations because ABIEncoderV2 is not supported by web3-rust.
             emit StoreCiphertext(_newCiphertexts[i]);
         }
     }

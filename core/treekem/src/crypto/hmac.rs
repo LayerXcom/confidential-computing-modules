@@ -1,10 +1,11 @@
 use std::vec::Vec;
+use super::{CryptoRng, SHA256_OUTPUT_LEN};
 use ring::{
     hmac::{SigningKey, SigningContext, HMAC_SHA256},
 };
 use codec::Encode;
 
-#[derive(Debug, Clone, Encode)]
+#[derive(Debug, Clone, Encode, Default)]
 pub struct HmacKey(Vec<u8>);
 
 impl HmacKey {
@@ -22,6 +23,12 @@ impl HmacKey {
 
     pub fn into_bytes(self) -> Vec<u8> {
         self.0
+    }
+
+     pub fn new_from_random<R: CryptoRng>(csprng: &mut R) -> HmacKey {
+        let mut buf = vec![0u8; SHA256_OUTPUT_LEN];
+        csprng.fill_bytes(&mut buf);
+        HmacKey(buf)
     }
 
     pub fn sign(&self, msg: &[u8]) -> Vec<u8> {

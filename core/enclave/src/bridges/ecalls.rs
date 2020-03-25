@@ -118,6 +118,7 @@ pub mod enclave_tests {
         use std::{panic::UnwindSafe, string::String, vec::Vec};
         use crate::state::tests::*;
         use crate::tests::*;
+        use anonify_treekem::tests::*;
 
         pub unsafe fn internal_tests(ext_ptr: *const RawPointer) -> ResultStatus {
             let mut ctr = 0u64;
@@ -126,6 +127,10 @@ pub mod enclave_tests {
 
             core_unitests(&mut ctr, &mut failures, test_read_write, "test_read_write");
             core_unitests(&mut ctr, &mut failures, test_get_report, "test_get_report");
+
+            // anonify_treekem
+            core_unitests(&mut ctr, &mut failures, app_msg_correctness, "app_msg_correctness");
+            core_unitests(&mut ctr, &mut failures, ecies_correctness, "ecies_correctness");
 
             let result = failures.is_empty();
             rsgx_unit_test_end(ctr, failures);

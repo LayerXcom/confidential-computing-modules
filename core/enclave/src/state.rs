@@ -64,7 +64,7 @@ impl StateTransService<StateType>
 
     /// Return current state's lock parameters of each user.
     // TODO: Consider; is it OK that init_lock_param = H(address||mem_id||zero_sv)
-    pub fn reveal_lock_params(&self) -> Vec<LockParam> {
+    pub fn create_lock_params(&self) -> Vec<LockParam> {
         self.updates
             .clone()
             .expect("State transitions are not applied.")
@@ -78,7 +78,7 @@ impl StateTransService<StateType>
     }
 
     /// Return ciphertexts data which is generates by encrypting updated user's state.
-    pub fn reveal_ciphertexts(&self, symm_key: &SymmetricKey) -> Result<Vec<Ciphertext>> {
+    pub fn create_ciphertexts(&self, symm_key: &SymmetricKey) -> Result<Vec<Ciphertext>> {
         self.updates
             .clone()
             .expect("State transitions are not applied.")

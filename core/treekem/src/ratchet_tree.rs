@@ -15,12 +15,26 @@ use codec::Encode;
 
 #[derive(Clone, Debug, Encode)]
 pub struct RatchetTree {
-    nodes: Vec<RatchetTreeNode>,
+    pub nodes: Vec<RatchetTreeNode>,
 }
 
 impl RatchetTree {
     pub fn new(nodes: Vec<RatchetTreeNode>) -> Self {
         RatchetTree { nodes }
+    }
+
+    pub fn new_empty() -> Self {
+        RatchetTree { nodes: vec![] }
+    }
+
+    /// Set my leaf node derived from path secret to the provided tree index.
+    pub fn init_path_secret_idx(path_secret: PathSecret, my_tree_idx: usize) -> Result<Self> {
+        let (_, privkey, _, _) = path_secret.derive_node_values()?;
+        let my_leaf = RatchetTreeNode::from_private_key(privkey);
+        let mut nodes = vec![RatchetTreeNode::Blank; my_tree_idx];
+        nodes.push(my_leaf);
+
+        Ok(RatchetTree::new(nodes))
     }
 
     /// Construct a Direct Path Message containing encrypted ratcheted path secrets.
@@ -36,6 +50,9 @@ impl RatchetTree {
         let mut node_msgs = vec![];
         let (leaf_public_key, _, _, mut parent_path_secret) = path_secret.derive_node_values()?;
         node_msgs.push(DirectPathNodeMsg::new(leaf_public_key, vec![]));
+        if num_leaves == 1 {
+            return Ok(DirectPathMsg::new(node_msgs));
+        }
 
         for path_node_idx in direct_path {
             let (parent_public_key, _, _, grandparent_path_secret) =
@@ -126,7 +143,9 @@ impl RatchetTree {
 
     pub fn add_leaf_node(&mut self, node: RatchetTreeNode) {
         match self.nodes.is_empty() {
-            true => self.nodes.push(node),
+            true => {
+                self.nodes.push(node);
+            },
             false => {
                 self.nodes.push(RatchetTreeNode::Blank);
                 self.nodes.push(node);
@@ -169,7 +188,19 @@ impl RatchetTree {
             }
         };
 
+        if num_leaves == 1 {
+            return Ok(NodeSecret::default());
+        }
+
         Ok(root_node_secret)
+    }
+
+    pub fn set_single_public_key(&mut self, tree_idx: usize, pubkey: DhPubKey) -> Result<()> {
+        let node = self.get_mut(tree_idx)
+            .ok_or(anyhow!("Invalid tree index. Cannot set a public key to ratchet tree by add operation"))?;
+        node.update_pub_key(pubkey);
+
+        Ok(())
     }
 
     /// Set the public keys.
@@ -186,8 +217,11 @@ impl RatchetTree {
         // direct path including a root
         let direct_path = tree_math::node_extended_direct_path(start_idx, num_leaves);
         for path_node_idx in direct_path {
-            let pubkey = public_keys.next()
-                .ok_or(anyhow!("length of direct path is longer than public key iterator"))?;
+            let pubkey = match public_keys.next() {
+                Some(p) => p,
+                None => break,
+            };
+
             if path_node_idx == stop_idx {
                 break;
             } else {
@@ -254,6 +288,7 @@ pub enum RatchetTreeNode {
     Blank,
     Filled {
         public_key: DhPubKey,
+        #[codec(skip)]
         private_key: Option<DhPrivateKey>,
     },
 }

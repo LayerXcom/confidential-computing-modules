@@ -63,20 +63,38 @@ impl DhPubKey {
     }
 }
 
-pub fn diffie_hellman(
+pub fn encapsulate(ephemeral_privkey: &DhPrivateKey, pubkey: &DhPubKey) -> Result<[u8; 32]> {
+    let shared_point = diffie_hellman(ephemeral_privkey, pubkey)?;
+    let ephemeral_pubkey = PublicKey::from_secret_key(&ephemeral_privkey.0);
+
+    gen_out_buf(&ephemeral_pubkey, &shared_point)
+}
+
+pub fn decapsulate(privkey: &DhPrivateKey, ephemeral_pubkey: &DhPubKey) -> Result<[u8; 32]> {
+    let shared_point = diffie_hellman(privkey, ephemeral_pubkey)?;
+
+    gen_out_buf(&ephemeral_pubkey.0, &shared_point)
+}
+
+
+fn diffie_hellman(
     privkey: &DhPrivateKey,
     pubkey: &DhPubKey,
-) -> Result<[u8; 32]> {
+) -> Result<DhPubKey> {
     let mut shared_point = pubkey.clone();
     shared_point.0
         .tweak_mul_assign(&privkey.0)
         .map_err(|e| anyhow!("error: {:?}", e))?;
 
+    Ok(shared_point)
+}
+
+fn gen_out_buf(pubkey: &PublicKey, shared_point: &DhPubKey) -> Result<[u8; 32]> {
     let mut master = Vec::with_capacity(COMPRESSED_PUBLIC_KEY_SIZE * 2);
-    master.extend(PublicKey::from_secret_key(&privkey.0).serialize_compressed().iter());
+    master.extend(pubkey.serialize_compressed().iter());
     master.extend(shared_point.0.serialize_compressed().iter());
 
     let mut out_buf = [0u8; 32];
-    hkdf::expand(&HmacKey::from(master), b"dh", &mut out_buf)?;
+    hkdf::expand(&HmacKey::from(master), b"dh", &mut out_buf, hkdf::Aes256GcmKey)?;
     Ok(out_buf)
 }
