@@ -47,7 +47,7 @@ impl From<AppSecret> for HmacKey {
 }
 
 /// A secret hat is unique to a member of the group.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AppMemberSecret(HmacKey);
 
 impl From<Vec<u8>> for AppMemberSecret {
@@ -170,36 +170,5 @@ impl PathSecret {
 
     pub fn as_bytes(&self) -> &[u8] {
         self.0.as_bytes()
-    }
-}
-
-pub enum PathSecretRequest {
-    Local(PathSecretKVS),
-    Remote(String),
-}
-
-pub struct PathSecretKVS(HashMap<AccessKey, PathSecret>);
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
-pub struct AccessKey{
-    roster_idx: u32,
-    epoch: u32,
-}
-
-impl PathSecretKVS {
-    pub fn new() -> Self {
-        let map: HashMap<AccessKey, PathSecret> = HashMap::new();
-        PathSecretKVS(map)
-    }
-
-    pub fn get(&self, roster_idx: u32, epoch: u32) -> Option<&PathSecret> {
-        let key = AccessKey{roster_idx, epoch};
-        self.0.get(&key)
-    }
-
-    pub fn insert_random_path_secret<R: CryptoRng>(&mut self, roster_idx: u32, epoch: u32, csprng: &mut R) {
-        let key = AccessKey{roster_idx, epoch};
-        let value = PathSecret::new_from_random(csprng);
-        self.0.insert(key, value);
     }
 }

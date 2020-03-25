@@ -1,8 +1,9 @@
 use crate::group_state::{GroupState, Handshake};
 use crate::application::AppKeyChain;
+use crate::handshake::{PathSecretRequest, PathSecretKVS};
 use crate::crypto::{
     CryptoRng,
-    secrets::{PathSecret, PathSecretRequest, PathSecretKVS},
+    secrets::PathSecret,
 };
 
 pub fn init_path_secret_kvs<R: CryptoRng>(kvs: &mut PathSecretKVS, until_roster_idx: usize, until_epoch: usize, csprng: &mut R) {

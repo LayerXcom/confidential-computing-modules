@@ -31,7 +31,7 @@ impl AppMsg {
 }
 
 /// Application Keychain manages each member's `AppMemberSecret' and generation.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AppKeyChain {
     member_secrets_and_gens: Vec<(AppMemberSecret, u32)>,
     epoch: u32,
@@ -155,7 +155,7 @@ pub mod tests {
     use super::*;
     use crate::test_utils;
     use rand::{self, SeedableRng};
-    use crate::crypto::secrets::{PathSecretKVS, PathSecretRequest};
+    use crate::handshake::{PathSecretKVS, PathSecretRequest};
 
     pub fn app_msg_correctness() {
         let mut rng = rand::rngs::StdRng::seed_from_u64(1);

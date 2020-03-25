@@ -1,7 +1,11 @@
 use std::vec::Vec;
+use std::collections::HashMap;
+use std::string::String;
 use crate::crypto::{
+    CryptoRng,
     dh::DhPubKey,
-    ecies::EciesCiphertext
+    ecies::EciesCiphertext,
+    secrets::PathSecret,
 };
 
 // TODO: Does need signature over the group's history?
@@ -37,5 +41,38 @@ pub struct DirectPathNodeMsg {
 impl DirectPathNodeMsg {
     pub fn new(public_key: DhPubKey, node_secrets: Vec<EciesCiphertext>) -> Self {
         DirectPathNodeMsg { public_key, node_secrets }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum PathSecretRequest {
+    Local(PathSecretKVS),
+    Remote(String),
+}
+
+#[derive(Debug, Clone)]
+pub struct PathSecretKVS(HashMap<AccessKey, PathSecret>);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
+pub struct AccessKey{
+    roster_idx: u32,
+    epoch: u32,
+}
+
+impl PathSecretKVS {
+    pub fn new() -> Self {
+        let map: HashMap<AccessKey, PathSecret> = HashMap::new();
+        PathSecretKVS(map)
+    }
+
+    pub fn get(&self, roster_idx: u32, epoch: u32) -> Option<&PathSecret> {
+        let key = AccessKey{roster_idx, epoch};
+        self.0.get(&key)
+    }
+
+    pub fn insert_random_path_secret<R: CryptoRng>(&mut self, roster_idx: u32, epoch: u32, csprng: &mut R) {
+        let key = AccessKey{roster_idx, epoch};
+        let value = PathSecret::new_from_random(csprng);
+        self.0.insert(key, value);
     }
 }

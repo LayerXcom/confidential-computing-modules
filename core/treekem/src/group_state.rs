@@ -6,7 +6,7 @@ use crate::crypto::{
     hmac::HmacKey,
 };
 use crate::application::AppKeyChain;
-use crate::handshake::{HandshakeParams};
+use crate::handshake::{HandshakeParams, PathSecretRequest};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use crate::tree_math;
 use anyhow::{Result, anyhow, ensure};
@@ -120,14 +120,14 @@ impl Handshake for GroupState {
 }
 
 impl GroupState {
-    pub fn new(my_roster_idx: u32) -> Result<Self> {
+    pub fn new(my_roster_idx: usize) -> Result<Self> {
         let epoch = 0;
         let tree = RatchetTree::new_empty();
         let init_secret = HmacKey::default();
 
         Ok(GroupState {
             epoch,
-            my_roster_idx,
+            my_roster_idx: my_roster_idx as u32,
             tree,
             init_secret,
         })
