@@ -18,6 +18,12 @@ use anonify_common::IntoVec;
 #[derive(Clone, Debug, Default)]
 pub struct Ciphertext(pub Vec<u8>);
 
+impl From<Vec<u8>> for Ciphertext {
+    fn from(c: Vec<u8>) -> Self {
+        Ciphertext(c)
+    }
+}
+
 impl IntoVec for Ciphertext {
     fn into_vec(&self) -> Vec<u8> {
         self.0.to_vec()

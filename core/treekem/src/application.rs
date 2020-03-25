@@ -9,14 +9,14 @@ use crate::crypto::{
 };
 use crate::ratchet_tree::RatchetTreeNode;
 use anyhow::{Result, anyhow, ensure};
-use codec::Encode;
+use codec::{Encode, Decode};
 use ring::aead::{
     OpeningKey, SealingKey, Nonce, UnboundKey, BoundKey,
     Aad, AES_256_GCM,
 };
 
 /// Application message broadcasted to other members.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Encode, Decode)]
 pub struct AppMsg {
     generation: u32,
     epoch: u32,
@@ -38,36 +38,6 @@ pub struct AppKeyChain {
 }
 
 impl AppKeyChain {
-    pub fn from_app_secret(group_state: &GroupState, app_secret: AppSecret) -> Self {
-        let roster_len = match group_state.epoch() {
-            0 => 1, // At the very first epoch, roster length should not be considered empty.
-            _ => u32::try_from(group_state.roster_len().expect("Invalid roster length"))
-                .expect("roster length exceeds u32::MAX") + 1,
-        };
-        let prk = HmacKey::from(app_secret);
-
-        let member_secrets_and_gens = (0..roster_len).map(|roster_idx: u32| {
-            let mut buf = vec![0u8; SHA256_OUTPUT_LEN];
-            let encoded_roster_idx = roster_idx.encode();
-            hkdf::expand_label(
-                &prk,
-                b"app sender",
-                &encoded_roster_idx,
-                buf.as_mut_slice(),
-            )
-            .expect("Failed hkdf expand.");
-            let app_member_secret = AppMemberSecret::from(buf);
-
-            (app_member_secret, 0)
-        })
-        .collect();
-
-        AppKeyChain {
-            member_secrets_and_gens,
-            epoch: group_state.epoch(),
-        }
-    }
-
     /// Encrypt message with current member's application secret.
     pub fn encrypt_msg(
         &self,
@@ -107,6 +77,36 @@ impl AppKeyChain {
                 self.ratchet(app_msg.roster_idx as usize)?;
                 Ok(Some(plaintext[..(plaintext.len() - 32)].to_vec()))
             }
+        }
+    }
+
+    pub(crate) fn from_app_secret(group_state: &GroupState, app_secret: AppSecret) -> Self {
+        let roster_len = match group_state.epoch() {
+            0 => 1, // At the very first epoch, roster length should not be considered empty.
+            _ => u32::try_from(group_state.roster_len().expect("Invalid roster length"))
+                .expect("roster length exceeds u32::MAX") + 1,
+        };
+        let prk = HmacKey::from(app_secret);
+
+        let member_secrets_and_gens = (0..roster_len).map(|roster_idx: u32| {
+            let mut buf = vec![0u8; SHA256_OUTPUT_LEN];
+            let encoded_roster_idx = roster_idx.encode();
+            hkdf::expand_label(
+                &prk,
+                b"app sender",
+                &encoded_roster_idx,
+                buf.as_mut_slice(),
+            )
+            .expect("Failed hkdf expand.");
+            let app_member_secret = AppMemberSecret::from(buf);
+
+            (app_member_secret, 0)
+        })
+        .collect();
+
+        AppKeyChain {
+            member_secrets_and_gens,
+            epoch: group_state.epoch(),
         }
     }
 
