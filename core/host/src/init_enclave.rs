@@ -17,7 +17,7 @@ impl EnclaveDir {
 
         if !enclave_dir.is_dir() {
             fs::create_dir_all(&enclave_dir)
-                .expect("Cannot creat enclave directory.");
+                .expect("Cannot create enclave directory.");
         }
 
         EnclaveDir(enclave_dir)
