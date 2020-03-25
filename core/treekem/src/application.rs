@@ -40,7 +40,7 @@ pub struct AppKeyChain {
 impl AppKeyChain {
     pub fn from_app_secret(group_state: &GroupState, app_secret: AppSecret) -> Self {
         let roster_len = match group_state.epoch() {
-            0 => 1,
+            0 => 1, // At the very first epoch, roster length should not be considered empty.
             _ => u32::try_from(group_state.roster_len().expect("Invalid roster length"))
                 .expect("roster length exceeds u32::MAX") + 1,
         };
@@ -92,6 +92,7 @@ impl AppKeyChain {
         group_state: &GroupState,
     ) -> Result<Option<Vec<u8>>> {
         match group_state.my_node()? {
+            // If current my node contains a DhKeypair, cannot decrypt message because you haven't join the group.
             RatchetTreeNode::Blank => Ok(None),
             _ => {
                 ensure!(app_msg.epoch == self.epoch, "application messages's epoch differs from the app key chain's");
@@ -161,14 +162,14 @@ pub mod tests {
         let msg = b"app msg correctnesss test";
 
         let mut kvs = PathSecretKVS::new();
-        test_utils::init_path_secret_kvs(&mut kvs, 5, 5, &mut rng);
+        test_utils::init_path_secret_kvs(&mut kvs, 10, 10, &mut rng);
         let req = PathSecretRequest::Local(kvs);
 
         let mut group_state1 = GroupState::new(0).unwrap();
         let mut group_state2 = GroupState::new(1).unwrap();
         let mut group_state3 = GroupState::new(2).unwrap();
 
-        // Add group1
+        // Add member1
         let (mut key_chain1_epoch1, mut key_chain2_epoch1, mut key_chain3_epoch1) = test_utils::do_handshake_three_party(
             &mut group_state1,
             &mut group_state2,
@@ -177,7 +178,7 @@ pub mod tests {
             &mut rng
         );
 
-        // Add group2
+        // Add member2
         let (mut key_chain1_epoch1, mut key_chain2_epoch1, mut key_chain3_epoch1) = test_utils::do_handshake_three_party(
             &mut group_state2,
             &mut group_state1,
@@ -230,10 +231,10 @@ pub mod tests {
             &mut key_chain3_epoch1,
         );
 
-        // Update group2
+        // Update member2
         let (mut key_chain1_epoch2, mut key_chain2_epoch2, mut key_chain3_epoch2) = test_utils::do_handshake_three_party(
-            &mut group_state1,
             &mut group_state2,
+            &mut group_state1,
             &mut group_state3,
             &req,
             &mut rng
@@ -272,13 +273,95 @@ pub mod tests {
             &mut key_chain3_epoch2,
         );
 
-        // Add group3
+        // Add member3
         let (mut key_chain1_epoch3, mut key_chain2_epoch3, mut key_chain3_epoch3) = test_utils::do_handshake_three_party(
+            &mut group_state3,
             &mut group_state1,
             &mut group_state2,
-            &mut group_state3,
             &req,
             &mut rng
+        );
+
+        // 3 --> 1,2
+        test_utils::encrypt_decrypt_helper(
+            msg,
+            &group_state3,
+            &mut key_chain3_epoch3,
+            &group_state1,
+            &mut key_chain1_epoch3,
+            &group_state2,
+            &mut key_chain2_epoch3,
+        );
+
+        // 3 --> 1,2
+        test_utils::encrypt_decrypt_helper(
+            msg,
+            &group_state3,
+            &mut key_chain3_epoch3,
+            &group_state1,
+            &mut key_chain1_epoch3,
+            &group_state2,
+            &mut key_chain2_epoch3,
+        );
+
+        // 1 --> 2,3
+        test_utils::encrypt_decrypt_helper(
+            msg,
+            &group_state1,
+            &mut key_chain1_epoch3,
+            &group_state2,
+            &mut key_chain2_epoch3,
+            &group_state3,
+            &mut key_chain3_epoch3,
+        );
+
+        // 1 --> 2,3
+        test_utils::encrypt_decrypt_helper(
+            msg,
+            &group_state1,
+            &mut key_chain1_epoch3,
+            &group_state2,
+            &mut key_chain2_epoch3,
+            &group_state3,
+            &mut key_chain3_epoch3,
+        );
+
+        // update member3
+        let (mut key_chain1_epoch4, mut key_chain2_epoch4, mut key_chain3_epoch4) = test_utils::do_handshake_three_party(
+            &mut group_state3,
+            &mut group_state1,
+            &mut group_state2,
+            &req,
+            &mut rng
+        );
+
+        // update member3
+        let (mut key_chain1_epoch5, mut key_chain2_epoch5, mut key_chain3_epoch5) = test_utils::do_handshake_three_party(
+            &mut group_state3,
+            &mut group_state1,
+            &mut group_state2,
+            &req,
+            &mut rng
+        );
+
+        // update member1
+        let (mut key_chain1_epoch6, mut key_chain2_epoch6, mut key_chain3_epoch6) = test_utils::do_handshake_three_party(
+            &mut group_state1,
+            &mut group_state3,
+            &mut group_state2,
+            &req,
+            &mut rng
+        );
+
+        // 3 --> 1,2
+        test_utils::encrypt_decrypt_helper(
+            msg,
+            &group_state3,
+            &mut key_chain3_epoch6,
+            &group_state1,
+            &mut key_chain1_epoch6,
+            &group_state2,
+            &mut key_chain2_epoch6,
         );
     }
 }

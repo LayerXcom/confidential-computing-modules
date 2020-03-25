@@ -12,9 +12,12 @@ use crate::tree_math;
 use anyhow::{Result, anyhow, ensure};
 use codec::Encode;
 
+/// A handshake operates sharing a group key to each member.
 pub trait Handshake: Sized {
+    /// Create a handshake to broadcast other members.
     fn create_handshake(&self, req: &PathSecretRequest) -> Result<HandshakeParams>;
 
+    /// Process a received handshake from other members.
     fn process_handshake(
         &mut self,
         handshake: &HandshakeParams,
@@ -31,6 +34,7 @@ pub struct GroupState {
     /// Otherwise, this field is None.
     #[codec(skip)]
     pub my_roster_idx: u32,
+    /// RatchetTree contains blank nodes or filled nodes which consist of DhPubkey and DhPrivKey.
     pub tree: RatchetTree,
     /// The initial secret used to derive app_secret.
     /// It works as a salt of HKDF.
@@ -52,7 +56,6 @@ impl Handshake for GroupState {
         }
 
         let update_secret = new_group_state.set_new_path_secret(path_secret.clone(), my_tree_idx)?;
-        new_group_state.increment_epoch()?;
         let direct_path_msg = new_group_state.tree.encrypt_direct_path_secret(my_tree_idx, path_secret.clone())?;
 
         let handshake = HandshakeParams {
@@ -73,10 +76,13 @@ impl Handshake for GroupState {
         ensure!(handshake.prior_epoch == self.epoch, "Handshake's prior epoch isn't the current epoch.");
         let sender_tree_idx = RatchetTree::roster_idx_to_tree_idx(handshake.roster_idx)?;
         ensure!(sender_tree_idx <= self.tree.size(), "Invalid tree index");
+
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
         let max_tree_size = RatchetTree::roster_idx_to_tree_idx(max_roster_idx)?;
 
+        // If sender_tree_size equals to the current tree size, the handshake containes an add operation.
         if sender_tree_idx == self.tree.size() {
+            // This is just special operation for the very first epoch.
             if self.tree.nodes.is_empty() {
                 self.tree.add_leaf_node(RatchetTreeNode::Blank);
             }
@@ -88,6 +94,8 @@ impl Handshake for GroupState {
 
         let mut my_path_secret: Option<PathSecret> = None;
         if let Some(my_leaf) = self.tree.get_mut(my_tree_idx) {
+            // Only if the received handshake sent from my own,
+            // request path secret to external key vault and then update the leaf node.
             if sender_tree_idx == my_tree_idx {
                 let path_secret = Self::request_new_path_secret(req, self.my_roster_idx, self.epoch)?;
                 let (node_pubkey, node_privkey, _, _) = path_secret.clone().derive_node_values()?;
@@ -125,14 +133,24 @@ impl GroupState {
         })
     }
 
-    fn apply_handshake(&mut self, handshake: &HandshakeParams, sender_tree_idx: usize, path_secret: Option<PathSecret>) -> Result<(UpdateSecret, usize)> {
+    fn apply_handshake(
+        &mut self,
+        handshake: &HandshakeParams,
+        sender_tree_idx: usize,
+        path_secret: Option<PathSecret>
+    ) -> Result<(UpdateSecret, usize)> {
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
 
+        // If the received handshake sent from my own, set the requested path secret.
         if sender_tree_idx == my_tree_idx {
                 let update_secret = self.set_new_path_secret(path_secret.unwrap(), my_tree_idx)?;
 
                 Ok((update_secret, my_tree_idx))
         } else {
+            // What the node is still blank means the member hasn't join the group yet.
+            // More precisely, the member hasn't send an add handshake yet.
+            // Otherwise, the handshake is an update operation,
+            // so decrypt direct path message using based on current group state.
             match self.tree.get(my_tree_idx).unwrap() {
                 RatchetTreeNode::Blank => {
                     let num_leaves = tree_math::num_leaves_in_tree(self.tree.size());
