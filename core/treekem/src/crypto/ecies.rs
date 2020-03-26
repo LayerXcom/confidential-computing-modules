@@ -7,7 +7,7 @@ use super::{
 };
 use ring::aead::{Nonce, NonceSequence, UnboundKey, BoundKey, OpeningKey, Aad, SealingKey, AES_256_GCM};
 use anyhow::Result;
-use codec::Encode;
+use codec::{Encode, Decode};
 
 #[derive(Debug, Clone, Encode, Decode)]
 pub struct EciesCiphertext {
