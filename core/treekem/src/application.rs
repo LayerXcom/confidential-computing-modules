@@ -10,6 +10,7 @@ use crate::crypto::{
 use crate::ratchet_tree::RatchetTreeNode;
 use anyhow::{Result, anyhow, ensure};
 use codec::{Encode, Decode};
+use log::info;
 use ring::aead::{
     OpeningKey, SealingKey, Nonce, UnboundKey, BoundKey,
     Aad, AES_256_GCM,
@@ -49,7 +50,10 @@ impl AppKeyChain {
     ) -> Result<Option<Vec<u8>>> {
         match group_state.my_node()? {
             // If current my node contains a DhKeypair, cannot decrypt message because you haven't join the group.
-            RatchetTreeNode::Blank => Ok(None),
+            RatchetTreeNode::Blank => {
+                info!("The received message is ignored because your enclave hasn't join the group yet");
+                Ok(None)
+            },
             _ => {
                 ensure!(app_msg.epoch() == self.epoch, "application messages's epoch differs from the app key chain's");
 

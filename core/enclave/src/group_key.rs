@@ -5,7 +5,6 @@ use anonify_treekem::{
 };
 use anonify_app_preluder::Ciphertext;
 use anyhow::Result;
-use log::info;
 
 #[derive(Clone, Debug)]
 pub struct GroupKey {
@@ -51,13 +50,7 @@ impl GroupKey {
         self.keychain.encrypt_msg(plaintext, &self.group_state)
     }
 
-    pub fn decrypt(&mut self, app_msg: Ciphertext) -> Result<()> {
-        match self.keychain.decrypt_msg(app_msg, &self.group_state)? {
-            Some(plaintext) => {
-
-            }
-            None => info!("The received message is ignored because your enclave hasn't join the group yet")
-        }
-        Ok(())
+    pub fn decrypt(&mut self, app_msg: Ciphertext) -> Result<Option<Vec<u8>>> {
+        self.keychain.decrypt_msg(app_msg, &self.group_state)
     }
 }

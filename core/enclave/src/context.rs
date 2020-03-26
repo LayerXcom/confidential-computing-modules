@@ -3,9 +3,11 @@ use std::prelude::v1::*;
 use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
 use anonify_app_preluder::{mem_name_to_id, Ciphertext};
 use anonify_runtime::{State, StateGetter, StateType, MemId};
+use anonify_treekem::handshake::{PathSecretRequest, PathSecretKVS};
 use crate::{
-    crypto::{Eik, SymmetricKey},
-    attestation::TEST_SPID,
+    crypto::Eik,
+    group_key::GroupKey,
+    config::{TEST_SPID, MY_ROSTER_IDX, MAX_ROSTER_IDX},
     ocalls::{sgx_init_quote, get_quote},
     error::Result,
     kvs::{EnclaveDB, EnclaveDBTx},
@@ -42,6 +44,7 @@ pub struct EnclaveContext<S: State> {
     spid: sgx_spid_t,
     identity_key: Eik,
     db: EnclaveDB<S>,
+    group_key: GroupKey,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
@@ -55,11 +58,20 @@ impl EnclaveContext<StateType> {
         let identity_key = Eik::new()?;
         let db = EnclaveDB::new();
 
+        let mut kvs = PathSecretKVS::new();
+        let req = PathSecretRequest::Local(kvs);
+        let group_key = GroupKey::new(MY_ROSTER_IDX, MAX_ROSTER_IDX, req)?;
+
         Ok(EnclaveContext{
             spid,
             identity_key,
             db,
+            group_key,
         })
+    }
+
+    pub fn group_key(self) -> GroupKey {
+        self.group_key
     }
 
     /// Generate Base64-encoded QUOTE data structure.
@@ -83,19 +95,22 @@ impl EnclaveContext<StateType> {
         self.identity_key.sign(msg.as_bytes())
     }
 
-    // Only State with `Current` allows to access to the database to avoid from
-    // storing data which have not been considered globally consensused.
+    /// Only State with `Current` allows to access to the database to avoid from
+    /// storing data which have not been considered globally consensused.
     pub fn write_cipheriv(
         &self,
         cipheriv: Ciphertext,
-        symm_key: &SymmetricKey
+        group_key: &mut GroupKey
     ) -> Result<()> {
-        let user_state = UserState::<StateType, Current>::decrypt(cipheriv, &symm_key)?;
-        let address = user_state.address();
-        let mem_id = user_state.mem_id();
-        let sv = user_state.into_sv();
-
-        self.db.insert(address, mem_id, sv);
+        // Only if the enclave join the group, you can receive ciphertext and decrypt it,
+        // otherwise do nothing.
+        match UserState::<StateType, Current>::decrypt(cipheriv, group_key)? {
+            Some(user_state) => {
+                self.db
+                    .insert(user_state.address(), user_state.mem_id(), user_state.into_sv());
+            }
+            None => { }
+        }
 
         Ok(())
     }

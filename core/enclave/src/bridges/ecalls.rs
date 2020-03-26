@@ -6,7 +6,6 @@ use anonify_app_preluder::{CIPHERTEXT_SIZE, Ciphertext, CallKind};
 use anonify_runtime::{StateGetter, State, StateType, MemId};
 use ed25519_dalek::{PublicKey, Signature};
 use crate::state::{UserState, StateValue, Current};
-use crate::crypto::SYMMETRIC_KEY;
 use crate::attestation::{
     TEST_SUB_KEY, DEV_HOSTNAME, REPORT_PATH,
 };
@@ -24,12 +23,12 @@ pub unsafe extern "C" fn ecall_insert_logs(
     ciphertexts_len: usize,
 ) -> sgx_status_t {
     let ciphertexts = slice::from_raw_parts_mut(ciphertexts, ciphertexts_len);
-    assert_eq!(ciphertexts.len() % (*CIPHERTEXT_SIZE), 0, "Ciphertexts must be divisible by ciphertexts_num.");
+    assert_eq!(ciphertexts.len() % (*CIPHERTEXT_SIZE), 0, "Ciphertexts must be divisible by number of ciphertext.");
 
     for ciphertext in ciphertexts.chunks_mut(*CIPHERTEXT_SIZE) {
         ENCLAVE_CONTEXT
             .write_cipheriv(Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY)
-            .expect("Failed to wirte cihpertexts.");
+            .expect("Failed to write cihpertexts.");
     }
 
     sgx_status_t::SGX_SUCCESS
@@ -97,7 +96,7 @@ pub unsafe extern "C" fn ecall_state_transition(
             call_kind,
             state_id,
             &ar,
-            &*ENCLAVE_CONTEXT,
+            *ENCLAVE_CONTEXT,
         )
         .expect("Failed to construct state tx.");
 

@@ -9,7 +9,7 @@ use crate::{
     context::EnclaveContext,
     bridges::ocalls::save_to_host_memory,
     state::{UserState, StateTransService},
-    crypto::SYMMETRIC_KEY,
+    group_key::GroupKey,
 };
 
 /// A trait for exporting transacitons to out-enclave.
@@ -100,14 +100,14 @@ impl StateTransTx {
         kind: CallKind,
         state_id: u64, // TODO: future works for separeting smart contracts
         access_right: &AccessRight,
-        enclave_ctx: &EnclaveContext<StateType>,
+        enclave_ctx: EnclaveContext<StateType>,
     ) -> Result<Self>
     {
-        let mut service = StateTransService::<StateType>::from_access_right(access_right, enclave_ctx)?;
+        let mut service = StateTransService::<StateType>::from_access_right(access_right, &enclave_ctx)?;
         service.apply(kind)?;
 
         let lock_params = service.create_lock_params();
-        let ciphertexts = service.create_ciphertexts(&SYMMETRIC_KEY)?;
+        let ciphertexts = service.create_ciphertexts(&enclave_ctx.group_key())?;
         let enclave_sig = enclave_ctx.sign(&lock_params[0])?;
 
         Ok(StateTransTx {
