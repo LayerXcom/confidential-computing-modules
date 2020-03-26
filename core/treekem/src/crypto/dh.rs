@@ -1,7 +1,7 @@
 use std::vec::Vec;
 use secp256k1::{PublicKey, SecretKey, util::{SECRET_KEY_SIZE, COMPRESSED_PUBLIC_KEY_SIZE}};
 use anyhow::{anyhow, Result};
-use codec::Encode;
+use codec::{Encode, Decode, Input, Error};
 use super::{
     CryptoRng, sgx_rand_assign, hkdf,
     hmac::HmacKey,
@@ -17,6 +17,14 @@ impl Encode for DhPrivateKey {
 
     fn size_hint(&self) -> usize {
         SECRET_KEY_SIZE
+    }
+}
+
+impl Decode for DhPrivateKey {
+    fn decode<I: Input>(value: &mut I) -> Result<Self, Error> {
+        let buf = <[u8; 32]>::decode(value)?;
+        let privkey = SecretKey::parse(&buf).unwrap();
+        Ok(DhPrivateKey(privkey))
     }
 }
 
@@ -54,6 +62,14 @@ impl Encode for DhPubKey {
 
     fn size_hint(&self) -> usize {
         COMPRESSED_PUBLIC_KEY_SIZE
+    }
+}
+
+impl Decode for DhPubKey {
+    fn decode<I: Input>(value: &mut I) -> Result<Self, Error> {
+        let buf = <[u8; 33]>::decode(value)?;
+        let pubkey = PublicKey::parse_compressed(&buf).unwrap();
+        Ok(DhPubKey(pubkey))
     }
 }
 
