@@ -152,7 +152,7 @@ pub mod tests {
         let msg = b"app msg correctnesss test";
 
         let mut kvs = PathSecretKVS::new();
-        test_utils::init_path_secret_kvs(&mut kvs, 10, 10, &mut rng);
+        test_utils::init_path_secret_kvs(&mut kvs, 10, 10);
         let req = PathSecretRequest::Local(kvs);
 
         let mut group_state1 = GroupState::new(0).unwrap();

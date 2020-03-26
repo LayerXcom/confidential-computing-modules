@@ -16,6 +16,9 @@ pub use crate::application::AppKeyChain;
 pub use crate::group_state::GroupState;
 pub use crate::handshake::Handshake;
 
+// temporary
+pub use crate::test_utils::init_path_secret_kvs;
+
 #[cfg(debug_assertions)]
 pub mod tests {
     use super::*;

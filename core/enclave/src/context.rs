@@ -4,11 +4,14 @@ use std::prelude::v1::*;
 use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
 use anonify_app_preluder::{mem_name_to_id, Ciphertext};
 use anonify_runtime::{State, StateGetter, StateType, MemId};
-use anonify_treekem::handshake::{PathSecretRequest, PathSecretKVS};
+use anonify_treekem::{
+    handshake::{PathSecretRequest, PathSecretKVS},
+    init_path_secret_kvs,
+};
 use crate::{
     crypto::EnclaveIdentityKey,
     group_key::GroupKey,
-    config::{TEST_SPID, MY_ROSTER_IDX, MAX_ROSTER_IDX},
+    config::{TEST_SPID, MY_ROSTER_IDX, MAX_ROSTER_IDX, UNTIL_ROSTER_IDX, UNTIL_EPOCH},
     ocalls::{sgx_init_quote, get_quote},
     error::Result,
     kvs::{EnclaveDB, EnclaveDBTx},
@@ -59,7 +62,9 @@ impl EnclaveContext<StateType> {
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
 
+        // temporary path secrets are generated in local.
         let mut kvs = PathSecretKVS::new();
+        init_path_secret_kvs(&mut kvs, UNTIL_ROSTER_IDX, UNTIL_EPOCH);
         let req = PathSecretRequest::Local(kvs);
         let group_key = Arc::new(SgxRwLock::new(GroupKey::new(MY_ROSTER_IDX, MAX_ROSTER_IDX, req)?));
 
