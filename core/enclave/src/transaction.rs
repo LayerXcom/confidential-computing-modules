@@ -100,10 +100,10 @@ impl StateTransTx {
         kind: CallKind,
         state_id: u64, // TODO: future works for separeting smart contracts
         access_right: &AccessRight,
-        enclave_ctx: EnclaveContext<StateType>,
+        enclave_ctx: &EnclaveContext<StateType>,
     ) -> Result<Self>
     {
-        let mut service = StateTransService::<StateType>::from_access_right(access_right, &enclave_ctx)?;
+        let mut service = StateTransService::<StateType>::from_access_right(access_right, enclave_ctx)?;
         service.apply(kind)?;
 
         let lock_params = service.create_lock_params();

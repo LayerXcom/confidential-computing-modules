@@ -1,3 +1,4 @@
+use std::sync::{SgxRwLock, Arc};
 use sgx_types::*;
 use std::prelude::v1::*;
 use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
@@ -5,7 +6,7 @@ use anonify_app_preluder::{mem_name_to_id, Ciphertext};
 use anonify_runtime::{State, StateGetter, StateType, MemId};
 use anonify_treekem::handshake::{PathSecretRequest, PathSecretKVS};
 use crate::{
-    crypto::Eik,
+    crypto::EnclaveIdentityKey,
     group_key::GroupKey,
     config::{TEST_SPID, MY_ROSTER_IDX, MAX_ROSTER_IDX},
     ocalls::{sgx_init_quote, get_quote},
@@ -42,9 +43,9 @@ impl StateGetter for EnclaveContext<StateType> {
 #[derive(Clone)]
 pub struct EnclaveContext<S: State> {
     spid: sgx_spid_t,
-    identity_key: Eik,
+    identity_key: EnclaveIdentityKey,
     db: EnclaveDB<S>,
-    group_key: GroupKey,
+    group_key: Arc<SgxRwLock<GroupKey>>,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
@@ -55,12 +56,12 @@ impl EnclaveContext<StateType> {
         id.copy_from_slice(&spid_vec);
         let spid: sgx_spid_t = sgx_spid_t { id };
 
-        let identity_key = Eik::new()?;
+        let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
 
         let mut kvs = PathSecretKVS::new();
         let req = PathSecretRequest::Local(kvs);
-        let group_key = GroupKey::new(MY_ROSTER_IDX, MAX_ROSTER_IDX, req)?;
+        let group_key = Arc::new(SgxRwLock::new(GroupKey::new(MY_ROSTER_IDX, MAX_ROSTER_IDX, req)?));
 
         Ok(EnclaveContext{
             spid,
@@ -70,8 +71,8 @@ impl EnclaveContext<StateType> {
         })
     }
 
-    pub fn group_key(self) -> GroupKey {
-        self.group_key
+    pub fn group_key(&self) -> GroupKey {
+        self.group_key.read().unwrap().clone()
     }
 
     /// Generate Base64-encoded QUOTE data structure.

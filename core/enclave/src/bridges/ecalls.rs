@@ -9,7 +9,7 @@ use crate::state::{UserState, StateValue, Current};
 use crate::attestation::{
     TEST_SUB_KEY, DEV_HOSTNAME, REPORT_PATH,
 };
-use crate::context::{ENCLAVE_CONTEXT};
+use crate::context::ENCLAVE_CONTEXT;
 use crate::transaction::{RegisterTx, EnclaveTx, StateTransTx};
 use crate::kvs::EnclaveDB;
 use super::ocalls::save_to_host_memory;
@@ -27,7 +27,7 @@ pub unsafe extern "C" fn ecall_insert_logs(
 
     for ciphertext in ciphertexts.chunks_mut(*CIPHERTEXT_SIZE) {
         ENCLAVE_CONTEXT
-            .write_cipheriv(Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY)
+            .write_cipheriv(Ciphertext::from_bytes(ciphertext), &mut (*ENCLAVE_CONTEXT).group_key())
             .expect("Failed to write cihpertexts.");
     }
 
@@ -96,7 +96,7 @@ pub unsafe extern "C" fn ecall_state_transition(
             call_kind,
             state_id,
             &ar,
-            *ENCLAVE_CONTEXT,
+            &*ENCLAVE_CONTEXT,
         )
         .expect("Failed to construct state tx.");
 
