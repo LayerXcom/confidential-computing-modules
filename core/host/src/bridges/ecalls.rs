@@ -1,6 +1,6 @@
 use std::boxed::Box;
 use sgx_types::*;
-use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx};
+use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx, RawHandshakeTx};
 use anonify_common::{AccessRight, IntoVec};
 use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
 use anonify_runtime::traits::State;
@@ -133,13 +133,38 @@ pub(crate) fn state_transition<S: State>(
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx{ status, function: "ecall_contract_deploy" }.into());
+        return Err(HostError::Sgx{ status, function: "ecall_state_transition" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx{ status: rt, function: "ecall_contract_deploy" }.into());
+        return Err(HostError::Sgx{ status: rt, function: "ecall_state_transition" }.into());
     }
 
     Ok(raw_state_tx)
+}
+
+/// Handshake to other group members to update the group key
+pub(crate) fn handshake(
+    eid: sgx_enclave_id_t,
+) -> Result<RawHandshakeTx> {
+    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut raw_handshake_tx = RawHandshakeTx::default();
+
+    let status = unsafe {
+        ecall_handshake(
+            eid,
+            &mut rt,
+            &mut raw_handshake_tx,
+        )
+    };
+
+    if status != sgx_status_t::SGX_SUCCESS {
+        return Err(HostError::Sgx{ status, function: "ecall_handshake" }.into());
+    }
+    if rt != sgx_status_t::SGX_SUCCESS {
+        return Err(HostError::Sgx{ status: rt, function: "ecall_handshake" }.into());
+    }
+
+    Ok(raw_handshake_tx)
 }
 
 #[cfg(test)]

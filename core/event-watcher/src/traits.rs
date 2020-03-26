@@ -5,7 +5,7 @@ use std::{
     sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::{RawRegisterTx, RawStateTransTx};
+use anonify_types::{RawRegisterTx, RawStateTransTx, RawHandshakeTx};
 use anonify_common::AccessRight;
 use anonify_runtime::traits::State;
 use crate::{
@@ -73,6 +73,15 @@ pub trait Sender: Sized {
     ) -> Result<String>
     where
         F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>;
+
+    fn handshake<F>(
+        &self,
+        signer: SignerAddress,
+        gas: u64,
+        handshake_fn: F,
+    ) -> Result<String>
+    where
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawHandshakeTx>;
 
     fn get_contract(self) -> ContractKind;
 }

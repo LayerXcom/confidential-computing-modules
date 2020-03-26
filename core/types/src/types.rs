@@ -105,6 +105,31 @@ impl fmt::Debug for RawStateTransTx {
     }
 }
 
+/// Bridged type from enclave to host to send a handshake transaction.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct RawHandshakeTx {
+    pub handshake: *const u8,
+}
+
+impl RawEnclaveTx for RawHandshakeTx { }
+
+impl Default for RawHandshakeTx {
+    fn default() -> Self {
+        RawHandshakeTx {
+            handshake: ptr::null(),
+        }
+    }
+}
+
+impl fmt::Debug for RawHandshakeTx {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut debug_trait_builder = f.debug_struct("RawHandshakeTx");
+        debug_trait_builder.field("handshake", &(self.handshake));
+        debug_trait_builder.finish()
+    }
+}
+
 // #[repr(C)]
 // #[derive(Clone, Copy)]
 // pub struct RawAccessRight {

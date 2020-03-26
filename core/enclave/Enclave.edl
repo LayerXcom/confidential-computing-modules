@@ -42,6 +42,10 @@ enclave {
             [out] RawRegisterTx* result
         );
 
+        public sgx_status_t ecall_handshake(
+            [out] RawHandshakeTx* result
+        );
+
         public void ecall_run_tests(
             [in] const RawPointer* ext_ptr,
             [out] ResultStatus* result

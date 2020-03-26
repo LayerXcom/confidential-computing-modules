@@ -4,7 +4,7 @@ use std::{
     boxed::Box,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::{RawRegisterTx, RawStateTransTx};
+use anonify_types::{RawRegisterTx, RawStateTransTx, RawHandshakeTx};
 use anonify_common::{AccessRight, LockParam};
 use anonify_runtime::traits::State;
 use anonify_app_preluder::Ciphertext;
@@ -140,6 +140,7 @@ impl Sender for EthSender {
                     addr,
                     &register_tx.report,
                     &register_tx.report_sig,
+                    &register_tx.handshake,
                     gas
                 )?
             }
@@ -175,6 +176,29 @@ impl Sender for EthSender {
                     locks,
                     &state_trans_tx.enclave_sig,
                     gas,
+                )?
+            }
+        };
+
+        Ok(hex::encode(receipt.as_bytes()))
+    }
+
+    fn handshake<F>(
+        &self,
+        signer: SignerAddress,
+        gas: u64,
+        handshake_fn: F,
+    ) -> Result<String>
+    where
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawHandshakeTx>
+    {
+        let handshake_tx: BoxedHandshakeTx = handshake_fn(self.enclave_id)?.into();
+        let receipt = match signer {
+            SignerAddress::EthAddress(addr) => {
+                self.contract.handshake(
+                    addr,
+                    &handshake_tx.handshake,
+                    gas
                 )?
             }
         };
@@ -291,6 +315,22 @@ impl From<RawStateTransTx> for BoxedStateTransTx {
         res_tx.ciphertext = *ciphertext;
         res_tx.lock_param = *lock_param;
         res_tx.enclave_sig = *enclave_sig;
+
+        res_tx
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub(crate) struct BoxedHandshakeTx {
+    pub handshake: Box<[u8]>,
+}
+
+impl From<RawHandshakeTx> for BoxedHandshakeTx {
+    fn from(raw_handshake_tx: RawHandshakeTx) -> Self {
+        let mut res_tx = BoxedHandshakeTx::default();
+        let box_handshake = raw_handshake_tx.handshake as *mut Box<[u8]>;
+        let handshake = unsafe { Box::from_raw(box_handshake) };
+        res_tx.handshake = *handshake;
 
         res_tx
     }

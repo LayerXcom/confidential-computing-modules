@@ -122,11 +122,12 @@ impl Web3Contract {
         from: Address,
         report: &[u8],
         report_sig: &[u8],
+        handshake: &[u8],
         gas: G,
     ) -> Result<H256> {
         let call = self.contract.call(
             "register",
-            (report.to_vec(), report_sig.to_vec()),
+            (report.to_vec(), report_sig.to_vec(), handshake.to_vec()),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );
@@ -158,6 +159,24 @@ impl Web3Contract {
         let call = self.contract.call(
             "stateTransition",
             (U256::from(state_id), ct, lp, enclave_sig.to_vec()),
+            from,
+            Options::with(|opt| opt.gas = Some(gas.into())),
+        );
+
+        // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253
+        let res = call.wait().unwrap(); //TODO: error handling
+        Ok(res)
+    }
+
+    pub fn handshake<G: Into<U256>>(
+        &self,
+        from: Address,
+        handshake: &[u8],
+        gas: G,
+    ) -> Result<H256> {
+        let call = self.contract.call(
+            "handshake",
+            handshake.to_vec(),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );

@@ -14,6 +14,7 @@ fn main() {
         .include_item("EnclaveReturn")
         .include_item("RawRegisterTx")
         .include_item("RawStateTransTx")
+        .include_item("RawHandshakeTx")
         // .include_item("RawAccessRight")
         .include_item("EnclaveState")
         .include_item("ResultStatus")

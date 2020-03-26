@@ -47,6 +47,13 @@ extern "C" {
     ) -> sgx_status_t;
 }
 extern "C" {
+    pub fn ecall_handshake(
+        eid: sgx_enclave_id_t,
+        retval: *mut sgx_status_t,
+        result: *mut RawHandshakeTx,
+    ) -> sgx_status_t;
+}
+extern "C" {
     pub fn ecall_run_tests(
         eid: sgx_enclave_id_t,
         ext_ptr: *const RawPointer,

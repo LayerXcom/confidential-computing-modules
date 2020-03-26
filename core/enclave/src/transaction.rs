@@ -1,5 +1,5 @@
 use std::vec::Vec;
-use anonify_types::{RawRegisterTx, RawStateTransTx, traits::RawEnclaveTx};
+use anonify_types::{RawRegisterTx, RawStateTransTx, RawHandshakeTx, traits::RawEnclaveTx};
 use anonify_common::{UserAddress, LockParam, AccessRight, IntoVec};
 use anonify_app_preluder::{Ciphertext, CallKind};
 use anonify_runtime::{StateType, State, MemId};
@@ -123,5 +123,35 @@ impl StateTransTx {
             lock_params,
             enclave_sig,
         })
+    }
+}
+
+/// A transaction components for handshake operations.
+#[derive(Debug, Clone)]
+pub struct HandshakeTx {
+    handshake: HandshakeParams,
+}
+
+impl EnclaveTx for HandshakeTx {
+    type R = RawHandshakeTx;
+
+    fn into_raw(self) -> Result<Self::R> {
+        let handshake = save_to_host_memory(&self.handshake.encode())? as *const u8;
+
+        Ok(RawHandshakeTx { handshake })
+    }
+}
+
+impl HandshakeTx {
+    pub fn new(handshake: HandshakeParams) -> Self {
+        HandshakeTx { handshake }
+    }
+
+    pub fn construct(
+        ctx: &EnclaveContext<StateType>,
+    ) -> Result<Self> {
+        let handshake = ctx.group_key().create_handshake()?;
+
+        Ok(HandshakeTx { handshake })
     }
 }
