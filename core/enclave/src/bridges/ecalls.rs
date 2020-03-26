@@ -10,7 +10,7 @@ use crate::attestation::{
     TEST_SUB_KEY, DEV_HOSTNAME, REPORT_PATH,
 };
 use crate::context::ENCLAVE_CONTEXT;
-use crate::transaction::{RegisterTx, EnclaveTx, StateTransTx};
+use crate::transaction::{RegisterTx, EnclaveTx, HandshakeTx, StateTransTx};
 use crate::kvs::EnclaveDB;
 use super::ocalls::save_to_host_memory;
 
@@ -102,6 +102,19 @@ pub unsafe extern "C" fn ecall_state_transition(
 
     *raw_state_tx = state_trans_tx.into_raw()
         .expect("Failed to convert into raw state transaction.");
+
+    sgx_status_t::SGX_SUCCESS
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ecall_handshake(
+    raw_handshake_tx: &mut RawHandshakeTx,
+) -> sgx_status_t {
+    let handshake_tx = HandshakeTx::construct(&*ENCLAVE_CONTEXT)
+        .expect("Faild to constract handshake transaction.");
+
+    *raw_handshake_tx = handshake_tx.into_raw()
+        .expect("Faild to convert into raw handshake transaction.");
 
     sgx_status_t::SGX_SUCCESS
 }
