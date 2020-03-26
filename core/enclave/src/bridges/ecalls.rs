@@ -20,13 +20,13 @@ use super::ocalls::save_to_host_memory;
 pub unsafe extern "C" fn ecall_insert_logs(
     _contract_addr: &[u8; 20], //TODO
     _block_number: u64, // TODO
-    ciphertexts: *const u8,
+    ciphertexts: *mut u8,
     ciphertexts_len: usize,
 ) -> sgx_status_t {
-    let ciphertexts = slice::from_raw_parts(ciphertexts, ciphertexts_len);
+    let ciphertexts = slice::from_raw_parts_mut(ciphertexts, ciphertexts_len);
     assert_eq!(ciphertexts.len() % (*CIPHERTEXT_SIZE), 0, "Ciphertexts must be divisible by ciphertexts_num.");
 
-    for ciphertext in ciphertexts.chunks(*CIPHERTEXT_SIZE) {
+    for ciphertext in ciphertexts.chunks_mut(*CIPHERTEXT_SIZE) {
         ENCLAVE_CONTEXT
             .write_cipheriv(Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY)
             .expect("Failed to wirte cihpertexts.");

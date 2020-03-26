@@ -51,16 +51,16 @@ impl AppKeyChain {
             // If current my node contains a DhKeypair, cannot decrypt message because you haven't join the group.
             RatchetTreeNode::Blank => Ok(None),
             _ => {
-                ensure!(app_msg.epoch == self.epoch, "application messages's epoch differs from the app key chain's");
+                ensure!(app_msg.epoch() == self.epoch, "application messages's epoch differs from the app key chain's");
 
-                let (ub_key, nonce_seq, generation) = self.key_nonce_gen(app_msg.roster_idx as usize)?;
-                ensure!(app_msg.generation == generation, "application messages's generation differs from the AppMeberSecret's");
+                let (ub_key, nonce_seq, generation) = self.key_nonce_gen(app_msg.roster_idx() as usize)?;
+                ensure!(app_msg.generation() == generation, "application messages's generation differs from the AppMeberSecret's");
 
-                let mut ciphertext = app_msg.encrypted_msg.clone();
+                let mut ciphertext = app_msg.encrypted_state_ref().to_vec();
                 let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
                 let plaintext = opening_key.open_in_place(Aad::empty(), &mut ciphertext)?;
 
-                self.ratchet(app_msg.roster_idx as usize)?;
+                self.ratchet(app_msg.roster_idx() as usize)?;
                 Ok(Some(plaintext[..(plaintext.len() - 32)].to_vec()))
             }
         }
@@ -124,7 +124,7 @@ impl AppKeyChain {
 
         let prk = HmacKey::from(member_secret);
         let mut key_buf = [0u8; AES_256_GCM_KEY_SIZE];
-        let mut nonce_buf = [0u8; AES_256_GCM_NONCE_SIZE];
+        let nonce_buf = [0u8; AES_256_GCM_NONCE_SIZE];
         hkdf::expand_label(&prk, b"key", b"", &mut key_buf)?;
         hkdf::expand_label(&prk, b"nonce", b"", &mut key_buf)?;
 
@@ -156,7 +156,7 @@ pub mod tests {
         let mut group_state3 = GroupState::new(2).unwrap();
 
         // Add member1
-        let (mut key_chain1_epoch1, mut key_chain2_epoch1, mut key_chain3_epoch1) = test_utils::do_handshake_three_party(
+        let (key_chain1_epoch1, key_chain2_epoch1, key_chain3_epoch1) = test_utils::do_handshake_three_party(
             &mut group_state1,
             &mut group_state2,
             &mut group_state3,
@@ -313,7 +313,7 @@ pub mod tests {
         );
 
         // update member3
-        let (mut key_chain1_epoch4, mut key_chain2_epoch4, mut key_chain3_epoch4) = test_utils::do_handshake_three_party(
+        let (key_chain1_epoch4, key_chain2_epoch4, key_chain3_epoch4) = test_utils::do_handshake_three_party(
             &mut group_state3,
             &mut group_state1,
             &mut group_state2,
@@ -322,7 +322,7 @@ pub mod tests {
         );
 
         // update member3
-        let (mut key_chain1_epoch5, mut key_chain2_epoch5, mut key_chain3_epoch5) = test_utils::do_handshake_three_party(
+        let (key_chain1_epoch5, key_chain2_epoch5, key_chain3_epoch5) = test_utils::do_handshake_three_party(
             &mut group_state3,
             &mut group_state1,
             &mut group_state2,

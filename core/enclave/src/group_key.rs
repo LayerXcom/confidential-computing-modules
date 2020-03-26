@@ -1,8 +1,9 @@
 use std::vec::Vec;
 use anonify_treekem::{
-    GroupState, AppKeyChain, AppMsg, Handshake,
+    GroupState, AppKeyChain, Handshake,
     handshake::{PathSecretRequest, HandshakeParams},
 };
+use anonify_app_preluder::Ciphertext;
 use anyhow::Result;
 use log::info;
 
@@ -46,11 +47,11 @@ impl GroupKey {
         Ok(())
     }
 
-    pub fn encrypt(&self, plaintext: Vec<u8>) -> Result<AppMsg> {
+    pub fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext> {
         self.keychain.encrypt_msg(plaintext, &self.group_state)
     }
 
-    pub fn decrypt(&mut self, app_msg: AppMsg) -> Result<()> {
+    pub fn decrypt(&mut self, app_msg: Ciphertext) -> Result<()> {
         match self.keychain.decrypt_msg(app_msg, &self.group_state)? {
             Some(plaintext) => {
 

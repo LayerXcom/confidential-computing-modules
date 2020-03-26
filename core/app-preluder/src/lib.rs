@@ -35,6 +35,10 @@ impl Ciphertext {
         Ciphertext::decode(&mut &bytes[..]).unwrap()
     }
 
+    pub fn as_vec(&self) -> Vec<u8> {
+        self.encode()
+    }
+
     pub fn from_bytes_iter(bytes: &[u8]) -> impl Iterator<Item=Self> + '_ {
         assert_eq!(bytes.len() % (*CIPHERTEXT_SIZE), 0);
         let iter_num = bytes.len() / (*CIPHERTEXT_SIZE);
@@ -43,6 +47,22 @@ impl Ciphertext {
             let mut buf = &bytes[i*(*CIPHERTEXT_SIZE)..(i+1)*(*CIPHERTEXT_SIZE)];
             Ciphertext::decode(&mut buf).unwrap()
         })
+    }
+
+    pub fn generation(&self) -> u32 {
+        self.generation
+    }
+
+    pub fn epoch(&self) -> u32 {
+        self.epoch
+    }
+
+    pub fn roster_idx(&self) -> u32 {
+        self.roster_idx
+    }
+
+    pub fn encrypted_state_ref(&self) -> &[u8] {
+        &self.encrypted_state
     }
 }
 

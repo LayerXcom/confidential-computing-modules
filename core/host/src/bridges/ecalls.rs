@@ -1,7 +1,7 @@
 use std::boxed::Box;
 use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx};
-use anonify_common::AccessRight;
+use anonify_common::{AccessRight, IntoVec};
 use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
 use anonify_runtime::traits::State;
 use anonify_event_watcher::{
@@ -19,7 +19,7 @@ pub(crate) fn insert_logs(
 ) -> Result<()> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let len = enclave_log.ciphertexts.len() * (*CIPHERTEXT_SIZE);
-    let buf = enclave_log.ciphertexts.clone().into_iter().flat_map(|e| e.0).collect::<Vec<u8>>();
+    let buf = enclave_log.ciphertexts.clone().into_iter().flat_map(|e| e.into_vec()).collect::<Vec<u8>>();
 
     let status = unsafe {
         ecall_insert_logs(
@@ -27,7 +27,7 @@ pub(crate) fn insert_logs(
             &mut rt,
             enclave_log.contract_addr.as_ptr() as _,
             enclave_log.latest_blc_num,
-            buf.as_c_ptr() as *const u8,
+            buf.as_c_ptr() as *mut u8,
             len,
         )
     };
