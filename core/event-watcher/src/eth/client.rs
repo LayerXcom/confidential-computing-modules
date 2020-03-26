@@ -58,6 +58,7 @@ impl Deployer for EthDeployer {
                     &address,
                     &register_tx.report,
                     &register_tx.report_sig,
+                    &register_tx.handshake,
                 )?
             }
         };
@@ -235,6 +236,7 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
 pub(crate) struct BoxedRegisterTx {
     pub report: Box<[u8]>,
     pub report_sig: Box<[u8]>,
+    pub handshake: Box<[u8]>,
 }
 
 impl From<RawRegisterTx> for BoxedRegisterTx {
@@ -245,9 +247,12 @@ impl From<RawRegisterTx> for BoxedRegisterTx {
         let report = unsafe { Box::from_raw(box_report) };
         let box_report_sig = raw_reg_tx.report_sig as *mut Box<[u8]>;
         let report_sig = unsafe { Box::from_raw(box_report_sig) };
+        let box_handshake = raw_reg_tx.handshake as *mut Box<[u8]>;
+        let handshake = unsafe { Box::from_raw(box_handshake) };
 
         res_tx.report = *report;
         res_tx.report_sig = *report_sig;
+        res_tx.handshake = *handshake;
 
         res_tx
     }

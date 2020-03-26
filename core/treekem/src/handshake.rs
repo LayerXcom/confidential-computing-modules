@@ -9,6 +9,7 @@ use crate::crypto::{
     secrets::PathSecret,
 };
 use anyhow::Result;
+use codec::Encode;
 
 /// A handshake operates sharing a group key to each member.
 pub trait Handshake: Sized {
@@ -26,7 +27,7 @@ pub trait Handshake: Sized {
 
 // TODO: Does need signature over the group's history?
 /// This `Handshake` is sent to global ledger.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Encode)]
 pub struct HandshakeParams {
     /// This is equal to the epoch of the current groupstate
     /// at the time of receicing and applying the handshake.
@@ -36,7 +37,7 @@ pub struct HandshakeParams {
 }
 
 /// Encrypted direct path
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Encode)]
 pub struct DirectPathMsg {
     pub node_msgs: Vec<DirectPathNodeMsg>,
 }
@@ -48,7 +49,7 @@ impl DirectPathMsg {
 }
 
 /// Containes a direct path node's public key and encrypted secrets
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Encode)]
 pub struct DirectPathNodeMsg {
     pub public_key: DhPubKey,
     pub node_secrets: Vec<EciesCiphertext>,

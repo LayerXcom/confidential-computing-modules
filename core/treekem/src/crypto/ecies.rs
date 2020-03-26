@@ -9,7 +9,7 @@ use ring::aead::{Nonce, NonceSequence, UnboundKey, BoundKey, OpeningKey, Aad, Se
 use anyhow::Result;
 use codec::Encode;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Encode)]
 pub struct EciesCiphertext {
     ephemeral_public_key: DhPubKey,
     ciphertext: Vec<u8>,

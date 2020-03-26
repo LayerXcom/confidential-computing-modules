@@ -58,10 +58,9 @@ impl EnclaveIdentityKey {
     /// REPORTDATA consists of a compressed secp256k1 public key and nonce.
     /// The public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
     /// because this enclave identity key is binding to enclave's code.
-    /// The nonce is used for prevenring from replay attacks.
-    /// 20bytes: address
-    /// 32bytes: nonce
-    /// 12bytes: zero padding
+    /// The nonce is used for preventing from replay attacks.
+    /// 33bytes: public key
+    /// 31bytes: nonce
     pub fn report_date(&self) -> Result<sgx_report_data_t> {
         let mut report_data = [0u8; REPORT_DATA_SIZE];
         report_data[..ADDRESS_SIZE].copy_from_slice(&self.address()[..]);

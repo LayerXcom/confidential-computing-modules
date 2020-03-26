@@ -46,6 +46,7 @@ pub struct RawRegisterTx {
     /// A pointer to the output of the report using `ocall_save_to_memory()`.
     pub report: *const u8,
     pub report_sig: *const u8,
+    pub handshake: *const u8,
 }
 
 impl RawEnclaveTx for RawRegisterTx { }
@@ -55,6 +56,7 @@ impl Default for RawRegisterTx {
         RawRegisterTx {
             report: ptr::null(),
             report_sig: ptr::null(),
+            handshake: ptr::null(),
         }
     }
 }
@@ -64,6 +66,7 @@ impl fmt::Debug for RawRegisterTx {
         let mut debug_trait_builder = f.debug_struct("RawRegisterTx");
         debug_trait_builder.field("report", &(self.report));
         debug_trait_builder.field("report_sig", &(self.report_sig));
+        debug_trait_builder.field("handshake", &(self.handshake));
         debug_trait_builder.finish()
     }
 }
