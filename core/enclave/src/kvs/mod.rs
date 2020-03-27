@@ -17,6 +17,7 @@ use crate::error::Result;
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct DBKey((UserAddress, MemId));
 
+// TODO: UserAddress+MemId is not sufficient size for hash digest in terms of collision resistance.
 impl DBKey {
     pub fn new(addr: UserAddress, mem_id: MemId) -> Self {
         DBKey((addr, mem_id))
