@@ -16,8 +16,11 @@ contract Anonify is ReportHandle {
 
     constructor(
         bytes memory _report,
-        bytes memory _reportSig
-    ) ReportHandle(_report, _reportSig) public { }
+        bytes memory _reportSig,
+        bytes memory _handshake
+    ) ReportHandle(_report, _reportSig) public {
+        handshake(_handshake);
+    }
 
     // Register a new TEE participant.
     function register(

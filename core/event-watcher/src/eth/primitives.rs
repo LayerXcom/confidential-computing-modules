@@ -72,18 +72,17 @@ impl Web3Http {
         let bin = include_str!("../../../../build/Anonify.bin");
 
         let contract = Contract::deploy(self.web3.eth(), abi)
-            .unwrap() // TODO
+            .map_err(|e| anyhow!("{:?}", e))?
             .confirmations(CONFIRMATIONS)
-            // .poll_interval(time::Duration::from_secs(POLL_INTERVAL_SECS))
             .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
             .execute(
                 bin,
                 (report.to_vec(), report_sig.to_vec(), handshake.to_vec()), // Parameters are got from ecall, so these have to be allocated.
                 *deployer,
             )
-            .unwrap() // TODO
+            .map_err(|e| anyhow!("{:?}", e))?
             .wait()
-            .unwrap(); // TODO
+            .map_err(|e| anyhow!("{:?}", e))?;
 
         Ok(contract.address())
     }
@@ -352,9 +351,3 @@ impl EthEvent {
         self.0[1].signature()
     }
 }
-
-// impl From<EthEvent> for Event {
-//     fn from(ev: EthEvent) -> Self {
-//         ev.0
-//     }
-// }
