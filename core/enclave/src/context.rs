@@ -21,7 +21,7 @@ impl StateGetter for EnclaveContext<StateType> {
     fn get<S: State>(&self, key: impl Into<UserAddress>, name: &str) -> anyhow::Result<S> {
         let mem_id = mem_name_to_id(name);
         let mut buf = self.db
-            .get(&key.into(), &mem_id)
+            .get(key.into(), mem_id)
             .into_inner_state()
             .into_bytes();
         if buf.len() == 0 {
@@ -31,8 +31,8 @@ impl StateGetter for EnclaveContext<StateType> {
         S::from_bytes(&mut buf)
     }
 
-    fn get_by_id(&self, key: &UserAddress, mem_id: MemId) -> StateType {
-        self.db.get(key, &mem_id).into_inner_state()
+    fn get_by_id(&self, key: UserAddress, mem_id: MemId) -> StateType {
+        self.db.get(key, mem_id).into_inner_state()
     }
 }
 
@@ -101,8 +101,8 @@ impl EnclaveContext<StateType> {
     }
 
     /// Get the user's state value for the specified memory id.
-    pub fn state_value(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<StateType, Current> {
-        self.db.get(key, &mem_id)
+    pub fn state_value(&self, key: UserAddress, mem_id: MemId) -> StateValue<StateType, Current> {
+        self.db.get(key, mem_id)
     }
 
     /// Return Attestation report

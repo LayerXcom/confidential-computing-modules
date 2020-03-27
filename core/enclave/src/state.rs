@@ -70,7 +70,7 @@ impl StateTransService<StateType>
             .expect("State transitions are not applied.")
             .into_iter()
             .map(|e| {
-                let sv = self.ctx.state_value(&e.address, &e.mem_id);
+                let sv = self.ctx.state_value(e.address, e.mem_id);
                 UserState::<StateType, Current>::new(e.address, e.mem_id, sv)
                     .lock_param()
             })
@@ -84,7 +84,7 @@ impl StateTransService<StateType>
             .expect("State transitions are not applied.")
             .into_iter()
             .map(|e| {
-                let sv = self.ctx.state_value(&e.address, &e.mem_id);
+                let sv = self.ctx.state_value(e.address, e.mem_id);
                 UserState::<StateType, Current>::new(e.address, e.mem_id, sv)
                     .update_inner_state(e.state)
                     .into_next()
