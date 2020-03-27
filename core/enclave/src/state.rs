@@ -71,7 +71,7 @@ impl StateTransService<StateType>
             .expect("State transitions are not applied.")
             .into_iter()
             .map(|e| {
-                let sv = self.ctx.state_value(&e.address, &e.mem_id);
+                let sv = self.ctx.state_value(e.address, e.mem_id);
                 UserState::<StateType, Current>::new(e.address, e.mem_id, sv)
                     .lock_param()
             })
@@ -85,7 +85,7 @@ impl StateTransService<StateType>
             .expect("State transitions are not applied.")
             .into_iter()
             .map(|e| {
-                let sv = self.ctx.state_value(&e.address, &e.mem_id);
+                let sv = self.ctx.state_value(e.address, e.mem_id);
                 UserState::<StateType, Current>::new(e.address, e.mem_id, sv)
                     .update_inner_state(e.state)
                     .into_next()
@@ -95,8 +95,8 @@ impl StateTransService<StateType>
     }
 }
 
-/// Curret generation of lock parameter for state.
-/// Priventing from race condition of writing ciphertext to blockchain.
+/// Current generation of lock parameter for state.
+/// Preventing from race condition of writing ciphertext to blockchain.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Current;
 

@@ -27,7 +27,7 @@ impl StateGetter for EnclaveContext<StateType> {
     fn get<S: State>(&self, key: impl Into<UserAddress>, name: &str) -> anyhow::Result<S> {
         let mem_id = mem_name_to_id(name);
         let mut buf = self.db
-            .get(&key.into(), &mem_id)
+            .get(key.into(), mem_id)
             .into_inner_state()
             .into_bytes();
         if buf.len() == 0 {
@@ -37,12 +37,12 @@ impl StateGetter for EnclaveContext<StateType> {
         S::from_bytes(&mut buf)
     }
 
-    fn get_by_id(&self, key: &UserAddress, mem_id: MemId) -> StateType {
-        self.db.get(key, &mem_id).into_inner_state()
+    fn get_by_id(&self, key: UserAddress, mem_id: MemId) -> StateType {
+        self.db.get(key, mem_id).into_inner_state()
     }
 }
 
-/// spid: Service procider ID for the ISV.
+/// spid: Service provider ID for the ISV.
 #[derive(Clone)]
 pub struct EnclaveContext<S: State> {
     spid: sgx_spid_t,
@@ -77,7 +77,7 @@ impl EnclaveContext<StateType> {
     }
 
     /// Generate Base64-encoded QUOTE data structure.
-    /// QUOTE will be sent to Attestation Serivce to verify SGX's status.
+    /// QUOTE will be sent to Attestation Service to verify SGX's status.
     /// For more information: https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf
     pub fn quote(&self) -> Result<String> {
         let target_info = self.init_quote()?;
@@ -91,8 +91,8 @@ impl EnclaveContext<StateType> {
     }
 
     /// Generate a signature using enclave's identity key.
-    /// This signature is used to verify enclacve's program dependencies and
-    /// should be verified in the public available place such as smart contracr on blokchain.
+    /// This signature is used to verify enclave's program dependencies and
+    /// should be verified in the public available place such as smart contract on blockchain.
     pub fn sign(&self, msg: &LockParam) -> Result<secp256k1::Signature> {
         self.identity_key.sign(msg.as_bytes())
     }
@@ -118,14 +118,14 @@ impl EnclaveContext<StateType> {
     }
 
     /// Get the user's state value for the specified memory id.
-    pub fn state_value(&self, key: &UserAddress, mem_id: &MemId) -> StateValue<StateType, Current> {
-        self.db.get(key, &mem_id)
+    pub fn state_value(&self, key: UserAddress, mem_id: MemId) -> StateValue<StateType, Current> {
+        self.db.get(key, mem_id)
     }
 
     /// Return Attestation report
     fn report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {
         let mut report = sgx_report_t::default();
-        let report_data = &self.identity_key.report_date()?;
+        let report_data = &self.identity_key.report_data()?;
 
         if let Ok(r) = sgx_tse::rsgx_create_report(&target_info, &report_data) {
             report = r;

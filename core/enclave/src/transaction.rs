@@ -14,8 +14,8 @@ use crate::{
     group_key::GroupKey,
 };
 
-/// A trait for exporting transacitons to out-enclave.
-/// For calculated transaction in enclacve which is ready to sending outside.
+/// A trait for exporting transactions to out-enclave.
+/// For calculated transaction in enclave which is ready to sending outside.
 pub trait EnclaveTx: Sized {
     type R: RawEnclaveTx;
 
@@ -106,7 +106,7 @@ impl EnclaveTx for StateTransTx {
 impl StateTransTx {
     pub fn construct(
         kind: CallKind,
-        state_id: u64, // TODO: future works for separeting smart contracts
+        state_id: u64, // TODO: future works for separating smart contracts
         access_right: &AccessRight,
         enclave_ctx: &EnclaveContext<StateType>,
     ) -> Result<Self>

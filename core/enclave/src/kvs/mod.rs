@@ -15,16 +15,12 @@ use crate::state::{StateValue, Current};
 use crate::error::Result;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct DBKey(Sha256);
+pub struct DBKey((UserAddress, MemId));
 
 // TODO: UserAddress+MemId is not sufficient size for hash digest in terms of collision resistance.
-// TODO: Consider if the hashing is needed.
 impl DBKey {
-    pub fn new(addr: &UserAddress, mem_id: &MemId) -> Self {
-        let mut inp = vec![];
-        inp.extend_from_slice(&addr.encode());
-        inp.extend_from_slice(&mem_id.encode());
-        DBKey(Sha256::hash(&inp))
+    pub fn new(addr: UserAddress, mem_id: MemId) -> Self {
+        DBKey((addr, mem_id))
     }
 }
 
@@ -36,7 +32,7 @@ impl<S: State> EnclaveDB<S> {
         EnclaveDB(Arc::new(SgxRwLock::new(HashMap::new())))
     }
 
-    pub fn get(&self, address: &UserAddress, mem_id: &MemId) -> StateValue<S, Current> {
+    pub fn get(&self, address: UserAddress, mem_id: MemId) -> StateValue<S, Current> {
         let key = DBKey::new(address, mem_id);
         match self.0.read().unwrap().get(&key) {
             Some(v) => v.clone(),
@@ -46,13 +42,13 @@ impl<S: State> EnclaveDB<S> {
 
     pub fn insert(&self, address: UserAddress, mem_id: MemId, sv: StateValue<S, Current>) {
         let mut tmp = self.0.write().unwrap();
-        let key = DBKey::new(&address, &mem_id);
+        let key = DBKey::new(address, mem_id);
         tmp.insert(key, sv);
     }
 
-    pub fn delete(&self, address: &UserAddress, mem_id: &MemId) {
+    pub fn delete(&self, address: UserAddress, mem_id: MemId) {
         let mut tmp = self.0.write().unwrap();
-        let key = DBKey::new(&address, &mem_id);
+        let key = DBKey::new(address, mem_id);
         tmp.remove(&key);
     }
 }

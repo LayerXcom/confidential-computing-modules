@@ -1,4 +1,4 @@
-//! This module containes enclave specific cryptographic logics.
+//! This module contains enclave specific cryptographic logics.
 
 use sgx_types::sgx_report_data_t;
 use std::prelude::v1::Vec;
@@ -59,9 +59,10 @@ impl EnclaveIdentityKey {
     /// The public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
     /// because this enclave identity key is binding to enclave's code.
     /// The nonce is used for preventing from replay attacks.
-    /// 33bytes: public key
-    /// 31bytes: nonce
-    pub fn report_date(&self) -> Result<sgx_report_data_t> {
+    /// 20bytes: Address
+    /// 32bytes: nonce
+    /// 12bytes: zero padding
+    pub fn report_data(&self) -> Result<sgx_report_data_t> {
         let mut report_data = [0u8; REPORT_DATA_SIZE];
         report_data[..ADDRESS_SIZE].copy_from_slice(&self.address()[..]);
         report_data[ADDRESS_SIZE..FILLED_REPORT_DATA_SIZE].copy_from_slice(&&self.nonce[..]);
