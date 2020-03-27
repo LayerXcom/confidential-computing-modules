@@ -94,8 +94,8 @@ impl StateTransService<StateType>
     }
 }
 
-/// Curret generation of lock parameter for state.
-/// Priventing from race condition of writing ciphertext to blockchain.
+/// Current generation of lock parameter for state.
+/// Preventing from race condition of writing ciphertext to blockchain.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Current;
 

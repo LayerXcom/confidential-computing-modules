@@ -29,7 +29,7 @@ pub unsafe extern "C" fn ecall_insert_logs(
     for ciphertext in ciphertexts.chunks(*CIPHERTEXT_SIZE) {
         ENCLAVE_CONTEXT
             .write_cipheriv(Ciphertext::from_bytes(ciphertext), &SYMMETRIC_KEY)
-            .expect("Failed to wirte cihpertexts.");
+            .expect("Failed to write cihpertexts.");
     }
 
     sgx_status_t::SGX_SUCCESS
@@ -49,7 +49,7 @@ pub unsafe extern "C" fn ecall_get_state(
     let pubkey = PublicKey::from_bytes(&pubkey[..])
         .expect("Failed to read public key.");
     let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey)
-        .expect("Faild to generate user address.");
+        .expect("Failed to generate user address.");
 
     let user_state = &ENCLAVE_CONTEXT.get_by_id(&key, MemId::from_raw(mem_id));
     state.0 = save_to_host_memory(user_state.as_bytes()).unwrap() as *const u8;
@@ -67,10 +67,10 @@ pub unsafe extern "C" fn ecall_register(
             TEST_SUB_KEY,
             &*ENCLAVE_CONTEXT,
         )
-        .expect("Faild to constract register transaction.");
+        .expect("Failed to construct register transaction.");
 
     *raw_register_tx = register_tx.into_raw()
-        .expect("Faild to convert into raw register transaction.");
+        .expect("Failed to convert into raw register transaction.");
 
     sgx_status_t::SGX_SUCCESS
 }
