@@ -15,7 +15,7 @@ use crate::state::{StateValue, Current};
 use crate::error::Result;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct DBKey(Sha256);
+pub struct DBKey(Vec<u8>);
 
 // TODO: UserAddress+MemId is not sufficient size for hash digest in terms of collision resistance.
 // TODO: Consider if the hashing is needed.
@@ -24,7 +24,8 @@ impl DBKey {
         let mut inp = vec![];
         inp.extend_from_slice(&addr.encode());
         inp.extend_from_slice(&mem_id.encode());
-        DBKey(Sha256::hash(&inp))
+
+        DBKey(inp)
     }
 }
 
