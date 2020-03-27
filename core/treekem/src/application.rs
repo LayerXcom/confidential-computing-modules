@@ -64,7 +64,6 @@ impl AppKeyChain {
                 let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
                 let plaintext = opening_key.open_in_place(Aad::empty(), &mut ciphertext)?;
 
-                self.ratchet(app_msg.roster_idx() as usize)?;
                 Ok(Some(plaintext[..(plaintext.len() - 32)].to_vec()))
             }
         }

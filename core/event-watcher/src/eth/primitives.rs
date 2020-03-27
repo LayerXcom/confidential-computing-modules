@@ -258,18 +258,19 @@ impl<D: BlockNumDB> Web3Logs<D> {
 
         for (i, log) in self.logs.iter().enumerate() {
             debug!("log: {:?}, \nindex: {:?}", log, i);
-
             if contract_addr != log.address {
                 return Err(anyhow!("Each log should have same contract address.: index: {}", i).into());
             }
 
             let mut data = Self::decode_data(&log);
 
+            // Processing conditions by ciphertext or handshake event
             if log.topics[0] == self.events.ciphertext_signature() {
                 if ciphertext_size != data.len() && data.len() != 0  {
                     return Err(anyhow!("Each log should have same size of data.: index: {}", i).into());
                 }
                 let res = Ciphertext::from_bytes(&mut data[..]);
+
                 ciphertexts.push(res);
             } else if log.topics[0] == self.events.handshake_signature() {
                 handshakes.push(data);
@@ -277,6 +278,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 return Err(anyhow!("Invalid topics").into());
             }
 
+            // Update latest block number
             if let Some(blc_num) = log.block_number {
                 let blc_num = blc_num.as_u64();
                 if latest_blc_num < blc_num {

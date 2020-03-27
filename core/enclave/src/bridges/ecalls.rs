@@ -35,8 +35,11 @@ pub unsafe extern "C" fn ecall_insert_ciphertexts(
             .write_cipheriv(&ciphertext, group_key)
             .expect("Failed to write cihpertexts.");
 
+        assert_eq!(roster_idx, ciphertext.roster_idx() as usize);
         roster_idx = ciphertext.roster_idx() as usize;
     }
+
+    // ratchet app keychain per a log.
     group_key.ratchet(roster_idx).unwrap();
 
     sgx_status_t::SGX_SUCCESS
