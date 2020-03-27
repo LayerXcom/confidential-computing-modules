@@ -146,7 +146,7 @@ impl UserState<StateType, Current> {
     }
 
     /// Decrypt Ciphertext which was stored in a shared ledger.
-    pub fn decrypt(cipheriv: Ciphertext, key: &mut GroupKey) -> Result<Option<Self>> {
+    pub fn decrypt(cipheriv: &Ciphertext, key: &mut GroupKey) -> Result<Option<Self>> {
         match key.decrypt(cipheriv)? {
             Some(plaintext) => {
                 UserState::decode(&mut &plaintext[..])

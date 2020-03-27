@@ -50,7 +50,12 @@ impl GroupKey {
         self.keychain.encrypt_msg(plaintext, &self.group_state)
     }
 
-    pub fn decrypt(&mut self, app_msg: Ciphertext) -> Result<Option<Vec<u8>>> {
-        self.keychain.decrypt_msg(app_msg, &self.group_state)
+    pub fn decrypt(&mut self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>> {
+        self.keychain.decrypt_msg(&app_msg, &self.group_state)
+    }
+
+    /// Ratchet keychain per a transaction
+    pub fn ratchet(&mut self, roster_idx: usize) -> Result<()> {
+        self.keychain.ratchet(roster_idx)
     }
 }

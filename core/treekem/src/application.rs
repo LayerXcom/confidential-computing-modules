@@ -45,7 +45,7 @@ impl AppKeyChain {
     /// Decrypt messag with current member's application secret.
     pub fn decrypt_msg(
         &mut self,
-        mut app_msg: Ciphertext,
+        app_msg: &Ciphertext,
         group_state: &GroupState,
     ) -> Result<Option<Vec<u8>>> {
         match group_state.my_node()? {
@@ -101,7 +101,7 @@ impl AppKeyChain {
     }
 
     /// Ratchets a specific roster's AppMemberSecret forward.
-    fn ratchet(&mut self, roster_idx: usize) -> Result<()> {
+    pub fn ratchet(&mut self, roster_idx: usize) -> Result<()> {
         let (member_secret, gen) = self.member_secrets_and_gens
             .get_mut(roster_idx)
             .ok_or(anyhow!("ratchet: Roster index is out of range of application key chain"))?;

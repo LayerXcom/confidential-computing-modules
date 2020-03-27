@@ -57,11 +57,11 @@ pub fn encrypt_decrypt_helper(
     ) {
     let app_msg = app_key_chain1.encrypt_msg(msg.to_vec(), group1).unwrap();
 
-    match app_key_chain1.decrypt_msg(app_msg.clone(), group1).unwrap() {
+    match app_key_chain1.decrypt_msg(&app_msg, group1).unwrap() {
         Some(plaintext1) => {
-            match app_key_chain2.decrypt_msg(app_msg.clone(), group2).unwrap() {
+            match app_key_chain2.decrypt_msg(&app_msg, group2).unwrap() {
                 Some(plaintext2) => {
-                    match app_key_chain3.decrypt_msg(app_msg.clone(), group3).unwrap() {
+                    match app_key_chain3.decrypt_msg(&app_msg, group3).unwrap() {
                         Some(plaintext3) => {
                             assert_eq!(plaintext1, plaintext2);
                             assert_eq!(plaintext2, plaintext3);

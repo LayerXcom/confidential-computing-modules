@@ -28,11 +28,16 @@ pub unsafe extern "C" fn ecall_insert_ciphertexts(
     assert_eq!(ciphertexts.len() % (*CIPHERTEXT_SIZE), 0, "Ciphertexts must be divisible by number of ciphertext.");
     let group_key = &mut *ENCLAVE_CONTEXT.group_key.write().unwrap();
 
+    let mut roster_idx: usize = 0;
     for ciphertext in ciphertexts.chunks_mut(*CIPHERTEXT_SIZE) {
+        let ciphertext = Ciphertext::from_bytes(ciphertext);
         ENCLAVE_CONTEXT
-            .write_cipheriv(Ciphertext::from_bytes(ciphertext), group_key)
+            .write_cipheriv(&ciphertext, group_key)
             .expect("Failed to write cihpertexts.");
+
+        roster_idx = ciphertext.roster_idx() as usize;
     }
+    group_key.ratchet(roster_idx).unwrap();
 
     sgx_status_t::SGX_SUCCESS
 }

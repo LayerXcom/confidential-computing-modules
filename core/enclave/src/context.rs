@@ -101,8 +101,8 @@ impl EnclaveContext<StateType> {
     /// storing data which have not been considered globally consensused.
     pub fn write_cipheriv(
         &self,
-        cipheriv: Ciphertext,
-        group_key: &mut GroupKey
+        cipheriv: &Ciphertext,
+        group_key: &mut GroupKey,
     ) -> Result<()> {
         // Only if the enclave join the group, you can receive ciphertext and decrypt it,
         // otherwise do nothing.
