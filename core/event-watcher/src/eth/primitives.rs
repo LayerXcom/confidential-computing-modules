@@ -189,32 +189,45 @@ impl Web3Contract {
     pub fn get_event<D: BlockNumDB>(
         &self,
         block_num_db: Arc<D>,
-        key: Hash
+        key: Address,
     ) -> Result<Web3Logs<D>> {
+        let events = EthEvent::create_event();
         // Read latest block number from in-memory event db.
         let latest_fetched_num = block_num_db.get_latest_block_num(key);
+        let mut logs_acc = vec![];
 
-        let filter = FilterBuilder::default()
-            .address(vec![self.address])
-            .topic_filter(TopicFilter {
-                topic0: Topic::This(key),
-                topic1: Topic::Any,
-                topic2: Topic::Any,
-                topic3: Topic::Any,
-            })
-            .from_block(BlockNumber::Number(latest_fetched_num))
-            .to_block(BlockNumber::Latest)
-            .build();
+        for event in &events.0 {
+            let sig = event.signature();
 
-        let logs = self.web3_conn.get_logs(filter)?;
+            let filter = FilterBuilder::default()
+                .address(vec![self.address])
+                .topic_filter(TopicFilter {
+                    topic0: Topic::This(sig),
+                    topic1: Topic::Any,
+                    topic2: Topic::Any,
+                    topic3: Topic::Any,
+                })
+                .from_block(BlockNumber::Number(latest_fetched_num))
+                .to_block(BlockNumber::Latest)
+                .build();
+
+            let logs = self.web3_conn.get_logs(filter)?;
+            logs_acc.extend_from_slice(&logs);
+        }
+
         Ok(Web3Logs {
-            logs,
+            logs: logs_acc,
             db: block_num_db,
+            events,
         })
     }
 
     pub fn get_account(&self, index: usize) -> Result<Address> {
         self.web3_conn.get_account(index)
+    }
+
+    pub fn address(&self) -> Address {
+        self.address
     }
 }
 
@@ -223,11 +236,13 @@ impl Web3Contract {
 pub struct Web3Logs<D: BlockNumDB>{
     logs: Vec<Log>,
     db: Arc<D>,
+    events: EthEvent,
 }
 
 impl<D: BlockNumDB> Web3Logs<D> {
     pub fn into_enclave_log(self) -> Result<EnclaveLog<D>> {
         let mut ciphertexts: Vec<Ciphertext> = vec![];
+        let mut handshakes: Vec<Vec<u8>> = vec![];
 
         // If log data is not fetched currently, return empty EnclaveLog.
         // This is occurred when it fetched data of dupulicated block number.
@@ -251,8 +266,16 @@ impl<D: BlockNumDB> Web3Logs<D> {
 
             let mut data = Self::decode_data(&log);
 
-            if ciphertext_size != data.len() && data.len() != 0  {
-                return Err(anyhow!("Each log should have same size of data.: index: {}", i).into());
+            if log.topics[0] == self.events.ciphertext_signature() {
+                if ciphertext_size != data.len() && data.len() != 0  {
+                    return Err(anyhow!("Each log should have same size of data.: index: {}", i).into());
+                }
+                let res = Ciphertext::from_bytes(&mut data[..]);
+                ciphertexts.push(res);
+            } else if log.topics[0] == self.events.handshake_signature() {
+                handshakes.push(data);
+            } else {
+                return Err(anyhow!("Invalid topics").into());
             }
 
             if let Some(blc_num) = log.block_number {
@@ -261,9 +284,6 @@ impl<D: BlockNumDB> Web3Logs<D> {
                     latest_blc_num = blc_num
                 }
             }
-
-            let res = Ciphertext::from_bytes(&mut data[..]);
-            ciphertexts.push(res);
         }
 
         Ok(EnclaveLog {
@@ -271,6 +291,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 contract_addr: contract_addr.to_fixed_bytes(),
                 latest_blc_num: latest_blc_num,
                 ciphertexts,
+                handshakes,
             }),
             db: self.db,
         })
@@ -290,34 +311,50 @@ impl<D: BlockNumDB> Web3Logs<D> {
 }
 
 /// A type of events from ethererum network.
-pub struct EthEvent(Event);
+#[derive(Debug)]
+pub struct EthEvent(Vec<Event>);
 
 impl EthEvent {
-    pub fn build_event() -> Self {
-        EthEvent(Event {
-            name: "StoreCiphertext".to_owned(),
-            inputs: vec![
-                EventParam {
-                    name: "ciphertext".to_owned(),
-                    kind: ParamType::Bytes,
-                    indexed: false,
-                },
-            ],
-            anonymous: false,
-        })
+    pub fn create_event() -> Self {
+        let events = vec![
+            Event {
+                name: "StoreCiphertext".to_owned(),
+                inputs: vec![
+                    EventParam {
+                        name: "ciphertext".to_owned(),
+                        kind: ParamType::Bytes,
+                        indexed: false,
+                    },
+                ],
+                anonymous: false,
+            },
+            Event {
+                name: "StoreHandshake".to_owned(),
+                inputs: vec![
+                    EventParam {
+                        name: "handshake".to_owned(),
+                        kind: ParamType::Bytes,
+                        indexed: false,
+                    },
+                ],
+                anonymous: false,
+            }
+        ];
+
+        EthEvent(events)
     }
 
-    pub fn signature(&self) -> Hash {
-        self.0.signature()
+    pub fn ciphertext_signature(&self) -> Hash {
+        self.0[0].signature()
     }
 
-    pub fn into_raw(&self) -> &Event {
-        &self.0
+    pub fn handshake_signature(&self) -> Hash {
+        self.0[1].signature()
     }
 }
 
-impl From<EthEvent> for Event {
-    fn from(ev: EthEvent) -> Self {
-        ev.0
-    }
-}
+// impl From<EthEvent> for Event {
+//     fn from(ev: EthEvent) -> Self {
+//         ev.0
+//     }
+// }

@@ -15,7 +15,7 @@ use crate::{
     traits::*,
     utils::*,
 };
-use super::primitives::{Web3Http, EthEvent, Web3Contract};
+use super::primitives::{Web3Http, Web3Contract};
 
 /// Components needed to deploy a contract
 #[derive(Debug)]
@@ -239,14 +239,11 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
     where
         F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<()>,
     {
-        let event = EthEvent::build_event();
-        let key = event.signature();
-
         self.contract
-            .get_event(self.event_db.clone(), key)?
+            .get_event(self.event_db.clone(), self.contract.address())?
             .into_enclave_log()?
             .insert_enclave(eid, insert_fn)?
-            .set_to_db(key);
+            .set_to_db(self.contract.address());
 
         Ok(())
     }
