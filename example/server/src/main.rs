@@ -67,6 +67,7 @@ fn main() -> io::Result<()> {
             .route("/api/v1/register", web::post().to(handle_register::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/init_state", web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/state_transition", web::post().to(handle_state_transition::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/handshake", web::post().to(handle_handshake::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/get_state", web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
     })
     .bind(dotenv!("ANONIFY_URL"))?

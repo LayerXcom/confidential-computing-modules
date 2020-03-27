@@ -85,21 +85,13 @@ fn subcommand_anonify<R: Rng>(
             .expect("Faild to deploy command");
         },
         ("register", Some(matches)) => {
-            let keyfile_index: usize = matches.value_of("keyfile-index")
-                .expect("Not found keyfile-index.")
-                .parse()
-                .expect("Failed to parse keyfile-index");
             let contract_addr = matches.value_of("contract-addr")
                 .expect("Not found contract-addr")
                 .to_string();
 
             commands::register(
-                &mut term,
-                root_dir,
                 anonify_url,
-                keyfile_index,
                 contract_addr,
-                rng,
             )
             .expect("Faild to register command");
         },
@@ -166,6 +158,17 @@ fn subcommand_anonify<R: Rng>(
             )
             .expect("Faild to state_transition command");
         },
+        ("handshake", Some(matches)) => {
+            let contract_addr = matches.value_of("contract-addr")
+                .expect("Not found contract-addr")
+                .to_string();
+
+            commands::handshake(
+                anonify_url,
+                contract_addr,
+            )
+            .expect("Faild to handshake command");
+        },
         ("get_state", Some(matches)) => {
             let keyfile_index: usize = matches.value_of("keyfile-index")
                 .expect("Not found keyfile-index.")
@@ -211,12 +214,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         )
         .subcommand(SubCommand::with_name("register")
             .about("register a contract from anonify services.")
-            .arg(Arg::with_name("keyfile-index")
-                .short("i")
-                .takes_value(true)
-                .required(false)
-                .default_value(DEFAULT_KEYFILE_INDEX)
-            )
             .arg(Arg::with_name("contract-addr")
                 .short("c")
                 .takes_value(true)
@@ -277,6 +274,15 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .required(true)
                 .default_value(DEFAULT_TARGET)
             )
+            .arg(Arg::with_name("contract-addr")
+                .short("c")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_CONTRACT_ADDRESS)
+            )
+        )
+        .subcommand(SubCommand::with_name("handshake")
+            .about("handshake with other group members")
             .arg(Arg::with_name("contract-addr")
                 .short("c")
                 .takes_value(true)

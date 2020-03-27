@@ -32,18 +32,11 @@ pub(crate) fn deploy<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn register<R: Rng>(
-    term: &mut Term,
-    root_dir: PathBuf,
+pub(crate) fn register(
     anonify_url: String,
-    index: usize,
     contract_addr: String,
-    rng: &mut R,
 ) -> Result<()> {
-    let password = prompt_password(term)?;
-    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-
-    let req = api::register::post::Request::new(&keypair, contract_addr, rng);
+    let req = api::register::post::Request{ contract_addr };
     let res = Client::new()
         .post(&format!("{}/api/v1/register", &anonify_url))
         .json(&req)
@@ -102,6 +95,22 @@ pub(crate) fn state_transition<R: Rng>(
         .text()?;
 
     println!("Transaction Receipt: {}", res);
+    Ok(())
+}
+
+pub(crate) fn handshake(
+    anonify_url: String,
+    contract_addr: String,
+) -> Result<()> {
+    let req = api::handshake::post::Request{ contract_addr };
+    let res = Client::new()
+        .post(&format!("{}/api/v1/handshake", &anonify_url))
+        .json(&req)
+        .send()?
+        .text()?;
+
+    println!("Transaction Receipt: {}", res);
+
     Ok(())
 }
 
