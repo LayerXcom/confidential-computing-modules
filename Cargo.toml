@@ -6,7 +6,6 @@ members = [
     "core/event-watcher",
     "core/common",
     "core/attestation",
-    "core/treekem",
     "core/enclave-rpc",
     "example/cli",
     "example/api",
@@ -14,7 +13,8 @@ members = [
     "wallet",
 ]
 exclude = [
-    "core/enclave",
     "core/host",
+    "core/enclave",
+    "core/treekem",
     "example/server",
 ]

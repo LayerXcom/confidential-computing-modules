@@ -7,9 +7,9 @@ use super::{
 };
 use ring::aead::{Nonce, NonceSequence, UnboundKey, BoundKey, OpeningKey, Aad, SealingKey, AES_256_GCM};
 use anyhow::Result;
-use codec::Encode;
+use codec::{Encode, Decode};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Encode, Decode)]
 pub struct EciesCiphertext {
     ephemeral_public_key: DhPubKey,
     ciphertext: Vec<u8>,
@@ -20,7 +20,7 @@ impl EciesCiphertext {
         others_pub_key: &DhPubKey,
         mut plaintext: Vec<u8>,
     ) -> Result<Self> {
-        let mut my_ephemeral_secret = DhPrivateKey::from_random()?;
+        let my_ephemeral_secret = DhPrivateKey::from_random()?;
         plaintext.extend(vec![0u8; AES_256_GCM_TAG_SIZE]);
 
         let my_ephemeral_pub_key = DhPubKey::from_private_key(&my_ephemeral_secret);
@@ -111,7 +111,7 @@ pub mod tests {
     use super::*;
 
     pub fn ecies_correctness() {
-        let mut plaintext = b"ecies correctness test";
+        let plaintext = b"ecies correctness test";
         let priv_key = DhPrivateKey::from_random().unwrap();
         let pub_key = DhPubKey::from_private_key(&priv_key);
 

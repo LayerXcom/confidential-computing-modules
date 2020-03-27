@@ -1,15 +1,17 @@
 use std::vec::Vec;
-use anonify_types::{RawRegisterTx, RawStateTransTx, traits::RawEnclaveTx};
+use anonify_types::{RawRegisterTx, RawStateTransTx, RawHandshakeTx, traits::RawEnclaveTx};
 use anonify_common::{UserAddress, LockParam, AccessRight, IntoVec};
 use anonify_app_preluder::{Ciphertext, CallKind};
 use anonify_runtime::{StateType, State, MemId};
+use anonify_treekem::handshake::HandshakeParams;
+use codec::Encode;
 use crate::{
     attestation::{Report, ReportSig, AttestationService},
     error::Result,
     context::EnclaveContext,
     bridges::ocalls::save_to_host_memory,
     state::{UserState, StateTransService},
-    crypto::SYMMETRIC_KEY,
+    group_key::GroupKey,
 };
 
 /// A trait for exporting transactions to out-enclave.
@@ -25,7 +27,7 @@ pub trait EnclaveTx: Sized {
 pub struct RegisterTx {
     report: Report,
     report_sig: ReportSig,
-    // AddHandShake
+    handshake: HandshakeParams,
 }
 
 impl EnclaveTx for RegisterTx {
@@ -34,19 +36,22 @@ impl EnclaveTx for RegisterTx {
     fn into_raw(self) -> Result<Self::R> {
         let report = save_to_host_memory(&self.report.as_bytes())? as *const u8;
         let report_sig = save_to_host_memory(&self.report_sig.as_bytes())? as *const u8;
+        let handshake = save_to_host_memory(&self.handshake.encode())? as *const u8;
 
         Ok(RawRegisterTx {
             report,
             report_sig,
+            handshake,
         })
     }
 }
 
 impl RegisterTx {
-    pub fn new(report: Report, report_sig: ReportSig) -> Self {
+    pub fn new(report: Report, report_sig: ReportSig, handshake: HandshakeParams) -> Self {
         RegisterTx {
             report,
             report_sig,
+            handshake,
         }
     }
 
@@ -59,10 +64,13 @@ impl RegisterTx {
         let service = AttestationService::new(host, path);
         let quote = ctx.quote()?;
         let (report, report_sig) = service.report_and_sig_new(&quote, ias_api_key)?;
+        let group_key = ctx.group_key.read().unwrap();
+        let handshake = group_key.create_handshake()?;
 
         Ok(RegisterTx {
             report,
             report_sig,
+            handshake,
         })
     }
 }
@@ -107,7 +115,8 @@ impl StateTransTx {
         service.apply(kind)?;
 
         let lock_params = service.create_lock_params();
-        let ciphertexts = service.create_ciphertexts(&SYMMETRIC_KEY)?;
+        let group_key = enclave_ctx.group_key.read().unwrap();
+        let ciphertexts = service.create_ciphertexts(&group_key)?;
         let enclave_sig = enclave_ctx.sign(&lock_params[0])?;
 
         Ok(StateTransTx {
@@ -116,5 +125,36 @@ impl StateTransTx {
             lock_params,
             enclave_sig,
         })
+    }
+}
+
+/// A transaction components for handshake operations.
+#[derive(Debug, Clone)]
+pub struct HandshakeTx {
+    handshake: HandshakeParams,
+}
+
+impl EnclaveTx for HandshakeTx {
+    type R = RawHandshakeTx;
+
+    fn into_raw(self) -> Result<Self::R> {
+        let handshake = save_to_host_memory(&self.handshake.encode())? as *const u8;
+
+        Ok(RawHandshakeTx { handshake })
+    }
+}
+
+impl HandshakeTx {
+    pub fn new(handshake: HandshakeParams) -> Self {
+        HandshakeTx { handshake }
+    }
+
+    pub fn construct(
+        ctx: &EnclaveContext<StateType>,
+    ) -> Result<Self> {
+        let group_key = ctx.group_key.read().unwrap();
+        let handshake = group_key.create_handshake()?;
+
+        Ok(HandshakeTx { handshake })
     }
 }

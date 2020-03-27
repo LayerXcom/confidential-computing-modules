@@ -53,6 +53,8 @@ fn test_integration_eth_transfer() {
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
 
+    // 1.5. Get handshake from contract
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // 2. init state
     let total_supply = U64::from_raw(100);

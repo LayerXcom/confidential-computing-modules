@@ -1,14 +1,17 @@
-use crate::group_state::{GroupState, Handshake};
+use crate::group_state::GroupState;
 use crate::application::AppKeyChain;
+use crate::handshake::{Handshake, PathSecretRequest, PathSecretKVS};
 use crate::crypto::{
     CryptoRng,
-    secrets::{PathSecret, PathSecretRequest, PathSecretKVS},
+    secrets::PathSecret,
 };
+use rand_core::SeedableRng;
 
-pub fn init_path_secret_kvs<R: CryptoRng>(kvs: &mut PathSecretKVS, until_roster_idx: usize, until_epoch: usize, csprng: &mut R) {
+pub fn init_path_secret_kvs(kvs: &mut PathSecretKVS, until_roster_idx: usize, until_epoch: usize) {
+    let mut csprng = rand::rngs::StdRng::seed_from_u64(1);
     for r_i in 0..until_roster_idx {
         for e_i in 0..until_epoch {
-            kvs.insert_random_path_secret(r_i as u32, e_i as u32, csprng);
+            kvs.insert_random_path_secret(r_i as u32, e_i as u32, &mut csprng);
         }
     }
 }
@@ -54,11 +57,11 @@ pub fn encrypt_decrypt_helper(
     ) {
     let app_msg = app_key_chain1.encrypt_msg(msg.to_vec(), group1).unwrap();
 
-    match app_key_chain1.decrypt_msg(app_msg.clone(), group1).unwrap() {
+    match app_key_chain1.decrypt_msg(&app_msg, group1).unwrap() {
         Some(plaintext1) => {
-            match app_key_chain2.decrypt_msg(app_msg.clone(), group2).unwrap() {
+            match app_key_chain2.decrypt_msg(&app_msg, group2).unwrap() {
                 Some(plaintext2) => {
-                    match app_key_chain3.decrypt_msg(app_msg.clone(), group3).unwrap() {
+                    match app_key_chain3.decrypt_msg(&app_msg, group3).unwrap() {
                         Some(plaintext3) => {
                             assert_eq!(plaintext1, plaintext2);
                             assert_eq!(plaintext2, plaintext3);

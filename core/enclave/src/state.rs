@@ -12,6 +12,7 @@ use crate::{
     kvs::EnclaveDBTx,
     error::{Result, EnclaveError},
     context::{EnclaveContext},
+    group_key::GroupKey,
 };
 use std::{
     vec::Vec,
@@ -78,7 +79,7 @@ impl StateTransService<StateType>
     }
 
     /// Return ciphertexts data which is generates by encrypting updated user's state.
-    pub fn create_ciphertexts(&self, symm_key: &SymmetricKey) -> Result<Vec<Ciphertext>> {
+    pub fn create_ciphertexts(&self, geoup_key: &GroupKey) -> Result<Vec<Ciphertext>> {
         self.updates
             .clone()
             .expect("State transitions are not applied.")
@@ -88,7 +89,7 @@ impl StateTransService<StateType>
                 UserState::<StateType, Current>::new(e.address, e.mem_id, sv)
                     .update_inner_state(e.state)
                     .into_next()
-                    .encrypt(symm_key)
+                    .encrypt(geoup_key)
             })
             .collect()
     }
@@ -145,10 +146,15 @@ impl UserState<StateType, Current> {
     }
 
     /// Decrypt Ciphertext which was stored in a shared ledger.
-    pub fn decrypt(cipheriv: Ciphertext, key: &SymmetricKey) -> Result<Self> {
-        let buf = key.decrypt_aes_256_gcm(cipheriv)?;
-        UserState::decode(&mut &buf[..])
-            .map_err(Into::into)
+    pub fn decrypt(cipheriv: &Ciphertext, key: &mut GroupKey) -> Result<Option<Self>> {
+        match key.decrypt(cipheriv)? {
+            Some(plaintext) => {
+                UserState::decode(&mut &plaintext[..])
+                    .map(|p| Some(p))
+                    .map_err(Into::into)
+            }
+            None => Ok(None)
+        }
     }
 
     pub fn mem_id(&self) -> MemId {
@@ -210,9 +216,9 @@ impl UserState<StateType, Current> {
 /// so that it allows us to do nothing other than generating ciphertexts which will be sent
 /// to blockchain node.
 impl UserState<StateType, Next> {
-    pub fn encrypt(self, key: &SymmetricKey) -> Result<Ciphertext> {
+    pub fn encrypt(self, key: &GroupKey) -> Result<Ciphertext> {
         let buf = self.encode();
-        key.encrypt_aes_256_gcm(buf)
+        key.encrypt(buf).map_err(Into::into)
     }
 }
 

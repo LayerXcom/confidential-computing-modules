@@ -3,8 +3,8 @@ use anonify_common::{
     kvs::{KVS, MemoryDB, DBTx}
 };
 use anonify_app_preluder::Ciphertext;
-use ethabi::Hash;
 use sgx_types::sgx_enclave_id_t;
+use web3::types::Address;
 use byteorder::{LittleEndian, ByteOrder};
 use crate::error::Result;
 
@@ -13,7 +13,7 @@ pub trait BlockNumDB {
 
     fn set_next_block_num(&self, tx: EventDBTx);
 
-    fn get_latest_block_num(&self, key: Hash) -> u64;
+    fn get_latest_block_num(&self, key: Address) -> u64;
 }
 
 #[derive(Debug)]
@@ -28,7 +28,7 @@ impl BlockNumDB for EventDB {
         self.0.inner_write(tx.0)
     }
 
-    fn get_latest_block_num(&self, key: Hash) -> u64 {
+    fn get_latest_block_num(&self, key: Address) -> u64 {
         match self.0.inner_get(key.as_bytes()) {
             Some(val) => LittleEndian::read_u64(&val.into_vec()),
             None => 0,
@@ -44,10 +44,10 @@ impl EventDBTx {
         EventDBTx(DBTx::new())
     }
 
-    pub fn put(&mut self, event_hash: Hash, block_num: u64) {
+    pub fn put(&mut self, address: Address, block_num: u64) {
         let mut wtr = [0u8; 8];
         LittleEndian::write_u64(&mut wtr, block_num);
-        self.0.put(event_hash.as_bytes(), &wtr);
+        self.0.put(address.as_bytes(), &wtr);
     }
 }
 
@@ -57,6 +57,7 @@ pub struct InnerEnclaveLog {
     pub contract_addr: [u8; 20],
     pub latest_blc_num: u64,
     pub ciphertexts: Vec<Ciphertext>, // Concatenated all fetched ciphertexts
+    pub handshakes: Vec<Vec<u8>>,
 }
 
 /// A wrapper type of enclave logs.
@@ -104,7 +105,7 @@ pub struct EnclaveBlockNumber<DB: BlockNumDB> {
 impl<DB: BlockNumDB> EnclaveBlockNumber<DB> {
     /// Only if EnclaveBlockNumber has new block number to log,
     /// it's set next block number to event db.
-    pub fn set_to_db(&self, key: Hash) {
+    pub fn set_to_db(&self, key: Address) {
         match &self.inner {
             Some(num) => {
                 let mut dbtx = EventDBTx::new();

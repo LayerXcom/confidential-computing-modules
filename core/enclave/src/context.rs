@@ -1,11 +1,17 @@
+use std::sync::{SgxRwLock, Arc};
 use sgx_types::*;
 use std::prelude::v1::*;
 use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
 use anonify_app_preluder::{mem_name_to_id, Ciphertext};
 use anonify_runtime::{State, StateGetter, StateType, MemId};
+use anonify_treekem::{
+    handshake::{PathSecretRequest, PathSecretKVS},
+    init_path_secret_kvs,
+};
 use crate::{
-    crypto::{Eik, SymmetricKey},
-    attestation::TEST_SPID,
+    crypto::EnclaveIdentityKey,
+    group_key::GroupKey,
+    config::{TEST_SPID, MY_ROSTER_IDX, MAX_ROSTER_IDX, UNTIL_ROSTER_IDX, UNTIL_EPOCH},
     ocalls::{sgx_init_quote, get_quote},
     error::Result,
     kvs::{EnclaveDB, EnclaveDBTx},
@@ -40,8 +46,9 @@ impl StateGetter for EnclaveContext<StateType> {
 #[derive(Clone)]
 pub struct EnclaveContext<S: State> {
     spid: sgx_spid_t,
-    identity_key: Eik,
+    identity_key: EnclaveIdentityKey,
     db: EnclaveDB<S>,
+    pub group_key: Arc<SgxRwLock<GroupKey>>,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
@@ -52,13 +59,20 @@ impl EnclaveContext<StateType> {
         id.copy_from_slice(&spid_vec);
         let spid: sgx_spid_t = sgx_spid_t { id };
 
-        let identity_key = Eik::new()?;
+        let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
+
+        // temporary path secrets are generated in local.
+        let mut kvs = PathSecretKVS::new();
+        init_path_secret_kvs(&mut kvs, UNTIL_ROSTER_IDX, UNTIL_EPOCH);
+        let req = PathSecretRequest::Local(kvs);
+        let group_key = Arc::new(SgxRwLock::new(GroupKey::new(MY_ROSTER_IDX, MAX_ROSTER_IDX, req)?));
 
         Ok(EnclaveContext{
             spid,
             identity_key,
             db,
+            group_key,
         })
     }
 
@@ -83,19 +97,22 @@ impl EnclaveContext<StateType> {
         self.identity_key.sign(msg.as_bytes())
     }
 
-    // Only State with `Current` allows to access to the database to avoid from
-    // storing data which have not been considered globally consensused.
+    /// Only State with `Current` allows to access to the database to avoid from
+    /// storing data which have not been considered globally consensused.
     pub fn write_cipheriv(
         &self,
-        cipheriv: Ciphertext,
-        symm_key: &SymmetricKey
+        cipheriv: &Ciphertext,
+        group_key: &mut GroupKey,
     ) -> Result<()> {
-        let user_state = UserState::<StateType, Current>::decrypt(cipheriv, &symm_key)?;
-        let address = user_state.address();
-        let mem_id = user_state.mem_id();
-        let sv = user_state.into_sv();
-
-        self.db.insert(address, mem_id, sv);
+        // Only if the enclave join the group, you can receive ciphertext and decrypt it,
+        // otherwise do nothing.
+        match UserState::<StateType, Current>::decrypt(cipheriv, group_key)? {
+            Some(user_state) => {
+                self.db
+                    .insert(user_state.address(), user_state.mem_id(), user_state.into_sv());
+            }
+            None => { }
+        }
 
         Ok(())
     }

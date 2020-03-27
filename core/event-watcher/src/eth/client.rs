@@ -4,7 +4,7 @@ use std::{
     boxed::Box,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::{RawRegisterTx, RawStateTransTx};
+use anonify_types::{RawRegisterTx, RawStateTransTx, RawHandshakeTx};
 use anonify_common::{AccessRight, LockParam};
 use anonify_runtime::traits::State;
 use anonify_app_preluder::Ciphertext;
@@ -15,7 +15,7 @@ use crate::{
     traits::*,
     utils::*,
 };
-use super::primitives::{Web3Http, EthEvent, Web3Contract};
+use super::primitives::{Web3Http, Web3Contract};
 
 /// Components needed to deploy a contract
 #[derive(Debug)]
@@ -58,6 +58,7 @@ impl Deployer for EthDeployer {
                     &address,
                     &register_tx.report,
                     &register_tx.report_sig,
+                    &register_tx.handshake,
                 )?
             }
         };
@@ -139,6 +140,7 @@ impl Sender for EthSender {
                     addr,
                     &register_tx.report,
                     &register_tx.report_sig,
+                    &register_tx.handshake,
                     gas
                 )?
             }
@@ -181,6 +183,29 @@ impl Sender for EthSender {
         Ok(hex::encode(receipt.as_bytes()))
     }
 
+    fn handshake<F>(
+        &self,
+        signer: SignerAddress,
+        gas: u64,
+        handshake_fn: F,
+    ) -> Result<String>
+    where
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawHandshakeTx>
+    {
+        let handshake_tx: BoxedHandshakeTx = handshake_fn(self.enclave_id)?.into();
+        let receipt = match signer {
+            SignerAddress::EthAddress(addr) => {
+                self.contract.handshake(
+                    addr,
+                    &handshake_tx.handshake,
+                    gas
+                )?
+            }
+        };
+
+        Ok(hex::encode(receipt.as_bytes()))
+    }
+
     fn get_contract(self) -> ContractKind {
         ContractKind::Web3Contract(self.contract)
     }
@@ -214,14 +239,11 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
     where
         F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<()>,
     {
-        let event = EthEvent::build_event();
-        let key = event.signature();
-
         self.contract
-            .get_event(self.event_db.clone(), key)?
+            .get_event(self.event_db.clone(), self.contract.address())?
             .into_enclave_log()?
             .insert_enclave(eid, insert_fn)?
-            .set_to_db(key);
+            .set_to_db(self.contract.address());
 
         Ok(())
     }
@@ -235,6 +257,7 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
 pub(crate) struct BoxedRegisterTx {
     pub report: Box<[u8]>,
     pub report_sig: Box<[u8]>,
+    pub handshake: Box<[u8]>,
 }
 
 impl From<RawRegisterTx> for BoxedRegisterTx {
@@ -245,9 +268,12 @@ impl From<RawRegisterTx> for BoxedRegisterTx {
         let report = unsafe { Box::from_raw(box_report) };
         let box_report_sig = raw_reg_tx.report_sig as *mut Box<[u8]>;
         let report_sig = unsafe { Box::from_raw(box_report_sig) };
+        let box_handshake = raw_reg_tx.handshake as *mut Box<[u8]>;
+        let handshake = unsafe { Box::from_raw(box_handshake) };
 
         res_tx.report = *report;
         res_tx.report_sig = *report_sig;
+        res_tx.handshake = *handshake;
 
         res_tx
     }
@@ -286,6 +312,22 @@ impl From<RawStateTransTx> for BoxedStateTransTx {
         res_tx.ciphertext = *ciphertext;
         res_tx.lock_param = *lock_param;
         res_tx.enclave_sig = *enclave_sig;
+
+        res_tx
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub(crate) struct BoxedHandshakeTx {
+    pub handshake: Box<[u8]>,
+}
+
+impl From<RawHandshakeTx> for BoxedHandshakeTx {
+    fn from(raw_handshake_tx: RawHandshakeTx) -> Self {
+        let mut res_tx = BoxedHandshakeTx::default();
+        let box_handshake = raw_handshake_tx.handshake as *mut Box<[u8]>;
+        let handshake = unsafe { Box::from_raw(box_handshake) };
+        res_tx.handshake = *handshake;
 
         res_tx
     }

@@ -8,6 +8,7 @@ use sgx_types::sgx_enclave_id_t;
 use crate::bridges::ecalls::{
     register as reg_fn,
     state_transition as st_fn,
+    handshake as handshake_fn,
     insert_logs as insert_fn,
     get_state_from_enclave,
 };
@@ -97,6 +98,22 @@ where
         let state_info = StateInfo::new(state, state_id, call_name);
 
         inner.state_transition(access_right, signer, state_info, contract_info, gas)
+    }
+
+    pub fn handshake<P>(
+        &self,
+        signer: SignerAddress,
+        gas: u64,
+        contract_addr: &str,
+        abi_path: P,
+    ) -> Result<String>
+    where
+        P: AsRef<Path> + Copy,
+    {
+        let mut inner = self.inner.write();
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+
+        inner.handshake(signer, contract_info, gas)
     }
 
     pub fn block_on_event<P: AsRef<Path> + Copy>(
@@ -223,6 +240,25 @@ where
         self.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
             .state_transition(access_right, signer, state_info, gas, st_fn)
+    }
+
+    fn handshake<P>(
+        &mut self,
+        signer: SignerAddress,
+        contract_info: ContractInfo<'_, P>,
+        gas: u64,
+    ) -> Result<String>
+    where
+        P: AsRef<Path> + Copy,
+    {
+        // If contract address is not set, set new contract address and abi path to generate sender instance.
+        // if let None = self.sender.as_mut() {
+            self.set_contract_addr(contract_info)?;
+        // }
+
+        self.sender.as_ref()
+            .ok_or(HostError::AddressNotSet)?
+            .handshake(signer, gas, handshake_fn)
     }
 }
 

@@ -19,8 +19,9 @@ mod sealing;
 mod attestation;
 mod context;
 mod transaction;
+mod config;
 mod cert;
-mod rpc;
+mod group_key;
 #[cfg(debug_assertions)]
 mod tests;
 

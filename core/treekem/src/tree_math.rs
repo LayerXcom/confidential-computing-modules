@@ -1,9 +1,8 @@
 //! This module defines all the tree operations we'll need to use when working with left-balanced
 //! binary trees. For more info, see section 5.1 of the MLS spec.
+//! referemnce: https://github.com/trailofbits/molasses/blob/master/src/tree_math.rs
 
 use std::vec::Vec;
-
-// TODO: Use a type alias for the index type, and switch out usize for u32
 
 // Suppose usize is u64. If there are k := 2^(63)+1 leaves, then there are a total of 2(k-1) + 1 =
 // 2(2^(63))+1 = 2^(64)+1 nodes in the tree, which is outside the representable range. So our upper

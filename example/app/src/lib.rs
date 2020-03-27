@@ -21,9 +21,11 @@ use codec::{Encode, Decode};
 lazy_static! {
     pub static ref MAX_MEM_SIZE: usize = max_size();
 
+    // TODO: How 120bytes is calculated
     // 85 bytes: the size of base state without inner state
     // 1 bytes: base padding to represent a empty vec
-    pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 85 + 1;
+    // 4*3 bytes: generaion, roster_idx, epoch for treekem
+    pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 120;
 }
 
 #[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd)]

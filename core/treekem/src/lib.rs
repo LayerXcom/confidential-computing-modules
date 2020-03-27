@@ -5,12 +5,19 @@ extern crate sgx_tstd as std;
 
 mod application;
 mod group_state;
-mod handshake;
+pub mod handshake;
 mod ratchet_tree;
 mod tree_math;
 mod crypto;
 #[cfg(debug_assertions)]
 mod test_utils;
+
+pub use crate::application::AppKeyChain;
+pub use crate::group_state::GroupState;
+pub use crate::handshake::Handshake;
+
+// temporary
+pub use crate::test_utils::init_path_secret_kvs;
 
 #[cfg(debug_assertions)]
 pub mod tests {

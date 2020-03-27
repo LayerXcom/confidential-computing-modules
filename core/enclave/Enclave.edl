@@ -12,11 +12,16 @@ enclave {
     include "anonify-types.h"
 
     trusted {
-        public sgx_status_t ecall_insert_logs(
+        public sgx_status_t ecall_insert_ciphertexts(
             [in] uint8_t contract_addr[20],
             uint64_t block_number,
-            [in, count=ciphertexts_len] const uint8_t *ciphertexts,
+            [in, count=ciphertexts_len] uint8_t *ciphertexts,
             size_t ciphertexts_len
+        );
+
+        public sgx_status_t ecall_insert_handshake(
+            [in, count=handshake_len] uint8_t *handshake,
+            size_t handshake_len
         );
 
         public sgx_status_t ecall_get_state(
@@ -40,6 +45,10 @@ enclave {
 
         public sgx_status_t ecall_register(
             [out] RawRegisterTx* result
+        );
+
+        public sgx_status_t ecall_handshake(
+            [out] RawHandshakeTx* result
         );
 
         public void ecall_run_tests(

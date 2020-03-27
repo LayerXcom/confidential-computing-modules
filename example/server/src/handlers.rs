@@ -117,6 +117,27 @@ where
     Ok(HttpResponse::Ok().json(api::state_transition::post::Response(receipt)))
 }
 
+pub fn handle_handshake<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::handshake::post::Request>,
+) -> Result<HttpResponse, Error>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher<WatcherDB=DB>,
+    DB: BlockNumDB,
+{
+    let signer = server.dispatcher.get_account(0)?;
+    let receipt = server.dispatcher.handshake(
+        signer,
+        DEFAULT_SEND_GAS,
+        &req.contract_addr,
+        &server.abi_path,
+    )?;
+
+    Ok(HttpResponse::Ok().json(api::handshake::post::Response(receipt)))
+}
+
 /// Fetch events from blockchain nodes manually, and then get state from enclave.
 pub fn handle_get_state<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,

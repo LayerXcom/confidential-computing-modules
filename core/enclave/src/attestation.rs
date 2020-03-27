@@ -10,11 +10,11 @@ use std::{
 use crate::{
     error::Result,
     ocalls::get_ias_socket,
+    config::TEST_SPID,
 };
 
 pub const DEV_HOSTNAME : &str = "api.trustedservices.intel.com";
 pub const REPORT_PATH : &str = "/sgx/dev/attestation/v3/report";
-pub const TEST_SPID: &str = "2C149BFC94A61D306A96211AED155BE9";
 pub const TEST_SUB_KEY: &str = "77e2533de0624df28dc3be3a5b9e50d9";
 
 pub const IAS_REPORT_CA: &[u8] = include_bytes!("../AttestationReportSigningCACert.pem");
