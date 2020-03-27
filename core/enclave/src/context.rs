@@ -48,7 +48,7 @@ pub struct EnclaveContext<S: State> {
     spid: sgx_spid_t,
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB<S>,
-    group_key: Arc<SgxRwLock<GroupKey>>,
+    pub group_key: Arc<SgxRwLock<GroupKey>>,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
@@ -74,10 +74,6 @@ impl EnclaveContext<StateType> {
             db,
             group_key,
         })
-    }
-
-    pub fn group_key(&self) -> GroupKey {
-        self.group_key.read().unwrap().clone()
     }
 
     /// Generate Base64-encoded QUOTE data structure.

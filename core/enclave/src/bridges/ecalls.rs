@@ -4,7 +4,9 @@ use anonify_types::*;
 use anonify_common::{UserAddress, AccessRight};
 use anonify_app_preluder::{CIPHERTEXT_SIZE, Ciphertext, CallKind};
 use anonify_runtime::{StateGetter, State, StateType, MemId};
+use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
+use codec::Decode;
 use crate::state::{UserState, StateValue, Current};
 use crate::attestation::{
     TEST_SUB_KEY, DEV_HOSTNAME, REPORT_PATH,
@@ -14,9 +16,9 @@ use crate::transaction::{RegisterTx, EnclaveTx, HandshakeTx, StateTransTx};
 use crate::kvs::EnclaveDB;
 use super::ocalls::save_to_host_memory;
 
-/// Insert event logs from blockchain nodes into enclave's memory database.
+/// Insert ciphertexts in event logs from blockchain nodes into enclave's memory database.
 #[no_mangle]
-pub unsafe extern "C" fn ecall_insert_logs(
+pub unsafe extern "C" fn ecall_insert_ciphertexts(
     _contract_addr: &[u8; 20], //TODO
     _block_number: u64, // TODO
     ciphertexts: *mut u8,
@@ -24,12 +26,28 @@ pub unsafe extern "C" fn ecall_insert_logs(
 ) -> sgx_status_t {
     let ciphertexts = slice::from_raw_parts_mut(ciphertexts, ciphertexts_len);
     assert_eq!(ciphertexts.len() % (*CIPHERTEXT_SIZE), 0, "Ciphertexts must be divisible by number of ciphertext.");
+    let group_key = &mut *ENCLAVE_CONTEXT.group_key.write().unwrap();
 
     for ciphertext in ciphertexts.chunks_mut(*CIPHERTEXT_SIZE) {
         ENCLAVE_CONTEXT
-            .write_cipheriv(Ciphertext::from_bytes(ciphertext), &mut (*ENCLAVE_CONTEXT).group_key())
+            .write_cipheriv(Ciphertext::from_bytes(ciphertext), group_key)
             .expect("Failed to write cihpertexts.");
     }
+
+    sgx_status_t::SGX_SUCCESS
+}
+
+/// Insert handshake received from blockchain nodes into enclave.
+#[no_mangle]
+pub unsafe extern "C" fn ecall_insert_handshake(
+    handshake: *mut u8,
+    handshake_len: usize,
+) -> sgx_status_t {
+    let handshake_bytes = slice::from_raw_parts_mut(handshake, handshake_len);
+    let handshake = HandshakeParams::decode(&mut &handshake_bytes[..]).unwrap();
+    let group_key = &mut *ENCLAVE_CONTEXT.group_key.write().unwrap();
+
+    group_key.process_handshake(&handshake).unwrap();
 
     sgx_status_t::SGX_SUCCESS
 }

@@ -5,13 +5,21 @@ use anonify_types::*;
 use sgx_types::*;
 
 extern "C" {
-    pub fn ecall_insert_logs(
+    pub fn ecall_insert_ciphertexts(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
         contract_addr: *mut [u8; 20usize],
         block_number: u64,
         ciphertexts: *mut u8,
         ciphertexts_len: usize,
+    ) -> sgx_status_t;
+}
+extern "C" {
+    pub fn ecall_insert_handshake(
+        eid: sgx_enclave_id_t,
+        retval: *mut sgx_status_t,
+        handshake: *mut u8,
+        handshake_len: usize,
     ) -> sgx_status_t;
 }
 extern "C" {

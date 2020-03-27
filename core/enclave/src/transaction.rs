@@ -64,7 +64,8 @@ impl RegisterTx {
         let service = AttestationService::new(host, path);
         let quote = ctx.quote()?;
         let (report, report_sig) = service.report_and_sig_new(&quote, ias_api_key)?;
-        let handshake = ctx.group_key().create_handshake()?;
+        let group_key = ctx.group_key.read().unwrap();
+        let handshake = group_key.create_handshake()?;
 
         Ok(RegisterTx {
             report,
@@ -114,7 +115,8 @@ impl StateTransTx {
         service.apply(kind)?;
 
         let lock_params = service.create_lock_params();
-        let ciphertexts = service.create_ciphertexts(&enclave_ctx.group_key())?;
+        let group_key = enclave_ctx.group_key.read().unwrap();
+        let ciphertexts = service.create_ciphertexts(&group_key)?;
         let enclave_sig = enclave_ctx.sign(&lock_params[0])?;
 
         Ok(StateTransTx {
@@ -150,7 +152,8 @@ impl HandshakeTx {
     pub fn construct(
         ctx: &EnclaveContext<StateType>,
     ) -> Result<Self> {
-        let handshake = ctx.group_key().create_handshake()?;
+        let group_key = ctx.group_key.read().unwrap();
+        let handshake = group_key.create_handshake()?;
 
         Ok(HandshakeTx { handshake })
     }

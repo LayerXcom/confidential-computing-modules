@@ -1,5 +1,6 @@
 use std::boxed::Box;
 use sgx_types::*;
+use anyhow::anyhow;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx, RawHandshakeTx};
 use anonify_common::{AccessRight, IntoVec};
 use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
@@ -12,8 +13,26 @@ use anonify_event_watcher::{
 use ed25519_dalek::{Signature, PublicKey};
 use crate::auto_ffi::*;
 
-/// Insert event logs from blockchain nodes into enclave memory database.
 pub(crate) fn insert_logs(
+    eid: sgx_enclave_id_t,
+    enclave_log: &InnerEnclaveLog,
+) -> Result<()> {
+    if enclave_log.ciphertexts.len() != 0 && enclave_log.handshakes.len() == 0 {
+        insert_ciphertexts(eid, &enclave_log)?;
+    } else if enclave_log.ciphertexts.len() == 0 && enclave_log.handshakes.len() != 0 {
+        // The size of handshake cannot be calculated in this host directory,
+        // so the ecall_insert_handshake function is repeatedly called over the number of fetched handshakes.
+        for handshake in &enclave_log.handshakes {
+            insert_handshake(eid, handshake)?;
+        }
+    } else {
+        return Err(anyhow!("Invalid inserting logs").into())
+    }
+
+    Ok(())
+}
+/// Insert event logs from blockchain nodes into enclave memory database.
+fn insert_ciphertexts(
     eid: sgx_enclave_id_t,
     enclave_log: &InnerEnclaveLog,
 ) -> Result<()> {
@@ -22,7 +41,7 @@ pub(crate) fn insert_logs(
     let buf = enclave_log.ciphertexts.clone().into_iter().flat_map(|e| e.into_vec()).collect::<Vec<u8>>();
 
     let status = unsafe {
-        ecall_insert_logs(
+        ecall_insert_ciphertexts(
             eid,
             &mut rt,
             enclave_log.contract_addr.as_ptr() as _,
@@ -33,10 +52,35 @@ pub(crate) fn insert_logs(
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(HostError::Sgx{ status, function: "ecall_insert_logs" }.into());
+		return Err(HostError::Sgx{ status, function: "ecall_insert_ciphertexts" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(HostError::Sgx{ status: rt, function: "ecall_insert_logs" }.into());
+		return Err(HostError::Sgx{ status: rt, function: "ecall_insert_ciphertexts" }.into());
+    }
+
+    Ok(())
+}
+
+fn insert_handshake(
+    eid: sgx_enclave_id_t,
+    handshake: &[u8],
+) -> Result<()> {
+    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+
+    let status = unsafe {
+        ecall_insert_handshake(
+            eid,
+            &mut rt,
+            handshake.as_c_ptr() as *mut u8,
+            handshake.len(),
+        )
+    };
+
+    if status != sgx_status_t::SGX_SUCCESS {
+		return Err(HostError::Sgx{ status, function: "ecall_insert_handshake" }.into());
+    }
+    if rt != sgx_status_t::SGX_SUCCESS {
+		return Err(HostError::Sgx{ status: rt, function: "ecall_insert_handshake" }.into());
     }
 
     Ok(())
