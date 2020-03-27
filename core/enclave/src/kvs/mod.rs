@@ -15,17 +15,11 @@ use crate::state::{StateValue, Current};
 use crate::error::Result;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct DBKey(Vec<u8>);
+pub struct DBKey((UserAddress, MemId));
 
-// TODO: UserAddress+MemId is not sufficient size for hash digest in terms of collision resistance.
-// TODO: Consider if the hashing is needed.
 impl DBKey {
     pub fn new(addr: &UserAddress, mem_id: &MemId) -> Self {
-        let mut inp = vec![];
-        inp.extend_from_slice(&addr.encode());
-        inp.extend_from_slice(&mem_id.encode());
-
-        DBKey(inp)
+        DBKey((*addr, *mem_id))
     }
 }
 
