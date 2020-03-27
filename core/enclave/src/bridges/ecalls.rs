@@ -51,7 +51,7 @@ pub unsafe extern "C" fn ecall_get_state(
     let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey)
         .expect("Failed to generate user address.");
 
-    let user_state = &ENCLAVE_CONTEXT.get_by_id(&key, MemId::from_raw(mem_id));
+    let user_state = &ENCLAVE_CONTEXT.get_by_id(key, MemId::from_raw(mem_id));
     state.0 = save_to_host_memory(user_state.as_bytes()).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS

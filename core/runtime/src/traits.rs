@@ -44,5 +44,5 @@ pub trait StateGetter {
 
     /// Get state using memory id.
     /// Assumed this is called by state getting operations from outside enclave.
-    fn get_by_id(&self, key: &UserAddress, mem_id: MemId) -> StateType;
+    fn get_by_id(&self, key: UserAddress, mem_id: MemId) -> StateType;
 }
