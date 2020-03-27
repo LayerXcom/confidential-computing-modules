@@ -36,7 +36,7 @@ impl StateGetter for EnclaveContext<StateType> {
     }
 }
 
-/// spid: Service procider ID for the ISV.
+/// spid: Service provider ID for the ISV.
 #[derive(Clone)]
 pub struct EnclaveContext<S: State> {
     spid: sgx_spid_t,
@@ -63,7 +63,7 @@ impl EnclaveContext<StateType> {
     }
 
     /// Generate Base64-encoded QUOTE data structure.
-    /// QUOTE will be sent to Attestation Serivce to verify SGX's status.
+    /// QUOTE will be sent to Attestation Service to verify SGX's status.
     /// For more information: https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf
     pub fn quote(&self) -> Result<String> {
         let target_info = self.init_quote()?;
@@ -77,8 +77,8 @@ impl EnclaveContext<StateType> {
     }
 
     /// Generate a signature using enclave's identity key.
-    /// This signature is used to verify enclacve's program dependencies and
-    /// should be verified in the public available place such as smart contracr on blokchain.
+    /// This signature is used to verify enclave's program dependencies and
+    /// should be verified in the public available place such as smart contract on blockchain.
     pub fn sign(&self, msg: &LockParam) -> Result<secp256k1::Signature> {
         self.identity_key.sign(msg.as_bytes())
     }
@@ -108,7 +108,7 @@ impl EnclaveContext<StateType> {
     /// Return Attestation report
     fn report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {
         let mut report = sgx_report_t::default();
-        let report_data = &self.identity_key.report_date()?;
+        let report_data = &self.identity_key.report_data()?;
 
         if let Ok(r) = sgx_tse::rsgx_create_report(&target_info, &report_data) {
             report = r;
