@@ -1,13 +1,13 @@
 version: '3'
 services:
-  sgx_machine:
-    image: osuketh/anonify:latest
+  sgx_machine1:
+    image: osuketh/anonify-server:latest
     command:
       - ./scripts/run-server.sh
     volumes:
       - ./:/root/anonify
-    # devices:
-    #   - "/dev/isgx"
+    devices:
+      - "/dev/isgx"
     working_dir: /root/anonify
     environment:
       ANONIFY_URL: 172.28.1.1:8080
@@ -16,7 +16,7 @@ services:
       testing_net:
         ipv4_address: 172.28.1.1
 
-  ganache:
+  ganache1:
       image: trufflesuite/ganache-cli:latest
       ports:
         - "8545:8545"

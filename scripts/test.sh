@@ -21,9 +21,6 @@ cd core
 echo `cargo --version`
 echo "Start building core components."
 
-# sudo rm -rf bin/ lib/ enclave/target/ host/target/
-# sudo rm -f enclave/Enclave_t.c enclave/Enclave_t.h enclave/Enclave_t.o enclave/enclave.so \
-# host/Enclave_u.c host/Enclave_u.o host/Enclave_u.h host/libEnclave_u.a
 make DEBUG=1
 rm -rf ../example/bin && cp -rf bin/ ../example/bin/
 
