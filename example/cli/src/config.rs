@@ -34,7 +34,7 @@ pub(crate) fn global_rootdir_match<'a>(default: &'a PathBuf, matches: &ArgMatche
 
 // quiet configuration
 
-pub(crate) fn global_quiet_difinition<'a, 'b>() -> Arg<'a, 'b> {
+pub(crate) fn global_quiet_definition<'a, 'b>() -> Arg<'a, 'b> {
     Arg::with_name("QUIET")
         .long("quiet")
         .global(true)

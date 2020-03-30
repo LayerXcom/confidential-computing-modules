@@ -26,7 +26,7 @@ fn main() {
         .author(crate_authors!())
         .about("Anonify's command line interface")
         .arg(global_verbose_definition())
-        .arg(global_quiet_difinition())
+        .arg(global_quiet_definition())
         .arg(global_color_definition())
         .arg(global_rootdir_definition(&default_root_dir))
         .subcommand(anonify_commands_definition())
@@ -82,7 +82,7 @@ fn subcommand_anonify<R: Rng>(
                 keyfile_index,
                 rng
             )
-            .expect("Faild to deploy command");
+            .expect("Failed to deploy command");
         },
         ("register", Some(matches)) => {
             let contract_addr = matches.value_of("contract-addr")
@@ -93,7 +93,7 @@ fn subcommand_anonify<R: Rng>(
                 anonify_url,
                 contract_addr,
             )
-            .expect("Faild to register command");
+            .expect("Failed to register command");
         },
         ("init_state", Some(matches)) => {
             let keyfile_index: usize = matches.value_of("keyfile-index")
@@ -122,7 +122,7 @@ fn subcommand_anonify<R: Rng>(
                 contract_addr,
                 rng
             )
-            .expect("Faild to init_state command");
+            .expect("Failed to init_state command");
         },
         ("state_transition", Some(matches)) => {
             let keyfile_index: usize = matches.value_of("keyfile-index")
@@ -156,7 +156,7 @@ fn subcommand_anonify<R: Rng>(
                 contract_addr,
                 rng
             )
-            .expect("Faild to state_transition command");
+            .expect("Failed to state_transition command");
         },
         ("handshake", Some(matches)) => {
             let contract_addr = matches.value_of("contract-addr")
@@ -167,7 +167,7 @@ fn subcommand_anonify<R: Rng>(
                 anonify_url,
                 contract_addr,
             )
-            .expect("Faild to handshake command");
+            .expect("Failed to handshake command");
         },
         ("get_state", Some(matches)) => {
             let keyfile_index: usize = matches.value_of("keyfile-index")
@@ -191,7 +191,7 @@ fn subcommand_anonify<R: Rng>(
                 contract_addr,
                 rng
             )
-            .expect("Faild to get state command");
+            .expect("Failed to get state command");
         },
         _ => {
             term.error(matches.usage()).unwrap();
