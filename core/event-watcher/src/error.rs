@@ -14,6 +14,8 @@ pub enum HostError {
     },
     #[error("Contract address have not been set.")]
     AddressNotSet,
+    #[error("Event watcher have not been set.")]
+    EventWatcherNotSet,
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
     #[error("Web3 error: {0}")]

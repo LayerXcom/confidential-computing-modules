@@ -21,19 +21,20 @@ use anonify_event_watcher::{
 use anonify_common::AccessRight;
 use anonify_runtime::traits::State;
 use parking_lot::RwLock;
+use anyhow::ensure;
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
 pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
-    inner: RwLock<SgxDispatcher<D,S,W,DB>>,
+    inner: RwLock<SgxDispatcher<D, S, W, DB>>,
 }
 
 impl<D, S, W, DB> Dispatcher<D, S, W, DB>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher<WatcherDB=DB>,
-    DB: BlockNumDB,
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
 {
     pub fn new(
         enclave_id: sgx_enclave_id_t,
@@ -48,8 +49,8 @@ where
     }
 
     pub fn set_contract_addr<P>(&mut self, contract_addr: &str, abi_path: P) -> Result<()>
-    where
-        P: AsRef<Path> + Copy,
+        where
+            P: AsRef<Path> + Copy,
     {
         let inner = &mut self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
@@ -89,9 +90,9 @@ where
         contract_addr: &str,
         abi_path: P,
     ) -> Result<String>
-    where
-        ST: State,
-        P: AsRef<Path> + Copy,
+        where
+            ST: State,
+            P: AsRef<Path> + Copy,
     {
         let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
@@ -107,8 +108,8 @@ where
         contract_addr: &str,
         abi_path: P,
     ) -> Result<String>
-    where
-        P: AsRef<Path> + Copy,
+        where
+            P: AsRef<Path> + Copy,
     {
         let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
@@ -119,7 +120,7 @@ where
     pub fn block_on_event<P: AsRef<Path> + Copy>(
         &self,
         contract_addr: &str,
-        abi_path: P
+        abi_path: P,
     ) -> Result<()> {
         let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
@@ -140,11 +141,11 @@ struct SgxDispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: Block
 }
 
 impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher<WatcherDB=DB>,
-    DB: BlockNumDB,
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
 {
     fn new_with_deployer(
         enclave_id: sgx_enclave_id_t,
@@ -165,8 +166,8 @@ where
         &mut self,
         contract_info: ContractInfo<'_, P>,
     ) -> Result<()>
-    where
-        P: AsRef<Path> + Copy
+        where
+            P: AsRef<Path> + Copy
     {
         let enclave_id = self.deployer.get_enclave_id();
         let node_url = self.deployer.get_node_url();
@@ -193,13 +194,12 @@ where
     }
 
     fn block_on_event<P: AsRef<Path> + Copy>(
-        &mut self,
+        &self,
         contract_info: ContractInfo<'_, P>,
     ) -> Result<()> {
-        // If contract address is not set, set new contract address and abi path to generate watcher instance.
-        // if let None = self.watcher.as_mut() {
-            self.set_contract_addr(contract_info)?;
-        // }
+        if self.watcher.is_none() {
+            return Err(HostError::EventWatcherNotSet);
+        }
 
         let eid = self.deployer.get_enclave_id();
         self.watcher.as_ref()
@@ -221,21 +221,20 @@ where
     }
 
     fn state_transition<ST, P>(
-        &mut self,
+        &self,
         access_right: AccessRight,
         signer: SignerAddress,
         state_info: StateInfo<'_, ST>,
         contract_info: ContractInfo<'_, P>,
         gas: u64,
     ) -> Result<String>
-    where
-        ST: State,
-        P: AsRef<Path> + Copy,
+        where
+            ST: State,
+            P: AsRef<Path> + Copy,
     {
-        // If contract address is not set, set new contract address and abi path to generate sender instance.
-        // if let None = self.sender.as_mut() {
-            self.set_contract_addr(contract_info)?;
-        // }
+        if self.sender.is_none() {
+            return Err(HostError::AddressNotSet);
+        }
 
         self.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
@@ -243,18 +242,17 @@ where
     }
 
     fn handshake<P>(
-        &mut self,
+        &self,
         signer: SignerAddress,
         contract_info: ContractInfo<'_, P>,
         gas: u64,
     ) -> Result<String>
-    where
-        P: AsRef<Path> + Copy,
+        where
+            P: AsRef<Path> + Copy,
     {
-        // If contract address is not set, set new contract address and abi path to generate sender instance.
-        // if let None = self.sender.as_mut() {
-            self.set_contract_addr(contract_info)?;
-        // }
+        if self.sender.is_none() {
+            return Err(HostError::AddressNotSet);
+        }
 
         self.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
@@ -267,9 +265,9 @@ pub fn get_state<S>(
     enclave_id: sgx_enclave_id_t,
     mem_name: &str,
 ) -> Result<S>
-where
-    S: State + TryFrom<Vec<u8>>,
-    <S as TryFrom<Vec<u8>>>::Error: Debug,
+    where
+        S: State + TryFrom<Vec<u8>>,
+        <S as TryFrom<Vec<u8>>>::Error: Debug,
 {
     let state = get_state_from_enclave(
         enclave_id,
@@ -278,8 +276,8 @@ where
         &access_right.challenge(),
         mem_name,
     )?
-    .try_into()
-    .expect("Failed to convert into State trait.");
+        .try_into()
+        .expect("Failed to convert into State trait.");
 
     Ok(state)
 }
