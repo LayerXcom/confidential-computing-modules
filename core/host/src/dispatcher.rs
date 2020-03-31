@@ -21,7 +21,6 @@ use anonify_event_watcher::{
 use anonify_common::AccessRight;
 use anonify_runtime::traits::State;
 use parking_lot::RwLock;
-use anyhow::ensure;
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
