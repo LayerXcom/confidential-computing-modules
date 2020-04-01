@@ -1,7 +1,7 @@
 # inherit the baidu sdk image
 FROM baiduxlab/sgx-rust:1804-1.1.0 as builder
 LABEL maintainer="osuke.sudo@layerx.co.jp"
-WORKDIR /root
+
 COPY . /root/anonify
 SHELL ["/bin/bash", "-c"]
 
@@ -20,7 +20,6 @@ RUN set -x && \
     git clone --depth 1 -b v1.1.0 https://github.com/baidu/rust-sgx-sdk.git sgx
 
 WORKDIR /root/anonify
-
 RUN source /opt/sgxsdk/environment && \
     source /root/.cargo/env && \
     export PATH="$HOME/.cargo/bin:$PATH" && \
@@ -30,17 +29,20 @@ RUN source /opt/sgxsdk/environment && \
     solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol && \
     cd core && \
     make DEBUG=1
-COPY /core/bin/ /example/bin/
-RUN cd example/server && cargo build
+
+COPY ./core/bin/ ./example/bin/
+RUN source /opt/sgxsdk/environment && \
+    cd example/server && \
+    /root/.cargo/bin/cargo build
 
 # ===== SECOND STAGE ======
 FROM baiduxlab/sgx-rust:1804-1.1.0
 LABEL maintainer="osuke.sudo@layerx.co.jp"
-WORKDIR /root/anonify
 
-COPY --from=builder /example/target/debug/anonify-server /usr/local/bin
+COPY --from=builder /root/anonify/core/bin/ /root/anonify/example/bin/
+COPY --from=builder /root/anonify/example/server/target/debug/anonify-server /root/anonify/example/server/target/debug/
 
 RUN LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
 
-WORKDIR /usr/local/bin
-CMD ["anonify-server"]
+WORKDIR /root/anonify/example/server/target/debug
+CMD ["./anonify-server"]

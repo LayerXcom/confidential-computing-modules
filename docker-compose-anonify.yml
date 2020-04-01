@@ -1,9 +1,7 @@
 version: '3'
 services:
   sgx_machine1:
-    image: osuketh/anonify-server:latest
-    command:
-      - ./scripts/run-server.sh
+    image: anonify-server:latest
     volumes:
       - ./:/root/anonify
     devices:
