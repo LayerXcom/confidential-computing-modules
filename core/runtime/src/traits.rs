@@ -3,6 +3,7 @@ use crate::utils::*;
 use crate::localstd::{
     fmt,
     vec::Vec,
+    mem::size_of,
 };
 use crate::state_type::StateType;
 use anonify_common::UserAddress;
@@ -33,7 +34,7 @@ pub trait State: Sized + Default + Clone + Encode + Decode + fmt::Debug {
         Self::from_bytes(&mut state)
     }
 
-    fn size(&self) -> usize { self.size_hint() }
+    fn size(&self) -> usize { size_of::<Self>() }
 }
 
 impl<T: Sized + Default + Clone + Encode + Decode + fmt::Debug> State for T {}
