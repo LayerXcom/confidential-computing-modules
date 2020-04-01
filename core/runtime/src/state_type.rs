@@ -10,7 +10,7 @@ use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
 macro_rules! impl_uint {
-    ($name:ident, $raw:ident, $size:expr) => {
+    ($name:ident, $raw:ident) => {
         #[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
         pub struct $name($raw);
 
@@ -105,15 +105,15 @@ macro_rules! impl_uint {
             }
 
             pub fn size() -> usize {
-                $size as usize
+                $name::size()
             }
         }
     };
 }
 
-impl_uint!(U16, u16, 2);
-impl_uint!(U32, u32, 4);
-impl_uint!(U64, u64, 8);
+impl_uint!(U16, u16);
+impl_uint!(U32, u32);
+impl_uint!(U64, u64);
 
 #[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Bytes(Vec<u8>);
