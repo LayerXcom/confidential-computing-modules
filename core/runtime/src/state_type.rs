@@ -103,10 +103,6 @@ macro_rules! impl_uint {
             pub fn zero() -> Self {
                 $name(0)
             }
-
-            pub fn size() -> usize {
-                $name::size()
-            }
         }
     };
 }
@@ -170,9 +166,9 @@ mod tests {
 
     #[test]
     fn test_size() {
-        assert_eq!(U16(0).size(), 2);
-        assert_eq!(U32(0).size(), 4);
-        assert_eq!(U64(0).size(), 8);
+        assert_eq!(U16::size(), 2);
+        assert_eq!(U32::size(), 4);
+        assert_eq!(U64::size(), 8);
     }
 
 }

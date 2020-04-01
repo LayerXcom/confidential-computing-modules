@@ -34,7 +34,7 @@ pub trait State: Sized + Default + Clone + Encode + Decode + fmt::Debug {
         Self::from_bytes(&mut state)
     }
 
-    fn size(&self) -> usize { size_of::<Self>() }
+    fn size() -> usize { size_of::<Self>() }
 }
 
 impl<T: Sized + Default + Clone + Encode + Decode + fmt::Debug> State for T {}
