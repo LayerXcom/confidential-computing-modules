@@ -2,8 +2,6 @@ version: '3'
 services:
   sgx_machine1:
     image: anonify-server:latest
-    volumes:
-      - ./:/root/anonify
     devices:
       - "/dev/sgx"
     working_dir: /root/anonify
