@@ -47,7 +47,7 @@ impl Term {
             .map(|e| e.into_bytes())
     }
 
-    pub fn passowrd(
+    pub fn password(
         &mut self,
         prompt: &str,
     ) -> io::Result<Vec<u8>> {

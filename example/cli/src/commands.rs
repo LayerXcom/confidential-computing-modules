@@ -142,7 +142,7 @@ pub(crate) fn new_wallet<R: Rng>(term: &mut Term, root_dir: PathBuf, rng: &mut R
     // 1. configure wallet directory
     let (_wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
 
-    // 2. configure user-defined passoword
+    // 2. configure user-defined password
     term.info("Set a wallet password. This is for local use only. It allows you to protect your cached private key and prevents the creation of non-desired transactions.\n")?;
     let password = term.new_password("wallet password", "confirm wallet password", "password mismatch")?;
 
@@ -186,7 +186,7 @@ pub(crate) fn add_account<R: Rng>(term: &mut Term, root_dir: PathBuf, rng: &mut 
     // 1. configure wallet directory
     let (_wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
 
-    // 2. configure user-defined passoword
+    // 2. configure user-defined password
     term.info("Set a wallet password. This is for local use only. It allows you to protect your cached private key and prevents the creation of non-desired transactions.\n")?;
     let password = term.new_password("wallet password", "confirm wallet password", "password mismatch")?;
 
@@ -265,8 +265,8 @@ fn wallet_keystore_dirs(root_dir: &PathBuf) -> Result<(WalletDirectory, Keystore
 
 pub fn prompt_password(term: &mut Term) -> Result<Vec<u8>> {
     // enter password
-    term.info("Enter the wallet passowrd.\n")?;
-    let password = term.passowrd("wallet password")?;
+    term.info("Enter the wallet password.\n")?;
+    let password = term.password("wallet password")?;
     Ok(password)
 }
 
