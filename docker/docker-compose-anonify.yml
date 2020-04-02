@@ -7,7 +7,7 @@ services:
     volumes:
       - ./:/root/anonify
     # devices:
-    #   - "/dev/isgx"
+    #   - "/dev/sgx"
     working_dir: /root/anonify
     environment:
       ANONIFY_URL: 172.28.1.1:8080
