@@ -10,7 +10,7 @@ use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
 macro_rules! impl_uint {
-    ($name:ident, $raw:ident, $size:expr) => {
+    ($name:ident, $raw:ident) => {
         #[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
         pub struct $name($raw);
 
@@ -103,17 +103,13 @@ macro_rules! impl_uint {
             pub fn zero() -> Self {
                 $name(0)
             }
-
-            pub fn size() -> usize {
-                $size as usize
-            }
         }
     };
 }
 
-impl_uint!(U16, u16, 2);
-impl_uint!(U32, u32, 4);
-impl_uint!(U64, u64, 8);
+impl_uint!(U16, u16);
+impl_uint!(U32, u32);
+impl_uint!(U64, u64);
 
 #[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Bytes(Vec<u8>);
@@ -148,9 +144,7 @@ impl StateType {
 #[derive(Encode, Decode, Clone, Debug, PartialEq, PartialOrd, Default)]
 pub struct Mapping(pub BTreeMap<UserAddress, U64>);
 
-impl Mapping {
-
-}
+impl Mapping {}
 
 
 #[cfg(test)]
@@ -166,5 +160,12 @@ mod tests {
     #[test]
     fn test_from_state() {
         assert_eq!(U64(100), U64::from_state(&U64(100)).unwrap());
+    }
+
+    #[test]
+    fn test_size() {
+        assert_eq!(U16::size(), 2);
+        assert_eq!(U32::size(), 4);
+        assert_eq!(U64::size(), 8);
     }
 }
