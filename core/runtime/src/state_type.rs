@@ -144,9 +144,7 @@ impl StateType {
 #[derive(Encode, Decode, Clone, Debug, PartialEq, PartialOrd, Default)]
 pub struct Mapping(pub BTreeMap<UserAddress, U64>);
 
-impl Mapping {
-
-}
+impl Mapping {}
 
 
 #[cfg(test)]
@@ -170,5 +168,4 @@ mod tests {
         assert_eq!(U32::size(), 4);
         assert_eq!(U64::size(), 8);
     }
-
 }
