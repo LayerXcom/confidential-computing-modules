@@ -70,7 +70,7 @@ pub enum PathSecretRequest {
 #[derive(Debug, Clone)]
 pub struct PathSecretKVS(HashMap<AccessKey, PathSecret>);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(Encode, Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub struct AccessKey{
     roster_idx: u32,
     epoch: u32,
