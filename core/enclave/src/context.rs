@@ -5,8 +5,7 @@ use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
 use anonify_app_preluder::{mem_name_to_id, Ciphertext};
 use anonify_runtime::{State, StateGetter, StateType, MemId};
 use anonify_treekem::{
-    handshake::{PathSecretRequest, PathSecretKVS},
-    init_path_secret_kvs,
+    handshake::{PathSecretRequest, CurrentPathSecret},
 };
 use crate::{
     crypto::EnclaveIdentityKey,
@@ -62,10 +61,8 @@ impl EnclaveContext<StateType> {
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
 
-        // temporary path secrets are generated in local.
-        let mut kvs = PathSecretKVS::new();
-        init_path_secret_kvs(&mut kvs, UNTIL_ROSTER_IDX, UNTIL_EPOCH);
-        let req = PathSecretRequest::Local(kvs);
+        let path_secret = CurrentPathSecret::new_from_random();
+        let req = PathSecretRequest::LocalDerive(path_secret);
         let group_key = Arc::new(SgxRwLock::new(GroupKey::new(MY_ROSTER_IDX, MAX_ROSTER_IDX, req)?));
 
         Ok(EnclaveContext{

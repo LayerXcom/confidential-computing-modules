@@ -12,7 +12,7 @@ use super::{
     SHA256_OUTPUT_LEN, hkdf,
     dh::{DhPrivateKey, DhPubKey},
     hmac::HmacKey,
-    CryptoRng,
+    CryptoRng, sgx_rand_assign,
 };
 use crate::handshake::AccessKey;
 use anyhow::Result;
@@ -163,6 +163,12 @@ impl PathSecret {
         let parent_path_secret = PathSecret::from(path_secret_buf);
 
         Ok((node_public_key, node_private_key, node_secret, parent_path_secret))
+    }
+
+    pub fn new_from_random_sgx() -> PathSecret {
+        let mut buf = vec![0u8; SHA256_OUTPUT_LEN];
+        sgx_rand_assign(&mut buf[..]).unwrap();
+        PathSecret::from(buf)
     }
 
     pub fn new_from_random<R: CryptoRng>(csprng: &mut R) -> PathSecret {
