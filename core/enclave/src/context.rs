@@ -62,7 +62,7 @@ impl EnclaveContext<StateType> {
         let db = EnclaveDB::new();
 
         let path_secret = CurrentPathSecret::new_from_random();
-        let req = PathSecretRequest::LocalDerive(path_secret);
+        let req = PathSecretRequest::LocalTest(path_secret);
         let group_key = Arc::new(SgxRwLock::new(GroupKey::new(MY_ROSTER_IDX, MAX_ROSTER_IDX, req)?));
 
         Ok(EnclaveContext{
