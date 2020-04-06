@@ -28,8 +28,7 @@ RUN source /opt/sgxsdk/environment && \
     /root/.cargo/bin/cargo install bindgen && \
     solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol && \
     cd core && \
-    make DEBUG=1 && \
-    cp -rf bin/ ../example/bin/
+    make DEBUG=1
 
 RUN source /opt/sgxsdk/environment && \
     cd example/server && \
@@ -39,9 +38,11 @@ RUN source /opt/sgxsdk/environment && \
 FROM baiduxlab/sgx-rust:1804-1.1.0
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
-COPY --from=builder /root/anonify/core/bin/ /root/anonify/example/bin/
-COPY --from=builder /root/anonify/example/server/target/debug/anonify-server /root/anonify/example/server/target/debug/
+WORKDIR /root/anonify/example/server
+COPY --from=builder /root/anonify/build/ /root/anonify/build/
+COPY --from=builder /root/anonify/core/bin/enclave.signed.so ../bin/
+COPY --from=builder /root/anonify/example/server/target/debug/anonify-server ./target/debug/
 
 RUN LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
 
-CMD ["/root/anonify/example/server/target/debug/anonify-server"]
+CMD ["./target/debug/anonify-server"]
