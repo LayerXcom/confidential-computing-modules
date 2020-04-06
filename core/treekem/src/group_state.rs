@@ -6,7 +6,7 @@ use crate::crypto::{
     hmac::HmacKey,
 };
 use crate::application::AppKeyChain;
-use crate::handshake::{Handshake, HandshakeParams, PathSecretRequest};
+use crate::handshake::{Handshake, HandshakeParams, PathSecretRequest, AccessKey};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use crate::tree_math;
 use anyhow::{Result, anyhow, ensure};
@@ -124,6 +124,14 @@ impl GroupState {
         match req {
             PathSecretRequest::Local(db) => {
                 db.get(roster_idx, epoch).cloned().ok_or(anyhow!("Not found Path Secret from local PathSecretKVS with provided roster_idx and epoch"))
+            },
+            // just for test use to derive new path secret depending on current path secret.
+            PathSecretRequest::LocalTest(current_path_secret) => {
+                let access_key = AccessKey::new(roster_idx, epoch);
+                let mut current = current_path_secret.0.write().unwrap();
+                let next = current.clone().derive_next(access_key)?;
+                *current = next.clone();
+                Ok(next)
             },
             PathSecretRequest::Remote(url) => unimplemented!(),
         }

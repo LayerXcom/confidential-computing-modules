@@ -12,9 +12,11 @@ use super::{
     SHA256_OUTPUT_LEN, hkdf,
     dh::{DhPrivateKey, DhPubKey},
     hmac::HmacKey,
-    CryptoRng,
+    CryptoRng, sgx_rand_assign,
 };
+use crate::handshake::AccessKey;
 use anyhow::Result;
+use codec::Encode;
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);
@@ -163,9 +165,23 @@ impl PathSecret {
         Ok((node_public_key, node_private_key, node_secret, parent_path_secret))
     }
 
+    pub fn new_from_random_sgx() -> PathSecret {
+        let mut buf = vec![0u8; SHA256_OUTPUT_LEN];
+        sgx_rand_assign(&mut buf[..]).unwrap();
+        PathSecret::from(buf)
+    }
+
     pub fn new_from_random<R: CryptoRng>(csprng: &mut R) -> PathSecret {
         let key = HmacKey::new_from_random(csprng);
         PathSecret(key)
+    }
+
+    pub fn derive_next(self, access_key: AccessKey) -> Result<PathSecret> {
+        let prk = HmacKey::from(self);
+        let mut path_secret_buf = vec![0u8; SHA256_OUTPUT_LEN];
+        hkdf::expand_label(&prk, b"next", &access_key.encode(), &mut path_secret_buf)?;
+
+        Ok(PathSecret::from(path_secret_buf))
     }
 
     pub fn as_bytes(&self) -> &[u8] {
