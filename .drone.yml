@@ -9,7 +9,7 @@ platform:
 steps:
 - name: hw-test
   commands:
-    - cp .env.template .env && cp example/server/.env.template example/server/.env
+    - cp .env.template .env
     - docker run -v `pwd`:/root/anonify --device /dev/sgx --net=test-network --name sgxci --rm osuketh/anonify:latest /bin/bash /root/anonify/scripts/test.sh
 - name: Teardown
   commands:
