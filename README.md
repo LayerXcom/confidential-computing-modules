@@ -33,7 +33,7 @@ $ make DEBUG=1
 ## Testing in HW
 Assumed your hardware supports Intel SGX or run it on [Azure Confidential Computing](https://azure.microsoft.com/ja-jp/solutions/confidential-compute/).
 
-If you don't have a docket network for testing: (Docker compose doesn't be working currently due to AESM service deamon.)
+If you haven't create a docker network for testing:
 ```
 $ docker network create --subnet=172.18.0.0/16 test-network
 ```
@@ -54,7 +54,7 @@ $ cd anonify/core
 $ make DEBUG=1
 ```
 
-Finally, you can test SGX parts in `./core/host`.
+Finally, you can test SGX parts.
 ```
 $ cd host
 $ cargo test
