@@ -65,8 +65,9 @@ impl DirectPathNodeMsg {
 #[derive(Debug, Clone)]
 pub enum PathSecretRequest {
     Local(PathSecretKVS),
-    LocalDerive(CurrentPathSecret),
     Remote(String),
+    /// just for test use to derive new path secret depending on current path secret.
+    LocalTest(CurrentPathSecret),
 }
 
 #[derive(Debug, Clone)]
