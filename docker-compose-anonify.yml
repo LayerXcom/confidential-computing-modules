@@ -7,7 +7,8 @@ services:
     working_dir: /root/anonify/example/server/
     environment:
       ANONIFY_URL: 172.28.1.1:8080
-      ETH_URL: 172.28.1.2:8545
+      ETH_URL: http://172.28.1.2:8545
+      ANONYMOUS_ASSET_ABI_PATH: "../../build/Anonify.abi"
     networks:
       testing_net:
         ipv4_address: 172.28.1.1

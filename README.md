@@ -50,7 +50,7 @@ Running intel SGX environment
 ```
 $ docker run -v `pwd`:/root/anonify --device /dev/sgx --net=test-network --name sgx --rm -it osuketh/anonify
 ```
-- The SDK Driver creates a device at `/dev/sgx`, DCAP systems using IAS.
+- The SDK Driver creates a device at `/dev/sgx`, non-DCAP systems using IAS.
 
 
 ### Test
