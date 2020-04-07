@@ -11,11 +11,6 @@ $ git clone git@github.com:LayerXcom/anonify.git
 $ cd anonify
 ```
 
-Copy files of environment variables.
-```
-$ cp .env.template .env
-```
-
 Building contracts
 ```
 $ solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol

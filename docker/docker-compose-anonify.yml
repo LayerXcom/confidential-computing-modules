@@ -1,7 +1,12 @@
 version: '3'
 services:
   sgx_machine1:
-    image: anonify-server:latest
+    image: osuketh/anonify-server:latest
+    volumes:
+      # See: https://github.com/apache/incubator-teaclave-sgx-sdk/blob/master/documents/sgx_in_mesalock_linux.md#solution-overview
+      - type: bind
+        source: /var/run/aesmd/aesm.socket
+        target: /var/run/aesmd/aesm.socket
     devices:
       - "/dev/sgx"
     working_dir: /root/anonify/example/server/

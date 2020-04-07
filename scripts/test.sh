@@ -14,8 +14,6 @@ dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/.."
 solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
 
-cp .env.template .env
-
 cd core
 
 echo `cargo --version`
