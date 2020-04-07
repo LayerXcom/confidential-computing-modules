@@ -39,10 +39,9 @@ FROM baiduxlab/sgx-rust:1804-1.1.0
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 WORKDIR /root/anonify/example/server
-COPY --from=builder /root/anonify/build/ /root/anonify/build/
+COPY --from=builder /root/anonify/build/Anonify.abi ../../build/
+COPY --from=builder /root/anonify/build/Anonify.bin ../../build/
 COPY --from=builder /root/anonify/core/bin/enclave.signed.so ../bin/
 COPY --from=builder /root/anonify/example/server/target/debug/anonify-server ./target/debug/
-
-RUN LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
 
 CMD ["./target/debug/anonify-server"]

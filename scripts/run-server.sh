@@ -10,9 +10,6 @@ export ANONIFY_URL=172.18.0.3:8080
 export ETH_URL=http://172.18.0.2:8545
 export ANONYMOUS_ASSET_ABI_PATH="../../build/Anonify.abi"
 
-LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
-sleep 1
-
 dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/../core"
 echo $PWD
