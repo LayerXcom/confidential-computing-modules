@@ -174,15 +174,8 @@ impl Approved {
         sum
     }
 
-    // TODO: consider using mutable borrowing to keep performance
-    pub fn insert(&self, user_address: UserAddress, amount: U64) -> Self {
-        let mut new_approved = BTreeMap::new();
-        self.0.iter()
-            .map(|(&k, &v)|
-                new_approved.insert(k, v)
-            );
-        new_approved.insert(user_address, amount);
-        Approved(new_approved)
+    pub fn insert(&mut self, user_address: UserAddress, amount: U64) -> Option<U64> {
+        self.0.insert(user_address, amount)
     }
 }
 

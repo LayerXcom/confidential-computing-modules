@@ -84,15 +84,16 @@ impl_runtime!{
         amount: U64
     ) {
         let owner_balance = self.get_map::<U64>(owner, "Balance")?;
-        let owner_approved = self.get_map::<Approved>(owner, "Approved")?;
+        let mut owner_approved = self.get_map::<Approved>(owner, "Approved")?;
 
         ensure!(
             owner_approved.total() + amount <= owner_balance,
             "approving amount exceeds balance and already approved."
         );
 
-        let new_approved = owner_approved.insert(spender, amount);
-        let owner_approved_update = update!(spender, "Approved", new_approved);
+        let _ = owner_approved.insert(spender, amount)
+            .expect("failed to insert amount");
+        let owner_approved_update = update!(spender, "Approved", owner_approved);
         insert![owner_approved_update]
     }
 
