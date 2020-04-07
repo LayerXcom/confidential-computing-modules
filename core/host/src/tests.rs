@@ -4,7 +4,7 @@ use sgx_types::*;
 use rand_os::OsRng;
 use anonify_common::AccessRight;
 use anonify_runtime::{State, U64, Approved};
-use anonify_app_preluder::{transfer, constructor};
+use anonify_app_preluder::{transfer, constructor, approve};
 use anonify_event_watcher::{
     eventdb::{EventDB, BlockNumDB},
     eth::*,
@@ -191,7 +191,7 @@ fn test_integration_eth_approve() {
     // 7. Check the updated states
     let my_state = get_state::<Approved>(&my_access_right, eid, "Approved").unwrap();
     let other_state = get_state::<Approved>(&other_access_right, eid, "Approved").unwrap();
-    let want_my_state = Approved::new({
+    let want_my_state = Approved({
         let bt = BTreeMap::new();
         bt.insert(recipient, amount);
         bt
