@@ -1,4 +1,7 @@
-use std::sync::Arc;
+use std::{
+    sync::Arc,
+    collections::BTreeMap,
+};
 use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use rand_os::OsRng;
@@ -12,7 +15,6 @@ use anonify_event_watcher::{
 use crate::auto_ffi::ecall_run_tests;
 use crate::init_enclave::EnclaveDir;
 use crate::dispatcher::*;
-use crate::localstd::collections::BTreeMap;
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
 const ANONYMOUS_ASSET_ABI_PATH: &str = "../../build/Anonify.abi";
