@@ -91,8 +91,7 @@ impl_runtime!{
             "approving amount exceeds balance and already approved."
         );
 
-        let _ = owner_approved.insert(spender, amount)
-            .expect("failed to insert amount");
+        owner_approved.approve(spender, amount);
         let owner_approved_update = update!(spender, "Approved", owner_approved);
         insert![owner_approved_update]
     }

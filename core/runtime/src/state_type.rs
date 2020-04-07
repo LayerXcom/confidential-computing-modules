@@ -178,8 +178,16 @@ impl Approved {
         sum
     }
 
-    pub fn insert(&mut self, user_address: UserAddress, amount: U64) -> Option<U64> {
-        self.0.insert(user_address, amount)
+    pub fn approve(&mut self, user_address: UserAddress, amount: U64) {
+        match self.0.get(&user_address) {
+            Some(existing_amount) => {
+                self.0.insert(user_address, amount + existing_amount);
+            },
+            None => {
+                self.0.insert(user_address, amount);
+            }
+        }
+
     }
 }
 
