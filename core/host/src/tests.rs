@@ -193,8 +193,8 @@ fn test_integration_eth_approve() {
     // 7. Check the updated states
     let my_state = get_state::<Approved>(&my_access_right, eid, "Approved").unwrap();
     let other_state = get_state::<Approved>(&other_access_right, eid, "Approved").unwrap();
-    let want_my_state = Approved({
-        let bt = BTreeMap::new();
+    let want_my_state = Approved::new({
+        let mut bt = BTreeMap::new();
         bt.insert(recipient, amount);
         bt
     });

@@ -168,6 +168,10 @@ mod tests {
 pub struct Approved(BTreeMap<UserAddress, U64>);
 
 impl Approved {
+    pub fn new(inner: BTreeMap<UserAddress, U64>) -> Self {
+        Approved(inner)
+    }
+
     pub fn total(&self) -> U64 {
         let sum = self.0.iter()
             .fold(U64(0), |acc, (_, &amount)| acc + amount);
