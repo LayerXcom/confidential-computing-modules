@@ -195,7 +195,7 @@ fn test_integration_eth_approve() {
     let other_state = get_state::<Approved>(&other_access_right, eid, "Approved").unwrap();
     let want_my_state = Approved::new({
         let mut bt = BTreeMap::new();
-        bt.insert(recipient, amount);
+        bt.insert(spender, amount);
         bt
     });
     assert_eq!(my_state, want_my_state);
