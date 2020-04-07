@@ -57,11 +57,11 @@ impl KeyFile {
         seed: &[u8],
         rng: &mut R,
     ) -> Result<Self> {
-        assert!(seed.len() < SECRET_KEY_LENGTH);
+        assert!(seed.len() > SECRET_KEY_LENGTH);
         let secret = SecretKey::from_bytes(&seed[..SECRET_KEY_LENGTH])?;
         let public = PublicKey::from(&secret);
         let key_pair = Keypair { secret, public };
-        
+
         Self::new(account_name, version, password, iters, &key_pair, rng)
     }
 

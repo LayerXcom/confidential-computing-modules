@@ -1,14 +1,12 @@
 # inherit the baidu sdk image
-FROM baiduxlab/sgx-rust:1804-1.0.9 as builder
+FROM baiduxlab/sgx-rust:1804-1.1.0 as builder
 LABEL maintainer="osuke.sudo@layerx.co.jp"
-WORKDIR /root
-RUN rm -rf /root/sgx
 
 COPY . /root/anonify
-
-ENV PATH "$PATH:/root/.cargo/bin"
+SHELL ["/bin/bash", "-c"]
 
 RUN set -x && \
+    rm -rf /root/sgx && \
     apt-get update && \
     apt-get upgrade -y --no-install-recommends && \
     apt-get install -y --no-install-recommends libzmq3-dev llvm clang-3.9 llvm-3.9-dev libclang-3.9-dev software-properties-common nodejs && \
@@ -16,31 +14,34 @@ RUN set -x && \
     export PATH="$HOME/.yarn/bin:$PATH" && \
     yarn global add ganache-cli && \
     rm -rf /var/lib/apt/lists/* && \
-    add-apt-repository -y ppa:ethereum/ethereum && \
-    apt-get install -y solc
-
-RUN cargo install bindgen cargo-audit && \
+    curl -o /usr/bin/solc -fL https://github.com/ethereum/solidity/releases/download/v0.5.16/solc-static-linux && \
+    chmod u+x /usr/bin/solc && \
     rm -rf /root/.cargo/registry && rm -rf /root/.cargo/git && \
-    git clone --depth 1 -b v1.0.9 https://github.com/baidu/rust-sgx-sdk.git sgx
+    git clone --depth 1 -b v1.1.0 https://github.com/baidu/rust-sgx-sdk.git sgx
 
 WORKDIR /root/anonify
-ARG PROFILE=release
+RUN source /opt/sgxsdk/environment && \
+    source /root/.cargo/env && \
+    export PATH="$HOME/.cargo/bin:$PATH" && \
+    export SGX_MODE=HW && \
+    export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
+    /root/.cargo/bin/cargo install bindgen && \
+    solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol && \
+    cd core && \
+    make DEBUG=1
 
-ENV SGX_MODE HW
-RUN cd core && make
-COPY /core/bin/ /example/bin/
-RUN cd example/server && cargo build --$PROFILE
+RUN source /opt/sgxsdk/environment && \
+    cd example/server && \
+    /root/.cargo/bin/cargo build
 
 # ===== SECOND STAGE ======
-FROM baiduxlab/sgx-rust:1804-1.0.9
+FROM baiduxlab/sgx-rust:1804-1.1.0
 LABEL maintainer="osuke.sudo@layerx.co.jp"
-WORKDIR /root/anonify
-ARG PROFILE=release
 
-COPY --from=builder /core/bin/ /example/bin/
-COPY --from=builder /example/target/$PROFILE/anonify-server /usr/local/bin
+WORKDIR /root/anonify/example/server
+COPY --from=builder /root/anonify/build/Anonify.abi ../../build/
+COPY --from=builder /root/anonify/build/Anonify.bin ../../build/
+COPY --from=builder /root/anonify/core/bin/enclave.signed.so ../bin/
+COPY --from=builder /root/anonify/example/server/target/debug/anonify-server ./target/debug/
 
-RUN LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
-
-WORKDIR /usr/local/bin
-CMD ["anonify-server"]
+CMD ["./target/debug/anonify-server"]

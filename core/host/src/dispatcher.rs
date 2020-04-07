@@ -47,11 +47,11 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         })
     }
 
-    pub fn set_contract_addr<P>(&mut self, contract_addr: &str, abi_path: P) -> Result<()>
+    pub fn set_contract_addr<P>(&self, contract_addr: &str, abi_path: P) -> Result<()>
         where
             P: AsRef<Path> + Copy,
     {
-        let inner = &mut self.inner.write();
+        let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         inner.set_contract_addr(contract_info)?;
 
@@ -93,7 +93,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             ST: State,
             P: AsRef<Path> + Copy,
     {
-        let mut inner = self.inner.write();
+        let inner = self.inner.read();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         let state_info = StateInfo::new(state, state_id, call_name);
 
@@ -110,7 +110,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         where
             P: AsRef<Path> + Copy,
     {
-        let mut inner = self.inner.write();
+        let inner = self.inner.read();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
 
         inner.handshake(signer, contract_info, gas)
@@ -121,7 +121,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         contract_addr: &str,
         abi_path: P,
     ) -> Result<()> {
-        let mut inner = self.inner.write();
+        let inner = self.inner.read();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         inner.block_on_event(contract_info).into()
     }
