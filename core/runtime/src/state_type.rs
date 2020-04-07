@@ -140,12 +140,6 @@ impl StateType {
     }
 }
 
-// TODO: Mapping!(Address, U64);
-#[derive(Encode, Decode, Clone, Debug, PartialEq, PartialOrd, Default)]
-pub struct Mapping(pub BTreeMap<UserAddress, U64>);
-
-impl Mapping {}
-
 
 #[cfg(test)]
 mod tests {
@@ -167,5 +161,33 @@ mod tests {
         assert_eq!(U16::size(), 2);
         assert_eq!(U32::size(), 4);
         assert_eq!(U64::size(), 8);
+    }
+}
+
+#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct Approved(BTreeMap<UserAddress, U64>);
+
+impl Approved {
+    pub fn total(&self) -> U64 {
+        let sum = self.0.iter()
+            .fold(U64(0), |acc, (_, &amount)| acc + amount);
+        sum
+    }
+
+    // TODO: consider using mutable borrowing to keep performance
+    pub fn insert(&self, user_address: UserAddress, amount: U64) -> Self {
+        let mut new_approved = BTreeMap::new();
+        self.0.iter()
+            .map(|(&k, &v)|
+                new_approved.insert(k, v)
+            );
+        new_approved.insert(user_address, amount);
+        Approved(new_approved)
+    }
+}
+
+impl From<Approved> for StateType {
+    fn from(a: Approved) -> Self {
+        StateType(a.0.as_bytes())
     }
 }

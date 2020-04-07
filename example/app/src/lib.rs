@@ -14,7 +14,10 @@ use anonify_runtime::{
     prelude::*,
     state_type::*,
 };
-use crate::localstd::vec::Vec;
+use crate::localstd::{
+    vec::Vec,
+    collections::BTreeMap
+};
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
@@ -28,10 +31,12 @@ lazy_static! {
     pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 120;
 }
 
-#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
+// TODO: delete Copy?
+#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd)]
 struct CustomType {
     address: UserAddress,
     balance: U64,
+    approved: BTreeMap<UserAddress, U64>
 }
 
 impl_mem! {
@@ -70,4 +75,36 @@ impl_runtime!{
 
         insert![sender_update, recipient_update]
     }
+
+    #[fn_id=2]
+    pub fn approve(
+        self,
+        owner: UserAddress,
+        spender: UserAddress,
+        amount: U64
+    ) {
+        let owner_balance = self.get_map::<U64>(owner, "Balance")?;
+        let owner_approved = self.get_map::<Approved>(owner, "Approved")?;
+
+        ensure!(
+            owner_approved.total() + amount <= owner_balance,
+            "approving amount exceeds balance and already approved."
+        );
+
+        let new_approved = owner_approved.insert(spender, amount);
+        let owner_approved_update = update!(spender, "Approved", new_approved);
+        insert![owner_approved_update]
+    }
+
+    // TODO: implement
+    // #[fn_id=3]
+    // pub fn allowance(
+    //     self,
+    //     owner: UserAddress,
+    //     spender: UserAddress,
+    // ) -> U64 {
+    //     // let owner_approved = self.get_map::<Approved>(owner, "Approved")?;
+    //     // owner_approved.get(spender).unwrap()
+    //     unimplemented!();
+    // }
 }
