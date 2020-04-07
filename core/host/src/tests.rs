@@ -172,7 +172,7 @@ fn test_integration_eth_approve() {
     // 5. Send a transaction to contract
     let amount = U64::from_raw(30);
     let recipient = other_access_right.user_address();
-    let approve_state = approve { amount, recipient };
+    let approve_state = approve { amount, spender };
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
         approve_state,
