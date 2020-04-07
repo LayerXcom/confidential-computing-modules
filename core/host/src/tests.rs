@@ -3,7 +3,7 @@ use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use rand_os::OsRng;
 use anonify_common::AccessRight;
-use anonify_runtime::{State, U64};
+use anonify_runtime::{State, U64, Approved};
 use anonify_app_preluder::{transfer, constructor};
 use anonify_event_watcher::{
     eventdb::{EventDB, BlockNumDB},
@@ -192,7 +192,7 @@ fn test_integration_eth_approve() {
     let my_state = get_state::<Approved>(&my_access_right, eid, "Approved").unwrap();
     let other_state = get_state::<Approved>(&other_access_right, eid, "Approved").unwrap();
     let want_my_state = Approved::new({
-        let bt = Btree::new();
+        let bt = BTreeMap::new();
         bt.insert(recipient, amount);
         bt
     });
