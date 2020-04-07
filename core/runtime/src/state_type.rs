@@ -180,7 +180,7 @@ impl Approved {
 
     pub fn approve(&mut self, user_address: UserAddress, amount: U64) {
         match self.0.get(&user_address) {
-            Some(existing_amount) => {
+            Some(&existing_amount) => {
                 self.0.insert(user_address, amount + existing_amount);
             },
             None => {
