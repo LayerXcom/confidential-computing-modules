@@ -1,4 +1,4 @@
-version: '3'
+version: "3.7"
 services:
   sgx_machine1:
     image: osuketh/anonify-server:latest

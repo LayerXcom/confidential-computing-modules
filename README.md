@@ -28,6 +28,11 @@ $ make DEBUG=1
 ## Testing in HW
 Assumed your hardware supports Intel SGX or run it on [Azure Confidential Computing](https://azure.microsoft.com/ja-jp/solutions/confidential-compute/).
 
+The very first thing you need to do is starting aesm service in a SGX-enabled environment. For more details, see: https://github.com/apache/incubator-teaclave-sgx-sdk/blob/master/documents/sgx_in_mesalock_linux.md#solution-overview
+```
+LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
+```
+
 If you haven't create a docker network for testing:
 ```
 $ docker network create --subnet=172.18.0.0/16 test-network
