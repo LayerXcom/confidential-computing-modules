@@ -191,3 +191,15 @@ impl From<Approved> for StateType {
         StateType(a.0.as_bytes())
     }
 }
+
+impl TryFrom<Vec<u8>> for Approved {
+    type Error = Error;
+
+    fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
+        if s.len() == 0 {
+            return Ok(Default::default());
+        }
+        let mut buf = s;
+        Approved::from_bytes(&mut buf)
+    }
+}
