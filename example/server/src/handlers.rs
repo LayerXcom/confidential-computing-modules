@@ -33,6 +33,7 @@ where
         .deploy(&deployer_addr)?;
 
     debug!("Contract address: {:?}", &contract_addr);
+    server.dispatcher.set_contract_addr(&server.abi_path, &contract_addr)?;
 
     Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr)))
 }
