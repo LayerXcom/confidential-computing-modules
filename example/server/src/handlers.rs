@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, thread, time};
 use failure::Error;
 use log::debug;
 use anonify_host::dispatcher::get_state;
@@ -156,4 +156,22 @@ where
     let state = get_state::<U64>(&access_right, server.eid, "Balance")?;
 
     Ok(HttpResponse::Ok().json(api::state::get::Response(state.as_raw())))
+}
+
+pub fn start_fetch_events<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::state::get::Request>,
+)
+where
+    D: Deployer + Send + Sync + 'static,
+    S: Sender + Send + Sync + 'static,
+    W: Watcher<WatcherDB=DB> + Send + Sync + 'static,
+    DB: BlockNumDB + Send + Sync + 'static,
+{
+    let _ = thread::spawn(move || {
+        loop {
+            server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path).unwrap();
+            thread::sleep(time::Duration::from_secs(3));
+        }
+    });
 }
