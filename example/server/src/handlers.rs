@@ -158,10 +158,10 @@ where
     Ok(HttpResponse::Ok().json(api::state::get::Response(state.as_raw())))
 }
 
-pub fn start_fetch_events<D, S, W, DB>(
+pub fn start_polling<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<api::state::get::Request>,
-)
+    req: web::Json<api::state::start_polling::Request>,
+) -> Result<HttpResponse, Error>
 where
     D: Deployer + Send + Sync + 'static,
     S: Sender + Send + Sync + 'static,
@@ -171,7 +171,10 @@ where
     let _ = thread::spawn(move || {
         loop {
             server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path).unwrap();
+            debug!("event fetched...");
             thread::sleep(time::Duration::from_secs(3));
         }
     });
+
+    Ok(HttpResponse::Ok().finish())
 }

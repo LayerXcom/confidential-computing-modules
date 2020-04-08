@@ -143,7 +143,7 @@ pub(crate) fn start_polling(
 ) -> Result<()> {
     let req = api::state::start_polling::Request::new(contract_addr);
     Client::new()
-        .get(&format!("{}/api/v1/get_state", &anonify_url))
+        .get(&format!("{}/api/v1/start_polling", &anonify_url))
         .json(&req)
         .send()?
         .text()?;
