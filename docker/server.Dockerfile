@@ -2,7 +2,6 @@
 FROM baiduxlab/sgx-rust:1804-1.1.0 as builder
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
-COPY . /root/anonify
 SHELL ["/bin/bash", "-c"]
 
 RUN set -x && \
@@ -17,20 +16,20 @@ RUN set -x && \
     curl -o /usr/bin/solc -fL https://github.com/ethereum/solidity/releases/download/v0.5.16/solc-static-linux && \
     chmod u+x /usr/bin/solc && \
     rm -rf /root/.cargo/registry && rm -rf /root/.cargo/git && \
+    /root/.cargo/bin/cargo install bindgen && \
     git clone --depth 1 -b v1.1.0 https://github.com/baidu/rust-sgx-sdk.git sgx
 
+COPY . /root/anonify
 WORKDIR /root/anonify
+
 RUN source /opt/sgxsdk/environment && \
     source /root/.cargo/env && \
     export PATH="$HOME/.cargo/bin:$PATH" && \
     export SGX_MODE=HW && \
     export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
-    /root/.cargo/bin/cargo install bindgen && \
     solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol && \
     cd core && \
-    make DEBUG=1
-
-RUN source /opt/sgxsdk/environment && \
+    make DEBUG=1 && \
     cd example/server && \
     /root/.cargo/bin/cargo build
 
