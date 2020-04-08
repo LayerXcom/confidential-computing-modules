@@ -36,12 +36,13 @@ lazy_static! {
 struct CustomType {
     address: UserAddress,
     balance: U64,
-    approved: BTreeMap<UserAddress, U64>
+    approved: Approved,
 }
 
 impl_memory! {
     (0, "Balance", Address => U64),
     (1, "Approved", Address => BTreeMap<UserAddress, U64>)
+    // (2, "TotalSupply", U64)
 }
 // impl_memory! {
 //     (1, "TotalSupply", U64)
