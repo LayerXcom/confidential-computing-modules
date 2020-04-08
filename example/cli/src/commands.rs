@@ -151,6 +151,20 @@ pub(crate) fn start_polling(
     Ok(())
 }
 
+pub(crate) fn set_contract_addr(
+    anonify_url: String,
+    contract_addr: String,
+) -> Result<()> {
+    let req = api::contract_addr::post::Request::new(contract_addr);
+    Client::new()
+        .get(&format!("{}/api/v1/set_contract_addr", &anonify_url))
+        .json(&req)
+        .send()?
+        .text()?;
+
+    Ok(())
+}
+
 /// Create a new wallet
 pub(crate) fn new_wallet<R: Rng>(term: &mut Term, root_dir: PathBuf, rng: &mut R) -> Result<()> {
     // 1. configure wallet directory
