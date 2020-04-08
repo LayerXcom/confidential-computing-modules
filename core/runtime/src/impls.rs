@@ -31,7 +31,7 @@ macro_rules! __impl_inner_memory {
 
         /// Return maximum size of mem values
         fn max_size() -> usize {
-            *[ $( <$value>::size(), )* ]
+            *[ $( <$value>::default().size(), )* ]
                 .into_iter()
                 .max()
                 .expect("Iterator should not be empty.")
