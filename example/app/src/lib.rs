@@ -39,10 +39,11 @@ struct CustomType {
     approved: BTreeMap<UserAddress, U64>
 }
 
-impl_mem! {
-    (0, "Balance", Address => U64)
+impl_memory! {
+    (0, "Balance", Address => U64),
+    (1, "Approved", Address => BTreeMap<UserAddress, U64>)
 }
-// impl_mem! {
+// impl_memory! {
 //     (1, "TotalSupply", U64)
 // }
 

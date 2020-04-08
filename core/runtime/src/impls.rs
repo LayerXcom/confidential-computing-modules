@@ -1,37 +1,37 @@
 #[macro_export]
-macro_rules! impl_mem {
+macro_rules! impl_memory {
     ( $( $t:tt )* ) => {
-        $crate::__impl_inner_mem!(@normalize $( $t )* );
+        $crate::__impl_inner_memory!(@normalize $( $t )* );
     };
 }
 
 #[macro_export]
-macro_rules! __impl_inner_mem {
+macro_rules! __impl_inner_memory {
     (@normalize
-        $(($id:expr, $name:expr, Address => $value:ty))*
+        $( ($id:expr, $name:expr, Address => $value:ty) ),*
     ) => {
-        $crate::__impl_inner_mem!(@normalize $(($id, $name, $value))* );
+        $crate::__impl_inner_memory!(@normalize $( ($id, $name, $value) ),* );
     };
 
     (@normalize
-        $(($id:expr, $name:expr, $value:ty))*
+        $( ($id:expr, $name:expr, $value:ty) ),*
     ) => {
-        $crate::__impl_inner_mem!(@imp $(($id, $name, $value))* );
+        $crate::__impl_inner_memory!(@imp $( ($id, $name, $value) ),* );
     };
 
     (@imp
-        $(($id:expr, $name:expr, $value:ty))*
+        $( ($id:expr, $name:expr, $value:ty) ),*
     ) => {
         pub fn mem_name_to_id(name: &str) -> MemId {
             match name {
-                $( $name => MemId::from_raw($id) ),* ,
+                $( $name => MemId::from_raw($id), )*
                 _ => panic!("invalid mem name"),
             }
         }
 
         /// Return maximum size of mem values
         fn max_size() -> usize {
-            *[$( <$value>::size(), )*]
+            *[ $( <$value>::size(), )* ]
                 .into_iter()
                 .max()
                 .expect("Iterator should not be empty.")
