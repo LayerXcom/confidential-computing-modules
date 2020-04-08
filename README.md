@@ -130,6 +130,11 @@ $ ./target/debug/anonify-cli anonify state_transition -a <AMOUNT> -t <TARGET_ACC
 $ ./target/debug/anonify-cli anonify get_state -c <CONTRACT ADDRESS>
 ```
 
+- Start fetching events
+```
+$ ./target/debug/anonify-cli anonify start_polling -c <CONTRACT ADDRESS>
+```
+
 ## Acknowledgements
 
 - [Rust SGX SDK](https://github.com/apache/incubator-teaclave-sgx-sdk)

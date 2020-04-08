@@ -271,4 +271,19 @@ pub mod state {
         #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
         pub struct Response<S: State>(pub S);
     }
+
+    pub mod start_polling {
+        use super::super::*;
+
+        #[derive(Clone, Deserialize, Serialize, Debug)]
+        pub struct Request {
+            pub contract_addr: String,
+        }
+
+        impl Request {
+            pub fn new(contract_addr: String) -> Self {
+                Request { contract_addr }
+            }
+        }
+    }
 }

@@ -189,6 +189,17 @@ fn subcommand_anonify<R: Rng>(
             )
             .expect("Failed to get state command");
         },
+        ("start_polling", Some(matches)) => {
+            let contract_addr = matches.value_of("contract-addr")
+                .expect("Not found contract-addr")
+                .to_string();
+
+            commands::start_polling(
+                anonify_url,
+                contract_addr,
+            )
+            .expect("Failed to start_polling command");
+        },
         _ => {
             term.error(matches.usage()).unwrap();
             std::process::exit(1);
@@ -305,6 +316,15 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .takes_value(true)
                 .required(true)
                 .default_value(DEFAULT_STATE_ID)
+            )
+        )
+        .subcommand(SubCommand::with_name("start_polling")
+            .about("Get state from anonify services.")
+            .arg(Arg::with_name("contract-addr")
+                .short("c")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_CONTRACT_ADDRESS)
             )
         )
 }
