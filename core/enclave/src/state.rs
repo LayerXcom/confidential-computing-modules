@@ -4,7 +4,7 @@ use anonify_common::{
     UserAddress, Sha256, Hash256, LockParam, AccessRight,
     kvs::*,
 };
-use anonify_app_preluder::{CallKind, MAX_MEM_SIZE, Ciphertext, Runtime};
+use anonify_app_preluder::{CallKind, max_mem_size, Ciphertext, Runtime};
 use anonify_runtime::{StateType, State, StateGetter, UpdatedState, into_trait, MemId};
 use codec::{Encode, Decode, Input, Output};
 use crate::{
@@ -243,7 +243,7 @@ impl<N> StateValue<StateType, N> {
 
     /// Get padding size to fix the ciphertext size of all state types.
     pub fn padding_size(&self) -> usize {
-        *MAX_MEM_SIZE - self.inner_state.len()
+        max_mem_size() - self.inner_state.len()
     }
 
     /// Get inner state and lock_param from database value.
