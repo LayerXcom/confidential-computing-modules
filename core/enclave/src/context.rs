@@ -1,4 +1,7 @@
-use std::sync::{SgxRwLock, Arc, env};
+use std::{
+    sync::{SgxRwLock, Arc},
+    env,
+};
 use sgx_types::*;
 use std::prelude::v1::*;
 use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
@@ -67,7 +70,12 @@ impl EnclaveContext<StateType> {
             .expect("MY_ROSTER_IDX is not set")
             .parse()
             .expect("Failed to parse MY_ROSTER_IDX to usize");
-        let group_key = Arc::new(SgxRwLock::new(GroupKey::new(my_roster_idx, MAX_ROSTER_IDX, req)?));
+        let max_roster_idx: usize = env::var("MAX_ROSTER_IDX")
+            .expect("MAX_ROSTER_IDX is not set")
+            .parse()
+            .expect("Failed to parse MAX_ROSTER_IDX to usize");
+
+        let group_key = Arc::new(SgxRwLock::new(GroupKey::new(my_roster_idx, max_roster_idx, req)?));
 
         Ok(EnclaveContext{
             spid,
