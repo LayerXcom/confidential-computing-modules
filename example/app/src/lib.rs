@@ -28,7 +28,7 @@ lazy_static! {
     // 85 bytes: the size of base state without inner state
     // 1 bytes: base padding to represent a empty vec
     // 4*3 bytes: generaion, roster_idx, epoch for treekem
-    pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 120;
+    pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 62;
 }
 
 // TODO: delete Copy?
