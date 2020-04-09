@@ -115,6 +115,11 @@ $ ./target/debug/anonify-cli anonify deploy
 ```
 return: a contract address
 
+- Register a enclave integrity to contract
+```
+$ ./target/debug/anonify-cli anonify register
+```
+
 - Initialize state
 ```
 $ ./target/debug/anonify-cli anonify init_state -t <TOTAL SUPPLY> -c <CONTRACT ADDRESS>
