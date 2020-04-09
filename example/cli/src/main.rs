@@ -33,7 +33,7 @@ fn main() {
     let root_dir = global_rootdir_match(&default_root_dir, &matches);
     let rng = &mut OsRng;
 
-    let contract_addr = env::var("CONTRACT_ADDR").expect("CONTRACT_ADDR is not set");
+    let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
 
     match matches.subcommand() {
         (ANONIFY_COMMAND, Some(matches)) => subcommand_anonify(term, root_dir, contract_addr, matches, rng),
