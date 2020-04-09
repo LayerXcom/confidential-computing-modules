@@ -22,15 +22,13 @@ use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
 lazy_static! {
+    pub static ref MAX_MEM_SIZE: usize = 100;
+
     // TODO: How 120bytes is calculated
     // 85 bytes: the size of base state without inner state
     // 1 bytes: base padding to represent a empty vec
     // 4*3 bytes: generaion, roster_idx, epoch for treekem
-    pub static ref CIPHERTEXT_SIZE: usize = max_mem_size() + 120;
-}
-
-pub fn max_mem_size() -> usize {
-    max_size()
+    pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 120;
 }
 
 // TODO: delete Copy?
