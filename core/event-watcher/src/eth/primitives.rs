@@ -66,6 +66,7 @@ impl Web3Http {
         deployer: &Address,
         report: &[u8],
         report_sig: &[u8],
+        handshake: &[u8],
     ) -> Result<Address> {
         let abi = include_bytes!("../../../../build/Anonify.abi");
         let bin = include_str!("../../../../build/Anonify.bin");
@@ -76,7 +77,7 @@ impl Web3Http {
             .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
             .execute(
                 bin,
-                (report.to_vec(), report_sig.to_vec()), // Parameters are got from ecall, so these have to be allocated.
+                (report.to_vec(), report_sig.to_vec(), handshake.to_vec()), // Parameters are got from ecall, so these have to be allocated.
                 *deployer,
             )
             .map_err(|e| anyhow!("{:?}", e))?

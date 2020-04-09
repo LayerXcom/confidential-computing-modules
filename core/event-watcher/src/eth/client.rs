@@ -58,6 +58,7 @@ impl Deployer for EthDeployer {
                     &address,
                     &register_tx.report,
                     &register_tx.report_sig,
+                    &register_tx.handshake,
                 )?
             }
         };
