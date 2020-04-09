@@ -6,6 +6,6 @@ Before building `cached.Dockerfile`, make sure you ran `./scripts/build_server.s
 
 ```
 $ docker build -t anonify -f docker/dev.Dockerfile ./
-$ docker build -t anonify-server -f docker/server.Dockerfile ./
-$ docker build -t anonify-server -f docker/cached.server.Dockerfile ./
+$ docker build -t osuketh/anonify-server:latest -f docker/server.Dockerfile ./
+$ docker build -t osuketh/anonify-server:latest -f docker/cached.server.Dockerfile ./
 ```

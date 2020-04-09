@@ -31,7 +31,7 @@ RUN source /opt/sgxsdk/environment && \
     cd core && \
     make DEBUG=1 && \
     cd example/server && \
-    /root/.cargo/bin/cargo build
+    RUST_BACKTRACE=1 RUST_LOG=debug /root/.cargo/bin/cargo build
 
 # ===== SECOND STAGE ======
 FROM baiduxlab/sgx-rust:1804-1.1.0

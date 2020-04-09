@@ -127,7 +127,7 @@ $ ./target/debug/anonify-cli anonify state_transition -a <AMOUNT> -t <TARGET_ACC
 
 - Get state from enclave
 ```
-$ ./target/debug/anonify-cli anonify get_state -c <CONTRACT ADDRESS>
+$ ./target/debug/anonify-cli anonify get_state -i <KEYFILE_INDEX> -c <CONTRACT ADDRESS>
 ```
 
 - Start fetching events
