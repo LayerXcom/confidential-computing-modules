@@ -33,8 +33,10 @@ fn main() {
     let root_dir = global_rootdir_match(&default_root_dir, &matches);
     let rng = &mut OsRng;
 
+    let contract_addr = env::var("CONTRACT_ADDR").expect("CONTRACT_ADDR is not set");
+
     match matches.subcommand() {
-        (ANONIFY_COMMAND, Some(matches)) => subcommand_anonify(term, root_dir, matches, rng),
+        (ANONIFY_COMMAND, Some(matches)) => subcommand_anonify(term, root_dir, contract_addr, matches, rng),
         (WALLET_COMMAND, Some(matches)) => subcommand_wallet(term, root_dir, matches, rng),
         _ => {
             term.error(matches.usage()).unwrap();
@@ -50,7 +52,6 @@ fn main() {
 
 const ANONIFY_COMMAND: &'static str = "anonify";
 const DEFAULT_KEYFILE_INDEX: &'static str = "0";
-const DEFAULT_CONTRACT_ADDRESS: &'static str = "580bc66c83f54056bb337a75eae8e424e96f32de";
 const DEFAULT_AMOUNT: &str = "10";
 const DEFAULT_BALANCE: &str = "100";
 const DEFAULT_STATE_ID: &str = "0";
@@ -59,6 +60,7 @@ const DEFAULT_TARGET: &str = "7H5cyDJ9CXBKOiM8tWnGaz5vqHY=";
 fn subcommand_anonify<R: Rng>(
     mut term: Term,
     root_dir: PathBuf,
+    default_contract_addr: String,
     matches: &ArgMatches,
     rng: &mut R
 ) {
@@ -81,9 +83,10 @@ fn subcommand_anonify<R: Rng>(
             .expect("Failed to deploy command");
         },
         ("register", Some(matches)) => {
-            let contract_addr = matches.value_of("contract-addr")
-                .expect("Not found contract-addr")
-                .to_string();
+            let contract_addr = match matches.value_of("contract-addr") {
+                Some(addr) => addr.to_string(),
+                None => default_contract_addr,
+            };
 
             commands::register(
                 anonify_url,
@@ -100,9 +103,10 @@ fn subcommand_anonify<R: Rng>(
                 .expect("Not found total_supply.")
                 .parse()
                 .expect("Failed to parse total_supply");
-            let contract_addr = matches.value_of("contract-addr")
-                .expect("Not found contract-addr")
-                .to_string();
+            let contract_addr = match matches.value_of("contract-addr") {
+                Some(addr) => addr.to_string(),
+                None => default_contract_addr,
+            };
             let state_id = matches.value_of("state_id")
                 .expect("Not found state_id")
                 .parse()
@@ -133,9 +137,10 @@ fn subcommand_anonify<R: Rng>(
                 .expect("Not found target");
             let target_addr = UserAddress::base64_decode(target);
 
-            let contract_addr = matches.value_of("contract-addr")
-                .expect("Not found contract-addr")
-                .to_string();
+            let contract_addr = match matches.value_of("contract-addr") {
+                Some(addr) => addr.to_string(),
+                None => default_contract_addr,
+            };
             let state_id = matches.value_of("state_id")
                 .expect("Not found state_id")
                 .parse()
@@ -155,9 +160,10 @@ fn subcommand_anonify<R: Rng>(
             .expect("Failed to state_transition command");
         },
         ("handshake", Some(matches)) => {
-            let contract_addr = matches.value_of("contract-addr")
-                .expect("Not found contract-addr")
-                .to_string();
+            let contract_addr = match matches.value_of("contract-addr") {
+                Some(addr) => addr.to_string(),
+                None => default_contract_addr,
+            };
 
             commands::handshake(
                 anonify_url,
@@ -170,9 +176,10 @@ fn subcommand_anonify<R: Rng>(
                 .expect("Not found keyfile-index.")
                 .parse()
                 .expect("Failed to parse keyfile-index");
-            let contract_addr = matches.value_of("contract-addr")
-                .expect("Not found contract-addr")
-                .to_string();
+            let contract_addr = match matches.value_of("contract-addr") {
+                Some(addr) => addr.to_string(),
+                None => default_contract_addr,
+            };
             let state_id = matches.value_of("state_id")
                 .expect("Not found state_id")
                 .parse()
@@ -190,9 +197,10 @@ fn subcommand_anonify<R: Rng>(
             .expect("Failed to get state command");
         },
         ("start_polling", Some(matches)) => {
-            let contract_addr = matches.value_of("contract-addr")
-                .expect("Not found contract-addr")
-                .to_string();
+            let contract_addr = match matches.value_of("contract-addr") {
+                Some(addr) => addr.to_string(),
+                None => default_contract_addr,
+            };
 
             commands::start_polling(
                 anonify_url,
@@ -201,9 +209,10 @@ fn subcommand_anonify<R: Rng>(
             .expect("Failed to start_polling command");
         },
         ("set_contract_addr", Some(matches)) => {
-            let contract_addr = matches.value_of("contract-addr")
-                .expect("Not found contract-addr")
-                .to_string();
+            let contract_addr = match matches.value_of("contract-addr") {
+                Some(addr) => addr.to_string(),
+                None => default_contract_addr,
+            };
 
             commands::set_contract_addr(
                 anonify_url,
@@ -235,8 +244,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             .arg(Arg::with_name("contract-addr")
                 .short("c")
                 .takes_value(true)
-                .required(true)
-                .default_value(DEFAULT_CONTRACT_ADDRESS)
             )
         )
         .subcommand(SubCommand::with_name("init_state")
@@ -262,8 +269,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             .arg(Arg::with_name("contract-addr")
                 .short("c")
                 .takes_value(true)
-                .required(true)
-                .default_value(DEFAULT_CONTRACT_ADDRESS)
             )
         )
         .subcommand(SubCommand::with_name("state_transition")
@@ -295,8 +300,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             .arg(Arg::with_name("contract-addr")
                 .short("c")
                 .takes_value(true)
-                .required(true)
-                .default_value(DEFAULT_CONTRACT_ADDRESS)
             )
         )
         .subcommand(SubCommand::with_name("handshake")
@@ -304,8 +307,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             .arg(Arg::with_name("contract-addr")
                 .short("c")
                 .takes_value(true)
-                .required(true)
-                .default_value(DEFAULT_CONTRACT_ADDRESS)
             )
         )
         .subcommand(SubCommand::with_name("get_state")
@@ -319,8 +320,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             .arg(Arg::with_name("contract-addr")
                 .short("c")
                 .takes_value(true)
-                .required(true)
-                .default_value(DEFAULT_CONTRACT_ADDRESS)
             )
             .arg(Arg::with_name("state_id")
                 .short("s")
@@ -334,8 +333,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             .arg(Arg::with_name("contract-addr")
                 .short("c")
                 .takes_value(true)
-                .required(true)
-                .default_value(DEFAULT_CONTRACT_ADDRESS)
             )
         )
         .subcommand(SubCommand::with_name("set_contract_addr")
@@ -343,8 +340,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             .arg(Arg::with_name("contract-addr")
                 .short("c")
                 .takes_value(true)
-                .required(true)
-                .default_value(DEFAULT_CONTRACT_ADDRESS)
             )
         )
 }

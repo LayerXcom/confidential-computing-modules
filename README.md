@@ -114,6 +114,7 @@ $ ./target/debug/anonify-cli wallet list
 $ ./target/debug/anonify-cli anonify deploy
 ```
 return: a contract address
+You can set the contract address to a environment variable `CONTRACT_ADDR`.
 
 - Register a enclave integrity to contract
 ```

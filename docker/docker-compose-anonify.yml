@@ -16,6 +16,8 @@ services:
       ANONYMOUS_ASSET_ABI_PATH: "../../build/Anonify.abi"
       MY_ROSTER_IDX: 0
       MAX_ROSTER_IDX: 2
+      RUST_BACKTRACE: 1
+      RUST_LOG: debug
     networks:
       testing_net:
         ipv4_address: 172.28.1.1
@@ -36,6 +38,8 @@ services:
       ANONYMOUS_ASSET_ABI_PATH: "../../build/Anonify.abi"
       MY_ROSTER_IDX: 1
       MAX_ROSTER_IDX: 2
+      RUST_BACKTRACE: 1
+      RUST_LOG: debug
     networks:
       testing_net:
         ipv4_address: 172.28.1.2
@@ -56,6 +60,8 @@ services:
       ANONYMOUS_ASSET_ABI_PATH: "../../build/Anonify.abi"
       MY_ROSTER_IDX: 2
       MAX_ROSTER_IDX: 2
+      RUST_BACKTRACE: 1
+      RUST_LOG: debug
     networks:
       testing_net:
         ipv4_address: 172.28.1.3
