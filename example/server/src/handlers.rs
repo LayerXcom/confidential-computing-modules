@@ -118,9 +118,9 @@ where
     Ok(HttpResponse::Ok().json(api::state_transition::post::Response(receipt)))
 }
 
-pub fn handle_handshake<D, S, W, DB>(
+pub fn handle_key_rotation<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<api::handshake::post::Request>,
+    req: web::Json<api::key_rotation::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
@@ -136,7 +136,7 @@ where
         &server.abi_path,
     )?;
 
-    Ok(HttpResponse::Ok().json(api::handshake::post::Response(receipt)))
+    Ok(HttpResponse::Ok().json(api::key_rotation::post::Response(receipt)))
 }
 
 /// Fetch events from blockchain nodes manually, and then get state from enclave.

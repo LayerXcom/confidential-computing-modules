@@ -98,13 +98,13 @@ pub(crate) fn state_transition<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn handshake(
+pub(crate) fn key_rotation(
     anonify_url: String,
     contract_addr: String,
 ) -> Result<()> {
-    let req = api::handshake::post::Request{ contract_addr };
+    let req = api::key_rotation::post::Request{ contract_addr };
     let res = Client::new()
-        .post(&format!("{}/api/v1/handshake", &anonify_url))
+        .post(&format!("{}/api/v1/key_rotation", &anonify_url))
         .json(&req)
         .send()?
         .text()?;
