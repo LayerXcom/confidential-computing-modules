@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, env};
 use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use rand_os::OsRng;
@@ -34,6 +34,8 @@ fn test_in_enclave() {
 
 #[test]
 fn test_integration_eth_transfer() {
+    env::set_var("MY_ROSTER_IDX", "0");
+    env::set_var("MAX_ROSTER_IDX", "2");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let mut csprng: OsRng = OsRng::new().unwrap();

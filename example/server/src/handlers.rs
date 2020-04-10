@@ -158,7 +158,7 @@ where
     Ok(HttpResponse::Ok().json(api::state::get::Response(state.as_raw())))
 }
 
-pub fn start_polling<D, S, W, DB>(
+pub fn handle_start_polling<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::state::start_polling::Request>,
 ) -> Result<HttpResponse, Error>
@@ -175,6 +175,24 @@ where
             thread::sleep(time::Duration::from_secs(3));
         }
     });
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+pub fn handle_set_contract_addr<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::contract_addr::post::Request>,
+) -> Result<HttpResponse, Error>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher<WatcherDB=DB>,
+    DB: BlockNumDB,
+{
+    debug!("Starting set a contract address...");
+
+    debug!("Contract address: {:?}", &req.contract_addr);
+    server.dispatcher.set_contract_addr(&req.contract_addr, &server.abi_path)?;
 
     Ok(HttpResponse::Ok().finish())
 }

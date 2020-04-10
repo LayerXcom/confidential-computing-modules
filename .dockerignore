@@ -1,6 +1,12 @@
 build/
+!build/Anonify.abi
+!build/Anonify.bin
+
 target/
 core/enclave/target
 core/host/target
-docker/Dockerfile
+example/server/target
+!example/server/target/debug/anonify-server
+
+docker/
 .dockerignore

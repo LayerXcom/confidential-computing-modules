@@ -114,6 +114,12 @@ $ ./target/debug/anonify-cli wallet list
 $ ./target/debug/anonify-cli anonify deploy
 ```
 return: a contract address
+You can set the contract address to a environment variable `CONTRACT_ADDR`.
+
+- Register a enclave integrity to contract
+```
+$ ./target/debug/anonify-cli anonify register
+```
 
 - Initialize state
 ```
@@ -127,7 +133,7 @@ $ ./target/debug/anonify-cli anonify state_transition -a <AMOUNT> -t <TARGET_ACC
 
 - Get state from enclave
 ```
-$ ./target/debug/anonify-cli anonify get_state -c <CONTRACT ADDRESS>
+$ ./target/debug/anonify-cli anonify get_state -i <KEYFILE_INDEX> -c <CONTRACT ADDRESS>
 ```
 
 - Start fetching events

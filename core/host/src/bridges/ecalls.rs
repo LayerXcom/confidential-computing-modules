@@ -11,6 +11,7 @@ use anonify_event_watcher::{
     error::{HostError, Result},
 };
 use ed25519_dalek::{Signature, PublicKey};
+use log::debug;
 use crate::auto_ffi::*;
 
 pub(crate) fn insert_logs(
@@ -26,7 +27,7 @@ pub(crate) fn insert_logs(
             insert_handshake(eid, handshake)?;
         }
     } else {
-        return Err(anyhow!("Invalid inserting logs").into())
+        debug!("No logs to insert into the enclave.");
     }
 
     Ok(())

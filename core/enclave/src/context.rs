@@ -1,11 +1,15 @@
-use std::sync::{SgxRwLock, Arc};
+use std::{
+    sync::{SgxRwLock, Arc},
+    env,
+};
 use sgx_types::*;
 use std::prelude::v1::*;
 use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
 use anonify_app_preluder::{mem_name_to_id, Ciphertext};
 use anonify_runtime::{State, StateGetter, StateType, MemId};
 use anonify_treekem::{
-    handshake::{PathSecretRequest, CurrentPathSecret},
+    handshake::{PathSecretRequest, PathSecretKVS},
+    init_path_secret_kvs,
 };
 use crate::{
     crypto::EnclaveIdentityKey,
@@ -61,9 +65,21 @@ impl EnclaveContext<StateType> {
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
 
-        let path_secret = CurrentPathSecret::new_from_random();
-        let req = PathSecretRequest::LocalTest(path_secret);
-        let group_key = Arc::new(SgxRwLock::new(GroupKey::new(MY_ROSTER_IDX, MAX_ROSTER_IDX, req)?));
+        // temporary path secrets are generated in local.
+        let mut kvs = PathSecretKVS::new();
+        init_path_secret_kvs(&mut kvs, UNTIL_ROSTER_IDX, UNTIL_EPOCH);
+        let req = PathSecretRequest::Local(kvs);
+        
+        let my_roster_idx: usize = env::var("MY_ROSTER_IDX")
+            .expect("MY_ROSTER_IDX is not set")
+            .parse()
+            .expect("Failed to parse MY_ROSTER_IDX to usize");
+        let max_roster_idx: usize = env::var("MAX_ROSTER_IDX")
+            .expect("MAX_ROSTER_IDX is not set")
+            .parse()
+            .expect("Failed to parse MAX_ROSTER_IDX to usize");
+
+        let group_key = Arc::new(SgxRwLock::new(GroupKey::new(my_roster_idx, max_roster_idx, req)?));
 
         Ok(EnclaveContext{
             spid,
