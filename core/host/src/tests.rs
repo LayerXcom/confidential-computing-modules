@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, env};
 use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use rand_os::OsRng;
