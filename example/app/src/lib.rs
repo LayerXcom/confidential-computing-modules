@@ -94,7 +94,7 @@ impl_runtime!{
         );
 
         owner_approved.approve(spender, amount);
-        let owner_approved_update = update!(spender, "Approved", owner_approved);
+        let owner_approved_update = update!(owner, "Approved", owner_approved);
         insert![owner_approved_update]
     }
 
