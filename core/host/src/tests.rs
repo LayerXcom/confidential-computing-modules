@@ -34,6 +34,8 @@ fn test_in_enclave() {
 
 #[test]
 fn test_integration_eth_transfer() {
+    env::set_var("MY_ROSTER_IDX", "0");
+    env::set_var("MAX_ROSTER_IDX", "2");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let mut csprng: OsRng = OsRng::new().unwrap();
