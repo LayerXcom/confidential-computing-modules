@@ -123,22 +123,30 @@ $ ./target/debug/anonify-cli anonify register
 
 - Initialize state
 ```
-$ ./target/debug/anonify-cli anonify init_state -t <TOTAL SUPPLY> -c <CONTRACT ADDRESS>
+$ ./target/debug/anonify-cli anonify init_state -t <TOTAL SUPPLY>
 ```
+Default `<AMOUNT>` is 100.
 
 - State transition
 ```
-$ ./target/debug/anonify-cli anonify state_transition -a <AMOUNT> -t <TARGET_ACCOUNT> -c <CONTRACT ADDRESS>
+$ ./target/debug/anonify-cli anonify state_transition -a <AMOUNT> -t <TARGET_ACCOUNT>
 ```
+Default `<AMOUNT>` is 10.
 
 - Get state from enclave
 ```
-$ ./target/debug/anonify-cli anonify get_state -i <KEYFILE_INDEX> -c <CONTRACT ADDRESS>
+$ ./target/debug/anonify-cli anonify get_state -i <KEYFILE_INDEX>
 ```
+Default `<KEYFILE_INDEX>` is 0.
 
 - Start fetching events
 ```
-$ ./target/debug/anonify-cli anonify start_polling -c <CONTRACT ADDRESS>
+$ ./target/debug/anonify-cli anonify start_polling
+```
+
+- Key rotation
+```
+$ ./target/debug/anonify-cli anonify key_rotation
 ```
 
 ## Acknowledgements

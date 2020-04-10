@@ -201,7 +201,7 @@ pub mod state_transition {
     }
 }
 
-pub mod handshake {
+pub mod key_rotation {
     pub mod post {
         use super::super::*;
 

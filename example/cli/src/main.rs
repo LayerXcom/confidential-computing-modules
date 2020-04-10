@@ -159,17 +159,17 @@ fn subcommand_anonify<R: Rng>(
             )
             .expect("Failed to state_transition command");
         },
-        ("handshake", Some(matches)) => {
+        ("key_rotation", Some(matches)) => {
             let contract_addr = match matches.value_of("contract-addr") {
                 Some(addr) => addr.to_string(),
                 None => default_contract_addr,
             };
 
-            commands::handshake(
+            commands::key_rotation(
                 anonify_url,
                 contract_addr,
             )
-            .expect("Failed to handshake command");
+            .expect("Failed to key_rotation command");
         },
         ("get_state", Some(matches)) => {
             let keyfile_index: usize = matches.value_of("keyfile-index")
