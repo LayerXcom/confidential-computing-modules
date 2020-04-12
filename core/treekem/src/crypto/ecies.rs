@@ -21,8 +21,6 @@ impl EciesCiphertext {
         mut plaintext: Vec<u8>,
     ) -> Result<Self> {
         let my_ephemeral_secret = DhPrivateKey::from_random()?;
-        plaintext.extend(vec![0u8; AES_256_GCM_TAG_SIZE]);
-
         let my_ephemeral_pub_key = DhPubKey::from_private_key(&my_ephemeral_secret);
 
         let aes_key = encapsulate(&my_ephemeral_secret, &others_pub_key)?;
@@ -46,7 +44,7 @@ impl EciesCiphertext {
         let mut ciphertext = self.ciphertext;
         let plaintext = opening_key.open_in_place(Aad::empty(), &mut ciphertext)?;
 
-        Ok(plaintext[..(plaintext.len() - 32)].to_vec())
+        Ok(plaintext.to_vec())
     }
 }
 
@@ -86,9 +84,7 @@ fn derive_ecies_key_nonce(
 }
 
 pub const AES_256_GCM_KEY_SIZE: usize = 256 / 8;
-pub const AES_256_GCM_TAG_SIZE: usize = 256 / 8;
 pub const AES_256_GCM_NONCE_SIZE: usize = 96 / 8;
-
 
 /// A sequences of unique nonces.
 /// See: https://briansmith.org/rustdoc/ring/aead/trait.NonceSequence.html
