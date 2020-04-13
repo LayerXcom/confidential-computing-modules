@@ -209,17 +209,17 @@ impl UserState<StateType, Current> {
 /// to blockchain node.
 impl UserState<StateType, Next> {
     pub fn encrypt(self, key: &GroupKey) -> Result<Ciphertext> {
+        /// Add padding to fix the ciphertext size of all state types.
+        fn append_padding(buf: &mut Vec<u8>) {
+            let padding_size = *MAX_MEM_SIZE - buf.len();
+            let mut padding = vec![0u8; padding_size];
+            buf.extend_from_slice(&mut padding);
+        }
+
         let mut buf = self.encode();
-        add_padding(&mut buf);
+        append_padding(&mut buf);
         key.encrypt(buf).map_err(Into::into)
     }
-}
-
-/// Add padding to fix the ciphertext size of all state types.
-fn add_padding(buf: &mut Vec<u8>) {
-    let padding_size = *MAX_MEM_SIZE - buf.len();
-    let mut padding = vec![0u8; padding_size];
-    buf.extend_from_slice(&mut padding);
 }
 
 /// State value per each user's state.
