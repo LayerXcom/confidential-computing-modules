@@ -52,17 +52,17 @@ fn test_integration_eth_transfer() {
     let event_db = Arc::new(EventDB::new());
     let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
-    // 1. Deploy
+    // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
     let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
 
-    // 1.5. Get handshake from contract
+    // Get handshake from contract
     dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
-    // 2. init state
+    // Init state
     let total_supply = U64::from_raw(100);
     let init_state = constructor{ total_supply };
     let receipt = dispatcher.state_transition(
@@ -79,11 +79,11 @@ fn test_integration_eth_transfer() {
     println!("init state receipt: {}", receipt);
 
 
-    // 3. Get logs from contract and update state inside enclave.
+    // Get logs from contract and update state inside enclave.
     dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
-    // 4. Get state from enclave
+    // Get state from enclave
     let my_state = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
     let other_state = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
     let third_state = get_state::<U64>(&third_access_right, eid, "Balance").unwrap();
@@ -92,7 +92,7 @@ fn test_integration_eth_transfer() {
     assert_eq!(third_state, U64::zero());
 
 
-    // 5. Send a transaction to contract
+    // Send a transaction to contract
     let amount = U64::from_raw(30);
     let recipient = other_access_right.user_address();
     let transfer_state = transfer{ amount, recipient };
@@ -109,11 +109,11 @@ fn test_integration_eth_transfer() {
     println!("receipt: {}", receipt);
 
 
-    // 6. Update state inside enclave
+    // Update state inside enclave
     dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
-    // 7. Check the updated states
+    // Check the updated states
     let my_updated_state = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
     let other_updated_state = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
     let third_updated_state = get_state::<U64>(&third_access_right, eid, "Balance").unwrap();
@@ -198,17 +198,17 @@ fn test_integration_eth_approve() {
     let event_db = Arc::new(EventDB::new());
     let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
-    // 1. Deploy
+    // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
     let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
 
-    // 1.5. Get handshake from contract
+    // Get handshake from contract
     dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
-    // 2. init state
+    // Init state
     let total_supply = U64::from_raw(100);
     let init_state = constructor { total_supply };
     let receipt = dispatcher.state_transition(
@@ -225,16 +225,16 @@ fn test_integration_eth_approve() {
     println!("init state receipt: {}", receipt);
 
 
-    // 3. Get logs from contract and update state inside enclave.
+    // Get logs from contract and update state inside enclave.
     dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
-    // 4. Get state from enclave
+    // Get state from enclave
     let my_state = get_state::<Approved>(&my_access_right, eid, "Approved").unwrap();
     let other_state = get_state::<Approved>(&other_access_right, eid, "Approved").unwrap();
     assert_eq!(my_state, Approved::default());
     assert_eq!(other_state, Approved::default());
 
-    // 5. Send a transaction to contract
+    // Send a transaction to contract
     let amount = U64::from_raw(30);
     let spender = other_access_right.user_address();
     let approve_state = approve { amount, spender };
@@ -251,11 +251,11 @@ fn test_integration_eth_approve() {
     println!("receipt: {}", receipt);
 
 
-    // 6. Update state inside enclave
+    // Update state inside enclave
     dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
-    // 7. Check the updated states
+    // Check the updated states
     let my_state = get_state::<Approved>(&my_access_right, eid, "Approved").unwrap();
     let other_state = get_state::<Approved>(&other_access_right, eid, "Approved").unwrap();
     let want_my_state = Approved::new({
