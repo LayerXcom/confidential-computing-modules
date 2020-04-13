@@ -115,7 +115,6 @@ pub struct UserState<S: State, N> {
     address: UserAddress,
     mem_id: MemId,
     state_value: StateValue<S, N>,
-    padding: Vec<bool>,
 }
 
 impl<N> UserState<StateType, N> {
@@ -135,13 +134,10 @@ impl UserState<StateType, Current> {
         mem_id: MemId,
         state_value: StateValue<StateType, Current>,
     ) -> Self {
-        let padding = vec![];
-
         UserState {
             address,
             mem_id,
             state_value,
-            padding,
         }
     }
 
@@ -172,14 +168,11 @@ impl UserState<StateType, Current> {
 
     pub fn update_inner_state(self, update: StateType) -> Self {
         let state_value = StateValue::new(update, self.lock_param());
-        let padding_size = state_value.padding_size();
-        let padding = vec![true; padding_size];
 
         UserState {
             address: self.address,
             mem_id: self.mem_id,
             state_value,
-            padding,
         }
     }
 
@@ -195,7 +188,6 @@ impl UserState<StateType, Current> {
             address: self.address,
             mem_id: self.mem_id,
             state_value,
-            padding: self.padding,
         }
     }
 
@@ -217,7 +209,15 @@ impl UserState<StateType, Current> {
 /// to blockchain node.
 impl UserState<StateType, Next> {
     pub fn encrypt(self, key: &GroupKey) -> Result<Ciphertext> {
-        let buf = self.encode();
+        /// Add padding to fix the ciphertext size of all state types.
+        fn append_padding(buf: &mut Vec<u8>) {
+            let padding_size = *MAX_MEM_SIZE - buf.len();
+            let mut padding = vec![0u8; padding_size];
+            buf.extend_from_slice(&mut padding);
+        }
+
+        let mut buf = self.encode();
+        append_padding(&mut buf);
         key.encrypt(buf).map_err(Into::into)
     }
 }
@@ -239,11 +239,6 @@ impl<N> StateValue<StateType, N> {
             lock_param,
             _marker: PhantomData,
         }
-    }
-
-    /// Get padding size to fix the ciphertext size of all state types.
-    pub fn padding_size(&self) -> usize {
-        *MAX_MEM_SIZE - self.inner_state.len()
     }
 
     /// Get inner state and lock_param from database value.
