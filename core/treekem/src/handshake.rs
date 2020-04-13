@@ -1,6 +1,7 @@
 use std::vec::Vec;
 use std::collections::HashMap;
 use std::string::String;
+use std::sync::{SgxRwLock, Arc};
 use crate::application::AppKeyChain;
 use crate::crypto::{
     CryptoRng,
@@ -65,15 +66,23 @@ impl DirectPathNodeMsg {
 pub enum PathSecretRequest {
     Local(PathSecretKVS),
     Remote(String),
+    /// just for test use to derive new path secret depending on current path secret.
+    LocalTest(CurrentPathSecret),
 }
 
 #[derive(Debug, Clone)]
 pub struct PathSecretKVS(HashMap<AccessKey, PathSecret>);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(Encode, Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub struct AccessKey{
     roster_idx: u32,
     epoch: u32,
+}
+
+impl AccessKey {
+    pub fn new(roster_idx: u32, epoch: u32) -> Self {
+        AccessKey { roster_idx, epoch }
+    }
 }
 
 impl PathSecretKVS {
@@ -91,5 +100,15 @@ impl PathSecretKVS {
         let key = AccessKey{roster_idx, epoch};
         let value = PathSecret::new_from_random(csprng);
         self.0.insert(key, value);
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct CurrentPathSecret(pub Arc<SgxRwLock<PathSecret>>);
+
+impl CurrentPathSecret {
+    pub fn new_from_random() -> Self {
+        let path_secret = PathSecret::new_from_random_sgx();
+        CurrentPathSecret(Arc::new(SgxRwLock::new(path_secret)))
     }
 }

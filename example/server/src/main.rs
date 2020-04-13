@@ -1,7 +1,4 @@
-#[macro_use]
-extern crate dotenv_codegen;
-
-use std::{sync::Arc, io};
+use std::{sync::Arc, io, env};
 use sgx_types::sgx_enclave_id_t;
 use anonify_host::{
     EnclaveDir,
@@ -33,8 +30,8 @@ where
     DB: BlockNumDB,
 {
     pub fn new(eid: sgx_enclave_id_t) -> Self {
-        let eth_url = dotenv!("ETH_URL").to_string();
-        let abi_path = dotenv!("ANONYMOUS_ASSET_ABI_PATH").to_string();
+        let eth_url = env::var("ETH_URL").expect("ETH_URL is not set.");
+        let abi_path = env::var("ANONYMOUS_ASSET_ABI_PATH").expect("ANONYMOUS_ASSET_ABI_PATH is not set.");
         let event_db = Arc::new(DB::new());
         let dispatcher = Dispatcher::<D,S,W,DB>::new(eid, &eth_url, event_db).unwrap();
 
@@ -49,7 +46,7 @@ where
 
 fn main() -> io::Result<()> {
     env_logger::init();
-    dotenv::from_filename(".env.template").ok();
+    let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
 
     // Enclave must be initialized in main function.
     let enclave = EnclaveDir::new()
@@ -67,9 +64,11 @@ fn main() -> io::Result<()> {
             .route("/api/v1/register", web::post().to(handle_register::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/init_state", web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/state_transition", web::post().to(handle_state_transition::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
-            .route("/api/v1/handshake", web::post().to(handle_handshake::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/key_rotation", web::post().to(handle_key_rotation::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/get_state", web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/start_polling", web::get().to(handle_start_polling::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/set_contract_addr", web::get().to(handle_set_contract_addr::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
     })
-    .bind(dotenv!("ANONIFY_URL"))?
+    .bind(anonify_url)?
     .run()
 }

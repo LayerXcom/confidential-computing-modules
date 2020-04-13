@@ -11,21 +11,13 @@ $ git clone git@github.com:LayerXcom/anonify.git
 $ cd anonify
 ```
 
-Copy files of environment variables.
-```
-$ cp .env.template .env
-$ cp example/server/.env.template example/server/.env
-```
-
-## Building contracts
+Building contracts
 ```
 $ solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
 ```
 
-## Running
-
-### SW
-You can just build the core component in simulation mode which allows us to run on macos.
+## Building in SW
+You can just build the core component in simulation mode which allows us to run on macOS.
 
 ```
 $ docker run -v `pwd`:/root/anonify --rm -it osuketh/anonify
@@ -33,10 +25,15 @@ $ cd anonify/core
 $ make DEBUG=1
 ```
 
-### HW
+## Testing in HW
 Assumed your hardware supports Intel SGX or run it on [Azure Confidential Computing](https://azure.microsoft.com/ja-jp/solutions/confidential-compute/).
 
-If you don't have a docket network for testing: (Docker compose doesn't be working currently due to AESM service deamon.)
+The very first thing you need to do is starting aesm service in a SGX-enabled environment. For more details, see: https://github.com/apache/incubator-teaclave-sgx-sdk/blob/master/documents/sgx_in_mesalock_linux.md#solution-overview
+```
+LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
+```
+
+If you haven't create a docker network for testing:
 ```
 $ docker network create --subnet=172.18.0.0/16 test-network
 ```
@@ -48,33 +45,29 @@ $ docker run -d --name ganache --net=test-network --rm -it trufflesuite/ganache-
 
 Running intel SGX environment
 ```
-$ docker run -v `pwd`:/root/anonify --device /dev/sgx --net=test-network --name sgx --rm -it osuketh/anonify
-```
-- The SDK Driver creates a device at `/dev/sgx`, non-DCAP systems using IAS.
-
-
-### Test
-
-After entering docker container, the very first thing is to start aesm service daemon.
-
-```
-$ LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
+$ ./scripts/start-docker.sh
 ```
 
-and then, you can run build in HW mode.
+and then, you can build in HW mode.
 ```
-$ export SGX_MODE=HW
 $ cd anonify/core
 $ make DEBUG=1
 ```
 
-Finally, you can test in core-host.
+Finally, you can test SGX parts.
 ```
 $ cd host
 $ cargo test
 ```
 
-### Running server
+## Running anonify server
+
+### Using docker
+```
+$ docker-compose -f docker/docker-compose-anonify.yml up -d
+```
+
+### Non-docker
 ```
 $ ./scripts/run-server.sh
 ```
@@ -84,7 +77,7 @@ If you want to build artifacts in release mode, pass a `--release` argument. Any
 $ ./scripts/run-server.sh --release
 ```
 
-### CLI Usage
+## CLI Usage
 You can use anonify-cli to communicate with a whole anonify system.
 
 Build anonify's command line utilities.
@@ -97,7 +90,7 @@ If you want to build artifacts in release mode, pass a `--release` argument.
 $ ./scripts/build-cli.sh --release
 ```
 
-#### Wallet operations
+### Wallet operations
 
 - Initialize a new wallet
 ```
@@ -114,30 +107,49 @@ $  ./target/debug/anonify-cli wallet add-account
 $ ./target/debug/anonify-cli wallet list
 ```
 
-#### Anonify operations
+### Anonify operations
 
 - Deploy a anonymous-asset contract
 ```
 $ ./target/debug/anonify-cli anonify deploy
 ```
 return: a contract address
+You can set the contract address to a environment variable `CONTRACT_ADDR`.
+
+- Register a enclave integrity to contract
+```
+$ ./target/debug/anonify-cli anonify register
+```
 
 - Initialize state
 ```
-$ ./target/debug/anonify-cli anonify init_state -t <TOTAL SUPPLY> -c <CONTRACT ADDRESS>
+$ ./target/debug/anonify-cli anonify init_state -t <TOTAL SUPPLY>
 ```
+Default `<AMOUNT>` is 100.
 
 - State transition
 ```
-$ ./target/debug/anonify-cli anonify state_transition -a <AMOUNT> -t <TARGET_ACCOUNT> -c <CONTRACT ADDRESS>
+$ ./target/debug/anonify-cli anonify state_transition -a <AMOUNT> -t <TARGET_ACCOUNT>
 ```
+Default `<AMOUNT>` is 10.
 
 - Get state from enclave
 ```
-$ ./target/debug/anonify-cli anonify get_state -c <CONTRACT ADDRESS>
+$ ./target/debug/anonify-cli anonify get_state -i <KEYFILE_INDEX>
+```
+Default `<KEYFILE_INDEX>` is 0.
+
+- Start fetching events
+```
+$ ./target/debug/anonify-cli anonify start_polling
 ```
 
-### Acknowledgements
+- Key rotation
+```
+$ ./target/debug/anonify-cli anonify key_rotation
+```
+
+## Acknowledgements
 
 - [Rust SGX SDK](https://github.com/apache/incubator-teaclave-sgx-sdk)
 - [Molasses](https://github.com/trailofbits/molasses)

@@ -21,7 +21,7 @@ if [ "x$1" == "x--release" ]; then
     rm -rf ../example/bin && cp -rf bin/ ../example/bin/ && cd ../example/server
 
     echo "Build artifacts in release mode, with optimizations."
-    cargo run --release
+    cargo build --release
     exit
 fi
 
@@ -33,4 +33,4 @@ solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
 cd example/server
 
 echo "Build artifacts in debug mode."
-RUST_BACKTRACE=1 RUST_LOG=debug cargo run
+RUST_BACKTRACE=1 RUST_LOG=debug cargo build

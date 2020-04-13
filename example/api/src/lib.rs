@@ -201,7 +201,7 @@ pub mod state_transition {
     }
 }
 
-pub mod handshake {
+pub mod key_rotation {
     pub mod post {
         use super::super::*;
 
@@ -270,5 +270,37 @@ pub mod state {
 
         #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
         pub struct Response<S: State>(pub S);
+    }
+
+    pub mod start_polling {
+        use super::super::*;
+
+        #[derive(Clone, Deserialize, Serialize, Debug)]
+        pub struct Request {
+            pub contract_addr: String,
+        }
+
+        impl Request {
+            pub fn new(contract_addr: String) -> Self {
+                Request { contract_addr }
+            }
+        }
+    }
+}
+
+pub mod contract_addr {
+    pub mod post {
+        use super::super::*;
+
+        #[derive(Clone, Deserialize, Serialize, Debug)]
+        pub struct Request {
+            pub contract_addr: String,
+        }
+
+        impl Request {
+            pub fn new(contract_addr: String) -> Self {
+                Request { contract_addr }
+            }
+        }
     }
 }

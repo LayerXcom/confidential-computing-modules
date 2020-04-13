@@ -4,7 +4,7 @@ use crate::group_state::GroupState;
 use crate::crypto::{
     hmac::HmacKey,
     secrets::{AppSecret, AppMemberSecret},
-    ecies::{OneNonceSequence, AES_256_GCM_KEY_SIZE, AES_256_GCM_NONCE_SIZE, AES_256_GCM_TAG_SIZE},
+    ecies::{OneNonceSequence, AES_256_GCM_KEY_SIZE, AES_256_GCM_NONCE_SIZE},
     hkdf, SHA256_OUTPUT_LEN,
 };
 use crate::ratchet_tree::RatchetTreeNode;
@@ -31,7 +31,6 @@ impl AppKeyChain {
         mut plaintext: Vec<u8>,
         group_state: &GroupState
     ) -> Result<Ciphertext> {
-        plaintext.extend(vec![0u8; AES_256_GCM_TAG_SIZE]);
         let my_roster_idx = group_state.my_roster_idx();
 
         let (ub_key, nonce_seq, generation) = self.key_nonce_gen(my_roster_idx as usize)?;
@@ -64,7 +63,7 @@ impl AppKeyChain {
                 let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
                 let plaintext = opening_key.open_in_place(Aad::empty(), &mut ciphertext)?;
 
-                Ok(Some(plaintext[..(plaintext.len() - 32)].to_vec()))
+                Ok(Some(plaintext.to_vec()))
             }
         }
     }

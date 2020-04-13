@@ -98,13 +98,13 @@ pub(crate) fn state_transition<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn handshake(
+pub(crate) fn key_rotation(
     anonify_url: String,
     contract_addr: String,
 ) -> Result<()> {
-    let req = api::handshake::post::Request{ contract_addr };
+    let req = api::key_rotation::post::Request{ contract_addr };
     let res = Client::new()
-        .post(&format!("{}/api/v1/handshake", &anonify_url))
+        .post(&format!("{}/api/v1/key_rotation", &anonify_url))
         .json(&req)
         .send()?
         .text()?;
@@ -134,6 +134,34 @@ pub(crate) fn get_state<R: Rng>(
         .text()?;
 
     println!("Current State: {}", res);
+    Ok(())
+}
+
+pub(crate) fn start_polling(
+    anonify_url: String,
+    contract_addr: String,
+) -> Result<()> {
+    let req = api::state::start_polling::Request::new(contract_addr);
+    Client::new()
+        .get(&format!("{}/api/v1/start_polling", &anonify_url))
+        .json(&req)
+        .send()?
+        .text()?;
+
+    Ok(())
+}
+
+pub(crate) fn set_contract_addr(
+    anonify_url: String,
+    contract_addr: String,
+) -> Result<()> {
+    let req = api::contract_addr::post::Request::new(contract_addr);
+    Client::new()
+        .get(&format!("{}/api/v1/set_contract_addr", &anonify_url))
+        .json(&req)
+        .send()?
+        .text()?;
+
     Ok(())
 }
 

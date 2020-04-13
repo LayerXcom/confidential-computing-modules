@@ -40,6 +40,6 @@ sgx_tstd = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.g
 sgx_rand = "1.1.0"
 sgx_types = "1.1.0"
 sgx_trts = "1.1.0"
-sgx_tcrypto  = "1.1.0"
-sgx_tseal  = "1.1.0"
+sgx_tcrypto = "1.1.0"
+sgx_tseal = "1.1.0"
 sgx_tunittest = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.git" }

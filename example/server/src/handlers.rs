@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, thread, time};
 use failure::Error;
 use log::debug;
 use anonify_host::dispatcher::get_state;
@@ -33,6 +33,7 @@ where
         .deploy(&deployer_addr)?;
 
     debug!("Contract address: {:?}", &contract_addr);
+    server.dispatcher.set_contract_addr(&contract_addr, &server.abi_path)?;
 
     Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr)))
 }
@@ -117,9 +118,9 @@ where
     Ok(HttpResponse::Ok().json(api::state_transition::post::Response(receipt)))
 }
 
-pub fn handle_handshake<D, S, W, DB>(
+pub fn handle_key_rotation<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<api::handshake::post::Request>,
+    req: web::Json<api::key_rotation::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
@@ -135,7 +136,7 @@ where
         &server.abi_path,
     )?;
 
-    Ok(HttpResponse::Ok().json(api::handshake::post::Response(receipt)))
+    Ok(HttpResponse::Ok().json(api::key_rotation::post::Response(receipt)))
 }
 
 /// Fetch events from blockchain nodes manually, and then get state from enclave.
@@ -155,4 +156,43 @@ where
     let state = get_state::<U64>(&access_right, server.eid, "Balance")?;
 
     Ok(HttpResponse::Ok().json(api::state::get::Response(state.as_raw())))
+}
+
+pub fn handle_start_polling<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::state::start_polling::Request>,
+) -> Result<HttpResponse, Error>
+where
+    D: Deployer + Send + Sync + 'static,
+    S: Sender + Send + Sync + 'static,
+    W: Watcher<WatcherDB=DB> + Send + Sync + 'static,
+    DB: BlockNumDB + Send + Sync + 'static,
+{
+    let _ = thread::spawn(move || {
+        loop {
+            server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path).unwrap();
+            debug!("event fetched...");
+            thread::sleep(time::Duration::from_secs(3));
+        }
+    });
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+pub fn handle_set_contract_addr<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::contract_addr::post::Request>,
+) -> Result<HttpResponse, Error>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher<WatcherDB=DB>,
+    DB: BlockNumDB,
+{
+    debug!("Starting set a contract address...");
+
+    debug!("Contract address: {:?}", &req.contract_addr);
+    server.dispatcher.set_contract_addr(&req.contract_addr, &server.abi_path)?;
+
+    Ok(HttpResponse::Ok().finish())
 }
