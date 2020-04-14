@@ -266,3 +266,146 @@ fn test_integration_eth_approve() {
     assert_eq!(my_state, want_my_state);
     assert_eq!(other_state, Approved::default());
 }
+
+#[test]
+fn test_integration_eth_transfer_from() {
+    env::set_var("MY_ROSTER_IDX", "0");
+    env::set_var("MAX_ROSTER_IDX", "2");
+    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+    let eid = enclave.geteid();
+    let mut csprng: OsRng = OsRng::new().unwrap();
+    let my_access_right = AccessRight::new_from_rng(&mut csprng);
+    let other_access_right = AccessRight::new_from_rng(&mut csprng);
+    let third_access_right = AccessRight::new_from_rng(&mut csprng);
+
+    let state_id = 0;
+    let gas = 3_000_000;
+    let event_db = Arc::new(EventDB::new());
+    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
+
+    // Deploy
+    let deployer_addr = dispatcher.get_account(0).unwrap();
+    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    println!("Deployer address: {:?}", deployer_addr);
+    println!("deployed contract address: {}", contract_addr);
+
+    // Get handshake from contract
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+    // Init state
+    let total_supply = U64::from_raw(100);
+    let init_state = constructor { total_supply };
+    let receipt = dispatcher.state_transition(
+        my_access_right.clone(),
+        init_state,
+        state_id,
+        "constructor",
+        deployer_addr.clone(),
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
+
+    println!("init state receipt: {}", receipt);
+
+
+    // Get logs from contract and update state inside enclave.
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+    // Get initial state from enclave
+    let my_state_balance = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
+    let other_state_balance = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
+    let third_state_balance = get_state::<U64>(&third_access_right, eid, "Balance").unwrap();
+    assert_eq!(my_state_balance, U64::from_raw(100));
+    assert_eq!(other_state_balance, U64::zero());
+    assert_eq!(third_state_balance, U64::zero());
+
+    let my_state_approved = get_state::<Approved>(&my_access_right, eid, "Approved").unwrap();
+    let other_state_approved = get_state::<Approved>(&other_access_right, eid, "Approved").unwrap();
+    let third_state_approved = get_state::<Approved>(&third_access_right, eid, "Approved").unwrap();
+    assert_eq!(my_state_approved, Approved::default());
+    assert_eq!(other_state_approved, Approved::default());
+    assert_eq!(third_state_approved, Approved::default());
+
+    // Send a transaction to contract
+    let amount = U64::from_raw(30);
+    let spender = other_access_right.user_address();
+    let approve_state = approve { amount, spender };
+    let receipt = dispatcher.state_transition(
+        my_access_right.clone(),
+        approve_state,
+        state_id,
+        "approve",
+        deployer_addr,
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
+    println!("receipt: {}", receipt);
+
+
+    // Update state inside enclave
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+    // Check the updated states
+    let my_state_balance = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
+    let other_state_balance = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
+    let third_state_balance = get_state::<U64>(&third_access_right, eid, "Balance").unwrap();
+    assert_eq!(my_state_balance, U64::from_raw(100));
+    assert_eq!(other_state_balance, U64::zero());
+    assert_eq!(third_state_balance, U64::zero());
+
+    let my_state_approved = get_state::<Approved>(&my_access_right, eid, "Approved").unwrap();
+    let other_state_approved = get_state::<Approved>(&other_access_right, eid, "Approved").unwrap();
+    let third_state_approved = get_state::<Approved>(&third_access_right, eid, "Approved").unwrap();
+    let want_my_state = Approved::new({
+        let mut bt = BTreeMap::new();
+        bt.insert(spender, amount);
+        bt
+    });
+    assert_eq!(my_state_approved, want_my_state);
+    assert_eq!(other_state_approved, Approved::default());
+    assert_eq!(third_state_approved, Approved::default());
+
+    // Send a transaction to contract
+    let amount = U64::from_raw(20);
+    let owner = my_access_right.user_address();
+    let to = third_access_right.user_address();
+    let transferred_from_state = transfer_from { owner, to, amount };
+    let receipt = dispatcher.state_transition(
+        other_access_right.clone(),
+        transferred_from_state,
+        state_id,
+        "transfer_from",
+        deployer_addr,
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
+    println!("receipt: {}", receipt);
+
+
+    // Update state inside enclave
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+    // Check the final states
+    let my_state_balance = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
+    let other_state_balance = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
+    let third_state_balance = get_state::<U64>(&third_access_right, eid, "Balance").unwrap();
+    assert_eq!(my_state_balance, U64::from_raw(80));
+    assert_eq!(other_state_balance, U64::zero());
+    assert_eq!(third_state_balance, U64::from_raw(20));
+
+    let my_state_approved = get_state::<Approved>(&my_access_right, eid, "Approved").unwrap();
+    let other_state_approved = get_state::<Approved>(&other_access_right, eid, "Approved").unwrap();
+    let third_state_approved = get_state::<Approved>(&third_access_right, eid, "Approved").unwrap();
+    let want_my_state = Approved::new({
+        let mut bt = BTreeMap::new();
+        bt.insert(spender, U64::from_raw(10));
+        bt
+    });
+    assert_eq!(my_state_approved, want_my_state);
+    assert_eq!(other_state_approved, Approved::default());
+    assert_eq!(third_state_approved, Approved::default());
+}
