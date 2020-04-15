@@ -8,7 +8,7 @@ use sgx_types::*;
 use rand_os::OsRng;
 use anonify_common::AccessRight;
 use anonify_runtime::{State, U64, Approved};
-use anonify_app_preluder::{transfer, constructor, approve};
+use anonify_app_preluder::{transfer, constructor, approve, transfer_from};
 use anonify_event_watcher::{
     eventdb::{EventDB, BlockNumDB},
     eth::*,
@@ -337,7 +337,7 @@ fn test_integration_eth_transfer_from() {
         approve_state,
         state_id,
         "approve",
-        deployer_addr,
+        deployer_addr.clone(),
         gas,
         &contract_addr,
         ANONYMOUS_ASSET_ABI_PATH,
@@ -371,8 +371,8 @@ fn test_integration_eth_transfer_from() {
     // Send a transaction to contract
     let amount = U64::from_raw(20);
     let owner = my_access_right.user_address();
-    let to = third_access_right.user_address();
-    let transferred_from_state = transfer_from { owner, to, amount };
+    let recipient = third_access_right.user_address();
+    let transferred_from_state = transfer_from { owner, recipient, amount };
     let receipt = dispatcher.state_transition(
         other_access_right.clone(),
         transferred_from_state,
