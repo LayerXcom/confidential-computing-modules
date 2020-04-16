@@ -19,18 +19,6 @@ x-quorum-def:
     - /bin/sh
     - -c
     - |
-      UDS_WAIT=10
-      for i in $$(seq 1 100)
-      do
-        set -e
-        if [ -S $${PRIVATE_CONFIG} ] && \
-          [ "I'm up!" == "$$(wget --timeout $${UDS_WAIT} -qO- --proxy off 172.16.239.10$${NODE_ID}:9000/upcheck)" ];
-        then break
-        else
-          echo "Sleep $${UDS_WAIT} seconds. Waiting for TxManager."
-          sleep $${UDS_WAIT}
-        fi
-      done
       DDIR=/qdata/dd
       rm -rf $${DDIR}
       mkdir -p $${DDIR}/keystore
@@ -64,126 +52,6 @@ x-quorum-def:
         --unlock 0 \
         --password /examples/passwords.txt \
         ${QUORUM_GETH_ARGS:-} $${GETH_ARGS_${QUORUM_CONSENSUS:-istanbul}}
-
-x-tx-manager-def:
-  &tx-manager-def
-  image: "${QUORUM_TX_MANAGER_DOCKER_IMAGE:-quorumengineering/tessera:0.10.0}"
-  expose:
-    - "9000"
-    - "9080"
-  restart: "no"
-  healthcheck:
-    test: ["CMD-SHELL", "[ -S /qdata/tm/tm.ipc ] || exit 1"]
-    interval: 3s
-    timeout: 3s
-    retries: 20
-    start_period: 5s
-  entrypoint:
-    - /bin/sh
-    - -c
-    - |
-      DDIR=/qdata/tm
-      rm -rf $${DDIR}
-      mkdir -p $${DDIR}
-      DOCKER_IMAGE="${QUORUM_TX_MANAGER_DOCKER_IMAGE:-quorumengineering/tessera:0.10.0}"
-      TX_MANAGER=$$(echo $${DOCKER_IMAGE} | sed 's/^.*\/\(.*\):.*$$/\1/g')
-      echo "TxManager: $${TX_MANAGER}"
-      case $${TX_MANAGER}
-      in
-        tessera)
-          cp /examples/keys/tm$${NODE_ID}.pub $${DDIR}/tm.pub
-          cp /examples/keys/tm$${NODE_ID}.key $${DDIR}/tm.key
-          #extract the tessera version from the jar
-          TESSERA_VERSION=$$(unzip -p /tessera/tessera-app.jar META-INF/MANIFEST.MF | grep Tessera-Version | cut -d" " -f2)
-          echo "Tessera version (extracted from manifest file): $${TESSERA_VERSION}"
-          # sorting versions to target correct configuration
-          V08=$$(echo -e "0.8\n$${TESSERA_VERSION}" | sort -n -r -t '.' -k 1,1 -k 2,2 | head -n1)
-          V09AndAbove=$$(echo -e "0.9\n$${TESSERA_VERSION}" | sort -n -r -t '.' -k 1,1 -k 2,2 | head -n1)
-          TESSERA_CONFIG_TYPE="-09"
-          case "$${TESSERA_VERSION}" in
-              "$${V09AndAbove}")
-                  TESSERA_CONFIG_TYPE="-09"
-                  ;;
-          esac
-
-          echo Config type $${TESSERA_CONFIG_TYPE}
-
-          #generating the two config flavors
-          cat <<EOF > $${DDIR}/tessera-config-09.json
-          {
-            "useWhiteList": false,
-            "jdbc": {
-              "username": "sa",
-              "password": "",
-              "url": "jdbc:h2:./$${DDIR}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0",
-              "autoCreateTables": true
-            },
-            "serverConfigs":[
-            {
-              "app":"ThirdParty",
-              "enabled": true,
-              "serverAddress": "http://$$(hostname -i):9080",
-              "communicationType" : "REST"
-            },
-            {
-              "app":"Q2T",
-              "enabled": true,
-              "serverAddress": "unix:$${DDIR}/tm.ipc",
-              "communicationType" : "REST"
-            },
-            {
-              "app":"P2P",
-              "enabled": true,
-              "serverAddress": "http://$$(hostname -i):9000",
-              "sslConfig": {
-                "tls": "OFF"
-              },
-              "communicationType" : "REST"
-            }
-            ],
-            "peer": [
-               {
-                   "url": "http://txmanager1:9000"
-               },
-               {
-                   "url": "http://txmanager2:9000"
-               },
-               {
-                   "url": "http://txmanager3:9000"
-               }
-            ],
-            "keys": {
-              "passwords": [],
-              "keyData": [
-                {
-                  "config": $$(cat $${DDIR}/tm.key),
-                  "publicKey": "$$(cat $${DDIR}/tm.pub)"
-                }
-              ]
-            },
-            "alwaysSendTo": []
-          }
-      EOF
-          cat $${DDIR}/tessera-config$${TESSERA_CONFIG_TYPE}.json
-          java -Xms128M -Xmx128M -jar /tessera/tessera-app.jar -configfile $${DDIR}/tessera-config$${TESSERA_CONFIG_TYPE}.json
-          ;;
-        constellation)
-          echo "socket=\"$${DDIR}/tm.ipc\"\npublickeys=[\"/examples/keys/tm$${NODE_ID}.pub\"]\n" > $${DDIR}/tm.conf
-          constellation-node \
-            --url=http://$$(hostname -i):9000/ \
-            --port=9000 \
-            --socket=$${DDIR}/tm.ipc \
-            --othernodes=http://172.16.239.101:9000/,http://172.16.239.102:9000/,http://172.16.239.103:9000/,http://172.16.239.104:9000/,http://172.16.239.105:9000/ \
-            --publickeys=/examples/keys/tm$${NODE_ID}.pub \
-            --privatekeys=/examples/keys/tm$${NODE_ID}.key \
-            --storage=$${DDIR} \
-            --verbosity=4
-          ;;
-        *)
-          echo "Invalid Transaction Manager"
-          exit 1
-          ;;
-      esac
 
 services:
   sgx_machine1:
@@ -259,29 +127,12 @@ services:
       - "22000:8545"
     volumes:
       - vol1:/qdata
-      - ./.quorum:/examples:ro
-    depends_on:
-      - txmanager1
+      - ../.quorum:/examples:ro
     environment:
-      - PRIVATE_CONFIG=/qdata/tm/tm.ipc
       - NODE_ID=1
     networks:
       testing_net:
         ipv4_address: 172.28.1.11
-
-  txmanager1:
-    << : *tx-manager-def
-    hostname: txmanager1
-    ports:
-      - "9081:9080"
-    volumes:
-      - vol1:/qdata
-      - ./.quorum:/examples:ro
-    networks:
-      testing_net:
-        ipv4_address: 172.28.1.101
-    environment:
-      - NODE_ID=1
 
   quorum_node2:
     << : *quorum-def
@@ -290,29 +141,12 @@ services:
       - "22001:8545"
     volumes:
       - vol1:/qdata
-      - ./.quorum:/examples:ro
-    depends_on:
-      - txmanager2
+      - ../.quorum:/examples:ro
     environment:
-      - PRIVATE_CONFIG=/qdata/tm/tm.ipc
       - NODE_ID=2
     networks:
       testing_net:
         ipv4_address: 172.28.1.12
-
-  txmanager2:
-    << : *tx-manager-def
-    hostname: txmanager2
-    ports:
-      - "9082:9080"
-    volumes:
-      - vol1:/qdata
-      - ./.quorum:/examples:ro
-    networks:
-      testing_net:
-        ipv4_address: 172.28.1.102
-    environment:
-      - NODE_ID=2
 
   quorum_node3:
     << : *quorum-def
@@ -321,29 +155,12 @@ services:
       - "22002:8545"
     volumes:
       - vol1:/qdata
-      - ./.quorum:/examples:ro
-    depends_on:
-      - txmanager3
+      - ../.quorum:/examples:ro
     environment:
-      - PRIVATE_CONFIG=/qdata/tm/tm.ipc
       - NODE_ID=3
     networks:
       testing_net:
         ipv4_address: 172.28.1.13
-
-  txmanager3:
-    << : *tx-manager-def
-    hostname: txmanager3
-    ports:
-      - "9083:9080"
-    volumes:
-      - vol1:/qdata
-      - ./.quorum:/examples:ro
-    networks:
-      testing_net:
-        ipv4_address: 172.28.1.103
-    environment:
-      - NODE_ID=3
 
 networks:
   testing_net:
