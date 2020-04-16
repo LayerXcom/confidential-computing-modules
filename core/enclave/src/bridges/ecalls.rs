@@ -137,10 +137,10 @@ pub unsafe extern "C" fn ecall_handshake(
     raw_handshake_tx: &mut RawHandshakeTx,
 ) -> sgx_status_t {
     let handshake_tx = HandshakeTx::construct(&*ENCLAVE_CONTEXT)
-        .expect("Faild to constract handshake transaction.");
+        .expect("Failed to construct handshake transaction.");
 
     *raw_handshake_tx = handshake_tx.into_raw()
-        .expect("Faild to convert into raw handshake transaction.");
+        .expect("Failed to convert into raw handshake transaction.");
 
     sgx_status_t::SGX_SUCCESS
 }
