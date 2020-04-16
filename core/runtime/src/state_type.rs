@@ -5,7 +5,7 @@ use crate::localstd::{
     ops::{Add, Sub, Mul, Div},
     convert::TryFrom,
 };
-use crate::local_anyhow::{Result, Error};
+use crate::local_anyhow::{Result, Error, anyhow};
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
@@ -179,14 +179,35 @@ impl Approved {
     }
 
     pub fn approve(&mut self, user_address: UserAddress, amount: U64) {
-        match self.0.get(&user_address) {
+        match self.allowance(&user_address) {
             Some(&existing_amount) => {
-                self.0.insert(user_address, amount + existing_amount);
+                self.0.insert(user_address, existing_amount + amount);
             },
             None => {
                 self.0.insert(user_address, amount);
             }
         }
+    }
+
+    pub fn consume(&mut self, user_address: UserAddress, amount: U64) -> Result<(), Error> {
+        match self.allowance(&user_address) {
+            Some(&existing_amount) => {
+                if existing_amount < amount {
+                    return Err(anyhow!(
+                    "{:?} doesn't have enough balance to consume {:?}.",
+                     user_address,
+                     amount,
+                     ).into());
+                }
+                self.0.insert(user_address, existing_amount - amount);
+                Ok(())
+            }
+            None => return Err(anyhow!("{:?} doesn't have any balance.", user_address).into())
+        }
+    }
+
+    pub fn allowance(&self, user_address: &UserAddress) -> Option<&U64> {
+        self.0.get(user_address)
     }
 
     pub fn size(&self) -> usize {

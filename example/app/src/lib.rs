@@ -27,7 +27,6 @@ lazy_static! {
     pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 30;
 }
 
-// TODO: delete Copy?
 #[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd)]
 struct CustomType {
     address: UserAddress,
@@ -94,15 +93,36 @@ impl_runtime!{
         insert![owner_approved_update]
     }
 
-    // TODO: implement
-    // #[fn_id=3]
-    // pub fn allowance(
-    //     self,
-    //     owner: UserAddress,
-    //     spender: UserAddress,
-    // ) -> U64 {
-    //     // let owner_approved = self.get_map::<Approved>(owner, "Approved")?;
-    //     // owner_approved.get(spender).unwrap()
-    //     unimplemented!();
-    // }
+    #[fn_id=3]
+    pub fn transfer_from(
+        self,
+        sender: UserAddress,
+        owner: UserAddress,
+        recipient: UserAddress,
+        amount: U64
+    ) {
+        let owner_balance = self.get_map::<U64>(owner, "Balance")?;
+        ensure!(
+            amount <= owner_balance,
+            "transferring amount exceeds owner's balance."
+        );
+
+        let mut owner_approved = self.get_map::<Approved>(owner, "Approved")?;
+        let approved_amount = owner_approved.allowance(&sender)
+            .ok_or(anyhow!("not enough amount approved."))?;
+        ensure!(
+            amount <= *approved_amount,
+            "transferring amount exceeds approved amount of sender."
+        );
+
+        owner_approved.consume(sender, amount)?;
+        let owner_approved_update = update!(owner, "Approved", owner_approved);
+
+        let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
+
+        let owner_balance_update = update!(owner, "Balance", owner_balance - amount);
+        let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount);
+
+        insert![owner_approved_update, owner_balance_update, recipient_balance_update]
+    }
 }
