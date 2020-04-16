@@ -5,7 +5,7 @@ use crate::localstd::{
     ops::{Add, Sub, Mul, Div},
     convert::TryFrom,
 };
-use crate::local_anyhow::{Result, Error};
+use crate::local_anyhow::{Result, Error, anyhow};
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
@@ -140,12 +140,6 @@ impl StateType {
     }
 }
 
-// TODO: Mapping!(Address, U64);
-#[derive(Encode, Decode, Clone, Debug, PartialEq, PartialOrd, Default)]
-pub struct Mapping(pub BTreeMap<UserAddress, U64>);
-
-impl Mapping {}
-
 
 #[cfg(test)]
 mod tests {
@@ -164,8 +158,77 @@ mod tests {
 
     #[test]
     fn test_size() {
-        assert_eq!(U16::size(), 2);
-        assert_eq!(U32::size(), 4);
-        assert_eq!(U64::size(), 8);
+        assert_eq!(U16(0).size(), 2);
+        assert_eq!(U32(0).size(), 4);
+        assert_eq!(U64(0).size(), 8);
+    }
+}
+
+#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct Approved(BTreeMap<UserAddress, U64>);
+
+impl Approved {
+    pub fn new(inner: BTreeMap<UserAddress, U64>) -> Self {
+        Approved(inner)
+    }
+
+    pub fn total(&self) -> U64 {
+        let sum = self.0.iter()
+            .fold(U64(0), |acc, (_, &amount)| acc + amount);
+        sum
+    }
+
+    pub fn approve(&mut self, user_address: UserAddress, amount: U64) {
+        match self.allowance(&user_address) {
+            Some(&existing_amount) => {
+                self.0.insert(user_address, existing_amount + amount);
+            },
+            None => {
+                self.0.insert(user_address, amount);
+            }
+        }
+    }
+
+    pub fn consume(&mut self, user_address: UserAddress, amount: U64) -> Result<(), Error> {
+        match self.allowance(&user_address) {
+            Some(&existing_amount) => {
+                if existing_amount < amount {
+                    return Err(anyhow!(
+                    "{:?} doesn't have enough balance to consume {:?}.",
+                     user_address,
+                     amount,
+                     ).into());
+                }
+                self.0.insert(user_address, existing_amount - amount);
+                Ok(())
+            }
+            None => return Err(anyhow!("{:?} doesn't have any balance.", user_address).into())
+        }
+    }
+
+    pub fn allowance(&self, user_address: &UserAddress) -> Option<&U64> {
+        self.0.get(user_address)
+    }
+
+    pub fn size(&self) -> usize {
+        self.0.len() * (UserAddress::default().size() + U64::default().size())
+    }
+}
+
+impl From<Approved> for StateType {
+    fn from(a: Approved) -> Self {
+        StateType(a.0.as_bytes())
+    }
+}
+
+impl TryFrom<Vec<u8>> for Approved {
+    type Error = Error;
+
+    fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
+        if s.len() == 0 {
+            return Ok(Default::default());
+        }
+        let mut buf = s;
+        Approved::from_bytes(&mut buf)
     }
 }

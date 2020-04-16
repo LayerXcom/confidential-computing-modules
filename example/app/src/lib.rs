@@ -14,30 +14,32 @@ use anonify_runtime::{
     prelude::*,
     state_type::*,
 };
-use crate::localstd::vec::Vec;
+use crate::localstd::{
+    vec::Vec,
+    collections::BTreeMap
+};
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
 lazy_static! {
-    pub static ref MAX_MEM_SIZE: usize = max_size();
-
-    // TODO: How 120bytes is calculated
-    // 85 bytes: the size of base state without inner state
-    // 1 bytes: base padding to represent a empty vec
-    // 4*3 bytes: generaion, roster_idx, epoch for treekem
-    pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 120;
+    // ref: https://github.com/LayerXcom/anonify/issues/107
+    pub static ref MAX_MEM_SIZE: usize = 100;
+    pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 30;
 }
 
-#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
+#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd)]
 struct CustomType {
     address: UserAddress,
     balance: U64,
+    approved: Approved,
 }
 
-impl_mem! {
-    (0, "Balance", Address => U64)
+impl_memory! {
+    (0, "Balance", Address => U64),
+    (1, "Approved", Address => Approved)
+    // (2, "TotalSupply", U64)
 }
-// impl_mem! {
+// impl_memory! {
 //     (1, "TotalSupply", U64)
 // }
 
@@ -69,5 +71,58 @@ impl_runtime!{
         let recipient_update = update!(recipient, "Balance", recipient_balance + amount);
 
         insert![sender_update, recipient_update]
+    }
+
+    #[fn_id=2]
+    pub fn approve(
+        self,
+        owner: UserAddress,
+        spender: UserAddress,
+        amount: U64
+    ) {
+        let owner_balance = self.get_map::<U64>(owner, "Balance")?;
+        let mut owner_approved = self.get_map::<Approved>(owner, "Approved")?;
+
+        ensure!(
+            owner_approved.total() + amount <= owner_balance,
+            "approving amount exceeds balance and already approved."
+        );
+
+        owner_approved.approve(spender, amount);
+        let owner_approved_update = update!(owner, "Approved", owner_approved);
+        insert![owner_approved_update]
+    }
+
+    #[fn_id=3]
+    pub fn transfer_from(
+        self,
+        sender: UserAddress,
+        owner: UserAddress,
+        recipient: UserAddress,
+        amount: U64
+    ) {
+        let owner_balance = self.get_map::<U64>(owner, "Balance")?;
+        ensure!(
+            amount <= owner_balance,
+            "transferring amount exceeds owner's balance."
+        );
+
+        let mut owner_approved = self.get_map::<Approved>(owner, "Approved")?;
+        let approved_amount = owner_approved.allowance(&sender)
+            .ok_or(anyhow!("not enough amount approved."))?;
+        ensure!(
+            amount <= *approved_amount,
+            "transferring amount exceeds approved amount of sender."
+        );
+
+        owner_approved.consume(sender, amount)?;
+        let owner_approved_update = update!(owner, "Approved", owner_approved);
+
+        let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
+
+        let owner_balance_update = update!(owner, "Balance", owner_balance - amount);
+        let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount);
+
+        insert![owner_approved_update, owner_balance_update, recipient_balance_update]
     }
 }
