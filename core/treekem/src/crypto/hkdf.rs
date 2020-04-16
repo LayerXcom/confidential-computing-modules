@@ -8,7 +8,7 @@ use anyhow::Result;
 use codec::Encode;
 use ring::hkdf::KeyType;
 
-const ANONIFY_PREFIX: &[u8] = b"anonif";
+const ANONIFY_PREFIX: &[u8] = b"anonify";
 
 #[derive(Debug, Encode)]
 struct HkdfLabel<'a> {
