@@ -8,7 +8,7 @@ use sgx_types::*;
 use rand_os::OsRng;
 use anonify_common::AccessRight;
 use anonify_runtime::{State, U64, Approved};
-use anonify_app_preluder::{transfer, constructor, approve, transfer_from};
+use anonify_app_preluder::{transfer, construct, approve, transfer_from};
 use anonify_event_watcher::{
     eventdb::{EventDB, BlockNumDB},
     eth::*,
@@ -64,12 +64,12 @@ fn test_integration_eth_transfer() {
 
     // Init state
     let total_supply = U64::from_raw(100);
-    let init_state = constructor{ total_supply };
+    let init_state = construct{ total_supply };
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
         init_state,
         state_id,
-        "constructor",
+        "construct",
         deployer_addr.clone(),
         gas,
         &contract_addr,
@@ -158,12 +158,12 @@ fn test_key_rotation() {
 
     // init state
     let total_supply = U64::from_raw(100);
-    let init_state = constructor{ total_supply };
+    let init_state = construct{ total_supply };
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
         init_state,
         state_id,
-        "constructor",
+        "construct",
         deployer_addr.clone(),
         gas,
         &contract_addr,
@@ -210,12 +210,12 @@ fn test_integration_eth_approve() {
 
     // Init state
     let total_supply = U64::from_raw(100);
-    let init_state = constructor { total_supply };
+    let init_state = construct { total_supply };
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
         init_state,
         state_id,
-        "constructor",
+        "construct",
         deployer_addr.clone(),
         gas,
         &contract_addr,
@@ -295,12 +295,12 @@ fn test_integration_eth_transfer_from() {
 
     // Init state
     let total_supply = U64::from_raw(100);
-    let init_state = constructor { total_supply };
+    let init_state = construct { total_supply };
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
         init_state,
         state_id,
-        "constructor",
+        "construct",
         deployer_addr.clone(),
         gas,
         &contract_addr,

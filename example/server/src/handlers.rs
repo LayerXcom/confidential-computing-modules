@@ -7,7 +7,7 @@ use anonify_event_watcher::{
     traits::*,
 };
 use anonify_runtime::U64;
-use app::{transfer, constructor};
+use app::{transfer, construct};
 use actix_web::{
     web,
     HttpResponse,
@@ -72,13 +72,13 @@ where
     let access_right = req.into_access_right()?;
     let signer = server.dispatcher.get_account(0)?;
     let total_supply = U64::from_raw(req.total_supply);
-    let init_state = constructor{ total_supply };
+    let init_state = construct{ total_supply };
 
     let receipt = server.dispatcher.state_transition(
         access_right,
         init_state,
         req.state_id,
-        "constructor",
+        "construct",
         signer,
         DEFAULT_SEND_GAS,
         &req.contract_addr,
