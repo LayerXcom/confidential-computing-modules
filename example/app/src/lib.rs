@@ -35,13 +35,12 @@ struct CustomType {
 }
 
 impl_memory! {
-    (0, "Balance", Address => U64),
-    (1, "Approved", Address => Approved)
-    // (2, "TotalSupply", U64)
+    // (0, "Balance", Address => U64),
+    // (1, "Approved", Address => Approved),
+    (0, "Balance", U64),
+    (1, "Approved", Approved),
+    (2, "TotalSupply", U64)
 }
-// impl_memory! {
-//     (1, "TotalSupply", U64)
-// }
 
 impl_runtime!{
     #[fn_id=0]
