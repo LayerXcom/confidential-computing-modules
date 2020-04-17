@@ -6,7 +6,7 @@ use std::{
 use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use rand_os::OsRng;
-use anonify_common::AccessRight;
+use anonify_common::{AccessRight, UserAddress};
 use anonify_runtime::{State, U64, Approved};
 use anonify_app_preluder::{transfer, construct, approve, transfer_from};
 use anonify_event_watcher::{
