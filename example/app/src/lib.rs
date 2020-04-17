@@ -56,7 +56,7 @@ impl_memory! {
 
 impl_runtime!{
     #[fn_id=0]
-    pub fn constructor(
+    pub fn construct(
         self,
         sender: UserAddress,
         total_supply: U64
