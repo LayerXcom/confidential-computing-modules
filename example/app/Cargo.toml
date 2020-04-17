@@ -13,12 +13,14 @@ sgx_tstd = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.g
 codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
 lazy_static = { version = "1.4", features = ["spin_no_std"] }
 # anyhow = "1.0"
+rand_os = { version = "0.1", optional = true }
 
 [features]
 default = ["std"]
 std = [
     "anonify-common/std",
     "anonify-runtime/std",
+    "rand_os"
 ]
 sgx = [
     "anonify-common/sgx",
