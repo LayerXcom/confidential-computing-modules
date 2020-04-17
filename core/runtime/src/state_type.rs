@@ -140,6 +140,11 @@ impl StateType {
     }
 }
 
+impl From<UserAddress> for StateType {
+    fn from(address: UserAddress) -> Self {
+        Self(address.as_bytes().into())
+    }
+}
 
 #[cfg(test)]
 mod tests {

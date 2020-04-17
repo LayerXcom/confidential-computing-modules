@@ -51,7 +51,8 @@ impl_memory! {
     // (1, "Approved", Address => Approved),
     (0, "Balance", U64),
     (1, "Approved", Approved),
-    (2, "TotalSupply", U64)
+    (2, "TotalSupply", U64),
+    (3, "Owner", UserAddress)
 }
 
 impl_runtime!{
@@ -61,9 +62,11 @@ impl_runtime!{
         sender: UserAddress,
         total_supply: U64
     ) {
+        let owner_address = update!(sender, "Owner", sender);
         let sender_balance = update!(sender, "Balance", total_supply);
+        let total_supply = update!(sender, "TotalSupply", total_supply);
 
-        insert![sender_balance]
+        insert![owner_address, sender_balance, total_supply]
     }
 
     #[fn_id=1]
