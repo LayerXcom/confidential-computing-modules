@@ -2,6 +2,7 @@ use crate::localstd::{
     io::{self, Read, Write},
     vec::Vec,
     string::String,
+    convert::TryFrom,
 };
 use crate::{
     serde::{Serialize, Deserialize}
@@ -14,6 +15,7 @@ use anonify_types::{RawPubkey, RawSig, RawChallenge};
 use rand::Rng;
 #[cfg(feature = "std")]
 use rand_core::{RngCore, CryptoRng};
+use crate::local_anyhow::{anyhow, Error};
 
 /// Trait for 256-bits hash functions
 pub trait Hash256 {
@@ -59,6 +61,20 @@ impl From<String> for UserAddress {
         res.copy_from_slice(&s.as_bytes()[..20]);
 
         Self::from_array(res)
+    }
+}
+
+impl TryFrom<Vec<u8>> for UserAddress {
+    type Error = Error;
+
+    fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
+        if s.len() < 20 {
+            return Err(anyhow!("source length must be 20"))
+        }
+
+        let mut res = [0u8; 20];
+        res.copy_from_slice(&s.as_slice()[..20]);
+        Ok(Self::from_array(res))
     }
 }
 

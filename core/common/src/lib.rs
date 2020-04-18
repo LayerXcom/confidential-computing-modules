@@ -11,6 +11,10 @@ extern crate core as localstd;
 use serde_sgx as serde;
 #[cfg(feature = "std")]
 use serde_std as serde;
+#[cfg(feature = "std")]
+use anyhow as local_anyhow;
+#[cfg(feature = "sgx")]
+use sgx_anyhow as local_anyhow;
 
 mod crypto;
 pub mod kvs;
