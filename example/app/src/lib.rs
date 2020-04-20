@@ -21,21 +21,15 @@ use crate::localstd::{
 use anonify_common::{UserAddress, AccessRight};
 use codec::{Encode, Decode};
 
-// extern crate rand_os;
-#[cfg(feature = "std")]
-use rand_os::{self, OsRng};
-
 lazy_static! {
     // ref: https://github.com/LayerXcom/anonify/issues/107
     pub static ref MAX_MEM_SIZE: usize = 100;
     pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 30;
 }
 
-#[cfg(feature = "std")]
 lazy_static! {
     pub static ref ACCESS_RIGHT_FOR_TOTAL_SUPPLY: AccessRight = {
-        let mut csprng: OsRng = OsRng::new().unwrap();
-        AccessRight::new_from_rng(&mut csprng)
+        AccessRight::new_from_rng().unwrap()
     };
 }
 
@@ -62,9 +56,9 @@ impl_runtime!{
         sender: UserAddress,
         total_supply: U64
     ) {
-        let owner_address = update!(sender, "Owner", sender);
+        let owner_address = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "Owner", sender);
         let sender_balance = update!(sender, "Balance", total_supply);
-        let total_supply = update!(sender, "TotalSupply", total_supply);
+        let total_supply = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply", total_supply);
 
         insert![owner_address, sender_balance, total_supply]
     }
