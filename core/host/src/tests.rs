@@ -7,7 +7,7 @@ use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use anonify_common::{AccessRight, UserAddress};
 use anonify_runtime::{State, U64, Approved};
-use anonify_app_preluder::{transfer, construct, approve, transfer_from, mint, ACCESS_RIGHT_FOR_TOTAL_SUPPLY};
+use anonify_app_preluder::{transfer, construct, approve, transfer_from, mint, burn, ACCESS_RIGHT_FOR_TOTAL_SUPPLY};
 use anonify_event_watcher::{
     eventdb::{EventDB, BlockNumDB},
     eth::*,
