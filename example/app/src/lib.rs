@@ -143,4 +143,23 @@ impl_runtime!{
 
         insert![owner_approved_update, owner_balance_update, recipient_balance_update]
     }
+
+    #[fn_id=4]
+    pub fn mint(
+        self,
+        executer: UserAddress,
+        recipient: UserAddress,
+        amount: U64
+    ) {
+        let owner_address = self.get_map::<UserAddress>(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "Owner")?;
+        ensure!(executer == owner_address, "only owner can mint");
+
+        let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
+        let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount);
+
+        let total_supply = self.get_map::<U64>(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply")?;
+        let total_supply_update = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply", total_supply + amount)
+
+        insert![recipient_balance_update, total_supply_update]
+    }
 }
