@@ -533,3 +533,98 @@ fn test_integration_eth_mint() {
     assert_eq!(owner_balance, U64::from_raw(100));
     assert_eq!(other_balance, amount);
 }
+
+#[test]
+fn test_integration_eth_burn() {
+    env::set_var("MY_ROSTER_IDX", "0");
+    env::set_var("MAX_ROSTER_IDX", "2");
+    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+    let eid = enclave.geteid();
+    let my_access_right = AccessRight::new_from_rng().unwrap();
+    let other_access_right = AccessRight::new_from_rng().unwrap();
+
+    let state_id = 0;
+    let gas = 3_000_000;
+    let event_db = Arc::new(EventDB::new());
+    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
+
+    // Deploy
+    let deployer_addr = dispatcher.get_account(0).unwrap();
+    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    println!("Deployer address: {:?}", deployer_addr);
+    println!("deployed contract address: {}", contract_addr);
+
+    // Get handshake from contract
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+    // Init state
+    let total_supply = U64::from_raw(100);
+    let init_state = construct{ total_supply };
+    let receipt = dispatcher.state_transition(
+        my_access_right.clone(),
+        init_state,
+        state_id,
+        "construct",
+        deployer_addr.clone(),
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
+
+    println!("init state receipt: {}", receipt);
+
+
+    // Get logs from contract and update state inside enclave.
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+
+    // Send a transaction to contract
+    let amount = U64::from_raw(30);
+    let recipient = other_access_right.user_address();
+    let transfer_state = transfer{ amount, recipient };
+    let receipt = dispatcher.state_transition(
+        my_access_right.clone(),
+        transfer_state,
+        state_id,
+        "transfer",
+        deployer_addr,
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
+    println!("receipt: {}", receipt);
+
+
+    // Update state inside enclave
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+
+    // Send a transaction to contract
+    let amount = U64::from_raw(20);
+    let burn_state = burn{ amount };
+    let receipt = dispatcher.state_transition(
+        other_access_right.clone(),
+        burn_state,
+        state_id,
+        "burn",
+        deployer_addr,
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
+    println!("receipt: {}", receipt);
+
+
+    // Update state inside enclave
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+
+    // Check the final states
+    let actual_total_supply = get_state::<U64>(&*ACCESS_RIGHT_FOR_TOTAL_SUPPLY, eid, "TotalSupply").unwrap();
+    let owner_balance = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
+    let other_balance = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
+    assert_eq!(actual_total_supply, U64::from_raw(80)); // 100 - 20(burn)
+    assert_eq!(owner_balance, U64::from_raw(70)); // 100 - 30(transfer)
+    assert_eq!(other_balance, U64::from_raw(10)); // 30 - 20(burn)
+}
