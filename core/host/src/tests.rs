@@ -457,3 +457,79 @@ fn test_integration_eth_transfer_from() {
     assert_eq!(other_state_approved, Approved::default());
     assert_eq!(third_state_approved, Approved::default());
 }
+
+#[test]
+fn test_integration_eth_mint() {
+    env::set_var("MY_ROSTER_IDX", "0");
+    env::set_var("MAX_ROSTER_IDX", "2");
+    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+    let eid = enclave.geteid();
+    let my_access_right = AccessRight::new_from_rng().unwrap();
+    let other_access_right = AccessRight::new_from_rng().unwrap();
+
+    let state_id = 0;
+    let gas = 3_000_000;
+    let event_db = Arc::new(EventDB::new());
+    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
+
+    // Deploy
+    let deployer_addr = dispatcher.get_account(0).unwrap();
+    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    println!("Deployer address: {:?}", deployer_addr);
+    println!("deployed contract address: {}", contract_addr);
+
+    // Get handshake from contract
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+    // Init state
+    let total_supply = U64::from_raw(100);
+    let init_state = construct{ total_supply };
+    let receipt = dispatcher.state_transition(
+        my_access_right.clone(),
+        init_state,
+        state_id,
+        "construct",
+        deployer_addr.clone(),
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
+
+    println!("init state receipt: {}", receipt);
+
+
+    // Get logs from contract and update state inside enclave.
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+
+    // transit state
+    let amount = U64::from_raw(50);
+    let recipient = other_access_right.user_address();
+    let minting_state = mint{ amount, recipient };
+    let receipt = dispatcher.state_transition(
+        my_access_right.clone(),
+        init_state,
+        state_id,
+        "mint",
+        deployer_addr.clone(),
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
+
+    println!("minted state receipt: {}", receipt);
+
+
+    // Update state inside enclave
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+
+    // Check the final states
+    let actual_total_supply = get_state::<U64>(&*ACCESS_RIGHT_FOR_TOTAL_SUPPLY, eid, "TotalSupply").unwrap();
+    let owner_balance = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
+    let other_balance = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
+    assert_eq!(actual_total_supply, U64::from_raw(50));
+    assert_eq!(owner_balance, U64::from_raw(100));
+    assert_eq!(other_balance, amount);
+}
