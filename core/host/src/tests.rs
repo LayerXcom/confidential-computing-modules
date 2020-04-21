@@ -588,7 +588,7 @@ fn test_integration_eth_burn() {
         transfer_state,
         state_id,
         "transfer",
-        deployer_addr,
+        deployer_addr.clone(),
         gas,
         &contract_addr,
         ANONYMOUS_ASSET_ABI_PATH,
