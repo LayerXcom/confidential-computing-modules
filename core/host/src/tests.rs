@@ -509,10 +509,10 @@ fn test_integration_eth_mint() {
     let minting_state = mint{ amount, recipient };
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
-        init_state,
+        minting_state,
         state_id,
         "mint",
-        deployer_addr.clone(),
+        deployer_addr,
         gas,
         &contract_addr,
         ANONYMOUS_ASSET_ABI_PATH,
