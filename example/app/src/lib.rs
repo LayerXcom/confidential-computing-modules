@@ -29,7 +29,17 @@ lazy_static! {
 
 lazy_static! {
     pub static ref ACCESS_RIGHT_FOR_TOTAL_SUPPLY: AccessRight = {
-        AccessRight::new_from_rng().unwrap()
+        use ed25519_dalek::{SecretKey, PublicKey, Keypair};
+
+        let secret = SecretKey::from_bytes(&[182, 93, 72, 157, 114, 225, 213, 95, 237, 176, 179, 23, 11, 100, 177, 16, 129, 8, 41, 4, 158, 209, 227, 21, 89, 47, 118, 0, 232, 162, 217, 203]).unwrap();
+        let pubkey = PublicKey::from(&secret);
+        let keypair = Keypair { secret, public: pubkey };
+
+        let challenge: [u8; 32] = [39, 79, 228, 49, 240, 219, 135, 53, 169, 47, 65, 111, 236, 125, 2, 195, 214, 154, 18, 77, 254, 135, 35, 77, 36, 45, 164, 254, 64, 8, 169, 238];
+        let sig = keypair.sign(&challenge);
+
+        assert!(keypair.verify(&challenge, &sig).is_ok());
+        AccessRight::new(sig, keypair.public, challenge)
     };
 }
 
