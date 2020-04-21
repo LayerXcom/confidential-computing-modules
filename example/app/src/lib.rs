@@ -161,4 +161,20 @@ impl_runtime!{
 
         insert![recipient_balance_update, total_supply_update]
     }
+
+    #[fn_id=5]
+    pub fn burn(
+        self,
+        sender: UserAddress,
+        amount: U64
+    ) {
+        let balance = self.get_map::<U64>(sender, "Balance")?;
+        ensure!(balance >= amount, "not enough balance to burn");
+        let balance_update = update!(sender, "Balance", balance - amount);
+
+        let total_supply = self.get_map::<U64>(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply")?;
+        let total_supply_update = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply", total_supply - amount);
+
+        insert![balance_update, total_supply_update]
+    }
 }
