@@ -529,7 +529,7 @@ fn test_integration_eth_mint() {
     let actual_total_supply = get_state::<U64>(&*ACCESS_RIGHT_FOR_TOTAL_SUPPLY, eid, "TotalSupply").unwrap();
     let owner_balance = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
     let other_balance = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
-    assert_eq!(actual_total_supply, U64::from_raw(50));
+    assert_eq!(actual_total_supply, U64::from_raw(150));
     assert_eq!(owner_balance, U64::from_raw(100));
     assert_eq!(other_balance, amount);
 }
