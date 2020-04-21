@@ -157,7 +157,7 @@ impl_runtime!{
         let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount);
 
         let total_supply = self.get_map::<U64>(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply")?;
-        let total_supply_update = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply", total_supply + amount)
+        let total_supply_update = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply", total_supply + amount);
 
         insert![recipient_balance_update, total_supply_update]
     }
