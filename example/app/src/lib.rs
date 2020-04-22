@@ -18,32 +18,13 @@ use crate::localstd::{
     vec::Vec,
     collections::BTreeMap
 };
-use anonify_common::{UserAddress, AccessRight, COMMON_SECRET, COMMON_CHALLENGE};
+use anonify_common::{UserAddress, OWNER_ADDRESS};
 use codec::{Encode, Decode};
 
 lazy_static! {
     // ref: https://github.com/LayerXcom/anonify/issues/107
     pub static ref MAX_MEM_SIZE: usize = 100;
     pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 30;
-}
-
-lazy_static! {
-    pub static ref COMMON_ACCESS_RIGHT: AccessRight = {
-        use ed25519_dalek::{SecretKey, PublicKey, Keypair};
-
-        let secret = SecretKey::from_bytes(&COMMON_SECRET).unwrap();
-        let pubkey = PublicKey::from(&secret);
-        let keypair = Keypair { secret, public: pubkey };
-
-        let sig = keypair.sign(&COMMON_CHALLENGE);
-
-        assert!(keypair.verify(&COMMON_CHALLENGE, &sig).is_ok());
-        AccessRight::new(sig, keypair.public, COMMON_CHALLENGE)
-    };
-
-    pub static ref OWNER_ADDRESS: UserAddress = {
-        COMMON_ACCESS_RIGHT.user_address()
-    };
 }
 
 #[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd)]

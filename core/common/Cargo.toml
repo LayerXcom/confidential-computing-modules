@@ -25,6 +25,7 @@ codec = { package = "parity-scale-codec", version = "1.1", default-features = fa
 anyhow = { version = "1.0", optional = true }
 sgx-anyhow = { rev = "sgx_1.1.0", package = "anyhow", git = "https://github.com/mesalock-linux/anyhow-sgx.git", optional = true }
 sgx_trts = { version = "1.1.0", optional = true }
+lazy_static = { version = "1.4", features = ["spin_no_std"] }
 
 [features]
 default = ["std"]
