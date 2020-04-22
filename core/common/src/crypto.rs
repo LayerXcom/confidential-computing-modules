@@ -229,7 +229,7 @@ impl AccessRight {
         let mut seed = [0u8; SECRET_KEY_LENGTH];
         sgx_rand_assign(&mut seed)?;
         let secret = SecretKey::from_bytes(&seed)
-            .map_err(|e| anyhow!("Failed to generate SecretKey: {:?}", e))?;
+            .expect("invalid secret key length");
 
         let pubkey = PublicKey::from(&secret);
         let keypair = Keypair { secret, public: pubkey };
