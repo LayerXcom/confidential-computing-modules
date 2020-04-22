@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 anonify-app-preluder = { path = "../app-preluder", default-features = false, features = ["sgx"] }
+anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
 sgx_tstd = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net"] }
 sgx_trts = "1.1.0"
 anyhow = { rev = "sgx_1.1.0", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }

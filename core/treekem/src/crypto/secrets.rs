@@ -12,8 +12,9 @@ use super::{
     SHA256_OUTPUT_LEN, hkdf,
     dh::{DhPrivateKey, DhPubKey},
     hmac::HmacKey,
-    CryptoRng, sgx_rand_assign,
+    CryptoRng,
 };
+use anonify_common::sgx_rand_assign;
 use crate::handshake::AccessKey;
 use anyhow::Result;
 use codec::Encode;
