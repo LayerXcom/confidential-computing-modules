@@ -5,9 +5,9 @@ use std::{
 };
 use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
-use anonify_common::{AccessRight, UserAddress};
+use anonify_common::{AccessRight, UserAddress, COMMON_ACCESS_RIGHT};
 use anonify_runtime::{State, U64, Approved};
-use anonify_app_preluder::{transfer, construct, approve, transfer_from, mint, burn, COMMON_ACCESS_RIGHT};
+use anonify_app_preluder::{transfer, construct, approve, transfer_from, mint, burn};
 use anonify_event_watcher::{
     eventdb::{EventDB, BlockNumDB},
     eth::*,
