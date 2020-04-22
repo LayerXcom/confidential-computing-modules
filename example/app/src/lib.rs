@@ -40,6 +40,10 @@ lazy_static! {
         assert!(keypair.verify(&COMMON_CHALLENGE, &sig).is_ok());
         AccessRight::new(sig, keypair.public, COMMON_CHALLENGE)
     };
+
+    pub static ref OWNER_ADDRESS: UserAddress = {
+        COMMON_ACCESS_RIGHT.user_address()
+    };
 }
 
 #[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd)]
@@ -65,9 +69,9 @@ impl_runtime!{
         sender: UserAddress,
         total_supply: U64
     ) {
-        let owner_address = update!(COMMON_ACCESS_RIGHT.user_address(), "Owner", sender);
+        let owner_address = update!(*OWNER_ADDRESS, "Owner", sender);
         let sender_balance = update!(sender, "Balance", total_supply);
-        let total_supply = update!(COMMON_ACCESS_RIGHT.user_address(), "TotalSupply", total_supply);
+        let total_supply = update!(*OWNER_ADDRESS, "TotalSupply", total_supply);
 
         insert![owner_address, sender_balance, total_supply]
     }
@@ -150,14 +154,14 @@ impl_runtime!{
         recipient: UserAddress,
         amount: U64
     ) {
-        let owner_address = self.get_map::<UserAddress>(COMMON_ACCESS_RIGHT.user_address(), "Owner")?;
+        let owner_address = self.get_map::<UserAddress>(*OWNER_ADDRESS, "Owner")?;
         ensure!(executer == owner_address, "only owner can mint");
 
         let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
         let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount);
 
-        let total_supply = self.get_map::<U64>(COMMON_ACCESS_RIGHT.user_address(), "TotalSupply")?;
-        let total_supply_update = update!(COMMON_ACCESS_RIGHT.user_address(), "TotalSupply", total_supply + amount);
+        let total_supply = self.get_map::<U64>(*OWNER_ADDRESS, "TotalSupply")?;
+        let total_supply_update = update!(*OWNER_ADDRESS, "TotalSupply", total_supply + amount);
 
         insert![recipient_balance_update, total_supply_update]
     }
@@ -172,8 +176,8 @@ impl_runtime!{
         ensure!(balance >= amount, "not enough balance to burn");
         let balance_update = update!(sender, "Balance", balance - amount);
 
-        let total_supply = self.get_map::<U64>(COMMON_ACCESS_RIGHT.user_address(), "TotalSupply")?;
-        let total_supply_update = update!(COMMON_ACCESS_RIGHT.user_address(), "TotalSupply", total_supply - amount);
+        let total_supply = self.get_map::<U64>(*OWNER_ADDRESS, "TotalSupply")?;
+        let total_supply_update = update!(*OWNER_ADDRESS, "TotalSupply", total_supply - amount);
 
         insert![balance_update, total_supply_update]
     }
