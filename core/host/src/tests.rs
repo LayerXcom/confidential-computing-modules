@@ -7,7 +7,7 @@ use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use anonify_common::{AccessRight, UserAddress};
 use anonify_runtime::{State, U64, Approved};
-use anonify_app_preluder::{transfer, construct, approve, transfer_from, mint, burn, ACCESS_RIGHT_FOR_TOTAL_SUPPLY};
+use anonify_app_preluder::{transfer, construct, approve, transfer_from, mint, burn, COMMON_ACCESS_RIGHT};
 use anonify_event_watcher::{
     eventdb::{EventDB, BlockNumDB},
     eth::*,
@@ -80,9 +80,9 @@ fn test_integration_eth_construct() {
 
 
     // Get state from enclave
-    let owner_address = get_state::<UserAddress>(&*ACCESS_RIGHT_FOR_TOTAL_SUPPLY, eid, "Owner").unwrap();
+    let owner_address = get_state::<UserAddress>(&*COMMON_ACCESS_RIGHT, eid, "Owner").unwrap();
     let my_balance = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
-    let actual_total_supply = get_state::<U64>(&*ACCESS_RIGHT_FOR_TOTAL_SUPPLY, eid, "TotalSupply").unwrap();
+    let actual_total_supply = get_state::<U64>(&*COMMON_ACCESS_RIGHT, eid, "TotalSupply").unwrap();
     assert_eq!(owner_address, my_access_right.user_address());
     assert_eq!(my_balance, total_supply);
     assert_eq!(actual_total_supply, total_supply);
@@ -526,7 +526,7 @@ fn test_integration_eth_mint() {
 
 
     // Check the final states
-    let actual_total_supply = get_state::<U64>(&*ACCESS_RIGHT_FOR_TOTAL_SUPPLY, eid, "TotalSupply").unwrap();
+    let actual_total_supply = get_state::<U64>(&*COMMON_ACCESS_RIGHT, eid, "TotalSupply").unwrap();
     let owner_balance = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
     let other_balance = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
     assert_eq!(actual_total_supply, U64::from_raw(150));
@@ -621,7 +621,7 @@ fn test_integration_eth_burn() {
 
 
     // Check the final states
-    let actual_total_supply = get_state::<U64>(&*ACCESS_RIGHT_FOR_TOTAL_SUPPLY, eid, "TotalSupply").unwrap();
+    let actual_total_supply = get_state::<U64>(&*COMMON_ACCESS_RIGHT, eid, "TotalSupply").unwrap();
     let owner_balance = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
     let other_balance = get_state::<U64>(&other_access_right, eid, "Balance").unwrap();
     assert_eq!(actual_total_supply, U64::from_raw(80)); // 100 - 20(burn)

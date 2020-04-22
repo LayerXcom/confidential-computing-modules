@@ -28,7 +28,7 @@ lazy_static! {
 }
 
 lazy_static! {
-    pub static ref ACCESS_RIGHT_FOR_TOTAL_SUPPLY: AccessRight = {
+    pub static ref COMMON_ACCESS_RIGHT: AccessRight = {
         use ed25519_dalek::{SecretKey, PublicKey, Keypair};
 
         let secret = SecretKey::from_bytes(&COMMON_SECRET).unwrap();
@@ -65,9 +65,9 @@ impl_runtime!{
         sender: UserAddress,
         total_supply: U64
     ) {
-        let owner_address = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "Owner", sender);
+        let owner_address = update!(COMMON_ACCESS_RIGHT.user_address(), "Owner", sender);
         let sender_balance = update!(sender, "Balance", total_supply);
-        let total_supply = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply", total_supply);
+        let total_supply = update!(COMMON_ACCESS_RIGHT.user_address(), "TotalSupply", total_supply);
 
         insert![owner_address, sender_balance, total_supply]
     }
@@ -150,14 +150,14 @@ impl_runtime!{
         recipient: UserAddress,
         amount: U64
     ) {
-        let owner_address = self.get_map::<UserAddress>(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "Owner")?;
+        let owner_address = self.get_map::<UserAddress>(COMMON_ACCESS_RIGHT.user_address(), "Owner")?;
         ensure!(executer == owner_address, "only owner can mint");
 
         let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
         let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount);
 
-        let total_supply = self.get_map::<U64>(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply")?;
-        let total_supply_update = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply", total_supply + amount);
+        let total_supply = self.get_map::<U64>(COMMON_ACCESS_RIGHT.user_address(), "TotalSupply")?;
+        let total_supply_update = update!(COMMON_ACCESS_RIGHT.user_address(), "TotalSupply", total_supply + amount);
 
         insert![recipient_balance_update, total_supply_update]
     }
@@ -172,8 +172,8 @@ impl_runtime!{
         ensure!(balance >= amount, "not enough balance to burn");
         let balance_update = update!(sender, "Balance", balance - amount);
 
-        let total_supply = self.get_map::<U64>(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply")?;
-        let total_supply_update = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply", total_supply - amount);
+        let total_supply = self.get_map::<U64>(COMMON_ACCESS_RIGHT.user_address(), "TotalSupply")?;
+        let total_supply_update = update!(COMMON_ACCESS_RIGHT.user_address(), "TotalSupply", total_supply - amount);
 
         insert![balance_update, total_supply_update]
     }
