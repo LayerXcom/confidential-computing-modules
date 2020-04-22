@@ -18,28 +18,13 @@ use crate::localstd::{
     vec::Vec,
     collections::BTreeMap
 };
-use anonify_common::{UserAddress, AccessRight, COMMON_SECRET, COMMON_CHALLENGE};
+use anonify_common::{UserAddress, OWNER_ADDRESS};
 use codec::{Encode, Decode};
 
 lazy_static! {
     // ref: https://github.com/LayerXcom/anonify/issues/107
     pub static ref MAX_MEM_SIZE: usize = 100;
     pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 30;
-}
-
-lazy_static! {
-    pub static ref ACCESS_RIGHT_FOR_TOTAL_SUPPLY: AccessRight = {
-        use ed25519_dalek::{SecretKey, PublicKey, Keypair};
-
-        let secret = SecretKey::from_bytes(&COMMON_SECRET).unwrap();
-        let pubkey = PublicKey::from(&secret);
-        let keypair = Keypair { secret, public: pubkey };
-
-        let sig = keypair.sign(&COMMON_CHALLENGE);
-
-        assert!(keypair.verify(&COMMON_CHALLENGE, &sig).is_ok());
-        AccessRight::new(sig, keypair.public, COMMON_CHALLENGE)
-    };
 }
 
 #[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd)]
@@ -65,9 +50,9 @@ impl_runtime!{
         sender: UserAddress,
         total_supply: U64
     ) {
-        let owner_address = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "Owner", sender);
+        let owner_address = update!(*OWNER_ADDRESS, "Owner", sender);
         let sender_balance = update!(sender, "Balance", total_supply);
-        let total_supply = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply", total_supply);
+        let total_supply = update!(*OWNER_ADDRESS, "TotalSupply", total_supply);
 
         insert![owner_address, sender_balance, total_supply]
     }
@@ -150,14 +135,14 @@ impl_runtime!{
         recipient: UserAddress,
         amount: U64
     ) {
-        let owner_address = self.get_map::<UserAddress>(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "Owner")?;
+        let owner_address = self.get_map::<UserAddress>(*OWNER_ADDRESS, "Owner")?;
         ensure!(executer == owner_address, "only owner can mint");
 
         let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
         let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount);
 
-        let total_supply = self.get_map::<U64>(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply")?;
-        let total_supply_update = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply", total_supply + amount);
+        let total_supply = self.get_map::<U64>(*OWNER_ADDRESS, "TotalSupply")?;
+        let total_supply_update = update!(*OWNER_ADDRESS, "TotalSupply", total_supply + amount);
 
         insert![recipient_balance_update, total_supply_update]
     }
@@ -172,8 +157,8 @@ impl_runtime!{
         ensure!(balance >= amount, "not enough balance to burn");
         let balance_update = update!(sender, "Balance", balance - amount);
 
-        let total_supply = self.get_map::<U64>(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply")?;
-        let total_supply_update = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply", total_supply - amount);
+        let total_supply = self.get_map::<U64>(*OWNER_ADDRESS, "TotalSupply")?;
+        let total_supply_update = update!(*OWNER_ADDRESS, "TotalSupply", total_supply - amount);
 
         insert![balance_update, total_supply_update]
     }

@@ -15,6 +15,8 @@ use serde_std as serde;
 use anyhow as local_anyhow;
 #[cfg(feature = "sgx")]
 use sgx_anyhow as local_anyhow;
+#[macro_use]
+extern crate lazy_static;
 
 mod crypto;
 pub mod kvs;
