@@ -7,7 +7,7 @@ use secp256k1::{
     self, Message, Signature, SecretKey, PublicKey,
     util::SECRET_KEY_SIZE,
 };
-use anonify_common::{Keccak256, IV_SIZE};
+use anonify_common::{Keccak256, IV_SIZE, sgx_rand_assign};
 use anonify_app_preluder::{CIPHERTEXT_SIZE, Ciphertext};
 use crate::error::Result;
 
@@ -80,11 +80,4 @@ impl EnclaveIdentityKey {
         res.copy_from_slice(address);
         res
     }
-}
-
-/// Generating a random number inside the enclave.
-pub fn sgx_rand_assign(rand: &mut [u8]) -> Result<()> {
-    use sgx_trts::trts::rsgx_read_rand;
-    rsgx_read_rand(rand)?;
-    Ok(())
 }

@@ -18,13 +18,28 @@ use crate::localstd::{
     vec::Vec,
     collections::BTreeMap
 };
-use anonify_common::UserAddress;
+use anonify_common::{UserAddress, AccessRight, COMMON_SECRET, COMMON_CHALLENGE};
 use codec::{Encode, Decode};
 
 lazy_static! {
     // ref: https://github.com/LayerXcom/anonify/issues/107
     pub static ref MAX_MEM_SIZE: usize = 100;
     pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 30;
+}
+
+lazy_static! {
+    pub static ref ACCESS_RIGHT_FOR_TOTAL_SUPPLY: AccessRight = {
+        use ed25519_dalek::{SecretKey, PublicKey, Keypair};
+
+        let secret = SecretKey::from_bytes(&COMMON_SECRET).unwrap();
+        let pubkey = PublicKey::from(&secret);
+        let keypair = Keypair { secret, public: pubkey };
+
+        let sig = keypair.sign(&COMMON_CHALLENGE);
+
+        assert!(keypair.verify(&COMMON_CHALLENGE, &sig).is_ok());
+        AccessRight::new(sig, keypair.public, COMMON_CHALLENGE)
+    };
 }
 
 #[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd)]
@@ -35,24 +50,26 @@ struct CustomType {
 }
 
 impl_memory! {
-    (0, "Balance", Address => U64),
-    (1, "Approved", Address => Approved)
-    // (2, "TotalSupply", U64)
+    // (0, "Balance", Address => U64),
+    // (1, "Approved", Address => Approved),
+    (0, "Balance", U64),
+    (1, "Approved", Approved),
+    (2, "TotalSupply", U64),
+    (3, "Owner", UserAddress)
 }
-// impl_memory! {
-//     (1, "TotalSupply", U64)
-// }
 
 impl_runtime!{
     #[fn_id=0]
-    pub fn constructor(
+    pub fn construct(
         self,
         sender: UserAddress,
         total_supply: U64
     ) {
+        let owner_address = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "Owner", sender);
         let sender_balance = update!(sender, "Balance", total_supply);
+        let total_supply = update!(ACCESS_RIGHT_FOR_TOTAL_SUPPLY.user_address(), "TotalSupply", total_supply);
 
-        insert![sender_balance]
+        insert![owner_address, sender_balance, total_supply]
     }
 
     #[fn_id=1]

@@ -5,10 +5,9 @@ use std::{
 };
 use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
-use rand_os::OsRng;
-use anonify_common::AccessRight;
+use anonify_common::{AccessRight, UserAddress};
 use anonify_runtime::{State, U64, Approved};
-use anonify_app_preluder::{transfer, constructor, approve, transfer_from};
+use anonify_app_preluder::{transfer, construct, approve, transfer_from, ACCESS_RIGHT_FOR_TOTAL_SUPPLY};
 use anonify_event_watcher::{
     eventdb::{EventDB, BlockNumDB},
     eth::*,
@@ -37,15 +36,12 @@ fn test_in_enclave() {
 }
 
 #[test]
-fn test_integration_eth_transfer() {
+fn test_integration_eth_construct() {
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
-    let mut csprng: OsRng = OsRng::new().unwrap();
-    let my_access_right = AccessRight::new_from_rng(&mut csprng);
-    let other_access_right = AccessRight::new_from_rng(&mut csprng);
-    let third_access_right = AccessRight::new_from_rng(&mut csprng);
+    let my_access_right = AccessRight::new_from_rng().unwrap();
 
     let state_id = 0;
     let gas = 3_000_000;
@@ -64,12 +60,67 @@ fn test_integration_eth_transfer() {
 
     // Init state
     let total_supply = U64::from_raw(100);
-    let init_state = constructor{ total_supply };
+    let init_state = construct{ total_supply };
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
         init_state,
         state_id,
-        "constructor",
+        "construct",
+        deployer_addr.clone(),
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
+
+    println!("init state receipt: {}", receipt);
+
+
+    // Get logs from contract and update state inside enclave.
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+
+    // Get state from enclave
+    let owner_address = get_state::<UserAddress>(&*ACCESS_RIGHT_FOR_TOTAL_SUPPLY, eid, "Owner").unwrap();
+    let my_balance = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
+    let actual_total_supply = get_state::<U64>(&*ACCESS_RIGHT_FOR_TOTAL_SUPPLY, eid, "TotalSupply").unwrap();
+    assert_eq!(owner_address, my_access_right.user_address());
+    assert_eq!(my_balance, total_supply);
+    assert_eq!(actual_total_supply, total_supply);
+}
+
+#[test]
+fn test_integration_eth_transfer() {
+    env::set_var("MY_ROSTER_IDX", "0");
+    env::set_var("MAX_ROSTER_IDX", "2");
+    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+    let eid = enclave.geteid();
+    let my_access_right = AccessRight::new_from_rng().unwrap();
+    let other_access_right = AccessRight::new_from_rng().unwrap();
+    let third_access_right = AccessRight::new_from_rng().unwrap();
+
+    let state_id = 0;
+    let gas = 3_000_000;
+    let event_db = Arc::new(EventDB::new());
+    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
+
+    // Deploy
+    let deployer_addr = dispatcher.get_account(0).unwrap();
+    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    println!("Deployer address: {:?}", deployer_addr);
+    println!("deployed contract address: {}", contract_addr);
+
+    // Get handshake from contract
+    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+    // Init state
+    let total_supply = U64::from_raw(100);
+    let init_state = construct{ total_supply };
+    let receipt = dispatcher.state_transition(
+        my_access_right.clone(),
+        init_state,
+        state_id,
+        "construct",
         deployer_addr.clone(),
         gas,
         &contract_addr,
@@ -129,10 +180,9 @@ fn test_key_rotation() {
     env::set_var("MAX_ROSTER_IDX", "2");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
-    let mut csprng: OsRng = OsRng::new().unwrap();
-    let my_access_right = AccessRight::new_from_rng(&mut csprng);
-    let other_access_right = AccessRight::new_from_rng(&mut csprng);
-    let third_access_right = AccessRight::new_from_rng(&mut csprng);
+    let my_access_right = AccessRight::new_from_rng().unwrap();
+    let other_access_right = AccessRight::new_from_rng().unwrap();
+    let third_access_right = AccessRight::new_from_rng().unwrap();
 
     let state_id = 0;
     let gas = 3_000_000;
@@ -158,12 +208,12 @@ fn test_key_rotation() {
 
     // init state
     let total_supply = U64::from_raw(100);
-    let init_state = constructor{ total_supply };
+    let init_state = construct{ total_supply };
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
         init_state,
         state_id,
-        "constructor",
+        "construct",
         deployer_addr.clone(),
         gas,
         &contract_addr,
@@ -189,9 +239,8 @@ fn test_integration_eth_approve() {
     env::set_var("MAX_ROSTER_IDX", "2");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
-    let mut csprng: OsRng = OsRng::new().unwrap();
-    let my_access_right = AccessRight::new_from_rng(&mut csprng);
-    let other_access_right = AccessRight::new_from_rng(&mut csprng);
+    let my_access_right = AccessRight::new_from_rng().unwrap();
+    let other_access_right = AccessRight::new_from_rng().unwrap();
 
     let state_id = 0;
     let gas = 3_000_000;
@@ -210,12 +259,12 @@ fn test_integration_eth_approve() {
 
     // Init state
     let total_supply = U64::from_raw(100);
-    let init_state = constructor { total_supply };
+    let init_state = construct { total_supply };
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
         init_state,
         state_id,
-        "constructor",
+        "construct",
         deployer_addr.clone(),
         gas,
         &contract_addr,
@@ -273,10 +322,9 @@ fn test_integration_eth_transfer_from() {
     env::set_var("MAX_ROSTER_IDX", "2");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
-    let mut csprng: OsRng = OsRng::new().unwrap();
-    let my_access_right = AccessRight::new_from_rng(&mut csprng);
-    let other_access_right = AccessRight::new_from_rng(&mut csprng);
-    let third_access_right = AccessRight::new_from_rng(&mut csprng);
+    let my_access_right = AccessRight::new_from_rng().unwrap();
+    let other_access_right = AccessRight::new_from_rng().unwrap();
+    let third_access_right = AccessRight::new_from_rng().unwrap();
 
     let state_id = 0;
     let gas = 3_000_000;
@@ -295,12 +343,12 @@ fn test_integration_eth_transfer_from() {
 
     // Init state
     let total_supply = U64::from_raw(100);
-    let init_state = constructor { total_supply };
+    let init_state = construct { total_supply };
     let receipt = dispatcher.state_transition(
         my_access_right.clone(),
         init_state,
         state_id,
-        "constructor",
+        "construct",
         deployer_addr.clone(),
         gas,
         &contract_addr,
