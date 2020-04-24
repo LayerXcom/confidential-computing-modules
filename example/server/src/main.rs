@@ -65,7 +65,7 @@ fn main() -> io::Result<()> {
             .route("/api/v1/init_state", web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/transfer", web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/key_rotation", web::post().to(handle_key_rotation::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
-            .route("/api/v1/get_state", web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/balance_of", web::get().to(handle_balance_of::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/start_polling", web::get().to(handle_start_polling::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/set_contract_addr", web::get().to(handle_set_contract_addr::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
     })

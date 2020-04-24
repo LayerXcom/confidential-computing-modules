@@ -139,8 +139,8 @@ where
     Ok(HttpResponse::Ok().json(api::key_rotation::post::Response(receipt)))
 }
 
-/// Fetch events from blockchain nodes manually, and then get state from enclave.
-pub fn handle_get_state<D, S, W, DB>(
+/// Fetch events from blockchain nodes manually, and then get balance of the address from enclave.
+pub fn handle_balance_of<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::state::get::Request>,
 ) -> Result<HttpResponse, Error>

@@ -171,7 +171,7 @@ fn subcommand_anonify<R: Rng>(
             )
             .expect("Failed to key_rotation command");
         },
-        ("get_state", Some(matches)) => {
+        ("balance_of", Some(matches)) => {
             let keyfile_index: usize = matches.value_of("keyfile-index")
                 .expect("Not found keyfile-index.")
                 .parse()
@@ -185,7 +185,7 @@ fn subcommand_anonify<R: Rng>(
                 .parse()
                 .expect("Failed to parse state_id");
 
-            commands::get_state(
+            commands::balance_of(
                 &mut term,
                 root_dir,
                 anonify_url,
@@ -194,7 +194,7 @@ fn subcommand_anonify<R: Rng>(
                 contract_addr,
                 rng
             )
-            .expect("Failed to get state command");
+            .expect("Failed balance_of command");
         },
         ("start_polling", Some(matches)) => {
             let contract_addr = match matches.value_of("contract-addr") {
@@ -309,8 +309,8 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .takes_value(true)
             )
         )
-        .subcommand(SubCommand::with_name("get_state")
-            .about("Get state from anonify services.")
+        .subcommand(SubCommand::with_name("balance_of")
+            .about("Get balance of the address from anonify services.")
             .arg(Arg::with_name("keyfile-index")
                 .short("i")
                 .takes_value(true)

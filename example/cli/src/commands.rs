@@ -114,7 +114,7 @@ pub(crate) fn key_rotation(
     Ok(())
 }
 
-pub(crate) fn get_state<R: Rng>(
+pub(crate) fn balance_of<R: Rng>(
     term: &mut Term,
     root_dir: PathBuf,
     anonify_url: String,
@@ -128,7 +128,7 @@ pub(crate) fn get_state<R: Rng>(
 
     let req = api::state::get::Request::new(&keypair, contract_addr, state_id, rng);
     let res = Client::new()
-        .get(&format!("{}/api/v1/get_state", &anonify_url))
+        .get(&format!("{}/api/v1/balance_of", &anonify_url))
         .json(&req)
         .send()?
         .text()?;
