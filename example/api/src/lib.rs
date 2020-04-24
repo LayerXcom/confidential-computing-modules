@@ -137,7 +137,7 @@ pub mod init_state {
     }
 }
 
-pub mod state_transition {
+pub mod transfer {
     pub mod post {
         use super::super::*;
         big_array! { BigArray; }

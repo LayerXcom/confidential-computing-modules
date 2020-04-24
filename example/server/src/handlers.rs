@@ -88,9 +88,9 @@ where
     Ok(HttpResponse::Ok().json(api::init_state::post::Response(receipt)))
 }
 
-pub fn handle_state_transition<D, S, W, DB>(
+pub fn handle_transfer<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<api::state_transition::post::Request>,
+    req: web::Json<api::transfer::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
@@ -115,7 +115,7 @@ where
         &server.abi_path,
     )?;
 
-    Ok(HttpResponse::Ok().json(api::state_transition::post::Response(receipt)))
+    Ok(HttpResponse::Ok().json(api::transfer::post::Response(receipt)))
 }
 
 pub fn handle_key_rotation<D, S, W, DB>(
@@ -139,8 +139,8 @@ where
     Ok(HttpResponse::Ok().json(api::key_rotation::post::Response(receipt)))
 }
 
-/// Fetch events from blockchain nodes manually, and then get state from enclave.
-pub fn handle_get_state<D, S, W, DB>(
+/// Fetch events from blockchain nodes manually, and then get balance of the address from enclave.
+pub fn handle_balance_of<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::state::get::Request>,
 ) -> Result<HttpResponse, Error>
