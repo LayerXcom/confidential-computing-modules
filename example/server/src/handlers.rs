@@ -88,9 +88,9 @@ where
     Ok(HttpResponse::Ok().json(api::init_state::post::Response(receipt)))
 }
 
-pub fn handle_state_transition<D, S, W, DB>(
+pub fn handle_transfer<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<api::state_transition::post::Request>,
+    req: web::Json<api::transfer::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
@@ -115,7 +115,7 @@ where
         &server.abi_path,
     )?;
 
-    Ok(HttpResponse::Ok().json(api::state_transition::post::Response(receipt)))
+    Ok(HttpResponse::Ok().json(api::transfer::post::Response(receipt)))
 }
 
 pub fn handle_key_rotation<D, S, W, DB>(

@@ -73,7 +73,7 @@ pub(crate) fn init_state<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn state_transition<R: Rng>(
+pub(crate) fn transfer<R: Rng>(
     term: &mut Term,
     root_dir: PathBuf,
     anonify_url: String,
@@ -87,9 +87,9 @@ pub(crate) fn state_transition<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::state_transition::post::Request::new(&keypair, amount, state_id, target, contract_addr, rng);
+    let req = api::transfer::post::Request::new(&keypair, amount, state_id, target, contract_addr, rng);
     let res = Client::new()
-        .post(&format!("{}/api/v1/state_transition", &anonify_url))
+        .post(&format!("{}/api/v1/transfer", &anonify_url))
         .json(&req)
         .send()?
         .text()?;

@@ -127,9 +127,9 @@ $ ./target/debug/anonify-cli anonify init_state -t <TOTAL SUPPLY>
 ```
 Default `<AMOUNT>` is 100.
 
-- State transition
+- Transfer
 ```
-$ ./target/debug/anonify-cli anonify state_transition -a <AMOUNT> -t <TARGET_ACCOUNT>
+$ ./target/debug/anonify-cli anonify transfer -a <AMOUNT> -t <TARGET_ACCOUNT>
 ```
 Default `<AMOUNT>` is 10.
 

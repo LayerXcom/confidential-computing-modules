@@ -124,7 +124,7 @@ fn subcommand_anonify<R: Rng>(
             )
             .expect("Failed to init_state command");
         },
-        ("state_transition", Some(matches)) => {
+        ("transfer", Some(matches)) => {
             let keyfile_index: usize = matches.value_of("keyfile-index")
                 .expect("Not found keyfile-index.")
                 .parse()
@@ -146,7 +146,7 @@ fn subcommand_anonify<R: Rng>(
                 .parse()
                 .expect("Failed to parse state_id");
 
-            commands::state_transition(
+            commands::transfer(
                 &mut term,
                 root_dir,
                 anonify_url,
@@ -157,7 +157,7 @@ fn subcommand_anonify<R: Rng>(
                 contract_addr,
                 rng
             )
-            .expect("Failed to state_transition command");
+            .expect("Failed to transfer command");
         },
         ("key_rotation", Some(matches)) => {
             let contract_addr = match matches.value_of("contract-addr") {
@@ -271,8 +271,8 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .takes_value(true)
             )
         )
-        .subcommand(SubCommand::with_name("state_transition")
-            .about("Send state transition to anonify system.")
+        .subcommand(SubCommand::with_name("transfer")
+            .about("Transfer the specified amount to the address")
             .arg(Arg::with_name("keyfile-index")
                 .short("i")
                 .takes_value(true)
