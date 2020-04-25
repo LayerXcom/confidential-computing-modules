@@ -57,7 +57,7 @@ impl AppKeyChain {
                 ensure!(app_msg.epoch() == self.epoch, "application messages's epoch differs from the app key chain's");
 
                 let (ub_key, nonce_seq, generation) = self.key_nonce_gen(app_msg.roster_idx() as usize)?;
-                ensure!(app_msg.generation() == generation, "application messages's generation differs from the AppMeberSecret's");
+                ensure!(app_msg.generation() == generation, "application messages's generation differs from the AppMemberSecret's");
 
                 let mut ciphertext = app_msg.encrypted_state_ref().to_vec();
                 let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
@@ -113,7 +113,7 @@ impl AppKeyChain {
             member_secret.as_mut_bytes(),
         )?;
 
-        *gen = gen.checked_add(1).ok_or(anyhow!("geenration is over u32::MAX"))?;
+        *gen = gen.checked_add(1).ok_or(anyhow!("generation is over u32::MAX"))?;
 
         Ok(())
     }

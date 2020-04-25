@@ -129,7 +129,7 @@ impl RatchetTree {
             {
                 let decryption_key = res_node.private_key().unwrap();
                 let plaintext = node_msg.node_secrets.get(pos)
-                    .ok_or(anyhow!("Invalid direcr path message"))?
+                    .ok_or(anyhow!("Invalid direct path message"))?
                     .clone()
                     .decrypt(&decryption_key)?;
                 let path_secret = PathSecret::from(plaintext);
