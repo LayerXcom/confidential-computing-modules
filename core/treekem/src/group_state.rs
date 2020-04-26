@@ -66,7 +66,7 @@ impl Handshake for GroupState {
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
         let max_tree_size = RatchetTree::roster_idx_to_tree_idx(max_roster_idx)?;
 
-        // If sender_tree_size equals to the current tree size, the handshake containes an add operation.
+        // If sender_tree_size equals to the current tree size, the handshake contains an add operation.
         if sender_tree_idx == self.tree.size() {
             // This is just special operation for the very first epoch.
             if self.tree.nodes.is_empty() {
