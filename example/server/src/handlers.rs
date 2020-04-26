@@ -118,6 +118,36 @@ where
     Ok(HttpResponse::Ok().json(api::transfer::post::Response(receipt)))
 }
 
+pub fn handle_approve<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::approve::post::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
+{
+    let access_right = req.into_access_right()?;
+    let signer = server.dispatcher.get_account(0)?;
+    let amount = U64::from_raw(req.amount);
+    let spender = req.target;
+    let approve_state = approve { amount, spender };
+
+    let receipt = server.dispatcher.state_transition(
+        access_right,
+        approve_state,
+        req.state_id,
+        "approve",
+        signer,
+        DEFAULT_SEND_GAS,
+        &req.contract_addr,
+        &server.abi_path,
+    )?;
+
+    Ok(HttpResponse::Ok().json(api::approve::post::Response(receipt)))
+}
+
 pub fn handle_key_rotation<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::key_rotation::post::Request>,
