@@ -570,7 +570,7 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             )
         )
         .subcommand(SubCommand::with_name("burn")
-            .about("Create new coins and assign to the target address")
+            .about("Burn the coins")
             .arg(Arg::with_name("keyfile-index")
                 .short("i")
                 .takes_value(true)
