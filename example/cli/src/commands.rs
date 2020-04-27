@@ -178,7 +178,7 @@ pub(crate) fn allowance<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::allowance::get::Request::new(&keypair, contract_addr, state_id, rng);
+    let req = api::allowance::get::Request::new(&keypair, contract_addr, spender, state_id, rng);
     let res = Client::new()
         .get(&format!("{}/api/v1/allowance", &anonify_url))
         .json(&req)
