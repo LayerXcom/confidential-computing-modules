@@ -12,6 +12,7 @@ use actix_web::{
     web,
     HttpResponse,
 };
+use anyhow::anyhow;
 use crate::Server;
 
 const DEFAULT_SEND_GAS: u64 = 3_000_000;

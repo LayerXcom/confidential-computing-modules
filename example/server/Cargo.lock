@@ -340,6 +340,7 @@ dependencies = [
  "anonify-event-watcher 0.1.0",
  "anonify-host 0.1.0",
  "anonify-runtime 0.1.0",
+ "anyhow 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",
  "api 0.1.0",
  "app 0.1.0",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
