@@ -203,7 +203,7 @@ fn subcommand_anonify<R: Rng>(
                 .expect("Not found amount.")
                 .parse()
                 .expect("Failed to parse amount");
-            let target: &str = matches.value_of("owner")
+            let owner: &str = matches.value_of("owner")
                 .expect("Not found owner");
             let owner_addr = UserAddress::base64_decode(owner);
             let target: &str = matches.value_of("target")
