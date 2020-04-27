@@ -187,7 +187,7 @@ pub(crate) fn burn<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::mint::burn::Request::new(&keypair, amount, state_id, contract_addr, rng);
+    let req = api::burn::post::Request::new(&keypair, amount, state_id, contract_addr, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/burn", &anonify_url))
         .json(&req)
