@@ -6,7 +6,7 @@ use anonify_event_watcher::{
     BlockNumDB,
     traits::*,
 };
-use anonify_runtime::U64;
+use anonify_runtime::{U64, Approved};
 use app::{approve, transfer, construct, transfer_from};
 use actix_web::{
     web,
@@ -198,6 +198,27 @@ pub fn handle_key_rotation<D, S, W, DB>(
     )?;
 
     Ok(HttpResponse::Ok().json(api::key_rotation::post::Response(receipt)))
+}
+
+/// Fetch events from blockchain nodes manually, and then get the balance of the address approved by the owner from enclave.
+pub fn handle_allowance<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::allowance::get::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
+{
+    server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path)?;
+
+    let access_right = req.into_access_right()?;
+    let owner_approved = get_state::<Approved>(&access_right, server.eid, "Approved")?;
+    let approved_amount = owner_approved.allowance(&req.spender)
+        .ok_or(anyhow!("not enough amount approved."))?;
+
+    Ok(HttpResponse::Ok().json(api::allowance::get::Response((*approved_amount).as_raw())))
 }
 
 /// Fetch events from blockchain nodes manually, and then get balance of the address from enclave.

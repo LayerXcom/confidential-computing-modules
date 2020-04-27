@@ -165,6 +165,30 @@ pub(crate) fn key_rotation(
     Ok(())
 }
 
+pub(crate) fn allowance<R: Rng>(
+    term: &mut Term,
+    root_dir: PathBuf,
+    anonify_url: String,
+    index: usize,
+    state_id: u64,
+    spender: UserAddress,
+    contract_addr: String,
+    rng: &mut R,
+) -> Result<()> {
+    let password = prompt_password(term)?;
+    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+
+    let req = api::allowance::get::Request::new(&keypair, contract_addr, state_id, rng);
+    let res = Client::new()
+        .get(&format!("{}/api/v1/allowance", &anonify_url))
+        .json(&req)
+        .send()?
+        .text()?;
+
+    println!("Current State: {}", res);
+    Ok(())
+}
+
 pub(crate) fn balance_of<R: Rng>(
     term: &mut Term,
     root_dir: PathBuf,

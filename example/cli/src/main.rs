@@ -245,6 +245,35 @@ fn subcommand_anonify<R: Rng>(
             )
             .expect("Failed to key_rotation command");
         },
+        ("allowance", Some(matches)) => {
+            let keyfile_index: usize = matches.value_of("keyfile-index")
+                .expect("Not found keyfile-index.")
+                .parse()
+                .expect("Failed to parse keyfile-index");
+            let contract_addr = match matches.value_of("contract-addr") {
+                Some(addr) => addr.to_string(),
+                None => default_contract_addr,
+            };
+            let state_id = matches.value_of("state_id")
+                .expect("Not found state_id")
+                .parse()
+                .expect("Failed to parse state_id");
+            let spender = matches.value_of("spender")
+                .expect("Not found spender");
+            let spender_addr = UserAddress::base64_decode(spender);
+
+            commands::allowance(
+                &mut term,
+                root_dir,
+                anonify_url,
+                keyfile_index,
+                state_id,
+                spender_addr,
+                contract_addr,
+                rng
+            )
+            .expect("Failed allowance command");
+        },
         ("balance_of", Some(matches)) => {
             let keyfile_index: usize = matches.value_of("keyfile-index")
                 .expect("Not found keyfile-index.")
@@ -448,6 +477,30 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             .arg(Arg::with_name("contract-addr")
                 .short("c")
                 .takes_value(true)
+            )
+        )
+        .subcommand(SubCommand::with_name("allowance")
+            .about("Get approved balance of the spender address from anonify services.")
+            .arg(Arg::with_name("keyfile-index")
+                .short("i")
+                .takes_value(true)
+                .required(false)
+                .default_value(DEFAULT_KEYFILE_INDEX)
+            )
+            .arg(Arg::with_name("contract-addr")
+                .short("c")
+                .takes_value(true)
+            )
+            .arg(Arg::with_name("state_id")
+                .short("s")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_STATE_ID)
+            )
+            .arg(Arg::with_name("spender")
+                .short("to")
+                .takes_value(true)
+                .required(true)
             )
         )
         .subcommand(SubCommand::with_name("balance_of")
