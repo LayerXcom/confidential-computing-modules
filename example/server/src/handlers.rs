@@ -7,7 +7,7 @@ use anonify_event_watcher::{
     traits::*,
 };
 use anonify_runtime::{U64, Approved};
-use app::{approve, transfer, construct, transfer_from};
+use app::{approve, transfer, construct, transfer_from, mint};
 use actix_web::{
     web,
     HttpResponse,
@@ -147,6 +147,36 @@ pub fn handle_approve<D, S, W, DB>(
     )?;
 
     Ok(HttpResponse::Ok().json(api::approve::post::Response(receipt)))
+}
+
+pub fn handle_mint<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::mint::post::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
+{
+    let access_right = req.into_access_right()?;
+    let signer = server.dispatcher.get_account(0)?;
+    let amount = U64::from_raw(req.amount);
+    let recipient = req.target;
+    let minting_state = mint{ amount, recipient };
+
+    let receipt = server.dispatcher.state_transition(
+        access_right,
+        minting_state,
+        req.state_id,
+        "mint",
+        signer,
+        DEFAULT_SEND_GAS,
+        &req.contract_addr,
+        &server.abi_path,
+    )?;
+
+    Ok(HttpResponse::Ok().json(api::mint::post::Response(receipt)))
 }
 
 pub fn handle_transfer_from<D, S, W, DB>(

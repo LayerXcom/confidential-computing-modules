@@ -149,6 +149,31 @@ pub(crate) fn transfer_from<R: Rng>(
     Ok(())
 }
 
+pub(crate) fn mint<R: Rng>(
+    term: &mut Term,
+    root_dir: PathBuf,
+    anonify_url: String,
+    index: usize,
+    target: UserAddress,
+    amount: u64,
+    state_id: u64,
+    contract_addr: String,
+    rng: &mut R
+) -> Result<()> {
+    let password = prompt_password(term)?;
+    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+
+    let req = api::mint::post::Request::new(&keypair, amount, state_id, target, contract_addr, rng);
+    let res = Client::new()
+        .post(&format!("{}/api/v1/mint", &anonify_url))
+        .json(&req)
+        .send()?
+        .text()?;
+
+    println!("Transaction Receipt: {}", res);
+    Ok(())
+}
+
 pub(crate) fn key_rotation(
     anonify_url: String,
     contract_addr: String,
