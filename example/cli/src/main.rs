@@ -194,6 +194,45 @@ fn subcommand_anonify<R: Rng>(
             )
                 .expect("Failed to approve command");
         },
+        ("transfer_from", Some(matches)) => {
+            let keyfile_index: usize = matches.value_of("keyfile-index")
+                .expect("Not found keyfile-index.")
+                .parse()
+                .expect("Failed to parse keyfile-index");
+            let amount: u64 = matches.value_of("amount")
+                .expect("Not found amount.")
+                .parse()
+                .expect("Failed to parse amount");
+            let target: &str = matches.value_of("owner")
+                .expect("Not found owner");
+            let owner_addr = UserAddress::base64_decode(owner);
+            let target: &str = matches.value_of("target")
+                .expect("Not found target");
+            let target_addr = UserAddress::base64_decode(target);
+
+            let contract_addr = match matches.value_of("contract-addr") {
+                Some(addr) => addr.to_string(),
+                None => default_contract_addr,
+            };
+            let state_id = matches.value_of("state_id")
+                .expect("Not found state_id")
+                .parse()
+                .expect("Failed to parse state_id");
+
+            commands::transfer_from(
+                &mut term,
+                root_dir,
+                anonify_url,
+                keyfile_index,
+                owner_addr,
+                target_addr,
+                amount,
+                state_id,
+                contract_addr,
+                rng
+            )
+                .expect("Failed to transfer_from command");
+        },
         ("key_rotation", Some(matches)) => {
             let contract_addr = match matches.value_of("contract-addr") {
                 Some(addr) => addr.to_string(),
@@ -356,6 +395,42 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .takes_value(true)
                 .required(true)
                 .default_value(DEFAULT_STATE_ID)
+            )
+            .arg(Arg::with_name("target")
+                .short("to")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_TARGET)
+            )
+            .arg(Arg::with_name("contract-addr")
+                .short("c")
+                .takes_value(true)
+            )
+        )
+        .subcommand(SubCommand::with_name("transfer_from")
+            .about("Transfer the specified amount to the target address from owner's address")
+            .arg(Arg::with_name("keyfile-index")
+                .short("i")
+                .takes_value(true)
+                .required(false)
+                .default_value(DEFAULT_KEYFILE_INDEX)
+            )
+            .arg(Arg::with_name("amount")
+                .short("a")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_AMOUNT)
+            )
+            .arg(Arg::with_name("state_id")
+                .short("s")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_STATE_ID)
+            )
+            .arg(Arg::with_name("owner")
+                .short("from")
+                .takes_value(true)
+                .required(true)
             )
             .arg(Arg::with_name("target")
                 .short("to")
