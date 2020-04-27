@@ -98,6 +98,57 @@ pub(crate) fn transfer<R: Rng>(
     Ok(())
 }
 
+pub(crate) fn approve<R: Rng>(
+    term: &mut Term,
+    root_dir: PathBuf,
+    anonify_url: String,
+    index: usize,
+    target: UserAddress,
+    amount: u64,
+    state_id: u64,
+    contract_addr: String,
+    rng: &mut R
+) -> Result<()> {
+    let password = prompt_password(term)?;
+    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+
+    let req = api::approve::post::Request::new(&keypair, amount, state_id, target, contract_addr, rng);
+    let res = Client::new()
+        .post(&format!("{}/api/v1/approve", &anonify_url))
+        .json(&req)
+        .send()?
+        .text()?;
+
+    println!("Transaction Receipt: {}", res);
+    Ok(())
+}
+
+pub(crate) fn transfer_from<R: Rng>(
+    term: &mut Term,
+    root_dir: PathBuf,
+    anonify_url: String,
+    index: usize,
+    owner: UserAddress,
+    target: UserAddress,
+    amount: u64,
+    state_id: u64,
+    contract_addr: String,
+    rng: &mut R
+) -> Result<()> {
+    let password = prompt_password(term)?;
+    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+
+    let req = api::transfer_from::post::Request::new(&keypair, amount, state_id, owner, target, contract_addr, rng);
+    let res = Client::new()
+        .post(&format!("{}/api/v1/transfer_from", &anonify_url))
+        .json(&req)
+        .send()?
+        .text()?;
+
+    println!("Transaction Receipt: {}", res);
+    Ok(())
+}
+
 pub(crate) fn key_rotation(
     anonify_url: String,
     contract_addr: String,
@@ -111,6 +162,30 @@ pub(crate) fn key_rotation(
 
     println!("Transaction Receipt: {}", res);
 
+    Ok(())
+}
+
+pub(crate) fn allowance<R: Rng>(
+    term: &mut Term,
+    root_dir: PathBuf,
+    anonify_url: String,
+    index: usize,
+    state_id: u64,
+    spender: UserAddress,
+    contract_addr: String,
+    rng: &mut R,
+) -> Result<()> {
+    let password = prompt_password(term)?;
+    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+
+    let req = api::allowance::get::Request::new(&keypair, contract_addr, spender, state_id, rng);
+    let res = Client::new()
+        .get(&format!("{}/api/v1/allowance", &anonify_url))
+        .json(&req)
+        .send()?
+        .text()?;
+
+    println!("Current State: {}", res);
     Ok(())
 }
 

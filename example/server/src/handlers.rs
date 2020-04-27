@@ -6,12 +6,13 @@ use anonify_event_watcher::{
     BlockNumDB,
     traits::*,
 };
-use anonify_runtime::U64;
-use app::{transfer, construct};
+use anonify_runtime::{U64, Approved};
+use app::{approve, transfer, construct, transfer_from};
 use actix_web::{
     web,
     HttpResponse,
 };
+use anyhow::anyhow;
 use crate::Server;
 
 const DEFAULT_SEND_GAS: u64 = 3_000_000;
@@ -20,11 +21,11 @@ pub fn handle_deploy<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::deploy::post::Request>,
 ) -> Result<HttpResponse, Error>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher<WatcherDB=DB>,
-    DB: BlockNumDB,
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
 {
     debug!("Starting deploy a contract...");
 
@@ -42,11 +43,11 @@ pub fn handle_register<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::register::post::Request>,
 ) -> Result<HttpResponse, Error>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher<WatcherDB=DB>,
-    DB: BlockNumDB,
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
 {
     let signer = server.dispatcher.get_account(0)?;
     let receipt = server.dispatcher.register(
@@ -63,11 +64,11 @@ pub fn handle_init_state<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::init_state::post::Request>,
 ) -> Result<HttpResponse, Error>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher<WatcherDB=DB>,
-    DB: BlockNumDB,
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
 {
     let access_right = req.into_access_right()?;
     let signer = server.dispatcher.get_account(0)?;
@@ -92,11 +93,11 @@ pub fn handle_transfer<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::transfer::post::Request>,
 ) -> Result<HttpResponse, Error>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher<WatcherDB=DB>,
-    DB: BlockNumDB,
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
 {
     let access_right = req.into_access_right()?;
     let signer = server.dispatcher.get_account(0)?;
@@ -118,15 +119,76 @@ where
     Ok(HttpResponse::Ok().json(api::transfer::post::Response(receipt)))
 }
 
+pub fn handle_approve<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::approve::post::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
+{
+    let access_right = req.into_access_right()?;
+    let signer = server.dispatcher.get_account(0)?;
+    let amount = U64::from_raw(req.amount);
+    let spender = req.target;
+    let approve_state = approve { amount, spender };
+
+    let receipt = server.dispatcher.state_transition(
+        access_right,
+        approve_state,
+        req.state_id,
+        "approve",
+        signer,
+        DEFAULT_SEND_GAS,
+        &req.contract_addr,
+        &server.abi_path,
+    )?;
+
+    Ok(HttpResponse::Ok().json(api::approve::post::Response(receipt)))
+}
+
+pub fn handle_transfer_from<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::transfer_from::post::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
+{
+    let access_right = req.into_access_right()?;
+    let signer = server.dispatcher.get_account(0)?;
+    let amount = U64::from_raw(req.amount);
+    let owner = req.owner;
+    let recipient = req.target;
+    let transferred_from_state = transfer_from { owner, recipient, amount };
+
+    let receipt = server.dispatcher.state_transition(
+        access_right,
+        transferred_from_state,
+        req.state_id,
+        "transfer_from",
+        signer,
+        DEFAULT_SEND_GAS,
+        &req.contract_addr,
+        &server.abi_path,
+    )?;
+
+    Ok(HttpResponse::Ok().json(api::transfer_from::post::Response(receipt)))
+}
+
 pub fn handle_key_rotation<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::key_rotation::post::Request>,
 ) -> Result<HttpResponse, Error>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher<WatcherDB=DB>,
-    DB: BlockNumDB,
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
 {
     let signer = server.dispatcher.get_account(0)?;
     let receipt = server.dispatcher.handshake(
@@ -139,16 +201,37 @@ where
     Ok(HttpResponse::Ok().json(api::key_rotation::post::Response(receipt)))
 }
 
+/// Fetch events from blockchain nodes manually, and then get the balance of the address approved by the owner from enclave.
+pub fn handle_allowance<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::allowance::get::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
+{
+    server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path)?;
+
+    let access_right = req.into_access_right()?;
+    let owner_approved = get_state::<Approved>(&access_right, server.eid, "Approved")?;
+    let approved_amount = owner_approved.allowance(&req.spender).unwrap();
+    // TODO: stop using unwrap when switching from failure to anyhow.
+
+    Ok(HttpResponse::Ok().json(api::allowance::get::Response((*approved_amount).as_raw())))
+}
+
 /// Fetch events from blockchain nodes manually, and then get balance of the address from enclave.
 pub fn handle_balance_of<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::state::get::Request>,
 ) -> Result<HttpResponse, Error>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher<WatcherDB=DB>,
-    DB: BlockNumDB,
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
 {
     server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path)?;
 
@@ -162,11 +245,11 @@ pub fn handle_start_polling<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::state::start_polling::Request>,
 ) -> Result<HttpResponse, Error>
-where
-    D: Deployer + Send + Sync + 'static,
-    S: Sender + Send + Sync + 'static,
-    W: Watcher<WatcherDB=DB> + Send + Sync + 'static,
-    DB: BlockNumDB + Send + Sync + 'static,
+    where
+        D: Deployer + Send + Sync + 'static,
+        S: Sender + Send + Sync + 'static,
+        W: Watcher<WatcherDB=DB> + Send + Sync + 'static,
+        DB: BlockNumDB + Send + Sync + 'static,
 {
     let _ = thread::spawn(move || {
         loop {
@@ -183,11 +266,11 @@ pub fn handle_set_contract_addr<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<api::contract_addr::post::Request>,
 ) -> Result<HttpResponse, Error>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher<WatcherDB=DB>,
-    DB: BlockNumDB,
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
 {
     debug!("Starting set a contract address...");
 
