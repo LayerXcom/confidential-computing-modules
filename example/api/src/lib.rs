@@ -276,6 +276,7 @@ pub mod transfer_from {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
+            pub owner: UserAddress,
             pub target: UserAddress,
             pub amount: u64,
             pub state_id: u64,
