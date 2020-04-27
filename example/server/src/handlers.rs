@@ -216,8 +216,8 @@ pub fn handle_allowance<D, S, W, DB>(
 
     let access_right = req.into_access_right()?;
     let owner_approved = get_state::<Approved>(&access_right, server.eid, "Approved")?;
-    let approved_amount = owner_approved.allowance(&req.spender)
-        .ok_or(anyhow!("not enough amount approved."))?;
+    let approved_amount = owner_approved.allowance(&req.spender).unwrap();
+    // TODO: stop using unwrap when switching from failure to anyhow.
 
     Ok(HttpResponse::Ok().json(api::allowance::get::Response((*approved_amount).as_raw())))
 }
