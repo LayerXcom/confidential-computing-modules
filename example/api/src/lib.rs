@@ -322,7 +322,7 @@ pub mod transfer_from {
                 write!(
                     f,
                     "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, owner: {:?}, target: {:?}, amount: {:?}, contract address: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.owner, .target, self.amount, self.contract_addr
+                    &self.sig[..], self.pubkey, self.challenge, self.owner, self.target, self.amount, self.contract_addr
                 )
             }
         }
