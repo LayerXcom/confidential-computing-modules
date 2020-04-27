@@ -7,7 +7,7 @@ use anonify_event_watcher::{
     traits::*,
 };
 use anonify_runtime::{U64, Approved};
-use app::{approve, transfer, construct, transfer_from, mint};
+use app::{approve, transfer, construct, transfer_from, mint, burn};
 use actix_web::{
     web,
     HttpResponse,
