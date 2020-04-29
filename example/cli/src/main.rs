@@ -233,6 +233,72 @@ fn subcommand_anonify<R: Rng>(
             )
                 .expect("Failed to transfer_from command");
         },
+        ("mint", Some(matches)) => {
+            let keyfile_index: usize = matches.value_of("keyfile-index")
+                .expect("Not found keyfile-index.")
+                .parse()
+                .expect("Failed to parse keyfile-index");
+            let amount: u64 = matches.value_of("amount")
+                .expect("Not found amount.")
+                .parse()
+                .expect("Failed to parse amount");
+            let target: &str = matches.value_of("target")
+                .expect("Not found target");
+            let target_addr = UserAddress::base64_decode(target);
+
+            let contract_addr = match matches.value_of("contract-addr") {
+                Some(addr) => addr.to_string(),
+                None => default_contract_addr,
+            };
+            let state_id = matches.value_of("state_id")
+                .expect("Not found state_id")
+                .parse()
+                .expect("Failed to parse state_id");
+
+            commands::mint(
+                &mut term,
+                root_dir,
+                anonify_url,
+                keyfile_index,
+                target_addr,
+                amount,
+                state_id,
+                contract_addr,
+                rng
+            )
+                .expect("Failed to mint command");
+        },
+        ("burn", Some(matches)) => {
+            let keyfile_index: usize = matches.value_of("keyfile-index")
+                .expect("Not found keyfile-index.")
+                .parse()
+                .expect("Failed to parse keyfile-index");
+            let amount: u64 = matches.value_of("amount")
+                .expect("Not found amount.")
+                .parse()
+                .expect("Failed to parse amount");
+
+            let contract_addr = match matches.value_of("contract-addr") {
+                Some(addr) => addr.to_string(),
+                None => default_contract_addr,
+            };
+            let state_id = matches.value_of("state_id")
+                .expect("Not found state_id")
+                .parse()
+                .expect("Failed to parse state_id");
+
+            commands::burn(
+                &mut term,
+                root_dir,
+                anonify_url,
+                keyfile_index,
+                amount,
+                state_id,
+                contract_addr,
+                rng
+            )
+                .expect("Failed to burn command");
+        },
         ("key_rotation", Some(matches)) => {
             let contract_addr = match matches.value_of("contract-addr") {
                 Some(addr) => addr.to_string(),
@@ -466,6 +532,62 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .takes_value(true)
                 .required(true)
                 .default_value(DEFAULT_TARGET)
+            )
+            .arg(Arg::with_name("contract-addr")
+                .short("c")
+                .takes_value(true)
+            )
+        )
+        .subcommand(SubCommand::with_name("mint")
+            .about("Create new coins and assign to the target address")
+            .arg(Arg::with_name("keyfile-index")
+                .short("i")
+                .takes_value(true)
+                .required(false)
+                .default_value(DEFAULT_KEYFILE_INDEX)
+            )
+            .arg(Arg::with_name("amount")
+                .short("a")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_AMOUNT)
+            )
+            .arg(Arg::with_name("state_id")
+                .short("s")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_STATE_ID)
+            )
+            .arg(Arg::with_name("target")
+                .short("to")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_TARGET)
+            )
+            .arg(Arg::with_name("contract-addr")
+                .short("c")
+                .takes_value(true)
+            )
+        )
+        .subcommand(SubCommand::with_name("burn")
+            .about("Burn the coins")
+            .arg(Arg::with_name("keyfile-index")
+                .short("i")
+                .takes_value(true)
+                .required(false)
+                .default_value(DEFAULT_KEYFILE_INDEX)
+            )
+            .arg(Arg::with_name("amount")
+                .short("a")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_AMOUNT)
+            )
+            .arg(Arg::with_name("state_id")
+                .short("s")
+                .takes_value(true)
+                .required(true)
+                .default_value(DEFAULT_STATE_ID)
             )
             .arg(Arg::with_name("contract-addr")
                 .short("c")
