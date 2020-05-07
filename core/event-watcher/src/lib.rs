@@ -6,3 +6,4 @@ pub mod utils;
 pub mod error;
 
 pub use eventdb::{BlockNumDB, EventDB};
+pub use traits::{Deployer, Sender, Watcher};

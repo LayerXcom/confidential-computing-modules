@@ -34,6 +34,8 @@ pub struct ERC20Bencher<'a, D, S, W, DB>
     max_roster_idx: &'a str,
     state_id: u64,
     gas: u64,
+    access_right: Option<AccessRight>,
+    contract_addr: Option<String>,
     pub dispatcher: Option<Dispatcher<D, S, W, DB>>,
 }
 
@@ -55,6 +57,8 @@ impl ERC20Bencher<D, S, W, DB>
             max_roster_idx,
             state_id,
             gas,
+            access_right: None,
+            contract_addr: None,
             dispatcher: None,
         }
     }
@@ -64,7 +68,7 @@ impl ERC20Bencher<D, S, W, DB>
         env::set_var("MAX_ROSTER_IDX", self.max_roster_idx);
         let enclave = EnclaveDir::new().init_enclave(true).unwrap();
         let eid = enclave.geteid();
-        let my_access_right = AccessRight::new_from_rng().unwrap();
+        let access_right = AccessRight::new_from_rng().unwrap();
 
         let event_db = Arc::new(EventDB::new());
         let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
@@ -73,7 +77,9 @@ impl ERC20Bencher<D, S, W, DB>
         let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
         dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
-        self.dispatcher = Some(dispatcher)
+        self.access_right = Some(access_right);
+        self.contract_addr = Some(contract_addr);
+        self.dispatcher = Some(dispatcher);
     }
 
     pub fn bench_construct(&self, b: &mut Bencher) {
@@ -82,18 +88,15 @@ impl ERC20Bencher<D, S, W, DB>
 
         b.iter(|| {
             let receipt = self.dispatcher.unwrap().state_transition(
-                self, // TODO: unimplemented
+                self.access_right.unwrap(),
                 init_state,
                 self.state_id,
                 "construct",
-                deployer_addr.clone(), // TODO: unimplemented
+                self.dispatcher.unwrap().get_account(0).unwrap(),
                 self.gas,
-                &contract_addr, // TODO: unimplemented
+                &(self.contract_addr.unwrap()),
                 ANONYMOUS_ASSET_ABI_PATH,
             ).unwrap();
-
-            // TODO: unimplemented
-            dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
         })
     }
 }
