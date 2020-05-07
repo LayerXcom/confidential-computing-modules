@@ -108,6 +108,7 @@ $ ./target/debug/anonify-cli wallet list
 ```
 
 ### Anonify operations
+Set the TEE url (e.x. http://172.28.1.1:8080) in the environment variable `ANONIFY_URL`.
 
 - Deploy a anonymous-asset contract
 ```
