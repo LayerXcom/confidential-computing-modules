@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate criterion;
 
-use criterion::{Criterion, Bencher, black_box};
+use criterion::{Criterion, Bencher};
 
 use anonify_host::{
     EnclaveDir,
@@ -58,7 +58,7 @@ impl ERC20Bencher {
         let eid = enclave.geteid();
 
         let event_db = Arc::new(EventDB::new());
-        let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db)?;
+        let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db)?;
 
         let deployer_addr = dispatcher.get_account(0)?;
         let contract_addr = dispatcher.deploy(&deployer_addr)?;
