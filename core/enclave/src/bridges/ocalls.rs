@@ -90,7 +90,7 @@ pub fn save_to_host_memory(data: &[u8]) -> Result<u64> {
     }
 }
 
-pub fn get_update_info(mut buf: Vec<u8>) -> Result<()> {
+pub fn get_update_info(buf: Vec<u8>) -> Result<()> {
     let mut update_info = sgx_update_info_bit_t::default();
     let mut rt : sgx_status_t = sgx_status_t::SGX_ERROR_UNEXPECTED;
 

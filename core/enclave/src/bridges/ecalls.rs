@@ -151,20 +151,14 @@ pub mod enclave_tests {
     #[cfg(debug_assertions)]
     mod internal_tests {
         use super::*;
-        use sgx_tstd as std;
         use sgx_tunittest::*;
-        use std::{panic::UnwindSafe, string::String, vec::Vec};
-        use crate::state::tests::*;
-        use crate::tests::*;
+        use crate::std::{panic::UnwindSafe, string::String, vec::Vec};
         use anonify_treekem::tests::*;
 
         pub unsafe fn internal_tests(ext_ptr: *const RawPointer) -> ResultStatus {
             let mut ctr = 0u64;
             let mut failures = Vec::new();
             rsgx_unit_test_start();
-
-            core_unitests(&mut ctr, &mut failures, test_read_write, "test_read_write");
-            core_unitests(&mut ctr, &mut failures, test_get_report, "test_get_report");
 
             // anonify_treekem
             core_unitests(&mut ctr, &mut failures, app_msg_correctness, "app_msg_correctness");
