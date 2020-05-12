@@ -31,7 +31,7 @@ impl Ciphertext {
     }
 
     pub fn from_bytes(bytes: &mut [u8]) -> Self {
-        assert_eq!(bytes.len(), *CIPHERTEXT_SIZE);
+        assert_eq!(bytes.len(), CIPHERTEXT_SIZE);
         Ciphertext::decode(&mut &bytes[..]).unwrap()
     }
 
@@ -40,11 +40,11 @@ impl Ciphertext {
     }
 
     pub fn from_bytes_iter(bytes: &[u8]) -> impl Iterator<Item=Self> + '_ {
-        assert_eq!(bytes.len() % (*CIPHERTEXT_SIZE), 0);
-        let iter_num = bytes.len() / (*CIPHERTEXT_SIZE);
+        assert_eq!(bytes.len() % (CIPHERTEXT_SIZE), 0);
+        let iter_num = bytes.len() / (CIPHERTEXT_SIZE);
 
         (0..iter_num).map(move |i| {
-            let mut buf = &bytes[i*(*CIPHERTEXT_SIZE)..(i+1)*(*CIPHERTEXT_SIZE)];
+            let mut buf = &bytes[i*(CIPHERTEXT_SIZE)..(i+1)*(CIPHERTEXT_SIZE)];
             Ciphertext::decode(&mut buf).unwrap()
         })
     }

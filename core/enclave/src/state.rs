@@ -106,10 +106,7 @@ pub struct Current;
 pub struct Next;
 
 /// This struct can be got by decrypting ciphertexts which is stored on blockchain.
-/// The secret key is shared among all TEE's enclaves.
-/// The padding works for fixing the ciphertext size so that
-/// other people cannot distinguish what state is encrypted based on the size.
-/// [Example]: A size of ciphertext is 95 bytes, if inner_state is u64 value.
+/// The group encryption key is shared among all TEE's enclaves.
 #[derive(Encode, Decode, Debug, Clone, PartialEq)]
 pub struct UserState<S: State, N> {
     address: UserAddress,
@@ -209,9 +206,11 @@ impl UserState<StateType, Current> {
 /// to blockchain node.
 impl UserState<StateType, Next> {
     pub fn encrypt(self, key: &GroupKey) -> Result<Ciphertext> {
-        /// Add padding to fix the ciphertext size of all state types.
+        // Add padding to fix the ciphertext size of all state types.
+        // The padding works for fixing the ciphertext size so that
+        // other people cannot distinguish what state is encrypted based on the size.
         fn append_padding(buf: &mut Vec<u8>) {
-            let padding_size = *MAX_MEM_SIZE - buf.len();
+            let padding_size = MAX_MEM_SIZE - buf.len();
             let mut padding = vec![0u8; padding_size];
             buf.extend_from_slice(&mut padding);
         }
