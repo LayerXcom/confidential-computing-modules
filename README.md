@@ -1,8 +1,5 @@
 # anonify
-A trusted anonymization tool for any blockchain
-
-## Directory structure
-wip
+A blockchain-agnostic execution environment with privacy and auditability
 
 ## Setup
 ```
@@ -148,8 +145,3 @@ $ ./target/debug/anonify-cli anonify start_polling
 ```
 $ ./target/debug/anonify-cli anonify key_rotation
 ```
-
-## Acknowledgements
-
-- [Rust SGX SDK](https://github.com/apache/incubator-teaclave-sgx-sdk)
-- [Molasses](https://github.com/trailofbits/molasses)
