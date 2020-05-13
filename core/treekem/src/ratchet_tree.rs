@@ -2,9 +2,7 @@ use std::vec::Vec;
 use crate::crypto::{
     dh::{DhPrivateKey, DhPubKey},
     secrets::{PathSecret, NodeSecret},
-    hmac::HmacKey,
     ecies::EciesCiphertext,
-    CryptoRng,
 };
 use crate::{
     tree_math,

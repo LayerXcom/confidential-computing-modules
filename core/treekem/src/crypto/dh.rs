@@ -4,7 +4,7 @@ use anonify_common::sgx_rand_assign;
 use anyhow::{anyhow, Result};
 use codec::{Encode, Decode, Input, Error};
 use super::{
-    CryptoRng, hkdf,
+    hkdf,
     hmac::HmacKey,
 };
 

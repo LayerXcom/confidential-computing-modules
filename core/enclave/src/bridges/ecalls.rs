@@ -25,11 +25,11 @@ pub unsafe extern "C" fn ecall_insert_ciphertexts(
     ciphertexts_len: usize,
 ) -> sgx_status_t {
     let ciphertexts = slice::from_raw_parts_mut(ciphertexts, ciphertexts_len);
-    assert_eq!(ciphertexts.len() % (*CIPHERTEXT_SIZE), 0, "Ciphertexts must be divisible by number of ciphertext.");
+    assert_eq!(ciphertexts.len() % CIPHERTEXT_SIZE, 0, "Ciphertexts must be divisible by number of ciphertext.");
     let group_key = &mut *ENCLAVE_CONTEXT.group_key.write().unwrap();
 
     let mut roster_idx: usize = 0;
-    for ciphertext in ciphertexts.chunks_mut(*CIPHERTEXT_SIZE) {
+    for ciphertext in ciphertexts.chunks_mut(CIPHERTEXT_SIZE) {
         let ciphertext = Ciphertext::from_bytes(ciphertext);
         ENCLAVE_CONTEXT
             .write_cipheriv(&ciphertext, group_key)
@@ -151,20 +151,14 @@ pub mod enclave_tests {
     #[cfg(debug_assertions)]
     mod internal_tests {
         use super::*;
-        use sgx_tstd as std;
         use sgx_tunittest::*;
-        use std::{panic::UnwindSafe, string::String, vec::Vec};
-        use crate::state::tests::*;
-        use crate::tests::*;
+        use crate::std::{panic::UnwindSafe, string::String, vec::Vec};
         use anonify_treekem::tests::*;
 
         pub unsafe fn internal_tests(ext_ptr: *const RawPointer) -> ResultStatus {
             let mut ctr = 0u64;
             let mut failures = Vec::new();
             rsgx_unit_test_start();
-
-            core_unitests(&mut ctr, &mut failures, test_read_write, "test_read_write");
-            core_unitests(&mut ctr, &mut failures, test_get_report, "test_get_report");
 
             // anonify_treekem
             core_unitests(&mut ctr, &mut failures, app_msg_correctness, "app_msg_correctness");

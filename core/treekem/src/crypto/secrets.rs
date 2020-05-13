@@ -6,8 +6,6 @@
 //! -> app_keychain
 
 use std::vec::Vec;
-use std::collections::HashMap;
-use std::string::String;
 use super::{
     SHA256_OUTPUT_LEN, hkdf,
     dh::{DhPrivateKey, DhPubKey},

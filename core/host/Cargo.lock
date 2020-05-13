@@ -115,7 +115,6 @@ version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
  "anonify-runtime 0.1.0",
- "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

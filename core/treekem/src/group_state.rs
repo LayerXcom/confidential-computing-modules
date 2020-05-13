@@ -1,7 +1,5 @@
 use crate::crypto::{
-    CryptoRng, SHA256_OUTPUT_LEN,
     hkdf,
-    dh::{DhPrivateKey, DhPubKey},
     secrets::*,
     hmac::HmacKey,
 };

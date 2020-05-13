@@ -22,7 +22,5 @@ mod transaction;
 mod config;
 mod cert;
 mod group_key;
-#[cfg(debug_assertions)]
-mod tests;
 
 use bridges::ocalls;

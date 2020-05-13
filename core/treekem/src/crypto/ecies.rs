@@ -3,7 +3,6 @@ use super::{
     dh::{DhPubKey, DhPrivateKey, encapsulate, decapsulate},
     hmac::HmacKey,
     hkdf,
-    CryptoRng,
 };
 use ring::aead::{Nonce, NonceSequence, UnboundKey, BoundKey, OpeningKey, Aad, SealingKey, AES_256_GCM};
 use anyhow::Result;

@@ -9,7 +9,7 @@ use crate::crypto::{
 };
 use crate::ratchet_tree::RatchetTreeNode;
 use anyhow::{Result, anyhow, ensure};
-use codec::{Encode, Decode};
+use codec::Encode;
 use log::info;
 use ring::aead::{
     OpeningKey, SealingKey, Nonce, UnboundKey, BoundKey,
@@ -158,7 +158,7 @@ pub mod tests {
         let mut group_state3 = GroupState::new(2).unwrap();
 
         // Add member1
-        let (key_chain1_epoch1, key_chain2_epoch1, key_chain3_epoch1) = test_utils::do_handshake_three_party(
+        let (_key_chain1_epoch1, _key_chain2_epoch1, _key_chain3_epoch1) = test_utils::do_handshake_three_party(
             &mut group_state1,
             &mut group_state2,
             &mut group_state3,
@@ -315,7 +315,7 @@ pub mod tests {
         );
 
         // update member3
-        let (key_chain1_epoch4, key_chain2_epoch4, key_chain3_epoch4) = test_utils::do_handshake_three_party(
+        let (_key_chain1_epoch4, _key_chain2_epoch4, _key_chain3_epoch4) = test_utils::do_handshake_three_party(
             &mut group_state3,
             &mut group_state1,
             &mut group_state2,

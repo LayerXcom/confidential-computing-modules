@@ -1,7 +1,5 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 
-#[macro_use]
-extern crate lazy_static;
 #[cfg(feature = "sgx")]
 #[macro_use]
 extern crate sgx_tstd as localstd;
@@ -21,22 +19,10 @@ use crate::localstd::{
 use anonify_common::{UserAddress, OWNER_ADDRESS};
 use codec::{Encode, Decode};
 
-lazy_static! {
-    // ref: https://github.com/LayerXcom/anonify/issues/107
-    pub static ref MAX_MEM_SIZE: usize = 100;
-    pub static ref CIPHERTEXT_SIZE: usize = *MAX_MEM_SIZE + 30;
-}
-
-#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd)]
-struct CustomType {
-    address: UserAddress,
-    balance: U64,
-    approved: Approved,
-}
+pub const MAX_MEM_SIZE: usize = 100;
+pub const CIPHERTEXT_SIZE: usize = MAX_MEM_SIZE + 30;
 
 impl_memory! {
-    // (0, "Balance", Address => U64),
-    // (1, "Approved", Address => Approved),
     (0, "Balance", U64),
     (1, "Approved", Approved),
     (2, "TotalSupply", U64),

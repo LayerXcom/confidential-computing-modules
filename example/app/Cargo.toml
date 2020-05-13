@@ -11,7 +11,6 @@ anonify-common = { path = "../../core/common", default-features = false }
 anonify-runtime = { path = "../../core/runtime", default-features = false }
 sgx_tstd = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
-lazy_static = { version = "1.4", features = ["spin_no_std"] }
 
 [features]
 default = ["std"]

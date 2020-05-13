@@ -1,6 +1,5 @@
 use std::boxed::Box;
 use sgx_types::*;
-use anyhow::anyhow;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx, RawHandshakeTx};
 use anonify_common::{AccessRight, IntoVec};
 use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
@@ -38,7 +37,7 @@ fn insert_ciphertexts(
     enclave_log: &InnerEnclaveLog,
 ) -> Result<()> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-    let len = enclave_log.ciphertexts.len() * (*CIPHERTEXT_SIZE);
+    let len = enclave_log.ciphertexts.len() * CIPHERTEXT_SIZE;
     let buf = enclave_log.ciphertexts.clone().into_iter().flat_map(|e| e.into_vec()).collect::<Vec<u8>>();
 
     let status = unsafe {
@@ -210,76 +209,4 @@ pub(crate) fn handshake(
     }
 
     Ok(raw_handshake_tx)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use rand_os::OsRng;
-    use rand::Rng;
-    use ed25519_dalek::Keypair;
-    use crate::init_enclave::EnclaveDir;
-
-    #[test]
-    #[ignore]
-    fn test_init_state() {
-        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
-        let mut csprng: OsRng = OsRng::new().unwrap();
-        let keypair: Keypair = Keypair::generate(&mut csprng);
-
-        let msg = rand::thread_rng().gen::<[u8; 32]>();
-        let sig = keypair.sign(&msg);
-        assert!(keypair.verify(&msg, &sig).is_ok());
-
-        let total_supply = 100;
-        let state_id = 0;
-
-        // assert!(init_state(
-        //     enclave.geteid(),
-        //     &sig,
-        //     &keypair.public,
-        //     &msg,
-        //     MockState::new(total_supply),
-        //     state_id,
-        // ).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn test_state_transition() {
-        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
-        let mut csprng: OsRng = OsRng::new().unwrap();
-        let keypair: Keypair = Keypair::generate(&mut csprng);
-
-        let msg = rand::thread_rng().gen::<[u8; 32]>();
-        let sig = keypair.sign(&msg);
-        assert!(keypair.verify(&msg, &sig).is_ok());
-
-        let amount = 0;
-        let target: [u8; 20] = csprng.gen();
-
-        // assert!(state_transition(
-        //     enclave.geteid(),
-        //     &sig,
-        //     &keypair.public,
-        //     &msg,
-        //     &target[..],
-        //     MockState::new(amount),
-        // ).is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn test_ecall_get_state() {
-        let enclave = EnclaveDir::new().init_enclave(true).unwrap();
-        let mut csprng: OsRng = OsRng::new().unwrap();
-        let keypair: Keypair = Keypair::generate(&mut csprng);
-
-        let msg = rand::thread_rng().gen::<[u8; 32]>();
-        let sig = keypair.sign(&msg);
-        assert!(keypair.verify(&msg, &sig).is_ok());
-
-        // let state = get_state_from_enclave::<Value>(enclave.geteid(), &sig, &keypair.public, &msg);
-        // assert_eq!(state, 0);
-    }
 }

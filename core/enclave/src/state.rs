@@ -5,12 +5,10 @@ use anonify_common::{
     kvs::*,
 };
 use anonify_app_preluder::{CallKind, MAX_MEM_SIZE, Ciphertext, Runtime};
-use anonify_runtime::{StateType, State, StateGetter, UpdatedState, into_trait, MemId};
+use anonify_runtime::{StateType, State, UpdatedState, MemId};
 use codec::{Encode, Decode, Input, Output};
 use crate::{
-    crypto::*,
-    kvs::EnclaveDBTx,
-    error::{Result, EnclaveError},
+    error::Result,
     context::{EnclaveContext},
     group_key::GroupKey,
 };
@@ -18,8 +16,6 @@ use std::{
     vec::Vec,
     io::{Write, Read},
     marker::PhantomData,
-    convert::{TryFrom, TryInto},
-    collections::HashMap,
 };
 
 /// An collection of state transition operations
@@ -106,10 +102,7 @@ pub struct Current;
 pub struct Next;
 
 /// This struct can be got by decrypting ciphertexts which is stored on blockchain.
-/// The secret key is shared among all TEE's enclaves.
-/// The padding works for fixing the ciphertext size so that
-/// other people cannot distinguish what state is encrypted based on the size.
-/// [Example]: A size of ciphertext is 95 bytes, if inner_state is u64 value.
+/// The group encryption key is shared among all TEE's enclaves.
 #[derive(Encode, Decode, Debug, Clone, PartialEq)]
 pub struct UserState<S: State, N> {
     address: UserAddress,
@@ -209,9 +202,11 @@ impl UserState<StateType, Current> {
 /// to blockchain node.
 impl UserState<StateType, Next> {
     pub fn encrypt(self, key: &GroupKey) -> Result<Ciphertext> {
-        /// Add padding to fix the ciphertext size of all state types.
+        // Add padding to fix the ciphertext size of all state types.
+        // The padding works for fixing the ciphertext size so that
+        // other people cannot distinguish what state is encrypted based on the size.
         fn append_padding(buf: &mut Vec<u8>) {
-            let padding_size = *MAX_MEM_SIZE - buf.len();
+            let padding_size = MAX_MEM_SIZE - buf.len();
             let mut padding = vec![0u8; padding_size];
             buf.extend_from_slice(&mut padding);
         }
@@ -290,42 +285,5 @@ impl<N> StateValue<StateType, N> {
 
     pub fn lock_param(&self) -> &LockParam {
         &self.lock_param
-    }
-}
-
-#[cfg(debug_assertions)]
-pub mod tests {
-    use super::*;
-    use anonify_runtime::StateType;
-    use ed25519_dalek::{SecretKey, PublicKey, Keypair, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH};
-
-    const SECRET_KEY_BYTES: [u8; SECRET_KEY_LENGTH] = [
-        062, 070, 027, 163, 092, 182, 011, 003,
-        077, 234, 098, 004, 011, 127, 079, 228,
-        243, 187, 150, 073, 201, 137, 076, 022,
-        085, 251, 152, 002, 241, 042, 072, 054, ];
-
-    const PUBLIC_KEY_BYTES: [u8; PUBLIC_KEY_LENGTH] = [
-        130, 039, 155, 015, 062, 076, 188, 063,
-        124, 122, 026, 251, 233, 253, 225, 220,
-        014, 041, 166, 120, 108, 035, 254, 077,
-        160, 083, 172, 058, 219, 042, 086, 120, ];
-
-    pub fn test_read_write() {
-        // let secret = SecretKey::from_bytes(&SECRET_KEY_BYTES).unwrap();
-        // let public = PublicKey::from_bytes(&PUBLIC_KEY_BYTES).unwrap();
-        // let keypair = Keypair { secret, public };
-
-        // let mut buf = vec![];
-        // StateType::new(100).write_le(&mut buf);
-
-        // let sig = keypair.sign(&buf);
-        // let user_address = UserAddress::from_sig(&buf, &sig, &public).unwrap();
-
-        // let state = UserState::<StateType, Next>::init(user_address, StateType::new(100)).unwrap();
-        // let state_vec = state.try_into_vec().unwrap();
-        // let res = UserState::read(&state_vec[..]).unwrap();
-
-        // assert_eq!(state, res);
     }
 }
