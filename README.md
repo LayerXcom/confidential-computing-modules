@@ -1,28 +1,24 @@
-![anonify_logo_rgb](https://user-images.githubusercontent.com/10915207/81931155-9c178e80-9624-11ea-9a32-5ad7985d1cb3.png)
+<div align="center">
+<img src="https://user-images.githubusercontent.com/10915207/81931155-9c178e80-9624-11ea-9a32-5ad7985d1cb3.png" width="400px">
+</div>
+</br>
 
-A blockchain-agnostic execution environment with privacy and auditability
+Anonify is a blockchain-agnostic execution environment with privacy and auditability based on TEE (Trusted Execution Environment). Currently supported ethereum-based blockchains such as quorum.
+It enables high availability and flexible execution of business logic while protecting shared state data that is not desired to be revealed between nodes. It also provides an auditability that allows only a specific audit entity to see the data on the blockchain.
+
+Have a look at [Anonify book](https://layerxcom.github.io/anonify-book/) for usage and more information.
 
 ## Setup
-```
-$ docker pull osuketh/anonify
-$ git clone git@github.com:LayerXcom/anonify.git
-$ cd anonify
-```
-
-Building contracts
+Building an anonify contract.
 ```
 $ solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
 ```
 
-## Running anonify server
-Using docker-compose, you can start server.
+## Running anonify system
+By using docker-compose, three nodes will be up by default.
+
 ```
 $ docker-compose -f docker/docker-compose-anonify.yml up -d
-```
-
-If you want to build artifacts in release mode, pass a `--release` argument. Any enclave needs to be whitelisted to be able to be launched in release mode.
-```
-$ ./scripts/run-server.sh --release
 ```
 
 ## Building CLI
@@ -39,9 +35,10 @@ $ ./scripts/build-cli.sh --release
 ```
 
 ## Documentations
+Currently, documents are only available in Japanese.
 
-- [Anonify-book](https://layerxcom.github.io/anonify-book/)
-
+- [White Paper](https://layerx.co.jp/anonify-white-paper/)
+- [Anonify book](https://layerxcom.github.io/anonify-book/)
 
 ## License
 
