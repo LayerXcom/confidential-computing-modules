@@ -1,4 +1,7 @@
 # anonify
+
+![anonify_logo_rgb](https://user-images.githubusercontent.com/10915207/81931155-9c178e80-9624-11ea-9a32-5ad7985d1cb3.png)
+
 A blockchain-agnostic execution environment with privacy and auditability
 
 ## Setup
