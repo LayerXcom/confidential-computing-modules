@@ -17,4 +17,5 @@ exclude = [
     "core/enclave",
     "core/treekem",
     "example/server",
+    "tests"
 ]
