@@ -1,4 +1,19 @@
 pub use anonify_test_utils_proc_macro::test_case;
+use serde::{Deserialize, Serialize};
+
+#[derive(Default, Serialize, Deserialize, Debug)]
+pub struct RunTestInput {
+    pub test_names: Vec<String>,
+}
+
+impl RunTestInput {
+    pub fn new(test_names: Vec<String>) -> Self {
+        Self { test_names }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RunTestOutput;
 
 pub struct TestCase(pub String, pub fn() -> ());
 
