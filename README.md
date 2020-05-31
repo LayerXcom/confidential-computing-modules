@@ -7,6 +7,8 @@ Anonify is a blockchain-agnostic execution environment with privacy and auditabi
 
 Please refer to [Anonify book](https://layerxcom.github.io/anonify-book/) for more information.
 
+*Note: This is a prototype implementation and has not been tested for production.*
+
 ## Setup
 Building an Anonify contract.
 ```
