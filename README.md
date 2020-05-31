@@ -3,13 +3,12 @@
 </div>
 </br>
 
-Anonify is a blockchain-agnostic execution environment with privacy and auditability based on TEE (Trusted Execution Environment). Currently supported ethereum-based blockchains such as quorum.
-It enables high availability and flexible execution of business logic while protecting shared state data that is not desired to be revealed between nodes. It also provides an auditability that allows only a specific audit entity to see the data on the blockchain.
+Anonify is a blockchain-agnostic execution environment with privacy and auditability based on TEE (Trusted Execution Environment). Anonify enables flexible execution of business logic while protecting a shared state that is not desired to be revealed to the others. Anonify also provides auditability, i.e., only an auditor can read a specific part of the state. The current implementation of Anonify only supports Ethereum-based blockchains such as [Quorum](https://github.com/jpmorganchase/quorum) as the backend.
 
-Have a look at [Anonify book](https://layerxcom.github.io/anonify-book/) for usage and more information.
+Please refer to [Anonify book](https://layerxcom.github.io/anonify-book/) for more information.
 
 ## Setup
-Building an anonify contract.
+Building an Anonify contract.
 ```
 $ solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
 ```
@@ -24,7 +23,7 @@ $ docker-compose -f docker/docker-compose-anonify.yml up -d
 ## Building CLI
 You can use anonify-cli to communicate with a whole anonify system.
 
-Build anonify's command line utilities.
+Build Anonify's command line utilities.
 ```
 $ ./scripts/build-cli.sh
 ```
