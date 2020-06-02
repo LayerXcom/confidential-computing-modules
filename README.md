@@ -22,6 +22,16 @@ By using docker-compose, three nodes will be up by default.
 $ docker-compose -f docker/docker-compose-anonify.yml up -d
 ```
 
+###  Building in simulation mode
+
+Anonify assumes your hardware supports Intel SGX. Without such hardware, you can build the core component in simulation mode, which allows you to build on macOS.
+
+```
+$ docker run -v `pwd`:/root/anonify --rm -it osuketh/anonify
+$ cd anonify/core
+$ make DEBUG=1
+```
+
 ## Building CLI
 You can use anonify-cli to communicate with a whole anonify system.
 
