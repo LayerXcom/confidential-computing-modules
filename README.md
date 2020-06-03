@@ -32,6 +32,42 @@ $ cd anonify/core
 $ make DEBUG=1
 ```
 
+## Testing
+
+Assumed your hardware supports Intel SGX or run it on [Azure Confidential Computing](https://azure.microsoft.com/ja-jp/solutions/confidential-compute/), you can test the core component you built works correctly.
+
+The very first thing you need to do is starting aesm service in a SGX-enabled environment. For more details, see: https://github.com/apache/incubator-teaclave-sgx-sdk/blob/master/documents/sgx_in_mesalock_linux.md#solution-overview
+```
+LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
+```
+
+If you haven't create a docker network for testing:
+```
+$ docker network create --subnet=172.18.0.0/16 test-network
+```
+
+Running ganache-cli
+```
+$ docker run -d --name ganache --net=test-network --rm -it trufflesuite/ganache-cli
+```
+
+Running intel SGX environment
+```
+$ ./scripts/start-docker.sh
+```
+
+and then, you can build in HW mode.
+```
+$ cd anonify/core
+$ make DEBUG=1
+```
+
+Finally, you can test SGX parts.
+```
+$ cd host
+$ cargo test
+```
+
 ## Building CLI
 You can use anonify-cli to communicate with a whole anonify system.
 
