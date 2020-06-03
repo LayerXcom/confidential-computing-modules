@@ -9,14 +9,4 @@ edition = "2018"
 [dependencies]
 inventory = { version = "0.1.6" }
 anyhow    = "1.0"
-sgx_tstd = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
-anonify-treekem    = { path = "../../../core/treekem", optional = true }
 anonify-test-utils = { path = "../../utils"}
-
-[features]
-default = ["std"]
-std = []
-sgx = [
-    "anonify-treekem",
-    "sgx_tstd",
-]
