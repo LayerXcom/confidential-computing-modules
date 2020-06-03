@@ -11,7 +11,7 @@ contract Anonify is ReportHandle {
 
     // Encrypted states
     mapping(uint256 => bytes[]) private _ciphertexts;
-    // Store lock parameters to avoid form data collision.
+    // Store lock parameters to avoid data collision.
     mapping(uint256 => mapping (bytes32 => bytes32)) private _lockParams;
 
     constructor(
