@@ -147,6 +147,7 @@ pub unsafe extern "C" fn ecall_handshake(
 
 pub mod enclave_tests {
     use anonify_types::{ResultStatus, RawPointer};
+    // use anonify_test_utils::run_inventory_tests;
 
     #[cfg(debug_assertions)]
     mod internal_tests {
