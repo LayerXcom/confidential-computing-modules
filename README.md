@@ -5,7 +5,7 @@
 
 Anonify is a blockchain-agnostic execution environment with privacy and auditability based on TEE (Trusted Execution Environment). Anonify enables flexible execution of business logic while protecting a shared state that is not desired to be revealed to the others. Anonify also provides auditability, i.e., only an auditor can read a specific part of the state. The current implementation of Anonify only supports Ethereum-based blockchains such as [Quorum](https://github.com/jpmorganchase/quorum) as the backend.
 
-Please refer to [Anonify book](https://layerxcom.github.io/anonify-book/) for more information.
+Please refer to [Anonify Book(EN)](https://layerxcom.github.io/anonify-book-en/) / [Anonify Book(JP)](https://layerxcom.github.io/anonify-book/) for more information.
 
 *Note: This is a prototype implementation and has not been tested for production.*
 
@@ -15,14 +15,29 @@ Building an Anonify contract.
 $ solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
 ```
 
-## Running anonify system
-By using docker-compose, three nodes will be up by default.
+## Running anonify protocol
+By using docker-compose, three nodes will be up by default. The ERC20-like application is implemented as the initial state transition functions. (Assumed your hardware supports Intel SGX.)
 
 ```
 $ docker-compose -f docker/docker-compose-anonify.yml up -d
 ```
 
-###  Building in simulation mode
+## Using CLI
+You can use anonify-cli to communicate with a whole anonify system. See the [transfer tutorial section](https://layerxcom.github.io/anonify-book-en/Tutorials/ERC20/transfer/) for usage.
+
+Build Anonify's command line utilities.
+```
+$ ./scripts/build-cli.sh
+```
+
+If you want to build artifacts in release mode, pass a `--release` argument.
+```
+$ ./scripts/build-cli.sh --release
+```
+
+## Developing
+
+##  Building in simulation mode
 
 Anonify assumes your hardware supports Intel SGX. Without such hardware, you can build the core component in simulation mode, which allows you to build on macOS.
 
@@ -68,23 +83,11 @@ $ cd host
 $ cargo test
 ```
 
-## Building CLI
-You can use anonify-cli to communicate with a whole anonify system.
-
-Build Anonify's command line utilities.
-```
-$ ./scripts/build-cli.sh
-```
-
-If you want to build artifacts in release mode, pass a `--release` argument.
-```
-$ ./scripts/build-cli.sh --release
-```
-
 ## Documentations
 Currently, documents are only available in Japanese.
 
-- [White Paper](https://layerx.co.jp/anonify-white-paper/)
+- [White Paper](https://layerx.co.jp/wp-content/uploads/2020/06/anonify.pdf)
+- [Slides](https://speakerdeck.com/layerx/anonify)
 - [Anonify book](https://layerxcom.github.io/anonify-book/)
 
 ## License
