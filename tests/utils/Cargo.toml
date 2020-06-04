@@ -8,7 +8,6 @@ edition = "2018"
 
 [dependencies]
 inventory    = { version = "0.1.6" }
-#serde        = { version = "1.0.92", features = ["derive"] }
 serde = { rev = "sgx_1.1.0", git = "https://github.com/mesalock-linux/serde-sgx.git", features = ["derive"] }
 sgx_tstd = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net"] }
 anonify-test-utils-proc-macro = { path = "./proc-macro" }
