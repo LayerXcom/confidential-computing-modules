@@ -1,5 +1,13 @@
+#![no_std]
+
+#[macro_use]
+extern crate sgx_tstd as std;
+
 pub use anonify_test_utils_proc_macro::test_case;
 use serde::{Deserialize, Serialize};
+
+use std::vec::Vec;
+use std::string::String;
 
 #[derive(Default, Serialize, Deserialize, Debug)]
 pub struct RunTestInput {
