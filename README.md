@@ -16,7 +16,7 @@ $ solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
 ```
 
 ## Running anonify protocol
-By using docker-compose, three nodes will be up by default. The ERC20-like application is implemented as the initial state transition functions. (Assumed your hardware supports Intel SGX.)
+By using docker-compose, three nodes will be up by default. [The ERC20-like application](https://github.com/LayerXcom/anonify/blob/master/example/app/src/lib.rs) is implemented as the initial state transition functions. (Assumed your hardware supports Intel SGX.)
 
 ```
 $ docker-compose -f docker/docker-compose-anonify.yml up -d
@@ -37,7 +37,7 @@ $ ./scripts/build-cli.sh --release
 
 ## Developing
 
-##  Building in simulation mode
+###  Building in simulation mode
 
 Anonify assumes your hardware supports Intel SGX. Without such hardware, you can build the core component in simulation mode, which allows you to build on macOS.
 
@@ -47,7 +47,7 @@ $ cd anonify/core
 $ make DEBUG=1
 ```
 
-## Testing
+### Testing
 
 Assumed your hardware supports Intel SGX or run it on [Azure Confidential Computing](https://azure.microsoft.com/ja-jp/solutions/confidential-compute/), you can test the core component you built works correctly.
 
@@ -88,7 +88,7 @@ Currently, documents are only available in Japanese.
 
 - [White Paper](https://layerx.co.jp/wp-content/uploads/2020/06/anonify.pdf)
 - [Slides](https://speakerdeck.com/layerx/anonify)
-- [Anonify book](https://layerxcom.github.io/anonify-book/)
+- [Anonify Book(EN)](https://layerxcom.github.io/anonify-book-en/) / [Anonify Book(JP)](https://layerxcom.github.io/anonify-book/)
 
 ## License
 
