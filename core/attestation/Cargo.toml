@@ -6,10 +6,10 @@ edition = "2018"
 
 [dependencies]
 rustls = { branch = "mesalock_sgx", git = "https://github.com/mesalock-linux/rustls" }
-sgx_tstd = { rev = "v1.1.0", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net"] }
-mio = { branch = "v0.6_sgx_1.1.0", git = "https://github.com/mesalock-linux/mio-sgx" }
+sgx_tstd = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net"] }
+mio = { branch = "v0.6_sgx_1.1.2", git = "https://github.com/mesalock-linux/mio-sgx" }
 webpki = { git = "https://github.com/mesalock-linux/webpki", branch = "mesalock_sgx" }
-webpki-roots = { rev = "sgx_1.1.0", git = "https://github.com/mesalock-linux/webpki-roots" }
-http = { rev = "sgx_1.1.0", git = "https://github.com/mesalock-linux/http-sgx" }
+webpki-roots = { rev = "sgx_1.1.2", git = "https://github.com/mesalock-linux/webpki-roots" }
+http = { rev = "sgx_1.1.2", git = "https://github.com/mesalock-linux/http-sgx" }
 
-sgx_types = "1.1.0"
+sgx_types = "1.1.1"

@@ -14,7 +14,7 @@ anonify-app-preluder = { path = "../app-preluder" }
 web3 = "0.8"
 ethabi = "8.0.0"
 byteorder = "1"
-sgx_types = "1.1.0" # TODO: Remove
+sgx_types = "1.1.1" # TODO: Remove
 anyhow = "1.0"
 thiserror = "1.0"
 log = "0.4"
