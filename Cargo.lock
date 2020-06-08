@@ -69,13 +69,13 @@ dependencies = [
 name = "anonify-attestation"
 version = "0.1.0"
 dependencies = [
- "http 0.2.0 (git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.0)",
- "mio 0.6.21 (git+https://github.com/mesalock-linux/mio-sgx?branch=v0.6_sgx_1.1.0)",
+ "http 0.2.1 (git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.2)",
+ "mio 0.6.21 (git+https://github.com/mesalock-linux/mio-sgx?branch=v0.6_sgx_1.1.2)",
  "rustls 0.16.0 (git+https://github.com/mesalock-linux/rustls?branch=mesalock_sgx)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
- "sgx_types 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+ "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "webpki 0.21.2 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)",
- "webpki-roots 0.19.0 (git+https://github.com/mesalock-linux/webpki-roots?rev=sgx_1.1.0)",
+ "webpki-roots 0.19.0 (git+https://github.com/mesalock-linux/webpki-roots?rev=sgx_1.1.2)",
 ]
 
 [[package]]
@@ -102,21 +102,21 @@ name = "anonify-common"
 version = "0.1.0"
 dependencies = [
  "anonify-types 0.1.0",
- "anyhow 1.0.26 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.0)",
  "anyhow 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",
+ "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "elastic-array 0.10.3 (git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.0)",
+ "elastic-array 0.10.3 (git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.2)",
  "elastic-array 0.10.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_core 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_os 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0)",
  "serde 1.0.105 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_trts 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+ "serde 1.0.106 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.2)",
+ "sgx_trts 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
  "sha2 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "tiny-keccak 1.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "web3 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -126,13 +126,13 @@ dependencies = [
 name = "anonify-enclave-rpc"
 version = "0.1.0"
 dependencies = [
- "anyhow 1.0.26 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.0)",
- "http 0.2.0 (git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.0)",
- "log 0.4.10 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.0)",
+ "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
+ "http 0.2.1 (git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.2)",
+ "log 0.4.8 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.2)",
  "rustls 0.16.0 (git+https://github.com/mesalock-linux/rustls?branch=mesalock_sgx)",
- "serde 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0)",
- "serde_json 1.0.40 (git+https://github.com/mesalock-linux/serde-json-sgx?rev=sgx_1.1.0)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+ "serde 1.0.106 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.2)",
+ "serde_json 1.0.51 (git+https://github.com/mesalock-linux/serde-json-sgx?rev=sgx_1.1.2)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
  "threadpool 1.8.0 (git+https://github.com/mesalock-linux/rust-threadpool-sgx)",
  "webpki 0.21.2 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)",
 ]
@@ -150,7 +150,7 @@ dependencies = [
  "ethabi 8.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_types 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 1.0.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "web3 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -160,10 +160,10 @@ name = "anonify-runtime"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
- "anyhow 1.0.26 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.0)",
  "anyhow 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",
+ "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
  "parity-scale-codec 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
 ]
 
 [[package]]
@@ -198,16 +198,16 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.26"
-source = "git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.0#8e99caf8d6eb3b7bb097470c7c1160cddb536424"
-dependencies = [
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
-]
+version = "1.0.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "anyhow"
-version = "1.0.27"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+version = "1.0.28"
+source = "git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2#b78ca3528c24fb2e37aa33f3b76c030ad3c1d719"
+dependencies = [
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+]
 
 [[package]]
 name = "api"
@@ -229,7 +229,7 @@ dependencies = [
  "anonify-common 0.1.0",
  "anonify-runtime 0.1.0",
  "parity-scale-codec 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
 ]
 
 [[package]]
@@ -727,10 +727,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "elastic-array"
 version = "0.10.3"
-source = "git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.0#dfcb3b3f419c70f394a3ce2c7a631607910a3112"
+source = "git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.2#fd839675fe94dd5c18ceb80b99279ff18ba07e69"
 dependencies = [
  "heapsize 0.4.2 (git+https://github.com/mesalock-linux/heapsize-sgx)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
 ]
 
 [[package]]
@@ -1027,13 +1027,13 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "0.2.0"
-source = "git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.0#6f20cd87cab3b0e21e415851779c4cb077a88168"
+version = "0.2.1"
+source = "git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.2#3076246ba8590ac51141305efb31eec7bff56de4"
 dependencies = [
  "bytes 0.5.4 (git+https://github.com/mesalock-linux/bytes-sgx)",
  "fnv 1.0.6 (git+https://github.com/mesalock-linux/rust-fnv-sgx)",
  "itoa 0.4.5 (git+https://github.com/mesalock-linux/itoa-sgx)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
 ]
 
 [[package]]
@@ -1274,6 +1274,15 @@ dependencies = [
 [[package]]
 name = "log"
 version = "0.4.8"
+source = "git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.2#d08c18ff0585d2d4948e658e55c516b404ebdecf"
+dependencies = [
+ "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+]
+
+[[package]]
+name = "log"
+version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1283,15 +1292,6 @@ dependencies = [
 name = "log"
 version = "0.4.10"
 source = "git+https://github.com/mesalock-linux/log-sgx#1f02c0fffc360b9efb6cd319f402c4a2b28d96e7"
-dependencies = [
- "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
-]
-
-[[package]]
-name = "log"
-version = "0.4.10"
-source = "git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.0#1f02c0fffc360b9efb6cd319f402c4a2b28d96e7"
 dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
@@ -1353,14 +1353,14 @@ dependencies = [
 [[package]]
 name = "mio"
 version = "0.6.21"
-source = "git+https://github.com/mesalock-linux/mio-sgx?branch=v0.6_sgx_1.1.0#08c71e56d95cf9692a765094494e68c06b641253"
+source = "git+https://github.com/mesalock-linux/mio-sgx?branch=v0.6_sgx_1.1.2#ad094ce49032b26eda6a8a0d48bb017e2df62d9c"
 dependencies = [
  "iovec 0.2.0 (git+https://github.com/mesalock-linux/iovec-sgx)",
  "log 0.4.10 (git+https://github.com/mesalock-linux/log-sgx)",
  "net2 0.2.33 (git+https://github.com/mesalock-linux/net2-rs-sgx)",
- "sgx_libc 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
- "sgx_trts 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+ "sgx_libc 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+ "sgx_trts 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
  "slab 0.4.2 (git+https://github.com/mesalock-linux/slab-sgx)",
 ]
 
@@ -2155,19 +2155,19 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.104"
-source = "git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0#c945ac9aeb23dc799070f3afaf590a6c3ac2c1a2"
-dependencies = [
- "serde_derive 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
-]
-
-[[package]]
-name = "serde"
 version = "1.0.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "serde_derive 1.0.105 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "serde"
+version = "1.0.106"
+source = "git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.2#58ff0793d46f96124132110880d0f4d44050d6ee"
+dependencies = [
+ "serde_derive 1.0.106 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.2)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
 ]
 
 [[package]]
@@ -2189,16 +2189,6 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.104"
-source = "git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0#c945ac9aeb23dc799070f3afaf590a6c3ac2c1a2"
-dependencies = [
- "proc-macro2 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "quote 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "syn 1.0.17 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "serde_derive"
 version = "1.0.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
@@ -2208,14 +2198,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde_json"
-version = "1.0.40"
-source = "git+https://github.com/mesalock-linux/serde-json-sgx?rev=sgx_1.1.0#c0a62f63fafdfbbbd5b89a6ad517373b93ccd41f"
+name = "serde_derive"
+version = "1.0.106"
+source = "git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.2#58ff0793d46f96124132110880d0f4d44050d6ee"
 dependencies = [
- "itoa 0.4.5 (git+https://github.com/mesalock-linux/itoa-sgx)",
- "ryu 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git)",
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+ "proc-macro2 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 1.0.17 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2226,6 +2215,17 @@ dependencies = [
  "itoa 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "ryu 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.105 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.51"
+source = "git+https://github.com/mesalock-linux/serde-json-sgx?rev=sgx_1.1.2#3fe8bd43ff5627f410efba9c67bb3d31f22b3bec"
+dependencies = [
+ "itoa 0.4.5 (git+https://github.com/mesalock-linux/itoa-sgx)",
+ "ryu 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
 ]
 
 [[package]]
@@ -2299,10 +2299,10 @@ dependencies = [
 
 [[package]]
 name = "sgx_libc"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "sgx_types 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2350,11 +2350,11 @@ dependencies = [
 
 [[package]]
 name = "sgx_trts"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "sgx_libc 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_types 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_libc 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2424,7 +2424,7 @@ source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0#71a88b64
 
 [[package]]
 name = "sgx_types"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -3116,9 +3116,9 @@ dependencies = [
 [[package]]
 name = "webpki-roots"
 version = "0.19.0"
-source = "git+https://github.com/mesalock-linux/webpki-roots?rev=sgx_1.1.0#3cdd237236e702e3bc93c960ca48cdfb42bec899"
+source = "git+https://github.com/mesalock-linux/webpki-roots?rev=sgx_1.1.2#4b542642de1d5a5394f8a24b356b7801e9220008"
 dependencies = [
- "sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
  "webpki 0.21.2 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)",
 ]
 
@@ -3224,8 +3224,8 @@ dependencies = [
 "checksum aesni 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2f70a6b5f971e473091ab7cfb5ffac6cde81666c4556751d8d5620ead8abf100"
 "checksum aho-corasick 0.7.10 (registry+https://github.com/rust-lang/crates.io-index)" = "8716408b8bc624ed7f65d223ddb9ac2d044c0547b6fa4b0d554f3a9540496ada"
 "checksum ansi_term 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ee49baf6cb617b853aa8d93bf420db2383fab46d314482ca2803b40d5fde979b"
-"checksum anyhow 1.0.26 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.0)" = "<none>"
 "checksum anyhow 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)" = "013a6e0a2cbe3d20f9c60b65458f7a7f7a5e636c5d0f45a5a6aee5d4b1f01785"
+"checksum anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)" = "<none>"
 "checksum arrayref 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "a4c527152e37cf757a3f78aae5a06fbeefdb07ccc535c980a3208ee3060dd544"
 "checksum arrayvec 0.4.12 (registry+https://github.com/rust-lang/crates.io-index)" = "cd9fd44efafa8690358b7408d253adf110036b88f55672a933f01d616ad9b1b9"
 "checksum arrayvec 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "cff77d8686867eceff3105329d4698d96c2391c176d5d03adc90c7389162b5b8"
@@ -3282,7 +3282,7 @@ dependencies = [
 "checksum dtoa 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)" = "4358a9e11b9a09cf52383b451b49a169e8d797b68aa02301ff586d70d9661ea3"
 "checksum ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)" = "845aaacc16f01178f33349e7c992ecd0cee095aa5e577f0f4dee35971bd36455"
 "checksum either 1.5.3 (registry+https://github.com/rust-lang/crates.io-index)" = "bb1f6b1ce1c140482ea30ddd3335fc0024ac7ee112895426e0a629a6c20adfe3"
-"checksum elastic-array 0.10.3 (git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.0)" = "<none>"
+"checksum elastic-array 0.10.3 (git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.2)" = "<none>"
 "checksum elastic-array 0.10.3 (registry+https://github.com/rust-lang/crates.io-index)" = "580f3768bd6465780d063f5b8213a2ebd506e139b345e4a81eb301ceae3d61e1"
 "checksum encode_unicode 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "a357d28ed41a50f9c765dbfe56cbc04a64e53e5fc58ba79fbc34c10ef3df831f"
 "checksum encoding_rs 0.8.22 (registry+https://github.com/rust-lang/crates.io-index)" = "cd8d03faa7fe0c1431609dfad7bbe827af30f82e1e2ae6f7ee4fca6bd764bc28"
@@ -3317,7 +3317,7 @@ dependencies = [
 "checksum hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "644f9158b2f133fd50f5fb3242878846d9eb792e445c893805ff0e3824006e35"
 "checksum hmac 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)" = "5dcb5e64cda4c23119ab41ba960d1e170a774c8e4b9d9e6a9bc18aabf5e59695"
 "checksum http 0.1.21 (registry+https://github.com/rust-lang/crates.io-index)" = "d6ccf5ede3a895d8856620237b2f02972c1bbc78d2965ad7fe8838d4a0ed41f0"
-"checksum http 0.2.0 (git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.0)" = "<none>"
+"checksum http 0.2.1 (git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.2)" = "<none>"
 "checksum http-body 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6741c859c1b2463a423a1dbce98d418e6c3c3fc720fb0d45528657320920292d"
 "checksum httparse 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "cd179ae861f0c2e53da70d892f5f3029f9594be0c41dc5269cd371691b1dc2f9"
 "checksum humantime 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "df004cfca50ef23c36850aaaa59ad52cc70d0e90243c3c7737a4dd32dc7a3c4f"
@@ -3344,7 +3344,7 @@ dependencies = [
 "checksum lock_api 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "79b2de95ecb4691949fea4716ca53cdbcfccb2c612e19644a8bad05edcf9f47b"
 "checksum log 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "e19e8d5c34a3e0e2223db8e060f9e8264aeeb5c5fc64a4ee9965c062211c024b"
 "checksum log 0.4.10 (git+https://github.com/mesalock-linux/log-sgx)" = "<none>"
-"checksum log 0.4.10 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.0)" = "<none>"
+"checksum log 0.4.8 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.2)" = "<none>"
 "checksum log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)" = "14b6052be84e6b71ab17edffc2eeabf5c2c3ae1fdb464aae35ac50c67a44e1f7"
 "checksum matches 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)" = "7ffc5c5338469d4d3ea17d269fa8ea3512ad247247c30bd2df69e68309ed0a08"
 "checksum maybe-uninit 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "60302e4db3a61da70c0cb7991976248362f30319e88850c487b9b95bbf059e00"
@@ -3354,7 +3354,7 @@ dependencies = [
 "checksum mime 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)" = "2a60c7ce501c71e03a9c9c0d35b861413ae925bd979cc7a4e30d060069aaac8d"
 "checksum mime_guess 2.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "2684d4c2e97d99848d30b324b00c8fcc7e5c897b7cbb5819b09e7c90e8baf212"
 "checksum miniz_oxide 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "aa679ff6578b1cddee93d7e82e263b94a575e0bfced07284eb0c037c1d2416a5"
-"checksum mio 0.6.21 (git+https://github.com/mesalock-linux/mio-sgx?branch=v0.6_sgx_1.1.0)" = "<none>"
+"checksum mio 0.6.21 (git+https://github.com/mesalock-linux/mio-sgx?branch=v0.6_sgx_1.1.2)" = "<none>"
 "checksum mio 0.6.21 (registry+https://github.com/rust-lang/crates.io-index)" = "302dec22bcf6bae6dfb69c647187f4b4d0fb6f535521f7bc022430ce8e12008f"
 "checksum mio-uds 0.6.7 (registry+https://github.com/rust-lang/crates.io-index)" = "966257a94e196b11bb43aca423754d87429960a768de9414f3691d6957abf125"
 "checksum miow 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "8c1f2f3b1cf331de6896aabf6e9d55dca90356cc9960cca7eaaf408a355ae919"
@@ -3438,14 +3438,14 @@ dependencies = [
 "checksum semver 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1d7eb9ef2c18661902cc47e535f9bc51b78acd254da71d375c2f6720d9a40403"
 "checksum semver-parser 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 "checksum serde 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git)" = "<none>"
-"checksum serde 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0)" = "<none>"
 "checksum serde 1.0.105 (registry+https://github.com/rust-lang/crates.io-index)" = "e707fbbf255b8fc8c3b99abb91e7257a622caeb20a9818cbadbeeede4e0932ff"
+"checksum serde 1.0.106 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.2)" = "<none>"
 "checksum serde-big-array 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "883eee5198ea51720eab8be52a36cf6c0164ac90eea0ed95b649d5e35382404e"
 "checksum serde_bytes 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)" = "325a073952621257820e7a3469f55ba4726d8b28657e7e36653d1c36dc2c84ae"
-"checksum serde_derive 1.0.104 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.0)" = "<none>"
 "checksum serde_derive 1.0.105 (registry+https://github.com/rust-lang/crates.io-index)" = "ac5d00fc561ba2724df6758a17de23df5914f20e41cb00f94d5b7ae42fffaff8"
-"checksum serde_json 1.0.40 (git+https://github.com/mesalock-linux/serde-json-sgx?rev=sgx_1.1.0)" = "<none>"
+"checksum serde_derive 1.0.106 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.2)" = "<none>"
 "checksum serde_json 1.0.48 (registry+https://github.com/rust-lang/crates.io-index)" = "9371ade75d4c2d6cb154141b9752cf3781ec9c05e0e5cf35060e1e70ee7b9c25"
+"checksum serde_json 1.0.51 (git+https://github.com/mesalock-linux/serde-json-sgx?rev=sgx_1.1.2)" = "<none>"
 "checksum serde_urlencoded 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)" = "642dd69105886af2efd227f75a520ec9b44a820d65bc133a9131f7d229fd165a"
 "checksum sgx_alloc 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_alloc 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
@@ -3456,20 +3456,20 @@ dependencies = [
 "checksum sgx_demangle 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_demangle 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
 "checksum sgx_libc 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_libc 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "06426be363359f7498b3fa93c7d99f523049479951bd7ebc49da2e8357c0c07f"
+"checksum sgx_libc 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "fee2c4cbe19e311ed879fa44471208cc0dc63ea7eb84cc65c65d3c0e5909242f"
 "checksum sgx_libc 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
 "checksum sgx_tcrypto 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_tprotected_fs 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_tprotected_fs 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
 "checksum sgx_trts 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_trts 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "501960f8338fb417c2ef33f5052f05079d0b7a4cc97d56ad2e065768d6d7f2f7"
+"checksum sgx_trts 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "63e3a84fb7cc0151f9c0d83c57dce4a29a9a619b8259e2473cca6b4aba0a94bc"
 "checksum sgx_trts 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
 "checksum sgx_tse 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_tseal 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_tstd 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
 "checksum sgx_types 1.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
-"checksum sgx_types 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "83bbcd1b60b9e47a4b9d5aa73893095b031d89dea8a644bac827f26d829d57a3"
+"checksum sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "df329127455d6a2964782739218468878770a6dc54cb037b6c9c8846fe09d362"
 "checksum sgx_types 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
 "checksum sgx_unwind 0.1.0 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.0)" = "<none>"
 "checksum sgx_unwind 0.1.1 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
@@ -3546,7 +3546,7 @@ dependencies = [
 "checksum wasi 0.9.0+wasi-snapshot-preview1 (registry+https://github.com/rust-lang/crates.io-index)" = "cccddf32554fecc6acb585f82a32a72e28b48f8c4c1883ddfeeeaa96f7d8e519"
 "checksum web3 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "076f34ed252d74a8521e3b013254b1a39f94a98f23aae7cfc85cda6e7b395664"
 "checksum webpki 0.21.2 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)" = "<none>"
-"checksum webpki-roots 0.19.0 (git+https://github.com/mesalock-linux/webpki-roots?rev=sgx_1.1.0)" = "<none>"
+"checksum webpki-roots 0.19.0 (git+https://github.com/mesalock-linux/webpki-roots?rev=sgx_1.1.2)" = "<none>"
 "checksum websocket 0.21.1 (registry+https://github.com/rust-lang/crates.io-index)" = "8c9faed2bff8af2ea6b9f8b917d3d00b467583f6781fe3def174a9e33c879703"
 "checksum winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)" = "167dc9d6949a9b857f3451275e911c3f44255842c1f7a76f33c55103a909087a"
 "checksum winapi 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)" = "8093091eeb260906a183e6ae1abdba2ef5ef2257a21801128899c3fc699229c6"
