@@ -36,7 +36,7 @@ extern "C" {
     pub fn ocall_save_to_memory(
         retval: *mut u64,
         data_ptr: *const u8,
-        data_len: usize,
+        data_len: size_t,
     ) -> sgx_status_t;
 }
 extern "C" {

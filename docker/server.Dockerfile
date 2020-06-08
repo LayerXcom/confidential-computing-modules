@@ -1,5 +1,5 @@
 # inherit the baidu sdk image
-FROM baiduxlab/sgx-rust:1804-1.1.0 as builder
+FROM baiduxlab/sgx-rust:1804-1.1.2 as builder
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 SHELL ["/bin/bash", "-c"]
@@ -17,7 +17,7 @@ RUN set -x && \
     chmod u+x /usr/bin/solc && \
     rm -rf /root/.cargo/registry && rm -rf /root/.cargo/git && \
     /root/.cargo/bin/cargo install bindgen && \
-    git clone --depth 1 -b v1.1.0 https://github.com/baidu/rust-sgx-sdk.git sgx
+    git clone --depth 1 -b v1.1.2 https://github.com/baidu/rust-sgx-sdk.git sgx
 
 COPY . /root/anonify
 WORKDIR /root/anonify
@@ -34,7 +34,7 @@ RUN source /opt/sgxsdk/environment && \
     RUST_BACKTRACE=1 RUST_LOG=debug /root/.cargo/bin/cargo build
 
 # ===== SECOND STAGE ======
-FROM baiduxlab/sgx-rust:1804-1.1.0
+FROM baiduxlab/sgx-rust:1804-1.1.2
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 WORKDIR /root/anonify/example/server
