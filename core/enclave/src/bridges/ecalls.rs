@@ -196,7 +196,14 @@ pub mod enclave_tests {
     }
 
     #[test_case]
-    fn test_app_msg_correctness() {}
+    fn test_app_msg_correctness() {
+        anonify_treekem::tests::app_msg_correctness();
+    }
+
+    #[test_case]
+    fn test_ecies_correctness() {
+        anonify_treekem::tests::ecies_correctness();
+    }
 
     #[no_mangle]
     pub unsafe extern "C" fn ecall_run_tests(ext_ptr: *const RawPointer, result: *mut ResultStatus) {
