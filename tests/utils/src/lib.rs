@@ -1,3 +1,14 @@
+#![no_std]
+
+#[macro_use]
+extern crate sgx_tstd as std;
+
+use std::vec::Vec;
+use std::string::String;
+
+#[macro_use]
+extern crate inventory;
+
 pub use anonify_test_utils_proc_macro::test_case;
 use serde::{Deserialize, Serialize};
 
