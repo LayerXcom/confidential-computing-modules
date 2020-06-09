@@ -78,7 +78,6 @@ dependencies = [
  "serde_json 1.0.51 (git+https://github.com/mesalock-linux/serde-json-sgx?rev=sgx_1.1.2)",
  "sgx_tcrypto 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tse 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_tseal 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
  "sgx_tunittest 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1230,17 +1229,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sgx_tseal"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "sgx_tcrypto 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_trts 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_tse 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "sgx_tstd"
 version = "1.1.2"
 source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2#253b3ac982b2d09d32f5fa5a2011e3c36bcbed1e"
@@ -1668,7 +1656,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum sgx_trts 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "63e3a84fb7cc0151f9c0d83c57dce4a29a9a619b8259e2473cca6b4aba0a94bc"
 "checksum sgx_trts 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
 "checksum sgx_tse 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "6bb1eecaba028749a185674c055d200d622f8cbd27aac302115e66b4935cb4c4"
-"checksum sgx_tseal 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "6cdccf45e441e59c25eb3d313a9f05215c5fade510db6dbc221b500ecf3d3bc0"
 "checksum sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
 "checksum sgx_tunittest 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
 "checksum sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "df329127455d6a2964782739218468878770a6dc54cb037b6c9c8846fe09d362"

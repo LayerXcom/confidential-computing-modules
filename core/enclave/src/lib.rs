@@ -15,7 +15,6 @@ mod state;
 mod error;
 mod kvs;
 mod bridges;
-mod sealing;
 mod context;
 mod transaction;
 mod config;
