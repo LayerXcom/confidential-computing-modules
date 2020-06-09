@@ -911,7 +911,7 @@ dependencies = [
 [[package]]
 name = "remote-attestation"
 version = "0.1.0"
-source = "git+https://github.com/LayerXcom/libsgx-rs?branch=feature/attestation#057037bf6880d9713a7e4e98bd6e785a14b52dc6"
+source = "git+https://github.com/LayerXcom/libsgx-rs?branch=feature/attestation#d87f973078d86670887fdc69d8bd92a6edc8aee5"
 dependencies = [
  "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
  "base64 0.10.1 (git+https://github.com/mesalock-linux/rust-base64-sgx?rev=sgx_1.1.2)",
