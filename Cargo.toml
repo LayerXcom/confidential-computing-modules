@@ -5,8 +5,6 @@ members = [
     "core/app-preluder",
     "core/event-watcher",
     "core/common",
-    "core/attestation",
-    "core/enclave-rpc",
     "example/cli",
     "example/api",
     "example/app",

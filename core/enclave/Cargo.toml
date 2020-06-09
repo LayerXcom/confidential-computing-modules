@@ -13,11 +13,10 @@ anonify-types = { path = "../types", default-features = false }
 anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
 anonify-app-preluder = { path = "../app-preluder", default-features = false, features = ["sgx"] }
 anonify-runtime = { path = "../runtime", default-features = false, features = ["sgx"] }
-anonify-attestation = { path = "../attestation" }
-anonify-enclave-rpc = { path = "../enclave-rpc" }
 anonify-treekem = { path = "../treekem" }
 anonify-test-utils = { path = "../../tests/utils" }
 
+remote-attestation = { git = "https://github.com/LayerXcom/libsgx-rs" }
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
 lazy_static = { version = "1.4", features = ["spin_no_std"] }
 sha2 = { version = "0.8", default-features = false }
@@ -41,5 +40,4 @@ sgx_tse = "1.1.1"
 sgx_tstd = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["untrusted_fs","net","backtrace"] }
 sgx_types = "1.1.1"
 sgx_tcrypto = "1.1.1"
-sgx_tseal = "1.1.1"
 sgx_tunittest = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
