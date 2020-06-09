@@ -16,6 +16,7 @@ anonify-runtime = { path = "../runtime", default-features = false, features = ["
 anonify-attestation = { path = "../attestation" }
 anonify-enclave-rpc = { path = "../enclave-rpc" }
 anonify-treekem = { path = "../treekem" }
+anonify-test-utils = { path = "../../tests/utils" }
 
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
 lazy_static = { version = "1.4", features = ["spin_no_std"] }

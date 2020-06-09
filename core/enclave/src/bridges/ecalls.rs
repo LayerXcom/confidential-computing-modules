@@ -147,6 +147,7 @@ pub unsafe extern "C" fn ecall_handshake(
 
 pub mod enclave_tests {
     use anonify_types::{ResultStatus, RawPointer};
+    use anonify_test_utils::{test_case, run_inventory_tests};
 
     #[cfg(debug_assertions)]
     mod internal_tests {
@@ -192,6 +193,9 @@ pub mod enclave_tests {
         }
     }
 
+    #[test_case]
+    fn test_app_msg_correctness() {}
+
     #[no_mangle]
     pub unsafe extern "C" fn ecall_run_tests(ext_ptr: *const RawPointer, result: *mut ResultStatus) {
         *result = ResultStatus::Ok;
@@ -200,5 +204,6 @@ pub mod enclave_tests {
             let internal_tests_result = self::internal_tests::internal_tests(ext_ptr);
             *result = internal_tests_result;
         }
+        run_inventory_tests!(|_s: &str| true);
     }
 }
