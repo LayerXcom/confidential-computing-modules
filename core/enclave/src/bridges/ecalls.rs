@@ -143,59 +143,18 @@ pub unsafe extern "C" fn ecall_handshake(
 }
 
 pub mod enclave_tests {
-    use anonify_types::{ResultStatus, RawPointer};
+    use anonify_test_utils::{test_case, run_inventory_tests};
+    use std::vec::Vec;
+    use std::string::{String, ToString};
 
-    #[cfg(debug_assertions)]
-    mod internal_tests {
-        use super::*;
-        use sgx_tunittest::*;
-        use crate::std::{panic::UnwindSafe, string::String, vec::Vec};
-        use anonify_treekem::tests::*;
-
-        pub unsafe fn internal_tests(ext_ptr: *const RawPointer) -> ResultStatus {
-            let mut ctr = 0u64;
-            let mut failures = Vec::new();
-            rsgx_unit_test_start();
-
-            // anonify_treekem
-            core_unitests(&mut ctr, &mut failures, app_msg_correctness, "app_msg_correctness");
-            core_unitests(&mut ctr, &mut failures, ecies_correctness, "ecies_correctness");
-
-            let result = failures.is_empty();
-            rsgx_unit_test_end(ctr, failures);
-            result.into()
-        }
-
-        fn core_unitests<F, R>(
-            ncases: &mut u64,
-            failurecases: &mut Vec<String>,
-            f: F,
-            name: &str
-        )
-        where
-            F: FnOnce() -> R + UnwindSafe
-        {
-            *ncases = *ncases + 1;
-            match std::panic::catch_unwind(|| { f(); }).is_ok()
-            {
-                true => {
-                    println!("{} {} ... {}!", "testing", name, "\x1B[1;32mok\x1B[0m");
-                }
-                false => {
-                    println!("{} {} ... {}!", "testing", name, "\x1B[1;31mfailed\x1B[0m");
-                    failurecases.push(String::from(name));
-                }
-            }
-        }
+    #[test_case]
+    fn test_app_msg_correctness() {
+        anonify_treekem::tests::app_msg_correctness();
     }
+
+    #[test_case]
+    fn test_ecies_correctness() { anonify_treekem::tests::ecies_correctness(); }
 
     #[no_mangle]
-    pub unsafe extern "C" fn ecall_run_tests(ext_ptr: *const RawPointer, result: *mut ResultStatus) {
-        *result = ResultStatus::Ok;
-        #[cfg(debug_assertions)]
-        {
-            let internal_tests_result = self::internal_tests::internal_tests(ext_ptr);
-            *result = internal_tests_result;
-        }
-    }
+    pub fn ecall_run_tests() { run_inventory_tests!(|_s: &str| true); }
 }
