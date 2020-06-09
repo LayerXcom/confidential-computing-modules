@@ -36,6 +36,15 @@ fn test_in_enclave() {
 }
 
 #[test]
+fn test_in_enclave_new() {
+    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+    let ret = unsafe { ecall_run_tests_new(
+        enclave.geteid(),
+    ) };
+    assert_eq!(ret, sgx_status_t::SGX_SUCCESS);
+}
+
+#[test]
 fn test_integration_eth_construct() {
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");

@@ -57,6 +57,9 @@ enclave {
             [in] const RawPointer* ext_ptr,
             [out] ResultStatus* result
         );
+
+        public void ecall_run_tests_new(
+        );
     };
 
     untrusted {

@@ -206,6 +206,9 @@ pub mod enclave_tests {
     }
 
     #[no_mangle]
+    pub fn ecall_run_tests_new() { run_inventory_tests!(|_s: &str| true); }
+
+    #[no_mangle]
     pub unsafe extern "C" fn ecall_run_tests(ext_ptr: *const RawPointer, result: *mut ResultStatus) {
         *result = ResultStatus::Ok;
         #[cfg(debug_assertions)]
@@ -213,6 +216,5 @@ pub mod enclave_tests {
             let internal_tests_result = self::internal_tests::internal_tests(ext_ptr);
             *result = internal_tests_result;
         }
-        run_inventory_tests!(|_s: &str| true);
     }
 }
