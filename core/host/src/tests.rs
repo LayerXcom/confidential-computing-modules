@@ -12,7 +12,7 @@ use anonify_event_watcher::{
     eventdb::{EventDB, BlockNumDB},
     eth::*,
 };
-use crate::auto_ffi::{ecall_run_tests, ecall_run_tests_new};
+use crate::auto_ffi::ecall_run_tests;
 use crate::init_enclave::EnclaveDir;
 use crate::dispatcher::*;
 
