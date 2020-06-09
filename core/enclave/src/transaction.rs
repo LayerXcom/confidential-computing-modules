@@ -5,17 +5,14 @@ use anonify_app_preluder::{Ciphertext, CallKind};
 use anonify_runtime::{StateType, State, MemId};
 use anonify_treekem::handshake::HandshakeParams;
 use codec::Encode;
-use attestation::{RAService, Report, ReportSig};
+use remote_attestation::{RAService, AttestationReport, ReportSig};
 use crate::{
-    // attestation::{Report, ReportSig, AttestationService},
     error::Result,
     context::EnclaveContext,
     bridges::ocalls::save_to_host_memory,
     state::{UserState, StateTransService},
     group_key::GroupKey,
 };
-
-pub const IAS_URL: &str = "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report";
 
 /// A trait for exporting transactions to out-enclave.
 /// For calculated transaction in enclave which is ready to sending outside.
@@ -28,7 +25,7 @@ pub trait EnclaveTx: Sized {
 /// A transaction components for register operations.
 #[derive(Debug, Clone)]
 pub struct RegisterTx {
-    report: Report,
+    report: AttestationReport,
     report_sig: ReportSig,
     handshake: HandshakeParams,
 }
@@ -50,7 +47,7 @@ impl EnclaveTx for RegisterTx {
 }
 
 impl RegisterTx {
-    pub fn new(report: Report, report_sig: ReportSig, handshake: HandshakeParams) -> Self {
+    pub fn new(report: AttestationReport, report_sig: ReportSig, handshake: HandshakeParams) -> Self {
         RegisterTx {
             report,
             report_sig,
@@ -59,13 +56,12 @@ impl RegisterTx {
     }
 
     pub fn construct(
-        host: &str,
-        path: &str,
+        ias_url: &str,
         ias_api_key: &str,
         ctx: &EnclaveContext<StateType>,
     ) -> Result<Self> {
         let quote = ctx.quote()?;
-        let (report, report_sig) = RAService::remote_attestation(IAS_URL, ias_api_key, &quote)?;
+        let (report, report_sig) = RAService::remote_attestation(ias_url, ias_api_key, &quote)?;
         let group_key = ctx.group_key.read().unwrap();
         let handshake = group_key.create_handshake()?;
 

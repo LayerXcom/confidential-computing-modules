@@ -8,12 +8,10 @@ use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
 use codec::Decode;
 use crate::state::{UserState, StateValue, Current};
-use crate::attestation::{
-    TEST_SUB_KEY, DEV_HOSTNAME, REPORT_PATH,
-};
 use crate::context::ENCLAVE_CONTEXT;
 use crate::transaction::{RegisterTx, EnclaveTx, HandshakeTx, StateTransTx};
 use crate::kvs::EnclaveDB;
+use crate::config::{IAS_URL, TEST_SUB_KEY};
 use super::ocalls::save_to_host_memory;
 
 /// Insert ciphertexts in event logs from blockchain nodes into enclave's memory database.
@@ -87,8 +85,7 @@ pub unsafe extern "C" fn ecall_register(
     raw_register_tx: &mut RawRegisterTx,
 ) -> sgx_status_t {
     let register_tx = RegisterTx::construct(
-            DEV_HOSTNAME,
-            REPORT_PATH,
+            IAS_URL,
             TEST_SUB_KEY,
             &*ENCLAVE_CONTEXT,
         )

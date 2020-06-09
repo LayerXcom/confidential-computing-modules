@@ -13,10 +13,6 @@ use crate::{
     config::TEST_SPID,
 };
 
-pub const DEV_HOSTNAME : &str = "api.trustedservices.intel.com";
-pub const REPORT_PATH : &str = "/sgx/dev/attestation/v3/report";
-pub const TEST_SUB_KEY: &str = "77e2533de0624df28dc3be3a5b9e50d9";
-
 pub const IAS_REPORT_CA: &[u8] = include_bytes!("../AttestationReportSigningCACert.pem");
 type SignatureAlgorithms = &'static [&'static webpki::SignatureAlgorithm];
 static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[

@@ -16,11 +16,9 @@ mod error;
 mod kvs;
 mod bridges;
 mod sealing;
-mod attestation;
 mod context;
 mod transaction;
 mod config;
-mod cert;
 mod group_key;
 
 use bridges::ocalls;
