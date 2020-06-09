@@ -13,8 +13,6 @@ anonify-types = { path = "../types", default-features = false }
 anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
 anonify-app-preluder = { path = "../app-preluder", default-features = false, features = ["sgx"] }
 anonify-runtime = { path = "../runtime", default-features = false, features = ["sgx"] }
-anonify-attestation = { path = "../attestation" }
-anonify-enclave-rpc = { path = "../enclave-rpc" }
 anonify-treekem = { path = "../treekem" }
 remote-attestation = { git = "https://github.com/LayerXcom/libsgx-rs", branch = "feature/attestation"}
 

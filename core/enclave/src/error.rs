@@ -20,9 +20,6 @@ pub enum EnclaveError {
     #[error("Sgx Error: {err:?}")]
     SgxError { err: sgx_types::sgx_status_t },
 
-    #[error("Https enclave error: {0}")]
-    HttpsEnclaveError(anonify_attestation::Error),
-
     #[error("Hex error: {0}")]
     HexError(hex::FromHexError),
 
@@ -51,12 +48,6 @@ impl From<ed25519_dalek::SignatureError> for EnclaveError {
 impl From<sgx_types::sgx_status_t> for EnclaveError {
     fn from(err: sgx_types::sgx_status_t) -> Self {
         anyhow!("Sgx error: {:?}", err).into()
-    }
-}
-
-impl From<anonify_attestation::Error> for EnclaveError {
-    fn from(err: anonify_attestation::Error) -> Self {
-        anyhow!("Https enclave error: {:?}", err).into()
     }
 }
 
