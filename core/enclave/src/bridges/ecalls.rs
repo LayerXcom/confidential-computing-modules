@@ -149,7 +149,7 @@ pub mod enclave_tests {
     use anonify_types::{ResultStatus, RawPointer};
     use anonify_test_utils::{test_case, run_inventory_tests};
     use std::vec::Vec;
-    use std::string::String;
+    use std::string::{String, ToString};
 
     #[cfg(debug_assertions)]
     mod internal_tests {
@@ -195,8 +195,8 @@ pub mod enclave_tests {
         }
     }
 
-    // #[test_case]
-    // fn test_app_msg_correctness() {}
+    #[test_case]
+    fn test_app_msg_correctness() {}
 
     #[no_mangle]
     pub unsafe extern "C" fn ecall_run_tests(ext_ptr: *const RawPointer, result: *mut ResultStatus) {
