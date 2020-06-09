@@ -16,7 +16,7 @@ anonify-runtime = { path = "../runtime", default-features = false, features = ["
 anonify-treekem = { path = "../treekem" }
 anonify-test-utils = { path = "../../tests/utils" }
 
-remote-attestation = { git = "https://github.com/LayerXcom/libsgx-rs", branch = "feature/attestation"}
+remote-attestation = { git = "https://github.com/LayerXcom/libsgx-rs" }
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
 lazy_static = { version = "1.4", features = ["spin_no_std"] }
 sha2 = { version = "0.8", default-features = false }
