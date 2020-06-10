@@ -143,7 +143,7 @@ pub unsafe extern "C" fn ecall_handshake(
 }
 
 pub mod enclave_tests {
-    use anonify_test_utils::{test_case, run_inventory_tests};
+    use test_utils::{test_case, run_inventory_tests};
     use std::vec::Vec;
     use std::string::{String, ToString};
 
