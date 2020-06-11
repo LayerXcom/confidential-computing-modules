@@ -29,7 +29,7 @@ impl_memory! {
     (3, "Owner", UserAddress)
 }
 
-impl_runtime!{
+impl_runtime! {
     #[fn_id=0]
     pub fn construct(
         self,
