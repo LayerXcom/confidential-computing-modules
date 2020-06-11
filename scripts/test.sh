@@ -17,13 +17,13 @@ echo `cargo --version`
 echo "Start building core components."
 
 make DEBUG=1
-rm -rf ../example/bin && cp -rf bin/ ../example/bin/
+rm -rf ../example/erc20/bin && cp -rf bin/ ../example/erc20/bin/
 
 echo "Testing core components..."
 cd host
 RUST_BACKTRACE=1 cargo test -- --nocapture
 
-cd ../../example/server
+cd ../../example/erc20/server
 echo "Build server."
 RUST_BACKTRACE=1 RUST_LOG=debug cargo build
 

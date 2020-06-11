@@ -3,7 +3,7 @@
 set -e
 
 dirpath=$(cd $(dirname $0) && pwd)
-cd "${dirpath}/../example/cli"
+cd "${dirpath}/../example/erc20/cli"
 echo $PWD
 export SGX_MODE=HW
 

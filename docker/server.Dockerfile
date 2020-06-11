@@ -30,17 +30,17 @@ RUN source /opt/sgxsdk/environment && \
     solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol && \
     cd core && \
     make DEBUG=1 && \
-    cd example/server && \
+    cd example/erc20/server && \
     RUST_BACKTRACE=1 RUST_LOG=debug /root/.cargo/bin/cargo build
 
 # ===== SECOND STAGE ======
 FROM baiduxlab/sgx-rust:1804-1.1.2
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
-WORKDIR /root/anonify/example/server
-COPY --from=builder /root/anonify/build/Anonify.abi ../../build/
-COPY --from=builder /root/anonify/build/Anonify.bin ../../build/
-COPY --from=builder /root/anonify/core/bin/enclave.signed.so ../bin/
-COPY --from=builder /root/anonify/example/server/target/debug/anonify-server ./target/debug/
+WORKDIR /root/anonify/example/erc20/server
+COPY --from=builder /root/anonify/build/Anonify.abi ../../../build/
+COPY --from=builder /root/anonify/build/Anonify.bin ../../../build/
+COPY --from=builder /root/anonify/core/bin/enclave.signed.so ../../bin/
+COPY --from=builder /root/anonify/example/erc20/server/target/debug/anonify-server ./target/debug/
 
 CMD ["./target/debug/anonify-server"]
