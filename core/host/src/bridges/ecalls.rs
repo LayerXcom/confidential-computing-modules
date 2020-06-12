@@ -4,7 +4,7 @@ use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawInstructi
 use anonify_common::{AccessRight, IntoVec};
 use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
 use anonify_runtime::traits::State;
-use anonify_event_watcher::{
+use anonify_bc_connector::{
     eventdb::InnerEnclaveLog,
     utils::StateInfo,
     error::{HostError, Result},

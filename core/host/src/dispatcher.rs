@@ -12,7 +12,7 @@ use crate::bridges::ecalls::{
     insert_logs as insert_fn,
     get_state_from_enclave,
 };
-use anonify_event_watcher::{
+use anonify_bc_connector::{
     traits::*,
     utils::*,
     eventdb::BlockNumDB,

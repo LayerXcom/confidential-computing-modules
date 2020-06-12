@@ -3,12 +3,11 @@ use std::{
     env,
     collections::BTreeMap,
 };
-use anonify_types::{RawPointer, ResultStatus};
 use sgx_types::*;
 use anonify_common::{AccessRight, UserAddress, COMMON_ACCESS_RIGHT};
 use anonify_runtime::{State, U64, Approved};
 use anonify_app_preluder::{transfer, construct, approve, transfer_from, mint, burn};
-use anonify_event_watcher::{
+use anonify_bc_connector::{
     eventdb::{EventDB, BlockNumDB},
     eth::*,
 };
@@ -39,7 +38,7 @@ fn test_integration_eth_construct() {
     let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
-    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
@@ -94,7 +93,7 @@ fn test_integration_eth_transfer() {
     let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
-    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
@@ -180,7 +179,7 @@ fn test_key_rotation() {
     let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
-    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
@@ -238,7 +237,7 @@ fn test_integration_eth_approve() {
     let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
-    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
@@ -322,7 +321,7 @@ fn test_integration_eth_transfer_from() {
     let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
-    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
@@ -463,7 +462,7 @@ fn test_integration_eth_mint() {
     let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
-    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
@@ -539,7 +538,7 @@ fn test_integration_eth_burn() {
     let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
-    let mut dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();

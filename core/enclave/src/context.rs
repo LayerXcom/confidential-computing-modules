@@ -4,7 +4,7 @@ use std::{
 };
 use sgx_types::*;
 use std::prelude::v1::*;
-use anonify_common::{LockParam, kvs::{MemoryDB, DBValue}, UserAddress};
+use anonify_common::{kvs::{MemoryDB, DBValue}, UserAddress};
 use anonify_app_preluder::{mem_name_to_id, Ciphertext};
 use anonify_runtime::{State, StateGetter, StateType, MemId};
 use anonify_treekem::{

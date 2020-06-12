@@ -5,7 +5,7 @@ use std::{
 };
 use sgx_types::sgx_enclave_id_t;
 use anonify_types::{RawRegisterTx, RawInstructionTx, RawHandshakeTx};
-use anonify_common::{AccessRight, LockParam};
+use anonify_common::AccessRight;
 use anonify_runtime::traits::State;
 use anonify_app_preluder::Ciphertext;
 use web3::types::Address as EthAddress;
