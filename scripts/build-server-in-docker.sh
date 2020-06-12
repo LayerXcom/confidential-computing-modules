@@ -18,7 +18,7 @@ echo "Start building core components."
 
 if [ "x$1" == "x--release" ]; then
     make
-    rm -rf ../example/bin && cp -rf bin/ ../example/bin/ && cd ../example/server
+    rm -rf ../example/erc20/bin && cp -rf bin/ ../example/erc20/bin/ && cd ../example/erc20/server
 
     echo "Build artifacts in release mode, with optimizations."
     cargo build --release
@@ -27,10 +27,10 @@ fi
 
 make DEBUG=1
 # enclave.signed.so is need to initialize enclave.
-rm -rf ../example/bin && cp -rf bin/ ../example/bin/ && cd ../
+rm -rf ../example/erc20/bin && cp -rf bin/ ../example/erc20/bin/ && cd ../
 
 solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
-cd example/server
+cd example/erc20/server
 
 echo "Build artifacts in debug mode."
 RUST_BACKTRACE=1 RUST_LOG=debug cargo build

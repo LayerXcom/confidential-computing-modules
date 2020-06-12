@@ -14,7 +14,7 @@ version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
  "anonify-runtime 0.1.0",
- "app 0.1.0",
+ "erc20-app 0.1.0",
  "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -108,15 +108,6 @@ dependencies = [
 name = "anyhow"
 version = "1.0.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "app"
-version = "0.1.0"
-dependencies = [
- "anonify-common 0.1.0",
- "anonify-runtime 0.1.0",
- "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
 
 [[package]]
 name = "arrayref"
@@ -502,6 +493,15 @@ dependencies = [
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 1.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "termcolor 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "erc20-app"
+version = "0.1.0"
+dependencies = [
+ "anonify-common 0.1.0",
+ "anonify-runtime 0.1.0",
+ "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

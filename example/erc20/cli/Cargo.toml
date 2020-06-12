@@ -8,8 +8,8 @@ edition = "2018"
 
 [dependencies]
 api = { path = "../api" }
-anonify-common = { path = "../../core/common" }
-anonify-wallet = { path = "../../wallet" }
+anonify-common = { path = "../../../core/common" }
+anonify-wallet = { path = "../../../wallet" }
 reqwest = "0.9"
 clap = "~2.32"
 rand = "0.7"

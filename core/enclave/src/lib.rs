@@ -21,5 +21,6 @@ mod context;
 mod transaction;
 mod config;
 mod group_key;
+mod notify;
 
 use bridges::ocalls;

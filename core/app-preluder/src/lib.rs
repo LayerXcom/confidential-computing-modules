@@ -12,7 +12,7 @@ use std as localstd;
 extern crate core as localstd;
 
 use crate::localstd::vec::Vec;
-pub use app::*;
+pub use erc20_app::*;
 use anonify_common::IntoVec;
 use codec::{Encode, Decode};
 

@@ -5,15 +5,15 @@ members = [
     "core/app-preluder",
     "core/event-watcher",
     "core/common",
-    "example/cli",
-    "example/api",
-    "example/app",
+    "example/erc20/cli",
+    "example/erc20/api",
+    "example/erc20/app",
     "wallet",
 ]
 exclude = [
     "core/host",
     "core/enclave",
     "core/treekem",
-    "example/server",
+    "example/erc20/server",
     "tests/utils",
 ]
