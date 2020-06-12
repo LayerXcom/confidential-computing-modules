@@ -34,7 +34,7 @@ extern "C" {
     ) -> sgx_status_t;
 }
 extern "C" {
-    pub fn ecall_state_transition(
+    pub fn ecall_instruction(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
         sig: *mut [u8; 64usize],
@@ -44,7 +44,7 @@ extern "C" {
         state_len: usize,
         state_id: u64,
         call_id: u32,
-        result: *mut RawStateTransTx,
+        result: *mut RawInstructionTx,
     ) -> sgx_status_t;
 }
 extern "C" {

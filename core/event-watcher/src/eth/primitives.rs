@@ -141,7 +141,6 @@ impl Web3Contract {
         from: Address,
         state_id: u64,
         ciphertexts: impl Iterator<Item=Ciphertext>,
-        lock_params: impl Iterator<Item=LockParam>,
         enclave_sig: &[u8],
         gas: u64,
     ) -> Result<H256> {
@@ -150,14 +149,9 @@ impl Web3Contract {
             .map(|e| e.into_vec())
             .for_each(|e| ct.push(e));
 
-        let mut lp = vec![];
-        lock_params
-            .map(|e| H256::from_slice(e.as_bytes()))
-            .for_each(|e| lp.push(e));
-
         let call = self.contract.call(
             "stateTransition",
-            (U256::from(state_id), ct, lp, enclave_sig.to_vec()),
+            (U256::from(state_id), ct, enclave_sig.to_vec()),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );

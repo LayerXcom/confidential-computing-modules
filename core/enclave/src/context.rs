@@ -11,6 +11,7 @@ use anonify_treekem::{
     handshake::{PathSecretRequest, PathSecretKVS},
     init_path_secret_kvs,
 };
+use codec::Encode;
 use crate::{
     notify::Notifier,
     crypto::EnclaveIdentityKey,
@@ -19,7 +20,7 @@ use crate::{
     ocalls::{sgx_init_quote, get_quote},
     error::Result,
     kvs::{EnclaveDB, EnclaveDBTx},
-    state::{Current, UserState, StateValue},
+    instructions::Instructions,
 };
 
 lazy_static! {
@@ -32,7 +33,6 @@ impl StateGetter for EnclaveContext<StateType> {
         let mem_id = mem_name_to_id(name);
         let mut buf = self.db
             .get(key.into(), mem_id)
-            .into_inner_state()
             .into_bytes();
         if buf.len() == 0 {
             return Ok(Default::default());
@@ -42,7 +42,7 @@ impl StateGetter for EnclaveContext<StateType> {
     }
 
     fn get_by_id(&self, key: UserAddress, mem_id: MemId) -> StateType {
-        self.db.get(key, mem_id).into_inner_state()
+        self.db.get(key, mem_id)
     }
 }
 
@@ -98,7 +98,7 @@ impl EnclaveContext<StateType> {
     }
 
     pub fn is_notified(&self, address: &UserAddress) -> bool {
-        self.notifier.is_contained(&address)
+        self.notifier.contains(&address)
     }
 
     /// Generate Base64-encoded QUOTE data structure.
@@ -118,32 +118,48 @@ impl EnclaveContext<StateType> {
     /// Generate a signature using enclave's identity key.
     /// This signature is used to verify enclave's program dependencies and
     /// should be verified in the public available place such as smart contract on blockchain.
-    pub fn sign(&self, msg: &LockParam) -> Result<secp256k1::Signature> {
-        self.identity_key.sign(msg.as_bytes())
+    pub fn sign(&self, msg: &Ciphertext) -> Result<secp256k1::Signature> {
+        self.identity_key.sign(&msg.encode())
     }
 
-    /// Only State with `Current` allows to access to the database to avoid from
-    /// storing data which have not been considered globally consensused.
-    /// Only if the enclave join the group, you can receive ciphertext and decrypt it,
-    /// otherwise do nothing.
-    pub fn write_cipheriv(
+    pub fn update_state(
         &self,
-        cipheriv: &Ciphertext,
+        ciphertext: &Ciphertext,
         group_key: &mut GroupKey,
     ) -> Result<()> {
-        if let Some(user_state) = UserState::<StateType, Current>::decrypt(cipheriv, group_key)? {
-            let address = user_state.address();
-            self.db.insert(address, user_state.mem_id(), user_state.into_sv());
-            self.is_notified(&address);
+        if let Some(instructions) = Instructions::decrypt(ciphertext, group_key)? {
+            let updated_states = instructions.state_transition::<StateType>(self)?;
+            for state in updated_states {
+                self.is_notified(&state.address);
+                self.db.insert_by_updated_state(state);
+            }
         }
 
         Ok(())
     }
 
-    /// Get the user's state value for the specified memory id.
-    pub fn state_value(&self, key: UserAddress, mem_id: MemId) -> StateValue<StateType, Current> {
-        self.db.get(key, mem_id)
-    }
+    // /// Only State with `Current` allows to access to the database to avoid from
+    // /// storing data which have not been considered globally consensused.
+    // /// Only if the enclave join the group, you can receive ciphertext and decrypt it,
+    // /// otherwise do nothing.
+    // pub fn write_cipheriv(
+    //     &self,
+    //     cipheriv: &Ciphertext,
+    //     group_key: &mut GroupKey,
+    // ) -> Result<()> {
+    //     if let Some(user_state) = UserState::<StateType, Current>::decrypt(cipheriv, group_key)? {
+    //         let address = user_state.address();
+    //         self.db.insert(address, user_state.mem_id(), user_state.into_sv());
+    //         self.is_notified(&address);
+    //     }
+
+    //     Ok(())
+    // }
+
+    // /// Get the user's state value for the specified memory id.
+    // pub fn state_value(&self, key: UserAddress, mem_id: MemId) -> StateValue<StateType, Current> {
+    //     self.db.get(key, mem_id)
+    // }
 
     /// Return Attestation report
     fn report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {

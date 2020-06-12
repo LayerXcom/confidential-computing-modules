@@ -13,7 +13,7 @@ extern crate lazy_static;
 extern crate inventory;
 
 mod crypto;
-mod state;
+// mod state;
 mod error;
 mod kvs;
 mod bridges;
@@ -22,5 +22,6 @@ mod transaction;
 mod config;
 mod group_key;
 mod notify;
+mod instructions;
 
 use bridges::ocalls;

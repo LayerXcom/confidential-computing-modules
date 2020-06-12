@@ -71,7 +71,7 @@ macro_rules! __impl_inner_runtime {
             }
         )*
 
-        #[derive(Debug)]
+        #[derive(Debug, Clone, Encode, Decode)]
         pub enum CallKind {
             $( $fn_name($fn_name), )*
         }

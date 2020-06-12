@@ -13,7 +13,7 @@ fn main() {
         .with_language(Language::C)
         .include_item("EnclaveReturn")
         .include_item("RawRegisterTx")
-        .include_item("RawStateTransTx")
+        .include_item("RawInstructionTx")
         .include_item("RawHandshakeTx")
         // .include_item("RawAccessRight")
         .include_item("EnclaveState")

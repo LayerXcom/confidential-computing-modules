@@ -1,6 +1,6 @@
 use std::boxed::Box;
 use sgx_types::*;
-use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawStateTransTx, RawHandshakeTx};
+use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawInstructionTx, RawHandshakeTx};
 use anonify_common::{AccessRight, IntoVec};
 use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
 use anonify_runtime::traits::State;
@@ -150,19 +150,18 @@ pub(crate) fn register(eid: sgx_enclave_id_t) -> Result<RawRegisterTx> {
     Ok(raw_reg_tx)
 }
 
-/// Update states when a transaction is sent to blockchain.
-pub(crate) fn state_transition<S: State>(
+pub(crate) fn state_transition<S: State>( // TODO: rename
     eid: sgx_enclave_id_t,
     access_right: AccessRight,
     state_info: StateInfo<'_, S>,
-) -> Result<RawStateTransTx> {
+) -> Result<RawInstructionTx> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-    let mut raw_state_tx = RawStateTransTx::default();
+    let mut raw_instruction_tx = RawInstructionTx::default();
     let state = state_info.state_as_bytes();
     let call_id = state_info.call_name_to_id();
 
     let status = unsafe {
-        ecall_state_transition(
+        ecall_instruction(
             eid,
             &mut rt,
             access_right.sig().to_bytes().as_ptr() as _,
@@ -172,7 +171,7 @@ pub(crate) fn state_transition<S: State>(
             state.len(),
             state_info.state_id(),
             call_id,
-            &mut raw_state_tx,
+            &mut raw_instruction_tx,
         )
     };
 
@@ -183,7 +182,7 @@ pub(crate) fn state_transition<S: State>(
         return Err(HostError::Sgx{ status: rt, function: "ecall_state_transition" }.into());
     }
 
-    Ok(raw_state_tx)
+    Ok(raw_instruction_tx)
 }
 
 /// Handshake to other group members to update the group key
