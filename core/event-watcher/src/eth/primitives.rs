@@ -147,7 +147,7 @@ impl Web3Contract {
     ) -> Result<H256> {
         let call = self.contract.call(
             "stateTransition",
-            (ciphertext.into_vec(), enclave_sig.to_vec(), msg.to_vec()),
+            (ciphertext.into_vec(), enclave_sig.to_vec(), H256::from_slice(msg)),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );
