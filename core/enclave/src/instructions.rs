@@ -38,7 +38,7 @@ impl Instructions {
 
         let mut buf = self.encode();
         // TODO
-        // append_padding(&mut buf);
+        append_padding(&mut buf);
         key.encrypt(buf).map_err(Into::into)
     }
 

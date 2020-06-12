@@ -139,7 +139,7 @@ impl Web3Contract {
     pub fn state_transition(
         &self,
         from: Address,
-        state_id: u64,
+        _state_id: u64,
         ciphertext: Ciphertext,
         enclave_sig: &[u8],
         msg: &[u8],
@@ -147,7 +147,7 @@ impl Web3Contract {
     ) -> Result<H256> {
         let call = self.contract.call(
             "stateTransition",
-            (U256::from(state_id), ciphertext.into_vec(), enclave_sig.to_vec(), msg.to_vec()),
+            (ciphertext.into_vec(), enclave_sig.to_vec(), msg.to_vec()),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );
