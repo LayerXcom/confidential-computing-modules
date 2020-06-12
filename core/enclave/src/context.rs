@@ -12,6 +12,7 @@ use anonify_treekem::{
     init_path_secret_kvs,
 };
 use crate::{
+    notify::Notifier,
     crypto::EnclaveIdentityKey,
     group_key::GroupKey,
     config::{TEST_SPID, MY_ROSTER_IDX, MAX_ROSTER_IDX, UNTIL_ROSTER_IDX, UNTIL_EPOCH},
@@ -51,6 +52,7 @@ pub struct EnclaveContext<S: State> {
     spid: sgx_spid_t,
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB<S>,
+    notifier: Notifier,
     pub group_key: Arc<SgxRwLock<GroupKey>>,
 }
 
@@ -69,7 +71,7 @@ impl EnclaveContext<StateType> {
         let mut kvs = PathSecretKVS::new();
         init_path_secret_kvs(&mut kvs, UNTIL_ROSTER_IDX, UNTIL_EPOCH);
         let req = PathSecretRequest::Local(kvs);
-        
+
         let my_roster_idx: usize = env::var("MY_ROSTER_IDX")
             .expect("MY_ROSTER_IDX is not set")
             .parse()
@@ -80,13 +82,19 @@ impl EnclaveContext<StateType> {
             .expect("Failed to parse MAX_ROSTER_IDX to usize");
 
         let group_key = Arc::new(SgxRwLock::new(GroupKey::new(my_roster_idx, max_roster_idx, req)?));
+        let notifier = Notifier::new();
 
         Ok(EnclaveContext{
             spid,
             identity_key,
             db,
+            notifier,
             group_key,
         })
+    }
+
+    pub fn set_notification(&self, address: UserAddress) -> bool {
+        self.notifier.register(address)
     }
 
     /// Generate Base64-encoded QUOTE data structure.
@@ -112,19 +120,15 @@ impl EnclaveContext<StateType> {
 
     /// Only State with `Current` allows to access to the database to avoid from
     /// storing data which have not been considered globally consensused.
+    /// Only if the enclave join the group, you can receive ciphertext and decrypt it,
+    /// otherwise do nothing.
     pub fn write_cipheriv(
         &self,
         cipheriv: &Ciphertext,
         group_key: &mut GroupKey,
     ) -> Result<()> {
-        // Only if the enclave join the group, you can receive ciphertext and decrypt it,
-        // otherwise do nothing.
-        match UserState::<StateType, Current>::decrypt(cipheriv, group_key)? {
-            Some(user_state) => {
-                self.db
-                    .insert(user_state.address(), user_state.mem_id(), user_state.into_sv());
-            }
-            None => { }
+        if let Some(user_state) = UserState::<StateType, Current>::decrypt(cipheriv, group_key)? {
+            self.db.insert(user_state.address(), user_state.mem_id(), user_state.into_sv());
         }
 
         Ok(())

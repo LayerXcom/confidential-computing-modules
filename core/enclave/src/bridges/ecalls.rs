@@ -123,6 +123,8 @@ pub unsafe extern "C" fn ecall_state_transition(
         )
         .expect("Failed to construct state tx.");
 
+    ENCLAVE_CONTEXT.set_notification(ar.user_address());
+
     *raw_state_tx = state_trans_tx.into_raw()
         .expect("Failed to convert into raw state transaction.");
 
