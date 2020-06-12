@@ -4,7 +4,7 @@ use anonify_host::{
     EnclaveDir,
     Dispatcher,
 };
-use anonify_event_watcher::{
+use anonify_bc_connector::{
     EventDB, BlockNumDB,
     traits::*,
     eth::*,

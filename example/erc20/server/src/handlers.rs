@@ -2,7 +2,7 @@ use std::{sync::Arc, thread, time};
 use failure::Error;
 use log::debug;
 use anonify_host::dispatcher::get_state;
-use anonify_event_watcher::{
+use anonify_bc_connector::{
     BlockNumDB,
     traits::*,
 };

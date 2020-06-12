@@ -12,7 +12,7 @@ erc20-app = { path = "../app" }
 anonify-common = { path = "../../../core/common" }
 anonify-runtime = { path = "../../../core/runtime" }
 anonify-host = { path = "../../../core/host" }
-anonify-event-watcher = { path = "../../../core/event-watcher" }
+anonify-bc-connector = { path = "../../../core/bc-connector" }
 sgx_types = "1.1.1"
 actix-web = "1.0"
 failure = "0.1"
