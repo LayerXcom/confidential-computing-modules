@@ -97,6 +97,10 @@ impl EnclaveContext<StateType> {
         self.notifier.register(address)
     }
 
+    pub fn is_notified(&self, address: &UserAddress) -> bool {
+        self.notifier.is_contained(&address)
+    }
+
     /// Generate Base64-encoded QUOTE data structure.
     /// QUOTE will be sent to Attestation Service to verify SGX's status.
     /// For more information: https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf
@@ -128,7 +132,9 @@ impl EnclaveContext<StateType> {
         group_key: &mut GroupKey,
     ) -> Result<()> {
         if let Some(user_state) = UserState::<StateType, Current>::decrypt(cipheriv, group_key)? {
-            self.db.insert(user_state.address(), user_state.mem_id(), user_state.into_sv());
+            let address = user_state.address();
+            self.db.insert(address, user_state.mem_id(), user_state.into_sv());
+            self.is_notified(&address);
         }
 
         Ok(())
