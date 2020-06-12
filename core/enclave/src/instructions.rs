@@ -30,14 +30,15 @@ impl Instructions {
         // Add padding to fix the ciphertext size of all state types.
         // The padding works for fixing the ciphertext size so that
         // other people cannot distinguish what state is encrypted based on the size.
-        fn append_padding(buf: &mut Vec<u8>) { // TODO
+        fn append_padding(buf: &mut Vec<u8>) {
             let padding_size = MAX_MEM_SIZE - buf.len();
             let mut padding = vec![0u8; padding_size];
             buf.extend_from_slice(&mut padding);
         }
 
         let mut buf = self.encode();
-        append_padding(&mut buf);
+        // TODO
+        // append_padding(&mut buf);
         key.encrypt(buf).map_err(Into::into)
     }
 

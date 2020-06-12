@@ -162,16 +162,17 @@ impl Sender for EthSender {
         F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST>) -> Result<RawInstructionTx>,
     {
         // ecall of state transition
-        let instruction_tx: BoxedInstructionTx = st_fn(self.enclave_id, access_right, state_info)?.into();
-        let ciphers = instruction_tx.get_ciphertexts();
+        let mut instruction_tx: BoxedInstructionTx = st_fn(self.enclave_id, access_right, state_info)?.into();
+        let ciphertext = instruction_tx.get_ciphertext();
 
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
                 self.contract.state_transition(
                     addr,
                     instruction_tx.state_id,
-                    ciphers,
+                    ciphertext,
                     &instruction_tx.enclave_sig,
+                    &instruction_tx.msg,
                     gas,
                 )?
             }
@@ -281,11 +282,12 @@ pub(crate) struct BoxedInstructionTx {
     pub state_id: u64,
     pub ciphertext: Box<[u8]>,
     pub enclave_sig: Box<[u8]>,
+    pub msg: Box<[u8]>,
 }
 
 impl BoxedInstructionTx {
-    pub fn get_ciphertexts(&self) -> impl Iterator<Item=Ciphertext> + '_ {
-        Ciphertext::from_bytes_iter(&self.ciphertext)
+    pub fn get_ciphertext(&mut self) -> Ciphertext {
+        Ciphertext::from_bytes(&mut self.ciphertext)
     }
 }
 
@@ -297,10 +299,13 @@ impl From<RawInstructionTx> for BoxedInstructionTx {
         let ciphertext = unsafe { Box::from_raw(box_ciphertext) };
         let box_enclave_sig = raw_instruction_tx.enclave_sig as *mut Box<[u8]>;
         let enclave_sig = unsafe { Box::from_raw(box_enclave_sig) };
+        let box_msg = raw_instruction_tx.msg as *mut Box<[u8]>;
+        let msg = unsafe { Box::from_raw(box_msg) };
 
         res_tx.state_id = raw_instruction_tx.state_id;
         res_tx.ciphertext = *ciphertext;
         res_tx.enclave_sig = *enclave_sig;
+        res_tx.msg = *msg;
 
         res_tx
     }

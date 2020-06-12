@@ -13,7 +13,6 @@ extern crate lazy_static;
 extern crate inventory;
 
 mod crypto;
-// mod state;
 mod error;
 mod kvs;
 mod bridges;

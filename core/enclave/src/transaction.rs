@@ -1,6 +1,6 @@
 use std::vec::Vec;
 use anonify_types::{RawRegisterTx, RawInstructionTx, RawHandshakeTx, traits::RawEnclaveTx};
-use anonify_common::{UserAddress, LockParam, AccessRight, IntoVec};
+use anonify_common::{UserAddress, Sha256, Hash256, AccessRight, IntoVec};
 use anonify_app_preluder::{Ciphertext, CallKind};
 use anonify_runtime::{StateType, State, MemId};
 use anonify_treekem::handshake::HandshakeParams;
@@ -79,6 +79,7 @@ pub struct InstructionTx {
     state_id: u64,
     ciphertext: Ciphertext,
     enclave_sig: secp256k1::Signature,
+    msg: Sha256,
 }
 
 impl EnclaveTx for InstructionTx {
@@ -87,11 +88,13 @@ impl EnclaveTx for InstructionTx {
     fn into_raw(self) -> Result<Self::R> {
         let ciphertext = save_to_host_memory(&self.ciphertext.into_vec())? as *const u8;
         let enclave_sig = save_to_host_memory(&self.enclave_sig.serialize())? as *const u8;
+        let msg = save_to_host_memory(&self.msg.as_bytes())? as *const u8;
 
         Ok(RawInstructionTx {
             state_id: self.state_id,
             ciphertext,
             enclave_sig,
+            msg,
         })
     }
 }
@@ -108,12 +111,14 @@ impl InstructionTx {
         let group_key = enclave_ctx.group_key.read().unwrap();
         let ciphertext = Instructions::new(call_id, params, &access_right)?
             .encrypt(&group_key)?;
-        let enclave_sig = enclave_ctx.sign(&ciphertext)?;
+        let msg = Sha256::hash(&ciphertext.encode());
+        let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;
 
         Ok(InstructionTx {
             state_id,
             ciphertext,
             enclave_sig,
+            msg,
         })
     }
 }

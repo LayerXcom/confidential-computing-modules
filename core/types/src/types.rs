@@ -78,6 +78,7 @@ pub struct RawInstructionTx {
     pub state_id: u64,
     pub ciphertext: *const u8,
     pub enclave_sig: *const u8,
+    pub msg: *const u8,
 }
 
 impl RawEnclaveTx for RawInstructionTx { }
@@ -87,6 +88,7 @@ impl Default for RawInstructionTx {
         RawInstructionTx {
             ciphertext: ptr::null(),
             enclave_sig: ptr::null(),
+            msg: ptr::null(),
             .. unsafe { mem::zeroed() }
         }
     }
@@ -98,6 +100,7 @@ impl fmt::Debug for RawInstructionTx {
         debug_trait_builder.field("state_id", &(self.state_id));
         debug_trait_builder.field("ciphertext", &(self.ciphertext));
         debug_trait_builder.field("enclave_sig", &(self.enclave_sig));
+        debug_trait_builder.field("msg", &(self.msg));
         debug_trait_builder.finish()
     }
 }

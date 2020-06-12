@@ -118,8 +118,8 @@ impl EnclaveContext<StateType> {
     /// Generate a signature using enclave's identity key.
     /// This signature is used to verify enclave's program dependencies and
     /// should be verified in the public available place such as smart contract on blockchain.
-    pub fn sign(&self, msg: &Ciphertext) -> Result<secp256k1::Signature> {
-        self.identity_key.sign(&msg.encode())
+    pub fn sign(&self, msg: &[u8]) -> Result<secp256k1::Signature> {
+        self.identity_key.sign(msg)
     }
 
     pub fn update_state(
