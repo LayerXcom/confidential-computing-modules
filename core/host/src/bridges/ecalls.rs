@@ -150,7 +150,7 @@ pub(crate) fn register(eid: sgx_enclave_id_t) -> Result<RawRegisterTx> {
     Ok(raw_reg_tx)
 }
 
-pub(crate) fn state_transition<S: State>( // TODO: rename
+pub(crate) fn encrypt_instruction<S: State>(
     eid: sgx_enclave_id_t,
     access_right: AccessRight,
     state_info: StateInfo<'_, S>,
@@ -176,10 +176,10 @@ pub(crate) fn state_transition<S: State>( // TODO: rename
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx{ status, function: "ecall_state_transition" }.into());
+        return Err(HostError::Sgx{ status, function: "ecall_encrypt_instruction" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx{ status: rt, function: "ecall_state_transition" }.into());
+        return Err(HostError::Sgx{ status: rt, function: "ecall_encrypt_instruction" }.into());
     }
 
     Ok(raw_instruction_tx)

@@ -7,7 +7,7 @@ use std::{
 use sgx_types::sgx_enclave_id_t;
 use crate::bridges::ecalls::{
     register as reg_fn,
-    state_transition as st_fn,
+    encrypt_instruction as enc_ins_fn,
     handshake as handshake_fn,
     insert_logs as insert_fn,
     get_state_from_enclave,
@@ -78,7 +78,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         inner.register(signer, gas, contract_info)
     }
 
-    pub fn state_transition<ST, P>(
+    pub fn send_instruction<ST, P>(
         &self,
         access_right: AccessRight,
         state: ST,
@@ -97,7 +97,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         let state_info = StateInfo::new(state, state_id, call_name);
 
-        inner.state_transition(access_right, signer, state_info, contract_info, gas)
+        inner.send_instruction(access_right, signer, state_info, contract_info, gas)
     }
 
     pub fn handshake<P>(
@@ -219,7 +219,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
             .register(signer, gas, reg_fn)
     }
 
-    fn state_transition<ST, P>(
+    fn send_instruction<ST, P>(
         &self,
         access_right: AccessRight,
         signer: SignerAddress,
@@ -237,7 +237,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
 
         self.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .state_transition(access_right, signer, state_info, gas, st_fn)
+            .send_instruction(access_right, signer, state_info, gas, enc_ins_fn)
     }
 
     fn handshake<P>(

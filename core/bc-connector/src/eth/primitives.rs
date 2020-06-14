@@ -136,7 +136,7 @@ impl Web3Contract {
         Ok(res)
     }
 
-    pub fn state_transition(
+    pub fn send_instruction(
         &self,
         from: Address,
         _state_id: u64,
@@ -146,7 +146,7 @@ impl Web3Contract {
         gas: u64,
     ) -> Result<H256> {
         let call = self.contract.call(
-            "stateTransition",
+            "storeInstruction",
             (ciphertext.into_vec(), enclave_sig.to_vec(), H256::from_slice(msg)),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),

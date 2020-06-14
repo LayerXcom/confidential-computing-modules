@@ -122,6 +122,8 @@ impl EnclaveContext<StateType> {
         self.identity_key.sign(msg)
     }
 
+    /// Only if the TEE belongs to the group, you can receive ciphertext and decrypt it,
+    /// otherwise do nothing.
     pub fn update_state(
         &self,
         ciphertext: &Ciphertext,
@@ -137,24 +139,6 @@ impl EnclaveContext<StateType> {
 
         Ok(())
     }
-
-    // /// Only State with `Current` allows to access to the database to avoid from
-    // /// storing data which have not been considered globally consensused.
-    // /// Only if the enclave join the group, you can receive ciphertext and decrypt it,
-    // /// otherwise do nothing.
-    // pub fn write_cipheriv(
-    //     &self,
-    //     cipheriv: &Ciphertext,
-    //     group_key: &mut GroupKey,
-    // ) -> Result<()> {
-    //     if let Some(user_state) = UserState::<StateType, Current>::decrypt(cipheriv, group_key)? {
-    //         let address = user_state.address();
-    //         self.db.insert(address, user_state.mem_id(), user_state.into_sv());
-    //         self.is_notified(&address);
-    //     }
-
-    //     Ok(())
-    // }
 
     // /// Get the user's state value for the specified memory id.
     // pub fn state_value(&self, key: UserAddress, mem_id: MemId) -> StateValue<StateType, Current> {

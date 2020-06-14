@@ -149,7 +149,7 @@ impl Sender for EthSender {
         Ok(hex::encode(receipt.as_bytes()))
     }
 
-    fn state_transition<ST, F>(
+    fn send_instruction<ST, F>(
         &self,
         access_right: AccessRight,
         signer: SignerAddress,
@@ -167,7 +167,7 @@ impl Sender for EthSender {
 
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
-                self.contract.state_transition(
+                self.contract.send_instruction(
                     addr,
                     instruction_tx.state_id,
                     ciphertext,

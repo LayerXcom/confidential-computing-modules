@@ -51,8 +51,8 @@ pub trait Sender: Sized {
 
     fn get_account(&self, index: usize) -> Result<SignerAddress>;
 
-    /// Send ciphertexts which is result of the state transition to blockchain nodes.
-    fn state_transition<ST, F>(
+    /// Send an encrypted instruction of state transition to blockchain nodes.
+    fn send_instruction<ST, F>(
         &self,
         access_right: AccessRight,
         signer: SignerAddress,
