@@ -1,9 +1,10 @@
 use crate::traits::State;
 use crate::local_anyhow::Result;
 use anonify_common::UserAddress;
+use anonify_types::RawUpdatedState;
 use codec::{Encode, Decode};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct UpdatedState<S: State> {
     pub address: UserAddress,
     pub mem_id: MemId,
@@ -21,6 +22,12 @@ impl<S: State> UpdatedState<S> {
             mem_id,
             state: state.into(),
         }
+    }
+}
+
+impl<S: State> From<RawUpdatedState> for UpdatedState<S> {
+    fn from(r: RawUpdatedState) -> Self {
+        unimplemented!();
     }
 }
 

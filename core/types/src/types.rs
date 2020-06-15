@@ -194,6 +194,34 @@ impl fmt::Debug for EnclaveState {
     }
 }
 
+/// Key Value data stored in an Enclave
+#[repr(C)]
+#[derive(Clone, Copy, PartialEq)]
+pub struct RawUpdatedState{
+    pub address: Address,
+    pub mem_id: u32,
+    pub state: *const u8,
+}
+
+impl Default for RawUpdatedState {
+    fn default() -> Self {
+        RawUpdatedState {
+            state: ptr::null(),
+            .. unsafe { mem::zeroed() }
+        }
+    }
+}
+
+impl fmt::Debug for RawUpdatedState {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut debug_trait_builder = f.debug_struct("RawUpdatedState");
+        debug_trait_builder.field("address", &(self.address));
+        debug_trait_builder.field("mem_id", &(self.mem_id));
+        debug_trait_builder.field("state", &(self.state));
+        debug_trait_builder.finish()
+    }
+}
+
 #[repr(C)]
 #[derive(Debug, PartialEq)]
 pub enum ResultStatus {

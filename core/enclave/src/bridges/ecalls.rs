@@ -21,14 +21,17 @@ use super::ocalls::save_to_host_memory;
 pub unsafe extern "C" fn ecall_insert_ciphertext(
     ciphertext: *mut u8,
     ciphertext_len: usize,
+    raw_updated_state: &mut RawUpdatedState,
 ) -> sgx_status_t {
     let ciphertext = slice::from_raw_parts_mut(ciphertext, ciphertext_len);
     let ciphertext = Ciphertext::from_bytes(ciphertext);
     let group_key = &mut *ENCLAVE_CONTEXT.group_key.write().unwrap();
 
-    ENCLAVE_CONTEXT
+    if let Some(updated_state) = ENCLAVE_CONTEXT
         .update_state(&ciphertext, group_key)
-        .expect("Failed to write cihpertexts.");
+        .expect("Failed to write cihpertexts.") {
+            raw_updated_state.0 = save_to_host_memory(updated_state.as_bytes()).unwrap() as *const u8;
+        }
 
     let roster_idx = ciphertext.roster_idx() as usize;
     // ratchet app keychain per a log.
@@ -37,35 +40,35 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
     sgx_status_t::SGX_SUCCESS
 }
 
-/// Insert ciphertexts in event logs from blockchain nodes into enclave's memory database.
-#[no_mangle]
-pub unsafe extern "C" fn ecall_insert_ciphertexts(
-    _contract_addr: &[u8; 20], //TODO
-    _block_number: u64, // TODO
-    ciphertexts: *mut u8,
-    ciphertexts_len: usize,
-) -> sgx_status_t {
-    let ciphertexts = slice::from_raw_parts_mut(ciphertexts, ciphertexts_len);
-    assert_eq!(ciphertexts.len() % CIPHERTEXT_SIZE, 0, "Ciphertexts must be divisible by number of ciphertext.");
-    let group_key = &mut *ENCLAVE_CONTEXT.group_key.write().unwrap();
+// /// Insert ciphertexts in event logs from blockchain nodes into enclave's memory database.
+// #[no_mangle]
+// pub unsafe extern "C" fn ecall_insert_ciphertexts(
+//     _contract_addr: &[u8; 20], //TODO
+//     _block_number: u64, // TODO
+//     ciphertexts: *mut u8,
+//     ciphertexts_len: usize,
+// ) -> sgx_status_t {
+//     let ciphertexts = slice::from_raw_parts_mut(ciphertexts, ciphertexts_len);
+//     assert_eq!(ciphertexts.len() % CIPHERTEXT_SIZE, 0, "Ciphertexts must be divisible by number of ciphertext.");
+//     let group_key = &mut *ENCLAVE_CONTEXT.group_key.write().unwrap();
 
-    let mut roster_idx: usize = 0;
-    for ciphertext in ciphertexts.chunks_mut(CIPHERTEXT_SIZE) {
-        let ciphertext = Ciphertext::from_bytes(ciphertext);
+//     let mut roster_idx: usize = 0;
+//     for ciphertext in ciphertexts.chunks_mut(CIPHERTEXT_SIZE) {
+//         let ciphertext = Ciphertext::from_bytes(ciphertext);
 
-        ENCLAVE_CONTEXT
-            .update_state(&ciphertext, group_key)
-            .expect("Failed to write cihpertexts.");
+//         ENCLAVE_CONTEXT
+//             .update_state(&ciphertext, group_key)
+//             .expect("Failed to write cihpertexts.");
 
-        assert_eq!(roster_idx, ciphertext.roster_idx() as usize);
-        roster_idx = ciphertext.roster_idx() as usize;
-    }
+//         assert_eq!(roster_idx, ciphertext.roster_idx() as usize);
+//         roster_idx = ciphertext.roster_idx() as usize;
+//     }
 
-    // ratchet app keychain per a log.
-    group_key.ratchet(roster_idx).unwrap();
+//     // ratchet app keychain per a log.
+//     group_key.ratchet(roster_idx).unwrap();
 
-    sgx_status_t::SGX_SUCCESS
-}
+//     sgx_status_t::SGX_SUCCESS
+// }
 
 /// Insert handshake received from blockchain nodes into enclave.
 #[no_mangle]
