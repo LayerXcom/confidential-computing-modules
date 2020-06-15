@@ -53,7 +53,7 @@ fn test_integration_eth_construct() {
     // Init state
     let total_supply = U64::from_raw(100);
     let init_state = construct{ total_supply };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         my_access_right.clone(),
         init_state,
         state_id,
@@ -108,7 +108,7 @@ fn test_integration_eth_transfer() {
     // Init state
     let total_supply = U64::from_raw(100);
     let init_state = construct{ total_supply };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         my_access_right.clone(),
         init_state,
         state_id,
@@ -139,7 +139,7 @@ fn test_integration_eth_transfer() {
     let amount = U64::from_raw(30);
     let recipient = other_access_right.user_address();
     let transfer_state = transfer{ amount, recipient };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         my_access_right.clone(),
         transfer_state,
         state_id,
@@ -201,7 +201,7 @@ fn test_key_rotation() {
     // init state
     let total_supply = U64::from_raw(100);
     let init_state = construct{ total_supply };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         my_access_right.clone(),
         init_state,
         state_id,
@@ -252,7 +252,7 @@ fn test_integration_eth_approve() {
     // Init state
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         my_access_right.clone(),
         init_state,
         state_id,
@@ -279,7 +279,7 @@ fn test_integration_eth_approve() {
     let amount = U64::from_raw(30);
     let spender = other_access_right.user_address();
     let approve_state = approve { amount, spender };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         my_access_right.clone(),
         approve_state,
         state_id,
@@ -336,7 +336,7 @@ fn test_integration_eth_transfer_from() {
     // Init state
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         my_access_right.clone(),
         init_state,
         state_id,
@@ -372,7 +372,7 @@ fn test_integration_eth_transfer_from() {
     let amount = U64::from_raw(30);
     let spender = other_access_right.user_address();
     let approve_state = approve { amount, spender };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         my_access_right.clone(),
         approve_state,
         state_id,
@@ -413,7 +413,7 @@ fn test_integration_eth_transfer_from() {
     let owner = my_access_right.user_address();
     let recipient = third_access_right.user_address();
     let transferred_from_state = transfer_from { owner, recipient, amount };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         other_access_right.clone(),
         transferred_from_state,
         state_id,
@@ -477,7 +477,7 @@ fn test_integration_eth_mint() {
     // Init state
     let total_supply = U64::from_raw(100);
     let init_state = construct{ total_supply };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         my_access_right.clone(),
         init_state,
         state_id,
@@ -499,7 +499,7 @@ fn test_integration_eth_mint() {
     let amount = U64::from_raw(50);
     let recipient = other_access_right.user_address();
     let minting_state = mint{ amount, recipient };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         my_access_right.clone(),
         minting_state,
         state_id,
@@ -553,7 +553,7 @@ fn test_integration_eth_burn() {
     // Init state
     let total_supply = U64::from_raw(100);
     let init_state = construct{ total_supply };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         my_access_right.clone(),
         init_state,
         state_id,
@@ -575,7 +575,7 @@ fn test_integration_eth_burn() {
     let amount = U64::from_raw(30);
     let recipient = other_access_right.user_address();
     let transfer_state = transfer{ amount, recipient };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         my_access_right.clone(),
         transfer_state,
         state_id,
@@ -595,7 +595,7 @@ fn test_integration_eth_burn() {
     // Send a transaction to contract
     let amount = U64::from_raw(20);
     let burn_state = burn{ amount };
-    let receipt = dispatcher.state_transition(
+    let receipt = dispatcher.send_instruction(
         other_access_right.clone(),
         burn_state,
         state_id,

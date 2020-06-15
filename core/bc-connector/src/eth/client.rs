@@ -155,14 +155,14 @@ impl Sender for EthSender {
         signer: SignerAddress,
         state_info: StateInfo<'_, ST>,
         gas: u64,
-        st_fn: F,
+        enc_ins_fn: F,
     ) -> Result<String>
     where
         ST: State,
         F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST>) -> Result<RawInstructionTx>,
     {
-        // ecall of state transition
-        let mut instruction_tx: BoxedInstructionTx = st_fn(self.enclave_id, access_right, state_info)?.into();
+        // ecall of encrypt instruction
+        let mut instruction_tx: BoxedInstructionTx = enc_ins_fn(self.enclave_id, access_right, state_info)?.into();
         let ciphertext = instruction_tx.get_ciphertext();
 
         let receipt = match signer {
