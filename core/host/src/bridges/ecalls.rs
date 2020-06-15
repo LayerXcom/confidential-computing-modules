@@ -118,14 +118,7 @@ pub(crate) fn get_state_from_enclave(
 		return Err(HostError::Sgx{ status: rt, function: "ecall_get_state" }.into());
     }
 
-    Ok(state_as_bytes(state).into())
-}
-
-fn state_as_bytes(state: EnclaveState) -> Box<[u8]> {
-    let raw_state = state.0 as *mut Box<[u8]>;
-    let box_state = unsafe { Box::from_raw(raw_state) };
-
-    *box_state
+    Ok(state.into_vec())
 }
 
 pub(crate) fn register(eid: sgx_enclave_id_t) -> Result<RawRegisterTx> {

@@ -16,6 +16,27 @@ use crate::{
 };
 use super::ocalls::save_to_host_memory;
 
+/// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
+#[no_mangle]
+pub unsafe extern "C" fn ecall_insert_ciphertext(
+    ciphertext: *mut u8,
+    ciphertext_len: usize,
+) -> sgx_status_t {
+    let ciphertext = slice::from_raw_parts_mut(ciphertext, ciphertext_len);
+    let ciphertext = Ciphertext::from_bytes(ciphertext);
+    let group_key = &mut *ENCLAVE_CONTEXT.group_key.write().unwrap();
+
+    ENCLAVE_CONTEXT
+        .update_state(&ciphertext, group_key)
+        .expect("Failed to write cihpertexts.");
+
+    let roster_idx = ciphertext.roster_idx() as usize;
+    // ratchet app keychain per a log.
+    group_key.ratchet(roster_idx).unwrap();
+
+    sgx_status_t::SGX_SUCCESS
+}
+
 /// Insert ciphertexts in event logs from blockchain nodes into enclave's memory database.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_insert_ciphertexts(

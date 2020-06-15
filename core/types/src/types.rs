@@ -1,8 +1,13 @@
+extern crate alloc;
 use core::{
     fmt,
     default::Default,
     ptr,
     mem,
+};
+use alloc::{
+    boxed::Box,
+    vec::Vec,
 };
 use crate::traits::RawEnclaveTx;
 
@@ -161,6 +166,19 @@ impl fmt::Debug for RawHandshakeTx {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct EnclaveState(pub *const u8);
+
+impl EnclaveState {
+    pub fn as_bytes(&self) -> Box<[u8]> {
+        let raw_state = self.0 as *mut Box<[u8]>;
+        let box_state = unsafe { Box::from_raw(raw_state) };
+
+        *box_state
+    }
+
+    pub fn into_vec(self) -> Vec<u8> {
+        self.as_bytes().into_vec()
+    }
+}
 
 impl Default for EnclaveState {
     fn default() -> Self {
