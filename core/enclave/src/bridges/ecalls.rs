@@ -7,11 +7,13 @@ use anonify_runtime::{StateGetter, State, StateType, MemId};
 use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
 use codec::Decode;
-use crate::state::{UserState, StateValue, Current};
-use crate::context::ENCLAVE_CONTEXT;
-use crate::transaction::{RegisterTx, EnclaveTx, HandshakeTx, StateTransTx};
-use crate::kvs::EnclaveDB;
-use crate::config::{IAS_URL, TEST_SUB_KEY};
+use crate::{
+    context::ENCLAVE_CONTEXT,
+    transaction::{RegisterTx, EnclaveTx, HandshakeTx, InstructionTx},
+    kvs::EnclaveDB,
+    config::{IAS_URL, TEST_SUB_KEY},
+    instructions::Instructions,
+};
 use super::ocalls::save_to_host_memory;
 
 /// Insert ciphertexts in event logs from blockchain nodes into enclave's memory database.
@@ -29,8 +31,9 @@ pub unsafe extern "C" fn ecall_insert_ciphertexts(
     let mut roster_idx: usize = 0;
     for ciphertext in ciphertexts.chunks_mut(CIPHERTEXT_SIZE) {
         let ciphertext = Ciphertext::from_bytes(ciphertext);
+
         ENCLAVE_CONTEXT
-            .write_cipheriv(&ciphertext, group_key)
+            .update_state(&ciphertext, group_key)
             .expect("Failed to write cihpertexts.");
 
         assert_eq!(roster_idx, ciphertext.roster_idx() as usize);
@@ -97,9 +100,9 @@ pub unsafe extern "C" fn ecall_register(
     sgx_status_t::SGX_SUCCESS
 }
 
-/// Execute state transition in enclave. It depends on state transition functions and provided inputs.
+
 #[no_mangle]
-pub unsafe extern "C" fn ecall_state_transition(
+pub unsafe extern "C" fn ecall_instruction(
     raw_sig: &RawSig,
     raw_pubkey: &RawPubkey,
     raw_challenge: &RawChallenge,
@@ -107,16 +110,15 @@ pub unsafe extern "C" fn ecall_state_transition(
     state_len: usize,
     state_id: u64,
     call_id: u32,
-    raw_state_tx: &mut RawStateTransTx,
+    raw_instruction_tx: &mut RawInstructionTx,
 ) -> sgx_status_t {
     let params = slice::from_raw_parts_mut(state, state_len);
-
     let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge)
         .expect("Failed to generate access right.");
-    let call_kind = CallKind::from_call_id(call_id, params)
-        .expect("Failed to generate callkind.");
-    let state_trans_tx = StateTransTx::construct(
-            call_kind,
+
+    let instruction_tx = InstructionTx::construct(
+            call_id,
+            params,
             state_id,
             &ar,
             &*ENCLAVE_CONTEXT,
@@ -124,8 +126,7 @@ pub unsafe extern "C" fn ecall_state_transition(
         .expect("Failed to construct state tx.");
 
     ENCLAVE_CONTEXT.set_notification(ar.user_address());
-
-    *raw_state_tx = state_trans_tx.into_raw()
+    *raw_instruction_tx = instruction_tx.into_raw()
         .expect("Failed to convert into raw state transaction.");
 
     sgx_status_t::SGX_SUCCESS

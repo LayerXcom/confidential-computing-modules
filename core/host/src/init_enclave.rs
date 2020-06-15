@@ -4,7 +4,7 @@ use std::{
 };
 use sgx_types::*;
 use sgx_urts::SgxEnclave;
-use anonify_event_watcher::error::Result;
+use anonify_bc_connector::error::Result;
 use crate::constants::*;
 
 pub struct EnclaveDir(PathBuf);

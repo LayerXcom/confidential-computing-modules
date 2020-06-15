@@ -19,7 +19,7 @@ use ethabi::{
     decode,
     Hash,
 };
-use anonify_common::{LockParam, IntoVec};
+use anonify_common::IntoVec;
 use anonify_app_preluder::Ciphertext;
 use anyhow::anyhow;
 use crate::{
@@ -136,28 +136,18 @@ impl Web3Contract {
         Ok(res)
     }
 
-    pub fn state_transition(
+    pub fn send_instruction(
         &self,
         from: Address,
-        state_id: u64,
-        ciphertexts: impl Iterator<Item=Ciphertext>,
-        lock_params: impl Iterator<Item=LockParam>,
+        _state_id: u64,
+        ciphertext: Ciphertext,
         enclave_sig: &[u8],
+        msg: &[u8],
         gas: u64,
     ) -> Result<H256> {
-        let mut ct = vec![];
-        ciphertexts
-            .map(|e| e.into_vec())
-            .for_each(|e| ct.push(e));
-
-        let mut lp = vec![];
-        lock_params
-            .map(|e| H256::from_slice(e.as_bytes()))
-            .for_each(|e| lp.push(e));
-
         let call = self.contract.call(
-            "stateTransition",
-            (U256::from(state_id), ct, lp, enclave_sig.to_vec()),
+            "storeInstruction",
+            (ciphertext.into_vec(), enclave_sig.to_vec(), H256::from_slice(msg)),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );

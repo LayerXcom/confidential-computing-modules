@@ -2,7 +2,7 @@ use std::{sync::Arc, thread, time};
 use failure::Error;
 use log::debug;
 use anonify_host::dispatcher::get_state;
-use anonify_event_watcher::{
+use anonify_bc_connector::{
     BlockNumDB,
     traits::*,
 };
@@ -75,7 +75,7 @@ pub fn handle_init_state<D, S, W, DB>(
     let total_supply = U64::from_raw(req.total_supply);
     let init_state = construct{ total_supply };
 
-    let receipt = server.dispatcher.state_transition(
+    let receipt = server.dispatcher.send_instruction(
         access_right,
         init_state,
         req.state_id,
@@ -105,7 +105,7 @@ pub fn handle_transfer<D, S, W, DB>(
     let recipient = req.target;
     let transfer_state = transfer{ amount, recipient };
 
-    let receipt = server.dispatcher.state_transition(
+    let receipt = server.dispatcher.send_instruction(
         access_right,
         transfer_state,
         req.state_id,
@@ -135,7 +135,7 @@ pub fn handle_approve<D, S, W, DB>(
     let spender = req.target;
     let approve_state = approve { amount, spender };
 
-    let receipt = server.dispatcher.state_transition(
+    let receipt = server.dispatcher.send_instruction(
         access_right,
         approve_state,
         req.state_id,
@@ -165,7 +165,7 @@ pub fn handle_mint<D, S, W, DB>(
     let recipient = req.target;
     let minting_state = mint{ amount, recipient };
 
-    let receipt = server.dispatcher.state_transition(
+    let receipt = server.dispatcher.send_instruction(
         access_right,
         minting_state,
         req.state_id,
@@ -194,7 +194,7 @@ pub fn handle_burn<D, S, W, DB>(
     let amount = U64::from_raw(req.amount);
     let burn_state = burn{ amount };
 
-    let receipt = server.dispatcher.state_transition(
+    let receipt = server.dispatcher.send_instruction(
         access_right,
         burn_state,
         req.state_id,
@@ -225,7 +225,7 @@ pub fn handle_transfer_from<D, S, W, DB>(
     let recipient = req.target;
     let transferred_from_state = transfer_from { owner, recipient, amount };
 
-    let receipt = server.dispatcher.state_transition(
+    let receipt = server.dispatcher.send_instruction(
         access_right,
         transferred_from_state,
         req.state_id,

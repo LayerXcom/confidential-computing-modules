@@ -338,61 +338,6 @@ impl<T: IntoVec> IntoVec for &[T] {
 /// The size of initialization vector for AES-256-GCM.
 pub const IV_SIZE: usize = 12;
 
-const LOCK_PARAM_SIZE: usize = 32;
-
-/// To avoid data collision when a transaction is sent to a blockchain.
-#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq)]
-pub struct LockParam([u8; LOCK_PARAM_SIZE]);
-
-impl IntoVec for LockParam {
-    fn into_vec(&self) -> Vec<u8> {
-        self.0.to_vec()
-    }
-}
-
-impl LockParam {
-    pub fn from_bytes(bytes: &[u8]) -> Self {
-        assert_eq!(bytes.len(), LOCK_PARAM_SIZE);
-        let mut buf = [0u8; LOCK_PARAM_SIZE];
-        buf.copy_from_slice(bytes);
-
-        LockParam(buf)
-    }
-
-    pub fn from_bytes_iter(bytes: &[u8]) -> impl Iterator<Item=Self> + '_ {
-        assert_eq!(bytes.len() % LOCK_PARAM_SIZE, 0);
-        let iter_num = bytes.len() / LOCK_PARAM_SIZE;
-
-        (0..iter_num).map(move |i| {
-            let mut buf = [0u8; LOCK_PARAM_SIZE];
-            let b = &bytes[i*LOCK_PARAM_SIZE..(i+1)*LOCK_PARAM_SIZE];
-            buf.copy_from_slice(&b);
-            LockParam(buf)
-        })
-    }
-
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.0[..]
-    }
-
-    pub fn write<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_all(&self.0)?;
-        Ok(())
-    }
-
-    pub fn read<R: Read>(reader: &mut R) -> io::Result<Self> {
-        let mut res = [0u8; 32];
-        reader.read_exact(&mut res)?;
-        Ok(LockParam(res))
-    }
-}
-
-impl From<Sha256> for LockParam {
-    fn from(s: Sha256) -> Self {
-        LockParam(s.as_array())
-    }
-}
-
 /// Generating a random number inside the enclave.
 #[cfg(feature = "sgx")]
 pub fn sgx_rand_assign(rand: &mut [u8]) -> Result<(), Error> {

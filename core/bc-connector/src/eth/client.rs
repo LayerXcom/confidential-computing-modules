@@ -4,8 +4,8 @@ use std::{
     boxed::Box,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::{RawRegisterTx, RawStateTransTx, RawHandshakeTx};
-use anonify_common::{AccessRight, LockParam};
+use anonify_types::{RawRegisterTx, RawInstructionTx, RawHandshakeTx};
+use anonify_common::AccessRight;
 use anonify_runtime::traits::State;
 use anonify_app_preluder::Ciphertext;
 use web3::types::Address as EthAddress;
@@ -149,32 +149,30 @@ impl Sender for EthSender {
         Ok(hex::encode(receipt.as_bytes()))
     }
 
-    fn state_transition<ST, F>(
+    fn send_instruction<ST, F>(
         &self,
         access_right: AccessRight,
         signer: SignerAddress,
         state_info: StateInfo<'_, ST>,
         gas: u64,
-        st_fn: F,
+        enc_ins_fn: F,
     ) -> Result<String>
     where
         ST: State,
-        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST>) -> Result<RawStateTransTx>,
+        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST>) -> Result<RawInstructionTx>,
     {
-        // ecall of state transition
-        let state_trans_tx: BoxedStateTransTx = st_fn(self.enclave_id, access_right, state_info)?.into();
-
-        let ciphers = state_trans_tx.get_ciphertexts();
-        let locks = state_trans_tx.get_lock_params();
+        // ecall of encrypt instruction
+        let mut instruction_tx: BoxedInstructionTx = enc_ins_fn(self.enclave_id, access_right, state_info)?.into();
+        let ciphertext = instruction_tx.get_ciphertext();
 
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
-                self.contract.state_transition(
+                self.contract.send_instruction(
                     addr,
-                    state_trans_tx.state_id,
-                    ciphers,
-                    locks,
-                    &state_trans_tx.enclave_sig,
+                    instruction_tx.state_id,
+                    ciphertext,
+                    &instruction_tx.enclave_sig,
+                    &instruction_tx.msg,
                     gas,
                 )?
             }
@@ -280,38 +278,34 @@ impl From<RawRegisterTx> for BoxedRegisterTx {
 }
 
 #[derive(Debug, Clone, Default)]
-pub(crate) struct BoxedStateTransTx {
+pub(crate) struct BoxedInstructionTx {
     pub state_id: u64,
     pub ciphertext: Box<[u8]>,
-    pub lock_param: Box<[u8]>,
     pub enclave_sig: Box<[u8]>,
+    pub msg: Box<[u8]>,
 }
 
-impl BoxedStateTransTx {
-    pub fn get_ciphertexts(&self) -> impl Iterator<Item=Ciphertext> + '_ {
-        Ciphertext::from_bytes_iter(&self.ciphertext)
-    }
-
-    pub fn get_lock_params(&self) -> impl Iterator<Item=LockParam> + '_ {
-        LockParam::from_bytes_iter(&self.lock_param)
+impl BoxedInstructionTx {
+    pub fn get_ciphertext(&mut self) -> Ciphertext {
+        Ciphertext::from_bytes(&mut self.ciphertext)
     }
 }
 
-impl From<RawStateTransTx> for BoxedStateTransTx {
-    fn from(raw_state_tx: RawStateTransTx) -> Self {
-        let mut res_tx = BoxedStateTransTx::default();
+impl From<RawInstructionTx> for BoxedInstructionTx {
+    fn from(raw_instruction_tx: RawInstructionTx) -> Self {
+        let mut res_tx = BoxedInstructionTx::default();
 
-        let box_ciphertext = raw_state_tx.ciphertext as *mut Box<[u8]>;
+        let box_ciphertext = raw_instruction_tx.ciphertext as *mut Box<[u8]>;
         let ciphertext = unsafe { Box::from_raw(box_ciphertext) };
-        let box_lock_param = raw_state_tx.lock_param as *mut Box<[u8]>;
-        let lock_param = unsafe { Box::from_raw(box_lock_param) };
-        let box_enclave_sig = raw_state_tx.enclave_sig as *mut Box<[u8]>;
+        let box_enclave_sig = raw_instruction_tx.enclave_sig as *mut Box<[u8]>;
         let enclave_sig = unsafe { Box::from_raw(box_enclave_sig) };
+        let box_msg = raw_instruction_tx.msg as *mut Box<[u8]>;
+        let msg = unsafe { Box::from_raw(box_msg) };
 
-        res_tx.state_id = raw_state_tx.state_id;
+        res_tx.state_id = raw_instruction_tx.state_id;
         res_tx.ciphertext = *ciphertext;
-        res_tx.lock_param = *lock_param;
         res_tx.enclave_sig = *enclave_sig;
+        res_tx.msg = *msg;
 
         res_tx
     }

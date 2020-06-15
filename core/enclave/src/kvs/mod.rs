@@ -9,9 +9,8 @@ use anonify_common::{
     kvs::*,
     Hash256, Sha256,
 };
-use anonify_runtime::{State, MemId};
+use anonify_runtime::{State, MemId, UpdatedState};
 use codec::Encode;
-use crate::state::{StateValue, Current};
 use crate::error::Result;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
@@ -25,25 +24,31 @@ impl DBKey {
 }
 
 #[derive(Debug, Clone)]
-pub struct EnclaveDB<S: State>(Arc<SgxRwLock<HashMap<DBKey, StateValue<S, Current>>>>);
+pub struct EnclaveDB<S: State>(Arc<SgxRwLock<HashMap<DBKey, S>>>);
 
 impl<S: State> EnclaveDB<S> {
     pub fn new() -> Self {
         EnclaveDB(Arc::new(SgxRwLock::new(HashMap::new())))
     }
 
-    pub fn get(&self, address: UserAddress, mem_id: MemId) -> StateValue<S, Current> {
+    pub fn get(&self, address: UserAddress, mem_id: MemId) -> S {
         let key = DBKey::new(address, mem_id);
         match self.0.read().unwrap().get(&key) {
             Some(v) => v.clone(),
-            None => return StateValue::default()
+            None => S::default(),
         }
     }
 
-    pub fn insert(&self, address: UserAddress, mem_id: MemId, sv: StateValue<S, Current>) {
+    pub fn insert_by_updated_state(&self, updated_state: UpdatedState<S>) {
+        let mut tmp = self.0.write().unwrap();
+        let key = DBKey::new(updated_state.address, updated_state.mem_id);
+        tmp.insert(key, updated_state.state);
+    }
+
+    pub fn insert(&self, address: UserAddress, mem_id: MemId, state: S) {
         let mut tmp = self.0.write().unwrap();
         let key = DBKey::new(address, mem_id);
-        tmp.insert(key, sv);
+        tmp.insert(key, state);
     }
 
     pub fn delete(&self, address: UserAddress, mem_id: MemId) {

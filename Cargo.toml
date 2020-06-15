@@ -3,7 +3,7 @@ members = [
     "core/types",
     "core/runtime",
     "core/app-preluder",
-    "core/event-watcher",
+    "core/bc-connector",
     "core/common",
     "example/erc20/cli",
     "example/erc20/api",

@@ -16,7 +16,6 @@ impl<S: State> UpdatedState<S> {
         mem_id: MemId,
         state: impl Into<S>,
     ) -> Self {
-        // let mem_id = mem_name_to_id(mem_name);
         UpdatedState {
             address: address.into(),
             mem_id,

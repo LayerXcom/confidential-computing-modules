@@ -5,7 +5,7 @@ use std::{
     sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::{RawRegisterTx, RawStateTransTx, RawHandshakeTx};
+use anonify_types::{RawRegisterTx, RawInstructionTx, RawHandshakeTx};
 use anonify_common::AccessRight;
 use anonify_runtime::traits::State;
 use crate::{
@@ -51,8 +51,8 @@ pub trait Sender: Sized {
 
     fn get_account(&self, index: usize) -> Result<SignerAddress>;
 
-    /// Send ciphertexts which is result of the state transition to blockchain nodes.
-    fn state_transition<ST, F>(
+    /// Send an encrypted instruction of state transition to blockchain nodes.
+    fn send_instruction<ST, F>(
         &self,
         access_right: AccessRight,
         signer: SignerAddress,
@@ -62,7 +62,7 @@ pub trait Sender: Sized {
     ) -> Result<String>
     where
         ST: State,
-        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST>) -> Result<RawStateTransTx>;
+        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST>) -> Result<RawInstructionTx>;
 
     /// Attestation with deployed contract.
     fn register<F>(

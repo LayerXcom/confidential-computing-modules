@@ -74,33 +74,33 @@ impl fmt::Debug for RawRegisterTx {
 /// Bridged type from enclave to host to modify state transaction.
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct RawStateTransTx {
+pub struct RawInstructionTx {
     pub state_id: u64,
     pub ciphertext: *const u8,
-    pub lock_param: *const u8,
     pub enclave_sig: *const u8,
+    pub msg: *const u8,
 }
 
-impl RawEnclaveTx for RawStateTransTx { }
+impl RawEnclaveTx for RawInstructionTx { }
 
-impl Default for RawStateTransTx {
+impl Default for RawInstructionTx {
     fn default() -> Self {
-        RawStateTransTx {
+        RawInstructionTx {
             ciphertext: ptr::null(),
-            lock_param: ptr::null(),
             enclave_sig: ptr::null(),
+            msg: ptr::null(),
             .. unsafe { mem::zeroed() }
         }
     }
 }
 
-impl fmt::Debug for RawStateTransTx {
+impl fmt::Debug for RawInstructionTx {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut debug_trait_builder = f.debug_struct("RawStateTransTx");
+        let mut debug_trait_builder = f.debug_struct("RawInstructionTx");
         debug_trait_builder.field("state_id", &(self.state_id));
         debug_trait_builder.field("ciphertext", &(self.ciphertext));
-        debug_trait_builder.field("lock_param", &(self.lock_param));
         debug_trait_builder.field("enclave_sig", &(self.enclave_sig));
+        debug_trait_builder.field("msg", &(self.msg));
         debug_trait_builder.finish()
     }
 }

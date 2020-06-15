@@ -25,7 +25,7 @@ impl Notifier {
         tmp.insert(address)
     }
 
-    pub fn is_contained(&self, address: &UserAddress) -> bool {
+    pub fn contains(&self, address: &UserAddress) -> bool {
         self.addresses.read().unwrap().contains(&address)
     }
 }
