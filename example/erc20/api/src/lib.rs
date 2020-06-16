@@ -625,9 +625,11 @@ pub mod contract_addr {
 pub mod register_notification {
     pub mod post {
         use super::super::*;
+        big_array! { BigArray; }
 
-        #[derive(Clone, Deserialize, Serialize, Debug)]
+        #[derive(Clone, Deserialize, Serialize)]
         pub struct Request {
+            #[serde(with = "BigArray")]
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
