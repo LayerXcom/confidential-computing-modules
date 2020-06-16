@@ -271,7 +271,7 @@ pub fn handle_allowance<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
-    server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path)?;
+    server.dispatcher.block_on_event::<_, U64>(&req.contract_addr, &server.abi_path)?;
 
     let access_right = req.into_access_right()?;
     let owner_approved = get_state::<Approved>(&access_right, server.eid, "Approved")?;
@@ -292,7 +292,7 @@ pub fn handle_balance_of<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
-    server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path)?;
+    server.dispatcher.block_on_event::<_, U64>(&req.contract_addr, &server.abi_path)?;
 
     let access_right = req.into_access_right()?;
     let state = get_state::<U64>(&access_right, server.eid, "Balance")?;
@@ -312,7 +312,7 @@ pub fn handle_start_polling<D, S, W, DB>(
 {
     let _ = thread::spawn(move || {
         loop {
-            server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path).unwrap();
+            server.dispatcher.block_on_event::<_, U64>(&req.contract_addr, &server.abi_path).unwrap();
             debug!("event fetched...");
             thread::sleep(time::Duration::from_secs(3));
         }
