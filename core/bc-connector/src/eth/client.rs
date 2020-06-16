@@ -84,7 +84,7 @@ impl Deployer for EthDeployer {
         &self.web3_conn.get_eth_url()
     }
 
-    fn register_notification(
+    fn register_notification<F>(
         &self,
         access_right: AccessRight,
         reg_notify_fn: F,

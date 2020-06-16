@@ -10,6 +10,7 @@ use crate::bridges::ecalls::{
     encrypt_instruction as enc_ins_fn,
     handshake as handshake_fn,
     insert_logs as insert_fn,
+    register_notification as reg_notify_fn,
     get_state_from_enclave,
 };
 use anonify_bc_connector::{
@@ -135,7 +136,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
     }
 
     pub fn register_notification(&self, access_right: AccessRight) -> Result<()> {
-        self.inner.register_notification(access_right)
+        self.inner.read().register_notification(access_right)
     }
 }
 
@@ -271,7 +272,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
     }
 
     fn register_notification(&self, access_right: AccessRight) -> Result<()> {
-        self.deployer.register_notification(access_right)
+        self.deployer.register_notification(access_right, reg_notify_fn)
     }
 }
 
