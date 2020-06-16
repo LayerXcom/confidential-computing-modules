@@ -19,7 +19,7 @@ use anonify_bc_connector::{
     error::{Result, HostError},
 };
 use anonify_common::AccessRight;
-use anonify_runtime::traits::State;
+use anonify_runtime::{traits::State, UpdatedState};
 use parking_lot::RwLock;
 
 /// This dispatcher communicates with a blockchain node.
@@ -116,11 +116,15 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         inner.handshake(signer, contract_info, gas)
     }
 
-    pub fn block_on_event<P: AsRef<Path> + Copy>(
+    pub fn block_on_event<P, St>(
         &self,
         contract_addr: &str,
         abi_path: P,
-    ) -> Result<()> {
+    ) -> Result<Option<Vec<UpdatedState<St>>>>
+        where
+            P: AsRef<Path> + Copy,
+            St: State,
+    {
         let inner = self.inner.read();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         inner.block_on_event(contract_info).into()
@@ -192,10 +196,14 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
             .get_account(index)
     }
 
-    fn block_on_event<P: AsRef<Path> + Copy>(
+    fn block_on_event<P, St>(
         &self,
         contract_info: ContractInfo<'_, P>,
-    ) -> Result<()> {
+    ) -> Result<Option<Vec<UpdatedState<St>>>>
+        where
+            P: AsRef<Path> + Copy,
+            St: State,
+    {
         if self.watcher.is_none() {
             return Err(HostError::EventWatcherNotSet);
         }

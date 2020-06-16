@@ -1,9 +1,9 @@
 use std::boxed::Box;
 use sgx_types::*;
-use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawInstructionTx, RawHandshakeTx};
+use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawInstructionTx, RawHandshakeTx, RawUpdatedState};
 use anonify_common::{AccessRight, IntoVec};
 use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
-use anonify_runtime::traits::State;
+use anonify_runtime::{traits::State, UpdatedState};
 use anonify_bc_connector::{
     eventdb::InnerEnclaveLog,
     utils::StateInfo,
@@ -13,52 +13,64 @@ use ed25519_dalek::{Signature, PublicKey};
 use log::debug;
 use crate::auto_ffi::*;
 
-pub(crate) fn insert_logs(
+pub(crate) fn insert_logs<S: State>(
     eid: sgx_enclave_id_t,
     enclave_log: &InnerEnclaveLog,
-) -> Result<()> {
+) -> Result<Option<Vec<UpdatedState<S>>>> {
     if enclave_log.ciphertexts.len() != 0 && enclave_log.handshakes.len() == 0 {
-        insert_ciphertexts(eid, &enclave_log)?;
+        insert_ciphertexts(eid, &enclave_log)
     } else if enclave_log.ciphertexts.len() == 0 && enclave_log.handshakes.len() != 0 {
         // The size of handshake cannot be calculated in this host directory,
         // so the ecall_insert_handshake function is repeatedly called over the number of fetched handshakes.
         for handshake in &enclave_log.handshakes {
             insert_handshake(eid, handshake)?;
         }
+
+        Ok(None)
     } else {
         debug!("No logs to insert into the enclave.");
+        Ok(None)
     }
 
-    Ok(())
 }
 /// Insert event logs from blockchain nodes into enclave memory database.
-fn insert_ciphertexts(
+fn insert_ciphertexts<S: State>(
     eid: sgx_enclave_id_t,
     enclave_log: &InnerEnclaveLog,
-) -> Result<()> {
+) -> Result<Option<Vec<UpdatedState<S>>>> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-    let len = enclave_log.ciphertexts.len() * CIPHERTEXT_SIZE;
-    let buf = enclave_log.ciphertexts.clone().into_iter().flat_map(|e| e.into_vec()).collect::<Vec<u8>>();
+    let mut acc = vec![];
 
-    let status = unsafe {
-        ecall_insert_ciphertexts(
-            eid,
-            &mut rt,
-            enclave_log.contract_addr.as_ptr() as _,
-            enclave_log.latest_blc_num,
-            buf.as_c_ptr() as *mut u8,
-            len,
-        )
-    };
+    for ciphertext in &enclave_log.ciphertexts {
+        let mut raw_updated_state = RawUpdatedState::default();
+        let status = unsafe {
+            ecall_insert_ciphertext(
+                eid,
+                &mut rt,
+                ciphertext.into_vec().as_c_ptr() as *mut u8,
+                CIPHERTEXT_SIZE,
+                &mut raw_updated_state,
+            )
+        };
 
-    if status != sgx_status_t::SGX_SUCCESS {
-		return Err(HostError::Sgx{ status, function: "ecall_insert_ciphertexts" }.into());
+        if status != sgx_status_t::SGX_SUCCESS {
+            return Err(HostError::Sgx{ status, function: "ecall_insert_ciphertext" }.into());
+        }
+        if rt != sgx_status_t::SGX_SUCCESS {
+            return Err(HostError::Sgx{ status: rt, function: "ecall_insert_ciphertext" }.into());
+        }
+
+        if raw_updated_state != Default::default() {
+            let updated_state = UpdatedState::from(raw_updated_state);
+            acc.push(updated_state)
+        }
     }
-    if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(HostError::Sgx{ status: rt, function: "ecall_insert_ciphertexts" }.into());
-    }
 
-    Ok(())
+    if acc.is_empty() {
+        return Ok(None)
+    } else {
+        return Ok(Some(acc))
+    }
 }
 
 fn insert_handshake(
@@ -118,14 +130,7 @@ pub(crate) fn get_state_from_enclave(
 		return Err(HostError::Sgx{ status: rt, function: "ecall_get_state" }.into());
     }
 
-    Ok(state_as_bytes(state).into())
-}
-
-fn state_as_bytes(state: EnclaveState) -> Box<[u8]> {
-    let raw_state = state.0 as *mut Box<[u8]>;
-    let box_state = unsafe { Box::from_raw(raw_state) };
-
-    *box_state
+    Ok(state.into_vec())
 }
 
 pub(crate) fn register(eid: sgx_enclave_id_t) -> Result<RawRegisterTx> {

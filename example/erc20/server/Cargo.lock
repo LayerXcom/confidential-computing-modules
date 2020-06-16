@@ -327,6 +327,7 @@ name = "anonify-runtime"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
+ "anonify-types 0.1.0",
  "anyhow 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

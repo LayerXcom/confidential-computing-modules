@@ -6,7 +6,7 @@ use std::{
 use sgx_types::sgx_enclave_id_t;
 use anonify_types::{RawRegisterTx, RawInstructionTx, RawHandshakeTx};
 use anonify_common::AccessRight;
-use anonify_runtime::traits::State;
+use anonify_runtime::{traits::State, UpdatedState};
 use anonify_app_preluder::Ciphertext;
 use web3::types::Address as EthAddress;
 use crate::{
@@ -229,21 +229,22 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
         Ok(EventWatcher { contract, event_db })
     }
 
-    fn block_on_event<F>(
+    fn block_on_event<F, S>(
         &self,
         eid: sgx_enclave_id_t,
         insert_fn: F,
-    ) -> Result<()>
+    ) -> Result<Option<Vec<UpdatedState<S>>>>
     where
-        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<()>,
+        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<Option<Vec<UpdatedState<S>>>>,
+        S: State,
     {
-        self.contract
+        let enclave_updated_state = self.contract
             .get_event(self.event_db.clone(), self.contract.address())?
             .into_enclave_log()?
             .insert_enclave(eid, insert_fn)?
             .set_to_db(self.contract.address());
 
-        Ok(())
+        Ok(enclave_updated_state.updated_states())
     }
 
     fn get_contract(self) -> ContractKind {

@@ -17,6 +17,7 @@ fn main() {
         .include_item("RawHandshakeTx")
         // .include_item("RawAccessRight")
         .include_item("EnclaveState")
+        .include_item("RawUpdatedState")
         .include_item("ResultStatus")
         .include_item("RawPointer")
         .include_item("RawSig")

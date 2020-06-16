@@ -6,7 +6,7 @@ use sgx_types::*;
 use std::prelude::v1::*;
 use anonify_common::{kvs::{MemoryDB, DBValue}, UserAddress};
 use anonify_app_preluder::{mem_name_to_id, Ciphertext};
-use anonify_runtime::{State, StateGetter, StateType, MemId};
+use anonify_runtime::{State, StateGetter, StateType, MemId, UpdatedState};
 use anonify_treekem::{
     handshake::{PathSecretRequest, PathSecretKVS},
     init_path_secret_kvs,
@@ -124,20 +124,25 @@ impl EnclaveContext<StateType> {
 
     /// Only if the TEE belongs to the group, you can receive ciphertext and decrypt it,
     /// otherwise do nothing.
+    /// Returns a updated state of registerd address in notification.
+    // TODO: Enables to return multiple updated states.
     pub fn update_state(
         &self,
         ciphertext: &Ciphertext,
         group_key: &mut GroupKey,
-    ) -> Result<()> {
+    ) -> Result<Option<UpdatedState<StateType>>> {
         if let Some(instructions) = Instructions::decrypt(ciphertext, group_key)? {
-            let updated_states = instructions.state_transition::<StateType>(self)?;
-            for state in updated_states {
-                self.is_notified(&state.address);
-                self.db.insert_by_updated_state(state);
-            }
+            let mut state_iter = instructions
+                .state_transition::<StateType>(self)?
+                .into_iter();
+
+            state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
+            let res = state_iter.find(|s| self.is_notified(&s.address));
+
+            return Ok(res)
         }
 
-        Ok(())
+        Ok(None)
     }
 
     /// Return Attestation report

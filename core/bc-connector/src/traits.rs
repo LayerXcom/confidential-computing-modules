@@ -7,7 +7,7 @@ use std::{
 use sgx_types::sgx_enclave_id_t;
 use anonify_types::{RawRegisterTx, RawInstructionTx, RawHandshakeTx};
 use anonify_common::AccessRight;
-use anonify_runtime::traits::State;
+use anonify_runtime::{traits::State, UpdatedState};
 use crate::{
     error::Result,
     eventdb::{BlockNumDB, InnerEnclaveLog},
@@ -97,13 +97,15 @@ pub trait Watcher: Sized {
     ) -> Result<Self>;
 
     /// Blocking event fetch from blockchain nodes.
-    fn block_on_event<F>(
+    fn block_on_event<F, S>(
         &self,
         eid: sgx_enclave_id_t,
         insert_fn: F,
-    ) -> Result<()>
+    ) -> Result<Option<Vec<UpdatedState<S>>>>
     where
-        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<()>;
+        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<Option<Vec<UpdatedState<S>>>>,
+        S: State
+    ;
 
     fn get_contract(self) -> ContractKind;
 }

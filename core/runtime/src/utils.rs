@@ -1,9 +1,11 @@
 use crate::traits::State;
 use crate::local_anyhow::Result;
+use crate::localstd::boxed::Box;
 use anonify_common::UserAddress;
+use anonify_types::RawUpdatedState;
 use codec::{Encode, Decode};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct UpdatedState<S: State> {
     pub address: UserAddress,
     pub mem_id: MemId,
@@ -20,6 +22,21 @@ impl<S: State> UpdatedState<S> {
             address: address.into(),
             mem_id,
             state: state.into(),
+        }
+    }
+}
+
+impl<S: State> From<RawUpdatedState> for UpdatedState<S> {
+    fn from(raw: RawUpdatedState) -> Self {
+        let box_state = raw.state as *mut Box<[u8]>;
+        let mut state = unsafe { Box::from_raw(box_state) };
+        let state = S::from_bytes(&mut state)
+            .expect("Failed to read raw pointer of state in RawUpdatedState");
+
+        UpdatedState {
+            address: UserAddress::from_array(raw.address),
+            mem_id: MemId::from_raw(raw.mem_id),
+            state,
         }
     }
 }
