@@ -13,6 +13,7 @@ extern crate core as localstd;
 
 use crate::localstd::vec::Vec;
 pub use erc20_app::*;
+// pub use dx_app::*;
 use anonify_common::IntoVec;
 use codec::{Encode, Decode};
 

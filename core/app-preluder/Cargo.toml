@@ -8,6 +8,7 @@ edition = "2018"
 anonify-common = { path = "../common", default-features = false }
 anonify-runtime = { path = "../runtime", default-features = false }
 erc20-app = { path = "../../example/erc20/app", default-features = false }
+dx-app = { path = "../../example/invoice-dx/app", default-features = false }
 sgx_tstd = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 codec = { package = "parity-scale-codec", version = "1.1", default-features = false }
 
@@ -15,11 +16,13 @@ codec = { package = "parity-scale-codec", version = "1.1", default-features = fa
 default = ["std"]
 std = [
     "erc20-app/std",
+    "dx-app/std",
     "anonify-common/std",
     "anonify-runtime/std",
 ]
 sgx = [
     "erc20-app/sgx",
+    "dx-app/sgx",
     "anonify-common/sgx",
     "anonify-runtime/sgx",
     "sgx_tstd",
