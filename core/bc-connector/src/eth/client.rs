@@ -83,6 +83,17 @@ impl Deployer for EthDeployer {
     fn get_node_url(&self) -> &str {
         &self.web3_conn.get_eth_url()
     }
+
+    fn register_notification(
+        &self,
+        access_right: AccessRight,
+        reg_notify_fn: F,
+    ) -> Result<()>
+    where
+        F: FnOnce(sgx_enclave_id_t, AccessRight) -> Result<()>,
+    {
+        reg_notify_fn(self.enclave_id, access_right)
+    }
 }
 
 /// Components needed to send a transaction

@@ -214,3 +214,29 @@ pub(crate) fn handshake(
 
     Ok(raw_handshake_tx)
 }
+
+pub(crate) fn register_notification(
+    eid: sgx_enclave_id_t,
+    access_right: AccessRight,
+) -> Result<()> {
+    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+
+    let status = unsafe {
+        ecall_register_notification(
+            eid,
+            &mut rt,
+            access_right.sig().to_bytes().as_ptr() as _,
+            access_right.pubkey().to_bytes().as_ptr() as _,
+            access_right.challenge().as_ptr() as _,
+        )
+    };
+
+    if status != sgx_status_t::SGX_SUCCESS {
+		return Err(HostError::Sgx{ status, function: "ecall_register_notification" }.into());
+    }
+    if rt != sgx_status_t::SGX_SUCCESS {
+		return Err(HostError::Sgx{ status: rt, function: "ecall_register_notification" }.into());
+    }
+
+    Ok(())
+}

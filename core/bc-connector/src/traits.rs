@@ -34,6 +34,8 @@ pub trait Deployer: Sized {
     fn get_enclave_id(&self) -> sgx_enclave_id_t;
 
     fn get_node_url(&self) -> &str;
+
+    fn register_notification(&self, access_right: AccessRight) -> Result<()>;
 }
 
 /// A trait for sending transactions to blockchain nodes

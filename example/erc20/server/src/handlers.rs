@@ -338,3 +338,19 @@ pub fn handle_set_contract_addr<D, S, W, DB>(
 
     Ok(HttpResponse::Ok().finish())
 }
+
+pub fn handle_register_notification<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::register_notification::post::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
+{
+    let access_right = req.into_access_right()?;
+    server.dispatcher.register_notification(access_right)?;
+
+    Ok(HttpResponse::Ok().finish())
+}

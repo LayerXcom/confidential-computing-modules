@@ -73,6 +73,7 @@ fn main() -> io::Result<()> {
             .route("/api/v1/balance_of", web::get().to(handle_balance_of::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/start_polling", web::get().to(handle_start_polling::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/set_contract_addr", web::get().to(handle_set_contract_addr::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/register_notification", web::post().to(handle_register_notification::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
     })
     .bind(anonify_url)?
     .run()

@@ -141,6 +141,24 @@ pub unsafe extern "C" fn ecall_handshake(
     sgx_status_t::SGX_SUCCESS
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn ecall_register_notification(
+    sig: &RawSig,
+    pubkey: &RawPubkey,
+    challenge: &RawChallenge,
+) -> sgx_status_t {
+    let sig = Signature::from_bytes(&sig[..])
+        .expect("Failed to read signatures.");
+    let pubkey = PublicKey::from_bytes(&pubkey[..])
+        .expect("Failed to read public key.");
+    let user_address = UserAddress::from_sig(&challenge[..], &sig, &pubkey)
+        .expect("Failed to generate user address.");
+
+    ENCLAVE_CONTEXT.set_notification(user_address);
+
+    sgx_status_t::SGX_SUCCESS
+}
+
 pub mod enclave_tests {
     use test_utils::{test_case, run_inventory_tests};
     use std::vec::Vec;

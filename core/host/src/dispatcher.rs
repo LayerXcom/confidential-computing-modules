@@ -133,6 +133,10 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
     pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
         self.inner.read().get_account(index)
     }
+
+    pub fn register_notification(&self, access_right: AccessRight) -> Result<()> {
+        self.inner.register_notification(access_right)
+    }
 }
 
 #[derive(Debug)]
@@ -264,6 +268,10 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
         self.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
             .handshake(signer, gas, handshake_fn)
+    }
+
+    fn register_notification(&self, access_right: AccessRight) -> Result<()> {
+        self.deployer.register_notification(access_right)
     }
 }
 

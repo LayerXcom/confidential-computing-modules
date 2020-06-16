@@ -52,6 +52,12 @@ enclave {
             [out] RawHandshakeTx* result
         );
 
+        public sgx_status_t ecall_register_notification(
+            [in] uint8_t sig[64],
+            [in] uint8_t pubkey[32],
+            [in] uint8_t challenge[32]
+        );
+
         public void ecall_run_tests(
         );
     };

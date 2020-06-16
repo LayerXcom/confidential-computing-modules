@@ -61,5 +61,14 @@ extern "C" {
     ) -> sgx_status_t;
 }
 extern "C" {
+    pub fn ecall_register_notification(
+        eid: sgx_enclave_id_t,
+        retval: *mut sgx_status_t,
+        sig: *mut [u8; 64usize],
+        pubkey: *mut [u8; 32usize],
+        challenge: *mut [u8; 32usize],
+    ) -> sgx_status_t;
+}
+extern "C" {
     pub fn ecall_run_tests(eid: sgx_enclave_id_t) -> sgx_status_t;
 }
