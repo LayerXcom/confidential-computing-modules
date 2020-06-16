@@ -40,8 +40,6 @@ fn insert_ciphertexts<S: State>(
 ) -> Result<Option<Vec<UpdatedState<S>>>> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut acc = vec![];
-    // let len = enclave_log.ciphertexts.len() * CIPHERTEXT_SIZE;
-    // let buf = enclave_log.ciphertexts.clone().into_iter().flat_map(|e| e.into_vec()).collect::<Vec<u8>>();
 
     for ciphertext in &enclave_log.ciphertexts {
         let mut raw_updated_state = RawUpdatedState::default();
@@ -50,7 +48,7 @@ fn insert_ciphertexts<S: State>(
                 eid,
                 &mut rt,
                 ciphertext.into_vec().as_c_ptr() as *mut u8,
-                ciphertext.state_len(),
+                CIPHERTEXT_SIZE,
                 &mut raw_updated_state,
             )
         };

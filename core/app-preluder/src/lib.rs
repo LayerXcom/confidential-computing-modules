@@ -64,10 +64,6 @@ impl Ciphertext {
     pub fn encrypted_state_ref(&self) -> &[u8] {
         &self.encrypted_state
     }
-
-    pub fn state_len(&self) -> usize {
-        self.encrypted_state.len()
-    }
 }
 
 impl IntoVec for Ciphertext {
