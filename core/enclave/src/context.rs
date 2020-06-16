@@ -124,6 +124,7 @@ impl EnclaveContext<StateType> {
 
     /// Only if the TEE belongs to the group, you can receive ciphertext and decrypt it,
     /// otherwise do nothing.
+    /// Returns a updated state of registerd address in notification.
     // TODO: Enables to return multiple updated states.
     pub fn update_state(
         &self,
@@ -131,17 +132,16 @@ impl EnclaveContext<StateType> {
         group_key: &mut GroupKey,
     ) -> Result<Option<UpdatedState<StateType>>> {
         if let Some(instructions) = Instructions::decrypt(ciphertext, group_key)? {
-            let mut res = UpdatedState::default();
-            let updated_states = instructions.state_transition::<StateType>(self)?;
-            for state in updated_states {
-                self.db.insert_by_updated_state(state.clone());
-                if self.is_notified(&state.address) {
-                    res = state;
-                }
-            }
+            let mut state_iter = instructions
+                .state_transition::<StateType>(self)?
+                .into_iter();
 
-            return Ok(Some(res))
+            state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
+            let res = state_iter.find(|s| self.is_notified(&s.address));
+
+            return Ok(res)
         }
+
         Ok(None)
     }
 
