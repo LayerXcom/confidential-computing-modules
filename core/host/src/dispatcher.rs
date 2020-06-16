@@ -6,7 +6,7 @@ use std::{
 };
 use sgx_types::sgx_enclave_id_t;
 use crate::bridges::ecalls::{
-    register as reg_fn,
+    join_group as join_fn,
     encrypt_instruction as enc_ins_fn,
     handshake as handshake_fn,
     insert_logs as insert_fn,
@@ -66,7 +66,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         inner.deploy(deploy_user)
     }
 
-    pub fn register<P: AsRef<Path> + Copy>(
+    pub fn join_group<P: AsRef<Path> + Copy>(
         &self,
         signer: SignerAddress,
         gas: u64,
@@ -75,7 +75,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
     ) -> Result<String> {
         let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
-        inner.register(signer, gas, contract_info)
+        inner.join_group(signer, gas, contract_info)
     }
 
     pub fn send_instruction<ST, P>(
@@ -188,7 +188,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
         deploy_user: &SignerAddress,
     ) -> Result<String> {
         self.deployer
-            .deploy(deploy_user, reg_fn)
+            .deploy(deploy_user, join_fn)
     }
 
     fn get_account(&self, index: usize) -> Result<SignerAddress> {
@@ -214,7 +214,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
             .block_on_event(eid, insert_fn)
     }
 
-    fn register<P: AsRef<Path> + Copy>(
+    fn join_group<P: AsRef<Path> + Copy>(
         &mut self,
         signer: SignerAddress,
         gas: u64,
@@ -224,7 +224,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
 
         self.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .register(signer, gas, reg_fn)
+            .join_group(signer, gas, join_fn)
     }
 
     fn send_instruction<ST, P>(

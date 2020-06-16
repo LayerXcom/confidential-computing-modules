@@ -62,7 +62,7 @@ pub mod deploy {
     }
 }
 
-pub mod register {
+pub mod join_group {
     pub mod post {
         use super::super::*;
 

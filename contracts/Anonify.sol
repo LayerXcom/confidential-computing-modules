@@ -17,8 +17,8 @@ contract Anonify is ReportHandle {
         handshake(_handshake);
      }
 
-    // Register a new TEE participant.
-    function register(
+    // a new TEE participant joins the group.
+    function joinGroup(
         bytes memory _report,
         bytes memory _reportSig,
         bytes memory _handshake

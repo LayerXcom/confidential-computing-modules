@@ -82,17 +82,17 @@ fn subcommand_anonify<R: Rng>(
             )
             .expect("Failed to deploy command");
         },
-        ("register", Some(matches)) => {
+        ("join_group", Some(matches)) => {
             let contract_addr = match matches.value_of("contract-addr") {
                 Some(addr) => addr.to_string(),
                 None => default_contract_addr,
             };
 
-            commands::register(
+            commands::join_group(
                 anonify_url,
                 contract_addr,
             )
-            .expect("Failed to register command");
+            .expect("Failed to join_group command");
         },
         ("init_state", Some(matches)) => {
             let keyfile_index: usize = matches.value_of("keyfile-index")
@@ -408,8 +408,8 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .default_value(DEFAULT_KEYFILE_INDEX)
             )
         )
-        .subcommand(SubCommand::with_name("register")
-            .about("register a contract from anonify services.")
+        .subcommand(SubCommand::with_name("join_group")
+            .about("join group a contract from anonify services.")
             .arg(Arg::with_name("contract-addr")
                 .short("c")
                 .takes_value(true)

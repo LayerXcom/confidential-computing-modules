@@ -47,10 +47,10 @@ extern "C" {
     ) -> sgx_status_t;
 }
 extern "C" {
-    pub fn ecall_register(
+    pub fn ecall_join_group(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
-        result: *mut RawRegisterTx,
+        result: *mut RawJoinGroupTx,
     ) -> sgx_status_t;
 }
 extern "C" {

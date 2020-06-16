@@ -5,7 +5,7 @@ use std::{
     sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::{RawRegisterTx, RawInstructionTx, RawHandshakeTx};
+use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx};
 use anonify_common::AccessRight;
 use anonify_runtime::{traits::State, UpdatedState};
 use crate::{
@@ -27,7 +27,7 @@ pub trait Deployer: Sized {
         reg_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>;
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawJoinGroupTx>;
 
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;
 
@@ -65,14 +65,14 @@ pub trait Sender: Sized {
         F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST>) -> Result<RawInstructionTx>;
 
     /// Attestation with deployed contract.
-    fn register<F>(
+    fn join_group<F>(
         &self,
         signer: SignerAddress,
         gas: u64,
         reg_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>;
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawJoinGroupTx>;
 
     fn handshake<F>(
         &self,

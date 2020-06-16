@@ -32,13 +32,13 @@ pub(crate) fn deploy<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn register(
+pub(crate) fn join_group(
     anonify_url: String,
     contract_addr: String,
 ) -> Result<()> {
-    let req = api::register::post::Request{ contract_addr };
+    let req = api::join_group::post::Request{ contract_addr };
     let res = Client::new()
-        .post(&format!("{}/api/v1/register", &anonify_url))
+        .post(&format!("{}/api/v1/join_group", &anonify_url))
         .json(&req)
         .send()?
         .text()?;

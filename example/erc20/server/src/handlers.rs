@@ -39,9 +39,9 @@ pub fn handle_deploy<D, S, W, DB>(
     Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr)))
 }
 
-pub fn handle_register<D, S, W, DB>(
+pub fn handle_join_group<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<api::register::post::Request>,
+    req: web::Json<api::join_group::post::Request>,
 ) -> Result<HttpResponse, Error>
     where
         D: Deployer,
@@ -50,14 +50,14 @@ pub fn handle_register<D, S, W, DB>(
         DB: BlockNumDB,
 {
     let signer = server.dispatcher.get_account(0)?;
-    let receipt = server.dispatcher.register(
+    let receipt = server.dispatcher.join_group(
         signer,
         DEFAULT_SEND_GAS,
         &req.contract_addr,
         &server.abi_path,
     )?;
 
-    Ok(HttpResponse::Ok().json(api::register::post::Response(receipt)))
+    Ok(HttpResponse::Ok().json(api::join_group::post::Response(receipt)))
 }
 
 pub fn handle_init_state<D, S, W, DB>(

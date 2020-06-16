@@ -4,7 +4,7 @@ use std::{
     boxed::Box,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::{RawRegisterTx, RawInstructionTx, RawHandshakeTx};
+use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx};
 use anonify_common::AccessRight;
 use anonify_runtime::{traits::State, UpdatedState};
 use anonify_app_preluder::Ciphertext;
@@ -48,17 +48,17 @@ impl Deployer for EthDeployer {
         reg_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>,
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawJoinGroupTx>,
     {
-        let register_tx: BoxedRegisterTx = reg_fn(self.enclave_id)?.into();
+        let join_group_tx: BoxedJoinGroupTx = reg_fn(self.enclave_id)?.into();
 
         let contract_addr = match deploy_user {
             SignerAddress::EthAddress(address) => {
                 self.web3_conn.deploy(
                     &address,
-                    &register_tx.report,
-                    &register_tx.report_sig,
-                    &register_tx.handshake,
+                    &join_group_tx.report,
+                    &join_group_tx.report_sig,
+                    &join_group_tx.handshake,
                 )?
             }
         };
@@ -124,23 +124,23 @@ impl Sender for EthSender {
         ))
     }
 
-    fn register<F>(
+    fn join_group<F>(
         &self,
         signer: SignerAddress,
         gas: u64,
         reg_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>,
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawJoinGroupTx>,
     {
-        let register_tx: BoxedRegisterTx = reg_fn(self.enclave_id)?.into();
+        let join_group_tx: BoxedJoinGroupTx = reg_fn(self.enclave_id)?.into();
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
-                self.contract.register(
+                self.contract.join_group(
                     addr,
-                    &register_tx.report,
-                    &register_tx.report_sig,
-                    &register_tx.handshake,
+                    &join_group_tx.report,
+                    &join_group_tx.report_sig,
+                    &join_group_tx.handshake,
                     gas
                 )?
             }
@@ -253,15 +253,15 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
 }
 
 #[derive(Debug, Clone, Default)]
-pub(crate) struct BoxedRegisterTx {
+pub(crate) struct BoxedJoinGroupTx {
     pub report: Box<[u8]>,
     pub report_sig: Box<[u8]>,
     pub handshake: Box<[u8]>,
 }
 
-impl From<RawRegisterTx> for BoxedRegisterTx {
-    fn from(raw_reg_tx: RawRegisterTx) -> Self {
-        let mut res_tx = BoxedRegisterTx::default();
+impl From<RawJoinGroupTx> for BoxedJoinGroupTx {
+    fn from(raw_reg_tx: RawJoinGroupTx) -> Self {
+        let mut res_tx = BoxedJoinGroupTx::default();
 
         let box_report = raw_reg_tx.report as *mut Box<[u8]>;
         let report = unsafe { Box::from_raw(box_report) };
