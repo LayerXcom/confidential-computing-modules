@@ -14,7 +14,10 @@ use anonify_runtime::{
     prelude::*,
     state_type::*,
 };
-use crate::localstd::string::String;
+use crate::localstd::{
+    string::String,
+    vec::Vec,
+};
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 

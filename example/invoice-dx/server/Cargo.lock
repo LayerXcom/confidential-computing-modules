@@ -353,6 +353,7 @@ name = "anonify-runtime"
 version = "0.1.0"
 dependencies = [
  "anonify-common",
+ "anonify-types",
  "anyhow",
  "parity-scale-codec",
 ]
