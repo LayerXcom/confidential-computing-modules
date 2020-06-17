@@ -81,6 +81,57 @@ fn test_integration_eth_construct() {
 }
 
 #[test]
+fn test_auto_notification() {
+    env::set_var("MY_ROSTER_IDX", "0");
+    env::set_var("MAX_ROSTER_IDX", "2");
+    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+    let eid = enclave.geteid();
+    let my_access_right = AccessRight::new_from_rng().unwrap();
+    let other_access_right = AccessRight::new_from_rng().unwrap();
+    let third_access_right = AccessRight::new_from_rng().unwrap();
+
+    let state_id = 0;
+    let gas = 3_000_000;
+    let event_db = Arc::new(EventDB::new());
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
+
+    // Deploy
+    let deployer_addr = dispatcher.get_account(0).unwrap();
+    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    println!("Deployer address: {:?}", deployer_addr);
+    println!("deployed contract address: {}", contract_addr);
+
+    // Get handshake from contract
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+    // Init state
+    let total_supply = U64::from_raw(100);
+    let init_state = construct{ total_supply };
+    let receipt = dispatcher.send_instruction(
+        my_access_right.clone(),
+        init_state,
+        state_id,
+        "construct",
+        deployer_addr.clone(),
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
+
+    println!("init state receipt: {}", receipt);
+
+    // Get logs from contract and update state inside enclave.
+    let updated_state = dispatcher
+        .block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap().unwrap();
+
+    assert_eq!(updated_state.len(), 1);
+    assert_eq!(updated_state[0].address, my_access_right.user_address());
+    assert_eq!(updated_state[0].mem_id.as_raw(), 0);
+    assert_eq!(updated_state[0].state, total_supply);
+}
+
+#[test]
 fn test_integration_eth_transfer() {
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
