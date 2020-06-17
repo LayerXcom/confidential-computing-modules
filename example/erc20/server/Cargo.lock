@@ -260,6 +260,7 @@ version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
  "anonify-runtime 0.1.0",
+ "dx-app 0.1.0",
  "erc20-app 0.1.0",
  "parity-scale-codec 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -840,6 +841,15 @@ dependencies = [
 name = "dtoa"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "dx-app"
+version = "0.1.0"
+dependencies = [
+ "anonify-common 0.1.0",
+ "anonify-runtime 0.1.0",
+ "parity-scale-codec 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "ed25519-dalek"

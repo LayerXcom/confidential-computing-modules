@@ -1,0 +1,14 @@
+[package]
+name = "dx-api"
+version = "0.1.0"
+authors = ["cipepser <respepic@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+anonify-common = { path = "../../../core/common" }
+#anonify-runtime = { path = "../../../core/runtime" }
+serde = { version = "1", features = ["derive"] }
+ed25519-dalek = { version = "1.0.0-pre.2", features = ["serde"] }
+rand = "0.7"
+serde-big-array = "0.2"
+#web3 = "0.8"
