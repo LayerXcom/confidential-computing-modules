@@ -30,7 +30,7 @@ pub mod send_invoice {
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                owner: UserAddress,
+                state_id: u64,
                 recipient: UserAddress,
                 body: String,
                 contract_addr: String,

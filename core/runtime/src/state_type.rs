@@ -4,6 +4,7 @@ use crate::localstd::{
     collections::BTreeMap,
     ops::{Add, Sub, Mul, Div},
     convert::TryFrom,
+    mem::size_of,
 };
 use crate::local_anyhow::{Result, Error, anyhow};
 use anonify_common::UserAddress;
@@ -187,7 +188,7 @@ impl Approved {
         match self.allowance(&user_address) {
             Some(&existing_amount) => {
                 self.0.insert(user_address, existing_amount + amount);
-            },
+            }
             None => {
                 self.0.insert(user_address, amount);
             }
@@ -235,5 +236,36 @@ impl TryFrom<Vec<u8>> for Approved {
         }
         let mut buf = s;
         Approved::from_bytes(&mut buf)
+    }
+}
+
+#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct Text(Vec<u8>);
+
+impl Text {
+    pub fn new(inner: Vec<u8>) -> Self {
+        Text(inner)
+    }
+
+    pub fn size(&self) -> usize {
+        self.0.len() * size_of::<u8>()
+    }
+}
+
+impl From<Text> for StateType {
+    fn from(t: Text) -> Self {
+        StateType(t.0.as_bytes())
+    }
+}
+
+impl TryFrom<Vec<u8>> for Text {
+    type Error = Error;
+
+    fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
+        if s.len() == 0 {
+            return Ok(Default::default());
+        }
+        let mut buf = s;
+        Text::from_bytes(&mut buf)
     }
 }

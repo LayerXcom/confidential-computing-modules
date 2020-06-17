@@ -1,46 +1,12 @@
-use std::{sync::Arc, env};
-use sgx_types::sgx_enclave_id_t;
-use anonify_host::{
-    EnclaveDir,
-    Dispatcher,
-};
+use std::{sync::Arc, io, env};
+use anonify_host::EnclaveDir;
 use anonify_bc_connector::{
-    EventDB, BlockNumDB,
+    EventDB,
     traits::*,
     eth::*,
 };
-use handlers::*;
+use dx_server::handlers::*;
 use actix_web::{web, App, HttpServer};
-
-#[derive(Debug)]
-pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
-    pub eid: sgx_enclave_id_t,
-    pub eth_url: String,
-    pub abi_path: String,
-    pub dispatcher: Dispatcher<D, S, W, DB>,
-}
-
-impl<D, S, W, DB> Server<D, S, W, DB>
-    where
-        D: Deployer,
-        S: Sender,
-        W: Watcher<WatcherDB=DB>,
-        DB: BlockNumDB,
-{
-    pub fn new(eid: sgx_enclave_id_t) -> Self {
-        let eth_url = env::var("ETH_URL").expect("ETH_URL is not set.");
-        let abi_path = env::var("ANONYMOUS_ASSET_ABI_PATH").expect("ANONYMOUS_ASSET_ABI_PATH is not set.");
-        let event_db = Arc::new(DB::new());
-        let dispatcher = Dispatcher::<D,S,W,DB>::new(eid, &eth_url, event_db).unwrap();
-
-        Server {
-            eid,
-            eth_url,
-            abi_path,
-            dispatcher
-        }
-    }
-}
 
 fn main() -> io::Result<()> {
     // let client = MFClient::new();
@@ -49,13 +15,24 @@ fn main() -> io::Result<()> {
     // let invoces = Billing::from_response(resp);
 
 
+    // let = state_id: u64 = ; TODO:
+    // let recipient: UserAddress = ; TODO:
+    // let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
+    // let rng = &mut OsRng;
+    // let req = api::send_invoice::post::Request::new(&keypair, state_id, recipient, body, contract_addr, rng);
+    // let res = Client::new()
+    //     .post(&format!("{}/api/v1/send_invoice", &anonify_url))
+    //     .json(&req)
+    //     .send()?
+    //     .text()?;
+
     env_logger::init();
     let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
 
     // Enclave must be initialized in main function.
     let enclave = EnclaveDir::new()
-            .init_enclave(true)
-            .expect("Failed to initialize enclave.");
+        .init_enclave(true)
+        .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
     let server = Arc::new(
         Server::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid)
@@ -66,7 +43,7 @@ fn main() -> io::Result<()> {
             .data(server.clone())
             .route("/api/v1/send_invoice", web::post().to(handle_send_invoice::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
     })
-    .bind(anonify_url)?
-    .run()
+        .bind(anonify_url)?
+        .run()
 }
 

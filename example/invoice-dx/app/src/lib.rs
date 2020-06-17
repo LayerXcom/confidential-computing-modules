@@ -22,13 +22,14 @@ use codec::{Encode, Decode};
 // pub const CIPHERTEXT_SIZE: usize = MAX_MEM_SIZE + 30;
 
 impl_memory! {
-    (0, "Body", Text),
+    (0, "Body", Text)
 }
 
 impl_runtime! {
     #[fn_id=0]
     pub fn send_invoice(
         self,
+        _sender: UserAddress,
         recipient: UserAddress,
         body: Text
     ) {
