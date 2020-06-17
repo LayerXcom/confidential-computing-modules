@@ -48,7 +48,7 @@ fn test_integration_eth_construct() {
     println!("deployed contract address: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -68,7 +68,7 @@ fn test_integration_eth_construct() {
 
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
     // Get state from enclave
@@ -78,6 +78,81 @@ fn test_integration_eth_construct() {
     assert_eq!(owner_address, my_access_right.user_address());
     assert_eq!(my_balance, total_supply);
     assert_eq!(actual_total_supply, total_supply);
+}
+
+#[test]
+fn test_auto_notification() {
+    env::set_var("MY_ROSTER_IDX", "0");
+    env::set_var("MAX_ROSTER_IDX", "2");
+    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+    let eid = enclave.geteid();
+    let my_access_right = AccessRight::new_from_rng().unwrap();
+    let other_access_right = AccessRight::new_from_rng().unwrap();
+    let third_access_right = AccessRight::new_from_rng().unwrap();
+
+    let state_id = 0;
+    let gas = 3_000_000;
+    let event_db = Arc::new(EventDB::new());
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
+
+    // Deploy
+    let deployer_addr = dispatcher.get_account(0).unwrap();
+    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    println!("Deployer address: {:?}", deployer_addr);
+    println!("deployed contract address: {}", contract_addr);
+
+    // Get handshake from contract
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+
+    // Init state
+    let total_supply = U64::from_raw(100);
+    let init_state = construct{ total_supply };
+    let receipt = dispatcher.send_instruction(
+        my_access_right.clone(),
+        init_state,
+        state_id,
+        "construct",
+        deployer_addr.clone(),
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
+
+    println!("init state receipt: {}", receipt);
+
+    // Get logs from contract and update state inside enclave.
+    let updated_state = dispatcher
+        .block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap().unwrap();
+
+    assert_eq!(updated_state.len(), 1);
+    assert_eq!(updated_state[0].address, my_access_right.user_address());
+    assert_eq!(updated_state[0].mem_id.as_raw(), 0);
+    assert_eq!(updated_state[0].state, total_supply);
+
+    // Send a transaction to contract
+    let amount = U64::from_raw(30);
+    let recipient = other_access_right.user_address();
+    let transfer_state = transfer{ amount, recipient };
+    let receipt = dispatcher.send_instruction(
+        my_access_right.clone(),
+        transfer_state,
+        state_id,
+        "transfer",
+        deployer_addr,
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
+    println!("receipt: {}", receipt);
+
+    // Update state inside enclave
+    let updated_state = dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap().unwrap();
+
+    assert_eq!(updated_state.len(), 1);
+    assert_eq!(updated_state[0].address, my_access_right.user_address());
+    assert_eq!(updated_state[0].mem_id.as_raw(), 0);
+    assert_eq!(updated_state[0].state, U64::from_raw(70));
 }
 
 #[test]
@@ -103,7 +178,7 @@ fn test_integration_eth_transfer() {
     println!("deployed contract address: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -123,7 +198,7 @@ fn test_integration_eth_transfer() {
 
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
     // Get state from enclave
@@ -151,9 +226,8 @@ fn test_integration_eth_transfer() {
     ).unwrap();
     println!("receipt: {}", receipt);
 
-
     // Update state inside enclave
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
     // Check the updated states
@@ -189,14 +263,14 @@ fn test_key_rotation() {
     println!("deployed contract address: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // Send handshake
     let receipt = dispatcher.handshake(deployer_addr.clone(), gas, &contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("handshake receipt: {}", receipt);
 
     // Get handshake from contract
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // init state
     let total_supply = U64::from_raw(100);
@@ -214,7 +288,7 @@ fn test_key_rotation() {
     println!("init state receipt: {}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // Get state from enclave
     let my_state = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
@@ -247,7 +321,7 @@ fn test_integration_eth_approve() {
     println!("deployed contract address: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -267,7 +341,7 @@ fn test_integration_eth_approve() {
 
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // Get state from enclave
     let my_state = get_state::<Approved>(&my_access_right, eid, "Approved").unwrap();
@@ -293,7 +367,7 @@ fn test_integration_eth_approve() {
 
 
     // Update state inside enclave
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
     // Check the updated states
@@ -331,7 +405,7 @@ fn test_integration_eth_transfer_from() {
     println!("deployed contract address: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -351,7 +425,7 @@ fn test_integration_eth_transfer_from() {
 
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // Get initial state from enclave
     let my_state_balance = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
@@ -386,7 +460,7 @@ fn test_integration_eth_transfer_from() {
 
 
     // Update state inside enclave
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // Check the updated states
     let my_state_balance = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
@@ -427,7 +501,7 @@ fn test_integration_eth_transfer_from() {
 
 
     // Update state inside enclave
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // Check the final states
     let my_state_balance = get_state::<U64>(&my_access_right, eid, "Balance").unwrap();
@@ -472,7 +546,7 @@ fn test_integration_eth_mint() {
     println!("deployed contract address: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -492,7 +566,7 @@ fn test_integration_eth_mint() {
 
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
     // transit state
@@ -514,7 +588,7 @@ fn test_integration_eth_mint() {
 
 
     // Update state inside enclave
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
     // Check the final states
@@ -548,7 +622,7 @@ fn test_integration_eth_burn() {
     println!("deployed contract address: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -568,7 +642,7 @@ fn test_integration_eth_burn() {
 
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
     // Send a transaction to contract
@@ -589,7 +663,7 @@ fn test_integration_eth_burn() {
 
 
     // Update state inside enclave
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
     // Send a transaction to contract
@@ -609,7 +683,7 @@ fn test_integration_eth_burn() {
 
 
     // Update state inside enclave
-    dispatcher.block_on_event(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
 
 
     // Check the final states

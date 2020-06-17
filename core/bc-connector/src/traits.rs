@@ -5,9 +5,9 @@ use std::{
     sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::{RawRegisterTx, RawInstructionTx, RawHandshakeTx};
+use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx};
 use anonify_common::AccessRight;
-use anonify_runtime::traits::State;
+use anonify_runtime::{traits::State, UpdatedState};
 use crate::{
     error::Result,
     eventdb::{BlockNumDB, InnerEnclaveLog},
@@ -27,13 +27,21 @@ pub trait Deployer: Sized {
         reg_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>;
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawJoinGroupTx>;
 
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;
 
     fn get_enclave_id(&self) -> sgx_enclave_id_t;
 
     fn get_node_url(&self) -> &str;
+
+    fn register_notification<F>(
+        &self,
+        access_right: AccessRight,
+        reg_notify_fn: F,
+    ) -> Result<()>
+    where
+        F: FnOnce(sgx_enclave_id_t, AccessRight) -> Result<()>;
 }
 
 /// A trait for sending transactions to blockchain nodes
@@ -65,14 +73,14 @@ pub trait Sender: Sized {
         F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST>) -> Result<RawInstructionTx>;
 
     /// Attestation with deployed contract.
-    fn register<F>(
+    fn join_group<F>(
         &self,
         signer: SignerAddress,
         gas: u64,
         reg_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>;
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawJoinGroupTx>;
 
     fn handshake<F>(
         &self,
@@ -97,13 +105,15 @@ pub trait Watcher: Sized {
     ) -> Result<Self>;
 
     /// Blocking event fetch from blockchain nodes.
-    fn block_on_event<F>(
+    fn block_on_event<F, S>(
         &self,
         eid: sgx_enclave_id_t,
         insert_fn: F,
-    ) -> Result<()>
+    ) -> Result<Option<Vec<UpdatedState<S>>>>
     where
-        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<()>;
+        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<Option<Vec<UpdatedState<S>>>>,
+        S: State
+    ;
 
     fn get_contract(self) -> ContractKind;
 }

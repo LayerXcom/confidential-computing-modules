@@ -6,10 +6,11 @@ use std::{
 };
 use sgx_types::sgx_enclave_id_t;
 use crate::bridges::ecalls::{
-    register as reg_fn,
+    join_group as join_fn,
     encrypt_instruction as enc_ins_fn,
     handshake as handshake_fn,
     insert_logs as insert_fn,
+    register_notification as reg_notify_fn,
     get_state_from_enclave,
 };
 use anonify_bc_connector::{
@@ -19,7 +20,7 @@ use anonify_bc_connector::{
     error::{Result, HostError},
 };
 use anonify_common::AccessRight;
-use anonify_runtime::traits::State;
+use anonify_runtime::{traits::State, UpdatedState};
 use parking_lot::RwLock;
 
 /// This dispatcher communicates with a blockchain node.
@@ -66,7 +67,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         inner.deploy(deploy_user)
     }
 
-    pub fn register<P: AsRef<Path> + Copy>(
+    pub fn join_group<P: AsRef<Path> + Copy>(
         &self,
         signer: SignerAddress,
         gas: u64,
@@ -75,7 +76,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
     ) -> Result<String> {
         let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
-        inner.register(signer, gas, contract_info)
+        inner.join_group(signer, gas, contract_info)
     }
 
     pub fn send_instruction<ST, P>(
@@ -116,11 +117,15 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         inner.handshake(signer, contract_info, gas)
     }
 
-    pub fn block_on_event<P: AsRef<Path> + Copy>(
+    pub fn block_on_event<P, St>(
         &self,
         contract_addr: &str,
         abi_path: P,
-    ) -> Result<()> {
+    ) -> Result<Option<Vec<UpdatedState<St>>>>
+        where
+            P: AsRef<Path> + Copy,
+            St: State,
+    {
         let inner = self.inner.read();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         inner.block_on_event(contract_info).into()
@@ -128,6 +133,10 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
 
     pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
         self.inner.read().get_account(index)
+    }
+
+    pub fn register_notification(&self, access_right: AccessRight) -> Result<()> {
+        self.inner.read().register_notification(access_right)
     }
 }
 
@@ -184,7 +193,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
         deploy_user: &SignerAddress,
     ) -> Result<String> {
         self.deployer
-            .deploy(deploy_user, reg_fn)
+            .deploy(deploy_user, join_fn)
     }
 
     fn get_account(&self, index: usize) -> Result<SignerAddress> {
@@ -192,10 +201,14 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
             .get_account(index)
     }
 
-    fn block_on_event<P: AsRef<Path> + Copy>(
+    fn block_on_event<P, St>(
         &self,
         contract_info: ContractInfo<'_, P>,
-    ) -> Result<()> {
+    ) -> Result<Option<Vec<UpdatedState<St>>>>
+        where
+            P: AsRef<Path> + Copy,
+            St: State,
+    {
         if self.watcher.is_none() {
             return Err(HostError::EventWatcherNotSet);
         }
@@ -206,7 +219,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
             .block_on_event(eid, insert_fn)
     }
 
-    fn register<P: AsRef<Path> + Copy>(
+    fn join_group<P: AsRef<Path> + Copy>(
         &mut self,
         signer: SignerAddress,
         gas: u64,
@@ -216,7 +229,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
 
         self.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .register(signer, gas, reg_fn)
+            .join_group(signer, gas, join_fn)
     }
 
     fn send_instruction<ST, P>(
@@ -256,6 +269,10 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
         self.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
             .handshake(signer, gas, handshake_fn)
+    }
+
+    fn register_notification(&self, access_right: AccessRight) -> Result<()> {
+        self.deployer.register_notification(access_right, reg_notify_fn)
     }
 }
 

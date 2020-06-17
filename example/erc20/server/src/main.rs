@@ -61,7 +61,7 @@ fn main() -> io::Result<()> {
         App::new()
             .data(server.clone())
             .route("/api/v1/deploy", web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
-            .route("/api/v1/register", web::post().to(handle_register::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/join_group", web::post().to(handle_join_group::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/init_state", web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/transfer", web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/key_rotation", web::post().to(handle_key_rotation::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
@@ -73,6 +73,7 @@ fn main() -> io::Result<()> {
             .route("/api/v1/balance_of", web::get().to(handle_balance_of::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/start_polling", web::get().to(handle_start_polling::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/set_contract_addr", web::get().to(handle_set_contract_addr::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/register_notification", web::post().to(handle_register_notification::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
     })
     .bind(anonify_url)?
     .run()

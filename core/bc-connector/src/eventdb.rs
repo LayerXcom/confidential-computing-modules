@@ -3,6 +3,7 @@ use anonify_common::{
     kvs::{KVS, MemoryDB, DBTx}
 };
 use anonify_app_preluder::Ciphertext;
+use anonify_runtime::{UpdatedState, traits::State};
 use sgx_types::sgx_enclave_id_t;
 use web3::types::Address;
 use byteorder::{LittleEndian, ByteOrder};
@@ -70,26 +71,29 @@ pub struct EnclaveLog<DB: BlockNumDB> {
 impl<DB: BlockNumDB> EnclaveLog<DB> {
     /// Store logs into enclave in-memory.
     /// This returns a latest block number specified by fetched logs.
-    pub fn insert_enclave<F>(
+    pub fn insert_enclave<F, S>(
         self,
         eid: sgx_enclave_id_t,
         insert_fn: F,
-    ) -> Result<EnclaveBlockNumber<DB>>
+    ) -> Result<EnclaveUpdatedState<DB, S>>
     where
-        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<()>,
+        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<Option<Vec<UpdatedState<S>>>>,
+        S: State,
     {
         match &self.inner {
             Some(log) => {
-                insert_fn(eid, log)?;
+                let updated_states = insert_fn(eid, log)?;
                 let next_blc_num = log.latest_blc_num + 1;
 
-                return Ok(EnclaveBlockNumber {
-                    inner: Some(next_blc_num),
+                return Ok(EnclaveUpdatedState {
+                    block_num: Some(next_blc_num),
+                    updated_states: updated_states,
                     db: self.db,
                 });
             },
-            None => return Ok(EnclaveBlockNumber {
-                inner: None,
+            None => return Ok(EnclaveUpdatedState {
+                block_num: None,
+                updated_states: None,
                 db: self.db,
             }),
         }
@@ -97,22 +101,29 @@ impl<DB: BlockNumDB> EnclaveLog<DB> {
 }
 
 #[derive(Debug, Clone)]
-pub struct EnclaveBlockNumber<DB: BlockNumDB> {
-    inner: Option<u64>,
+pub struct EnclaveUpdatedState<DB: BlockNumDB, S: State> {
+    block_num: Option<u64>,
+    updated_states: Option<Vec<UpdatedState<S>>>,
     db: Arc<DB>,
 }
 
-impl<DB: BlockNumDB> EnclaveBlockNumber<DB> {
-    /// Only if EnclaveBlockNumber has new block number to log,
+impl<DB: BlockNumDB, S: State> EnclaveUpdatedState<DB, S> {
+    /// Only if EnclaveUpdatedState has new block number to log,
     /// it's set next block number to event db.
-    pub fn set_to_db(&self, key: Address) {
-        match &self.inner {
-            Some(num) => {
+    pub fn set_to_db(self, key: Address) -> Self {
+        match &self.block_num {
+            Some(block_num) => {
                 let mut dbtx = EventDBTx::new();
-                dbtx.put(key, *num);
+                dbtx.put(key, *block_num);
                 self.db.set_next_block_num(dbtx);
             },
             None => { },
         }
+
+        self
+    }
+
+    pub fn updated_states(self) -> Option<Vec<UpdatedState<S>>> {
+        self.updated_states
     }
 }

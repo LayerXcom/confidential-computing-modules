@@ -4,9 +4,9 @@ use std::{
     boxed::Box,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::{RawRegisterTx, RawInstructionTx, RawHandshakeTx};
+use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx};
 use anonify_common::AccessRight;
-use anonify_runtime::traits::State;
+use anonify_runtime::{traits::State, UpdatedState};
 use anonify_app_preluder::Ciphertext;
 use web3::types::Address as EthAddress;
 use crate::{
@@ -48,17 +48,17 @@ impl Deployer for EthDeployer {
         reg_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>,
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawJoinGroupTx>,
     {
-        let register_tx: BoxedRegisterTx = reg_fn(self.enclave_id)?.into();
+        let join_group_tx: BoxedJoinGroupTx = reg_fn(self.enclave_id)?.into();
 
         let contract_addr = match deploy_user {
             SignerAddress::EthAddress(address) => {
                 self.web3_conn.deploy(
                     &address,
-                    &register_tx.report,
-                    &register_tx.report_sig,
-                    &register_tx.handshake,
+                    &join_group_tx.report,
+                    &join_group_tx.report_sig,
+                    &join_group_tx.handshake,
                 )?
             }
         };
@@ -82,6 +82,17 @@ impl Deployer for EthDeployer {
 
     fn get_node_url(&self) -> &str {
         &self.web3_conn.get_eth_url()
+    }
+
+    fn register_notification<F>(
+        &self,
+        access_right: AccessRight,
+        reg_notify_fn: F,
+    ) -> Result<()>
+    where
+        F: FnOnce(sgx_enclave_id_t, AccessRight) -> Result<()>,
+    {
+        reg_notify_fn(self.enclave_id, access_right)
     }
 }
 
@@ -124,23 +135,23 @@ impl Sender for EthSender {
         ))
     }
 
-    fn register<F>(
+    fn join_group<F>(
         &self,
         signer: SignerAddress,
         gas: u64,
         reg_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawRegisterTx>,
+        F: FnOnce(sgx_enclave_id_t) -> Result<RawJoinGroupTx>,
     {
-        let register_tx: BoxedRegisterTx = reg_fn(self.enclave_id)?.into();
+        let join_group_tx: BoxedJoinGroupTx = reg_fn(self.enclave_id)?.into();
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
-                self.contract.register(
+                self.contract.join_group(
                     addr,
-                    &register_tx.report,
-                    &register_tx.report_sig,
-                    &register_tx.handshake,
+                    &join_group_tx.report,
+                    &join_group_tx.report_sig,
+                    &join_group_tx.handshake,
                     gas
                 )?
             }
@@ -229,21 +240,22 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
         Ok(EventWatcher { contract, event_db })
     }
 
-    fn block_on_event<F>(
+    fn block_on_event<F, S>(
         &self,
         eid: sgx_enclave_id_t,
         insert_fn: F,
-    ) -> Result<()>
+    ) -> Result<Option<Vec<UpdatedState<S>>>>
     where
-        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<()>,
+        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<Option<Vec<UpdatedState<S>>>>,
+        S: State,
     {
-        self.contract
+        let enclave_updated_state = self.contract
             .get_event(self.event_db.clone(), self.contract.address())?
             .into_enclave_log()?
             .insert_enclave(eid, insert_fn)?
             .set_to_db(self.contract.address());
 
-        Ok(())
+        Ok(enclave_updated_state.updated_states())
     }
 
     fn get_contract(self) -> ContractKind {
@@ -252,15 +264,15 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
 }
 
 #[derive(Debug, Clone, Default)]
-pub(crate) struct BoxedRegisterTx {
+pub(crate) struct BoxedJoinGroupTx {
     pub report: Box<[u8]>,
     pub report_sig: Box<[u8]>,
     pub handshake: Box<[u8]>,
 }
 
-impl From<RawRegisterTx> for BoxedRegisterTx {
-    fn from(raw_reg_tx: RawRegisterTx) -> Self {
-        let mut res_tx = BoxedRegisterTx::default();
+impl From<RawJoinGroupTx> for BoxedJoinGroupTx {
+    fn from(raw_reg_tx: RawJoinGroupTx) -> Self {
+        let mut res_tx = BoxedJoinGroupTx::default();
 
         let box_report = raw_reg_tx.report as *mut Box<[u8]>;
         let report = unsafe { Box::from_raw(box_report) };

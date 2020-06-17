@@ -39,9 +39,9 @@ pub fn handle_deploy<D, S, W, DB>(
     Ok(HttpResponse::Ok().json(api::deploy::post::Response(contract_addr)))
 }
 
-pub fn handle_register<D, S, W, DB>(
+pub fn handle_join_group<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<api::register::post::Request>,
+    req: web::Json<api::join_group::post::Request>,
 ) -> Result<HttpResponse, Error>
     where
         D: Deployer,
@@ -50,14 +50,14 @@ pub fn handle_register<D, S, W, DB>(
         DB: BlockNumDB,
 {
     let signer = server.dispatcher.get_account(0)?;
-    let receipt = server.dispatcher.register(
+    let receipt = server.dispatcher.join_group(
         signer,
         DEFAULT_SEND_GAS,
         &req.contract_addr,
         &server.abi_path,
     )?;
 
-    Ok(HttpResponse::Ok().json(api::register::post::Response(receipt)))
+    Ok(HttpResponse::Ok().json(api::join_group::post::Response(receipt)))
 }
 
 pub fn handle_init_state<D, S, W, DB>(
@@ -271,7 +271,7 @@ pub fn handle_allowance<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
-    server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path)?;
+    server.dispatcher.block_on_event::<_, U64>(&req.contract_addr, &server.abi_path)?;
 
     let access_right = req.into_access_right()?;
     let owner_approved = get_state::<Approved>(&access_right, server.eid, "Approved")?;
@@ -292,7 +292,7 @@ pub fn handle_balance_of<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
-    server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path)?;
+    server.dispatcher.block_on_event::<_, U64>(&req.contract_addr, &server.abi_path)?;
 
     let access_right = req.into_access_right()?;
     let state = get_state::<U64>(&access_right, server.eid, "Balance")?;
@@ -312,7 +312,7 @@ pub fn handle_start_polling<D, S, W, DB>(
 {
     let _ = thread::spawn(move || {
         loop {
-            server.dispatcher.block_on_event(&req.contract_addr, &server.abi_path).unwrap();
+            server.dispatcher.block_on_event::<_, U64>(&req.contract_addr, &server.abi_path).unwrap();
             debug!("event fetched...");
             thread::sleep(time::Duration::from_secs(3));
         }
@@ -335,6 +335,22 @@ pub fn handle_set_contract_addr<D, S, W, DB>(
 
     debug!("Contract address: {:?}", &req.contract_addr);
     server.dispatcher.set_contract_addr(&req.contract_addr, &server.abi_path)?;
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+pub fn handle_register_notification<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<api::register_notification::post::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
+{
+    let access_right = req.into_access_right()?;
+    server.dispatcher.register_notification(access_right)?;
 
     Ok(HttpResponse::Ok().finish())
 }

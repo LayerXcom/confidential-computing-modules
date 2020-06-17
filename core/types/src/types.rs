@@ -1,8 +1,13 @@
+extern crate alloc;
 use core::{
     fmt,
     default::Default,
     ptr,
     mem,
+};
+use alloc::{
+    boxed::Box,
+    vec::Vec,
 };
 use crate::traits::RawEnclaveTx;
 
@@ -39,21 +44,21 @@ impl fmt::Display for EnclaveReturn {
     }
 }
 
-/// Bridged type from enclave to host to send a register transaction.
+/// Bridged type from enclave to host to send a JoinGroup transaction.
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct RawRegisterTx {
+pub struct RawJoinGroupTx {
     /// A pointer to the output of the report using `ocall_save_to_memory()`.
     pub report: *const u8,
     pub report_sig: *const u8,
     pub handshake: *const u8,
 }
 
-impl RawEnclaveTx for RawRegisterTx { }
+impl RawEnclaveTx for RawJoinGroupTx { }
 
-impl Default for RawRegisterTx {
+impl Default for RawJoinGroupTx {
     fn default() -> Self {
-        RawRegisterTx {
+        RawJoinGroupTx {
             report: ptr::null(),
             report_sig: ptr::null(),
             handshake: ptr::null(),
@@ -61,9 +66,9 @@ impl Default for RawRegisterTx {
     }
 }
 
-impl fmt::Debug for RawRegisterTx {
+impl fmt::Debug for RawJoinGroupTx {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut debug_trait_builder = f.debug_struct("RawRegisterTx");
+        let mut debug_trait_builder = f.debug_struct("RawJoinGroupTx");
         debug_trait_builder.field("report", &(self.report));
         debug_trait_builder.field("report_sig", &(self.report_sig));
         debug_trait_builder.field("handshake", &(self.handshake));
@@ -162,6 +167,19 @@ impl fmt::Debug for RawHandshakeTx {
 #[derive(Clone, Copy)]
 pub struct EnclaveState(pub *const u8);
 
+impl EnclaveState {
+    pub fn as_bytes(&self) -> Box<[u8]> {
+        let raw_state = self.0 as *mut Box<[u8]>;
+        let box_state = unsafe { Box::from_raw(raw_state) };
+
+        *box_state
+    }
+
+    pub fn into_vec(self) -> Vec<u8> {
+        self.as_bytes().into_vec()
+    }
+}
+
 impl Default for EnclaveState {
     fn default() -> Self {
         EnclaveState ( ptr::null() )
@@ -172,6 +190,34 @@ impl fmt::Debug for EnclaveState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut debug_trait_builder = f.debug_struct("EnclaveState");
         debug_trait_builder.field("0", &(self.0));
+        debug_trait_builder.finish()
+    }
+}
+
+/// Key Value data stored in an Enclave
+#[repr(C)]
+#[derive(Clone, Copy, PartialEq)]
+pub struct RawUpdatedState{
+    pub address: Address,
+    pub mem_id: u32,
+    pub state: *const u8,
+}
+
+impl Default for RawUpdatedState {
+    fn default() -> Self {
+        RawUpdatedState {
+            state: ptr::null(),
+            .. unsafe { mem::zeroed() }
+        }
+    }
+}
+
+impl fmt::Debug for RawUpdatedState {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut debug_trait_builder = f.debug_struct("RawUpdatedState");
+        debug_trait_builder.field("address", &(self.address));
+        debug_trait_builder.field("mem_id", &(self.mem_id));
+        debug_trait_builder.field("state", &(self.state));
         debug_trait_builder.finish()
     }
 }

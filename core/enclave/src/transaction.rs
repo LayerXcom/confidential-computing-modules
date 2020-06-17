@@ -1,5 +1,5 @@
 use std::vec::Vec;
-use anonify_types::{RawRegisterTx, RawInstructionTx, RawHandshakeTx, traits::RawEnclaveTx};
+use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, traits::RawEnclaveTx};
 use anonify_common::{UserAddress, Sha256, Hash256, AccessRight, IntoVec};
 use anonify_app_preluder::{Ciphertext, CallKind};
 use anonify_runtime::{StateType, State, MemId};
@@ -22,23 +22,23 @@ pub trait EnclaveTx: Sized {
     fn into_raw(self) -> Result<Self::R>;
  }
 
-/// A transaction components for register operations.
+/// A transaction components for JoinGroup operations.
 #[derive(Debug, Clone)]
-pub struct RegisterTx {
+pub struct JoinGroupTx {
     report: AttestationReport,
     report_sig: ReportSig,
     handshake: HandshakeParams,
 }
 
-impl EnclaveTx for RegisterTx {
-    type R = RawRegisterTx;
+impl EnclaveTx for JoinGroupTx {
+    type R = RawJoinGroupTx;
 
     fn into_raw(self) -> Result<Self::R> {
         let report = save_to_host_memory(&self.report.as_bytes())? as *const u8;
         let report_sig = save_to_host_memory(&self.report_sig.as_bytes())? as *const u8;
         let handshake = save_to_host_memory(&self.handshake.encode())? as *const u8;
 
-        Ok(RawRegisterTx {
+        Ok(RawJoinGroupTx {
             report,
             report_sig,
             handshake,
@@ -46,9 +46,9 @@ impl EnclaveTx for RegisterTx {
     }
 }
 
-impl RegisterTx {
+impl JoinGroupTx {
     pub fn new(report: AttestationReport, report_sig: ReportSig, handshake: HandshakeParams) -> Self {
-        RegisterTx {
+        JoinGroupTx {
             report,
             report_sig,
             handshake,
@@ -65,7 +65,7 @@ impl RegisterTx {
         let group_key = ctx.group_key.read().unwrap();
         let handshake = group_key.create_handshake()?;
 
-        Ok(RegisterTx {
+        Ok(JoinGroupTx {
             report,
             report_sig,
             handshake,

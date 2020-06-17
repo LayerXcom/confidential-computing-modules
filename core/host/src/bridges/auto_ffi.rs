@@ -5,13 +5,12 @@ use anonify_types::*;
 use sgx_types::*;
 
 extern "C" {
-    pub fn ecall_insert_ciphertexts(
+    pub fn ecall_insert_ciphertext(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
-        contract_addr: *mut [u8; 20usize],
-        block_number: u64,
         ciphertexts: *mut u8,
         ciphertexts_len: usize,
+        enclave_kv: *mut RawUpdatedState,
     ) -> sgx_status_t;
 }
 extern "C" {
@@ -48,10 +47,10 @@ extern "C" {
     ) -> sgx_status_t;
 }
 extern "C" {
-    pub fn ecall_register(
+    pub fn ecall_join_group(
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
-        result: *mut RawRegisterTx,
+        result: *mut RawJoinGroupTx,
     ) -> sgx_status_t;
 }
 extern "C" {
@@ -59,6 +58,15 @@ extern "C" {
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
         result: *mut RawHandshakeTx,
+    ) -> sgx_status_t;
+}
+extern "C" {
+    pub fn ecall_register_notification(
+        eid: sgx_enclave_id_t,
+        retval: *mut sgx_status_t,
+        sig: *mut [u8; 64usize],
+        pubkey: *mut [u8; 32usize],
+        challenge: *mut [u8; 32usize],
     ) -> sgx_status_t;
 }
 extern "C" {

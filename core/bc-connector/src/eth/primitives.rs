@@ -116,7 +116,7 @@ impl Web3Contract {
         })
     }
 
-    pub fn register<G: Into<U256>>(
+    pub fn join_group<G: Into<U256>>(
         &self,
         from: Address,
         report: &[u8],
@@ -125,7 +125,7 @@ impl Web3Contract {
         gas: G,
     ) -> Result<H256> {
         let call = self.contract.call(
-            "register",
+            "join_group",
             (report.to_vec(), report_sig.to_vec(), handshake.to_vec()),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),

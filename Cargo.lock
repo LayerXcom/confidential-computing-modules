@@ -141,6 +141,7 @@ name = "anonify-runtime"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
+ "anonify-types 0.1.0",
  "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
  "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
