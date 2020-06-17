@@ -1,13 +1,11 @@
 [package]
-name = "server"
+name = "dx-server"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-
+dx-api = { path = "../api" }
 dx-app = { path = "../app" }
 anonify-common = { path = "../../../core/common" }
 anonify-runtime = { path = "../../../core/runtime" }
@@ -19,5 +17,8 @@ failure = "0.1"
 log = "0.4"
 env_logger = "0.7"
 ed25519-dalek = "1.0.0-pre.2"
-hex = "0.4"
+#hex = "0.4"
 anyhow = "1.0"
+reqwest = "0.9"
+serde_json = "1.0.55"
+lazy_static = "1.4.0"

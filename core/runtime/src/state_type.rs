@@ -4,6 +4,7 @@ use crate::localstd::{
     collections::BTreeMap,
     ops::{Add, Sub, Mul, Div},
     convert::TryFrom,
+    mem::size_of,
 };
 use crate::local_anyhow::{Result, Error, anyhow};
 use anonify_common::UserAddress;
@@ -120,6 +121,22 @@ impl From<Vec<u8>> for Bytes {
     }
 }
 
+impl Bytes {
+    pub fn new(inner: Vec<u8>) -> Self {
+        Bytes(inner)
+    }
+
+    pub fn size(&self) -> usize {
+        self.0.len() * size_of::<u8>()
+    }
+}
+
+impl From<Bytes> for StateType {
+    fn from(bs: Bytes) -> Self {
+        StateType(bs.0.as_bytes())
+    }
+}
+
 pub trait RawState: Encode + Decode + Clone + Default {}
 
 /// Do not use `as_bytes()` to get raw bytes from `StateType`, just use `StateType.0`.
@@ -187,7 +204,7 @@ impl Approved {
         match self.allowance(&user_address) {
             Some(&existing_amount) => {
                 self.0.insert(user_address, existing_amount + amount);
-            },
+            }
             None => {
                 self.0.insert(user_address, amount);
             }
