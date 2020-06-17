@@ -9,23 +9,6 @@ use dx_server::handlers::*;
 use actix_web::{web, App, HttpServer};
 
 fn main() -> io::Result<()> {
-    // let client = MFClient::new();
-    // let resp = client.get_invoices().unwrap();
-    //
-    // let invoces = Billing::from_response(resp);
-
-
-    // let = state_id: u64 = ; TODO:
-    // let recipient: UserAddress = ; TODO:
-    // let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
-    // let rng = &mut OsRng;
-    // let req = api::send_invoice::post::Request::new(&keypair, state_id, recipient, body, contract_addr, rng);
-    // let res = Client::new()
-    //     .post(&format!("{}/api/v1/send_invoice", &anonify_url))
-    //     .json(&req)
-    //     .send()?
-    //     .text()?;
-
     env_logger::init();
     let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
 
@@ -42,6 +25,7 @@ fn main() -> io::Result<()> {
         App::new()
             .data(server.clone())
             .route("/api/v1/send_invoice", web::post().to(handle_send_invoice::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/start_polling_moneyforward", web::post().to(handle_start_polling_moneyforward))
     })
         .bind(anonify_url)?
         .run()

@@ -1,7 +1,6 @@
-use std::{sync::Arc, env};
-// use std::{sync::Arc, thread, time};
+use std::{sync::Arc, env, thread, time};
 use failure::Error;
-// use log::debug;
+use log::debug;
 // use anonify_host::dispatcher::get_state;
 use anonify_bc_connector::{
     // EventDB,
@@ -18,6 +17,7 @@ use actix_web::{
 };
 // use anyhow::anyhow;
 use sgx_types::sgx_enclave_id_t;
+use crate::moneyforward::MFClient;
 
 #[derive(Debug)]
 pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
@@ -81,4 +81,37 @@ pub fn handle_send_invoice<D, S, W, DB>(
     )?;
 
     Ok(HttpResponse::Ok().json(dx_api::send_invoice::post::Response(receipt)))
+}
+
+pub fn handle_start_polling_moneyforward(
+    req: web::Json<dx_api::state::start_polling_moneyforward::Request>,
+) -> Result<HttpResponse, Error>
+{
+    let client = MFClient::new();
+
+    let _ = thread::spawn(move || {
+        loop {
+            if client.exists_new().unwrap() {
+                debug!("new invoice exists");
+                break;
+            }
+
+            // let invoces = Billing::from_response(resp);
+
+            // let = state_id: u64 = ; TODO:
+            // let recipient: UserAddress = ; TODO:
+            // let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
+            // let rng = &mut OsRng;
+            // let req = api::send_invoice::post::Request::new(&keypair, state_id, recipient, body, contract_addr, rng);
+            // let res = Client::new()
+            //     .post(&format!("{}/api/v1/send_invoice", &anonify_url))
+            //     .json(&req)
+            //     .send()?
+            //     .text()?;
+
+            thread::sleep(time::Duration::from_secs(3));
+        }
+    });
+
+    Ok(HttpResponse::Ok().finish())
 }

@@ -73,3 +73,18 @@ pub mod send_invoice {
         pub struct Response(pub String);
     }
 }
+
+pub mod state {
+    pub mod start_polling_moneyforward {
+        use super::super::*;
+
+        #[derive(Clone, Deserialize, Serialize, Debug)]
+        pub struct Request {}
+
+        impl Request {
+            pub fn new() -> Self {
+                Request {}
+            }
+        }
+    }
+}
