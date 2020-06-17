@@ -25,7 +25,7 @@ use codec::{Encode, Decode};
 // pub const CIPHERTEXT_SIZE: usize = MAX_MEM_SIZE + 30;
 
 impl_memory! {
-    (0, "Body", Text)
+    (0, "Invoice", Text)
 }
 
 impl_runtime! {
@@ -36,7 +36,7 @@ impl_runtime! {
         recipient: UserAddress,
         body: Text
     ) {
-        let body_update = update!(recipient, "Body", body);
+        let body_update = update!(recipient, "Invoice", body);
         insert![body_update]
     }
 }
