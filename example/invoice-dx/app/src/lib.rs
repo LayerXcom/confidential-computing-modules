@@ -34,9 +34,9 @@ impl_runtime! {
         self,
         _sender: UserAddress,
         recipient: UserAddress,
-        body: Bytes
+        invoice: Bytes
     ) {
-        let body_update = update!(recipient, "Invoice", body);
-        insert![body_update]
+        let invoice_update = update!(recipient, "Invoice", invoice);
+        insert![invoice_update]
     }
 }

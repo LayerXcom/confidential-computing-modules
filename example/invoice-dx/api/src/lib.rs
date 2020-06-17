@@ -22,7 +22,7 @@ pub mod send_invoice {
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
             pub recipient: UserAddress,
-            pub body: String,
+            pub invoice: String,
             pub state_id: u64,
             pub contract_addr: String,
         }
@@ -32,7 +32,7 @@ pub mod send_invoice {
                 keypair: &Keypair,
                 state_id: u64,
                 recipient: UserAddress,
-                body: String,
+                invoice: String,
                 contract_addr: String,
                 rng: &mut R,
             ) -> Self {
@@ -45,7 +45,7 @@ pub mod send_invoice {
                     pubkey: keypair.public.to_bytes(),
                     challenge,
                     recipient,
-                    body,
+                    invoice,
                     state_id,
                     contract_addr,
                 }
@@ -63,8 +63,8 @@ pub mod send_invoice {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, recipient: {:?}, body: {:?}, contract address: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.recipient, self.body, self.contract_addr
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, recipient: {:?}, invoice: {:?}, contract address: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.recipient, self.invoice, self.contract_addr
                 )
             }
         }

@@ -64,10 +64,10 @@ pub fn handle_send_invoice<D, S, W, DB>(
     let access_right = req.into_access_right()?;
     let signer = server.dispatcher.get_account(0)?;
     let recipient = req.recipient;
-    let body = Bytes::new(req.body.clone().into());
-    let body = Bytes::from(body);
+    let invoice = Bytes::new(req.invoice.clone().into());
+    let invoice = Bytes::from(invoice);
 
-    let send_invoice_state = send_invoice{ recipient, body };
+    let send_invoice_state = send_invoice{ recipient, invoice };
 
     let receipt = server.dispatcher.send_instruction(
         access_right,

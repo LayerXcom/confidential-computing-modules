@@ -9,6 +9,7 @@ members = [
     "example/erc20/api",
     "example/erc20/app",
     "example/invoice-dx/app",
+    "example/invoice-dx/api",
     "wallet",
 ]
 exclude = [
@@ -17,5 +18,4 @@ exclude = [
     "core/treekem",
     "example/erc20/server",
     "example/invoice-dx/server",
-    "tests/utils",
 ]
