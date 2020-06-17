@@ -129,6 +129,30 @@ fn test_auto_notification() {
     assert_eq!(updated_state[0].address, my_access_right.user_address());
     assert_eq!(updated_state[0].mem_id.as_raw(), 0);
     assert_eq!(updated_state[0].state, total_supply);
+
+    // Send a transaction to contract
+    let amount = U64::from_raw(30);
+    let recipient = other_access_right.user_address();
+    let transfer_state = transfer{ amount, recipient };
+    let receipt = dispatcher.send_instruction(
+        my_access_right.clone(),
+        transfer_state,
+        state_id,
+        "transfer",
+        deployer_addr,
+        gas,
+        &contract_addr,
+        ANONYMOUS_ASSET_ABI_PATH,
+    ).unwrap();
+    println!("receipt: {}", receipt);
+
+    // Update state inside enclave
+    let updated_state = dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap().unwrap();
+
+    assert_eq!(updated_state.len(), 1);
+    assert_eq!(updated_state[0].address, my_access_right.user_address());
+    assert_eq!(updated_state[0].mem_id.as_raw(), 0);
+    assert_eq!(updated_state[0].state, U64::from_raw(70));
 }
 
 #[test]
@@ -201,7 +225,6 @@ fn test_integration_eth_transfer() {
         ANONYMOUS_ASSET_ABI_PATH,
     ).unwrap();
     println!("receipt: {}", receipt);
-
 
     // Update state inside enclave
     dispatcher.block_on_event::<_, U64>(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
