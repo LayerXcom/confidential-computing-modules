@@ -121,6 +121,22 @@ impl From<Vec<u8>> for Bytes {
     }
 }
 
+impl Bytes {
+    pub fn new(inner: Vec<u8>) -> Self {
+        Bytes(inner)
+    }
+
+    pub fn size(&self) -> usize {
+        self.0.len() * size_of::<u8>()
+    }
+}
+
+impl From<Bytes> for StateType {
+    fn from(bs: Bytes) -> Self {
+        StateType(bs.0.as_bytes())
+    }
+}
+
 pub trait RawState: Encode + Decode + Clone + Default {}
 
 /// Do not use `as_bytes()` to get raw bytes from `StateType`, just use `StateType.0`.
@@ -236,36 +252,5 @@ impl TryFrom<Vec<u8>> for Approved {
         }
         let mut buf = s;
         Approved::from_bytes(&mut buf)
-    }
-}
-
-#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct Text(Vec<u8>);
-
-impl Text {
-    pub fn new(inner: Vec<u8>) -> Self {
-        Text(inner)
-    }
-
-    pub fn size(&self) -> usize {
-        self.0.len() * size_of::<u8>()
-    }
-}
-
-impl From<Text> for StateType {
-    fn from(t: Text) -> Self {
-        StateType(t.0.as_bytes())
-    }
-}
-
-impl TryFrom<Vec<u8>> for Text {
-    type Error = Error;
-
-    fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
-        if s.len() == 0 {
-            return Ok(Default::default());
-        }
-        let mut buf = s;
-        Text::from_bytes(&mut buf)
     }
 }
