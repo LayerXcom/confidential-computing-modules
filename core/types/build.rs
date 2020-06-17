@@ -12,7 +12,7 @@ fn main() {
         .with_sys_include("stdbool.h")
         .with_language(Language::C)
         .include_item("EnclaveReturn")
-        .include_item("RawRegisterTx")
+        .include_item("RawJoinGroupTx")
         .include_item("RawInstructionTx")
         .include_item("RawHandshakeTx")
         // .include_item("RawAccessRight")

@@ -1,6 +1,6 @@
 use std::boxed::Box;
 use sgx_types::*;
-use anonify_types::{traits::SliceCPtr, EnclaveState, RawRegisterTx, RawInstructionTx, RawHandshakeTx, RawUpdatedState};
+use anonify_types::{traits::SliceCPtr, EnclaveState, RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, RawUpdatedState};
 use anonify_common::{AccessRight, IntoVec};
 use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
 use anonify_runtime::{traits::State, UpdatedState};
@@ -133,12 +133,12 @@ pub(crate) fn get_state_from_enclave(
     Ok(state.into_vec())
 }
 
-pub(crate) fn register(eid: sgx_enclave_id_t) -> Result<RawRegisterTx> {
+pub(crate) fn join_group(eid: sgx_enclave_id_t) -> Result<RawJoinGroupTx> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
-    let mut raw_reg_tx = RawRegisterTx::default();
+    let mut raw_reg_tx = RawJoinGroupTx::default();
 
     let status = unsafe {
-        ecall_register(
+        ecall_join_group(
             eid,
             &mut rt,
             &mut raw_reg_tx,
@@ -146,10 +146,10 @@ pub(crate) fn register(eid: sgx_enclave_id_t) -> Result<RawRegisterTx> {
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx{ status, function: "ecall_register" }.into());
+        return Err(HostError::Sgx{ status, function: "ecall_join_group" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx{ status: rt, function: "ecall_register" }.into());
+        return Err(HostError::Sgx{ status: rt, function: "ecall_join_group" }.into());
     }
 
     Ok(raw_reg_tx)
@@ -213,4 +213,30 @@ pub(crate) fn handshake(
     }
 
     Ok(raw_handshake_tx)
+}
+
+pub(crate) fn register_notification(
+    eid: sgx_enclave_id_t,
+    access_right: AccessRight,
+) -> Result<()> {
+    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+
+    let status = unsafe {
+        ecall_register_notification(
+            eid,
+            &mut rt,
+            access_right.sig().to_bytes().as_ptr() as _,
+            access_right.pubkey().to_bytes().as_ptr() as _,
+            access_right.challenge().as_ptr() as _,
+        )
+    };
+
+    if status != sgx_status_t::SGX_SUCCESS {
+		return Err(HostError::Sgx{ status, function: "ecall_register_notification" }.into());
+    }
+    if rt != sgx_status_t::SGX_SUCCESS {
+		return Err(HostError::Sgx{ status: rt, function: "ecall_register_notification" }.into());
+    }
+
+    Ok(())
 }

@@ -44,12 +44,18 @@ enclave {
             [out] RawInstructionTx* result
         );
 
-        public sgx_status_t ecall_register(
-            [out] RawRegisterTx* result
+        public sgx_status_t ecall_join_group(
+            [out] RawJoinGroupTx* result
         );
 
         public sgx_status_t ecall_handshake(
             [out] RawHandshakeTx* result
+        );
+
+        public sgx_status_t ecall_register_notification(
+            [in] uint8_t sig[64],
+            [in] uint8_t pubkey[32],
+            [in] uint8_t challenge[32]
         );
 
         public void ecall_run_tests(

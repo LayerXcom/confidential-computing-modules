@@ -9,7 +9,7 @@ use ed25519_dalek::{PublicKey, Signature};
 use codec::Decode;
 use crate::{
     context::ENCLAVE_CONTEXT,
-    transaction::{RegisterTx, EnclaveTx, HandshakeTx, InstructionTx},
+    transaction::{JoinGroupTx, EnclaveTx, HandshakeTx, InstructionTx},
     kvs::EnclaveDB,
     config::{IAS_URL, TEST_SUB_KEY},
     instructions::Instructions,
@@ -80,18 +80,18 @@ pub unsafe extern "C" fn ecall_get_state(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn ecall_register(
-    raw_register_tx: &mut RawRegisterTx,
+pub unsafe extern "C" fn ecall_join_group(
+    raw_join_group_tx: &mut RawJoinGroupTx,
 ) -> sgx_status_t {
-    let register_tx = RegisterTx::construct(
+    let join_group_tx = JoinGroupTx::construct(
             IAS_URL,
             TEST_SUB_KEY,
             &*ENCLAVE_CONTEXT,
         )
-        .expect("Failed to construct register transaction.");
+        .expect("Failed to construct JoinGroup transaction.");
 
-    *raw_register_tx = register_tx.into_raw()
-        .expect("Failed to convert into raw register transaction.");
+    *raw_join_group_tx = join_group_tx.into_raw()
+        .expect("Failed to convert into raw JoinGroup transaction.");
 
     sgx_status_t::SGX_SUCCESS
 }
@@ -137,6 +137,24 @@ pub unsafe extern "C" fn ecall_handshake(
 
     *raw_handshake_tx = handshake_tx.into_raw()
         .expect("Failed to convert into raw handshake transaction.");
+
+    sgx_status_t::SGX_SUCCESS
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn ecall_register_notification(
+    sig: &RawSig,
+    pubkey: &RawPubkey,
+    challenge: &RawChallenge,
+) -> sgx_status_t {
+    let sig = Signature::from_bytes(&sig[..])
+        .expect("Failed to read signatures.");
+    let pubkey = PublicKey::from_bytes(&pubkey[..])
+        .expect("Failed to read public key.");
+    let user_address = UserAddress::from_sig(&challenge[..], &sig, &pubkey)
+        .expect("Failed to generate user address.");
+
+    ENCLAVE_CONTEXT.set_notification(user_address);
 
     sgx_status_t::SGX_SUCCESS
 }
