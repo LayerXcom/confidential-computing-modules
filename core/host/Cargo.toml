@@ -10,7 +10,7 @@ anonify-types = { path = "../types" }
 anonify-common = { path = "../common" }
 anonify-app-preluder = { path = "../app-preluder", default-features = false }
 anonify-runtime = { path = "../runtime" }
-anonify-bc-connector = { path = "../bc-connector"}
+anonify-bc-connector = { path = "../bc-connector", default-features = false }
 sgx_types = "1.1.1"
 sgx_urts = "1.1.1"
 anyhow = "1.0"
@@ -32,5 +32,11 @@ dirs = "2.0"
 
 [features]
 default = ["erc20"]
-erc20 = ["anonify-app-preluder/erc20-std"]
-dx = ["anonify-app-preluder/dx-std"]
+erc20 = [
+    "anonify-app-preluder/erc20-std",
+    "anonify-bc-connector/erc20",
+]
+dx = [
+    "anonify-app-preluder/dx-std",
+    "anonify-bc-connector/dx",
+]

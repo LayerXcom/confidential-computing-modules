@@ -286,7 +286,6 @@ dependencies = [
  "anonify-common",
  "anonify-runtime",
  "dx-app",
- "erc20-app",
  "parity-scale-codec",
 ]
 
@@ -1029,15 +1028,6 @@ dependencies = [
  "log 0.4.8",
  "regex",
  "termcolor",
-]
-
-[[package]]
-name = "erc20-app"
-version = "0.1.0"
-dependencies = [
- "anonify-common",
- "anonify-runtime",
- "parity-scale-codec",
 ]
 
 [[package]]

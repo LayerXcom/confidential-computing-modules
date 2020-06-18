@@ -9,8 +9,8 @@ dx-api = { path = "../api" }
 dx-app = { path = "../app" }
 anonify-common = { path = "../../../core/common" }
 anonify-runtime = { path = "../../../core/runtime" }
-anonify-host = { path = "../../../core/host", features = ["dx"] }
-anonify-bc-connector = { path = "../../../core/bc-connector" }
+anonify-host = { path = "../../../core/host", default-features = false, features = ["dx"] }
+anonify-bc-connector = { path = "../../../core/bc-connector", default-features = false, features = ["dx"] }
 sgx_types = "1.1.1"
 actix-web = "1.0"
 failure = "0.1"
