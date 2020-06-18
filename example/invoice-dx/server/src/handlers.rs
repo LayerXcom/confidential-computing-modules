@@ -1,10 +1,4 @@
-use std::{
-    env,
-    path::PathBuf,
-    sync::Arc,
-    thread,
-    time,
-};
+use std::{sync::{Arc, mpsc}, env, thread, time, path::PathBuf,};
 use failure::Error;
 use log::debug;
 use actix_web::{
@@ -24,6 +18,7 @@ use anonify_bc_connector::{
     traits::*,
     // eth::*,
 };
+use anonify_runtime::{Bytes, UpdatedState};
 use anonify_common::UserAddress;
 use anonify_runtime::Bytes;
 use anonify_host::Dispatcher;
@@ -40,7 +35,7 @@ use dx_api;
 use crate::moneyforward::MFClient;
 use crate::Server;
 use crate::config::get_default_root_dir;
-
+use crate::sunabar::SunabarClient;
 const DEFAULT_SEND_GAS: u64 = 3_000_000;
 
 pub fn handle_send_invoice<D, S, W, DB>(
@@ -114,6 +109,47 @@ pub fn handle_start_polling_moneyforward(
 
     Ok(HttpResponse::Ok().finish())
 }
+
+pub fn handle_start_sync_bc<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<dx_api::state::start_sync_bc::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer + Send + Sync + 'static,
+        S: Sender + Send + Sync + 'static,
+        W: Watcher<WatcherDB=DB> + Send + Sync + 'static,
+        DB: BlockNumDB + Send + Sync + 'static,
+{
+    let client = SunabarClient::new();
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        loop {
+            debug!("event fetched...");
+            let shared_invoices = server
+                .dispatcher
+                .block_on_event::<_, Bytes>(&req.contract_addr, &server.abi_path).unwrap();
+
+            if let Some(invoices) = shared_invoices {
+                for invoice in invoices {
+                    tx.send(invoice).unwrap()
+                }
+            }
+
+            thread::sleep(time::Duration::from_secs(3));
+        }
+    });
+
+    let res = client
+        .set_shared_invoice(&rx.recv().unwrap())
+        .transfer_request()
+        .unwrap(); //todo
+
+    println!("response from sunabar: {}", res);
+
+    Ok(HttpResponse::Ok().finish())
+}
+
 
 
 fn wallet_keystore_dirs(root_dir: &PathBuf) -> Result<(WalletDirectory, KeystoreDirectory), Error> {

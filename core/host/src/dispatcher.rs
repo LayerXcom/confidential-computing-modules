@@ -287,9 +287,7 @@ pub fn get_state<S>(
 {
     let state = get_state_from_enclave(
         enclave_id,
-        &access_right.sig(),
-        &access_right.pubkey(),
-        &access_right.challenge(),
+        access_right,
         mem_name,
     )?
         .try_into()

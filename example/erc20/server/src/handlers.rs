@@ -300,9 +300,9 @@ pub fn handle_balance_of<D, S, W, DB>(
     Ok(HttpResponse::Ok().json(api::state::get::Response(state.as_raw())))
 }
 
-pub fn handle_start_polling<D, S, W, DB>(
+pub fn handle_start_sync_bc<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<api::state::start_polling::Request>,
+    req: web::Json<api::state::start_sync_bc::Request>,
 ) -> Result<HttpResponse, Error>
     where
         D: Deployer + Send + Sync + 'static,

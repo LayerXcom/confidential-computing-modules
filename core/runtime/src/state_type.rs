@@ -129,6 +129,10 @@ impl Bytes {
     pub fn size(&self) -> usize {
         self.0.len() * size_of::<u8>()
     }
+
+    pub fn as_byets(&self) -> &[u8] {
+        &self.0[..]
+    }
 }
 
 impl From<Bytes> for StateType {

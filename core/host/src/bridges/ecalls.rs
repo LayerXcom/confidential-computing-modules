@@ -101,9 +101,7 @@ fn insert_handshake(
 /// Get state only if the signature verification returns true.
 pub(crate) fn get_state_from_enclave(
     eid: sgx_enclave_id_t,
-    sig: &Signature,
-    pubkey: &PublicKey,
-    msg: &[u8],
+    access_right: &AccessRight,
     mem_name: &str,
 ) -> Result<Vec<u8>>
 {
@@ -115,9 +113,9 @@ pub(crate) fn get_state_from_enclave(
         ecall_get_state(
             eid,
             &mut rt,
-            sig.to_bytes().as_ptr() as _,
-            pubkey.to_bytes().as_ptr() as _,
-            msg.as_ptr() as _,
+            access_right.sig().to_bytes().as_ptr() as _,
+            access_right.pubkey().to_bytes().as_ptr() as _,
+            access_right.challenge().as_ptr() as _,
             mem_id,
             &mut state,
         )

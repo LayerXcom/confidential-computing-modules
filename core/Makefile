@@ -74,6 +74,14 @@ else
 	Rust_target_dir := release
 endif
 
+ifeq ($(FEATURES), ERC20)
+	Enclave_Rust_Flags := --features=erc20
+else ifeq ($(FEATURES), DX)
+	Enclave_Rust_Flags := --features=dx
+else
+	Enclave_Rust_Flags := --features=erc20
+endif
+
 ######## CUSTOM Settings ########
 
 CUSTOM_LIBRARY_PATH := ./lib
@@ -172,7 +180,7 @@ $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 .PHONY: enclave
 enclave: $(Enclave_EDL_Files)
 	mkdir -p $(CUSTOM_LIBRARY_PATH)
-	$(MAKE) -C ./enclave/ CARGO_FLAGS=$(Host_Rust_Flags) Rust_target_dir=$(Rust_target_dir) CARGO=$(CARGO) BINDGEN=$(BINDGEN) RUSTFMT=$(RUSTFMT)
+	$(MAKE) -C ./enclave/ CARGO_FLAGS=$(Host_Rust_Flags) FEATURE_FLAGS=$(Enclave_Rust_Flags) Rust_target_dir=$(Rust_target_dir) CARGO=$(CARGO) BINDGEN=$(BINDGEN) RUSTFMT=$(RUSTFMT)
 
 .PHONY: compiler-rt
 compiler-rt:

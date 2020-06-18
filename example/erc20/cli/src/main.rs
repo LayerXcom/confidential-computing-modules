@@ -365,17 +365,17 @@ fn subcommand_anonify<R: Rng>(
             )
             .expect("Failed balance_of command");
         },
-        ("start_polling", Some(matches)) => {
+        ("start_sync_bc", Some(matches)) => {
             let contract_addr = match matches.value_of("contract-addr") {
                 Some(addr) => addr.to_string(),
                 None => default_contract_addr,
             };
 
-            commands::start_polling(
+            commands::start_sync_bc(
                 anonify_url,
                 contract_addr,
             )
-            .expect("Failed to start_polling command");
+            .expect("Failed to start_sync_bc command");
         },
         ("set_contract_addr", Some(matches)) => {
             let contract_addr = match matches.value_of("contract-addr") {
@@ -644,7 +644,7 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .default_value(DEFAULT_STATE_ID)
             )
         )
-        .subcommand(SubCommand::with_name("start_polling")
+        .subcommand(SubCommand::with_name("start_sync_bc")
             .about("Get state from anonify services.")
             .arg(Arg::with_name("contract-addr")
                 .short("c")

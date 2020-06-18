@@ -12,8 +12,10 @@ use std as localstd;
 extern crate core as localstd;
 
 use crate::localstd::vec::Vec;
+#[cfg(any(feature="erc20-std", feature="erc20-sgx"))]
 pub use erc20_app::*;
-// pub use dx_app::*;
+#[cfg(any(feature="dx-std", feature="dx-sgx"))]
+pub use dx_app::*;
 use anonify_common::IntoVec;
 use codec::{Encode, Decode};
 
