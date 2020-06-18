@@ -18,7 +18,7 @@ use actix_web::{
 // use anyhow::anyhow;
 use sgx_types::sgx_enclave_id_t;
 use crate::moneyforward::MFClient;
-use crate::sunabar;
+use crate::sunabar::SunabarClient;
 
 #[derive(Debug)]
 pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
@@ -119,7 +119,7 @@ pub fn handle_start_polling_moneyforward(
 
 pub fn handle_start_sync_bc<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<api::state::sync_bc::Request>,
+    req: web::Json<dx_api::state::start_sync_bc::Request>,
 ) -> Result<HttpResponse, Error>
     where
         D: Deployer + Send + Sync + 'static,
@@ -127,6 +127,7 @@ pub fn handle_start_sync_bc<D, S, W, DB>(
         W: Watcher<WatcherDB=DB> + Send + Sync + 'static,
         DB: BlockNumDB + Send + Sync + 'static,
 {
+    let client = SunabarClient::new();
     let (tx, rx) = mpsc::channel();
 
     thread::spawn(move || {
@@ -146,7 +147,12 @@ pub fn handle_start_sync_bc<D, S, W, DB>(
         }
     });
 
-    let shared_invoice = rx.recv();
+    let res = client
+        .set_shared_invoice(&rx.recv().unwrap())
+        .transfer_request()
+        .unwrap(); //todo
+
+    println!("response from sunabar: {}", res);
 
     Ok(HttpResponse::Ok().finish())
 }

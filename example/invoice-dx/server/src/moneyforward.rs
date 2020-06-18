@@ -27,7 +27,7 @@ impl MFClient {
         let client = Client::builder()
             .default_headers(headers)
             .build()
-            .expect("Client builder failed");
+            .expect("MFClient builder failed");
 
         Self { inner: client }
     }
