@@ -9,15 +9,14 @@ dx-api = { path = "../api" }
 dx-app = { path = "../app" }
 anonify-common = { path = "../../../core/common" }
 anonify-runtime = { path = "../../../core/runtime" }
-anonify-host = { path = "../../../core/host", features = ["dx"] }
-anonify-bc-connector = { path = "../../../core/bc-connector" }
+anonify-host = { path = "../../../core/host", default-features = false, features = ["dx"] }
+anonify-bc-connector = { path = "../../../core/bc-connector", default-features = false, features = ["dx"] }
 sgx_types = "1.1.1"
 actix-web = "1.0"
 failure = "0.1"
 log = "0.4"
 env_logger = "0.7"
 ed25519-dalek = "1.0.0-pre.2"
-#hex = "0.4"
 anyhow = "1.0"
 reqwest = "0.9"
 serde_json = "1.0.55"

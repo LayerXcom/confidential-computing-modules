@@ -589,7 +589,7 @@ pub mod state {
         pub struct Response<S: State>(pub S);
     }
 
-    pub mod start_polling {
+    pub mod start_sync_bc {
         use super::super::*;
 
         #[derive(Clone, Deserialize, Serialize, Debug)]

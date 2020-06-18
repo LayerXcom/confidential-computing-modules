@@ -1,4 +1,4 @@
-use std::{sync::Arc, env, thread, time};
+use std::{sync::{Arc, mpsc}, env, thread, time};
 use failure::Error;
 use log::debug;
 // use anonify_host::dispatcher::get_state;
@@ -8,7 +8,7 @@ use anonify_bc_connector::{
     traits::*,
     // eth::*,
 };
-use anonify_runtime::Bytes;
+use anonify_runtime::{Bytes, UpdatedState};
 use anonify_host::Dispatcher;
 use dx_app::send_invoice;
 use actix_web::{
@@ -18,6 +18,7 @@ use actix_web::{
 // use anyhow::anyhow;
 use sgx_types::sgx_enclave_id_t;
 use crate::moneyforward::MFClient;
+use crate::sunabar::SunabarClient;
 
 #[derive(Debug)]
 pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
@@ -112,6 +113,46 @@ pub fn handle_start_polling_moneyforward(
             thread::sleep(time::Duration::from_secs(3));
         }
     });
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+pub fn handle_start_sync_bc<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<dx_api::state::start_sync_bc::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer + Send + Sync + 'static,
+        S: Sender + Send + Sync + 'static,
+        W: Watcher<WatcherDB=DB> + Send + Sync + 'static,
+        DB: BlockNumDB + Send + Sync + 'static,
+{
+    let client = SunabarClient::new();
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        loop {
+            debug!("event fetched...");
+            let shared_invoices = server
+                .dispatcher
+                .block_on_event::<_, Bytes>(&req.contract_addr, &server.abi_path).unwrap();
+
+            if let Some(invoices) = shared_invoices {
+                for invoice in invoices {
+                    tx.send(invoice).unwrap()
+                }
+            }
+
+            thread::sleep(time::Duration::from_secs(3));
+        }
+    });
+
+    let res = client
+        .set_shared_invoice(&rx.recv().unwrap())
+        .transfer_request()
+        .unwrap(); //todo
+
+    println!("response from sunabar: {}", res);
 
     Ok(HttpResponse::Ok().finish())
 }

@@ -261,13 +261,13 @@ pub(crate) fn balance_of<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn start_polling(
+pub(crate) fn start_sync_bc(
     anonify_url: String,
     contract_addr: String,
 ) -> Result<()> {
-    let req = api::state::start_polling::Request::new(contract_addr);
+    let req = api::state::start_sync_bc::Request::new(contract_addr);
     Client::new()
-        .get(&format!("{}/api/v1/start_polling", &anonify_url))
+        .get(&format!("{}/api/v1/start_sync_bc", &anonify_url))
         .json(&req)
         .send()?
         .text()?;
