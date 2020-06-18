@@ -1,6 +1,12 @@
 use std::{sync::Arc, env, thread, time};
 use failure::Error;
 use log::debug;
+use actix_web::{
+    web,
+    HttpResponse,
+};
+// use anyhow::anyhow;
+
 // use anonify_host::dispatcher::get_state;
 use anonify_bc_connector::{
     // EventDB,
@@ -9,45 +15,10 @@ use anonify_bc_connector::{
     // eth::*,
 };
 use anonify_runtime::Bytes;
-use anonify_host::Dispatcher;
 use dx_app::send_invoice;
-use actix_web::{
-    web,
-    HttpResponse,
-};
-// use anyhow::anyhow;
-use sgx_types::sgx_enclave_id_t;
+
 use crate::moneyforward::MFClient;
-
-#[derive(Debug)]
-pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
-    pub eid: sgx_enclave_id_t,
-    pub eth_url: String,
-    pub abi_path: String,
-    pub dispatcher: Dispatcher<D, S, W, DB>,
-}
-
-impl<D, S, W, DB> Server<D, S, W, DB>
-    where
-        D: Deployer,
-        S: Sender,
-        W: Watcher<WatcherDB=DB>,
-        DB: BlockNumDB,
-{
-    pub fn new(eid: sgx_enclave_id_t) -> Self {
-        let eth_url = env::var("ETH_URL").expect("ETH_URL is not set.");
-        let abi_path = env::var("ANONYMOUS_ASSET_ABI_PATH").expect("ANONYMOUS_ASSET_ABI_PATH is not set.");
-        let event_db = Arc::new(DB::new());
-        let dispatcher = Dispatcher::<D, S, W, DB>::new(eid, &eth_url, event_db).unwrap();
-
-        Server {
-            eid,
-            eth_url,
-            abi_path,
-            dispatcher,
-        }
-    }
-}
+use crate::Server;
 
 const DEFAULT_SEND_GAS: u64 = 3_000_000;
 
