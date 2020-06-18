@@ -71,7 +71,7 @@ fn main() -> io::Result<()> {
             .route("/api/v1/burn", web::post().to(handle_burn::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/allowance", web::get().to(handle_allowance::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/balance_of", web::get().to(handle_balance_of::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
-            .route("/api/v1/start_polling", web::get().to(handle_start_polling::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
+            .route("/api/v1/start_sync_bc", web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/set_contract_addr", web::get().to(handle_set_contract_addr::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/register_notification", web::post().to(handle_register_notification::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
     })
