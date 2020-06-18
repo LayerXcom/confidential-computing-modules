@@ -11,6 +11,7 @@ anonify-common = { path = "../../../core/common" }
 anonify-runtime = { path = "../../../core/runtime" }
 anonify-host = { path = "../../../core/host", default-features = false, features = ["dx"] }
 anonify-bc-connector = { path = "../../../core/bc-connector", default-features = false, features = ["dx"] }
+anonify-wallet = { path = "../../../wallet" }
 sgx_types = "1.1.1"
 actix-web = "1.0"
 failure = "0.1"

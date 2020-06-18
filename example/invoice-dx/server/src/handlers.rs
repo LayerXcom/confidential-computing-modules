@@ -20,7 +20,6 @@ use anonify_bc_connector::{
 };
 use anonify_runtime::{Bytes, UpdatedState};
 use anonify_common::UserAddress;
-use anonify_runtime::Bytes;
 use anonify_host::Dispatcher;
 use anonify_wallet::{
     WalletDirectory,
@@ -36,7 +35,9 @@ use crate::moneyforward::MFClient;
 use crate::Server;
 use crate::config::get_default_root_dir;
 use crate::sunabar::SunabarClient;
+
 const DEFAULT_SEND_GAS: u64 = 3_000_000;
+const DEFAULT_RECIPIENT_ADDRESS: &str = "KDY06J2T4bIldIq5Pjxo0Mq3ocY=";
 
 pub fn handle_send_invoice<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
@@ -87,7 +88,7 @@ pub fn handle_start_polling_moneyforward(
                 let keypair = get_keypair_from_keystore(root_dir, "test".as_bytes(), 0)
                     .expect("failed to get keypair");
                 let state_id: u64 = 0;
-                let recipient: UserAddress = UserAddress::base64_decode("4Ab47AzIPrMwdsE3ufpksPklbLk=");
+                let recipient: UserAddress = UserAddress::base64_decode(DEFAULT_RECIPIENT_ADDRESS);
                 let invoice = client.get_invoices()
                     .expect("failed to get invoice");
                 let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());

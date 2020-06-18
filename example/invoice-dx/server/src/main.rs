@@ -69,7 +69,7 @@ fn main() -> io::Result<()> {
             .data(server.clone())
             .route("/api/v1/send_invoice", web::post().to(handle_send_invoice::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/start_polling_moneyforward", web::post().to(handle_start_polling_moneyforward))
-            .route("/api/v1/handle_start_sync_bc", web::post().to(handle_start_sync_bc))
+            .route("/api/v1/handle_start_sync_bc", web::post().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
     })
         .bind(anonify_url)?
         .run()
