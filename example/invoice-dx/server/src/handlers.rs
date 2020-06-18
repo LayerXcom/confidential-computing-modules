@@ -75,38 +75,44 @@ pub fn handle_start_polling_moneyforward(
     req: web::Json<dx_api::state::start_polling_moneyforward::Request>,
 ) -> Result<HttpResponse, Error>
 {
-    let client = MFClient::new();
+    let mf_client = MFClient::new();
+    let (tx, rx) = mpsc::channel();
+
+    let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
+    let root_dir = get_default_root_dir();
+    // "test" and `0` is only used for DEMO.
+    let keypair = get_keypair_from_keystore(root_dir, "test".as_bytes(), 0)
+        .expect("failed to get keypair");
+    let state_id: u64 = 0;
+    let recipient: UserAddress = UserAddress::base64_decode(DEFAULT_RECIPIENT_ADDRESS);
+    let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
+    let rng = &mut OsRng;
 
     let _ = thread::spawn(move || {
         loop {
-            if client.exists_new().unwrap() {
+            if mf_client.exists_new().unwrap() {
                 debug!("new invoice exists");
                 let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
 
-                let root_dir = get_default_root_dir();
-                // "test" and `0` is only used for DEMO.
-                let keypair = get_keypair_from_keystore(root_dir, "test".as_bytes(), 0)
-                    .expect("failed to get keypair");
-                let state_id: u64 = 0;
-                let recipient: UserAddress = UserAddress::base64_decode(DEFAULT_RECIPIENT_ADDRESS);
-                let invoice = client.get_invoices()
-                    .expect("failed to get invoice");
-                let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
-                let rng = &mut OsRng;
-
-                let req = dx_api::send_invoice::post::Request::new(&keypair, state_id, recipient, invoice, contract_addr, rng);
-                let res = Client::new()
-                    .post(&format!("{}/api/v1/send_invoice", &anonify_url))
-                    .json(&req)
-                    .send().expect("failed to send invoice")
-                    .text().expect("failed to get the response text");
-
+                let invoice = mf_client.get_invoices()
+                    .expect("failed to get invoice from moneyforward");
+                tx.send(invoice).unwrap();
                 break;
             }
 
             thread::sleep(time::Duration::from_secs(3));
         }
     });
+
+    let invoice = &rx.recv().unwrap();
+    let req = dx_api::send_invoice::post::Request::new(&keypair, state_id, recipient, invoice.to_string(), contract_addr, rng);
+    let res = Client::new()
+        .post(&format!("{}/api/v1/send_invoice", &anonify_url))
+        .json(&req)
+        .send().expect("failed to send invoice")
+        .text().expect("failed to get the response text");
+
+    println!("response from send_invoicer: {}", res);
 
     Ok(HttpResponse::Ok().finish())
 }
