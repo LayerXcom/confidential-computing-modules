@@ -18,6 +18,7 @@ use handlers::*;
 
 mod moneyforward;
 mod handlers;
+mod config;
 
 #[derive(Debug)]
 pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
@@ -51,8 +52,8 @@ impl<D, S, W, DB> Server<D, S, W, DB>
 
 
 fn main() -> io::Result<()> {
-    env_logger::init();
     let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
+    env_logger::init();
 
     // Enclave must be initialized in main function.
     let enclave = EnclaveDir::new()
