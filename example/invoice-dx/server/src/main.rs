@@ -67,6 +67,7 @@ fn main() -> io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(server.clone())
+            .route("/api/v1/deploy", web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/send_invoice", web::post().to(handle_send_invoice::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))
             .route("/api/v1/start_polling_moneyforward", web::post().to(handle_start_polling_moneyforward))
             .route("/api/v1/handle_start_sync_bc", web::post().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>))

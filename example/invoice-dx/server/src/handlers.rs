@@ -39,6 +39,28 @@ use crate::sunabar::SunabarClient;
 const DEFAULT_SEND_GAS: u64 = 3_000_000;
 const DEFAULT_RECIPIENT_ADDRESS: &str = "KDY06J2T4bIldIq5Pjxo0Mq3ocY=";
 
+pub fn handle_deploy<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<dx_api::deploy::post::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
+{
+    debug!("Starting deploy a contract...");
+
+    let deployer_addr = server.dispatcher.get_account(0)?;
+    let contract_addr = server.dispatcher
+        .deploy(&deployer_addr)?;
+
+    debug!("Contract address: {:?}", &contract_addr);
+    server.dispatcher.set_contract_addr(&contract_addr, &server.abi_path)?;
+
+    Ok(HttpResponse::Ok().json(dx_api::deploy::post::Response(contract_addr)))
+}
+
 pub fn handle_send_invoice<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<dx_api::send_invoice::post::Request>,
@@ -107,7 +129,7 @@ pub fn handle_start_polling_moneyforward(
     let invoice = &rx.recv().unwrap();
     let req = dx_api::send_invoice::post::Request::new(&keypair, state_id, recipient, invoice.to_string(), contract_addr, rng);
     let res = Client::new()
-        .post(&format!("{}/api/v1/send_invoice", &anonify_url))
+        .post(&format!("http://{}/api/v1/send_invoice", &anonify_url))
         .json(&req)
         .send().expect("failed to send invoice")
         .text().expect("failed to get the response text");
