@@ -210,7 +210,7 @@ pub fn handle_set_notification<D, S, W, DB>(
         W: Watcher<WatcherDB=DB> + Send + Sync + 'static,
         DB: BlockNumDB + Send + Sync + 'static,
 {
-    let keypair = get_keypair_from_keystore("as".as_bytes(), 1)
+    let keypair = get_keypair_from_keystore("as".as_bytes(), req.keyfile_index)
         .expect("failed to get keypair");
     let access_right = create_access_right(keypair);
 

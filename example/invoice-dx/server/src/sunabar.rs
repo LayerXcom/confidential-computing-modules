@@ -17,7 +17,7 @@ const TRANSFER_DATA: &str = r#"{
       "transferAmount": "0",
       "beneficiaryBankCode": "0398",
       "beneficiaryBankName": "ｱｵｿﾞﾗ",
-      "beneficiaryBranchCode": "111",
+      "beneficiaryBranchCode": "101",
       "beneficiaryBranchName": "ﾎｳｼﾞﾝｴｲｷﾞｮｳﾌﾞ",
       "accountTypeCode": "1",
       "accountNumber": "0000314",
