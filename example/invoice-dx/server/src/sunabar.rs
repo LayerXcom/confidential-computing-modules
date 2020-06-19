@@ -4,24 +4,24 @@ use anyhow::{Result, anyhow};
 use anonify_runtime::{Bytes, UpdatedState, traits::State};
 use serde_json::Value;
 
-const ENDPOINT_TRANSFER_REQUEST: &str = "https://api.sunabar.gmo-aozora.com/personal/v1/transfer/request";
+const ENDPOINT_TRANSFER_REQUEST: &str = "https://api.sunabar.gmo-aozora.com/corporation/v1/transfer/request";
+// 5 -> 2
 const TRANSFER_DATA: &str = r#"{
-  "accountId": "301010000338",
-  "remitterName": "ｵｽｹ",
+  "accountId": "101011234567",
   "transferDesignatedDate": "2020-06-18",
   "transferDateHolidayCode": "1",
   "totalCount": "1",
   "totalAmount": "0",
   "transfers": [
     {
-      "transferAmount": "0",
-      "beneficiaryBankCode": "0310",
+      "transferAmount": "1000",
+      "beneficiaryBankCode": "0398",
       "beneficiaryBankName": "ｱｵｿﾞﾗ",
-      "beneficiaryBranchCode": "102",
-      "beneficiaryBranchName": "ﾎｳｼﾞﾝﾀﾞｲﾆｴｲｷﾞｮｳﾌﾞ",
+      "beneficiaryBranchCode": "111",
+      "beneficiaryBranchName": "ﾎｳｼﾞﾝｴｲｷﾞｮｳﾌﾞ",
       "accountTypeCode": "1",
-      "accountNumber": "0000369",
-      "beneficiaryName": "ｽﾅﾊﾞﾊﾙﾕｷ(ｶ"
+      "accountNumber": "0000314",
+      "beneficiaryName": "ｽﾅﾊﾞｺｳｽｹ(ｶ"
     }
   ]
 }"#;
