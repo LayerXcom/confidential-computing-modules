@@ -21,7 +21,7 @@ use crate::localstd::{
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
-pub const MAX_MEM_SIZE: usize = 500;
+pub const MAX_MEM_SIZE: usize = 2000;
 pub const CIPHERTEXT_SIZE: usize = MAX_MEM_SIZE + 30;
 
 impl_memory! {
