@@ -134,7 +134,7 @@ pub fn handle_start_polling_moneyforward(
         .send().expect("failed to send invoice")
         .text().expect("failed to get the response text");
 
-    println!("response from send_invoicer: {}", res);
+    println!("response from send_invoice: {}", res);
 
     Ok(HttpResponse::Ok().finish())
 }

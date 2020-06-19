@@ -25,7 +25,7 @@ if [ "x$1" == "x--release" ]; then
     exit
 fi
 
-make DEBUG=1
+make DEBUG=1 FEATURES=DX
 # enclave.signed.so is need to initialize enclave.
 rm -rf ../example/erc20/bin && cp -rf bin/ ../example/erc20/bin/ && cd ../
 
