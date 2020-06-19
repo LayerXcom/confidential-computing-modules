@@ -4,11 +4,11 @@ use anyhow::{Result, anyhow};
 use anonify_runtime::{Bytes, UpdatedState, traits::State};
 use serde_json::Value;
 
-const ENDPOINT_TRANSFER_REQUEST: &str = "https://api.sunabar.gmo-aozora.com/corporation/v1/transfer/request";
+const ENDPOINT_TRANSFER_REQUEST: &str = "https://api.sunabar.gmo-aozora.com/personal/v1/transfer/request";
 // 5 -> 2
 const TRANSFER_DATA: &str = r#"{
-  "accountId": "101011234567",
-  "transferDesignatedDate": "2020-06-18",
+  "accountId": "301010000338",
+  "transferDesignatedDate": "2020-06-23",
   "transferDateHolidayCode": "1",
   "totalCount": "1",
   "totalAmount": "0",
