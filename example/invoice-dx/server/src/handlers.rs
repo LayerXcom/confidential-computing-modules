@@ -101,9 +101,8 @@ pub fn handle_start_polling_moneyforward(
     let (tx, rx) = mpsc::channel();
 
     let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
-    let root_dir = get_default_root_dir();
-    // "test" and `0` is only used for DEMO.
-    let keypair = get_keypair_from_keystore(root_dir, "test".as_bytes(), 0)
+    // "as" and `0` is only used for DEMO.
+    let keypair = get_keypair_from_keystore("as".as_bytes(), 0)
         .expect("failed to get keypair");
     let state_id: u64 = 0;
     let recipient: UserAddress = UserAddress::base64_decode(DEFAULT_RECIPIENT_ADDRESS);
@@ -177,24 +176,4 @@ pub fn handle_start_sync_bc<D, S, W, DB>(
     println!("response from sunabar: {}", res);
 
     Ok(HttpResponse::Ok().finish())
-}
-
-
-
-fn wallet_keystore_dirs(root_dir: &PathBuf) -> Result<(WalletDirectory, KeystoreDirectory), Error> {
-    // configure wallet directory
-    let wallet_dir = WalletDirectory::create(&root_dir)?;
-
-    // configure ketstore directory
-    let keystore_dir_path = wallet_dir.get_default_keystore_dir();
-    let keystore_dir = KeystoreDirectory::create(keystore_dir_path)?;
-
-    Ok((wallet_dir, keystore_dir))
-}
-
-pub fn get_keypair_from_keystore(root_dir: PathBuf, password: &[u8], keyfile_index: usize) -> Result<Keypair, Error> {
-    let (_wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
-    let keyfile = &keystore_dir.load_all()?[keyfile_index];
-    let keypair = keyfile.get_key_pair(password)?;
-    Ok(keypair)
 }

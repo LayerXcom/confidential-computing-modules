@@ -1,12 +1,27 @@
-use dirs;
 use std::path::PathBuf;
+use std::env;
 
-const APPLICATION_DIRECTORY_NAME: &'static str = "anonify";
+const KEYSTORE_DIRECTORY_NAME: &'static str = "fixture";
 
-/// root directory configuration
-pub(crate) fn get_default_root_dir() -> PathBuf {
-    match dirs::data_local_dir() {
-        Some(dir) => dir.join(APPLICATION_DIRECTORY_NAME),
-        None => panic!("Undefined the local data directory."),
-    }
+pub fn get_keypair_from_keystore(password: &[u8], keyfile_index: usize) -> Result<Keypair, Error> {
+    let root_dir = env::current_dir()?.parent().unwrap().join(KEYSTORE_DIRECTORY_NAME);
+    println!("current dir: {:?}", path);
+
+    let (_wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
+    let keyfile = &keystore_dir.load_all()?[keyfile_index];
+    let keypair = keyfile.get_key_pair(password)?;
+
+    Ok(keypair)
+}
+
+
+fn wallet_keystore_dirs(root_dir: &PathBuf) -> Result<(WalletDirectory, KeystoreDirectory), Error> {
+    // configure wallet directory
+    let wallet_dir = WalletDirectory::create(&root_dir)?;
+
+    // configure ketstore directory
+    let keystore_dir_path = wallet_dir.get_default_keystore_dir();
+    let keystore_dir = KeystoreDirectory::create(keystore_dir_path)?;
+
+    Ok((wallet_dir, keystore_dir))
 }
