@@ -30,7 +30,6 @@ const DEFAULT_RECIPIENT_ADDRESS: &str = "KDY06J2T4bIldIq5Pjxo0Mq3ocY=";
 
 pub fn handle_deploy<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<dx_api::deploy::post::Request>,
 ) -> Result<HttpResponse, Error>
     where
         D: Deployer,
@@ -50,41 +49,8 @@ pub fn handle_deploy<D, S, W, DB>(
     Ok(HttpResponse::Ok().json(dx_api::deploy::post::Response(contract_addr)))
 }
 
-pub fn handle_send_invoice<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<dx_api::send_invoice::post::Request>,
-) -> Result<HttpResponse, Error>
-    where
-        D: Deployer,
-        S: Sender,
-        W: Watcher<WatcherDB=DB>,
-        DB: BlockNumDB,
-{
-    let access_right = req.into_access_right()?;
-    let signer = server.dispatcher.get_account(0)?;
-    let recipient = req.recipient;
-    let invoice = Bytes::new(req.invoice.clone().into());
-    let invoice = Bytes::from(invoice);
-
-    let send_invoice_state = send_invoice { recipient, invoice };
-
-    let receipt = server.dispatcher.send_instruction(
-        access_right,
-        send_invoice_state,
-        req.state_id,
-        "send_invoice",
-        signer,
-        DEFAULT_SEND_GAS,
-        &req.contract_addr,
-        &server.abi_path,
-    )?;
-
-    Ok(HttpResponse::Ok().json(dx_api::send_invoice::post::Response(receipt)))
-}
-
 pub fn handle_start_polling_moneyforward<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<dx_api::state::start_polling_moneyforward::Request>,
 ) -> Result<HttpResponse, Error>
     where
             D: Deployer,
