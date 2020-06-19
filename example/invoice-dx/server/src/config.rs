@@ -1,11 +1,18 @@
 use std::path::PathBuf;
 use std::env;
+use anonify_wallet::{
+    WalletDirectory,
+    KeystoreDirectory,
+    DirOperations,
+};
+use ed25519_dalek::Keypair;
+use failure::Error;
 
 const KEYSTORE_DIRECTORY_NAME: &'static str = "fixture";
 
 pub fn get_keypair_from_keystore(password: &[u8], keyfile_index: usize) -> Result<Keypair, Error> {
     let root_dir = env::current_dir()?.parent().unwrap().join(KEYSTORE_DIRECTORY_NAME);
-    println!("current dir: {:?}", path);
+    println!("current dir: {:?}", root_dir);
 
     let (_wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
     let keyfile = &keystore_dir.load_all()?[keyfile_index];
@@ -13,7 +20,6 @@ pub fn get_keypair_from_keystore(password: &[u8], keyfile_index: usize) -> Resul
 
     Ok(keypair)
 }
-
 
 fn wallet_keystore_dirs(root_dir: &PathBuf) -> Result<(WalletDirectory, KeystoreDirectory), Error> {
     // configure wallet directory

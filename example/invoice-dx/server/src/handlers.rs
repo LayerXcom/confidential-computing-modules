@@ -11,29 +11,18 @@ use ed25519_dalek::Keypair;
 use sgx_types::sgx_enclave_id_t;
 // use anyhow::anyhow;
 
-// use anonify_host::dispatcher::get_state;
 use anonify_bc_connector::{
-    // EventDB,
     BlockNumDB,
     traits::*,
-    // eth::*,
 };
 use anonify_runtime::{Bytes, UpdatedState};
 use anonify_common::UserAddress;
 use anonify_host::Dispatcher;
-use anonify_wallet::{
-    WalletDirectory,
-    KeystoreDirectory,
-    // KeyFile,
-    DirOperations,
-};
-
 use dx_app::send_invoice;
-use dx_api;
 
 use crate::moneyforward::MFClient;
 use crate::Server;
-use crate::config::get_default_root_dir;
+use crate::config::get_keypair_from_keystore;
 use crate::sunabar::SunabarClient;
 
 const DEFAULT_SEND_GAS: u64 = 3_000_000;
@@ -113,7 +102,6 @@ pub fn handle_start_polling_moneyforward(
         loop {
             if mf_client.exists_new().unwrap() {
                 debug!("new invoice exists");
-                let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
 
                 let invoice = mf_client.get_invoices()
                     .expect("failed to get invoice from moneyforward");
