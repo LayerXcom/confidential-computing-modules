@@ -184,3 +184,20 @@ pub mod notification {
         }
     }
 }
+
+pub mod contract_addr {
+    pub mod post {
+        use super::super::*;
+
+        #[derive(Clone, Deserialize, Serialize, Debug)]
+        pub struct Request {
+            pub contract_addr: String,
+        }
+
+        impl Request {
+            pub fn new(contract_addr: String) -> Self {
+                Request { contract_addr }
+            }
+        }
+    }
+}

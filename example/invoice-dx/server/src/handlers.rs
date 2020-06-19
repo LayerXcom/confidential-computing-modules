@@ -219,6 +219,23 @@ pub fn handle_set_notification<D, S, W, DB>(
     Ok(HttpResponse::Ok().finish())
 }
 
+pub fn handle_set_contract_addr<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<dx_api::contract_addr::post::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
+{
+    debug!("Starting set a contract address...");
+
+    debug!("Contract address: {:?}", &req.contract_addr);
+    server.dispatcher.set_contract_addr(&req.contract_addr, &server.abi_path)?;
+
+    Ok(HttpResponse::Ok().finish())
+}
 
 
 fn create_access_right(keypair: Keypair) -> AccessRight {
