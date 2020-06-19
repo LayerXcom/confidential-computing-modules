@@ -157,7 +157,7 @@ pub fn handle_start_sync_bc<D, S, W, DB>(
     });
 
     let res = client
-        .set_shared_invoice(&rx.recv().unwrap())
+        .set_shared_invoice(rx.recv().unwrap())
         .transfer_request()
         .unwrap(); //todo
 

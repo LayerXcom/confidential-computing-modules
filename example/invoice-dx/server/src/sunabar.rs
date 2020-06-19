@@ -15,13 +15,13 @@ const TRANSFER_DATA: &str = r#"{
   "transfers": [
     {
       "transferAmount": "0",
-      "beneficiaryBankCode": "0398",
+      "beneficiaryBankCode": "0310",
       "beneficiaryBankName": "ｱｵｿﾞﾗ",
-      "beneficiaryBranchCode": "101",
-      "beneficiaryBranchName": "ﾎｳｼﾞﾝｴｲｷﾞｮｳﾌﾞ",
+      "beneficiaryBranchCode": "102",
+      "beneficiaryBranchName": "ﾎｳｼﾞﾝﾀﾞｲﾆｴｲｷﾞｮｳﾌﾞ",
       "accountTypeCode": "1",
-      "accountNumber": "0000314",
-      "beneficiaryName": "ｽﾅﾊﾞｺｳｽｹ(ｶ"
+      "accountNumber": "0000369",
+      "beneficiaryName": "ｽﾅﾊﾞﾊﾙﾕｷ(ｶ"
     }
   ]
 }"#;
@@ -58,8 +58,8 @@ impl SunabarClient {
         }
     }
 
-    pub fn set_shared_invoice(mut self, invoice: &UpdatedState<Bytes>) -> Self {
-        let invoice_json: Value = serde_json::from_slice(&invoice.state.as_bytes()).unwrap();
+    pub fn set_shared_invoice(mut self, invoice: UpdatedState<Bytes>) -> Self {
+        let invoice_json: Value = serde_json::from_slice(&invoice.state.into_raw()).unwrap();
         let amount = &invoice_json["data"][0]["attributes"]["total_price"];
 
         *self.body.get_mut("totalAmount").unwrap() = amount.clone();
