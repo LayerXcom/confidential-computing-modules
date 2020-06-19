@@ -7,16 +7,16 @@ use actix_web::{
 };
 use reqwest::Client;
 use rand::rngs::OsRng;
+use rand::Rng;
 use ed25519_dalek::Keypair;
 use sgx_types::sgx_enclave_id_t;
-// use anyhow::anyhow;
 
 use anonify_bc_connector::{
     BlockNumDB,
     traits::*,
 };
 use anonify_runtime::{Bytes, UpdatedState};
-use anonify_common::UserAddress;
+use anonify_common::{UserAddress, AccessRight};
 use anonify_host::Dispatcher;
 use dx_app::send_invoice;
 
@@ -162,6 +162,28 @@ pub fn handle_start_sync_bc<D, S, W, DB>(
         .unwrap(); //todo
 
     println!("response from sunabar: {}", res);
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+pub fn handle_set_notification<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<dx_api::notification::post::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer + Send + Sync + 'static,
+        S: Sender + Send + Sync + 'static,
+        W: Watcher<WatcherDB=DB> + Send + Sync + 'static,
+        DB: BlockNumDB + Send + Sync + 'static,
+{
+    let keypair = get_keypair_from_keystore("as".as_bytes(), 1)
+        .expect("failed to get keypair");
+    let rng = &mut OsRng;
+    let challenge: [u8; 32] = rng.gen();
+    let sig = keypair.sign(&challenge[..]);
+    let access_right = AccessRight::new(sig, keypair.public, challenge);
+
+    server.dispatcher.register_notification(access_right).unwrap();
 
     Ok(HttpResponse::Ok().finish())
 }
