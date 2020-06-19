@@ -82,9 +82,15 @@ pub fn handle_send_invoice<D, S, W, DB>(
     Ok(HttpResponse::Ok().json(dx_api::send_invoice::post::Response(receipt)))
 }
 
-pub fn handle_start_polling_moneyforward(
+pub fn handle_start_polling_moneyforward<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<dx_api::state::start_polling_moneyforward::Request>,
 ) -> Result<HttpResponse, Error>
+    where
+            D: Deployer,
+            S: Sender,
+            W: Watcher<WatcherDB=DB>,
+            DB: BlockNumDB,
 {
     let mf_client = MFClient::new();
     let (tx, rx) = mpsc::channel();
@@ -111,17 +117,24 @@ pub fn handle_start_polling_moneyforward(
     });
 
     let invoice = &rx.recv().unwrap();
-    let receipt = inner_send_invoice(keypair, invoice.to_string()).unwrap();
-    
+    let receipt = inner_send_invoice(server, keypair, invoice.to_string()).unwrap();
+
     println!("response from send_invoice: {}", receipt);
 
     Ok(HttpResponse::Ok().finish())
 }
 
-fn inner_send_invoice(
+fn inner_send_invoice<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
     keypair: Keypair,
     invoice: String,
-) -> Result<String> {
+) -> Result<String, Error>
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
+{
     let access_right = create_access_right(keypair);
     let state_id: u64 = 0;
     let signer = server.dispatcher.get_account(0)?;
