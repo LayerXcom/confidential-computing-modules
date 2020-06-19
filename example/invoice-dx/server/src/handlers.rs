@@ -93,9 +93,6 @@ pub fn handle_start_polling_moneyforward(
     // "as" and `0` is only used for DEMO.
     let keypair = get_keypair_from_keystore("as".as_bytes(), 0)
         .expect("failed to get keypair");
-    let state_id: u64 = 0;
-    let recipient: UserAddress = UserAddress::base64_decode(DEFAULT_RECIPIENT_ADDRESS);
-    let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
     let rng = &mut OsRng;
 
     let _ = thread::spawn(move || {
@@ -114,16 +111,40 @@ pub fn handle_start_polling_moneyforward(
     });
 
     let invoice = &rx.recv().unwrap();
-    let req = dx_api::send_invoice::post::Request::new(&keypair, state_id, recipient, invoice.to_string(), contract_addr, rng);
-    let res = Client::new()
-        .post(&format!("http://{}/api/v1/send_invoice", &anonify_url))
-        .json(&req)
-        .send().expect("failed to send invoice")
-        .text().expect("failed to get the response text");
-
-    println!("response from send_invoice: {}", res);
+    let receipt = inner_send_invoice(keypair, invoice.to_string()).unwrap();
+    
+    println!("response from send_invoice: {}", receipt);
 
     Ok(HttpResponse::Ok().finish())
+}
+
+fn inner_send_invoice(
+    keypair: Keypair,
+    invoice: String,
+) -> Result<String> {
+    let access_right = create_access_right(keypair);
+    let state_id: u64 = 0;
+    let signer = server.dispatcher.get_account(0)?;
+    let recipient: UserAddress = UserAddress::base64_decode(DEFAULT_RECIPIENT_ADDRESS);
+    let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
+
+    let invoice = Bytes::new(invoice.clone().into());
+    let invoice = Bytes::from(invoice);
+
+    let send_invoice_state = send_invoice { recipient, invoice };
+
+    let receipt = server.dispatcher.send_instruction(
+        access_right,
+        send_invoice_state,
+        state_id,
+        "send_invoice",
+        signer,
+        DEFAULT_SEND_GAS,
+        &contract_addr,
+        &server.abi_path,
+    )?;
+
+    Ok(receipt)
 }
 
 pub fn handle_start_sync_bc<D, S, W, DB>(
@@ -178,12 +199,19 @@ pub fn handle_set_notification<D, S, W, DB>(
 {
     let keypair = get_keypair_from_keystore("as".as_bytes(), 1)
         .expect("failed to get keypair");
-    let rng = &mut OsRng;
-    let challenge: [u8; 32] = rng.gen();
-    let sig = keypair.sign(&challenge[..]);
-    let access_right = AccessRight::new(sig, keypair.public, challenge);
+    let access_right = create_access_right(keypair);
 
     server.dispatcher.register_notification(access_right).unwrap();
 
     Ok(HttpResponse::Ok().finish())
+}
+
+
+
+fn create_access_right(keypair: Keypair) -> AccessRight {
+    let rng = &mut OsRng;
+    let challenge: [u8; 32] = rng.gen();
+    let sig = keypair.sign(&challenge[..]);
+
+    AccessRight::new(sig, keypair.public, challenge)
 }
