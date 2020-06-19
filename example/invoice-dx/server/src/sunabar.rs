@@ -14,7 +14,7 @@ const TRANSFER_DATA: &str = r#"{
   "totalAmount": "0",
   "transfers": [
     {
-      "transferAmount": "1000",
+      "transferAmount": "0",
       "beneficiaryBankCode": "0398",
       "beneficiaryBankName": "ｱｵｿﾞﾗ",
       "beneficiaryBranchCode": "111",
