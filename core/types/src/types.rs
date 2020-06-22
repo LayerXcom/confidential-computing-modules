@@ -37,6 +37,8 @@ impl Default for EnclaveStatus {
 }
 
 impl EnclaveStatus {
+    pub fn success() -> Self { EnclaveStatus(0) }
+
     pub fn is_err(&self) -> bool {
         match self.0 {
             0 => false,

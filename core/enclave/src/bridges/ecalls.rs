@@ -23,7 +23,7 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
     ciphertext: *mut u8,
     ciphertext_len: usize,
     raw_updated_state: &mut RawUpdatedState,
-) -> sgx_status_t {
+) -> EnclaveStatus {
     let ciphertext = slice::from_raw_parts_mut(ciphertext, ciphertext_len);
     let ciphertext = Ciphertext::from_bytes(ciphertext);
     let group_key = &mut *ENCLAVE_CONTEXT.group_key.write().unwrap();
@@ -39,7 +39,7 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
     // ratchet app keychain per a log.
     group_key.ratchet(roster_idx).unwrap();
 
-    sgx_status_t::SGX_SUCCESS
+    EnclaveStatus::success()
 }
 
 /// Insert handshake received from blockchain nodes into enclave.
@@ -47,14 +47,14 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
 pub unsafe extern "C" fn ecall_insert_handshake(
     handshake: *mut u8,
     handshake_len: usize,
-) -> sgx_status_t {
+) -> EnclaveStatus {
     let handshake_bytes = slice::from_raw_parts_mut(handshake, handshake_len);
     let handshake = HandshakeParams::decode(&mut &handshake_bytes[..]).unwrap();
     let group_key = &mut *ENCLAVE_CONTEXT.group_key.write().unwrap();
 
     group_key.process_handshake(&handshake).unwrap();
 
-    sgx_status_t::SGX_SUCCESS
+    EnclaveStatus::success()
 }
 
 /// Get current state of the user represented the given public key from enclave memory database.
@@ -76,13 +76,13 @@ pub unsafe extern "C" fn ecall_get_state(
     let user_state = &ENCLAVE_CONTEXT.get_by_id(key, MemId::from_raw(mem_id));
     state.0 = save_to_host_memory(user_state.as_bytes()).unwrap() as *const u8;
 
-    EnclaveStatus(0)
+    EnclaveStatus::success()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_join_group(
     raw_join_group_tx: &mut RawJoinGroupTx,
-) -> sgx_status_t {
+) -> EnclaveStatus {
     let join_group_tx = JoinGroupTx::construct(
             IAS_URL,
             TEST_SUB_KEY,
@@ -93,7 +93,7 @@ pub unsafe extern "C" fn ecall_join_group(
     *raw_join_group_tx = join_group_tx.into_raw()
         .expect("Failed to convert into raw JoinGroup transaction.");
 
-    sgx_status_t::SGX_SUCCESS
+    EnclaveStatus::success()
 }
 
 
@@ -107,7 +107,7 @@ pub unsafe extern "C" fn ecall_instruction(
     state_id: u64,
     call_id: u32,
     raw_instruction_tx: &mut RawInstructionTx,
-) -> sgx_status_t {
+) -> EnclaveStatus {
     let params = slice::from_raw_parts_mut(state, state_len);
     let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge)
         .expect("Failed to generate access right.");
@@ -125,20 +125,20 @@ pub unsafe extern "C" fn ecall_instruction(
     *raw_instruction_tx = instruction_tx.into_raw()
         .expect("Failed to convert into raw state transaction.");
 
-    sgx_status_t::SGX_SUCCESS
+    EnclaveStatus::success()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_handshake(
     raw_handshake_tx: &mut RawHandshakeTx,
-) -> sgx_status_t {
+) -> EnclaveStatus {
     let handshake_tx = HandshakeTx::construct(&*ENCLAVE_CONTEXT)
         .expect("Failed to construct handshake transaction.");
 
     *raw_handshake_tx = handshake_tx.into_raw()
         .expect("Failed to convert into raw handshake transaction.");
 
-    sgx_status_t::SGX_SUCCESS
+    EnclaveStatus::success()
 }
 
 #[no_mangle]
@@ -146,7 +146,7 @@ pub unsafe extern "C" fn ecall_register_notification(
     sig: &RawSig,
     pubkey: &RawPubkey,
     challenge: &RawChallenge,
-) -> sgx_status_t {
+) -> EnclaveStatus {
     let sig = Signature::from_bytes(&sig[..])
         .expect("Failed to read signatures.");
     let pubkey = PublicKey::from_bytes(&pubkey[..])
@@ -156,7 +156,7 @@ pub unsafe extern "C" fn ecall_register_notification(
 
     ENCLAVE_CONTEXT.set_notification(user_address);
 
-    sgx_status_t::SGX_SUCCESS
+    EnclaveStatus::success()
 }
 
 pub mod enclave_tests {
