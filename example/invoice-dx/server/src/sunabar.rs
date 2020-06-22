@@ -5,10 +5,10 @@ use anonify_runtime::{Bytes, UpdatedState, traits::State};
 use serde_json::Value;
 
 const ENDPOINT_TRANSFER_REQUEST: &str = "https://api.sunabar.gmo-aozora.com/personal/v1/transfer/request";
+// 5 -> 2
 const TRANSFER_DATA: &str = r#"{
   "accountId": "301010000338",
-  "remitterName": "ｵｽｹ",
-  "transferDesignatedDate": "2020-06-18",
+  "transferDesignatedDate": "2020-06-23",
   "transferDateHolidayCode": "1",
   "totalCount": "1",
   "totalAmount": "0",
@@ -29,8 +29,7 @@ const TRANSFER_DATA: &str = r#"{
 lazy_static! {
     static ref SUNABAR_SECRET: String = {
         use std::env;
-        let secret = env::var("SUNABAR_SECRET").unwrap();
-        format!("{}{}", "Bearer ", secret)
+        env::var("SUNABAR_SECRET").unwrap()
     };
 }
 
@@ -58,14 +57,15 @@ impl SunabarClient {
         }
     }
 
-    pub fn set_shared_invoice(mut self, invoice: &UpdatedState<Bytes>) -> Self {
-        let invoice_json: Value = serde_json::from_slice(&invoice.state.as_bytes()).unwrap();
+    pub fn set_shared_invoice(mut self, invoice: UpdatedState<Bytes>) -> Self {
+        let invoice_json: Value = serde_json::from_slice(&invoice.state.into_raw()).unwrap();
         let amount = &invoice_json["data"][0]["attributes"]["total_price"];
+        let amount = trim_by_point(amount);
 
-        *self.body.get_mut("totalAmount").unwrap() = amount.clone();
+        *self.body.get_mut("totalAmount").unwrap() = Value::from(amount);
         *self.body.get_mut("transfers").unwrap()
             .get_mut(0).unwrap()
-            .get_mut("transferAmount").unwrap() = amount.clone();
+            .get_mut("transferAmount").unwrap() = Value::from(amount);
 
         self
     }
@@ -78,4 +78,11 @@ impl SunabarClient {
             .text()
             .map_err(Into::into)
     }
+}
+
+fn trim_by_point(v: &Value) -> &str {
+    v.as_str().unwrap()
+        .split('.')
+        .into_iter()
+        .next().unwrap()
 }

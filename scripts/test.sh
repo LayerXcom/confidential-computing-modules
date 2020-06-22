@@ -16,7 +16,7 @@ cd core
 echo `cargo --version`
 echo "Start building core components."
 
-make DEBUG=1
+make DEBUG=1 FEATURES=ERC20
 rm -rf ../example/erc20/bin && cp -rf bin/ ../example/erc20/bin/
 
 echo "Testing core components..."

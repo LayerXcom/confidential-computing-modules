@@ -29,7 +29,7 @@ RUN source /opt/sgxsdk/environment && \
     export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
     solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol && \
     cd core && \
-    make DEBUG=1 && \
+    make DEBUG=1 FEATURES=ERC20 && \
     cd example/erc20/server && \
     RUST_BACKTRACE=1 RUST_LOG=debug /root/.cargo/bin/cargo build
 

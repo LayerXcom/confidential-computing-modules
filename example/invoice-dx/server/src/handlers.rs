@@ -1,60 +1,35 @@
-use std::{sync::{Arc, mpsc}, env, thread, time};
+use std::{sync::{Arc, mpsc}, env, thread, time, path::PathBuf,};
 use failure::Error;
 use log::debug;
-// use anonify_host::dispatcher::get_state;
-use anonify_bc_connector::{
-    // EventDB,
-    BlockNumDB,
-    traits::*,
-    // eth::*,
-};
-use anonify_runtime::{Bytes, UpdatedState};
-use anonify_host::Dispatcher;
-use dx_app::send_invoice;
 use actix_web::{
     web,
     HttpResponse,
 };
-// use anyhow::anyhow;
+use reqwest::Client;
+use rand::rngs::OsRng;
+use rand::Rng;
+use ed25519_dalek::Keypair;
 use sgx_types::sgx_enclave_id_t;
+
+use anonify_bc_connector::{
+    BlockNumDB,
+    traits::*,
+};
+use anonify_runtime::{Bytes, UpdatedState};
+use anonify_common::{UserAddress, AccessRight};
+use anonify_host::Dispatcher;
+use dx_app::send_invoice;
+
 use crate::moneyforward::MFClient;
+use crate::Server;
+use crate::config::get_keypair_from_keystore;
 use crate::sunabar::SunabarClient;
 
-#[derive(Debug)]
-pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
-    pub eid: sgx_enclave_id_t,
-    pub eth_url: String,
-    pub abi_path: String,
-    pub dispatcher: Dispatcher<D, S, W, DB>,
-}
-
-impl<D, S, W, DB> Server<D, S, W, DB>
-    where
-        D: Deployer,
-        S: Sender,
-        W: Watcher<WatcherDB=DB>,
-        DB: BlockNumDB,
-{
-    pub fn new(eid: sgx_enclave_id_t) -> Self {
-        let eth_url = env::var("ETH_URL").expect("ETH_URL is not set.");
-        let abi_path = env::var("ANONYMOUS_ASSET_ABI_PATH").expect("ANONYMOUS_ASSET_ABI_PATH is not set.");
-        let event_db = Arc::new(DB::new());
-        let dispatcher = Dispatcher::<D, S, W, DB>::new(eid, &eth_url, event_db).unwrap();
-
-        Server {
-            eid,
-            eth_url,
-            abi_path,
-            dispatcher,
-        }
-    }
-}
-
 const DEFAULT_SEND_GAS: u64 = 3_000_000;
+const DEFAULT_RECIPIENT_ADDRESS: &str = "KDY06J2T4bIldIq5Pjxo0Mq3ocY=";
 
-pub fn handle_send_invoice<D, S, W, DB>(
+pub fn handle_deploy<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<dx_api::send_invoice::post::Request>,
 ) -> Result<HttpResponse, Error>
     where
         D: Deployer,
@@ -62,59 +37,93 @@ pub fn handle_send_invoice<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
-    let access_right = req.into_access_right()?;
-    let signer = server.dispatcher.get_account(0)?;
-    let recipient = req.recipient;
-    let invoice = Bytes::new(req.invoice.clone().into());
-    let invoice = Bytes::from(invoice);
+    debug!("Starting deploy a contract...");
 
-    let send_invoice_state = send_invoice{ recipient, invoice };
+    let deployer_addr = server.dispatcher.get_account(0)?;
+    let contract_addr = server.dispatcher
+        .deploy(&deployer_addr)?;
 
-    let receipt = server.dispatcher.send_instruction(
-        access_right,
-        send_invoice_state,
-        req.state_id,
-        "send_invoice",
-        signer,
-        DEFAULT_SEND_GAS,
-        &req.contract_addr,
-        &server.abi_path,
-    )?;
+    debug!("Contract address: {:?}", &contract_addr);
+    server.dispatcher.set_contract_addr(&contract_addr, &server.abi_path)?;
 
-    Ok(HttpResponse::Ok().json(dx_api::send_invoice::post::Response(receipt)))
+    Ok(HttpResponse::Ok().json(dx_api::deploy::post::Response(contract_addr)))
 }
 
-pub fn handle_start_polling_moneyforward(
-    req: web::Json<dx_api::state::start_polling_moneyforward::Request>,
+pub fn handle_start_polling_moneyforward<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
 ) -> Result<HttpResponse, Error>
+    where
+            D: Deployer,
+            S: Sender,
+            W: Watcher<WatcherDB=DB>,
+            DB: BlockNumDB,
 {
-    let client = MFClient::new();
+    let mf_client = MFClient::new();
+    let (tx, rx) = mpsc::channel();
+
+    let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
+    // "as" and `0` is only used for DEMO.
+    let keypair = get_keypair_from_keystore("as".as_bytes(), 0)
+        .expect("failed to get keypair");
+    let rng = &mut OsRng;
 
     let _ = thread::spawn(move || {
         loop {
-            if client.exists_new().unwrap() {
+            if mf_client.exists_new().unwrap() {
                 debug!("new invoice exists");
+
+                let invoice = mf_client.get_invoices()
+                    .expect("failed to get invoice from moneyforward");
+                tx.send(invoice).unwrap();
                 break;
             }
-
-            // let invoces = Billing::from_response(resp);
-
-            // let = state_id: u64 = ; TODO:
-            // let recipient: UserAddress = ; TODO:
-            // let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
-            // let rng = &mut OsRng;
-            // let req = api::send_invoice::post::Request::new(&keypair, state_id, recipient, body, contract_addr, rng);
-            // let res = Client::new()
-            //     .post(&format!("{}/api/v1/send_invoice", &anonify_url))
-            //     .json(&req)
-            //     .send()?
-            //     .text()?;
 
             thread::sleep(time::Duration::from_secs(3));
         }
     });
 
+    let invoice = &rx.recv().unwrap();
+    let receipt = inner_send_invoice(server, keypair, invoice.to_string()).unwrap();
+
+    println!("response from send_invoice: {}", receipt);
+
     Ok(HttpResponse::Ok().finish())
+}
+
+fn inner_send_invoice<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    keypair: Keypair,
+    invoice: String,
+) -> Result<String, Error>
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
+{
+    let access_right = create_access_right(keypair);
+    let state_id: u64 = 0;
+    let signer = server.dispatcher.get_account(0)?;
+    let recipient: UserAddress = UserAddress::base64_decode(DEFAULT_RECIPIENT_ADDRESS);
+    let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
+
+    let invoice = Bytes::new(invoice.clone().into());
+    let invoice = Bytes::from(invoice);
+
+    let send_invoice_state = send_invoice { recipient, invoice };
+
+    let receipt = server.dispatcher.send_instruction(
+        access_right,
+        send_invoice_state,
+        state_id,
+        "send_invoice",
+        signer,
+        DEFAULT_SEND_GAS,
+        &contract_addr,
+        &server.abi_path,
+    )?;
+
+    Ok(receipt)
 }
 
 pub fn handle_start_sync_bc<D, S, W, DB>(
@@ -148,11 +157,57 @@ pub fn handle_start_sync_bc<D, S, W, DB>(
     });
 
     let res = client
-        .set_shared_invoice(&rx.recv().unwrap())
+        .set_shared_invoice(rx.recv().unwrap())
         .transfer_request()
         .unwrap(); //todo
 
     println!("response from sunabar: {}", res);
 
     Ok(HttpResponse::Ok().finish())
+}
+
+pub fn handle_set_notification<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<dx_api::notification::post::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer + Send + Sync + 'static,
+        S: Sender + Send + Sync + 'static,
+        W: Watcher<WatcherDB=DB> + Send + Sync + 'static,
+        DB: BlockNumDB + Send + Sync + 'static,
+{
+    let keypair = get_keypair_from_keystore("as".as_bytes(), req.keyfile_index)
+        .expect("failed to get keypair");
+    let access_right = create_access_right(keypair);
+
+    server.dispatcher.register_notification(access_right).unwrap();
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+pub fn handle_set_contract_addr<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<dx_api::contract_addr::post::Request>,
+) -> Result<HttpResponse, Error>
+    where
+        D: Deployer,
+        S: Sender,
+        W: Watcher<WatcherDB=DB>,
+        DB: BlockNumDB,
+{
+    debug!("Starting set a contract address...");
+
+    debug!("Contract address: {:?}", &req.contract_addr);
+    server.dispatcher.set_contract_addr(&req.contract_addr, &server.abi_path)?;
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+
+fn create_access_right(keypair: Keypair) -> AccessRight {
+    let rng = &mut OsRng;
+    let challenge: [u8; 32] = rng.gen();
+    let sig = keypair.sign(&challenge[..]);
+
+    AccessRight::new(sig, keypair.public, challenge)
 }

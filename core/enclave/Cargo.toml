@@ -43,6 +43,6 @@ sgx_tcrypto = "1.1.1"
 sgx_tunittest = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 
 [features]
-default = ["erc20"]
+default = []
 erc20 = ["anonify-app-preluder/erc20-sgx"]
 dx = ["anonify-app-preluder/dx-sgx"]

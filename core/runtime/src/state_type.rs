@@ -130,8 +130,8 @@ impl Bytes {
         self.0.len() * size_of::<u8>()
     }
 
-    pub fn as_byets(&self) -> &[u8] {
-        &self.0[..]
+    pub fn into_raw(self) -> Vec<u8> {
+        self.0
     }
 }
 

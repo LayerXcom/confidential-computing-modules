@@ -56,13 +56,13 @@ impl MFClient {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Invoice {
-    raw: String,
-}
-
-impl Invoice {
-    pub fn from_response(raw: String) -> Self {
-        Invoice { raw }
-    }
-}
+// #[derive(Debug, Clone)]
+// pub struct Invoice {
+//     raw: String,
+// }
+//
+// impl Invoice {
+//     pub fn from_response(raw: String) -> Self {
+//         Invoice { raw }
+//     }
+// }

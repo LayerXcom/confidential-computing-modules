@@ -17,20 +17,20 @@ echo $PWD
 echo "Start building core components."
 
 if [ "x$1" == "x--release" ]; then
-    make FEATURES=ERC20
-    rm -rf ../example/erc20/bin && cp -rf bin/ ../example/erc20/bin/ && cd ../example/erc20/server
+    make FEATURES=DX
+    rm -rf ../example/invoice-dx/bin && cp -rf bin/ ../example/invoice-dx/bin/ && cd ../example/invoice-dx/server
 
     echo "Build artifacts in release mode, with optimizations."
     cargo run --release
     exit
 fi
 
-make DEBUG=1 FEATURES=ERC20
+make DEBUG=1 FEATURES=DX
 # enclave.signed.so is need to initialize enclave.
-rm -rf ../example/erc20/bin && cp -rf bin/ ../example/erc20/bin/ && cd ../
+rm -rf ../example/invoice-dx/bin && cp -rf bin/ ../example/invoice-dx/bin/ && cd ../
 
 solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
-cd example/erc20/server
+cd example/invoice-dx/server
 
 echo "Build artifacts in debug mode."
 RUST_BACKTRACE=1 RUST_LOG=debug cargo run
