@@ -17,7 +17,7 @@ echo $PWD
 echo "Start building core components."
 
 if [ "x$1" == "x--release" ]; then
-    make
+    make FEATURES=ERC20
     rm -rf ../example/erc20/bin && cp -rf bin/ ../example/erc20/bin/ && cd ../example/erc20/server
 
     echo "Build artifacts in release mode, with optimizations."
@@ -25,7 +25,7 @@ if [ "x$1" == "x--release" ]; then
     exit
 fi
 
-make DEBUG=1
+make DEBUG=1 FEATURES=ERC20
 # enclave.signed.so is need to initialize enclave.
 rm -rf ../example/erc20/bin && cp -rf bin/ ../example/erc20/bin/ && cd ../
 

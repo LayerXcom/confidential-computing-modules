@@ -17,7 +17,7 @@ echo $PWD
 echo "Start building core components."
 
 if [ "x$1" == "x--release" ]; then
-    make
+    make FEATURES=DX
     rm -rf ../example/invoice-dx/bin && cp -rf bin/ ../example/invoice-dx/bin/ && cd ../example/invoice-dx/server
 
     echo "Build artifacts in release mode, with optimizations."
