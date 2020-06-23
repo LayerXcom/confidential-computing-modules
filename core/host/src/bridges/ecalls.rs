@@ -1,6 +1,6 @@
 use std::boxed::Box;
 use sgx_types::*;
-use anonify_types::{traits::SliceCPtr, EnclaveState, RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, RawUpdatedState};
+use anonify_types::{traits::SliceCPtr, EnclaveState, RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, RawUpdatedState, EnclaveStatus};
 use anonify_common::{AccessRight, IntoVec};
 use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
 use anonify_runtime::{traits::State, UpdatedState};
@@ -31,14 +31,14 @@ pub(crate) fn insert_logs<S: State>(
         debug!("No logs to insert into the enclave.");
         Ok(None)
     }
-
 }
+
 /// Insert event logs from blockchain nodes into enclave memory database.
 fn insert_ciphertexts<S: State>(
     eid: sgx_enclave_id_t,
     enclave_log: &InnerEnclaveLog,
 ) -> Result<Option<Vec<UpdatedState<S>>>> {
-    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut rt = EnclaveStatus::default();
     let mut acc = vec![];
 
     for ciphertext in &enclave_log.ciphertexts {
@@ -54,10 +54,10 @@ fn insert_ciphertexts<S: State>(
         };
 
         if status != sgx_status_t::SGX_SUCCESS {
-            return Err(HostError::Sgx{ status, function: "ecall_insert_ciphertext" }.into());
+            return Err(HostError::Sgx { status, function: "ecall_insert_ciphertext" }.into());
         }
-        if rt != sgx_status_t::SGX_SUCCESS {
-            return Err(HostError::Sgx{ status: rt, function: "ecall_insert_ciphertext" }.into());
+        if rt != EnclaveStatus::default() {
+            return Err(HostError::Enclave { status: rt, function: "ecall_insert_ciphertext" }.into());
         }
 
         if raw_updated_state != Default::default() {
@@ -67,9 +67,9 @@ fn insert_ciphertexts<S: State>(
     }
 
     if acc.is_empty() {
-        return Ok(None)
+        return Ok(None);
     } else {
-        return Ok(Some(acc))
+        return Ok(Some(acc));
     }
 }
 
@@ -89,10 +89,10 @@ fn insert_handshake(
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(HostError::Sgx{ status, function: "ecall_insert_handshake" }.into());
+        return Err(HostError::Sgx { status, function: "ecall_insert_handshake" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(HostError::Sgx{ status: rt, function: "ecall_insert_handshake" }.into());
+        return Err(HostError::Sgx { status: rt, function: "ecall_insert_handshake" }.into());
     }
 
     Ok(())
@@ -122,10 +122,10 @@ pub(crate) fn get_state_from_enclave(
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(HostError::Sgx{ status, function: "ecall_get_state" }.into());
+        return Err(HostError::Sgx { status, function: "ecall_get_state" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(HostError::Sgx{ status: rt, function: "ecall_get_state" }.into());
+        return Err(HostError::Sgx { status: rt, function: "ecall_get_state" }.into());
     }
 
     Ok(state.into_vec())
@@ -144,10 +144,10 @@ pub(crate) fn join_group(eid: sgx_enclave_id_t) -> Result<RawJoinGroupTx> {
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx{ status, function: "ecall_join_group" }.into());
+        return Err(HostError::Sgx { status, function: "ecall_join_group" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx{ status: rt, function: "ecall_join_group" }.into());
+        return Err(HostError::Sgx { status: rt, function: "ecall_join_group" }.into());
     }
 
     Ok(raw_reg_tx)
@@ -179,10 +179,10 @@ pub(crate) fn encrypt_instruction<S: State>(
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx{ status, function: "ecall_encrypt_instruction" }.into());
+        return Err(HostError::Sgx { status, function: "ecall_encrypt_instruction" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx{ status: rt, function: "ecall_encrypt_instruction" }.into());
+        return Err(HostError::Sgx { status: rt, function: "ecall_encrypt_instruction" }.into());
     }
 
     Ok(raw_instruction_tx)
@@ -204,10 +204,10 @@ pub(crate) fn handshake(
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx{ status, function: "ecall_handshake" }.into());
+        return Err(HostError::Sgx { status, function: "ecall_handshake" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx{ status: rt, function: "ecall_handshake" }.into());
+        return Err(HostError::Sgx { status: rt, function: "ecall_handshake" }.into());
     }
 
     Ok(raw_handshake_tx)
@@ -230,10 +230,10 @@ pub(crate) fn register_notification(
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(HostError::Sgx{ status, function: "ecall_register_notification" }.into());
+        return Err(HostError::Sgx { status, function: "ecall_register_notification" }.into());
     }
     if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(HostError::Sgx{ status: rt, function: "ecall_register_notification" }.into());
+        return Err(HostError::Sgx { status: rt, function: "ecall_register_notification" }.into());
     }
 
     Ok(())

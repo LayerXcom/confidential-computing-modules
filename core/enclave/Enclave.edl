@@ -14,7 +14,7 @@ enclave {
     include "anonify-types.h"
 
     trusted {
-        public sgx_status_t ecall_insert_ciphertext(
+        public EnclaveStatus ecall_insert_ciphertext(
             [in, count=ciphertexts_len] uint8_t *ciphertexts,
             size_t ciphertexts_len,
             [out] RawUpdatedState* enclave_kv

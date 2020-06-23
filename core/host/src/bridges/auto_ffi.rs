@@ -7,7 +7,7 @@ use sgx_types::*;
 extern "C" {
     pub fn ecall_insert_ciphertext(
         eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
+        retval: *mut EnclaveStatus,
         ciphertexts: *mut u8,
         ciphertexts_len: usize,
         enclave_kv: *mut RawUpdatedState,

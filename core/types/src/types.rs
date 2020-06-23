@@ -26,7 +26,7 @@ pub type RawChallenge = [u8; RANDOMNESS_SIZE];
 
 /// Status for Ecall
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct EnclaveStatus(pub u32);
 
 impl Default for EnclaveStatus {
@@ -46,7 +46,7 @@ impl EnclaveStatus {
 
 /// Status for Ocall
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct UntrustedStatus(pub u32);
 
 impl Default for UntrustedStatus {
