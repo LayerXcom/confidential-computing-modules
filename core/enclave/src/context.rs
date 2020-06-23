@@ -16,7 +16,7 @@ use crate::{
     crypto::EnclaveIdentityKey,
     group_key::GroupKey,
     config::{TEST_SPID, MY_ROSTER_IDX, MAX_ROSTER_IDX, UNTIL_ROSTER_IDX, UNTIL_EPOCH},
-    ocalls::{sgx_init_quote, get_quote},
+    bridges::ocalls::{sgx_init_quote, get_quote},
     error::Result,
     kvs::{EnclaveDB, EnclaveDBTx},
     instructions::Instructions,

@@ -15,7 +15,7 @@ use anonify_enclave::{
     bridges::ocalls::save_to_host_memory,
 };
 use crate::ENCLAVE_CONTEXT;
-use crate::logics::CIPHERTEXT_SIZE;
+use crate::logics::{CIPHERTEXT_SIZE, MAX_MEM_SIZE};
 
 /// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
 #[no_mangle]
@@ -24,8 +24,8 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
     ciphertext_len: usize,
     raw_updated_state: &mut RawUpdatedState,
 ) -> sgx_status_t {
-    let ciphertext = slice::from_raw_parts_mut(ciphertext, ciphertext_len);
-    let ciphertext = Ciphertext::from_bytes(ciphertext);
+    let buf = slice::from_raw_parts_mut(ciphertext, ciphertext_len);
+    let ciphertext = Ciphertext::from_bytes(buf, CIPHERTEXT_SIZE);
     let group_key = &mut *ENCLAVE_CONTEXT.group_key.write().unwrap();
 
     if let Some(updated_state) = ENCLAVE_CONTEXT
@@ -118,6 +118,7 @@ pub unsafe extern "C" fn ecall_instruction(
             state_id,
             &ar,
             &*ENCLAVE_CONTEXT,
+            MAX_MEM_SIZE,
         )
         .expect("Failed to construct state tx.");
 

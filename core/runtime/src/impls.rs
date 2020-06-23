@@ -88,7 +88,7 @@ macro_rules! __impl_inner_runtime {
                 }
             }
 
-            fn find(self, runtime: Runtime, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
+            fn find_stf<G: StateGetter>(self, runtime: Runtime<G>, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
                 match self {
                     $( CallKind::$fn_name($fn_name) => {
                         runtime.$fn_name(
@@ -113,17 +113,14 @@ macro_rules! __impl_inner_runtime {
         }
 
         impl<G: StateGetter> StateTransition for Runtime<G> {
-            type G = G;
-            type C = CallKind;
-
-            fn new(db: Self::G) -> Self {
+            fn new(db: G) -> Self {
                 Runtime {
                     db,
                 }
             }
 
-            fn call(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
-                kind.find(self, my_addr)
+            fn call<C: CallKindConverter>(self, kind: C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
+                kind.find_stf(self, my_addr)
             }
         }
 
@@ -133,7 +130,7 @@ macro_rules! __impl_inner_runtime {
                 key: UserAddress,
                 name: &str
             ) -> Result<S> {
-                let mem_id = mem_name_to_id(name);
+                let mem_id = MemName::as_id(name);
                 self.db.get(key, name)
             }
 
@@ -157,11 +154,11 @@ macro_rules! __impl_inner_runtime {
 #[macro_export]
 macro_rules! update {
     ($addr:expr, $mem_name:expr, $value:expr) => {
-        UpdatedState::new($addr, mem_name_to_id($mem_name), $value)
+        UpdatedState::new($addr, MemName::as_id($mem_name), $value)
     };
 
     ($mem_name:expr, $value:expr) => {
-        UpdatedState::new($mem_name, mem_name_to_id($mem_name), $value)
+        UpdatedState::new($mem_name, MemName::as_id($mem_name), $value)
     };
 }
 

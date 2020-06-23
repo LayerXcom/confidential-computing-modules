@@ -6,6 +6,7 @@ use crate::localstd::{
     mem::size_of,
 };
 use crate::state_type::StateType;
+use crate::impls::Runtime;
 use anonify_common::UserAddress;
 use codec::{Input, Output, Encode, Decode};
 
@@ -48,7 +49,7 @@ pub trait StateGetter {
 
 pub trait CallKindConverter: Sized + Encode + Decode + Debug + Clone {
     fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self>;
-    fn find(self, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
+    fn find_stf<G: StateGetter>(self, runtime: Runtime<G>, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
 }
 
 pub trait StateTransition: Sized {

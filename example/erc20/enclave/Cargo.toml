@@ -20,3 +20,4 @@ lazy_static = { version = "1.4", features = ["spin_no_std"] }
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
 sgx_types = "1.1.1"
 test-utils = { git = "https://github.com/LayerXcom/libsgx-rs" }
+inventory = { rev = "sgx_1.1.2", git = "https://github.com/mesalock-linux/inventory-sgx"}

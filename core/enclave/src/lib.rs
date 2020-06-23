@@ -4,14 +4,12 @@
 #[cfg(not(target_env = "sgx"))]
 #[macro_use]
 extern crate sgx_tstd as std;
-#[macro_use]
-extern crate inventory;
 
 mod crypto;
 mod error;
 pub mod kvs;
 pub mod bridges;
-mod context;
+pub mod context;
 pub mod transaction;
 pub mod config;
 mod group_key;
