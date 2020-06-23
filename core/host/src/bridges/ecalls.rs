@@ -56,7 +56,7 @@ fn insert_ciphertexts<S: State>(
         if status != sgx_status_t::SGX_SUCCESS {
             return Err(HostError::Sgx { status, function: "ecall_insert_ciphertext" }.into());
         }
-        if rt != EnclaveStatus::default() {
+        if rt != EnclaveStatus::success() {
             return Err(HostError::Enclave { status: rt, function: "ecall_insert_ciphertext" }.into());
         }
 
@@ -77,7 +77,7 @@ fn insert_handshake(
     eid: sgx_enclave_id_t,
     handshake: &[u8],
 ) -> Result<()> {
-    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut rt = EnclaveStatus::default();
 
     let status = unsafe {
         ecall_insert_handshake(
@@ -91,8 +91,8 @@ fn insert_handshake(
     if status != sgx_status_t::SGX_SUCCESS {
         return Err(HostError::Sgx { status, function: "ecall_insert_handshake" }.into());
     }
-    if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx { status: rt, function: "ecall_insert_handshake" }.into());
+    if rt != EnclaveStatus::success() {
+        return Err(HostError::Enclave { status: rt, function: "ecall_insert_handshake" }.into());
     }
 
     Ok(())
@@ -105,7 +105,7 @@ pub(crate) fn get_state_from_enclave(
     mem_name: &str,
 ) -> Result<Vec<u8>>
 {
-    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut rt = EnclaveStatus::default();
     let mut state = EnclaveState::default();
     let mem_id = mem_name_to_id(mem_name).as_raw();
 
@@ -124,15 +124,15 @@ pub(crate) fn get_state_from_enclave(
     if status != sgx_status_t::SGX_SUCCESS {
         return Err(HostError::Sgx { status, function: "ecall_get_state" }.into());
     }
-    if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx { status: rt, function: "ecall_get_state" }.into());
+    if rt != EnclaveStatus::success() {
+        return Err(HostError::Enclave { status: rt, function: "ecall_get_state" }.into());
     }
 
     Ok(state.into_vec())
 }
 
 pub(crate) fn join_group(eid: sgx_enclave_id_t) -> Result<RawJoinGroupTx> {
-    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut rt = EnclaveStatus::default();
     let mut raw_reg_tx = RawJoinGroupTx::default();
 
     let status = unsafe {
@@ -146,8 +146,8 @@ pub(crate) fn join_group(eid: sgx_enclave_id_t) -> Result<RawJoinGroupTx> {
     if status != sgx_status_t::SGX_SUCCESS {
         return Err(HostError::Sgx { status, function: "ecall_join_group" }.into());
     }
-    if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx { status: rt, function: "ecall_join_group" }.into());
+    if rt != EnclaveStatus::success() {
+        return Err(HostError::Enclave { status: rt, function: "ecall_join_group" }.into());
     }
 
     Ok(raw_reg_tx)
@@ -158,7 +158,7 @@ pub(crate) fn encrypt_instruction<S: State>(
     access_right: AccessRight,
     state_info: StateInfo<'_, S>,
 ) -> Result<RawInstructionTx> {
-    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut rt = EnclaveStatus::default();
     let mut raw_instruction_tx = RawInstructionTx::default();
     let state = state_info.state_as_bytes();
     let call_id = state_info.call_name_to_id();
@@ -181,8 +181,8 @@ pub(crate) fn encrypt_instruction<S: State>(
     if status != sgx_status_t::SGX_SUCCESS {
         return Err(HostError::Sgx { status, function: "ecall_encrypt_instruction" }.into());
     }
-    if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx { status: rt, function: "ecall_encrypt_instruction" }.into());
+    if rt != EnclaveStatus::success() {
+        return Err(HostError::Enclave { status: rt, function: "ecall_encrypt_instruction" }.into());
     }
 
     Ok(raw_instruction_tx)
@@ -192,7 +192,7 @@ pub(crate) fn encrypt_instruction<S: State>(
 pub(crate) fn handshake(
     eid: sgx_enclave_id_t,
 ) -> Result<RawHandshakeTx> {
-    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut rt = EnclaveStatus::default();
     let mut raw_handshake_tx = RawHandshakeTx::default();
 
     let status = unsafe {
@@ -206,8 +206,8 @@ pub(crate) fn handshake(
     if status != sgx_status_t::SGX_SUCCESS {
         return Err(HostError::Sgx { status, function: "ecall_handshake" }.into());
     }
-    if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx { status: rt, function: "ecall_handshake" }.into());
+    if rt != EnclaveStatus::success() {
+        return Err(HostError::Enclave { status: rt, function: "ecall_handshake" }.into());
     }
 
     Ok(raw_handshake_tx)
@@ -217,7 +217,7 @@ pub(crate) fn register_notification(
     eid: sgx_enclave_id_t,
     access_right: AccessRight,
 ) -> Result<()> {
-    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut rt = EnclaveStatus::default();
 
     let status = unsafe {
         ecall_register_notification(
@@ -232,8 +232,8 @@ pub(crate) fn register_notification(
     if status != sgx_status_t::SGX_SUCCESS {
         return Err(HostError::Sgx { status, function: "ecall_register_notification" }.into());
     }
-    if rt != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx { status: rt, function: "ecall_register_notification" }.into());
+    if rt != EnclaveStatus::success() {
+        return Err(HostError::Enclave { status: rt, function: "ecall_register_notification" }.into());
     }
 
     Ok(())

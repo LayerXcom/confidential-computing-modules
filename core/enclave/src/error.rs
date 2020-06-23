@@ -3,6 +3,7 @@ use std::{
 };
 use thiserror::Error;
 use anyhow::anyhow;
+use anonify_types::UntrustedStatus;
 
 pub type Result<T> = std::result::Result<T, EnclaveError>;
 
@@ -37,6 +38,12 @@ pub enum EnclaveError {
 
     #[error("Anyhow error: {0}")]
     AnyhowError(#[from] anyhow::Error),
+
+    #[error("Enclave ocall failed function: {function:?}, status: {status:?}")]
+    UntrustedError {
+        status: UntrustedStatus,
+        function: &'static str,
+    },
 }
 
 impl From<ed25519_dalek::SignatureError> for EnclaveError {
