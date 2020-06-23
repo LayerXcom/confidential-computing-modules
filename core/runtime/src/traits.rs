@@ -58,3 +58,7 @@ pub trait StateTransition: Sized {
     fn new(db: Self::G) -> Self;
     fn call(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
 }
+
+pub trait MemNameConverter {
+    fn as_id(name: &str) -> MemId;
+}

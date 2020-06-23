@@ -22,10 +22,14 @@ macro_rules! __impl_inner_memory {
     (@imp
         $( ($id:expr, $name:expr, $value:ty) ),*
     ) => {
-        pub fn mem_name_to_id(name: &str) -> MemId {
-            match name {
-                $( $name => MemId::from_raw($id), )*
-                _ => panic!("invalid mem name"),
+        pub struct MemName<'a>(&'a str);
+
+        impl MemNameConverter for MemName<'_> {
+            fn as_id(name: &str) -> MemId {
+                match name {
+                    $( $name => MemId::from_raw($id), )*
+                    _ => panic!("invalid mem name"),
+                }
             }
         }
 

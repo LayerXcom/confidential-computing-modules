@@ -2,8 +2,7 @@ use std::boxed::Box;
 use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, RawUpdatedState};
 use anonify_common::{AccessRight, IntoVec};
-use anonify_app_preluder::{mem_name_to_id, CIPHERTEXT_SIZE};
-use anonify_runtime::{traits::State, UpdatedState};
+use anonify_runtime::{traits::*, UpdatedState};
 use anonify_bc_connector::{
     eventdb::InnerEnclaveLog,
     utils::StateInfo,
@@ -16,9 +15,10 @@ use crate::auto_ffi::*;
 pub(crate) fn insert_logs<S: State>(
     eid: sgx_enclave_id_t,
     enclave_log: &InnerEnclaveLog,
+    ciphertext_size: usize,
 ) -> Result<Option<Vec<UpdatedState<S>>>> {
     if enclave_log.ciphertexts.len() != 0 && enclave_log.handshakes.len() == 0 {
-        insert_ciphertexts(eid, &enclave_log)
+        insert_ciphertexts(eid, &enclave_log, ciphertext_size)
     } else if enclave_log.ciphertexts.len() == 0 && enclave_log.handshakes.len() != 0 {
         // The size of handshake cannot be calculated in this host directory,
         // so the ecall_insert_handshake function is repeatedly called over the number of fetched handshakes.
@@ -37,6 +37,7 @@ pub(crate) fn insert_logs<S: State>(
 fn insert_ciphertexts<S: State>(
     eid: sgx_enclave_id_t,
     enclave_log: &InnerEnclaveLog,
+    ciphertext_size: usize,
 ) -> Result<Option<Vec<UpdatedState<S>>>> {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut acc = vec![];
@@ -48,7 +49,7 @@ fn insert_ciphertexts<S: State>(
                 eid,
                 &mut rt,
                 ciphertext.into_vec().as_c_ptr() as *mut u8,
-                CIPHERTEXT_SIZE,
+                ciphertext_size,
                 &mut raw_updated_state,
             )
         };
@@ -99,7 +100,7 @@ fn insert_handshake(
 }
 
 /// Get state only if the signature verification returns true.
-pub(crate) fn get_state_from_enclave(
+pub(crate) fn get_state_from_enclave<M: MemNameConverter>(
     eid: sgx_enclave_id_t,
     access_right: &AccessRight,
     mem_name: &str,
@@ -107,7 +108,7 @@ pub(crate) fn get_state_from_enclave(
 {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut state = EnclaveState::default();
-    let mem_id = mem_name_to_id(mem_name).as_raw();
+    let mem_id = M::as_id(mem_name).as_raw();
 
     let status = unsafe {
         ecall_get_state(
