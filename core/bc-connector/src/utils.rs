@@ -7,7 +7,6 @@ use std::{
 use web3::types::Address;
 use ethabi::Contract as ContractABI;
 use anonify_runtime::traits::State;
-use anonify_app_preluder::call_name_to_id;
 use anyhow::anyhow;
 use crate::{
     error::Result,
@@ -62,10 +61,6 @@ impl<'a, ST: State> StateInfo<'a, ST> {
 
     pub fn state_as_bytes(&self) -> Vec<u8> {
         self.state.as_bytes()
-    }
-
-    pub fn call_name_to_id(&self) -> u32 {
-        call_name_to_id(&self.call_name)
     }
 
     pub fn state_id(&self) -> u64 {

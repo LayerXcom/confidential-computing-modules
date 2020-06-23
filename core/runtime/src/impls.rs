@@ -76,11 +76,23 @@ macro_rules! __impl_inner_runtime {
             $( $fn_name($fn_name), )*
         }
 
-        impl CallKind {
-            pub fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self> {
+        impl CallKindConverter for CallKind {
+            fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self> {
                 match id {
                     $( $fn_id => Ok(CallKind::$fn_name($fn_name::from_bytes(state)?)), )*
                     _ => return Err(anyhow!("Invalid Call ID")),
+                }
+            }
+
+            fn find(self, runtime: Runtime, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
+                match self {
+                    $( CallKind::$fn_name($fn_name) => {
+                        runtime.$fn_name(
+                            my_addr,
+                            $( $fn_name.$param_name, )*
+                        )
+                    }, )*
+                    _ => unimplemented!()
                 }
             }
         }
@@ -96,39 +108,33 @@ macro_rules! __impl_inner_runtime {
             db: G,
         }
 
-        impl<G: StateGetter> Runtime<G> {
-            pub fn new(db: G) -> Self {
+        impl<G: StateGetter> StateTransition for Runtime<G> {
+            type G = G;
+            type C = CallKind;
+
+            fn new(db: Self::G) -> Self {
                 Runtime {
                     db,
                 }
             }
 
+            fn call(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
+                kind.find(self, my_addr)
+            }
+        }
+
+        impl<G: StateGetter> Runtime<G> {
             pub fn get_map<S: State>(
                 &self,
                 key: UserAddress,
                 name: &str
             ) -> Result<S> {
+                let mem_id = mem_name_to_id(name);
                 self.db.get(key, name)
             }
 
             pub fn get<S: State>(&self, name: &str) -> Result<S> {
                 self.db.get(name, name)
-            }
-
-            pub fn call(
-                self,
-                kind: CallKind,
-                my_addr: UserAddress,
-            ) -> Result<Vec<UpdatedState<StateType>>> {
-                match kind {
-                    $( CallKind::$fn_name($fn_name) => {
-                        self.$fn_name(
-                            my_addr,
-                            $( $fn_name.$param_name, )*
-                        )
-                    }, )*
-                    _ => unimplemented!()
-                }
             }
 
             $(

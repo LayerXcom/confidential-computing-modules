@@ -5,9 +5,8 @@ use std::{
 };
 use sgx_types::sgx_enclave_id_t;
 use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx};
-use anonify_common::AccessRight;
+use anonify_common::{AccessRight. Ciphertext};
 use anonify_runtime::{traits::State, UpdatedState};
-use anonify_app_preluder::Ciphertext;
 use web3::types::Address as EthAddress;
 use crate::{
     error::Result,

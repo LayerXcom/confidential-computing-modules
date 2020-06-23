@@ -41,11 +41,20 @@ impl<T: Sized + Default + Clone + Encode + Decode + fmt::Debug> State for T {}
 
 /// A getter of state stored in enclave memory.
 pub trait StateGetter {
-    /// Get state using memory name.
-    /// Assumed this is called in user-defined state transition functions.
-    fn get<S: State>(&self, key: impl Into<UserAddress>, name: &str) -> Result<S>;
-
     /// Get state using memory id.
-    /// Assumed this is called by state getting operations from outside enclave.
-    fn get_by_id(&self, key: UserAddress, mem_id: MemId) -> StateType;
+    /// Assumed this is called in user-defined state transition functions.
+    fn get<S: State>(&self, key: impl Into<UserAddress>,  mem_id: MemId) -> Result<S>;
+}
+
+pub trait CallKindConverter: Sized {
+    fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self>;
+    fn find(self, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
+}
+
+pub trait StateTransition: Sized {
+    type G: StateGetter;
+    type C: CallKindConverter;
+
+    fn new(db: Self::G) -> Self;
+    fn call(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
 }

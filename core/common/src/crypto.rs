@@ -346,3 +346,49 @@ pub fn sgx_rand_assign(rand: &mut [u8]) -> Result<(), Error> {
         .map_err(|e| anyhow!("error rsgx_read_rand: {:?}", e))?;
     Ok(())
 }
+
+/// Application message broadcasted to other members.
+#[derive(Clone, Debug, Encode, Decode)]
+pub struct Ciphertext {
+    generation: u32,
+    epoch: u32,
+    roster_idx: u32,
+    encrypted_state: Vec<u8>,
+}
+
+impl Ciphertext {
+    pub fn new(generation: u32, epoch: u32, roster_idx: u32, encrypted_state: Vec<u8>) -> Self {
+        Ciphertext { generation, epoch, roster_idx, encrypted_state }
+    }
+
+    pub fn from_bytes(bytes: &mut [u8], len: usize) -> Self {
+        assert_eq!(bytes.len(), len);
+        Ciphertext::decode(&mut &bytes[..]).unwrap()
+    }
+
+    pub fn as_vec(&self) -> Vec<u8> {
+        self.encode()
+    }
+
+    pub fn generation(&self) -> u32 {
+        self.generation
+    }
+
+    pub fn epoch(&self) -> u32 {
+        self.epoch
+    }
+
+    pub fn roster_idx(&self) -> u32 {
+        self.roster_idx
+    }
+
+    pub fn encrypted_state_ref(&self) -> &[u8] {
+        &self.encrypted_state
+    }
+}
+
+impl IntoVec for Ciphertext {
+    fn into_vec(&self) -> Vec<u8> {
+        self.encode()
+    }
+}

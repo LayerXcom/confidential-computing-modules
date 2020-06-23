@@ -7,14 +7,12 @@ edition = "2018"
 [dependencies]
 anonify-types = { path = "../types", default-features = false }
 anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
-anonify-app-preluder = { path = "../app-preluder", default-features = false }
 anonify-runtime = { path = "../runtime", default-features = false, features = ["sgx"] }
 anonify-treekem = { path = "../treekem" }
 
 remote-attestation = { git = "https://github.com/LayerXcom/libsgx-rs" }
 test-utils = { git = "https://github.com/LayerXcom/libsgx-rs" }
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
-lazy_static = { version = "1.4", features = ["spin_no_std"] }
 sha2 = { version = "0.8", default-features = false }
 httparse = { version = "1.3", default-features = false }
 libsecp256k1 = { version = "0.2", default-features = false }
@@ -37,8 +35,3 @@ sgx_tstd = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.g
 sgx_types = "1.1.1"
 sgx_tcrypto = "1.1.1"
 sgx_tunittest = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
-
-[features]
-default = []
-erc20 = ["anonify-app-preluder/erc20-sgx"]
-dx = ["anonify-app-preluder/dx-sgx"]

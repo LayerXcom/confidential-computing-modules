@@ -4,8 +4,7 @@ use std::{
 };
 use sgx_types::*;
 use std::prelude::v1::*;
-use anonify_common::{kvs::{MemoryDB, DBValue}, UserAddress};
-use anonify_app_preluder::{mem_name_to_id, Ciphertext};
+use anonify_common::{kvs::{MemoryDB, DBValue}, UserAddress, Ciphertext};
 use anonify_runtime::{State, StateGetter, StateType, MemId, UpdatedState};
 use anonify_treekem::{
     handshake::{PathSecretRequest, PathSecretKVS},
@@ -23,14 +22,8 @@ use crate::{
     instructions::Instructions,
 };
 
-lazy_static! {
-    pub static ref ENCLAVE_CONTEXT: EnclaveContext<StateType>
-        = EnclaveContext::new(TEST_SPID).unwrap();
-}
-
 impl StateGetter for EnclaveContext<StateType> {
-    fn get<S: State>(&self, key: impl Into<UserAddress>, name: &str) -> anyhow::Result<S> {
-        let mem_id = mem_name_to_id(name);
+    fn get<S: State>(&self, key: impl Into<UserAddress>, mem_id: MemId) -> anyhow::Result<S> {
         let mut buf = self.db
             .get(key.into(), mem_id)
             .into_bytes();
@@ -39,10 +32,6 @@ impl StateGetter for EnclaveContext<StateType> {
         }
 
         S::from_bytes(&mut buf)
-    }
-
-    fn get_by_id(&self, key: UserAddress, mem_id: MemId) -> StateType {
-        self.db.get(key, mem_id)
     }
 }
 

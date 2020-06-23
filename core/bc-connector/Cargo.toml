@@ -4,13 +4,10 @@ version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 anonify-types = { path = "../types" }
 anonify-common = { path = "../common" }
 anonify-runtime = { path = "../runtime" }
-anonify-app-preluder = { path = "../app-preluder", default-features = false }
 web3 = "0.8"
 ethabi = "8.0.0"
 byteorder = "1"
@@ -19,8 +16,3 @@ anyhow = "1.0"
 thiserror = "1.0"
 log = "0.4"
 hex = "0.4"
-
-[features]
-default = ["erc20"]
-erc20 = ["anonify-app-preluder/erc20-std"]
-dx = ["anonify-app-preluder/dx-std"]
