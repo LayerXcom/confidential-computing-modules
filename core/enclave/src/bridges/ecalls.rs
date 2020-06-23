@@ -38,16 +38,13 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
                 Some(updated_state) => {
                     match updated_state_into_raw(updated_state) {
                         Ok(new) => *raw_updated_state = new,
-                        Err(e) => {
+                        Err(_) => {
                             debug!("Failed to convert into raw updated state");
                             return EnclaveStatus(1);
                         }
                     }
                 }
-                None => {
-                    debug!("Failed to write cihpertexts.");
-                    return EnclaveStatus(1);
-                }
+                None => {},
             }
         }
         Err(_) => return EnclaveStatus(1),
