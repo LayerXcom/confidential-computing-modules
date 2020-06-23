@@ -29,15 +29,32 @@ pub type RawChallenge = [u8; RANDOMNESS_SIZE];
 #[derive(Debug)]
 pub struct EnclaveStatus(pub u32);
 
-/// Status for Ocall
-pub type UntrustedStatus = EnclaveStatus;
-
 impl Default for EnclaveStatus {
     fn default() -> Self { EnclaveStatus(0) }
 }
 
 impl EnclaveStatus {
     pub fn success() -> Self { EnclaveStatus(0) }
+
+    pub fn is_err(&self) -> bool {
+        match self.0 {
+            0 => false,
+            _ => true,
+        }
+    }
+}
+
+/// Status for Ocall
+#[repr(C)]
+#[derive(Debug)]
+pub struct UntrustedStatus(pub u32);
+
+impl Default for UntrustedStatus {
+    fn default() -> Self { UntrustedStatus(0) }
+}
+
+impl UntrustedStatus {
+    pub fn success() -> Self { UntrustedStatus(0) }
 
     pub fn is_err(&self) -> bool {
         match self.0 {
