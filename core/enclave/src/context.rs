@@ -5,7 +5,7 @@ use std::{
 use sgx_types::*;
 use std::prelude::v1::*;
 use anonify_common::{kvs::{MemoryDB, DBValue}, UserAddress, Ciphertext};
-use anonify_runtime::{State, StateGetter, StateType, MemId, UpdatedState};
+use anonify_runtime::{State, StateGetter, StateType, MemId, UpdatedState, traits::*};
 use anonify_treekem::{
     handshake::{PathSecretRequest, PathSecretKVS},
     init_path_secret_kvs,
@@ -115,14 +115,19 @@ impl EnclaveContext<StateType> {
     /// otherwise do nothing.
     /// Returns a updated state of registerd address in notification.
     // TODO: Enables to return multiple updated states.
-    pub fn update_state(
+    pub fn update_state<C, S, G>(
         &self,
         ciphertext: &Ciphertext,
         group_key: &mut GroupKey,
-    ) -> Result<Option<UpdatedState<StateType>>> {
-        if let Some(instructions) = Instructions::decrypt(ciphertext, group_key)? {
+    ) -> Result<Option<UpdatedState<StateType>>>
+    where
+        C: CallKindConverter,
+        S: StateTransition,
+        G: StateGetter,
+    {
+        if let Some(instructions) = Instructions::<C>::decrypt(ciphertext, group_key)? {
             let mut state_iter = instructions
-                .state_transition::<StateType>(self)?
+                .state_transition::<S, EnclaveContext<StateType>>(self.clone())? // TODO: remove clone
                 .into_iter();
 
             state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));

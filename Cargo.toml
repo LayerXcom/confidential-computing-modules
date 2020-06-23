@@ -3,7 +3,6 @@ members = [
     "core/enclave",
     "core/types",
     "core/runtime",
-    "core/app-preluder",
     "core/bc-connector",
     "core/common",
     "example/erc20/cli",

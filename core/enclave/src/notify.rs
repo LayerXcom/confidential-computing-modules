@@ -1,5 +1,4 @@
 use std::{
-    vec::Vec,
     collections::HashSet,
     sync::{SgxRwLock, Arc},
 };

@@ -1,6 +1,6 @@
 use std::vec::Vec;
-use anonify_common::{UserAddress, AccessRight, Ciphertext, traits::*};
-use anonify_runtime::{UpdatedState, State, StateType};
+use anonify_common::{UserAddress, AccessRight, Ciphertext};
+use anonify_runtime::{UpdatedState, StateType, traits::*};
 use codec::{Encode, Decode};
 use crate::{
     error::Result,
@@ -51,8 +51,12 @@ impl<C: CallKindConverter> Instructions<C> {
         }
     }
 
-    pub fn state_transition<S: StateTransition>(self, ctx: &EnclaveContext<StateType>) -> Result<Vec<UpdatedState<StateType>>> {
-        let res = S::new(ctx.clone()).call(
+    pub fn state_transition<S, G>(self, ctx: G) -> Result<Vec<UpdatedState<StateType>>>
+    where
+        S: StateTransition,
+        G: StateGetter,
+    {
+        let res = S::new(ctx).call::<C>(
             self.call_kind,
             self.my_addr,
         )?;

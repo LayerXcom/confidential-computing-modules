@@ -1,8 +1,7 @@
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
-use anonify_common::{UserAddress, AccessRight};
-use anonify_app_preluder::{CIPHERTEXT_SIZE, Ciphertext, CallKind};
+use anonify_common::{UserAddress, AccessRight, Ciphertext};
 use anonify_runtime::{StateGetter, State, MemId};
 use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
@@ -13,8 +12,10 @@ use anonify_enclave::{
     config::{IAS_URL, TEST_SUB_KEY},
     instructions::Instructions,
     notify::updated_state_into_raw,
+    bridges::ocalls::save_to_host_memory,
 };
-use super::ocalls::save_to_host_memory;
+use crate::ENCLAVE_CONTEXT;
+use crate::logics::CIPHERTEXT_SIZE;
 
 /// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
 #[no_mangle]
@@ -158,6 +159,7 @@ pub unsafe extern "C" fn ecall_register_notification(
     sgx_status_t::SGX_SUCCESS
 }
 
+#[cfg(debug_assertions)]
 pub mod enclave_tests {
     use test_utils::{test_case, run_inventory_tests};
     use std::vec::Vec;

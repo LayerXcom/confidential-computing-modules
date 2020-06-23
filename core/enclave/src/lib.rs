@@ -5,19 +5,15 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 #[macro_use]
-extern crate lazy_static;
-#[macro_use]
 extern crate inventory;
 
 mod crypto;
 mod error;
-mod kvs;
-mod bridges;
+pub mod kvs;
+pub mod bridges;
 mod context;
-mod transaction;
-mod config;
+pub mod transaction;
+pub mod config;
 mod group_key;
-mod notify;
-mod instructions;
-
-use bridges::ocalls;
+pub mod notify;
+pub mod instructions;

@@ -1,7 +1,7 @@
 use crate::local_anyhow::{Result, anyhow};
 use crate::utils::*;
 use crate::localstd::{
-    fmt,
+    fmt::Debug,
     vec::Vec,
     mem::size_of,
 };
@@ -10,7 +10,7 @@ use anonify_common::UserAddress;
 use codec::{Input, Output, Encode, Decode};
 
 /// Trait of each user's state.
-pub trait State: Sized + Default + Clone + Encode + Decode + fmt::Debug {
+pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
     fn as_bytes(&self) -> Vec<u8> {
         self.encode()
     }
@@ -37,7 +37,7 @@ pub trait State: Sized + Default + Clone + Encode + Decode + fmt::Debug {
     fn size(&self) -> usize { size_of::<Self>() }
 }
 
-impl<T: Sized + Default + Clone + Encode + Decode + fmt::Debug> State for T {}
+impl<T: Sized + Default + Clone + Encode + Decode + Debug> State for T {}
 
 /// A getter of state stored in enclave memory.
 pub trait StateGetter {
@@ -46,17 +46,14 @@ pub trait StateGetter {
     fn get<S: State>(&self, key: impl Into<UserAddress>,  mem_id: MemId) -> Result<S>;
 }
 
-pub trait CallKindConverter: Sized {
+pub trait CallKindConverter: Sized + Encode + Decode + Debug + Clone {
     fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self>;
     fn find(self, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
 }
 
 pub trait StateTransition: Sized {
-    type G: StateGetter;
-    type C: CallKindConverter;
-
-    fn new(db: Self::G) -> Self;
-    fn call(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
+    fn new<G: StateGetter>(db: G) -> Self;
+    fn call<C: CallKindConverter>(self, kind: C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
 }
 
 pub trait MemNameConverter {

@@ -23,5 +23,5 @@ endif
 .PHONY: bindgen
 bindgen: Enclave_t.h
 	cargo build -p anonify-types
-	$(BINDGEN) Enclave_t.h $(BINDGEN_FLAGS) -- $(BINDGEN_CLANG_FLAGS) > $(BINDGEN_OUTPUT_FILE)
-	$(RUSTFMT)  $(BINDGEN_OUTPUT_FILE)
+	bindgen Enclave_t.h $(BINDGEN_FLAGS) -- $(BINDGEN_CLANG_FLAGS) > $(BINDGEN_OUTPUT_FILE)
+	rustfmt $(BINDGEN_OUTPUT_FILE)
