@@ -29,7 +29,7 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
     let ciphertext = Ciphertext::from_bytes(ciphertext);
     let group_key = &mut *match ENCLAVE_CONTEXT.group_key.write() {
         Ok(group_key) => group_key,
-        Err(_) => return EnclaveStatus(1),
+        Err(_) => return EnclaveStatus::error(),
     };
 
     match ENCLAVE_CONTEXT.update_state(&ciphertext, group_key) {
@@ -40,20 +40,20 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
                         Ok(new) => *raw_updated_state = new,
                         Err(_) => {
                             debug!("Failed to convert into raw updated state");
-                            return EnclaveStatus(1);
+                            return EnclaveStatus::error();
                         }
                     }
                 }
                 None => {},
             }
         }
-        Err(_) => return EnclaveStatus(1),
+        Err(_) => return EnclaveStatus::error(),
     }
 
     let roster_idx = ciphertext.roster_idx() as usize;
     // ratchet app keychain per a log.
     if group_key.ratchet(roster_idx).is_err() {
-        return EnclaveStatus(1);
+        return EnclaveStatus::error();
     }
 
     EnclaveStatus::success()
@@ -68,15 +68,15 @@ pub unsafe extern "C" fn ecall_insert_handshake(
     let handshake_bytes = slice::from_raw_parts_mut(handshake, handshake_len);
     let handshake = match HandshakeParams::decode(&mut &handshake_bytes[..]) {
         Ok(handshake) => handshake,
-        Err(_) => return EnclaveStatus(1),
+        Err(_) => return EnclaveStatus::error(),
     };
     let group_key = &mut *match ENCLAVE_CONTEXT.group_key.write() {
         Ok(group_key) => group_key,
-        Err(_) => return EnclaveStatus(1),
+        Err(_) => return EnclaveStatus::error(),
     };
 
     if group_key.process_handshake(&handshake).is_err() {
-        return EnclaveStatus(1);
+        return EnclaveStatus::error();
     }
 
     EnclaveStatus::success()
@@ -95,28 +95,28 @@ pub unsafe extern "C" fn ecall_get_state(
         Ok(sig) => sig,
         Err(_) => {
             debug!("Failed to read signatures.");
-            return EnclaveStatus(1);
+            return EnclaveStatus::error();
         }
     };
     let pubkey = match PublicKey::from_bytes(&pubkey[..]) {
         Ok(pubkey) => pubkey,
         Err(_) => {
             debug!("Failed to read public key.");
-            return EnclaveStatus(1);
+            return EnclaveStatus::error();
         }
     };
     let key = match UserAddress::from_sig(&challenge[..], &sig, &pubkey) {
         Ok(user_address) => user_address,
         Err(_) => {
             debug!("Failed to generate user address.");
-            return EnclaveStatus(1);
+            return EnclaveStatus::error();
         }
     };
 
     let user_state = &ENCLAVE_CONTEXT.get_by_id(key, MemId::from_raw(mem_id));
     state.0 = match save_to_host_memory(user_state.as_bytes()) {
         Ok(ptr) => ptr as *const u8,
-        Err(_) => return EnclaveStatus(1),
+        Err(_) => return EnclaveStatus::error(),
     };
 
     EnclaveStatus::success()
@@ -134,7 +134,7 @@ pub unsafe extern "C" fn ecall_join_group(
         Ok(join_group_tx) => join_group_tx,
         Err(_) => {
             debug!("Failed to construct JoinGroup transaction.");
-            return EnclaveStatus(1);
+            return EnclaveStatus::error();
         }
     };
 
@@ -142,7 +142,7 @@ pub unsafe extern "C" fn ecall_join_group(
         Ok(raw) => raw,
         Err(_) => {
             debug!("Failed to convert into raw JoinGroup transaction.");
-            return EnclaveStatus(1);
+            return EnclaveStatus::error();
         }
     };
 
@@ -166,7 +166,7 @@ pub unsafe extern "C" fn ecall_instruction(
         Ok(access_right) => access_right,
         Err(_) => {
             debug!("Failed to generate access right.");
-            return EnclaveStatus(1);
+            return EnclaveStatus::error();
         }
     };
 
@@ -180,7 +180,7 @@ pub unsafe extern "C" fn ecall_instruction(
         Ok(instruction_tx) => instruction_tx,
         Err(_) => {
             debug!("Failed to construct state tx.");
-            return EnclaveStatus(1);
+            return EnclaveStatus::error();
         }
     };
 
@@ -189,7 +189,7 @@ pub unsafe extern "C" fn ecall_instruction(
         Ok(raw) => raw,
         Err(_) => {
             debug!("Failed to convert into raw state transaction.");
-            return EnclaveStatus(1);
+            return EnclaveStatus::error();
         }
     };
 
@@ -204,7 +204,7 @@ pub unsafe extern "C" fn ecall_handshake(
         Ok(handshake_tx) => handshake_tx,
         Err(_) => {
             debug!("Failed to construct handshake transaction.");
-            return EnclaveStatus(1);
+            return EnclaveStatus::error();
         }
     };
 
@@ -212,7 +212,7 @@ pub unsafe extern "C" fn ecall_handshake(
         Ok(raw) => raw,
         Err(_) => {
             debug!("Failed to convert into raw handshake transaction.");
-            return EnclaveStatus(1);
+            return EnclaveStatus::error();
         }
     };
 
@@ -229,21 +229,21 @@ pub unsafe extern "C" fn ecall_register_notification(
         Ok(sig) => sig,
         Err(_) => {
             debug!("Failed to read signatures.");
-            return EnclaveStatus(1);
+            return EnclaveStatus::error();
         }
     };
     let pubkey = match PublicKey::from_bytes(&pubkey[..]) {
         Ok(pubkey) => pubkey,
         Err(_) => {
             debug!("Failed to read public key.");
-            return EnclaveStatus(1);
+            return EnclaveStatus::error();
         }
     };
     let user_address = match UserAddress::from_sig(&challenge[..], &sig, &pubkey) {
         Ok(user_address) => user_address,
         Err(_) => {
             debug!("Failed to generate user address.");
-            return EnclaveStatus(1);
+            return EnclaveStatus::error();
         }
     };
 

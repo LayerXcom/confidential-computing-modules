@@ -56,7 +56,7 @@ fn insert_ciphertexts<S: State>(
         if status != sgx_status_t::SGX_SUCCESS {
             return Err(HostError::Sgx { status, function: "ecall_insert_ciphertext" }.into());
         }
-        if rt != EnclaveStatus::success() {
+        if rt.is_err() {
             return Err(HostError::Enclave { status: rt, function: "ecall_insert_ciphertext" }.into());
         }
 
@@ -91,7 +91,7 @@ fn insert_handshake(
     if status != sgx_status_t::SGX_SUCCESS {
         return Err(HostError::Sgx { status, function: "ecall_insert_handshake" }.into());
     }
-    if rt != EnclaveStatus::success() {
+    if rt.is_err() {
         return Err(HostError::Enclave { status: rt, function: "ecall_insert_handshake" }.into());
     }
 
@@ -124,7 +124,7 @@ pub(crate) fn get_state_from_enclave(
     if status != sgx_status_t::SGX_SUCCESS {
         return Err(HostError::Sgx { status, function: "ecall_get_state" }.into());
     }
-    if rt != EnclaveStatus::success() {
+    if rt.is_err() {
         return Err(HostError::Enclave { status: rt, function: "ecall_get_state" }.into());
     }
 
@@ -146,7 +146,7 @@ pub(crate) fn join_group(eid: sgx_enclave_id_t) -> Result<RawJoinGroupTx> {
     if status != sgx_status_t::SGX_SUCCESS {
         return Err(HostError::Sgx { status, function: "ecall_join_group" }.into());
     }
-    if rt != EnclaveStatus::success() {
+    if rt.is_err() {
         return Err(HostError::Enclave { status: rt, function: "ecall_join_group" }.into());
     }
 
@@ -181,7 +181,7 @@ pub(crate) fn encrypt_instruction<S: State>(
     if status != sgx_status_t::SGX_SUCCESS {
         return Err(HostError::Sgx { status, function: "ecall_encrypt_instruction" }.into());
     }
-    if rt != EnclaveStatus::success() {
+    if rt.is_err() {
         return Err(HostError::Enclave { status: rt, function: "ecall_encrypt_instruction" }.into());
     }
 
@@ -206,7 +206,7 @@ pub(crate) fn handshake(
     if status != sgx_status_t::SGX_SUCCESS {
         return Err(HostError::Sgx { status, function: "ecall_handshake" }.into());
     }
-    if rt != EnclaveStatus::success() {
+    if rt.is_err() {
         return Err(HostError::Enclave { status: rt, function: "ecall_handshake" }.into());
     }
 
@@ -232,7 +232,7 @@ pub(crate) fn register_notification(
     if status != sgx_status_t::SGX_SUCCESS {
         return Err(HostError::Sgx { status, function: "ecall_register_notification" }.into());
     }
-    if rt != EnclaveStatus::success() {
+    if rt.is_err() {
         return Err(HostError::Enclave { status: rt, function: "ecall_register_notification" }.into());
     }
 

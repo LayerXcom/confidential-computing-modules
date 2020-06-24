@@ -18,7 +18,7 @@ pub extern "C" fn ocall_sgx_init_quote(
 
     if ret != sgx_status_t::SGX_SUCCESS {
         println!("sgx_init_quote returned {}", ret);
-        return UntrustedStatus(1);
+        return UntrustedStatus::error();
     }
 
     UntrustedStatus::success()
@@ -46,7 +46,7 @@ fn ocall_get_quote(
 
     if ret != sgx_status_t::SGX_SUCCESS {
         println!("sgx_calc_quote_size returned {}", ret);
-        return UntrustedStatus(1);
+        return UntrustedStatus::error();
     }
 
     println!("quote size = {}", real_quote_len);
@@ -68,7 +68,7 @@ fn ocall_get_quote(
 
     if ret != sgx_status_t::SGX_SUCCESS {
         println!("sgx_calc_quote_size returned {}", ret);
-        return UntrustedStatus(1);
+        return UntrustedStatus::error();
     }
 
     UntrustedStatus::success()
@@ -80,14 +80,14 @@ pub extern "C" fn ocall_get_ias_socket(ret_fd: *mut c_int) -> UntrustedStatus {
         Ok(addr) => addr,
         Err(_) => {
             debug!("Failed to lookup ipv4 address.");
-            return UntrustedStatus(1);
+            return UntrustedStatus::error();
         }
     };
     let sock = match TcpStream::connect(&addr) {
         Ok(sock) => sock,
         Err(_) => {
             debug!("[-] Connect tls server failed!");
-            return UntrustedStatus(1);
+            return UntrustedStatus::error();
         }
     };
 
@@ -129,7 +129,7 @@ fn ocall_get_update_info(
 
     if ret != sgx_status_t::SGX_SUCCESS {
         println!("sgx_report_attestation_status returned {}", ret);
-        return UntrustedStatus(1);
+        return UntrustedStatus::error();
     }
 
     UntrustedStatus::success()
