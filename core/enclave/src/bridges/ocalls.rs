@@ -1,16 +1,16 @@
 use sgx_types::*;
-use anonify_types::traits::SliceCPtr;
+use anonify_types::{traits::SliceCPtr, UntrustedStatus};
 use std::vec::Vec;
 use super::auto_ffi::*;
 use crate::error::*;
 
 pub fn get_ias_socket() -> Result<i32> {
-    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut rt = UntrustedStatus::default();
     let mut ias_sock : i32 = 0;
 
     let status = unsafe {
 		ocall_get_ias_socket(
-            &mut rt as *mut sgx_status_t,
+            &mut rt as *mut UntrustedStatus,
             &mut ias_sock as *mut i32
         )
     };
@@ -18,21 +18,21 @@ pub fn get_ias_socket() -> Result<i32> {
     if status != sgx_status_t::SGX_SUCCESS {
 		return Err(EnclaveError::SgxError{ err: status });
 	}
-	if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(EnclaveError::SgxError{ err: rt });
+	if rt.is_err() {
+		return Err(EnclaveError::UntrustedError{ status: rt, function: "ocall_get_ias_socket" });
     }
 
     Ok(ias_sock)
 }
 
 pub fn sgx_init_quote() -> Result<sgx_target_info_t> {
-    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut rt = UntrustedStatus::default();
     let mut target_info = sgx_target_info_t::default();
     let mut gid = sgx_epid_group_id_t::default();
 
     let status = unsafe {
         ocall_sgx_init_quote(
-            &mut rt as *mut sgx_status_t,
+            &mut rt as *mut UntrustedStatus,
             &mut target_info as *mut sgx_target_info_t,
             &mut gid as *mut sgx_epid_group_id_t,
         )
@@ -41,8 +41,8 @@ pub fn sgx_init_quote() -> Result<sgx_target_info_t> {
     if status != sgx_status_t::SGX_SUCCESS {
 		return Err(EnclaveError::SgxError{ err: status });
 	}
-	if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(EnclaveError::SgxError{ err: rt });
+	if rt.is_err() {
+        return Err(EnclaveError::UntrustedError{ status: rt, function: "ocall_sgx_init_quote" });
     }
 
     Ok(target_info)
@@ -51,12 +51,12 @@ pub fn sgx_init_quote() -> Result<sgx_target_info_t> {
 pub fn get_quote(report: sgx_report_t, spid: &sgx_spid_t) -> Result<Vec<u8>> {
     const RET_QUOTE_BUF_LEN : u32 = 2048;
     let mut quote_len: u32 = 0;
-    let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut rt = UntrustedStatus::default();
     let mut quote = vec![0u8; RET_QUOTE_BUF_LEN as usize];
 
     let status = unsafe {
         ocall_get_quote(
-            &mut rt as *mut sgx_status_t,
+            &mut rt as *mut UntrustedStatus,
             std::ptr::null(), // p_sigrl
             0,                // sigrl_len
             &report as *const sgx_report_t,
@@ -73,8 +73,8 @@ pub fn get_quote(report: sgx_report_t, spid: &sgx_spid_t) -> Result<Vec<u8>> {
     if status != sgx_status_t::SGX_SUCCESS {
 		return Err(EnclaveError::SgxError{ err: status });
 	}
-	if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(EnclaveError::SgxError{ err: rt });
+	if rt.is_err() {
+        return Err(EnclaveError::UntrustedError{ status: rt, function: "ocall_get_quote" });
     }
 
     let _ = quote.split_off(quote_len as usize);
@@ -92,11 +92,11 @@ pub fn save_to_host_memory(data: &[u8]) -> Result<u64> {
 
 pub fn get_update_info(buf: Vec<u8>) -> Result<()> {
     let mut update_info = sgx_update_info_bit_t::default();
-    let mut rt : sgx_status_t = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut rt = UntrustedStatus::default();
 
     let status = unsafe {
         ocall_get_update_info(
-            &mut rt as *mut sgx_status_t,
+            &mut rt as *mut UntrustedStatus,
             buf.as_slice().as_ptr() as *mut sgx_platform_info_t,
             1,
             &mut update_info as *mut sgx_update_info_bit_t
@@ -106,8 +106,8 @@ pub fn get_update_info(buf: Vec<u8>) -> Result<()> {
     if status != sgx_status_t::SGX_SUCCESS {
 		return Err(EnclaveError::SgxError{ err: status });
 	}
-	if rt != sgx_status_t::SGX_SUCCESS {
-		return Err(EnclaveError::SgxError{ err: rt });
+	if rt.is_err() {
+        return Err(EnclaveError::UntrustedError{ status: rt, function: "ocall_get_update_info" });
     }
 
     Ok(())

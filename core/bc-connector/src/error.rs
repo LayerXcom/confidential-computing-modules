@@ -1,5 +1,6 @@
 use thiserror::Error;
 use sgx_types::sgx_status_t;
+use anonify_types::EnclaveStatus;
 
 pub type Result<T> = std::result::Result<T, HostError>;
 
@@ -10,6 +11,11 @@ pub enum HostError {
     #[error("SGX ecall failed function: {function:?}, status: {status:?}")]
     Sgx {
         status: sgx_status_t,
+        function: &'static str,
+    },
+    #[error("Enclave ecall failed function: {function:?}, status: {status:?}")]
+    Enclave {
+        status: EnclaveStatus,
         function: &'static str,
     },
     #[error("Contract address have not been set.")]
