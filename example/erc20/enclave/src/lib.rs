@@ -12,7 +12,7 @@ extern crate inventory; // TODO
 mod logics;
 mod ecalls;
 
-use anonify_enclave::context::{EnclaveContext};
+use anonify_enclave::context::EnclaveContext;
 use anonify_runtime::StateType;
 use anonify_enclave::config::TEST_SPID;
 

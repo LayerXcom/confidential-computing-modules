@@ -6,7 +6,6 @@ use crate::localstd::{
     mem::size_of,
 };
 use crate::state_type::StateType;
-use crate::impls::Runtime;
 use anonify_common::UserAddress;
 use codec::{Input, Output, Encode, Decode};
 
@@ -47,14 +46,18 @@ pub trait StateGetter {
     fn get<S: State>(&self, key: impl Into<UserAddress>,  mem_id: MemId) -> Result<S>;
 }
 
-pub trait CallKindConverter: Sized + Encode + Decode + Debug + Clone {
+pub trait CallKindConverter<G: StateGetter>: Sized + Encode + Decode + Debug + Clone {
+    type S: StateTransition<G>;
+
     fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self>;
-    fn find_stf<G: StateGetter>(self, runtime: Runtime<G>, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
+    fn find_stf(self, runtime: Self::S, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
 }
 
-pub trait StateTransition: Sized {
-    fn new<G: StateGetter>(db: G) -> Self;
-    fn call<C: CallKindConverter>(self, kind: C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
+pub trait StateTransition<G: StateGetter>: Sized {
+    type C: CallKindConverter<G>;
+
+    fn new(db: G) -> Self;
+    fn call(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
 }
 
 pub trait MemNameConverter {

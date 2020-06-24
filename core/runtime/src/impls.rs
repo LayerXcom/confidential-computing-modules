@@ -80,7 +80,9 @@ macro_rules! __impl_inner_runtime {
             $( $fn_name($fn_name), )*
         }
 
-        impl CallKindConverter for CallKind {
+        impl<G: StateGetter> CallKindConverter<G> for CallKind {
+            type S = Runtime<G>;
+
             fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self> {
                 match id {
                     $( $fn_id => Ok(CallKind::$fn_name($fn_name::from_bytes(state)?)), )*
@@ -88,7 +90,7 @@ macro_rules! __impl_inner_runtime {
                 }
             }
 
-            fn find_stf<G: StateGetter>(self, runtime: Runtime<G>, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
+            fn find_stf(self, runtime: Self::S, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
                 match self {
                     $( CallKind::$fn_name($fn_name) => {
                         runtime.$fn_name(
@@ -112,14 +114,21 @@ macro_rules! __impl_inner_runtime {
             db: G,
         }
 
-        impl<G: StateGetter> StateTransition for Runtime<G> {
+        impl<G: StateGetter> StateTransition<G> for Runtime<G> {
+            type C = CallKind;
+
             fn new(db: G) -> Self {
                 Runtime {
                     db,
                 }
             }
 
-            fn call<C: CallKindConverter>(self, kind: C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
+            fn call(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>
+            where
+                // C: CallKindConverter<G>,
+                // // Runtime<G>: <C as CallKindConverter<G>>::S,
+                // <C as CallKindConverter<G>>::S: StateTransition<G>,
+            {
                 kind.find_stf(self, my_addr)
             }
         }

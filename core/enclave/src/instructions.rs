@@ -1,4 +1,7 @@
-use std::vec::Vec;
+use std::{
+    vec::Vec,
+    marker::PhantomData,
+};
 use anonify_common::{UserAddress, AccessRight, Ciphertext};
 use anonify_runtime::{UpdatedState, StateType, traits::*};
 use codec::{Encode, Decode};
@@ -9,12 +12,13 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Encode, Decode)]
-pub struct Instructions<C: CallKindConverter> {
+pub struct Instructions<S: StateTransition<G>, G: StateGetter> {
     my_addr: UserAddress,
-    call_kind: C,
+    call_kind: S::C,
+    marker: PhantomData<G>,
 }
 
-impl<C: CallKindConverter> Instructions<C> {
+impl<S: StateTransition<G>, G: StateGetter> Instructions<S, G> {
     pub fn new(call_id: u32, params: &mut [u8], access_right: &AccessRight) -> Result<Self> {
         let my_addr = UserAddress::from_access_right(&access_right)?;
         let call_kind = C::from_call_id(call_id, params)?;
@@ -22,6 +26,7 @@ impl<C: CallKindConverter> Instructions<C> {
         Ok(Instructions {
             my_addr,
             call_kind,
+            marker: PhantomData::<G>,
         })
     }
 
@@ -51,12 +56,9 @@ impl<C: CallKindConverter> Instructions<C> {
         }
     }
 
-    pub fn state_transition<S, G>(self, ctx: G) -> Result<Vec<UpdatedState<StateType>>>
-    where
-        S: StateTransition,
-        G: StateGetter,
+    pub fn state_transition(self, ctx: G) -> Result<Vec<UpdatedState<StateType>>>
     {
-        let res = S::new(ctx).call::<C>(
+        let res = S::new(ctx).call(
             self.call_kind,
             self.my_addr,
         )?;

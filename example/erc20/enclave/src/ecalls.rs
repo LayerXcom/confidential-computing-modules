@@ -2,7 +2,7 @@ use std::slice;
 use sgx_types::*;
 use anonify_types::*;
 use anonify_common::{UserAddress, AccessRight, Ciphertext};
-use anonify_runtime::{StateGetter, State, MemId};
+use anonify_runtime::{StateGetter, State, MemId, StateType};
 use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
 use codec::Decode;
@@ -13,9 +13,10 @@ use anonify_enclave::{
     instructions::Instructions,
     notify::updated_state_into_raw,
     bridges::ocalls::save_to_host_memory,
+    context::EnclaveContext,
 };
 use crate::ENCLAVE_CONTEXT;
-use crate::logics::{CIPHERTEXT_SIZE, MAX_MEM_SIZE};
+use crate::logics::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, CallKind, Runtime};
 
 /// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
 #[no_mangle]
@@ -29,7 +30,7 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
     let group_key = &mut *ENCLAVE_CONTEXT.group_key.write().unwrap();
 
     if let Some(updated_state) = ENCLAVE_CONTEXT
-        .update_state(&ciphertext, group_key)
+        .update_state::<CallKind,Runtime<EnclaveContext<StateType>>,_>(&ciphertext, group_key)
         .expect("Failed to write cihpertexts.") {
              *raw_updated_state = updated_state_into_raw(updated_state)
                 .expect("Failed to convert into raw updated state");
@@ -73,7 +74,7 @@ pub unsafe extern "C" fn ecall_get_state(
     let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey)
         .expect("Failed to generate user address.");
 
-    let user_state = &ENCLAVE_CONTEXT.get_by_id(key, MemId::from_raw(mem_id));
+    let user_state = &ENCLAVE_CONTEXT.get(key, MemId::from_raw(mem_id)).unwrap();
     state.0 = save_to_host_memory(user_state.as_bytes()).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS

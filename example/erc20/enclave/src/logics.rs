@@ -1,13 +1,14 @@
 use anonify_runtime::{
     prelude::*,
     state_type::*,
+    traits::*,
 };
+use anonify_enclave::context::EnclaveContext; // TODO: remove
 use std::{
     vec::Vec,
     collections::BTreeMap
 };
 use anonify_common::{UserAddress, OWNER_ADDRESS};
-use anonify_runtime::traits::*;
 use codec::{Encode, Decode};
 
 pub const MAX_MEM_SIZE: usize = 100;

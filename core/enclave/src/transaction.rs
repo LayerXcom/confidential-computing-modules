@@ -99,7 +99,7 @@ impl EnclaveTx for InstructionTx {
 }
 
 impl InstructionTx {
-    pub fn construct<C: CallKindConverter>(
+    pub fn construct<C, G>(
         call_id: u32,
         params: &mut [u8],
         state_id: u64, // TODO: future works for separating smart contracts
@@ -107,9 +107,12 @@ impl InstructionTx {
         enclave_ctx: &EnclaveContext<StateType>,
         max_mem_size: usize,
     ) -> Result<Self>
+    where
+        C: CallKindConverter<G>,
+        G: StateGetter,
     {
         let group_key = enclave_ctx.group_key.read().unwrap();
-        let ciphertext = Instructions::<C>::new(call_id, params, &access_right)?
+        let ciphertext = Instructions::<C, G>::new(call_id, params, &access_right)?
             .encrypt(&group_key, max_mem_size)?;
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;

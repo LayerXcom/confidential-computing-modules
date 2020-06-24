@@ -115,19 +115,18 @@ impl EnclaveContext<StateType> {
     /// otherwise do nothing.
     /// Returns a updated state of registerd address in notification.
     // TODO: Enables to return multiple updated states.
-    pub fn update_state<C, S, G>(
+    pub fn update_state<S, G>(
         &self,
         ciphertext: &Ciphertext,
         group_key: &mut GroupKey,
     ) -> Result<Option<UpdatedState<StateType>>>
     where
-        C: CallKindConverter,
-        S: StateTransition,
+        S: StateTransition<EnclaveContext<StateType>>,
         G: StateGetter,
     {
-        if let Some(instructions) = Instructions::<C>::decrypt(ciphertext, group_key)? {
+        if let Some(instructions) = Instructions::<S, G>::decrypt(ciphertext, group_key)? {
             let mut state_iter = instructions
-                .state_transition::<S, EnclaveContext<StateType>>(self.clone())? // TODO: remove clone
+                .state_transition::<S>(self.clone())? // TODO: remove clone
                 .into_iter();
 
             state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
