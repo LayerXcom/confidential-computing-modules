@@ -140,11 +140,12 @@ macro_rules! __impl_inner_runtime {
                 name: &str
             ) -> Result<S> {
                 let mem_id = MemName::as_id(name);
-                self.db.get(key, name)
+                self.db.get(key, mem_id)
             }
 
             pub fn get<S: State>(&self, name: &str) -> Result<S> {
-                self.db.get(name, name)
+                let mem_id = MemName::as_id(name);
+                self.db.get(name, mem_id)
             }
 
             $(

@@ -43,7 +43,10 @@ impl<T: Sized + Default + Clone + Encode + Decode + Debug> State for T {}
 pub trait StateGetter {
     /// Get state using memory id.
     /// Assumed this is called in user-defined state transition functions.
-    fn get<S: State>(&self, key: impl Into<UserAddress>,  mem_id: MemId) -> Result<S>;
+    fn get<S, U>(&self, key: U, mem_id: MemId) -> Result<S>
+    where
+        S: State,
+        U: Into<UserAddress>;
 }
 
 pub trait CallKindConverter<G: StateGetter>: Sized + Encode + Decode + Debug + Clone {

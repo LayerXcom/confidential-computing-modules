@@ -23,7 +23,11 @@ use crate::{
 };
 
 impl StateGetter for EnclaveContext<StateType> {
-    fn get<S: State>(&self, key: impl Into<UserAddress>, mem_id: MemId) -> anyhow::Result<S> {
+    fn get<S, U>(&self, key: U, mem_id: MemId) -> anyhow::Result<S>
+    where
+        S: State,
+        U: Into<UserAddress>,
+    {
         let mut buf = self.db
             .get(key.into(), mem_id)
             .into_bytes();
@@ -111,31 +115,14 @@ impl EnclaveContext<StateType> {
         self.identity_key.sign(msg)
     }
 
-    /// Only if the TEE belongs to the group, you can receive ciphertext and decrypt it,
-    /// otherwise do nothing.
     /// Returns a updated state of registerd address in notification.
     // TODO: Enables to return multiple updated states.
-    pub fn update_state<S, G>(
+    pub fn update_state(
         &self,
-        ciphertext: &Ciphertext,
-        group_key: &mut GroupKey,
-    ) -> Result<Option<UpdatedState<StateType>>>
-    where
-        S: StateTransition<EnclaveContext<StateType>>,
-        G: StateGetter,
-    {
-        if let Some(instructions) = Instructions::<S, G>::decrypt(ciphertext, group_key)? {
-            let mut state_iter = instructions
-                .state_transition::<S>(self.clone())? // TODO: remove clone
-                .into_iter();
-
-            state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
-            let res = state_iter.find(|s| self.is_notified(&s.address));
-
-            return Ok(res)
-        }
-
-        Ok(None)
+        mut state_iter: impl Iterator<Item=UpdatedState<StateType>> + Clone
+    ) -> Option<UpdatedState<StateType>> {
+        state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
+        state_iter.find(|s| self.is_notified(&s.address))
     }
 
     /// Return Attestation report

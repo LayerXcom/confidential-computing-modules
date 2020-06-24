@@ -2,13 +2,12 @@ use std::slice;
 use sgx_types::*;
 use anonify_types::*;
 use anonify_common::{UserAddress, AccessRight, Ciphertext};
-use anonify_runtime::{StateGetter, State, MemId, StateType};
+use anonify_runtime::{StateGetter, MemId, StateType};
 use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
 use codec::Decode;
 use anonify_enclave::{
     transaction::{JoinGroupTx, EnclaveTx, HandshakeTx, InstructionTx},
-    kvs::EnclaveDB,
     config::{IAS_URL, TEST_SUB_KEY},
     instructions::Instructions,
     notify::updated_state_into_raw,
@@ -16,7 +15,9 @@ use anonify_enclave::{
     context::EnclaveContext,
 };
 use crate::ENCLAVE_CONTEXT;
-use crate::logics::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, CallKind, Runtime};
+use crate::logics::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
+
+type Context = EnclaveContext<StateType>;
 
 /// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
 #[no_mangle]
@@ -29,11 +30,12 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
     let ciphertext = Ciphertext::from_bytes(buf, CIPHERTEXT_SIZE);
     let group_key = &mut *ENCLAVE_CONTEXT.group_key.write().unwrap();
 
-    if let Some(updated_state) = ENCLAVE_CONTEXT
-        .update_state::<CallKind,Runtime<EnclaveContext<StateType>>,_>(&ciphertext, group_key)
-        .expect("Failed to write cihpertexts.") {
-             *raw_updated_state = updated_state_into_raw(updated_state)
-                .expect("Failed to convert into raw updated state");
+    if let Some(updated_state_iter) =
+        Instructions::<Runtime<Context>, Context>::state_transition(ENCLAVE_CONTEXT.clone(), &ciphertext, group_key).unwrap() {
+            if let Some(updated_state) = ENCLAVE_CONTEXT.update_state(updated_state_iter) {
+                *raw_updated_state = updated_state_into_raw(updated_state)
+                    .expect("Failed to convert into raw updated state");
+            }
         }
 
     let roster_idx = ciphertext.roster_idx() as usize;
@@ -74,7 +76,7 @@ pub unsafe extern "C" fn ecall_get_state(
     let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey)
         .expect("Failed to generate user address.");
 
-    let user_state = &ENCLAVE_CONTEXT.get(key, MemId::from_raw(mem_id)).unwrap();
+    let user_state = &ENCLAVE_CONTEXT.get::<StateType, _>(key, MemId::from_raw(mem_id)).unwrap();
     state.0 = save_to_host_memory(user_state.as_bytes()).unwrap() as *const u8;
 
     sgx_status_t::SGX_SUCCESS
@@ -113,7 +115,7 @@ pub unsafe extern "C" fn ecall_instruction(
     let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge)
         .expect("Failed to generate access right.");
 
-    let instruction_tx = InstructionTx::construct(
+    let instruction_tx = InstructionTx::construct::<Runtime<Context>, Context>(
             call_id,
             params,
             state_id,
