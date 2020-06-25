@@ -8,6 +8,7 @@ BINDGEN_CLANG_FLAGS := -I/opt/sgxsdk/include -I $(HOME)/sgx/edl
 BINDGEN_FLAGS := --default-enum-style=rust --rust-target=nightly \
 	--no-recursive-whitelist --use-array-pointers-in-arguments \
 	--whitelist-function ocall_.*  --raw-line $(BINDGEN_RAW_LINES)
+Rust_target_dir := debug
 
 all: bindgen $(Rust_Enclave_Name)
 

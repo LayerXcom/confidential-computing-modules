@@ -67,6 +67,7 @@ pub trait Sender: Sized {
         state_info: StateInfo<'_, ST>,
         gas: u64,
         st_fn: F,
+        ciphertext_len: usize,
     ) -> Result<String>
     where
         ST: State,
@@ -111,7 +112,7 @@ pub trait Watcher: Sized {
         insert_fn: F,
     ) -> Result<Option<Vec<UpdatedState<S>>>>
     where
-        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<Option<Vec<UpdatedState<S>>>>,
+        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog, usize) -> Result<Option<Vec<UpdatedState<S>>>>,
         S: State
     ;
 

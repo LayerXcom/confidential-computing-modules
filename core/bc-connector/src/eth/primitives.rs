@@ -258,7 +258,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 if ciphertext_size != data.len() && data.len() != 0  {
                     return Err(anyhow!("Each log should have same size of data.: index: {}", i).into());
                 }
-                let res = Ciphertext::from_bytes(&mut data[..]);
+                let res = Ciphertext::from_bytes(&mut data[..], ciphertext_size);
 
                 ciphertexts.push(res);
             } else if log.topics[0] == self.events.handshake_signature() {

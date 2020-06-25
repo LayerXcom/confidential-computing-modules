@@ -123,12 +123,7 @@ macro_rules! __impl_inner_runtime {
                 }
             }
 
-            fn call(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>
-            where
-                // C: CallKindConverter<G>,
-                // // Runtime<G>: <C as CallKindConverter<G>>::S,
-                // <C as CallKindConverter<G>>::S: StateTransition<G>,
-            {
+            fn call(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
                 kind.find_stf(self, my_addr)
             }
         }

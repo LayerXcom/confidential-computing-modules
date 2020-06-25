@@ -20,7 +20,7 @@ use anonify_bc_connector::{
     error::{Result, HostError},
 };
 use anonify_common::AccessRight;
-use anonify_runtime::{traits::State, UpdatedState};
+use anonify_runtime::{traits::{State, MemNameConverter}, UpdatedState};
 use parking_lot::RwLock;
 
 /// This dispatcher communicates with a blockchain node.
@@ -89,6 +89,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         gas: u64,
         contract_addr: &str,
         abi_path: P,
+        ciphertext_len: usize,
     ) -> Result<String>
         where
             ST: State,
@@ -98,7 +99,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         let state_info = StateInfo::new(state, state_id, call_name);
 
-        inner.send_instruction(access_right, signer, state_info, contract_info, gas)
+        inner.send_instruction(access_right, signer, state_info, contract_info, gas, ciphertext_len)
     }
 
     pub fn handshake<P>(
@@ -239,6 +240,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
         state_info: StateInfo<'_, ST>,
         contract_info: ContractInfo<'_, P>,
         gas: u64,
+        ciphertext_len: usize,
     ) -> Result<String>
         where
             ST: State,
@@ -250,7 +252,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
 
         self.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .send_instruction(access_right, signer, state_info, gas, enc_ins_fn)
+            .send_instruction(access_right, signer, state_info, gas, enc_ins_fn, ciphertext_len)
     }
 
     fn handshake<P>(
@@ -276,7 +278,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
     }
 }
 
-pub fn get_state<S>(
+pub fn get_state<S, M>(
     access_right: &AccessRight,
     enclave_id: sgx_enclave_id_t,
     mem_name: &str,
@@ -284,8 +286,9 @@ pub fn get_state<S>(
     where
         S: State + TryFrom<Vec<u8>>,
         <S as TryFrom<Vec<u8>>>::Error: Debug,
+        M: MemNameConverter,
 {
-    let state = get_state_from_enclave(
+    let state = get_state_from_enclave::<M>(
         enclave_id,
         access_right,
         mem_name,

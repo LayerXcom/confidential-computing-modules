@@ -77,7 +77,7 @@ impl<DB: BlockNumDB> EnclaveLog<DB> {
         insert_fn: F,
     ) -> Result<EnclaveUpdatedState<DB, S>>
     where
-        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<Option<Vec<UpdatedState<S>>>>,
+        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog, usize) -> Result<Option<Vec<UpdatedState<S>>>>,
         S: State,
     {
         match &self.inner {
