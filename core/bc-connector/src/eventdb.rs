@@ -65,6 +65,7 @@ pub struct InnerEnclaveLog {
 #[derive(Debug, Clone)]
 pub struct EnclaveLog<DB: BlockNumDB> {
     pub inner: Option<InnerEnclaveLog>,
+    pub ciphertext_size: usize,
     pub db: Arc<DB>,
 }
 
@@ -82,7 +83,7 @@ impl<DB: BlockNumDB> EnclaveLog<DB> {
     {
         match &self.inner {
             Some(log) => {
-                let updated_states = insert_fn(eid, log)?;
+                let updated_states = insert_fn(eid, log, self.ciphertext_size)?;
                 let next_blc_num = log.latest_blc_num + 1;
 
                 return Ok(EnclaveUpdatedState {

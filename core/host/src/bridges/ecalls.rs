@@ -1,4 +1,3 @@
-use std::boxed::Box;
 use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, RawUpdatedState};
 use anonify_common::{AccessRight, IntoVec};
@@ -8,7 +7,6 @@ use anonify_bc_connector::{
     utils::StateInfo,
     error::{HostError, Result},
 };
-use ed25519_dalek::{Signature, PublicKey};
 use log::debug;
 use crate::auto_ffi::*;
 
@@ -154,15 +152,19 @@ pub(crate) fn join_group(eid: sgx_enclave_id_t) -> Result<RawJoinGroupTx> {
     Ok(raw_reg_tx)
 }
 
-pub(crate) fn encrypt_instruction<S: State>(
+pub(crate) fn encrypt_instruction<S, M>(
     eid: sgx_enclave_id_t,
     access_right: AccessRight,
-    state_info: StateInfo<'_, S>,
-) -> Result<RawInstructionTx> {
+    state_info: StateInfo<'_, S, M>,
+) -> Result<RawInstructionTx>
+where
+    S: State,
+    M: MemNameConverter,
+{
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut raw_instruction_tx = RawInstructionTx::default();
     let state = state_info.state_as_bytes();
-    let call_id = state_info.call_name_to_id();
+    let call_id = state_info.call_name_to_id().as_raw();
 
     let status = unsafe {
         ecall_instruction(

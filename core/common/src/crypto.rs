@@ -4,9 +4,7 @@ use crate::localstd::{
     string::String,
     convert::TryFrom,
 };
-use crate::{
-    serde::{Serialize, Deserialize}
-};
+use crate::serde::{Serialize, Deserialize};
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, SignatureError, SECRET_KEY_LENGTH};
 use tiny_keccak::Keccak;
 use codec::{Encode, Decode};
@@ -26,8 +24,6 @@ pub const COMMON_CHALLENGE: [u8; CHALLENGE_SIZE] = [39, 79, 228, 49, 240, 219, 1
 
 lazy_static! {
     pub static ref COMMON_ACCESS_RIGHT: AccessRight = {
-        use ed25519_dalek::{SecretKey, PublicKey, Keypair};
-
         let secret = SecretKey::from_bytes(&COMMON_SECRET).unwrap();
         let pubkey = PublicKey::from(&secret);
         let keypair = Keypair { secret, public: pubkey };

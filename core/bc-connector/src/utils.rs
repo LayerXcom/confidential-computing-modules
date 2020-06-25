@@ -3,10 +3,14 @@ use std::{
     io::BufReader,
     fs::File,
     str::FromStr,
+    marker::PhantomData,
 };
 use web3::types::Address;
 use ethabi::Contract as ContractABI;
-use anonify_runtime::traits::State;
+use anonify_runtime::{
+    traits::{State, MemNameConverter},
+    MemId,
+};
 use anyhow::anyhow;
 use crate::{
     error::Result,
@@ -44,19 +48,25 @@ impl<'a, P: AsRef<Path>> ContractInfo<'a, P> {
     }
 }
 
-pub struct StateInfo<'a, ST: State> {
+pub struct StateInfo<'a, ST: State, M: MemNameConverter> {
     state: ST,
     state_id: u64,
     call_name: &'a str,
+    phantom: PhantomData<M>
 }
 
-impl<'a, ST: State> StateInfo<'a, ST> {
+impl<'a, ST: State, M: MemNameConverter> StateInfo<'a, ST, M> {
     pub fn new(state: ST, state_id: u64, call_name: &'a str) -> Self {
         StateInfo {
             state,
             state_id,
             call_name,
+            phantom: PhantomData::<M>,
         }
+    }
+
+    pub fn call_name_to_id(&self) -> MemId {
+        M::as_id(self.call_name)
     }
 
     pub fn state_as_bytes(&self) -> Vec<u8> {

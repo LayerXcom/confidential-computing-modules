@@ -79,7 +79,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         inner.join_group(signer, gas, contract_info)
     }
 
-    pub fn send_instruction<ST, P>(
+    pub fn send_instruction<ST, M>(
         &self,
         access_right: AccessRight,
         state: ST,
@@ -87,57 +87,50 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         call_name: &str,
         signer: SignerAddress,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
         ciphertext_len: usize,
     ) -> Result<String>
         where
             ST: State,
-            P: AsRef<Path> + Copy,
+            M: MemNameConverter,
     {
-        let inner = self.inner.read();
-        let contract_info = ContractInfo::new(abi_path, contract_addr);
-        let state_info = StateInfo::new(state, state_id, call_name);
-
-        inner.send_instruction(access_right, signer, state_info, contract_info, gas, ciphertext_len)
+        let state_info = StateInfo::<_,M>::new(state, state_id, call_name);
+        self.inner
+            .read()
+            .send_instruction(access_right, signer, state_info, gas, ciphertext_len)
     }
 
-    pub fn handshake<P>(
+    pub fn handshake(
         &self,
         signer: SignerAddress,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
-    ) -> Result<String>
-        where
-            P: AsRef<Path> + Copy,
-    {
-        let inner = self.inner.read();
-        let contract_info = ContractInfo::new(abi_path, contract_addr);
-
-        inner.handshake(signer, contract_info, gas)
+    ) -> Result<String> {
+        self.inner
+            .read()
+            .handshake(signer, gas)
     }
 
-    pub fn block_on_event<P, St>(
+    pub fn block_on_event<St>(
         &self,
-        contract_addr: &str,
-        abi_path: P,
     ) -> Result<Option<Vec<UpdatedState<St>>>>
         where
-            P: AsRef<Path> + Copy,
             St: State,
     {
-        let inner = self.inner.read();
-        let contract_info = ContractInfo::new(abi_path, contract_addr);
-        inner.block_on_event(contract_info).into()
+        self.inner
+            .read()
+            .block_on_event()
+            .into()
     }
 
     pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
-        self.inner.read().get_account(index)
+        self.inner
+            .read()
+            .get_account(index)
     }
 
     pub fn register_notification(&self, access_right: AccessRight) -> Result<()> {
-        self.inner.read().register_notification(access_right)
+        self.inner
+            .read()
+            .register_notification(access_right)
     }
 }
 
@@ -202,12 +195,10 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
             .get_account(index)
     }
 
-    fn block_on_event<P, St>(
+    fn block_on_event<St>(
         &self,
-        contract_info: ContractInfo<'_, P>,
     ) -> Result<Option<Vec<UpdatedState<St>>>>
         where
-            P: AsRef<Path> + Copy,
             St: State,
     {
         if self.watcher.is_none() {
@@ -215,7 +206,8 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
         }
 
         let eid = self.deployer.get_enclave_id();
-        self.watcher.as_ref()
+        self.watcher
+            .as_ref()
             .ok_or(HostError::AddressNotSet)?
             .block_on_event(eid, insert_fn)
     }
@@ -233,18 +225,17 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
             .join_group(signer, gas, join_fn)
     }
 
-    fn send_instruction<ST, P>(
+    fn send_instruction<ST, M>(
         &self,
         access_right: AccessRight,
         signer: SignerAddress,
-        state_info: StateInfo<'_, ST>,
-        contract_info: ContractInfo<'_, P>,
+        state_info: StateInfo<'_, ST, M>,
         gas: u64,
         ciphertext_len: usize,
     ) -> Result<String>
         where
             ST: State,
-            P: AsRef<Path> + Copy,
+            M: MemNameConverter,
     {
         if self.sender.is_none() {
             return Err(HostError::AddressNotSet);
@@ -255,14 +246,11 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
             .send_instruction(access_right, signer, state_info, gas, enc_ins_fn, ciphertext_len)
     }
 
-    fn handshake<P>(
+    fn handshake(
         &self,
         signer: SignerAddress,
-        contract_info: ContractInfo<'_, P>,
         gas: u64,
     ) -> Result<String>
-        where
-            P: AsRef<Path> + Copy,
     {
         if self.sender.is_none() {
             return Err(HostError::AddressNotSet);

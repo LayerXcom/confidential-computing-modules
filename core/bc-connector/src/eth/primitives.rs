@@ -237,7 +237,8 @@ impl<D: BlockNumDB> Web3Logs<D> {
         if self.logs.len() == 0 {
             return Ok(EnclaveLog{
                 inner: None,
-                db: self.db
+                db: self.db,
+                ciphertext_size: 0,
             });
         }
 
@@ -283,6 +284,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 ciphertexts,
                 handshakes,
             }),
+            ciphertext_size,
             db: self.db,
         })
     }

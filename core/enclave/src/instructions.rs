@@ -15,7 +15,7 @@ use crate::{
 pub struct Instructions<S: StateTransition<G>, G: StateGetter> {
     my_addr: UserAddress,
     call_kind: S::C,
-    marker: PhantomData<G>,
+    phantom: PhantomData<G>,
 }
 
 impl<S: StateTransition<G>, G: StateGetter> Instructions<S, G> {
@@ -26,7 +26,7 @@ impl<S: StateTransition<G>, G: StateGetter> Instructions<S, G> {
         Ok(Instructions {
             my_addr,
             call_kind,
-            marker: PhantomData::<G>,
+            phantom: PhantomData::<G>,
         })
     }
 
