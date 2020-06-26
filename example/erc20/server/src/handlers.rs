@@ -7,7 +7,7 @@ use anonify_bc_connector::{
     traits::*,
 };
 use anonify_runtime::{U64, Approved};
-use erc20_state_transition::{approve, transfer, construct, transfer_from, mint, burn};
+use erc20_state_transition::{CIPHERTEXT_SIZE, approve, transfer, construct, transfer_from, mint, burn};
 use actix_web::{
     web,
     HttpResponse,
@@ -82,8 +82,7 @@ pub fn handle_init_state<D, S, W, DB>(
         "construct",
         signer,
         DEFAULT_SEND_GAS,
-        &req.contract_addr,
-        &server.abi_path,
+        CIPHERTEXT_SIZE,
     )?;
 
     Ok(HttpResponse::Ok().json(api::init_state::post::Response(receipt)))
@@ -142,8 +141,7 @@ pub fn handle_approve<D, S, W, DB>(
         "approve",
         signer,
         DEFAULT_SEND_GAS,
-        &req.contract_addr,
-        &server.abi_path,
+        CIPHERTEXT_SIZE
     )?;
 
     Ok(HttpResponse::Ok().json(api::approve::post::Response(receipt)))
@@ -172,8 +170,7 @@ pub fn handle_mint<D, S, W, DB>(
         "mint",
         signer,
         DEFAULT_SEND_GAS,
-        &req.contract_addr,
-        &server.abi_path,
+        CIPHERTEXT_SIZE
     )?;
 
     Ok(HttpResponse::Ok().json(api::mint::post::Response(receipt)))
@@ -201,8 +198,7 @@ pub fn handle_burn<D, S, W, DB>(
         "burn",
         signer,
         DEFAULT_SEND_GAS,
-        &req.contract_addr,
-        &server.abi_path,
+        CIPHERTEXT_SIZE,
     )?;
 
     Ok(HttpResponse::Ok().json(api::burn::post::Response(receipt)))
@@ -232,8 +228,7 @@ pub fn handle_transfer_from<D, S, W, DB>(
         "transfer_from",
         signer,
         DEFAULT_SEND_GAS,
-        &req.contract_addr,
-        &server.abi_path,
+        CIPHERTEXT_SIZE,
     )?;
 
     Ok(HttpResponse::Ok().json(api::transfer_from::post::Response(receipt)))
@@ -241,7 +236,6 @@ pub fn handle_transfer_from<D, S, W, DB>(
 
 pub fn handle_key_rotation<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<api::key_rotation::post::Request>,
 ) -> Result<HttpResponse, Error>
     where
         D: Deployer,
@@ -253,8 +247,6 @@ pub fn handle_key_rotation<D, S, W, DB>(
     let receipt = server.dispatcher.handshake(
         signer,
         DEFAULT_SEND_GAS,
-        &req.contract_addr,
-        &server.abi_path,
     )?;
 
     Ok(HttpResponse::Ok().json(api::key_rotation::post::Response(receipt)))

@@ -89,7 +89,6 @@ pub mod init_state {
             pub challenge: [u8; 32],
             pub total_supply: u64,
             pub state_id: u64,
-            pub contract_addr: String,
         }
 
         impl Request {
@@ -97,7 +96,6 @@ pub mod init_state {
                 keypair: &Keypair,
                 total_supply: u64,
                 state_id: u64,
-                contract_addr: String,
                 rng: &mut R
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -110,7 +108,6 @@ pub mod init_state {
                     challenge,
                     total_supply,
                     state_id,
-                    contract_addr,
                 }
             }
 
@@ -126,8 +123,8 @@ pub mod init_state {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, total_supply: {:?}, state_id: {:?}, contract address: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.total_supply, self.state_id, self.contract_addr
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, total_supply: {:?}, state_id: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.total_supply, self.state_id
                 )
             }
         }
@@ -151,7 +148,6 @@ pub mod transfer {
             pub target: UserAddress,
             pub amount: u64,
             pub state_id: u64,
-            pub contract_addr: String,
         }
 
         impl Request {
@@ -160,7 +156,6 @@ pub mod transfer {
                 amount: u64,
                 state_id: u64,
                 target: UserAddress,
-                contract_addr: String,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -174,7 +169,6 @@ pub mod transfer {
                     target,
                     amount,
                     state_id,
-                    contract_addr,
                 }
             }
 
@@ -190,8 +184,8 @@ pub mod transfer {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, target: {:?}, amount: {:?}, contract address: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.target, self.amount, self.contract_addr
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, target: {:?}, amount: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.target, self.amount,
                 )
             }
         }
@@ -215,7 +209,6 @@ pub mod approve {
             pub target: UserAddress,
             pub amount: u64,
             pub state_id: u64,
-            pub contract_addr: String,
         }
 
         impl Request {
@@ -224,7 +217,6 @@ pub mod approve {
                 amount: u64,
                 state_id: u64,
                 target: UserAddress,
-                contract_addr: String,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -238,7 +230,6 @@ pub mod approve {
                     target,
                     amount,
                     state_id,
-                    contract_addr,
                 }
             }
 
@@ -254,8 +245,8 @@ pub mod approve {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, target: {:?}, amount: {:?}, contract address: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.target, self.amount, self.contract_addr
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, target: {:?}, amount: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.target, self.amount
                 )
             }
         }
@@ -280,7 +271,6 @@ pub mod transfer_from {
             pub target: UserAddress,
             pub amount: u64,
             pub state_id: u64,
-            pub contract_addr: String,
         }
 
         impl Request {
@@ -290,7 +280,6 @@ pub mod transfer_from {
                 state_id: u64,
                 owner: UserAddress,
                 target: UserAddress,
-                contract_addr: String,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -305,7 +294,6 @@ pub mod transfer_from {
                     target,
                     amount,
                     state_id,
-                    contract_addr,
                 }
             }
 
@@ -321,8 +309,8 @@ pub mod transfer_from {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, owner: {:?}, target: {:?}, amount: {:?}, contract address: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.owner, self.target, self.amount, self.contract_addr
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, owner: {:?}, target: {:?}, amount: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.owner, self.target, self.amount
                 )
             }
         }
@@ -346,7 +334,6 @@ pub mod mint {
             pub target: UserAddress,
             pub amount: u64,
             pub state_id: u64,
-            pub contract_addr: String,
         }
 
         impl Request {
@@ -355,7 +342,6 @@ pub mod mint {
                 amount: u64,
                 state_id: u64,
                 target: UserAddress,
-                contract_addr: String,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -369,7 +355,6 @@ pub mod mint {
                     target,
                     amount,
                     state_id,
-                    contract_addr,
                 }
             }
 
@@ -385,8 +370,8 @@ pub mod mint {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, target: {:?}, amount: {:?}, contract address: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.target, self.amount, self.contract_addr
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, target: {:?}, amount: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.target, self.amount
                 )
             }
         }
@@ -409,7 +394,6 @@ pub mod burn {
             pub challenge: [u8; 32],
             pub amount: u64,
             pub state_id: u64,
-            pub contract_addr: String,
         }
 
         impl Request {
@@ -417,7 +401,6 @@ pub mod burn {
                 keypair: &Keypair,
                 amount: u64,
                 state_id: u64,
-                contract_addr: String,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -430,7 +413,6 @@ pub mod burn {
                     challenge,
                     amount,
                     state_id,
-                    contract_addr,
                 }
             }
 
@@ -446,8 +428,8 @@ pub mod burn {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, amount: {:?}, contract address: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.amount, self.contract_addr
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, amount: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.amount
                 )
             }
         }
@@ -460,11 +442,6 @@ pub mod burn {
 pub mod key_rotation {
     pub mod post {
         use super::super::*;
-
-        #[derive(Clone, Deserialize, Serialize, Debug)]
-        pub struct Request {
-            pub contract_addr: String,
-        }
 
         #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
         pub struct Response(pub String);
