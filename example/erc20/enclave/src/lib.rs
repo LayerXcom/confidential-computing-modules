@@ -9,7 +9,6 @@ extern crate lazy_static;
 #[macro_use]
 extern crate inventory; // TODO
 
-mod logics;
 mod ecalls;
 
 use anonify_enclave::context::EnclaveContext;

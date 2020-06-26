@@ -103,13 +103,6 @@ macro_rules! __impl_inner_runtime {
             }
         }
 
-        // pub fn call_name_to_id(name: &str) -> u32 {
-        //     match name {
-        //         $( stringify!($fn_name) => $fn_id, )*
-        //         _ => panic!("invalid call name"),
-        //     }
-        // }
-
         pub struct Runtime<G: StateGetter> {
             db: G,
         }

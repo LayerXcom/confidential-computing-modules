@@ -1,0 +1,21 @@
+[package]
+name = "erc20-state-transition"
+version = "0.1.0"
+authors = ["osuketh <dish230@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+anonify-runtime = { path = "../../../core/runtime", default-features = false }
+anonify-common = { path = "../../../core/common", default-features = false }
+codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
+
+[features]
+default = ["std"]
+std = [
+    "anonify-runtime/std",
+    "anonify-common/std",
+]
+sgx = [
+    "anonify-runtime/sgx",
+    "anonify-common/sgx",
+]

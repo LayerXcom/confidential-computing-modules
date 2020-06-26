@@ -3,7 +3,6 @@ use anonify_runtime::{
     state_type::*,
     traits::*,
 };
-use anonify_enclave::context::EnclaveContext; // TODO: remove
 use std::{
     vec::Vec,
     collections::BTreeMap

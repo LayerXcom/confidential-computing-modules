@@ -5,16 +5,17 @@ members = [
     "core/runtime",
     "core/bc-connector",
     "core/common",
+    "core/host",
     "example/erc20/cli",
     "example/erc20/api",
+    "example/erc20/state-transition",
+    "example/erc20/server",
     "example/invoice-dx/app",
     "example/invoice-dx/api",
     "wallet",
 ]
 exclude = [
-    "core/host",
     "core/treekem",
     "example/erc20/enclave",
-    "example/erc20/server",
     "example/invoice-dx/server",
 ]

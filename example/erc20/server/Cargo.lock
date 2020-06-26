@@ -255,21 +255,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "anonify-app-preluder"
-version = "0.1.0"
-dependencies = [
- "anonify-common 0.1.0",
- "anonify-runtime 0.1.0",
- "dx-app 0.1.0",
- "erc20-app 0.1.0",
- "parity-scale-codec 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "anonify-bc-connector"
 version = "0.1.0"
 dependencies = [
- "anonify-app-preluder 0.1.0",
  "anonify-common 0.1.0",
  "anonify-runtime 0.1.0",
  "anonify-types 0.1.0",
@@ -307,7 +295,6 @@ dependencies = [
 name = "anonify-host"
 version = "0.1.0"
 dependencies = [
- "anonify-app-preluder 0.1.0",
  "anonify-bc-connector 0.1.0",
  "anonify-common 0.1.0",
  "anonify-runtime 0.1.0",
@@ -346,7 +333,7 @@ dependencies = [
  "api 0.1.0",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "erc20-app 0.1.0",
+ "erc20-state-transition 0.1.0",
  "failure 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -843,15 +830,6 @@ version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "dx-app"
-version = "0.1.0"
-dependencies = [
- "anonify-common 0.1.0",
- "anonify-runtime 0.1.0",
- "parity-scale-codec 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "ed25519-dalek"
 version = "1.0.0-pre.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -921,7 +899,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "erc20-app"
+name = "erc20-state-transition"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",

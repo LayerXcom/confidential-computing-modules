@@ -14,8 +14,8 @@ use anonify_enclave::{
     bridges::ocalls::save_to_host_memory,
     context::EnclaveContext,
 };
+use erc20_state_transition::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
 use crate::ENCLAVE_CONTEXT;
-use crate::logics::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
 
 type Context = EnclaveContext<StateType>;
 

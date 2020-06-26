@@ -7,7 +7,7 @@ use anonify_bc_connector::{
     traits::*,
 };
 use anonify_runtime::{U64, Approved};
-use erc20_app::{approve, transfer, construct, transfer_from, mint, burn};
+use erc20_state_transition::{approve, transfer, construct, transfer_from, mint, burn};
 use actix_web::{
     web,
     HttpResponse,
