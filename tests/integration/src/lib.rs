@@ -6,26 +6,18 @@ use std::{
 use sgx_types::*;
 use anonify_common::{AccessRight, UserAddress, COMMON_ACCESS_RIGHT};
 use anonify_runtime::{State, U64, Approved};
-use anonify_app_preluder::{transfer, construct, approve, transfer_from, mint, burn};
+use erc20_state_transition::{transfer, construct, approve, transfer_from, mint, burn};
 use anonify_bc_connector::{
     eventdb::{EventDB, BlockNumDB},
     eth::*,
 };
-use crate::auto_ffi::ecall_run_tests;
-use crate::init_enclave::EnclaveDir;
-use crate::dispatcher::*;
+use anonify_host::{
+    init_enclave::EnclaveDir,
+    dispatcher::*,
+};
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
 const ANONYMOUS_ASSET_ABI_PATH: &str = "../../build/Anonify.abi";
-
-#[test]
-fn test_in_enclave() {
-    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
-    let ret = unsafe { ecall_run_tests(
-        enclave.geteid(),
-    ) };
-    assert_eq!(ret, sgx_status_t::SGX_SUCCESS);
-}
 
 #[test]
 fn test_integration_eth_construct() {

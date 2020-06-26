@@ -13,6 +13,7 @@ members = [
     "example/invoice-dx/app",
     "example/invoice-dx/api",
     "wallet",
+    "tests/integration",
 ]
 exclude = [
     "core/treekem",
