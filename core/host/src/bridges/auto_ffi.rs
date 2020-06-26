@@ -69,3 +69,6 @@ extern "C" {
         challenge: *mut [u8; 32usize],
     ) -> sgx_status_t;
 }
+extern "C" {
+    pub fn ecall_run_tests(eid: sgx_enclave_id_t) -> sgx_status_t;
+}

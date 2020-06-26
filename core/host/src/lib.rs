@@ -2,7 +2,7 @@
 
 pub mod dispatcher;
 mod bridges;
-mod init_enclave;
+pub mod init_enclave;
 mod constants;
 
 use bridges::auto_ffi;
