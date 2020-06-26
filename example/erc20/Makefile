@@ -63,7 +63,7 @@ Enclave_EDL_Files := $(ANONIFY_ENCLAVE_DIR)/Enclave_t.c $(ANONIFY_ENCLAVE_DIR)/E
 
 Host_Rust_Flags += $(if $(JOBS),-j$(JOBS), )
 Host_SRC_Files := $(shell find $(ANONIFY_HOST_DIR)/ -type f -name '*.rs') $(shell find $(ANONIFY_HOST_DIR)/ -type f -name 'Cargo.toml')
-Host_Include_Paths := -I ./host -I./include -I$(SGX_SDK)/include -I$(CUSTOM_EDL_PATH)
+Host_Include_Paths := -I $(ANONIFY_HOST_DIR) -I./include -I$(SGX_SDK)/include -I$(CUSTOM_EDL_PATH)
 Host_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(Host_Include_Paths)
 
 Host_Rust_Path := ./$(ANONIFY_HOST_DIR)/target/$(Rust_target_dir)
@@ -80,12 +80,12 @@ else
 	Service_Library_Name := sgx_tservice
 endif
 Crypto_Library_Name := sgx_tcrypto
-KeyExchange_Library_Name := sgx_tkey_exchange
-ProtectedFs_Library_Name := sgx_tprotected_fs
+# KeyExchange_Library_Name := sgx_tkey_exchange
+# ProtectedFs_Library_Name := sgx_tprotected_fs
 
-RustEnclave_C_Files := $(wildcard $(ANONIFY_ENCLAVE_DIR)/*.c)
-RustEnclave_C_Objects := $(RustEnclave_C_Files:.c=.o)
-RustEnclave_Include_Paths := -I$(CUSTOM_COMMON_PATH)/inc -I$(CUSTOM_EDL_PATH) -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SDK)/include/epid -I $(ANONIFY_ENCLAVE_DIR) -I./include
+# RustEnclave_C_Files := $(wildcard $(ANONIFY_ENCLAVE_DIR)/*.c)
+# RustEnclave_C_Objects := $(RustEnclave_C_Files:.c=.o)
+RustEnclave_Include_Paths := -I$(CUSTOM_COMMON_PATH)/inc -I$(CUSTOM_EDL_PATH) -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SDK)/include/epid -I ./enclave -I./include
 RustEnclave_Link_Libs := -L$(CUSTOM_LIBRARY_PATH) -lenclave
 RustEnclave_Compile_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(RustEnclave_Include_Paths)
 RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) \
@@ -106,8 +106,8 @@ all: $(Host_Name) $(Signed_RustEnclave_Name)
 ######## EDL Objects ########
 
 $(Enclave_EDL_Files): $(SGX_EDGER8R) $(ANONIFY_ENCLAVE_DIR)/Enclave.edl
-	$(SGX_EDGER8R) --trusted $(ANONIFY_ENCLAVE_DIR)/Enclave.edl --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --trusted-dir enclave
-	$(SGX_EDGER8R) --untrusted $(ANONIFY_ENCLAVE_DIR)/Enclave.edl --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --untrusted-dir host
+	$(SGX_EDGER8R) --trusted $(ANONIFY_ENCLAVE_DIR)/Enclave.edl --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --trusted-dir $(ANONIFY_ENCLAVE_DIR)
+	$(SGX_EDGER8R) --untrusted $(ANONIFY_ENCLAVE_DIR)/Enclave.edl --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --untrusted-dir $(ANONIFY_HOST_DIR)
 	@echo "GEN  =>  $(Enclave_EDL_Files)"
 
 ######## Host Objects ########

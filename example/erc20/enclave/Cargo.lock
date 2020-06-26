@@ -451,12 +451,21 @@ dependencies = [
  "anonify-treekem",
  "anonify-types",
  "ed25519-dalek",
+ "erc20-state-transition",
  "inventory",
  "lazy_static",
- "parity-scale-codec",
  "sgx_tstd",
  "sgx_types 1.1.1",
  "test-utils",
+]
+
+[[package]]
+name = "erc20-state-transition"
+version = "0.1.0"
+dependencies = [
+ "anonify-common",
+ "anonify-runtime",
+ "parity-scale-codec",
 ]
 
 [[package]]

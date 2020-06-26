@@ -64,7 +64,6 @@ $(error Cannot set DEBUG and SGX_PRERELEASE at the same time!!)
 endif
 endif
 
-
 ifeq ($(DEBUG), 1)
 	SGX_COMMON_CFLAGS += -O0 -g
 	Rust_target_dir := debug
@@ -72,14 +71,6 @@ else
 	SGX_COMMON_CFLAGS += -O2
 	Host_Rust_Flags := --release
 	Rust_target_dir := release
-endif
-
-ifeq ($(FEATURES), ERC20)
-	Enclave_Rust_Flags := --features=erc20
-else ifeq ($(FEATURES), DX)
-	Enclave_Rust_Flags := --features=dx
-else
-	Enclave_Rust_Flags := --features=erc20
 endif
 
 ######## CUSTOM Settings ########
@@ -180,7 +171,7 @@ $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 .PHONY: enclave
 enclave: $(Enclave_EDL_Files)
 	mkdir -p $(CUSTOM_LIBRARY_PATH)
-	$(MAKE) -C ./enclave/ CARGO_FLAGS=$(Host_Rust_Flags) FEATURE_FLAGS=$(Enclave_Rust_Flags) Rust_target_dir=$(Rust_target_dir) CARGO=$(CARGO) BINDGEN=$(BINDGEN) RUSTFMT=$(RUSTFMT)
+	$(MAKE) -C ./enclave/ CARGO_FLAGS=$(Host_Rust_Flags) Rust_target_dir=$(Rust_target_dir) CARGO=$(CARGO) BINDGEN=$(BINDGEN) RUSTFMT=$(RUSTFMT)
 
 .PHONY: compiler-rt
 compiler-rt:

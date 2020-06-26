@@ -4,6 +4,10 @@ version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
+[lib]
+name = "anonifyenclave"
+crate-type = ["staticlib"]
+
 [dependencies]
 anonify-types = { path = "../types", default-features = false }
 anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
