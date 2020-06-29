@@ -144,7 +144,6 @@ $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 
 .PHONY: enclave
 enclave: $(Enclave_EDL_Files)
-	mkdir -p $(CUSTOM_LIBRARY_PATH)
 	$(MAKE) -C ./$(ANONIFY_ENCLAVE_DIR)/ CARGO_FLAGS=$(Host_Rust_Flags) Rust_target_dir=$(Rust_target_dir) CARGO=$(CARGO) BINDGEN=$(BINDGEN) RUSTFMT=$(RUSTFMT)
 
 .PHONY: compiler-rt
