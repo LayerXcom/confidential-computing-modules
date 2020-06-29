@@ -44,6 +44,12 @@ fn main () {
     bindings
         .write_to_file(out_path.join("auto_ffi.rs"))
         .expect("Couldn't write bindings!");
+
+    cc::Build::new()
+        .file("Enclave_u.c")
+        .include("/opt/sgxsdk/include")
+        .include(edl)
+        .compile("libEnclave_u.a");
 }
 
 fn target_dir() -> PathBuf {

@@ -414,6 +414,7 @@ dependencies = [
  "anonify-types 0.1.0",
  "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
  "bindgen 0.51.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cc 1.0.54 (registry+https://github.com/rust-lang/crates.io-index)",
  "dirs 2.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",

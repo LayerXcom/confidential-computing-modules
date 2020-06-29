@@ -22,3 +22,4 @@ log = "0.4"
 [build-dependencies]
 bindgen = "0.51"
 dirs = "2.0"
+cc = "1.0"
