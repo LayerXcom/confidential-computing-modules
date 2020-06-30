@@ -24,6 +24,8 @@ Anonify_common_t.h
 Anonify_common_u.h
 
 anonify-types.h
+!core/enclave/anonify-types.h
+!core/host/anonify-types.h
 
 # Prerequisites
 *.d

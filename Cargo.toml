@@ -1,11 +1,12 @@
 [workspace]
 members = [
     "core/enclave",
-    "core/types",
+    "core/host",
     "core/runtime",
     "core/bc-connector",
     "core/common",
-    "core/host",
+    "core/types",
+    "core/treekem",
     "example/erc20/cli",
     "example/erc20/api",
     "example/erc20/state-transition",
@@ -16,7 +17,6 @@ members = [
     "tests/integration",
 ]
 exclude = [
-    "core/treekem",
     "example/erc20/enclave",
     "example/invoice-dx/server",
 ]
