@@ -152,19 +152,19 @@ pub(crate) fn join_group(eid: sgx_enclave_id_t) -> Result<RawJoinGroupTx> {
     Ok(raw_reg_tx)
 }
 
-pub(crate) fn encrypt_instruction<S, M>(
+pub(crate) fn encrypt_instruction<S, C>(
     eid: sgx_enclave_id_t,
     access_right: AccessRight,
-    state_info: StateInfo<'_, S, M>,
+    state_info: StateInfo<'_, S, C>,
 ) -> Result<RawInstructionTx>
 where
     S: State,
-    M: MemNameConverter,
+    C: CallNameConverter,
 {
     let mut rt = sgx_status_t::SGX_ERROR_UNEXPECTED;
     let mut raw_instruction_tx = RawInstructionTx::default();
     let state = state_info.state_as_bytes();
-    let call_id = state_info.call_name_to_id().as_raw();
+    let call_id = state_info.call_name_to_id();
 
     let status = unsafe {
         ecall_instruction(

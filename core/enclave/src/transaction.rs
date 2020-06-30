@@ -1,7 +1,7 @@
 use std::vec::Vec;
 use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, traits::RawEnclaveTx};
 use anonify_common::{UserAddress, Sha256, Hash256, AccessRight, IntoVec, Ciphertext};
-use anonify_runtime::{StateType, State, MemId, traits::*};
+use anonify_runtime::{StateType, MemId, traits::*};
 use anonify_treekem::handshake::HandshakeParams;
 use codec::Encode;
 use remote_attestation::{RAService, AttestationReport, ReportSig};
@@ -99,7 +99,7 @@ impl EnclaveTx for InstructionTx {
 }
 
 impl InstructionTx {
-    pub fn construct<S, G>(
+    pub fn construct<R, G>(
         call_id: u32,
         params: &mut [u8],
         state_id: u64, // TODO: future works for separating smart contracts
@@ -108,11 +108,11 @@ impl InstructionTx {
         max_mem_size: usize,
     ) -> Result<Self>
     where
-        S: StateTransition<G>,
+        R: RuntimeExecutor<G>,
         G: StateGetter,
     {
         let group_key = enclave_ctx.group_key.read().unwrap();
-        let ciphertext = Instructions::<S, G>::new(call_id, params, &access_right)?
+        let ciphertext = Instructions::<R, G>::new(call_id, params, &access_right)?
             .encrypt(&group_key, max_mem_size)?;
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;

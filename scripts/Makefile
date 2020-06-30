@@ -115,6 +115,7 @@ $(RustEnclave_Name): enclave $(ANONIFY_ENCLAVE_DIR)/Anonify_common_t.o
 	@echo "LINK =>  $@"
 
 $(Signed_RustEnclave_Name): $(RustEnclave_Name)
+	mkdir -p $(ANONIFY_BIN_DIR)
 	@$(SGX_ENCLAVE_SIGNER) sign -key $(ANONIFY_ENCLAVE_DIR)/Enclave_private.pem -enclave $(RustEnclave_Name) -out $@ -config $(ANONIFY_ENCLAVE_DIR)/Enclave.config.xml
 	@echo "SIGN =>  $@"
 

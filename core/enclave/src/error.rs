@@ -14,17 +14,11 @@ pub enum EnclaveError {
     #[error("Ed25519 error: {0}")]
     Ed25519Error(ed25519_dalek::SignatureError),
 
-    #[error("Ring Error: {err:?}")]
-    RingError { #[from] err: ring::error::Unspecified },
-
     #[error("Sgx Error: {err:?}")]
     SgxError { err: sgx_types::sgx_status_t },
 
     #[error("Hex error: {0}")]
     HexError(hex::FromHexError),
-
-    #[error("Webpki error: {0}")]
-    WebpkiError(#[from] webpki::Error),
 
     #[error("Base64 error: {0}")]
     Base64Error(#[from] base64::DecodeError),

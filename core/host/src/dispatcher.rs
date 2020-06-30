@@ -20,7 +20,7 @@ use anonify_bc_connector::{
     error::{Result, HostError},
 };
 use anonify_common::AccessRight;
-use anonify_runtime::{traits::{State, MemNameConverter}, UpdatedState};
+use anonify_runtime::{traits::{State, MemNameConverter, CallNameConverter}, UpdatedState};
 use parking_lot::RwLock;
 
 /// This dispatcher communicates with a blockchain node.
@@ -79,7 +79,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         inner.join_group(signer, gas, contract_info)
     }
 
-    pub fn send_instruction<ST, M>(
+    pub fn send_instruction<ST, C>(
         &self,
         access_right: AccessRight,
         state: ST,
@@ -91,9 +91,9 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
     ) -> Result<String>
         where
             ST: State,
-            M: MemNameConverter,
+            C: CallNameConverter,
     {
-        let state_info = StateInfo::<_,M>::new(state, state_id, call_name);
+        let state_info = StateInfo::<_, C>::new(state, state_id, call_name);
         self.inner
             .read()
             .send_instruction(access_right, signer, state_info, gas, ciphertext_len)
@@ -225,17 +225,17 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
             .join_group(signer, gas, join_fn)
     }
 
-    fn send_instruction<ST, M>(
+    fn send_instruction<ST, C>(
         &self,
         access_right: AccessRight,
         signer: SignerAddress,
-        state_info: StateInfo<'_, ST, M>,
+        state_info: StateInfo<'_, ST, C>,
         gas: u64,
         ciphertext_len: usize,
     ) -> Result<String>
         where
             ST: State,
-            M: MemNameConverter,
+            C: CallNameConverter,
     {
         if self.sender.is_none() {
             return Err(HostError::AddressNotSet);

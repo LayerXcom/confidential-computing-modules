@@ -6,7 +6,7 @@ use std::{
 use sgx_types::sgx_enclave_id_t;
 use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx};
 use anonify_common::{AccessRight, Ciphertext};
-use anonify_runtime::{traits::{State, MemNameConverter}, UpdatedState};
+use anonify_runtime::{traits::{State, CallNameConverter}, UpdatedState};
 use web3::types::Address as EthAddress;
 use crate::{
     error::Result,
@@ -159,19 +159,19 @@ impl Sender for EthSender {
         Ok(hex::encode(receipt.as_bytes()))
     }
 
-    fn send_instruction<ST, F, M>(
+    fn send_instruction<ST, F, C>(
         &self,
         access_right: AccessRight,
         signer: SignerAddress,
-        state_info: StateInfo<'_, ST, M>,
+        state_info: StateInfo<'_, ST, C>,
         gas: u64,
         enc_ins_fn: F,
         ciphertext_len: usize,
     ) -> Result<String>
     where
         ST: State,
-        M: MemNameConverter,
-        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, M>) -> Result<RawInstructionTx>,
+        C: CallNameConverter,
+        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, C>) -> Result<RawInstructionTx>,
     {
         // ecall of encrypt instruction
         let mut instruction_tx: BoxedInstructionTx = enc_ins_fn(self.enclave_id, access_right, state_info)?.into();

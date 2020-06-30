@@ -22,6 +22,7 @@ macro_rules! __impl_inner_memory {
     (@imp
         $( ($id:expr, $name:expr, $value:ty) ),*
     ) => {
+        #[derive(Debug, Clone)]
         pub struct MemName;
 
         impl MemNameConverter for MemName {
@@ -75,22 +76,34 @@ macro_rules! __impl_inner_runtime {
             }
         )*
 
+        #[derive(Debug, Clone)]
+        pub struct CallName;
+
+        impl CallNameConverter for CallName {
+            fn as_id(name: &str) -> u32 {
+                match name {
+                    $( stringify!($fn_name) => $fn_id, )*
+                    _ => panic!("invalid call name"),
+                }
+            }
+        }
+
         #[derive(Debug, Clone, Encode, Decode)]
         pub enum CallKind {
             $( $fn_name($fn_name), )*
         }
 
-        impl<G: StateGetter> CallKindConverter<G> for CallKind {
-            type S = Runtime<G>;
+        impl<G: StateGetter> CallKindExecutor<G> for CallKind {
+            type R = Runtime<G>;
 
-            fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self> {
+            fn new(id: u32, state: &mut [u8]) -> Result<Self> {
                 match id {
                     $( $fn_id => Ok(CallKind::$fn_name($fn_name::from_bytes(state)?)), )*
                     _ => return Err(anyhow!("Invalid Call ID")),
                 }
             }
 
-            fn find_stf(self, runtime: Self::S, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
+            fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
                 match self {
                     $( CallKind::$fn_name($fn_name) => {
                         runtime.$fn_name(
@@ -107,7 +120,7 @@ macro_rules! __impl_inner_runtime {
             db: G,
         }
 
-        impl<G: StateGetter> StateTransition<G> for Runtime<G> {
+        impl<G: StateGetter> RuntimeExecutor<G> for Runtime<G> {
             type C = CallKind;
 
             fn new(db: G) -> Self {
@@ -116,8 +129,8 @@ macro_rules! __impl_inner_runtime {
                 }
             }
 
-            fn call(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
-                kind.find_stf(self, my_addr)
+            fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
+                kind.execute(self, my_addr)
             }
         }
 

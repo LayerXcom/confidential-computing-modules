@@ -8,7 +8,7 @@ use std::{
 use web3::types::Address;
 use ethabi::Contract as ContractABI;
 use anonify_runtime::{
-    traits::{State, MemNameConverter},
+    traits::{State, CallNameConverter},
     MemId,
 };
 use anyhow::anyhow;
@@ -48,25 +48,26 @@ impl<'a, P: AsRef<Path>> ContractInfo<'a, P> {
     }
 }
 
-pub struct StateInfo<'a, ST: State, M: MemNameConverter> {
+#[derive(Debug, Clone)]
+pub struct StateInfo<'a, ST: State, C: CallNameConverter> {
     state: ST,
     state_id: u64,
     call_name: &'a str,
-    phantom: PhantomData<M>
+    phantom: PhantomData<C>
 }
 
-impl<'a, ST: State, M: MemNameConverter> StateInfo<'a, ST, M> {
+impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
     pub fn new(state: ST, state_id: u64, call_name: &'a str) -> Self {
         StateInfo {
             state,
             state_id,
             call_name,
-            phantom: PhantomData::<M>,
+            phantom: PhantomData::<C>,
         }
     }
 
-    pub fn call_name_to_id(&self) -> MemId {
-        M::as_id(self.call_name)
+    pub fn call_name_to_id(&self) -> u32 {
+        C::as_id(self.call_name)
     }
 
     pub fn state_as_bytes(&self) -> Vec<u8> {

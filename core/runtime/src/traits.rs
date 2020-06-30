@@ -49,20 +49,28 @@ pub trait StateGetter {
         U: Into<UserAddress>;
 }
 
-pub trait CallKindConverter<G: StateGetter>: Sized + Encode + Decode + Debug + Clone {
-    type S: StateTransition<G>;
-
-    fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self>;
-    fn find_stf(self, runtime: Self::S, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
-}
-
-pub trait StateTransition<G: StateGetter>: Sized {
-    type C: CallKindConverter<G>;
+/// Execute state transiton functions from runtime
+pub trait RuntimeExecutor<G: StateGetter>: Sized {
+    type C: CallKindExecutor<G>;
 
     fn new(db: G) -> Self;
-    fn call(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
+    fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
 }
 
-pub trait MemNameConverter {
+/// Execute state traisiton functions from call kind
+pub trait CallKindExecutor<G: StateGetter>: Sized + Encode + Decode + Debug + Clone {
+    type R: RuntimeExecutor<G>;
+
+    fn new(id: u32, state: &mut [u8]) -> Result<Self>;
+    fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
+}
+
+/// A converter from memory name to memory id
+pub trait MemNameConverter: Debug {
     fn as_id(name: &str) -> MemId;
+}
+
+/// A converter from call name to call id
+pub trait CallNameConverter: Debug {
+    fn as_id(name: &str) -> u32;
 }

@@ -2,7 +2,6 @@
 
 use sgx_types::sgx_report_data_t;
 use std::prelude::v1::Vec;
-use ring::aead::BoundKey;
 use secp256k1::{
     self, Message, Signature, SecretKey, PublicKey,
     util::SECRET_KEY_SIZE,

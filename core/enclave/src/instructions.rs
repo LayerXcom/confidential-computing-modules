@@ -12,16 +12,16 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Encode, Decode)]
-pub struct Instructions<S: StateTransition<G>, G: StateGetter> {
+pub struct Instructions<R: RuntimeExecutor<G>, G: StateGetter> {
     my_addr: UserAddress,
-    call_kind: S::C,
+    call_kind: R::C,
     phantom: PhantomData<G>,
 }
 
-impl<S: StateTransition<G>, G: StateGetter> Instructions<S, G> {
+impl<R: RuntimeExecutor<G>, G: StateGetter> Instructions<R, G> {
     pub fn new(call_id: u32, params: &mut [u8], access_right: &AccessRight) -> Result<Self> {
         let my_addr = UserAddress::from_access_right(&access_right)?;
-        let call_kind = S::C::from_call_id(call_id, params)?;
+        let call_kind = R::C::new(call_id, params)?;
 
         Ok(Instructions {
             my_addr,
@@ -52,7 +52,7 @@ impl<S: StateTransition<G>, G: StateGetter> Instructions<S, G> {
         ciphertext: &Ciphertext,
         group_key: &mut GroupKey
     ) -> Result<Option<impl Iterator<Item=UpdatedState<StateType>> + Clone>> {
-        if let Some(instructions) = Instructions::<S, G>::decrypt(ciphertext, group_key)? {
+        if let Some(instructions) = Instructions::<R, G>::decrypt(ciphertext, group_key)? {
             let state_iter = instructions
                 .stf_call(ctx)?
                 .into_iter();
@@ -76,7 +76,7 @@ impl<S: StateTransition<G>, G: StateGetter> Instructions<S, G> {
 
     fn stf_call(self, ctx: G) -> Result<Vec<UpdatedState<StateType>>>
     {
-        let res = S::new(ctx).call(
+        let res = R::new(ctx).execute(
             self.call_kind,
             self.my_addr,
         )?;
