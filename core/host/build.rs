@@ -8,9 +8,6 @@ fn main () {
         .unwrap_or_else(|_| format!("{}/sgx", dirs::home_dir().unwrap().display()));
     let is_sim = env::var("SGX_MODE").unwrap_or_else(|_| "HW".to_string());
 
-    println!("cargo:rustc-link-search=native=../lib");
-    println!("cargo:rustc-link-lib=static=Enclave_u");
-
     println!("cargo:rustc-link-search=native={}/lib64", sdk_dir);
     match is_sim.as_ref() {
         "SW" => {
@@ -32,7 +29,7 @@ fn main () {
         .rust_target(RustTarget::Nightly)
         .clang_arg(format!("-I{}/include", sdk_dir))
         .clang_arg(format!("-I{}", edl))
-        .header("Enclave_u.h")
+        .header("Anonify_common_u.h")
         .raw_line("#![allow(dead_code)]")
         .raw_line("use anonify_types::*;")
         .raw_line("use sgx_types::*;")
@@ -46,10 +43,10 @@ fn main () {
         .expect("Couldn't write bindings!");
 
     cc::Build::new()
-        .file("Enclave_u.c")
+        .file("Anonify_common_u.c")
         .include("/opt/sgxsdk/include")
         .include(edl)
-        .compile("libEnclave_u.a");
+        .compile("libAnonify_common_u.a");
 }
 
 fn target_dir() -> PathBuf {

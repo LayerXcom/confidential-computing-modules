@@ -18,6 +18,10 @@ Enclave_t.h
 helloworld/bin/app
 core/bin/
 core/lib/
+Anonify_common_u.c
+Anonify_common_t.c
+Anonify_common_t.h
+Anonify_common_u.h
 
 anonify-types.h
 

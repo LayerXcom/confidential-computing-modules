@@ -57,9 +57,6 @@ enclave {
             [in] uint8_t pubkey[32],
             [in] uint8_t challenge[32]
         );
-
-        public void ecall_run_tests(
-        );
     };
 
     untrusted {
