@@ -28,7 +28,7 @@ impl EnclaveDir {
         let mut launch_token = Self::get_launch_token(&token_file_path)?;
 
         let mut launch_token_updated = 0;
-        let enclave = Self::create_enclave(
+        let enclave = self.create_enclave(
             &mut launch_token,
             &mut launch_token_updated,
             is_debug
@@ -44,6 +44,10 @@ impl EnclaveDir {
 
     fn get_token_file_path(&self) -> PathBuf {
         self.0.join(ENCLAVE_TOKEN)
+    }
+
+    fn get_enclave_file_path(&self) -> PathBuf {
+        self.0.join(ENCLAVE_FILE)
     }
 
     fn get_launch_token<P: AsRef<Path>>(path: P) -> Result<sgx_launch_token_t> {
@@ -76,6 +80,7 @@ impl EnclaveDir {
     }
 
     fn create_enclave(
+        &self,
         launch_token: &mut sgx_launch_token_t,
         launch_token_updated: &mut i32,
         is_debug: bool,
@@ -95,7 +100,7 @@ impl EnclaveDir {
         };
 
         SgxEnclave::create(
-            ENCLAVE_FILE,
+            self.get_enclave_file_path(),
             debug,
             launch_token,
             launch_token_updated,

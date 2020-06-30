@@ -1,9 +1,17 @@
+#![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
+
+#[cfg(feature = "sgx")]
+#[macro_use]
+extern crate sgx_tstd as localstd;
+#[cfg(feature = "std")]
+use std as localstd;
+
 use anonify_runtime::{
     prelude::*,
     state_type::*,
     traits::*,
 };
-use std::{
+use crate::localstd::{
     vec::Vec,
     collections::BTreeMap
 };

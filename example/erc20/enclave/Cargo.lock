@@ -51,7 +51,6 @@ dependencies = [
  "sgx_tcrypto",
  "sgx_tse",
  "sgx_tstd",
- "sgx_tunittest",
  "sgx_types 1.1.1",
  "sha2 0.8.2",
  "thiserror",
@@ -454,6 +453,7 @@ dependencies = [
  "erc20-state-transition",
  "inventory",
  "lazy_static",
+ "parity-scale-codec",
  "sgx_tstd",
  "sgx_types 1.1.1",
  "test-utils",
@@ -466,6 +466,7 @@ dependencies = [
  "anonify-common",
  "anonify-runtime",
  "parity-scale-codec",
+ "sgx_tstd",
 ]
 
 [[package]]
@@ -1262,14 +1263,6 @@ dependencies = [
  "sgx_trts 1.1.2",
  "sgx_types 1.1.2",
  "sgx_unwind",
-]
-
-[[package]]
-name = "sgx_tunittest"
-version = "1.1.2"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2#fdc2ea93caecaa7f69a3edc9cf840607d0628ff3"
-dependencies = [
- "sgx_tstd",
 ]
 
 [[package]]
