@@ -7,16 +7,16 @@ members = [
     "core/common",
     "core/types",
     "core/treekem",
-    "example/erc20/cli",
     "example/erc20/api",
-    "example/erc20/state-transition",
+    "example/erc20/cli",
+    "example/erc20/enclave",
     "example/erc20/server",
+    "example/erc20/state-transition",
     "example/invoice-dx/app",
     "example/invoice-dx/api",
     "wallet",
     "tests/integration",
 ]
 exclude = [
-    "example/erc20/enclave",
     "example/invoice-dx/server",
 ]

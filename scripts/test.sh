@@ -11,22 +11,22 @@ dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/.."
 solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
 
-cd core
+cd scripts
 
 echo `cargo --version`
 echo "Start building core components."
 
-make DEBUG=1 FEATURES=ERC20
-rm -rf ../example/erc20/bin && cp -rf bin/ ../example/erc20/bin/
+# Generate a `enclave.signed.so` in `$HOME/.anonify`
+make DEBUG=1
 
 echo "Testing core components..."
-cd host
+cd ../tests/integration
 RUST_BACKTRACE=1 cargo test -- --nocapture
 
-cd ../../example/erc20/server
-echo "Build server."
-RUST_BACKTRACE=1 RUST_LOG=debug cargo build
+# cd ../../example/erc20/server
+# echo "Build server."
+# RUST_BACKTRACE=1 RUST_LOG=debug cargo build
 
-echo "Build in root dir."
-cd ../../
-RUST_BACKTRACE=1 RUST_LOG=debug cargo build
+# echo "Build in root dir."
+# cd ../../
+# RUST_BACKTRACE=1 RUST_LOG=debug cargo build
