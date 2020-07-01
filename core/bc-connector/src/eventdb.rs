@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use anonify_common::{
-    kvs::{KVS, MemoryDB, DBTx}
+    kvs::{KVS, MemoryDB, DBTx},
+    Ciphertext,
 };
-use anonify_app_preluder::Ciphertext;
 use anonify_runtime::{UpdatedState, traits::State};
 use sgx_types::sgx_enclave_id_t;
 use web3::types::Address;
@@ -65,6 +65,7 @@ pub struct InnerEnclaveLog {
 #[derive(Debug, Clone)]
 pub struct EnclaveLog<DB: BlockNumDB> {
     pub inner: Option<InnerEnclaveLog>,
+    pub ciphertext_size: usize,
     pub db: Arc<DB>,
 }
 
@@ -77,12 +78,12 @@ impl<DB: BlockNumDB> EnclaveLog<DB> {
         insert_fn: F,
     ) -> Result<EnclaveUpdatedState<DB, S>>
     where
-        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<Option<Vec<UpdatedState<S>>>>,
+        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog, usize) -> Result<Option<Vec<UpdatedState<S>>>>,
         S: State,
     {
         match &self.inner {
             Some(log) => {
-                let updated_states = insert_fn(eid, log)?;
+                let updated_states = insert_fn(eid, log, self.ciphertext_size)?;
                 let next_blc_num = log.latest_blc_num + 1;
 
                 return Ok(EnclaveUpdatedState {

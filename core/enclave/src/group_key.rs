@@ -3,7 +3,7 @@ use anonify_treekem::{
     GroupState, AppKeyChain, Handshake,
     handshake::{PathSecretRequest, HandshakeParams},
 };
-use anonify_app_preluder::Ciphertext;
+use anonify_common::Ciphertext;
 use anyhow::Result;
 
 #[derive(Clone, Debug)]

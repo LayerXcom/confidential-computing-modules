@@ -4,9 +4,8 @@ use std::{
 };
 use sgx_types::*;
 use std::prelude::v1::*;
-use anonify_common::{kvs::{MemoryDB, DBValue}, UserAddress};
-use anonify_app_preluder::{mem_name_to_id, Ciphertext};
-use anonify_runtime::{State, StateGetter, StateType, MemId, UpdatedState};
+use anonify_common::{kvs::{MemoryDB, DBValue}, UserAddress, Ciphertext};
+use anonify_runtime::{StateType, MemId, UpdatedState, traits::*};
 use anonify_treekem::{
     handshake::{PathSecretRequest, PathSecretKVS},
     init_path_secret_kvs,
@@ -17,20 +16,18 @@ use crate::{
     crypto::EnclaveIdentityKey,
     group_key::GroupKey,
     config::{TEST_SPID, MY_ROSTER_IDX, MAX_ROSTER_IDX, UNTIL_ROSTER_IDX, UNTIL_EPOCH},
-    ocalls::{sgx_init_quote, get_quote},
+    bridges::ocalls::{sgx_init_quote, get_quote},
     error::Result,
     kvs::{EnclaveDB, EnclaveDBTx},
     instructions::Instructions,
 };
 
-lazy_static! {
-    pub static ref ENCLAVE_CONTEXT: EnclaveContext<StateType>
-        = EnclaveContext::new(TEST_SPID).unwrap();
-}
-
 impl StateGetter for EnclaveContext<StateType> {
-    fn get<S: State>(&self, key: impl Into<UserAddress>, name: &str) -> anyhow::Result<S> {
-        let mem_id = mem_name_to_id(name);
+    fn get_trait<S, U>(&self, key: U, mem_id: MemId) -> anyhow::Result<S>
+    where
+        S: State,
+        U: Into<UserAddress>,
+    {
         let mut buf = self.db
             .get(key.into(), mem_id)
             .into_bytes();
@@ -41,7 +38,7 @@ impl StateGetter for EnclaveContext<StateType> {
         S::from_bytes(&mut buf)
     }
 
-    fn get_by_id(&self, key: UserAddress, mem_id: MemId) -> StateType {
+    fn get_type(&self, key: UserAddress, mem_id: MemId) -> StateType {
         self.db.get(key, mem_id)
     }
 }
@@ -122,27 +119,14 @@ impl EnclaveContext<StateType> {
         self.identity_key.sign(msg)
     }
 
-    /// Only if the TEE belongs to the group, you can receive ciphertext and decrypt it,
-    /// otherwise do nothing.
     /// Returns a updated state of registerd address in notification.
     // TODO: Enables to return multiple updated states.
     pub fn update_state(
         &self,
-        ciphertext: &Ciphertext,
-        group_key: &mut GroupKey,
-    ) -> Result<Option<UpdatedState<StateType>>> {
-        if let Some(instructions) = Instructions::decrypt(ciphertext, group_key)? {
-            let mut state_iter = instructions
-                .state_transition::<StateType>(self)?
-                .into_iter();
-
-            state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
-            let res = state_iter.find(|s| self.is_notified(&s.address));
-
-            return Ok(res)
-        }
-
-        Ok(None)
+        mut state_iter: impl Iterator<Item=UpdatedState<StateType>> + Clone
+    ) -> Option<UpdatedState<StateType>> {
+        state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
+        state_iter.find(|s| self.is_notified(&s.address))
     }
 
     /// Return Attestation report

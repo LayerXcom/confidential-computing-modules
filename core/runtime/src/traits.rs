@@ -1,7 +1,7 @@
 use crate::local_anyhow::{Result, anyhow};
 use crate::utils::*;
 use crate::localstd::{
-    fmt,
+    fmt::Debug,
     vec::Vec,
     mem::size_of,
 };
@@ -10,7 +10,7 @@ use anonify_common::UserAddress;
 use codec::{Input, Output, Encode, Decode};
 
 /// Trait of each user's state.
-pub trait State: Sized + Default + Clone + Encode + Decode + fmt::Debug {
+pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
     fn as_bytes(&self) -> Vec<u8> {
         self.encode()
     }
@@ -37,15 +37,42 @@ pub trait State: Sized + Default + Clone + Encode + Decode + fmt::Debug {
     fn size(&self) -> usize { size_of::<Self>() }
 }
 
-impl<T: Sized + Default + Clone + Encode + Decode + fmt::Debug> State for T {}
+impl<T: Sized + Default + Clone + Encode + Decode + Debug> State for T {}
 
 /// A getter of state stored in enclave memory.
 pub trait StateGetter {
-    /// Get state using memory name.
-    /// Assumed this is called in user-defined state transition functions.
-    fn get<S: State>(&self, key: impl Into<UserAddress>, name: &str) -> Result<S>;
-
     /// Get state using memory id.
-    /// Assumed this is called by state getting operations from outside enclave.
-    fn get_by_id(&self, key: UserAddress, mem_id: MemId) -> StateType;
+    /// Assumed this is called in user-defined state transition functions.
+    fn get_trait<S, U>(&self, key: U, mem_id: MemId) -> Result<S>
+    where
+        S: State,
+        U: Into<UserAddress>;
+
+    fn get_type(&self, key: UserAddress, mem_id: MemId) -> StateType;
+}
+
+/// Execute state transiton functions from runtime
+pub trait RuntimeExecutor<G: StateGetter>: Sized {
+    type C: CallKindExecutor<G>;
+
+    fn new(db: G) -> Self;
+    fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
+}
+
+/// Execute state traisiton functions from call kind
+pub trait CallKindExecutor<G: StateGetter>: Sized + Encode + Decode + Debug + Clone {
+    type R: RuntimeExecutor<G>;
+
+    fn new(id: u32, state: &mut [u8]) -> Result<Self>;
+    fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
+}
+
+/// A converter from memory name to memory id
+pub trait MemNameConverter: Debug {
+    fn as_id(name: &str) -> MemId;
+}
+
+/// A converter from call name to call id
+pub trait CallNameConverter: Debug {
+    fn as_id(name: &str) -> u32;
 }

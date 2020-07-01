@@ -8,9 +8,8 @@ build = "build.rs"
 [dependencies]
 anonify-types = { path = "../types" }
 anonify-common = { path = "../common" }
-anonify-app-preluder = { path = "../app-preluder", default-features = false }
 anonify-runtime = { path = "../runtime" }
-anonify-bc-connector = { path = "../bc-connector", default-features = false }
+anonify-bc-connector = { path = "../bc-connector" }
 sgx_types = "1.1.1"
 sgx_urts = "1.1.1"
 anyhow = "1.0"
@@ -20,23 +19,7 @@ parking_lot = "0.10"
 codec = { package = "parity-scale-codec", version = "1.1" }
 log = "0.4"
 
-[dev-dependencies]
-rand_os = "0.1"
-rand = "0.6"
-base64 = "0.11"
-serde = { version = "1.0", features = ["derive"] }
-
 [build-dependencies]
 bindgen = "0.51"
 dirs = "2.0"
-
-[features]
-default = ["erc20"]
-erc20 = [
-    "anonify-app-preluder/erc20-std",
-    "anonify-bc-connector/erc20",
-]
-dx = [
-    "anonify-app-preluder/dx-std",
-    "anonify-bc-connector/dx",
-]
+cc = "1.0"

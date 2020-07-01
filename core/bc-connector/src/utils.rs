@@ -3,11 +3,13 @@ use std::{
     io::BufReader,
     fs::File,
     str::FromStr,
+    marker::PhantomData,
 };
 use web3::types::Address;
 use ethabi::Contract as ContractABI;
-use anonify_runtime::traits::State;
-use anonify_app_preluder::call_name_to_id;
+use anonify_runtime::{
+    traits::{State, CallNameConverter},
+};
 use anyhow::anyhow;
 use crate::{
     error::Result,
@@ -45,27 +47,30 @@ impl<'a, P: AsRef<Path>> ContractInfo<'a, P> {
     }
 }
 
-pub struct StateInfo<'a, ST: State> {
+#[derive(Debug, Clone)]
+pub struct StateInfo<'a, ST: State, C: CallNameConverter> {
     state: ST,
     state_id: u64,
     call_name: &'a str,
+    phantom: PhantomData<C>
 }
 
-impl<'a, ST: State> StateInfo<'a, ST> {
+impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
     pub fn new(state: ST, state_id: u64, call_name: &'a str) -> Self {
         StateInfo {
             state,
             state_id,
             call_name,
+            phantom: PhantomData::<C>,
         }
+    }
+
+    pub fn call_name_to_id(&self) -> u32 {
+        C::as_id(self.call_name)
     }
 
     pub fn state_as_bytes(&self) -> Vec<u8> {
         self.state.as_bytes()
-    }
-
-    pub fn call_name_to_id(&self) -> u32 {
-        call_name_to_id(&self.call_name)
     }
 
     pub fn state_id(&self) -> u64 {

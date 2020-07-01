@@ -5,9 +5,8 @@ use std::{
 };
 use sgx_types::sgx_enclave_id_t;
 use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx};
-use anonify_common::AccessRight;
-use anonify_runtime::{traits::State, UpdatedState};
-use anonify_app_preluder::Ciphertext;
+use anonify_common::{AccessRight, Ciphertext};
+use anonify_runtime::{traits::{State, CallNameConverter}, UpdatedState};
 use web3::types::Address as EthAddress;
 use crate::{
     error::Result,
@@ -160,21 +159,23 @@ impl Sender for EthSender {
         Ok(hex::encode(receipt.as_bytes()))
     }
 
-    fn send_instruction<ST, F>(
+    fn send_instruction<ST, F, C>(
         &self,
         access_right: AccessRight,
         signer: SignerAddress,
-        state_info: StateInfo<'_, ST>,
+        state_info: StateInfo<'_, ST, C>,
         gas: u64,
         enc_ins_fn: F,
+        ciphertext_len: usize,
     ) -> Result<String>
     where
         ST: State,
-        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST>) -> Result<RawInstructionTx>,
+        C: CallNameConverter,
+        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, C>) -> Result<RawInstructionTx>,
     {
         // ecall of encrypt instruction
         let mut instruction_tx: BoxedInstructionTx = enc_ins_fn(self.enclave_id, access_right, state_info)?.into();
-        let ciphertext = instruction_tx.get_ciphertext();
+        let ciphertext = instruction_tx.get_ciphertext(ciphertext_len);
 
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
@@ -246,7 +247,7 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
         insert_fn: F,
     ) -> Result<Option<Vec<UpdatedState<S>>>>
     where
-        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<Option<Vec<UpdatedState<S>>>>,
+        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog, usize) -> Result<Option<Vec<UpdatedState<S>>>>,
         S: State,
     {
         let enclave_updated_state = self.contract
@@ -298,8 +299,8 @@ pub(crate) struct BoxedInstructionTx {
 }
 
 impl BoxedInstructionTx {
-    pub fn get_ciphertext(&mut self) -> Ciphertext {
-        Ciphertext::from_bytes(&mut self.ciphertext)
+    pub fn get_ciphertext(&mut self, len: usize) -> Ciphertext {
+        Ciphertext::from_bytes(&mut self.ciphertext, len)
     }
 }
 

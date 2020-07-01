@@ -19,8 +19,7 @@ use ethabi::{
     decode,
     Hash,
 };
-use anonify_common::IntoVec;
-use anonify_app_preluder::Ciphertext;
+use anonify_common::{IntoVec, Ciphertext};
 use anyhow::anyhow;
 use crate::{
     error::Result,
@@ -238,7 +237,8 @@ impl<D: BlockNumDB> Web3Logs<D> {
         if self.logs.len() == 0 {
             return Ok(EnclaveLog{
                 inner: None,
-                db: self.db
+                db: self.db,
+                ciphertext_size: 0,
             });
         }
 
@@ -259,7 +259,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 if ciphertext_size != data.len() && data.len() != 0  {
                     return Err(anyhow!("Each log should have same size of data.: index: {}", i).into());
                 }
-                let res = Ciphertext::from_bytes(&mut data[..]);
+                let res = Ciphertext::from_bytes(&mut data[..], ciphertext_size);
 
                 ciphertexts.push(res);
             } else if log.topics[0] == self.events.handshake_signature() {
@@ -284,6 +284,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 ciphertexts,
                 handshakes,
             }),
+            ciphertext_size,
             db: self.db,
         })
     }

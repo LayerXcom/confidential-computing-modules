@@ -7,7 +7,7 @@ use std::{
 use sgx_types::sgx_enclave_id_t;
 use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx};
 use anonify_common::AccessRight;
-use anonify_runtime::{traits::State, UpdatedState};
+use anonify_runtime::{traits::{State, CallNameConverter}, UpdatedState};
 use crate::{
     error::Result,
     eventdb::{BlockNumDB, InnerEnclaveLog},
@@ -60,17 +60,19 @@ pub trait Sender: Sized {
     fn get_account(&self, index: usize) -> Result<SignerAddress>;
 
     /// Send an encrypted instruction of state transition to blockchain nodes.
-    fn send_instruction<ST, F>(
+    fn send_instruction<ST, F, C>(
         &self,
         access_right: AccessRight,
         signer: SignerAddress,
-        state_info: StateInfo<'_, ST>,
+        state_info: StateInfo<'_, ST, C>,
         gas: u64,
         st_fn: F,
+        ciphertext_len: usize,
     ) -> Result<String>
     where
         ST: State,
-        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST>) -> Result<RawInstructionTx>;
+        C: CallNameConverter,
+        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, C>) -> Result<RawInstructionTx>;
 
     /// Attestation with deployed contract.
     fn join_group<F>(
@@ -111,7 +113,7 @@ pub trait Watcher: Sized {
         insert_fn: F,
     ) -> Result<Option<Vec<UpdatedState<S>>>>
     where
-        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog) -> Result<Option<Vec<UpdatedState<S>>>>,
+        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog, usize) -> Result<Option<Vec<UpdatedState<S>>>>,
         S: State
     ;
 

@@ -5,12 +5,11 @@
 extern crate sgx_tstd as localstd;
 #[cfg(feature = "std")]
 use std as localstd;
-#[cfg(all(not(feature = "std"), not(feature = "sgx")))]
-extern crate core as localstd;
 
 use anonify_runtime::{
     prelude::*,
     state_type::*,
+    traits::*,
 };
 use crate::localstd::{
     vec::Vec,

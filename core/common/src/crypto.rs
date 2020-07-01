@@ -4,9 +4,7 @@ use crate::localstd::{
     string::String,
     convert::TryFrom,
 };
-use crate::{
-    serde::{Serialize, Deserialize}
-};
+use crate::serde::{Serialize, Deserialize};
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, SignatureError, SECRET_KEY_LENGTH};
 use tiny_keccak::Keccak;
 use codec::{Encode, Decode};
@@ -26,8 +24,6 @@ pub const COMMON_CHALLENGE: [u8; CHALLENGE_SIZE] = [39, 79, 228, 49, 240, 219, 1
 
 lazy_static! {
     pub static ref COMMON_ACCESS_RIGHT: AccessRight = {
-        use ed25519_dalek::{SecretKey, PublicKey, Keypair};
-
         let secret = SecretKey::from_bytes(&COMMON_SECRET).unwrap();
         let pubkey = PublicKey::from(&secret);
         let keypair = Keypair { secret, public: pubkey };
@@ -345,4 +341,50 @@ pub fn sgx_rand_assign(rand: &mut [u8]) -> Result<(), Error> {
     rsgx_read_rand(rand)
         .map_err(|e| anyhow!("error rsgx_read_rand: {:?}", e))?;
     Ok(())
+}
+
+/// Application message broadcasted to other members.
+#[derive(Clone, Debug, Encode, Decode)]
+pub struct Ciphertext {
+    generation: u32,
+    epoch: u32,
+    roster_idx: u32,
+    encrypted_state: Vec<u8>,
+}
+
+impl Ciphertext {
+    pub fn new(generation: u32, epoch: u32, roster_idx: u32, encrypted_state: Vec<u8>) -> Self {
+        Ciphertext { generation, epoch, roster_idx, encrypted_state }
+    }
+
+    pub fn from_bytes(bytes: &mut [u8], len: usize) -> Self {
+        assert_eq!(bytes.len(), len);
+        Ciphertext::decode(&mut &bytes[..]).unwrap()
+    }
+
+    pub fn as_vec(&self) -> Vec<u8> {
+        self.encode()
+    }
+
+    pub fn generation(&self) -> u32 {
+        self.generation
+    }
+
+    pub fn epoch(&self) -> u32 {
+        self.epoch
+    }
+
+    pub fn roster_idx(&self) -> u32 {
+        self.roster_idx
+    }
+
+    pub fn encrypted_state_ref(&self) -> &[u8] {
+        &self.encrypted_state
+    }
+}
+
+impl IntoVec for Ciphertext {
+    fn into_vec(&self) -> Vec<u8> {
+        self.encode()
+    }
 }

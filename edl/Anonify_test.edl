@@ -1,0 +1,7 @@
+enclave {
+    from "Anonify_common.edl" import *;
+
+    trusted {
+        public void ecall_run_tests();
+    }
+}

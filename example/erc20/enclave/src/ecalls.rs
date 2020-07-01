@@ -1,22 +1,24 @@
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
-use anonify_common::{UserAddress, AccessRight};
-use anonify_app_preluder::{CIPHERTEXT_SIZE, Ciphertext, CallKind};
-use anonify_runtime::{StateGetter, State, MemId};
+use anonify_common::{UserAddress, AccessRight, Ciphertext};
+use anonify_runtime::{StateGetter, MemId, StateType};
 use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
 use codec::Decode;
 use log::debug;
-use crate::{
-    context::ENCLAVE_CONTEXT,
+use anonify_enclave::{
     transaction::{JoinGroupTx, EnclaveTx, HandshakeTx, InstructionTx},
-    kvs::EnclaveDB,
     config::{IAS_URL, TEST_SUB_KEY},
     instructions::Instructions,
     notify::updated_state_into_raw,
+    bridges::ocalls::save_to_host_memory,
+    context::EnclaveContext,
 };
-use super::ocalls::save_to_host_memory;
+use erc20_state_transition::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
+use crate::ENCLAVE_CONTEXT;
+
+type Context = EnclaveContext<StateType>;
 
 /// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
 #[no_mangle]
@@ -25,29 +27,31 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
     ciphertext_len: usize,
     raw_updated_state: &mut RawUpdatedState,
 ) -> EnclaveStatus {
-    let ciphertext = slice::from_raw_parts_mut(ciphertext, ciphertext_len);
-    let ciphertext = Ciphertext::from_bytes(ciphertext);
+    let buf = slice::from_raw_parts_mut(ciphertext, ciphertext_len);
+    let ciphertext = Ciphertext::from_bytes(buf, CIPHERTEXT_SIZE);
     let group_key = &mut *match ENCLAVE_CONTEXT.group_key.write() {
         Ok(group_key) => group_key,
         Err(_) => return EnclaveStatus::error(),
     };
 
-    match ENCLAVE_CONTEXT.update_state(&ciphertext, group_key) {
-        Ok(updated_state_optioned) => {
-            match updated_state_optioned {
-                Some(updated_state) => {
+    match Instructions::<Runtime<Context>, Context>::state_transition(ENCLAVE_CONTEXT.clone(), &ciphertext, group_key) {
+        Ok(iter_op) => {
+            if let Some(updated_state_iter) = iter_op {
+                if let Some(updated_state) = ENCLAVE_CONTEXT.update_state(updated_state_iter) {
                     match updated_state_into_raw(updated_state) {
                         Ok(new) => *raw_updated_state = new,
                         Err(_) => {
-                            debug!("Failed to convert into raw updated state");
+                            debug!("Failed updated_state_into_raw(updated_state)");
                             return EnclaveStatus::error();
                         }
                     }
                 }
-                None => {},
             }
-        }
-        Err(_) => return EnclaveStatus::error(),
+        },
+        Err(_) => {
+            debug!("Failed Instructions::state_transition");
+            return EnclaveStatus::error();
+        },
     }
 
     let roster_idx = ciphertext.roster_idx() as usize;
@@ -113,7 +117,7 @@ pub unsafe extern "C" fn ecall_get_state(
         }
     };
 
-    let user_state = &ENCLAVE_CONTEXT.get_by_id(key, MemId::from_raw(mem_id));
+    let user_state = &ENCLAVE_CONTEXT.get_type(key, MemId::from_raw(mem_id));
     state.0 = match save_to_host_memory(user_state.as_bytes()) {
         Ok(ptr) => ptr as *const u8,
         Err(_) => return EnclaveStatus::error(),
@@ -170,12 +174,13 @@ pub unsafe extern "C" fn ecall_instruction(
         }
     };
 
-    let instruction_tx = match InstructionTx::construct(
+    let instruction_tx = match InstructionTx::construct::<Runtime<Context>, Context>(
         call_id,
         params,
         state_id,
         &ar,
         &*ENCLAVE_CONTEXT,
+        MAX_MEM_SIZE,
     ) {
         Ok(instruction_tx) => instruction_tx,
         Err(_) => {
@@ -250,21 +255,4 @@ pub unsafe extern "C" fn ecall_register_notification(
     ENCLAVE_CONTEXT.set_notification(user_address);
 
     EnclaveStatus::success()
-}
-
-pub mod enclave_tests {
-    use test_utils::{test_case, run_inventory_tests};
-    use std::vec::Vec;
-    use std::string::{String, ToString};
-
-    #[test_case]
-    fn test_app_msg_correctness() {
-        anonify_treekem::tests::app_msg_correctness();
-    }
-
-    #[test_case]
-    fn test_ecies_correctness() { anonify_treekem::tests::ecies_correctness(); }
-
-    #[no_mangle]
-    pub fn ecall_run_tests() { run_inventory_tests!(|_s: &str| true); }
 }

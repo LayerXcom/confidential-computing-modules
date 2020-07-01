@@ -22,10 +22,15 @@ macro_rules! __impl_inner_memory {
     (@imp
         $( ($id:expr, $name:expr, $value:ty) ),*
     ) => {
-        pub fn mem_name_to_id(name: &str) -> MemId {
-            match name {
-                $( $name => MemId::from_raw($id), )*
-                _ => panic!("invalid mem name"),
+        #[derive(Debug, Clone)]
+        pub struct MemName;
+
+        impl MemNameConverter for MemName {
+            fn as_id(name: &str) -> MemId {
+                match name {
+                    $( $name => MemId::from_raw($id), )*
+                    _ => panic!("invalid mem name"),
+                }
             }
         }
 
@@ -71,24 +76,43 @@ macro_rules! __impl_inner_runtime {
             }
         )*
 
+        #[derive(Debug, Clone)]
+        pub struct CallName;
+
+        impl CallNameConverter for CallName {
+            fn as_id(name: &str) -> u32 {
+                match name {
+                    $( stringify!($fn_name) => $fn_id, )*
+                    _ => panic!("invalid call name"),
+                }
+            }
+        }
+
         #[derive(Debug, Clone, Encode, Decode)]
         pub enum CallKind {
             $( $fn_name($fn_name), )*
         }
 
-        impl CallKind {
-            pub fn from_call_id(id: u32, state: &mut [u8]) -> Result<Self> {
+        impl<G: StateGetter> CallKindExecutor<G> for CallKind {
+            type R = Runtime<G>;
+
+            fn new(id: u32, state: &mut [u8]) -> Result<Self> {
                 match id {
                     $( $fn_id => Ok(CallKind::$fn_name($fn_name::from_bytes(state)?)), )*
                     _ => return Err(anyhow!("Invalid Call ID")),
                 }
             }
-        }
 
-        pub fn call_name_to_id(name: &str) -> u32 {
-            match name {
-                $( stringify!($fn_name) => $fn_id, )*
-                _ => panic!("invalid call name"),
+            fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
+                match self {
+                    $( CallKind::$fn_name($fn_name) => {
+                        runtime.$fn_name(
+                            my_addr,
+                            $( $fn_name.$param_name, )*
+                        )
+                    }, )*
+                    _ => unimplemented!()
+                }
             }
         }
 
@@ -96,39 +120,33 @@ macro_rules! __impl_inner_runtime {
             db: G,
         }
 
-        impl<G: StateGetter> Runtime<G> {
-            pub fn new(db: G) -> Self {
+        impl<G: StateGetter> RuntimeExecutor<G> for Runtime<G> {
+            type C = CallKind;
+
+            fn new(db: G) -> Self {
                 Runtime {
                     db,
                 }
             }
 
+            fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
+                kind.execute(self, my_addr)
+            }
+        }
+
+        impl<G: StateGetter> Runtime<G> {
             pub fn get_map<S: State>(
                 &self,
                 key: UserAddress,
                 name: &str
             ) -> Result<S> {
-                self.db.get(key, name)
+                let mem_id = MemName::as_id(name);
+                self.db.get_trait(key, mem_id)
             }
 
             pub fn get<S: State>(&self, name: &str) -> Result<S> {
-                self.db.get(name, name)
-            }
-
-            pub fn call(
-                self,
-                kind: CallKind,
-                my_addr: UserAddress,
-            ) -> Result<Vec<UpdatedState<StateType>>> {
-                match kind {
-                    $( CallKind::$fn_name($fn_name) => {
-                        self.$fn_name(
-                            my_addr,
-                            $( $fn_name.$param_name, )*
-                        )
-                    }, )*
-                    _ => unimplemented!()
-                }
+                let mem_id = MemName::as_id(name);
+                self.db.get_trait(name, mem_id)
             }
 
             $(
@@ -147,11 +165,11 @@ macro_rules! __impl_inner_runtime {
 #[macro_export]
 macro_rules! update {
     ($addr:expr, $mem_name:expr, $value:expr) => {
-        UpdatedState::new($addr, mem_name_to_id($mem_name), $value)
+        UpdatedState::new($addr, MemName::as_id($mem_name), $value)
     };
 
     ($mem_name:expr, $value:expr) => {
-        UpdatedState::new($mem_name, mem_name_to_id($mem_name), $value)
+        UpdatedState::new($mem_name, MemName::as_id($mem_name), $value)
     };
 }
 
