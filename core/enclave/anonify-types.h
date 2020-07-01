@@ -14,13 +14,6 @@
 
 typedef enum {
   /**
-   * Success, the function returned without any failure.
-   */
-  Success,
-} EnclaveReturn;
-
-typedef enum {
-  /**
    * Ok = Success = 1.
    */
   Ok = 1,
@@ -58,6 +51,20 @@ typedef struct {
 typedef struct {
   const uint8_t *handshake;
 } RawHandshakeTx;
+
+/**
+ * Status for Ecall
+ */
+typedef struct {
+  uint32_t _0;
+} EnclaveStatus;
+
+/**
+ * Status for Ocall
+ */
+typedef struct {
+  uint32_t _0;
+} UntrustedStatus;
 
 /**
  * Returned from getting state operations.

@@ -1,4 +1,5 @@
 extern crate alloc;
+
 use core::{
     fmt,
     default::Default,
@@ -23,24 +24,47 @@ pub type RawPubkey = [u8; PUBKEY_SIZE];
 pub type RawSig = [u8; SIG_SIZE];
 pub type RawChallenge = [u8; RANDOMNESS_SIZE];
 
+/// Status for Ecall
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum EnclaveReturn {
-    /// Success, the function returned without any failure.
-    Success,
+#[derive(Debug, PartialEq, Eq)]
+pub struct EnclaveStatus(pub u32);
+
+impl Default for EnclaveStatus {
+    fn default() -> Self { EnclaveStatus(0) }
 }
 
-impl Default for EnclaveReturn {
-    fn default() -> EnclaveReturn { EnclaveReturn::Success }
+impl EnclaveStatus {
+    pub fn success() -> Self { EnclaveStatus(0) }
+
+    pub fn error() -> Self { EnclaveStatus(1) }
+
+    pub fn is_err(&self) -> bool {
+        match self.0 {
+            0 => false,
+            _ => true,
+        }
+    }
 }
 
-impl fmt::Display for EnclaveReturn {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use self::EnclaveReturn::*;
-        let p = match *self {
-            Success => "EnclaveReturn: Success",
-        };
-        write!(f, "{}", p)
+/// Status for Ocall
+#[repr(C)]
+#[derive(Debug, PartialEq, Eq)]
+pub struct UntrustedStatus(pub u32);
+
+impl Default for UntrustedStatus {
+    fn default() -> Self { UntrustedStatus(0) }
+}
+
+impl UntrustedStatus {
+    pub fn success() -> Self { UntrustedStatus(0) }
+
+    pub fn error() -> Self { UntrustedStatus(1) }
+
+    pub fn is_err(&self) -> bool {
+        match self.0 {
+            0 => false,
+            _ => true,
+        }
     }
 }
 
@@ -54,7 +78,7 @@ pub struct RawJoinGroupTx {
     pub handshake: *const u8,
 }
 
-impl RawEnclaveTx for RawJoinGroupTx { }
+impl RawEnclaveTx for RawJoinGroupTx {}
 
 impl Default for RawJoinGroupTx {
     fn default() -> Self {
@@ -86,7 +110,7 @@ pub struct RawInstructionTx {
     pub msg: *const u8,
 }
 
-impl RawEnclaveTx for RawInstructionTx { }
+impl RawEnclaveTx for RawInstructionTx {}
 
 impl Default for RawInstructionTx {
     fn default() -> Self {
@@ -94,7 +118,7 @@ impl Default for RawInstructionTx {
             ciphertext: ptr::null(),
             enclave_sig: ptr::null(),
             msg: ptr::null(),
-            .. unsafe { mem::zeroed() }
+            ..unsafe { mem::zeroed() }
         }
     }
 }
@@ -117,7 +141,7 @@ pub struct RawHandshakeTx {
     pub handshake: *const u8,
 }
 
-impl RawEnclaveTx for RawHandshakeTx { }
+impl RawEnclaveTx for RawHandshakeTx {}
 
 impl Default for RawHandshakeTx {
     fn default() -> Self {
@@ -182,7 +206,7 @@ impl EnclaveState {
 
 impl Default for EnclaveState {
     fn default() -> Self {
-        EnclaveState ( ptr::null() )
+        EnclaveState(ptr::null())
     }
 }
 
@@ -197,7 +221,7 @@ impl fmt::Debug for EnclaveState {
 /// Key Value data stored in an Enclave
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq)]
-pub struct RawUpdatedState{
+pub struct RawUpdatedState {
     pub address: Address,
     pub mem_id: u32,
     pub state: *const u8,
@@ -207,7 +231,7 @@ impl Default for RawUpdatedState {
     fn default() -> Self {
         RawUpdatedState {
             state: ptr::null(),
-            .. unsafe { mem::zeroed() }
+            ..unsafe { mem::zeroed() }
         }
     }
 }
@@ -247,7 +271,7 @@ impl From<bool> for ResultStatus {
 #[derive(Clone, Copy, Debug)]
 pub struct RawPointer {
     ptr: *const u8,
-    _mut: bool
+    _mut: bool,
 }
 
 impl RawPointer {
@@ -285,7 +309,7 @@ impl RawPointer {
         if !self._mut {
             Err("This DoublePointer is not mutable")
         } else {
-            Ok(&mut *(self.ptr as *mut T) )
+            Ok(&mut *(self.ptr as *mut T))
         }
     }
 }

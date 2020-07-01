@@ -6,14 +6,14 @@ use sgx_types::*;
 
 extern "C" {
     pub fn ocall_sgx_init_quote(
-        retval: *mut sgx_status_t,
+        retval: *mut UntrustedStatus,
         ret_ti: *mut sgx_target_info_t,
         ret_gid: *mut sgx_epid_group_id_t,
     ) -> sgx_status_t;
 }
 extern "C" {
     pub fn ocall_get_quote(
-        retval: *mut sgx_status_t,
+        retval: *mut UntrustedStatus,
         p_sigrl: *const u8,
         sigrl_len: u32,
         report: *const sgx_report_t,
@@ -28,7 +28,7 @@ extern "C" {
 }
 extern "C" {
     pub fn ocall_get_ias_socket(
-        retval: *mut sgx_status_t,
+        retval: *mut UntrustedStatus,
         ret_fd: *mut ::std::os::raw::c_int,
     ) -> sgx_status_t;
 }
@@ -41,7 +41,7 @@ extern "C" {
 }
 extern "C" {
     pub fn ocall_get_update_info(
-        retval: *mut sgx_status_t,
+        retval: *mut UntrustedStatus,
         platformBlob: *mut sgx_platform_info_t,
         enclaveTrusted: i32,
         update_info: *mut sgx_update_info_bit_t,

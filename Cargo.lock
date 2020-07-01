@@ -1310,6 +1310,7 @@ dependencies = [
  "erc20-state-transition 0.1.0",
  "inventory 0.1.5 (git+https://github.com/mesalock-linux/inventory-sgx?rev=sgx_1.1.2)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log 0.4.8 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.2)",
  "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",

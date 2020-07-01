@@ -8,7 +8,7 @@ BINDGEN_FLAGS := --default-enum-style=rust --rust-target=nightly \
 	--whitelist-function ocall_.*  --raw-line $(BINDGEN_RAW_LINES)
 Rust_target_dir := debug
 ENCLAVE_DIR := ../example/erc20/enclave
-BINDGEN_OUTPUT_FILE := $(ANONIFY_ROOT_DIR)/example/erc20/enclave/src/auto_ffi.rs
+BINDGEN_OUTPUT_FILE := $(ANONIFY_ROOT_DIR)/core/enclave/src/auto_ffi.rs
 
 all: bindgen $(Rust_Enclave_Name)
 

@@ -14,18 +14,18 @@ enclave {
     include "anonify-types.h"
 
     trusted {
-        public sgx_status_t ecall_insert_ciphertext(
+        public EnclaveStatus ecall_insert_ciphertext(
             [in, count=ciphertexts_len] uint8_t *ciphertexts,
             size_t ciphertexts_len,
             [out] RawUpdatedState* enclave_kv
         );
 
-        public sgx_status_t ecall_insert_handshake(
+        public EnclaveStatus ecall_insert_handshake(
             [in, count=handshake_len] uint8_t *handshake,
             size_t handshake_len
         );
 
-        public sgx_status_t ecall_get_state(
+        public EnclaveStatus ecall_get_state(
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
             [in] uint8_t challenge[32],
@@ -33,7 +33,7 @@ enclave {
             [out] EnclaveState* state
         );
 
-        public sgx_status_t ecall_instruction(
+        public EnclaveStatus ecall_instruction(
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
             [in] uint8_t challenge[32],
@@ -44,15 +44,15 @@ enclave {
             [out] RawInstructionTx* result
         );
 
-        public sgx_status_t ecall_join_group(
+        public EnclaveStatus ecall_join_group(
             [out] RawJoinGroupTx* result
         );
 
-        public sgx_status_t ecall_handshake(
+        public EnclaveStatus ecall_handshake(
             [out] RawHandshakeTx* result
         );
 
-        public sgx_status_t ecall_register_notification(
+        public EnclaveStatus ecall_register_notification(
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
             [in] uint8_t challenge[32]
@@ -60,12 +60,12 @@ enclave {
     };
 
     untrusted {
-        sgx_status_t ocall_sgx_init_quote(
+        UntrustedStatus ocall_sgx_init_quote(
             [out] sgx_target_info_t *ret_ti,
             [out] sgx_epid_group_id_t *ret_gid
         );
 
-        sgx_status_t ocall_get_quote(
+        UntrustedStatus ocall_get_quote(
             [in, size = sigrl_len] const uint8_t *p_sigrl,
             uint32_t sigrl_len,
             [in] const sgx_report_t *report,
@@ -78,7 +78,7 @@ enclave {
             [out] uint32_t* p_quote_len
         );
 
-        sgx_status_t ocall_get_ias_socket(
+        UntrustedStatus ocall_get_ias_socket(
             [out] int *ret_fd
         );
 
@@ -87,7 +87,7 @@ enclave {
             size_t data_len
         );
 
-        sgx_status_t ocall_get_update_info(
+        UntrustedStatus ocall_get_update_info(
             [in] sgx_platform_info_t * platformBlob,
 			int32_t enclaveTrusted,
 			[out] sgx_update_info_bit_t * update_info
