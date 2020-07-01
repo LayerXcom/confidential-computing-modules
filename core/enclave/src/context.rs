@@ -23,7 +23,7 @@ use crate::{
 };
 
 impl StateGetter for EnclaveContext<StateType> {
-    fn get<S, U>(&self, key: U, mem_id: MemId) -> anyhow::Result<S>
+    fn get_trait<S, U>(&self, key: U, mem_id: MemId) -> anyhow::Result<S>
     where
         S: State,
         U: Into<UserAddress>,
@@ -36,6 +36,10 @@ impl StateGetter for EnclaveContext<StateType> {
         }
 
         S::from_bytes(&mut buf)
+    }
+
+    fn get_type(&self, key: UserAddress, mem_id: MemId) -> StateType {
+        self.db.get(key, mem_id)
     }
 }
 

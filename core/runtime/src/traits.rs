@@ -43,10 +43,12 @@ impl<T: Sized + Default + Clone + Encode + Decode + Debug> State for T {}
 pub trait StateGetter {
     /// Get state using memory id.
     /// Assumed this is called in user-defined state transition functions.
-    fn get<S, U>(&self, key: U, mem_id: MemId) -> Result<S>
+    fn get_trait<S, U>(&self, key: U, mem_id: MemId) -> Result<S>
     where
         S: State,
         U: Into<UserAddress>;
+
+    fn get_type(&self, key: UserAddress, mem_id: MemId) -> StateType;
 }
 
 /// Execute state transiton functions from runtime

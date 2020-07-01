@@ -9,7 +9,6 @@ use web3::types::Address;
 use ethabi::Contract as ContractABI;
 use anonify_runtime::{
     traits::{State, CallNameConverter},
-    MemId,
 };
 use anyhow::anyhow;
 use crate::{
