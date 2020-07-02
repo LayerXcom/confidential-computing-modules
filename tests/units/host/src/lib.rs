@@ -1,4 +1,9 @@
+use sgx_types::{sgx_status_t, sgx_enclave_id_t};
 use anonify_host::init_enclave::EnclaveDir;
+
+extern "C" {
+    pub fn ecall_run_tests(eid: sgx_enclave_id_t) -> sgx_status_t;
+}
 
 #[test]
 fn test_in_enclave() {

@@ -22,6 +22,10 @@ Anonify_common_u.c
 Anonify_common_t.c
 Anonify_common_t.h
 Anonify_common_u.h
+Anonify_test_u.c
+Anonify_test_t.c
+Anonify_test_t.h
+Anonify_test_u.h
 
 anonify-types.h
 !core/enclave/anonify-types.h

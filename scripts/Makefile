@@ -19,8 +19,20 @@ SGX_ARCH ?= x64
 
 ifeq ($(TEST), 1)
 	EDL_FILE := Anonify_test.edl
+	T_H_FILE := Anonify_test_t.h
+	T_C_FILE := Anonify_test_t.c
+	T_O_FILE := Anonify_test_t.o
+	U_H_FILE := Anonify_test_u.h
+	U_C_FILE := Anonify_test_u.c
+	U_O_FILE := Anonify_test_u.o
 else
 	EDL_FILE := Anonify_common.edl
+	T_H_FILE := Anonify_common_t.h
+	T_C_FILE := Anonify_common_t.c
+	T_O_FILE := Anonify_common_t.o
+	U_H_FILE := Anonify_common_u.h
+	U_C_FILE := Anonify_common_u.c
+	U_O_FILE := Anonify_common_u.o
 endif
 
 ifeq ($(shell getconf LONG_BIT), 32)
@@ -66,7 +78,7 @@ CUSTOM_COMMON_PATH := $(SGX_SDK_RUST)/common
 
 ######## EDL Settings ########
 
-Enclave_EDL_Files := $(ANONIFY_ENCLAVE_DIR)/Anonify_common_t.c $(ANONIFY_ENCLAVE_DIR)/Anonify_common_t.h $(ANONIFY_HOST_DIR)/Anonify_common_u.c $(ANONIFY_HOST_DIR)/Anonify_common_u.h
+Enclave_EDL_Files := $(ANONIFY_ENCLAVE_DIR)/$(T_C_FILE) $(ANONIFY_ENCLAVE_DIR)/$(T_H_FILE) $(ANONIFY_HOST_DIR)/$(U_C_FILE) $(ANONIFY_HOST_DIR)/$(U_H_FILE)
 
 ######## Enclave Settings ########
 
@@ -106,12 +118,12 @@ $(Enclave_EDL_Files): $(SGX_EDGER8R) $(ANONIFY_EDL_DIR)/$(EDL_FILE)
 
 ######## Enclave Objects ########
 
-$(ANONIFY_ENCLAVE_DIR)/Anonify_common_t.o: $(Enclave_EDL_Files)
-	@$(CC) $(RustEnclave_Compile_Flags) -c $(ANONIFY_ENCLAVE_DIR)/Anonify_common_t.c -o $@
+$(ANONIFY_ENCLAVE_DIR)/$(T_O_FILE): $(Enclave_EDL_Files)
+	@$(CC) $(RustEnclave_Compile_Flags) -c $(ANONIFY_ENCLAVE_DIR)/$(T_C_FILE) -o $@
 	@echo "CC   <=  $<"
 
-$(RustEnclave_Name): enclave $(ANONIFY_ENCLAVE_DIR)/Anonify_common_t.o
-	@$(CXX) $(ANONIFY_ENCLAVE_DIR)/Anonify_common_t.o -o $@ $(RustEnclave_Link_Flags)
+$(RustEnclave_Name): enclave $(ANONIFY_ENCLAVE_DIR)/$(T_O_FILE)
+	@$(CXX) $(ANONIFY_ENCLAVE_DIR)/$(T_O_FILE) -o $@ $(RustEnclave_Link_Flags)
 	@echo "LINK =>  $@"
 
 $(Signed_RustEnclave_Name): $(RustEnclave_Name)
@@ -121,4 +133,4 @@ $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 
 .PHONY: enclave
 enclave: $(Enclave_EDL_Files)
-	$(MAKE) -f Enclave.Makefile CARGO_FLAGS=$(Host_Rust_Flags) Rust_target_dir=$(Rust_target_dir) CARGO=$(CARGO) BINDGEN=$(BINDGEN) RUSTFMT=$(RUSTFMT) ANONIFY_ENCLAVE_DIR=$(ANONIFY_ENCLAVE_DIR) CUSTOM_LIBRARY_PATH=$(CUSTOM_LIBRARY_PATH) ANONIFY_ROOT_DIR=$(ANONIFY_ROOT_DIR) ENCLAVE_DIR=$(ENCLAVE_DIR)
+	$(MAKE) -f Enclave.Makefile CARGO_FLAGS=$(Host_Rust_Flags) Rust_target_dir=$(Rust_target_dir) CARGO=$(CARGO) BINDGEN=$(BINDGEN) RUSTFMT=$(RUSTFMT) ANONIFY_ENCLAVE_DIR=$(ANONIFY_ENCLAVE_DIR) CUSTOM_LIBRARY_PATH=$(CUSTOM_LIBRARY_PATH) ANONIFY_ROOT_DIR=$(ANONIFY_ROOT_DIR) ENCLAVE_DIR=$(ENCLAVE_DIR) T_H_FILE=$(T_H_FILE)

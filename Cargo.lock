@@ -1664,6 +1664,9 @@ name = "host"
 version = "0.1.0"
 dependencies = [
  "anonify-host 0.1.0",
+ "cc 1.0.54 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dirs 2.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

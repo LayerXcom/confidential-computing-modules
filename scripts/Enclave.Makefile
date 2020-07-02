@@ -18,7 +18,7 @@ $(Rust_Enclave_Name): $(Rust_Enclave_Files)
 	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/libenclave.a
 
 .PHONY: bindgen
-bindgen: $(ANONIFY_ENCLAVE_DIR)/Anonify_common_t.h
+bindgen: $(ANONIFY_ENCLAVE_DIR)/$(T_H_FILE)
 	@cd $(ANONIFY_ENCLAVE_DIR) && cargo build -p anonify-types
-	bindgen $(ANONIFY_ENCLAVE_DIR)/Anonify_common_t.h $(BINDGEN_FLAGS) -- $(BINDGEN_CLANG_FLAGS) > $(BINDGEN_OUTPUT_FILE)
+	bindgen $(ANONIFY_ENCLAVE_DIR)/$(T_H_FILE) $(BINDGEN_FLAGS) -- $(BINDGEN_CLANG_FLAGS) > $(BINDGEN_OUTPUT_FILE)
 	rustfmt $(BINDGEN_OUTPUT_FILE)
