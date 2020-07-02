@@ -17,7 +17,7 @@ echo `cargo --version`
 echo "Start building core components."
 
 # Generate a `enclave.signed.so` in `$HOME/.anonify`
-make DEBUG=1
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
 echo "Testing core components..."
 cd ../tests/integration

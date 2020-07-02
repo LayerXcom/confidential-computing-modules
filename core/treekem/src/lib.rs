@@ -23,6 +23,13 @@ pub use crate::test_utils::init_path_secret_kvs;
 #[cfg(debug_assertions)]
 pub mod tests {
     use super::*;
-    pub use application::tests::*;
-    pub use crypto::ecies::tests::*;
+    use std::prelude::v1::*;
+    use libsgx_test_utils::*;
+
+    pub fn run_tests() -> bool {
+        run_tests!(
+            application::tests::run_tests,
+            crypto::ecies::tests::run_tests,
+        )
+    }
 }

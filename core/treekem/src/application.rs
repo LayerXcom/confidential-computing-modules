@@ -1,4 +1,4 @@
-use std::vec::Vec;
+use std::prelude::v1::*;
 use std::convert::TryFrom;
 use crate::group_state::GroupState;
 use crate::crypto::{
@@ -139,13 +139,20 @@ impl AppKeyChain {
 }
 
 #[cfg(debug_assertions)]
-pub mod tests {
+pub(crate) mod tests {
     use super::*;
+    use libsgx_test_utils::*;
     use crate::test_utils;
     use rand::{self, SeedableRng};
     use crate::handshake::{PathSecretKVS, PathSecretRequest};
 
-    pub fn app_msg_correctness() {
+    pub(crate) fn run_tests() -> bool {
+        run_tests!(
+            test_app_msg_correctness,
+        )
+    }
+
+    fn test_app_msg_correctness() {
         let mut rng = rand::rngs::StdRng::seed_from_u64(1);
         let msg = b"app msg correctnesss test";
 

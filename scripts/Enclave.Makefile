@@ -7,13 +7,13 @@ BINDGEN_FLAGS := --default-enum-style=rust --rust-target=nightly \
 	--no-recursive-whitelist --use-array-pointers-in-arguments \
 	--whitelist-function ocall_.*  --raw-line $(BINDGEN_RAW_LINES)
 Rust_target_dir := debug
-ENCLAVE_DIR := ../example/erc20/enclave
+ENCLAVE_PATH := $(ANONIFY_ROOT_DIR)/$(ENCLAVE_DIR)
 BINDGEN_OUTPUT_FILE := $(ANONIFY_ROOT_DIR)/core/enclave/src/auto_ffi.rs
 
 all: bindgen $(Rust_Enclave_Name)
 
 $(Rust_Enclave_Name): $(Rust_Enclave_Files)
-	@cd $(ENCLAVE_DIR) && cargo build $(CARGO_FLAGS) $(FEATURE_FLAGS)
+	@cd $(ENCLAVE_PATH) && cargo build $(CARGO_FLAGS) $(FEATURE_FLAGS)
 	mkdir -p $(CUSTOM_LIBRARY_PATH)
 	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/libenclave.a
 
