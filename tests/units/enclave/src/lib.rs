@@ -1,17 +1,17 @@
-#[cfg(debug_assertions)]
-pub mod enclave_tests {
-    use test_utils::{test_case, run_inventory_tests};
-    use std::vec::Vec;
-    use std::string::{String, ToString};
+#![crate_name = "anonifyenclave"]
+#![crate_type = "staticlib"]
+#![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
+#[macro_use]
+extern crate sgx_tstd as std;
 
-    #[test_case]
-    fn test_app_msg_correctness() {
-        anonify_treekem::tests::app_msg_correctness();
-    }
+use libsgx_test_utils::*;
+use std::prelude::v1::*;
 
-    #[test_case]
-    fn test_ecies_correctness() { anonify_treekem::tests::ecies_correctness(); }
+#[no_mangle]
+pub fn ecall_run_tests() {
+    let ret = check_all_passed!(
+        anonify_treekem::tests::run_tests(),
+    );
 
-    #[no_mangle]
-    pub fn ecall_run_tests() { run_inventory_tests!(|_s: &str| true); }
+    assert!(ret);
 }

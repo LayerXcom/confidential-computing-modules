@@ -6,8 +6,6 @@
 extern crate sgx_tstd as std;
 #[macro_use]
 extern crate lazy_static;
-#[macro_use]
-extern crate inventory; // TODO
 
 mod ecalls;
 

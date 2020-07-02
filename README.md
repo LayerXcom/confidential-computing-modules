@@ -12,7 +12,7 @@ Please refer to [Anonify Book(EN)](https://layerxcom.github.io/anonify-book-en/)
 ## Setup
 Building an Anonify contract.
 ```
-$ solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
+$ solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
 ```
 
 ## Running anonify protocol

@@ -7,18 +7,18 @@ BINDGEN_FLAGS := --default-enum-style=rust --rust-target=nightly \
 	--no-recursive-whitelist --use-array-pointers-in-arguments \
 	--whitelist-function ocall_.*  --raw-line $(BINDGEN_RAW_LINES)
 Rust_target_dir := debug
-ENCLAVE_DIR := ../example/erc20/enclave
-BINDGEN_OUTPUT_FILE := $(ANONIFY_ROOT_DIR)/core/enclave/src/auto_ffi.rs
+ENCLAVE_PATH := $(ANONIFY_ROOT_DIR)/$(ENCLAVE_DIR)
+BINDGEN_OUTPUT_FILE := $(ANONIFY_ROOT_DIR)/core/enclave/src/bridges/auto_ffi.rs
 
 all: bindgen $(Rust_Enclave_Name)
 
 $(Rust_Enclave_Name): $(Rust_Enclave_Files)
-	@cd $(ENCLAVE_DIR) && cargo build $(CARGO_FLAGS) $(FEATURE_FLAGS)
+	@cd $(ENCLAVE_PATH) && cargo build $(CARGO_FLAGS) $(FEATURE_FLAGS)
 	mkdir -p $(CUSTOM_LIBRARY_PATH)
 	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/libenclave.a
 
 .PHONY: bindgen
-bindgen: $(ANONIFY_ENCLAVE_DIR)/Anonify_common_t.h
-	@cd $(ANONIFY_ENCLAVE_DIR) && cargo build -p anonify-types
-	bindgen $(ANONIFY_ENCLAVE_DIR)/Anonify_common_t.h $(BINDGEN_FLAGS) -- $(BINDGEN_CLANG_FLAGS) > $(BINDGEN_OUTPUT_FILE)
+bindgen: $(ANONIFY_BUILD_DIR)/$(T_H_FILE)
+	@cd $(ANONIFY_ENCLAVE_DIR)
+	bindgen $(ANONIFY_BUILD_DIR)/$(T_H_FILE) $(BINDGEN_FLAGS) -- $(BINDGEN_CLANG_FLAGS) > $(BINDGEN_OUTPUT_FILE)
 	rustfmt $(BINDGEN_OUTPUT_FILE)

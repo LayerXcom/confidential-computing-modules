@@ -22,31 +22,43 @@ fn main () {
     }
 
     let edl = format!("{}/edl", rust_sgx_sdk);
-    let bindings = builder()
-        .whitelist_recursively(false)
-        .array_pointers_in_arguments(true)
-        .default_enum_style(EnumVariation::Rust{ non_exhaustive: false })
-        .rust_target(RustTarget::Nightly)
-        .clang_arg(format!("-I{}/include", sdk_dir))
-        .clang_arg(format!("-I{}", edl))
-        .header("Anonify_common_u.h")
-        .raw_line("#![allow(dead_code)]")
-        .raw_line("use anonify_types::*;")
-        .raw_line("use sgx_types::*;")
-        .whitelist_function("ecall_.*")
-        .generate()
-        .expect("Unable to generate bindings");
 
-    let out_path = target_dir();
-    bindings
-        .write_to_file(out_path.join("auto_ffi.rs"))
-        .expect("Couldn't write bindings!");
+    match env::var("TEST") {
+        Ok(test_var) if test_var == "1" => {
+            cc::Build::new()
+                .file("../../build/Anonify_test_u.c")
+                .include("/opt/sgxsdk/include")
+                .include(edl)
+                .compile("libAnonify_test_u");
+        },
+        _ => {
+            let bindings = builder()
+                .whitelist_recursively(false)
+                .array_pointers_in_arguments(true)
+                .default_enum_style(EnumVariation::Rust{ non_exhaustive: false })
+                .rust_target(RustTarget::Nightly)
+                .clang_arg(format!("-I{}/include", sdk_dir))
+                .clang_arg(format!("-I{}", edl))
+                .header("../../build/Anonify_common_u.h")
+                .raw_line("#![allow(dead_code)]")
+                .raw_line("use anonify_types::*;")
+                .raw_line("use sgx_types::*;")
+                .whitelist_function("ecall_.*")
+                .generate()
+                .expect("Unable to generate bindings");
+            let out_path = target_dir();
 
-    cc::Build::new()
-        .file("Anonify_common_u.c")
-        .include("/opt/sgxsdk/include")
-        .include(edl)
-        .compile("libAnonify_common_u.a");
+            bindings
+                .write_to_file(out_path.join("auto_ffi.rs"))
+                .expect("Couldn't write bindings!");
+
+            cc::Build::new()
+                .file("../../build/Anonify_common_u.c")
+                .include("/opt/sgxsdk/include")
+                .include(edl)
+                .compile("libAnonify_common_u");
+        }
+    }
 }
 
 fn target_dir() -> PathBuf {

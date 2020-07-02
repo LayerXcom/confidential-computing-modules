@@ -1,4 +1,4 @@
-use std::vec::Vec;
+use std::prelude::v1::*;
 use super::{
     dh::{DhPubKey, DhPrivateKey, encapsulate, decapsulate},
     hmac::HmacKey,
@@ -102,10 +102,17 @@ impl NonceSequence for OneNonceSequence {
 }
 
 #[cfg(debug_assertions)]
-pub mod tests {
+pub(crate) mod tests {
     use super::*;
+    use libsgx_test_utils::*;
 
-    pub fn ecies_correctness() {
+    pub(crate) fn run_tests() -> bool {
+        run_tests!(
+            test_ecies_correctness,
+        )
+    }
+
+    fn test_ecies_correctness() {
         let plaintext = b"ecies correctness test";
         let priv_key = DhPrivateKey::from_random().unwrap();
         let pub_key = DhPubKey::from_private_key(&priv_key);
