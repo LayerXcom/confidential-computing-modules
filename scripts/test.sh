@@ -19,8 +19,14 @@ echo "Start building core components."
 # Generate a `enclave.signed.so` in `$HOME/.anonify`
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
-echo "Testing core components..."
+echo "Integration testing..."
 cd ../tests/integration
+RUST_BACKTRACE=1 cargo test -- --nocapture
+
+echo "Unit testing..."
+cd ../../scripts
+make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave
+cd ../tests/unit/host
 RUST_BACKTRACE=1 cargo test -- --nocapture
 
 # cd ../../example/erc20/server

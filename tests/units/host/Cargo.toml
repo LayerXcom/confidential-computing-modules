@@ -5,3 +5,4 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+anonify-host = { path = "../../../core/host" }

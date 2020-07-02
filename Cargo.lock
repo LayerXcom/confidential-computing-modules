@@ -1252,6 +1252,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "enclave"
+version = "0.1.0"
+dependencies = [
+ "anonify-treekem 0.1.0",
+ "libsgx-test-utils 0.1.0 (git+https://github.com/LayerXcom/libsgx-rs)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+]
+
+[[package]]
 name = "encode_unicode"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1648,6 +1657,13 @@ dependencies = [
  "digest 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "generic-array 0.8.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "hmac 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "host"
+version = "0.1.0"
+dependencies = [
+ "anonify-host 0.1.0",
 ]
 
 [[package]]

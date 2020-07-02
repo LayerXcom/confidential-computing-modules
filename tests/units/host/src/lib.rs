@@ -1,3 +1,4 @@
+use anonify_host::init_enclave::EnclaveDir;
 
 #[test]
 fn test_in_enclave() {
@@ -5,5 +6,6 @@ fn test_in_enclave() {
     let ret = unsafe { ecall_run_tests(
         enclave.geteid(),
     ) };
+
     assert_eq!(ret, sgx_status_t::SGX_SUCCESS);
 }

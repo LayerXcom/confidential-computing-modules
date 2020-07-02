@@ -16,6 +16,8 @@ members = [
     "example/invoice-dx/api",
     "wallet",
     "tests/integration",
+    "tests/units/enclave",
+    "tests/units/host",
 ]
 exclude = [
     "example/invoice-dx/server",
