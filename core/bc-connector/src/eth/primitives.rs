@@ -67,8 +67,8 @@ impl Web3Http {
         report_sig: &[u8],
         handshake: &[u8],
     ) -> Result<Address> {
-        let abi = include_bytes!("../../../../build/Anonify.abi");
-        let bin = include_str!("../../../../build/Anonify.bin");
+        let abi = include_bytes!("../../../../contract-build/Anonify.abi");
+        let bin = include_str!("../../../../contract-build/Anonify.bin");
 
         let contract = Contract::deploy(self.web3.eth(), abi)
             .map_err(|e| anyhow!("{:?}", e))?

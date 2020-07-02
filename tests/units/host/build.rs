@@ -22,8 +22,8 @@ fn main () {
     }
 
     cc::Build::new()
-        .file("Anonify_test_u.c")
+        .file("../../../build/Anonify_test_u.c")
         .include("/opt/sgxsdk/include")
         .include(edl)
-        .compile("libAnonify_test_u.a");
+        .compile("libAnonify_test_u");
 }

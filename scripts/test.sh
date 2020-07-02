@@ -26,7 +26,7 @@ RUST_BACKTRACE=1 cargo test -- --nocapture
 echo "Unit testing..."
 cd ../../scripts
 make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave
-cd ../tests/unit/host
+cd ../tests/units/host
 RUST_BACKTRACE=1 cargo test -- --nocapture
 
 # cd ../../example/erc20/server

@@ -24,12 +24,12 @@ fn main () {
     let edl = format!("{}/edl", rust_sgx_sdk);
 
     match env::var("TEST") {
-        Ok("1") => {
+        Ok(test_var) if test_var == "1" => {
             cc::Build::new()
                 .file("../../build/Anonify_test_u.c")
                 .include("/opt/sgxsdk/include")
                 .include(edl)
-                .compile("../../build/libAnonify_test_u.a");
+                .compile("libAnonify_test_u");
         },
         _ => {
             let bindings = builder()
@@ -56,7 +56,7 @@ fn main () {
                 .file("../../build/Anonify_common_u.c")
                 .include("/opt/sgxsdk/include")
                 .include(edl)
-                .compile("../../build/libAnonify_common_u.a");
+                .compile("libAnonify_common_u");
         }
     }
 }
