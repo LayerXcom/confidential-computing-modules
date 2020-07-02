@@ -29,7 +29,7 @@ make DEBUG=1 FEATURES=DX
 # enclave.signed.so is need to initialize enclave.
 rm -rf ../example/invoice-dx/bin && cp -rf bin/ ../example/invoice-dx/bin/ && cd ../
 
-solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
+solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
 cd example/invoice-dx/server
 
 echo "Build artifacts in debug mode."

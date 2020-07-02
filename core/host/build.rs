@@ -29,7 +29,7 @@ fn main () {
         .rust_target(RustTarget::Nightly)
         .clang_arg(format!("-I{}/include", sdk_dir))
         .clang_arg(format!("-I{}", edl))
-        .header("Anonify_common_u.h")
+        .header("../../build/Anonify_common_u.h")
         .raw_line("#![allow(dead_code)]")
         .raw_line("use anonify_types::*;")
         .raw_line("use sgx_types::*;")
@@ -43,10 +43,10 @@ fn main () {
         .expect("Couldn't write bindings!");
 
     cc::Build::new()
-        .file("Anonify_common_u.c")
+        .file("../../build/Anonify_common_u.c")
         .include("/opt/sgxsdk/include")
         .include(edl)
-        .compile("libAnonify_common_u.a");
+        .compile("../../build/libAnonify_common_u.a");
 }
 
 fn target_dir() -> PathBuf {

@@ -9,7 +9,7 @@ export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
 
 dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/.."
-solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol
+solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
 
 cd scripts
 
