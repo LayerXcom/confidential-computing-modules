@@ -11,10 +11,7 @@ use anonify_runtime::{
     state_type::*,
     traits::*,
 };
-use crate::localstd::{
-    vec::Vec,
-    collections::BTreeMap
-};
+use crate::localstd::vec::Vec;
 use anonify_common::{UserAddress, OWNER_ADDRESS};
 use codec::{Encode, Decode};
 
