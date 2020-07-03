@@ -16,7 +16,7 @@ use anonify_treekem::{
 };
 
 /// Execute state transiton functions from runtime
-pub trait RuntimeExecutor<G: StateGetter<S>, S: State>: Sized {
+pub trait RuntimeExecutor<G: ContextOps<S>, S: State>: Sized {
     type C: CallKindExecutor<G, S>;
 
     fn new(db: G) -> Self;
@@ -24,12 +24,14 @@ pub trait RuntimeExecutor<G: StateGetter<S>, S: State>: Sized {
 }
 
 /// Execute state traisiton functions from call kind
-pub trait CallKindExecutor<G: StateGetter<S>, S: State>: Sized + Encode + Decode + Debug + Clone {
+pub trait CallKindExecutor<G: ContextOps<S>, S: State>: Sized + Encode + Decode + Debug + Clone {
     type R: RuntimeExecutor<G, S>;
 
     fn new(id: u32, state: &mut [u8]) -> Result<Self>;
     fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<S>>>;
 }
+
+pub trait ContextOps<S: State>: StateGetter<S> + InnerContextOps<S> {}
 
 /// A getter of state stored in enclave memory.
 pub trait StateGetter<S: State> {
@@ -42,8 +44,10 @@ pub trait StateGetter<S: State> {
     fn get_type(&self, key: UserAddress, mem_id: MemId) -> S;
 }
 
-pub trait ContextOps<S: State> {
-    fn get_group_key<GK: GroupKeyOps>(&self) -> GK;
+pub trait InnerContextOps<S: State> {
+    type GK: GroupKeyOps;
+
+    fn get_group_key(&self) -> &Self::GK;
 
     fn update_state(
         &self,
@@ -68,4 +72,7 @@ pub trait GroupKeyOps: Sized {
     fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext>;
 
     fn decrypt(&mut self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>>;
+
+    /// Ratchet keychain per a transaction
+    fn ratchet(&mut self, roster_idx: usize) -> Result<()>;
 }

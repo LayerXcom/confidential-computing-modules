@@ -10,6 +10,7 @@ use anonify_common::{
     traits::*,
     state_types::{MemId, UpdatedState},
 };
+use anonify_runtime::traits::*;
 use anonify_treekem::{
     handshake::{PathSecretRequest, PathSecretKVS},
     init_path_secret_kvs,
@@ -18,12 +19,12 @@ use codec::Encode;
 use crate::{
     notify::Notifier,
     crypto::EnclaveIdentityKey,
-    group_key::GroupKey,
     config::{TEST_SPID, MY_ROSTER_IDX, MAX_ROSTER_IDX, UNTIL_ROSTER_IDX, UNTIL_EPOCH},
     bridges::ocalls::{sgx_init_quote, get_quote},
     error::Result,
     kvs::{EnclaveDB, EnclaveDBTx},
     instructions::Instructions,
+    group_key::GroupKey,
 };
 
 impl<S: State> StateGetter<S> for EnclaveContext<S> {
@@ -45,9 +46,11 @@ impl<S: State> StateGetter<S> for EnclaveContext<S> {
     }
 }
 
-impl<S: State> ContextOps<S> for EnclaveContext<S> {
-    fn get_group_key<D: Decrypter>(&self) -> &D {
-        &self.group_key.write().unwrap()
+impl<S: State> InnerContextOps<S> for EnclaveContext<S> {
+    type GK = GroupKey;
+
+    fn get_group_key(&self) -> &Self::GK {
+        &*self.group_key.write().unwrap()
     }
 
     /// Returns a updated state of registerd address in notification.
@@ -106,10 +109,6 @@ impl<S: State> EnclaveContext<S> {
             notifier,
             group_key,
         })
-    }
-
-    pub fn get_group_key(&self) -> &GroupKey {
-        &self.group_key.write().unwrap()
     }
 
     /// Returns a updated state of registerd address in notification.

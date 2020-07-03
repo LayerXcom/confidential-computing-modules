@@ -6,13 +6,13 @@ use anonify_common::{
     state_types::MemId,
 };
 use anonify_treekem::handshake::HandshakeParams;
+use anonify_runtime::traits::*;
 use codec::Encode;
 use remote_attestation::{RAService, AttestationReport, ReportSig};
 use crate::{
     error::Result,
     context::EnclaveContext,
     bridges::ocalls::save_to_host_memory,
-    group_key::GroupKey,
     instructions::Instructions,
 };
 
@@ -102,7 +102,7 @@ impl EnclaveTx for InstructionTx {
 }
 
 impl InstructionTx {
-    pub fn construct<R, G, S>(
+    pub fn construct<R, C, S>(
         call_id: u32,
         params: &mut [u8],
         state_id: u64, // TODO: future works for separating smart contracts
@@ -111,13 +111,13 @@ impl InstructionTx {
         max_mem_size: usize,
     ) -> Result<Self>
     where
-        R: RuntimeExecutor<G, S>,
-        G: StateGetter<S>,
+        R: RuntimeExecutor<C, S>,
+        C: ContextOps<S>,
         S: State,
     {
-        let group_key = enclave_ctx.group_key.read().unwrap();
-        let ciphertext = Instructions::<R, G, S>::new(call_id, params, &access_right)?
-            .encrypt(&group_key, max_mem_size)?;
+        let group_key = &*enclave_ctx.group_key.read().unwrap();
+        let ciphertext = Instructions::<R, C, S>::new(call_id, params, &access_right)?
+            .encrypt(group_key, max_mem_size)?;
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;
 
