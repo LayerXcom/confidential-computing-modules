@@ -7,7 +7,6 @@ edition = "2018"
 [dependencies]
 invoice-api = { path = "../api" }
 anonify-common = { path = "../../../core/common" }
-anonify-runtime = { path = "../../../core/runtime" }
 anonify-host = { path = "../../../core/host" }
 anonify-bc-connector = { path = "../../../core/bc-connector" }
 anonify-wallet = { path = "../../../wallet" }

@@ -12,12 +12,9 @@ use sgx_anyhow as local_anyhow;
 #[cfg(all(not(feature = "std"), not(feature = "sgx")))]
 extern crate core as localstd;
 
-pub mod state_type;
 pub mod impls;
-pub mod utils;
 pub mod prelude;
 pub mod traits;
 
-pub use crate::state_type::*;
 pub use crate::traits::*;
 pub use crate::utils::*;

@@ -4,6 +4,7 @@ use anonify_treekem::{
     handshake::{PathSecretRequest, HandshakeParams},
 };
 use anonify_common::Ciphertext;
+use anonify_runtime::traits::*;
 use anyhow::Result;
 
 #[derive(Clone, Debug)]
@@ -12,6 +13,12 @@ pub struct GroupKey {
     keychain: AppKeyChain,
     max_roster_idx: usize,
     path_secret_req: PathSecretRequest,
+}
+
+impl Decrypter for GroupKey {
+    fn decrypt(&mut self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>> {
+        self.keychain.decrypt_msg(&app_msg, &self.group_state)
+    }
 }
 
 impl GroupKey {
@@ -48,10 +55,6 @@ impl GroupKey {
 
     pub fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext> {
         self.keychain.encrypt_msg(plaintext, &self.group_state)
-    }
-
-    pub fn decrypt(&mut self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>> {
-        self.keychain.decrypt_msg(&app_msg, &self.group_state)
     }
 
     /// Ratchet keychain per a transaction

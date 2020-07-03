@@ -41,6 +41,22 @@ impl<S: State> StateGetter<S> for EnclaveContext<S> {
     }
 }
 
+impl<S: State> ContextOps<S> for EnclaveContext<S> {
+    fn get_group_key<D: Decrypter>(&self) -> &D {
+        &self.group_key.write().unwrap()
+    }
+
+    /// Returns a updated state of registerd address in notification.
+    // TODO: Enables to return multiple updated states.
+    fn update_state(
+        &self,
+        mut state_iter: impl Iterator<Item=UpdatedState<S>> + Clone
+    ) -> Option<UpdatedState<S>> {
+        state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
+        state_iter.find(|s| self.is_notified(&s.address))
+    }
+}
+
 /// spid: Service provider ID for the ISV.
 #[derive(Clone)]
 pub struct EnclaveContext<S: State> {
@@ -88,6 +104,20 @@ impl<S: State> EnclaveContext<S> {
         })
     }
 
+    pub fn get_group_key(&self) -> &GroupKey {
+        &self.group_key.write().unwrap()
+    }
+
+    /// Returns a updated state of registerd address in notification.
+    // TODO: Enables to return multiple updated states.
+    pub fn update_state(
+        &self,
+        mut state_iter: impl Iterator<Item=UpdatedState<S>> + Clone
+    ) -> Option<UpdatedState<S>> {
+        state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
+        state_iter.find(|s| self.is_notified(&s.address))
+    }
+
     pub fn set_notification(&self, address: UserAddress) -> bool {
         self.notifier.register(address)
     }
@@ -115,16 +145,6 @@ impl<S: State> EnclaveContext<S> {
     /// should be verified in the public available place such as smart contract on blockchain.
     pub fn sign(&self, msg: &[u8]) -> Result<secp256k1::Signature> {
         self.identity_key.sign(msg)
-    }
-
-    /// Returns a updated state of registerd address in notification.
-    // TODO: Enables to return multiple updated states.
-    pub fn update_state(
-        &self,
-        mut state_iter: impl Iterator<Item=UpdatedState<S>> + Clone
-    ) -> Option<UpdatedState<S>> {
-        state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
-        state_iter.find(|s| self.is_notified(&s.address))
     }
 
     /// Return Attestation report

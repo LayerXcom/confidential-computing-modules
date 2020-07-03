@@ -1,43 +1,16 @@
 use crate::local_anyhow::{Result, anyhow};
-use crate::utils::*;
 use crate::localstd::{
     fmt::Debug,
     vec::Vec,
     mem::size_of,
 };
 use crate::state_type::StateType;
-use anonify_common::UserAddress;
-use codec::{Input, Output, Encode, Decode};
-
-/// Trait of each user's state.
-pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
-    fn as_bytes(&self) -> Vec<u8> {
-        self.encode()
-    }
-
-    fn from_bytes(bytes: &mut [u8]) -> Result<Self> {
-        Self::decode(&mut &bytes[..])
-            .map_err(|e| anyhow!("{:?}", e))
-    }
-
-    fn write_le<O: Output>(&self, writer: &mut O) {
-        self.encode_to(writer)
-    }
-
-    fn read_le<I: Input>(reader: &mut I) -> Result<Self> {
-        Self::decode(reader)
-            .map_err(|e| anyhow!("{:?}", e))
-    }
-
-    fn from_state(state: &impl State) -> Result<Self> {
-        let mut state = state.as_bytes();
-        Self::from_bytes(&mut state)
-    }
-
-    fn size(&self) -> usize { size_of::<Self>() }
-}
-
-impl<T: Sized + Default + Clone + Encode + Decode + Debug> State for T {}
+use anonify_common::{UserAddress, Ciphertext, traits::*};
+use codec::{Encode, Decode};
+use anonify_treekem::{
+    GroupState, AppKeyChain, Handshake,
+    handshake::{PathSecretRequest, HandshakeParams},
+};
 
 /// A getter of state stored in enclave memory.
 pub trait StateGetter<S: State> {
@@ -66,12 +39,30 @@ pub trait CallKindExecutor<G: StateGetter<S>, S: State>: Sized + Encode + Decode
     fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<S>>>;
 }
 
-/// A converter from memory name to memory id
-pub trait MemNameConverter: Debug {
-    fn as_id(name: &str) -> MemId;
+pub trait ContextOps<S: State> {
+    fn get_group_key<GK: GroupKeyOps>(&self) -> GroupKeyOps;
+
+    fn update_state(
+        &self,
+        state_iter: impl Iterator<Item=UpdatedState<S>> + Clone
+    ) -> Option<UpdatedState<S>>;
 }
 
-/// A converter from call name to call id
-pub trait CallNameConverter: Debug {
-    fn as_id(name: &str) -> u32;
+pub trait GroupKeyOps: Sized {
+    fn new(
+        my_roster_idx: usize,
+        max_roster_idx: usize,
+        path_secret_req: PathSecretRequest,
+    ) -> Result<Self>;
+
+    fn create_handshake(&self) -> Result<HandshakeParams>;
+
+    fn process_handshake(
+        &mut self,
+        handshake: &HandshakeParams,
+    ) -> Result<()>;
+
+    fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext>;
+
+    fn decrypt(&mut self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>>;
 }

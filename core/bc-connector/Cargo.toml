@@ -7,7 +7,6 @@ edition = "2018"
 [dependencies]
 anonify-types = { path = "../types" }
 anonify-common = { path = "../common" }
-anonify-runtime = { path = "../runtime" }
 web3 = "0.8"
 ethabi = "8.0.0"
 byteorder = "1"

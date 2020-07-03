@@ -8,7 +8,6 @@ edition = "2018"
 erc20-api = { path = "../api" }
 erc20-state-transition = { path = "../state-transition", default-features = false, features = ["std"] }
 anonify-common = { path = "../../../core/common" }
-anonify-runtime = { path = "../../../core/runtime" }
 anonify-host = { path = "../../../core/host" }
 anonify-bc-connector = { path = "../../../core/bc-connector" }
 sgx_types = "1.1.1"

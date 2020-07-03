@@ -47,10 +47,10 @@ impl<R: RuntimeExecutor<G, S>, G: StateGetter<S>, S: State> Instructions<R, G, S
 
     /// Only if the TEE belongs to the group, you can receive ciphertext and decrypt it,
     /// otherwise do nothing.
-    pub fn state_transition(
+    pub fn state_transition<D: Decrypter>(
         ctx: G,
         ciphertext: &Ciphertext,
-        group_key: &mut GroupKey
+        group_key: &mut D
     ) -> Result<Option<impl Iterator<Item=UpdatedState<S>> + Clone>> {
         if let Some(instructions) = Instructions::<R, G, S>::decrypt(ciphertext, group_key)? {
             let state_iter = instructions
@@ -63,7 +63,7 @@ impl<R: RuntimeExecutor<G, S>, G: StateGetter<S>, S: State> Instructions<R, G, S
         Ok(None)
     }
 
-    fn decrypt(ciphertext: &Ciphertext, key: &mut GroupKey) -> Result<Option<Self>> {
+    fn decrypt<D: Decrypter>(ciphertext: &Ciphertext, key: &mut D) -> Result<Option<Self>> {
         match key.decrypt(ciphertext)? {
             Some(plaintext) => {
                 Instructions::decode(&mut &plaintext[..])

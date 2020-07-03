@@ -27,15 +27,13 @@ where
     R: RuntimeExecutor<G, S>,
     G: StateGetter<S>,
     S: State,
+    X: 
 {
     let buf = slice::from_raw_parts_mut(ciphertext, ciphertext_len);
     let ciphertext = Ciphertext::from_bytes(buf, ciphertext_size);
-    let group_key = &mut *match enclave_context.group_key.write() {
-        Ok(group_key) => group_key,
-        Err(_) => return EnclaveStatus::error(),
-    };
+    let group_key = &mut *enclave_context.get_group_key();
 
-    match Instructions::<R, G, S>::state_transition(enclave_context.clone(), &ciphertext, group_key) {
+    match Instructions::<R, _, S>::state_transition(enclave_context.clone(), &ciphertext, group_key) {
         Ok(iter_op) => {
             if let Some(updated_state_iter) = iter_op {
                 if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {

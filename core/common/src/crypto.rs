@@ -16,6 +16,7 @@ use rand_core::{RngCore, CryptoRng};
 #[cfg(feature = "std")]
 use rand_os::OsRng;
 use crate::local_anyhow::{anyhow, Error};
+use crate::traits::IntoVec;
 
 const ADDRESS_SIZE: usize = 20;
 
@@ -307,10 +308,6 @@ impl AccessRight {
 
         Ok(AccessRight::new(sig, pubkey, raw_challenge))
     }
-}
-
-pub trait IntoVec {
-    fn into_vec(&self) -> Vec<u8>;
 }
 
 impl<T: IntoVec> IntoVec for Vec<T> {

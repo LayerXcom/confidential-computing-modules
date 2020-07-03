@@ -18,8 +18,9 @@ use sgx_anyhow as local_anyhow;
 #[macro_use]
 extern crate lazy_static;
 
-mod crypto;
+pub mod crypto;
 pub mod kvs;
+pub mod traits;
+pub mod state_types;
 
-pub use crate::crypto::*;
 pub use crate::kvs::*;

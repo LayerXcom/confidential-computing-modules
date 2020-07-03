@@ -6,8 +6,11 @@ use std::{
 };
 use sgx_types::sgx_enclave_id_t;
 use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx};
-use anonify_common::AccessRight;
-use anonify_runtime::{traits::{State, CallNameConverter}, UpdatedState};
+use anonify_common::{
+    traits::*,
+    crypto::AccessRight,
+    state_types::UpdatedState,
+};
 use crate::{
     error::Result,
     eventdb::{BlockNumDB, InnerEnclaveLog},

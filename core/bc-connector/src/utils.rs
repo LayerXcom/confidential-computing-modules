@@ -7,9 +7,7 @@ use std::{
 };
 use web3::types::Address;
 use ethabi::Contract as ContractABI;
-use anonify_runtime::{
-    traits::{State, CallNameConverter},
-};
+use anonify_common::traits::*;
 use anyhow::anyhow;
 use crate::{
     error::Result,

@@ -19,7 +19,7 @@ use ethabi::{
     decode,
     Hash,
 };
-use anonify_common::{IntoVec, Ciphertext};
+use anonify_common::{IntoVec, crypto::Ciphertext};
 use anyhow::anyhow;
 use crate::{
     error::Result,
