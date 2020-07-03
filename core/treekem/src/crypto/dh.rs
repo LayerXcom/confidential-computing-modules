@@ -1,6 +1,6 @@
 use std::vec::Vec;
 use secp256k1::{PublicKey, SecretKey, util::{SECRET_KEY_SIZE, COMPRESSED_PUBLIC_KEY_SIZE}};
-use anonify_common::sgx_rand_assign;
+use anonify_common::crypto::sgx_rand_assign;
 use anyhow::{anyhow, Result};
 use codec::{Encode, Decode, Input, Error};
 use super::{

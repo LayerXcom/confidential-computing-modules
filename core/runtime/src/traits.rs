@@ -1,11 +1,14 @@
-use crate::local_anyhow::{Result, anyhow};
-use crate::localstd::{
+use anyhow::{Result, anyhow};
+use std::{
     fmt::Debug,
     vec::Vec,
     mem::size_of,
 };
-use crate::state_type::StateType;
-use anonify_common::{UserAddress, Ciphertext, traits::*};
+use anonify_common::{
+    crypto::{UserAddress, Ciphertext},
+    traits::*,
+    state_types::{StateType, UpdatedState, MemId},
+};
 use codec::{Encode, Decode};
 use anonify_treekem::{
     GroupState, AppKeyChain, Handshake,
@@ -40,7 +43,7 @@ pub trait CallKindExecutor<G: StateGetter<S>, S: State>: Sized + Encode + Decode
 }
 
 pub trait ContextOps<S: State> {
-    fn get_group_key<GK: GroupKeyOps>(&self) -> GroupKeyOps;
+    fn get_group_key<GK: GroupKeyOps>(&self) -> GK;
 
     fn update_state(
         &self,

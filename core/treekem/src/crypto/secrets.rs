@@ -12,7 +12,7 @@ use super::{
     hmac::HmacKey,
     CryptoRng,
 };
-use anonify_common::sgx_rand_assign;
+use anonify_common::crypto::sgx_rand_assign;
 use crate::handshake::AccessKey;
 use anyhow::Result;
 use codec::Encode;
