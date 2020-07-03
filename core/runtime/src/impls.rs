@@ -71,6 +71,7 @@ macro_rules! __impl_inner_runtime {
     ) => {
         $(
             #[derive(Encode, Decode, Debug, Clone, Default)]
+            #[allow(non_camel_case_types)]
             pub struct $fn_name {
                 $( pub $param_name: $param, )*
             }
@@ -90,7 +91,10 @@ macro_rules! __impl_inner_runtime {
 
         #[derive(Debug, Clone, Encode, Decode)]
         pub enum CallKind {
-            $( $fn_name($fn_name), )*
+            $(
+                #[allow(non_camel_case_types)]
+                $fn_name($fn_name),
+            )*
         }
 
         impl<G: StateGetter> CallKindExecutor<G> for CallKind {
