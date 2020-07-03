@@ -1,8 +1,11 @@
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
-use anonify_common::{UserAddress, AccessRight, Ciphertext};
-use anonify_runtime::{traits::*, MemId};
+use anonify_common::{
+    crypto::{UserAddress, AccessRight, Ciphertext},
+    traits::*,
+    state_types::MemId,
+};
 use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
 use codec::Decode;
@@ -27,7 +30,6 @@ where
     R: RuntimeExecutor<G, S>,
     G: StateGetter<S>,
     S: State,
-    X: 
 {
     let buf = slice::from_raw_parts_mut(ciphertext, ciphertext_len);
     let ciphertext = Ciphertext::from_bytes(buf, ciphertext_size);

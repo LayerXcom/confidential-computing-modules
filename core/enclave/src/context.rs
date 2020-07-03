@@ -4,8 +4,12 @@ use std::{
 };
 use sgx_types::*;
 use std::prelude::v1::*;
-use anonify_common::{kvs::{MemoryDB, DBValue}, UserAddress, Ciphertext};
-use anonify_runtime::{MemId, UpdatedState, traits::*};
+use anonify_common::{
+    kvs::{MemoryDB, DBValue},
+    crypto::{UserAddress, Ciphertext},
+    traits::*,
+    state_types::{MemId, UpdatedState},
+};
 use anonify_treekem::{
     handshake::{PathSecretRequest, PathSecretKVS},
     init_path_secret_kvs,

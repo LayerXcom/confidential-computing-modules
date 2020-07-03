@@ -5,11 +5,11 @@ use std::{
 };
 use ed25519_dalek::{PublicKey, Signature};
 use anonify_common::{
-    UserAddress,
+    crypto::UserAddress,
     kvs::*,
-    Hash256, Sha256,
+    state_types::{MemId, UpdatedState},
+    traits::*,
 };
-use anonify_runtime::{State, MemId, UpdatedState};
 use codec::Encode;
 use crate::error::Result;
 

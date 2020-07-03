@@ -6,6 +6,8 @@ use crate::localstd::{
 use crate::state_types::MemId;
 use crate::local_anyhow::{Result, anyhow};
 use codec::{Input, Output, Encode, Decode};
+use ed25519_dalek::PublicKey;
+use tiny_keccak::Keccak;
 
 /// Trait of each user's state.
 pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
@@ -49,4 +51,27 @@ pub trait CallNameConverter: Debug {
 
 pub trait IntoVec {
     fn into_vec(&self) -> Vec<u8>;
+}
+
+/// Trait for 256-bits hash functions
+pub trait Hash256 {
+    fn hash(inp: &[u8]) -> Self;
+
+    fn from_pubkey(pubkey: &PublicKey) -> Self;
+}
+
+/// A trait that will hash using Keccak256 the object it's implemented on.
+pub trait Keccak256<T> {
+    /// This will return a sized object with the hash
+    fn keccak256(&self) -> T where T: Sized;
+}
+
+impl Keccak256<[u8; 32]> for [u8] {
+    fn keccak256(&self) -> [u8; 32] {
+        let mut keccak = Keccak::new_keccak256();
+        let mut result = [0u8; 32];
+        keccak.update(self);
+        keccak.finalize(result.as_mut());
+        result
+    }
 }

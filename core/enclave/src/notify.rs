@@ -2,8 +2,11 @@ use std::{
     collections::HashSet,
     sync::{SgxRwLock, Arc},
 };
-use anonify_common::UserAddress;
-use anonify_runtime::{UpdatedState, traits::State};
+use anonify_common::{
+    crypto::UserAddress,
+    traits::State,
+    state_types::UpdatedState,
+};
 use anonify_types::RawUpdatedState;
 use crate::{
     error::Result,

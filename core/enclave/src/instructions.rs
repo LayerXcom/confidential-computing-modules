@@ -2,8 +2,11 @@ use std::{
     vec::Vec,
     marker::PhantomData,
 };
-use anonify_common::{UserAddress, AccessRight, Ciphertext};
-use anonify_runtime::{traits::*, UpdatedState};
+use anonify_common::{
+    crypto::{UserAddress, AccessRight, Ciphertext},
+    traits::*,
+    state_types::UpdatedState,
+};
 use codec::{Encode, Decode};
 use crate::{
     error::Result,

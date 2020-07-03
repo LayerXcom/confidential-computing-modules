@@ -3,8 +3,10 @@ use anonify_treekem::{
     GroupState, AppKeyChain, Handshake,
     handshake::{PathSecretRequest, HandshakeParams},
 };
-use anonify_common::Ciphertext;
-use anonify_runtime::traits::*;
+use anonify_common::{
+    crypto::Ciphertext,
+    traits::*,
+};
 use anyhow::Result;
 
 #[derive(Clone, Debug)]

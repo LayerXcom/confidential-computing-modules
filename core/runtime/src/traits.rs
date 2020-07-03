@@ -15,17 +15,6 @@ use anonify_treekem::{
     handshake::{PathSecretRequest, HandshakeParams},
 };
 
-/// A getter of state stored in enclave memory.
-pub trait StateGetter<S: State> {
-    /// Get state using memory id.
-    /// Assumed this is called in user-defined state transition functions.
-    fn get_trait<U>(&self, key: U, mem_id: MemId) -> S
-    where
-        U: Into<UserAddress>;
-
-    fn get_type(&self, key: UserAddress, mem_id: MemId) -> S;
-}
-
 /// Execute state transiton functions from runtime
 pub trait RuntimeExecutor<G: StateGetter<S>, S: State>: Sized {
     type C: CallKindExecutor<G, S>;
@@ -40,6 +29,17 @@ pub trait CallKindExecutor<G: StateGetter<S>, S: State>: Sized + Encode + Decode
 
     fn new(id: u32, state: &mut [u8]) -> Result<Self>;
     fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<S>>>;
+}
+
+/// A getter of state stored in enclave memory.
+pub trait StateGetter<S: State> {
+    /// Get state using memory id.
+    /// Assumed this is called in user-defined state transition functions.
+    fn get_trait<U>(&self, key: U, mem_id: MemId) -> S
+    where
+        U: Into<UserAddress>;
+
+    fn get_type(&self, key: UserAddress, mem_id: MemId) -> S;
 }
 
 pub trait ContextOps<S: State> {

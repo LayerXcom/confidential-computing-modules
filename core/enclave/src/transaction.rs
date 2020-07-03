@@ -1,7 +1,10 @@
 use std::vec::Vec;
 use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, traits::RawEnclaveTx};
-use anonify_common::{UserAddress, Sha256, Hash256, AccessRight, IntoVec, Ciphertext};
-use anonify_runtime::{MemId, traits::*};
+use anonify_common::{
+    crypto::{UserAddress, Sha256, AccessRight, Ciphertext},
+    traits::*,
+    state_types::MemId,
+};
 use anonify_treekem::handshake::HandshakeParams;
 use codec::Encode;
 use remote_attestation::{RAService, AttestationReport, ReportSig};

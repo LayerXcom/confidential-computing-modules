@@ -6,7 +6,6 @@ use crate::localstd::{
 };
 use crate::serde::{Serialize, Deserialize};
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, SignatureError, SECRET_KEY_LENGTH};
-use tiny_keccak::Keccak;
 use codec::{Encode, Decode};
 use anonify_types::{RawPubkey, RawSig, RawChallenge};
 #[cfg(feature = "std")]
@@ -16,7 +15,7 @@ use rand_core::{RngCore, CryptoRng};
 #[cfg(feature = "std")]
 use rand_os::OsRng;
 use crate::local_anyhow::{anyhow, Error};
-use crate::traits::IntoVec;
+use crate::traits::*;
 
 const ADDRESS_SIZE: usize = 20;
 
@@ -38,13 +37,6 @@ lazy_static! {
     pub static ref OWNER_ADDRESS: UserAddress = {
         COMMON_ACCESS_RIGHT.user_address()
     };
-}
-
-/// Trait for 256-bits hash functions
-pub trait Hash256 {
-    fn hash(inp: &[u8]) -> Self;
-
-    fn from_pubkey(pubkey: &PublicKey) -> Self;
 }
 
 /// User address represents last 20 bytes of digest of user's public key.
@@ -193,22 +185,6 @@ impl Sha256 {
 
     fn copy_from_slice(&mut self, src: &[u8]) {
         self.0.copy_from_slice(src)
-    }
-}
-
-/// A trait that will hash using Keccak256 the object it's implemented on.
-pub trait Keccak256<T> {
-    /// This will return a sized object with the hash
-    fn keccak256(&self) -> T where T: Sized;
-}
-
-impl Keccak256<[u8; 32]> for [u8] {
-    fn keccak256(&self) -> [u8; 32] {
-        let mut keccak = Keccak::new_keccak256();
-        let mut result = [0u8; 32];
-        keccak.update(self);
-        keccak.finalize(result.as_mut());
-        result
     }
 }
 
