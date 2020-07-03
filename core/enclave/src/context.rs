@@ -5,7 +5,7 @@ use std::{
 use sgx_types::*;
 use std::prelude::v1::*;
 use anonify_common::{kvs::{MemoryDB, DBValue}, UserAddress, Ciphertext};
-use anonify_runtime::{StateType, MemId, UpdatedState, traits::*};
+use anonify_runtime::{MemId, UpdatedState, traits::*};
 use anonify_treekem::{
     handshake::{PathSecretRequest, PathSecretKVS},
     init_path_secret_kvs,
@@ -22,23 +22,21 @@ use crate::{
     instructions::Instructions,
 };
 
-impl StateGetter for EnclaveContext<StateType> {
-    fn get_trait<S, U>(&self, key: U, mem_id: MemId) -> anyhow::Result<S>
+impl<S: State> StateGetter<S> for EnclaveContext<S> {
+    fn get_trait<U>(&self, key: U, mem_id: MemId) -> S
     where
-        S: State,
         U: Into<UserAddress>,
     {
-        let mut buf = self.db
-            .get(key.into(), mem_id)
-            .into_bytes();
-        if buf.len() == 0 {
-            return Ok(Default::default());
+        let res = self.db
+            .get(key.into(), mem_id);
+        if res.size() == 0 {
+            return S::default();
         }
 
-        S::from_bytes(&mut buf)
+        res
     }
 
-    fn get_type(&self, key: UserAddress, mem_id: MemId) -> StateType {
+    fn get_type(&self, key: UserAddress, mem_id: MemId) -> S {
         self.db.get(key, mem_id)
     }
 }
@@ -54,7 +52,7 @@ pub struct EnclaveContext<S: State> {
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
-impl EnclaveContext<StateType> {
+impl<S: State> EnclaveContext<S> {
     pub fn new(spid: &str) -> Result<Self> {
         let spid_vec = hex::decode(spid)?;
         let mut id = [0; 16];
@@ -123,8 +121,8 @@ impl EnclaveContext<StateType> {
     // TODO: Enables to return multiple updated states.
     pub fn update_state(
         &self,
-        mut state_iter: impl Iterator<Item=UpdatedState<StateType>> + Clone
-    ) -> Option<UpdatedState<StateType>> {
+        mut state_iter: impl Iterator<Item=UpdatedState<S>> + Clone
+    ) -> Option<UpdatedState<S>> {
         state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
         state_iter.find(|s| self.is_notified(&s.address))
     }

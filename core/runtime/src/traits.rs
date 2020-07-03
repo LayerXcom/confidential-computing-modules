@@ -40,31 +40,30 @@ pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
 impl<T: Sized + Default + Clone + Encode + Decode + Debug> State for T {}
 
 /// A getter of state stored in enclave memory.
-pub trait StateGetter {
+pub trait StateGetter<S: State> {
     /// Get state using memory id.
     /// Assumed this is called in user-defined state transition functions.
-    fn get_trait<S, U>(&self, key: U, mem_id: MemId) -> Result<S>
+    fn get_trait<U>(&self, key: U, mem_id: MemId) -> S
     where
-        S: State,
         U: Into<UserAddress>;
 
-    fn get_type(&self, key: UserAddress, mem_id: MemId) -> StateType;
+    fn get_type(&self, key: UserAddress, mem_id: MemId) -> S;
 }
 
 /// Execute state transiton functions from runtime
-pub trait RuntimeExecutor<G: StateGetter>: Sized {
-    type C: CallKindExecutor<G>;
+pub trait RuntimeExecutor<G: StateGetter<S>, S: State>: Sized {
+    type C: CallKindExecutor<G, S>;
 
     fn new(db: G) -> Self;
-    fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
+    fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<S>>>;
 }
 
 /// Execute state traisiton functions from call kind
-pub trait CallKindExecutor<G: StateGetter>: Sized + Encode + Decode + Debug + Clone {
-    type R: RuntimeExecutor<G>;
+pub trait CallKindExecutor<G: StateGetter<S>, S: State>: Sized + Encode + Decode + Debug + Clone {
+    type R: RuntimeExecutor<G, S>;
 
     fn new(id: u32, state: &mut [u8]) -> Result<Self>;
-    fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
+    fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<S>>>;
 }
 
 /// A converter from memory name to memory id

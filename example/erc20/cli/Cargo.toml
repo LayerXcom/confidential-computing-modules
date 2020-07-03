@@ -1,13 +1,11 @@
 [package]
-name = "anonify-cli"
+name = "erc20-cli"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-api = { path = "../api" }
+erc20-api = { path = "../api" }
 anonify-common = { path = "../../../core/common" }
 anonify-wallet = { path = "../../../wallet" }
 reqwest = "0.9"

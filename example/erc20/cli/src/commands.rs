@@ -27,7 +27,7 @@ pub(crate) fn join_group(
     anonify_url: String,
     contract_addr: String,
 ) -> Result<()> {
-    let req = api::join_group::post::Request{ contract_addr };
+    let req = erc20_api::join_group::post::Request{ contract_addr };
     let res = Client::new()
         .post(&format!("{}/api/v1/join_group", &anonify_url))
         .json(&req)
@@ -51,7 +51,7 @@ pub(crate) fn init_state<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::init_state::post::Request::new(&keypair, total_supply, state_id, rng);
+    let req = erc20_api::init_state::post::Request::new(&keypair, total_supply, state_id, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/init_state", &anonify_url))
         .json(&req)
@@ -76,7 +76,7 @@ pub(crate) fn transfer<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::transfer::post::Request::new(&keypair, amount, state_id, target, rng);
+    let req = erc20_api::transfer::post::Request::new(&keypair, amount, state_id, target, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/transfer", &anonify_url))
         .json(&req)
@@ -100,7 +100,7 @@ pub(crate) fn approve<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::approve::post::Request::new(&keypair, amount, state_id, target, rng);
+    let req = erc20_api::approve::post::Request::new(&keypair, amount, state_id, target, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/approve", &anonify_url))
         .json(&req)
@@ -125,7 +125,7 @@ pub(crate) fn transfer_from<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::transfer_from::post::Request::new(&keypair, amount, state_id, owner, target, rng);
+    let req = erc20_api::transfer_from::post::Request::new(&keypair, amount, state_id, owner, target, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/transfer_from", &anonify_url))
         .json(&req)
@@ -149,7 +149,7 @@ pub(crate) fn mint<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::mint::post::Request::new(&keypair, amount, state_id, target, rng);
+    let req = erc20_api::mint::post::Request::new(&keypair, amount, state_id, target, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/mint", &anonify_url))
         .json(&req)
@@ -172,7 +172,7 @@ pub(crate) fn burn<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::burn::post::Request::new(&keypair, amount, state_id, rng);
+    let req = erc20_api::burn::post::Request::new(&keypair, amount, state_id, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/burn", &anonify_url))
         .json(&req)
@@ -207,7 +207,7 @@ pub(crate) fn allowance<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::allowance::get::Request::new(&keypair, spender, rng);
+    let req = erc20_api::allowance::get::Request::new(&keypair, spender, rng);
     let res = Client::new()
         .get(&format!("{}/api/v1/allowance", &anonify_url))
         .json(&req)
@@ -228,7 +228,7 @@ pub(crate) fn balance_of<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
 
-    let req = api::state::get::Request::new(&keypair, rng);
+    let req = erc20_api::state::get::Request::new(&keypair, rng);
     let res = Client::new()
         .get(&format!("{}/api/v1/balance_of", &anonify_url))
         .json(&req)
@@ -254,7 +254,7 @@ pub(crate) fn set_contract_addr(
     anonify_url: String,
     contract_addr: String,
 ) -> Result<()> {
-    let req = api::contract_addr::post::Request::new(contract_addr);
+    let req = erc20_api::contract_addr::post::Request::new(contract_addr);
     Client::new()
         .get(&format!("{}/api/v1/set_contract_addr", &anonify_url))
         .json(&req)

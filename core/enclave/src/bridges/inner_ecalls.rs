@@ -2,12 +2,12 @@ use std::slice;
 use sgx_types::*;
 use anonify_types::*;
 use anonify_common::{UserAddress, AccessRight, Ciphertext};
-use anonify_runtime::{StateGetter, MemId, StateType};
+use anonify_runtime::{traits::*, MemId};
 use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
 use codec::Decode;
 use log::debug;
-use anonify_enclave::{
+use crate::{
     transaction::{JoinGroupTx, EnclaveTx, HandshakeTx, InstructionTx},
     config::{IAS_URL, TEST_SUB_KEY},
     instructions::Instructions,
@@ -15,29 +15,30 @@ use anonify_enclave::{
     bridges::ocalls::save_to_host_memory,
     context::EnclaveContext,
 };
-use erc20_state_transition::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
-use crate::ENCLAVE_CONTEXT;
 
-type Context = EnclaveContext<StateType>;
-
-/// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
-#[no_mangle]
-pub unsafe extern "C" fn ecall_insert_ciphertext(
+pub fn inner_ecall_insert_ciphertext<R, G, S>(
     ciphertext: *mut u8,
     ciphertext_len: usize,
     raw_updated_state: &mut RawUpdatedState,
-) -> EnclaveStatus {
+    ciphertext_size: usize,
+    enclave_context: EnclaveContext<S>,
+) -> EnclaveStatus
+where
+    R: RuntimeExecutor<G, S>,
+    G: StateGetter<S>,
+    S: State,
+{
     let buf = slice::from_raw_parts_mut(ciphertext, ciphertext_len);
-    let ciphertext = Ciphertext::from_bytes(buf, CIPHERTEXT_SIZE);
-    let group_key = &mut *match ENCLAVE_CONTEXT.group_key.write() {
+    let ciphertext = Ciphertext::from_bytes(buf, ciphertext_size);
+    let group_key = &mut *match enclave_context.group_key.write() {
         Ok(group_key) => group_key,
         Err(_) => return EnclaveStatus::error(),
     };
 
-    match Instructions::<Runtime<Context>, Context>::state_transition(ENCLAVE_CONTEXT.clone(), &ciphertext, group_key) {
+    match Instructions::<R, G, S>::state_transition(enclave_context.clone(), &ciphertext, group_key) {
         Ok(iter_op) => {
             if let Some(updated_state_iter) = iter_op {
-                if let Some(updated_state) = ENCLAVE_CONTEXT.update_state(updated_state_iter) {
+                if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
                     match updated_state_into_raw(updated_state) {
                         Ok(new) => *raw_updated_state = new,
                         Err(_) => {
@@ -63,18 +64,17 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
     EnclaveStatus::success()
 }
 
-/// Insert handshake received from blockchain nodes into enclave.
-#[no_mangle]
-pub unsafe extern "C" fn ecall_insert_handshake(
+pub fn inner_ecall_insert_handshake<S: State>(
     handshake: *mut u8,
     handshake_len: usize,
+    enclave_context: EnclaveContext<S>,
 ) -> EnclaveStatus {
     let handshake_bytes = slice::from_raw_parts_mut(handshake, handshake_len);
     let handshake = match HandshakeParams::decode(&mut &handshake_bytes[..]) {
         Ok(handshake) => handshake,
         Err(_) => return EnclaveStatus::error(),
     };
-    let group_key = &mut *match ENCLAVE_CONTEXT.group_key.write() {
+    let group_key = &mut *match enclave_context.group_key.write() {
         Ok(group_key) => group_key,
         Err(_) => return EnclaveStatus::error(),
     };
@@ -86,14 +86,13 @@ pub unsafe extern "C" fn ecall_insert_handshake(
     EnclaveStatus::success()
 }
 
-/// Get current state of the user represented the given public key from enclave memory database.
-#[no_mangle]
-pub unsafe extern "C" fn ecall_get_state(
+pub fn inner_ecall_get_state<S: State>(
     sig: &RawSig,
     pubkey: &RawPubkey,
     challenge: &RawChallenge, // 32 bytes randomness for avoiding replay attacks.
     mem_id: u32,
     state: &mut EnclaveState,
+    enclave_context: EnclaveContext<S>,
 ) -> EnclaveStatus {
     let sig = match Signature::from_bytes(&sig[..]) {
         Ok(sig) => sig,
@@ -117,8 +116,8 @@ pub unsafe extern "C" fn ecall_get_state(
         }
     };
 
-    let user_state = &ENCLAVE_CONTEXT.get_type(key, MemId::from_raw(mem_id));
-    state.0 = match save_to_host_memory(user_state.as_bytes()) {
+    let user_state = &enclave_context.get_type(key, MemId::from_raw(mem_id));
+    state.0 = match save_to_host_memory(&user_state.as_bytes()) {
         Ok(ptr) => ptr as *const u8,
         Err(_) => return EnclaveStatus::error(),
     };
@@ -126,14 +125,16 @@ pub unsafe extern "C" fn ecall_get_state(
     EnclaveStatus::success()
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn ecall_join_group(
+pub fn inner_ecall_join_group<S: State>(
     raw_join_group_tx: &mut RawJoinGroupTx,
+    enclave_context: EnclaveContext<S>,
+    ias_url: &str,
+    test_sub_key: &str,
 ) -> EnclaveStatus {
     let join_group_tx = match JoinGroupTx::construct(
-        IAS_URL,
-        TEST_SUB_KEY,
-        &*ENCLAVE_CONTEXT,
+        ias_url,
+        test_sub_key,
+        &enclave_context,
     ) {
         Ok(join_group_tx) => join_group_tx,
         Err(_) => {
@@ -153,8 +154,7 @@ pub unsafe extern "C" fn ecall_join_group(
     EnclaveStatus::success()
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn ecall_instruction(
+pub fn inner_ecall_instruction<R, G, S>(
     raw_sig: &RawSig,
     raw_pubkey: &RawPubkey,
     raw_challenge: &RawChallenge,
@@ -163,7 +163,14 @@ pub unsafe extern "C" fn ecall_instruction(
     state_id: u64,
     call_id: u32,
     raw_instruction_tx: &mut RawInstructionTx,
-) -> EnclaveStatus {
+    enclave_context: EnclaveContext<S>,
+    max_mem_size: usize,
+) -> EnclaveStatus
+where
+    R: RuntimeExecutor<G, S>,
+    G: StateGetter<S>,
+    S: State,
+{
     let params = slice::from_raw_parts_mut(state, state_len);
     let ar = match AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge) {
         Ok(access_right) => access_right,
@@ -173,13 +180,13 @@ pub unsafe extern "C" fn ecall_instruction(
         }
     };
 
-    let instruction_tx = match InstructionTx::construct::<Runtime<Context>, Context>(
+    let instruction_tx = match InstructionTx::construct::<R, G, S>(
         call_id,
         params,
         state_id,
         &ar,
-        &*ENCLAVE_CONTEXT,
-        MAX_MEM_SIZE,
+        &enclave_context,
+        max_mem_size,
     ) {
         Ok(instruction_tx) => instruction_tx,
         Err(_) => {
@@ -188,7 +195,7 @@ pub unsafe extern "C" fn ecall_instruction(
         }
     };
 
-    ENCLAVE_CONTEXT.set_notification(ar.user_address());
+    enclave_context.set_notification(ar.user_address());
     *raw_instruction_tx = match instruction_tx.into_raw() {
         Ok(raw) => raw,
         Err(_) => {
@@ -200,11 +207,11 @@ pub unsafe extern "C" fn ecall_instruction(
     EnclaveStatus::success()
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn ecall_handshake(
+pub fn inner_ecall_handshake<S: State>(
     raw_handshake_tx: &mut RawHandshakeTx,
+    enclave_context: EnclaveContext<S>,
 ) -> EnclaveStatus {
-    let handshake_tx = match HandshakeTx::construct(&*ENCLAVE_CONTEXT) {
+    let handshake_tx = match HandshakeTx::construct(&enclave_context) {
         Ok(handshake_tx) => handshake_tx,
         Err(_) => {
             debug!("Failed to construct handshake transaction.");
@@ -223,11 +230,11 @@ pub unsafe extern "C" fn ecall_handshake(
     EnclaveStatus::success()
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn ecall_register_notification(
+pub fn inner_ecall_register_notification<S: State>(
     sig: &RawSig,
     pubkey: &RawPubkey,
     challenge: &RawChallenge,
+    enclave_context: EnclaveContext<S>,
 ) -> EnclaveStatus {
     let sig = match Signature::from_bytes(&sig[..]) {
         Ok(sig) => sig,
@@ -251,7 +258,7 @@ pub unsafe extern "C" fn ecall_register_notification(
         }
     };
 
-    ENCLAVE_CONTEXT.set_notification(user_address);
+    enclave_context.set_notification(user_address);
 
     EnclaveStatus::success()
 }

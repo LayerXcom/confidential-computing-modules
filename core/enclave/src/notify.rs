@@ -3,7 +3,7 @@ use std::{
     sync::{SgxRwLock, Arc},
 };
 use anonify_common::UserAddress;
-use anonify_runtime::{UpdatedState, StateType};
+use anonify_runtime::{UpdatedState, traits::State};
 use anonify_types::RawUpdatedState;
 use crate::{
     error::Result,
@@ -33,8 +33,8 @@ impl Notifier {
     }
 }
 
-pub fn updated_state_into_raw(updated_state: UpdatedState<StateType>) -> Result<RawUpdatedState> {
-    let state = save_to_host_memory(updated_state.state.as_bytes())? as *const u8;
+pub fn updated_state_into_raw<S: State>(updated_state: UpdatedState<S>) -> Result<RawUpdatedState> {
+    let state = save_to_host_memory(&updated_state.state.as_bytes())? as *const u8;
 
     Ok(RawUpdatedState {
         address: updated_state.address.into_array(),

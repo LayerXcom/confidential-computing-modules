@@ -3,7 +3,7 @@ use std::{
     marker::PhantomData,
 };
 use anonify_common::{UserAddress, AccessRight, Ciphertext};
-use anonify_runtime::{UpdatedState, StateType, traits::*};
+use anonify_runtime::{traits::*, UpdatedState};
 use codec::{Encode, Decode};
 use crate::{
     error::Result,
@@ -12,13 +12,13 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Encode, Decode)]
-pub struct Instructions<R: RuntimeExecutor<G>, G: StateGetter> {
+pub struct Instructions<R: RuntimeExecutor<G, S>, G: StateGetter<S>, S: State> {
     my_addr: UserAddress,
     call_kind: R::C,
     phantom: PhantomData<G>,
 }
 
-impl<R: RuntimeExecutor<G>, G: StateGetter> Instructions<R, G> {
+impl<R: RuntimeExecutor<G, S>, G: StateGetter<S>, S: State> Instructions<R, G, S> {
     pub fn new(call_id: u32, params: &mut [u8], access_right: &AccessRight) -> Result<Self> {
         let my_addr = UserAddress::from_access_right(&access_right)?;
         let call_kind = R::C::new(call_id, params)?;
@@ -51,8 +51,8 @@ impl<R: RuntimeExecutor<G>, G: StateGetter> Instructions<R, G> {
         ctx: G,
         ciphertext: &Ciphertext,
         group_key: &mut GroupKey
-    ) -> Result<Option<impl Iterator<Item=UpdatedState<StateType>> + Clone>> {
-        if let Some(instructions) = Instructions::<R, G>::decrypt(ciphertext, group_key)? {
+    ) -> Result<Option<impl Iterator<Item=UpdatedState<S>> + Clone>> {
+        if let Some(instructions) = Instructions::<R, G, S>::decrypt(ciphertext, group_key)? {
             let state_iter = instructions
                 .stf_call(ctx)?
                 .into_iter();
@@ -74,7 +74,7 @@ impl<R: RuntimeExecutor<G>, G: StateGetter> Instructions<R, G> {
         }
     }
 
-    fn stf_call(self, ctx: G) -> Result<Vec<UpdatedState<StateType>>>
+    fn stf_call(self, ctx: G) -> Result<Vec<UpdatedState<S>>>
     {
         let res = R::new(ctx).execute(
             self.call_kind,

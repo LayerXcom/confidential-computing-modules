@@ -1,16 +1,16 @@
 [package]
-name = "anonify-server"
+name = "erc20-server"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-api = { path = "../api" }
+erc20-api = { path = "../api" }
+erc20-state-transition = { path = "../state-transition", default-features = false, features = ["std"] }
 anonify-common = { path = "../../../core/common" }
 anonify-runtime = { path = "../../../core/runtime" }
 anonify-host = { path = "../../../core/host" }
 anonify-bc-connector = { path = "../../../core/bc-connector" }
-erc20-state-transition = { path = "../state-transition", default-features = false, features = ["std"] }
 sgx_types = "1.1.1"
 actix-web = "1.0"
 failure = "0.1"

@@ -1,5 +1,5 @@
 [package]
-name = "dx-api"
+name = "invoice-api"
 version = "0.1.0"
 authors = ["cipepser <respepic@gmail.com>"]
 edition = "2018"

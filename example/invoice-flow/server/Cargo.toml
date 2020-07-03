@@ -1,16 +1,15 @@
 [package]
-name = "dx-server"
+name = "invoice-server"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-dx-api = { path = "../api" }
-dx-app = { path = "../app" }
+invoice-api = { path = "../api" }
 anonify-common = { path = "../../../core/common" }
 anonify-runtime = { path = "../../../core/runtime" }
-anonify-host = { path = "../../../core/host", default-features = false, features = ["dx"] }
-anonify-bc-connector = { path = "../../../core/bc-connector", default-features = false, features = ["dx"] }
+anonify-host = { path = "../../../core/host" }
+anonify-bc-connector = { path = "../../../core/bc-connector" }
 anonify-wallet = { path = "../../../wallet" }
 sgx_types = "1.1.1"
 actix-web = "1.0"
