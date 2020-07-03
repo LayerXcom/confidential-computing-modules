@@ -117,7 +117,7 @@ pub fn inner_ecall_get_state<S: State>(
         }
     };
 
-    let user_state = &enclave_context.get_type(key, MemId::from_raw(mem_id));
+    let user_state = &enclave_context.get_state(key, MemId::from_raw(mem_id));
     state.0 = match save_to_host_memory(&user_state.as_bytes()) {
         Ok(ptr) => ptr as *const u8,
         Err(_) => return EnclaveStatus::error(),

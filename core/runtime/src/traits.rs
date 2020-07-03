@@ -31,28 +31,27 @@ pub trait CallKindExecutor<G: ContextOps<S>, S: State>: Sized + Encode + Decode 
     fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<S>>>;
 }
 
-pub trait ContextOps<S: State>: StateGetter<S> + InnerContextOps<S> {}
+pub trait ContextOps<S: State>: StateOps<S> + GroupKeyGetter {}
 
 /// A getter of state stored in enclave memory.
-pub trait StateGetter<S: State> {
+pub trait StateOps<S: State> {
     /// Get state using memory id.
     /// Assumed this is called in user-defined state transition functions.
-    fn get_trait<U>(&self, key: U, mem_id: MemId) -> S
+    fn get_state<U>(&self, key: U, mem_id: MemId) -> S
     where
         U: Into<UserAddress>;
 
-    fn get_type(&self, key: UserAddress, mem_id: MemId) -> S;
-}
-
-pub trait InnerContextOps<S: State> {
-    type GK: GroupKeyOps;
-
-    fn get_group_key(&self) -> &Self::GK;
-
+    /// Returns a updated state of registerd address in notification.
     fn update_state(
         &self,
         state_iter: impl Iterator<Item=UpdatedState<S>> + Clone
     ) -> Option<UpdatedState<S>>;
+}
+
+pub trait GroupKeyGetter {
+    type GK: GroupKeyOps;
+
+    fn get_group_key(&self) -> &Self::GK;
 }
 
 pub trait GroupKeyOps: Sized {

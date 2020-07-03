@@ -27,8 +27,8 @@ use crate::{
     group_key::GroupKey,
 };
 
-impl<S: State> StateGetter<S> for EnclaveContext<S> {
-    fn get_trait<U>(&self, key: U, mem_id: MemId) -> S
+impl<S: State> StateOps<S> for EnclaveContext<S> {
+    fn get_state<U>(&self, key: U, mem_id: MemId) -> S
     where
         U: Into<UserAddress>,
     {
@@ -41,18 +41,6 @@ impl<S: State> StateGetter<S> for EnclaveContext<S> {
         res
     }
 
-    fn get_type(&self, key: UserAddress, mem_id: MemId) -> S {
-        self.db.get(key, mem_id)
-    }
-}
-
-impl<S: State> InnerContextOps<S> for EnclaveContext<S> {
-    type GK = GroupKey;
-
-    fn get_group_key(&self) -> &Self::GK {
-        &*self.group_key.write().unwrap()
-    }
-
     /// Returns a updated state of registerd address in notification.
     // TODO: Enables to return multiple updated states.
     fn update_state(
@@ -61,6 +49,14 @@ impl<S: State> InnerContextOps<S> for EnclaveContext<S> {
     ) -> Option<UpdatedState<S>> {
         state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
         state_iter.find(|s| self.is_notified(&s.address))
+    }
+}
+
+impl<S: State> GroupKeyGetter for EnclaveContext<S> {
+    type GK = GroupKey;
+
+    fn get_group_key(&self) -> &Self::GK {
+        &*self.group_key.write().unwrap()
     }
 }
 
