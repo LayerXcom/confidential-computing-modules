@@ -5,18 +5,7 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anonify-runtime = { path = "../../../core/runtime", optional = true }
-anonify-common = { path = "../../../core/common", default-features = false }
-sgx_tstd = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
+anonify-runtime = { path = "../../../core/runtime" }
+anonify-common = { path = "../../../core/common", default-features = false, features = ["sgx"] }
+sgx_tstd = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
-
-[features]
-default = ["std"]
-std = [
-    "anonify-common/std",
-]
-sgx = [
-    "sgx_tstd",
-    "anonify-runtime",
-    "anonify-common/sgx",
-]

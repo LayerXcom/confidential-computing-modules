@@ -97,8 +97,8 @@ macro_rules! __impl_inner_runtime {
             )*
         }
 
-        impl<G: StateGetter> CallKindExecutor<G> for CallKind {
-            type R = Runtime<G>;
+        impl<G: ContextOps<S>, S: State> CallKindExecutor<G, S> for CallKind {
+            type R = Runtime<G, S>;
 
             fn new(id: u32, state: &mut [u8]) -> Result<Self> {
                 match id {
@@ -107,7 +107,7 @@ macro_rules! __impl_inner_runtime {
                 }
             }
 
-            fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
+            fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<S>>> {
                 match self {
                     $( CallKind::$fn_name($fn_name) => {
                         runtime.$fn_name(
@@ -120,37 +120,39 @@ macro_rules! __impl_inner_runtime {
             }
         }
 
-        pub struct Runtime<G: StateGetter> {
+        pub struct Runtime<G: ContextOps<S>, S: State> {
             db: G,
+            phamtom: PhantomData<S>,
         }
 
-        impl<G: StateGetter> RuntimeExecutor<G> for Runtime<G> {
+        impl<G: ContextOps<S>, S: State> RuntimeExecutor<G, S> for Runtime<G, S> {
             type C = CallKind;
 
             fn new(db: G) -> Self {
                 Runtime {
                     db,
+                    phantom: PhantomData,
                 }
             }
 
-            fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>> {
+            fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<S>>> {
                 kind.execute(self, my_addr)
             }
         }
 
-        impl<G: StateGetter> Runtime<G> {
-            pub fn get_map<S: State>(
+        impl<G: ContextOps<S>, S: State> Runtime<G, S> {
+            pub fn get_map<SN: S>(
                 &self,
                 key: UserAddress,
                 name: &str
-            ) -> Result<S> {
+            ) -> SN {
                 let mem_id = MemName::as_id(name);
-                self.db.get_trait(key, mem_id)
+                self.db.get_state(key, mem_id)
             }
 
-            pub fn get<S: State>(&self, name: &str) -> Result<S> {
+            pub fn get(&self, name: &str) -> S {
                 let mem_id = MemName::as_id(name);
-                self.db.get_trait(name, mem_id)
+                self.db.get_state(name, mem_id)
             }
 
             $(
@@ -158,7 +160,7 @@ macro_rules! __impl_inner_runtime {
                     $runtime,
                     $sender: $address
                     $(, $param_name : $param )*
-                ) -> Result<Vec<UpdatedState<StateType>>> {
+                ) -> Result<Vec<UpdatedState<S>>> {
                     $( $impl )*
                 }
             )*

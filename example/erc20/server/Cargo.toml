@@ -6,7 +6,6 @@ edition = "2018"
 
 [dependencies]
 erc20-api = { path = "../api" }
-erc20-state-transition = { path = "../state-transition", default-features = false, features = ["std"] }
 anonify-common = { path = "../../../core/common" }
 anonify-host = { path = "../../../core/host" }
 anonify-bc-connector = { path = "../../../core/bc-connector" }

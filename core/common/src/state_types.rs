@@ -273,12 +273,12 @@ impl<S: State> UpdatedState<S> {
     pub fn new(
         address: impl Into<UserAddress>,
         mem_id: MemId,
-        state: impl Into<S>,
+        state: S,
     ) -> Self {
         UpdatedState {
             address: address.into(),
             mem_id,
-            state: state.into(),
+            state: state,
         }
     }
 }

@@ -1,19 +1,8 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
-
-#[cfg(feature = "sgx")]
 #[macro_use]
-extern crate sgx_tstd as localstd;
-#[cfg(feature = "std")]
-use std as localstd;
+extern crate sgx_tstd as std;
 
-use anonify_runtime::{
-    prelude::*,
-    state_type::*,
-    traits::*,
-};
-use crate::localstd::vec::Vec;
-use anonify_common::{UserAddress, OWNER_ADDRESS};
-use codec::{Encode, Decode};
+use anonify_runtime::prelude::*;
 
 pub const MAX_MEM_SIZE: usize = 100;
 pub const CIPHERTEXT_SIZE: usize = MAX_MEM_SIZE + 30;
@@ -46,8 +35,8 @@ impl_runtime! {
         recipient: UserAddress,
         amount: U64
     ) {
-        let sender_balance = self.get_map::<U64>(sender, "Balance")?;
-        let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
+        let sender_balance = self.get_map::<U64>(sender, "Balance");
+        let recipient_balance = self.get_map::<U64>(recipient, "Balance");
 
         ensure!(sender_balance > amount, "transfer amount exceeds balance.");
 
@@ -64,8 +53,8 @@ impl_runtime! {
         spender: UserAddress,
         amount: U64
     ) {
-        let owner_balance = self.get_map::<U64>(owner, "Balance")?;
-        let mut owner_approved = self.get_map::<Approved>(owner, "Approved")?;
+        let owner_balance = self.get_map::<U64>(owner, "Balance");
+        let mut owner_approved = self.get_map::<Approved>(owner, "Approved");
 
         ensure!(
             owner_approved.total() + amount <= owner_balance,
@@ -85,13 +74,13 @@ impl_runtime! {
         recipient: UserAddress,
         amount: U64
     ) {
-        let owner_balance = self.get_map::<U64>(owner, "Balance")?;
+        let owner_balance = self.get_map::<U64>(owner, "Balance");
         ensure!(
             amount <= owner_balance,
             "transferring amount exceeds owner's balance."
         );
 
-        let mut owner_approved = self.get_map::<Approved>(owner, "Approved")?;
+        let mut owner_approved = self.get_map::<Approved>(owner, "Approved");
         let approved_amount = owner_approved.allowance(&sender)
             .ok_or(anyhow!("not enough amount approved."))?;
         ensure!(
@@ -102,7 +91,7 @@ impl_runtime! {
         owner_approved.consume(sender, amount)?;
         let owner_approved_update = update!(owner, "Approved", owner_approved);
 
-        let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
+        let recipient_balance = self.get_map::<U64>(recipient, "Balance");
 
         let owner_balance_update = update!(owner, "Balance", owner_balance - amount);
         let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount);
@@ -117,13 +106,13 @@ impl_runtime! {
         recipient: UserAddress,
         amount: U64
     ) {
-        let owner_address = self.get_map::<UserAddress>(*OWNER_ADDRESS, "Owner")?;
+        let owner_address = self.get_map::<UserAddress>(*OWNER_ADDRESS, "Owner");
         ensure!(executer == owner_address, "only owner can mint");
 
-        let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
+        let recipient_balance = self.get_map::<U64>(recipient, "Balance");
         let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount);
 
-        let total_supply = self.get_map::<U64>(*OWNER_ADDRESS, "TotalSupply")?;
+        let total_supply = self.get_map::<U64>(*OWNER_ADDRESS, "TotalSupply");
         let total_supply_update = update!(*OWNER_ADDRESS, "TotalSupply", total_supply + amount);
 
         insert![recipient_balance_update, total_supply_update]
@@ -135,11 +124,11 @@ impl_runtime! {
         sender: UserAddress,
         amount: U64
     ) {
-        let balance = self.get_map::<U64>(sender, "Balance")?;
+        let balance = self.get_map::<U64>(sender, "Balance");
         ensure!(balance >= amount, "not enough balance to burn");
         let balance_update = update!(sender, "Balance", balance - amount);
 
-        let total_supply = self.get_map::<U64>(*OWNER_ADDRESS, "TotalSupply")?;
+        let total_supply = self.get_map::<U64>(*OWNER_ADDRESS, "TotalSupply");
         let total_supply_update = update!(*OWNER_ADDRESS, "TotalSupply", total_supply - amount);
 
         insert![balance_update, total_supply_update]

@@ -2,8 +2,8 @@ use anyhow::Result;
 use std::{
     fmt::Debug,
     vec::Vec,
-    mem::size_of,
     sync::SgxRwLockWriteGuard,
+    boxed::Box,
 };
 use anonify_common::{
     crypto::{UserAddress, Ciphertext},

@@ -1,20 +1,12 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
-
-#[cfg(feature = "sgx")]
 #[macro_use]
-extern crate sgx_tstd as localstd;
-
-#[cfg(feature = "std")]
-use std as localstd;
-
-#[cfg(all(not(feature = "std"), not(feature = "sgx")))]
-extern crate core as localstd;
+extern crate sgx_tstd as std;
 
 use anonify_runtime::{
     prelude::*,
     state_type::*,
 };
-use crate::localstd::prelude::v1::*;
+use std::prelude::v1::*;
 use anonify_common::UserAddress;
 use codec::{Encode, Decode};
 
