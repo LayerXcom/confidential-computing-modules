@@ -1,12 +1,11 @@
 use std::{
-    sync::{SgxRwLock, Arc},
+    sync::{SgxRwLock, SgxRwLockWriteGuard, Arc},
     env,
 };
 use sgx_types::*;
 use std::prelude::v1::*;
 use anonify_common::{
-    kvs::{MemoryDB, DBValue},
-    crypto::{UserAddress, Ciphertext},
+    crypto::UserAddress,
     traits::*,
     state_types::{MemId, UpdatedState},
 };
@@ -15,15 +14,13 @@ use anonify_treekem::{
     handshake::{PathSecretRequest, PathSecretKVS},
     init_path_secret_kvs,
 };
-use codec::Encode;
 use crate::{
     notify::Notifier,
     crypto::EnclaveIdentityKey,
-    config::{TEST_SPID, MY_ROSTER_IDX, MAX_ROSTER_IDX, UNTIL_ROSTER_IDX, UNTIL_EPOCH},
+    config::{UNTIL_ROSTER_IDX, UNTIL_EPOCH},
     bridges::ocalls::{sgx_init_quote, get_quote},
     error::Result,
-    kvs::{EnclaveDB, EnclaveDBTx},
-    instructions::Instructions,
+    kvs::EnclaveDB,
     group_key::GroupKey,
 };
 
@@ -55,8 +52,8 @@ impl<S: State> StateOps<S> for EnclaveContext<S> {
 impl<S: State> GroupKeyGetter for EnclaveContext<S> {
     type GK = GroupKey;
 
-    fn get_group_key(&self) -> &Self::GK {
-        &*self.group_key.write().unwrap()
+    fn get_group_key(&self) -> SgxRwLockWriteGuard<Self::GK> {
+        self.group_key.write().unwrap()
     }
 }
 

@@ -1,9 +1,7 @@
-use std::vec::Vec;
 use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, traits::RawEnclaveTx};
 use anonify_common::{
-    crypto::{UserAddress, Sha256, AccessRight, Ciphertext},
+    crypto::{Sha256, AccessRight, Ciphertext},
     traits::*,
-    state_types::MemId,
 };
 use anonify_treekem::handshake::HandshakeParams;
 use anonify_runtime::traits::*;

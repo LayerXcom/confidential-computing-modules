@@ -13,7 +13,6 @@ use codec::Decode;
 use log::debug;
 use crate::{
     transaction::{JoinGroupTx, EnclaveTx, HandshakeTx, InstructionTx},
-    config::{IAS_URL, TEST_SUB_KEY},
     instructions::Instructions,
     notify::updated_state_into_raw,
     bridges::ocalls::save_to_host_memory,

@@ -5,7 +5,6 @@ use anonify_treekem::{
 };
 use anonify_common::{
     crypto::Ciphertext,
-    traits::*,
 };
 use anonify_runtime::traits::*;
 use anyhow::Result;

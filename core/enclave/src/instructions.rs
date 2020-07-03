@@ -9,10 +9,7 @@ use anonify_common::{
 };
 use anonify_runtime::traits::*;
 use codec::{Encode, Decode};
-use crate::{
-    error::Result,
-    context::EnclaveContext,
-};
+use crate::error::Result;
 
 #[derive(Debug, Clone, Encode, Decode)]
 pub struct Instructions<R: RuntimeExecutor<CTX, S>, CTX: ContextOps<S>, S: State> {

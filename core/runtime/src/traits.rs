@@ -1,17 +1,17 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use std::{
     fmt::Debug,
     vec::Vec,
     mem::size_of,
+    sync::SgxRwLockWriteGuard,
 };
 use anonify_common::{
     crypto::{UserAddress, Ciphertext},
     traits::*,
-    state_types::{StateType, UpdatedState, MemId},
+    state_types::{UpdatedState, MemId},
 };
 use codec::{Encode, Decode};
 use anonify_treekem::{
-    GroupState, AppKeyChain, Handshake,
     handshake::{PathSecretRequest, HandshakeParams},
 };
 
@@ -51,7 +51,7 @@ pub trait StateOps<S: State> {
 pub trait GroupKeyGetter {
     type GK: GroupKeyOps;
 
-    fn get_group_key(&self) -> &Self::GK;
+    fn get_group_key(&self) -> SgxRwLockWriteGuard<Self::GK>;
 }
 
 pub trait GroupKeyOps: Sized {

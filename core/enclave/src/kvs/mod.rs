@@ -10,7 +10,6 @@ use anonify_common::{
     state_types::{MemId, UpdatedState},
     traits::*,
 };
-use codec::Encode;
 use crate::error::Result;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
