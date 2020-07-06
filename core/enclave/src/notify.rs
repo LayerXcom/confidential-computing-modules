@@ -37,7 +37,7 @@ impl Notifier {
 }
 
 pub fn updated_state_into_raw<S: State>(updated_state: UpdatedState<S>) -> Result<RawUpdatedState> {
-    let state = save_to_host_memory(&updated_state.state.as_bytes())? as *const u8;
+    let state = save_to_host_memory(&updated_state.state.encode_s())? as *const u8;
 
     Ok(RawUpdatedState {
         address: updated_state.address.into_array(),

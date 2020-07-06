@@ -5,20 +5,20 @@ use std::{
 use anonify_common::{
     crypto::{UserAddress, AccessRight, Ciphertext},
     traits::*,
-    state_types::UpdatedState,
+    state_types::{UpdatedState, StateType},
 };
 use anonify_runtime::traits::*;
 use codec::{Encode, Decode};
 use crate::error::Result;
 
 #[derive(Debug, Clone, Encode, Decode)]
-pub struct Instructions<R: RuntimeExecutor<CTX, S>, CTX: ContextOps<S>, S: State> {
+pub struct Instructions<R: RuntimeExecutor<CTX>, CTX: ContextOps> {
     my_addr: UserAddress,
     call_kind: R::C,
     phantom: PhantomData<CTX>,
 }
 
-impl<R: RuntimeExecutor<CTX, S>, CTX: ContextOps<S>, S: State> Instructions<R, CTX, S> {
+impl<R: RuntimeExecutor<CTX, S=StateType>, CTX: ContextOps> Instructions<R, CTX> {
     pub fn new(call_id: u32, params: &mut [u8], access_right: &AccessRight) -> Result<Self> {
         let my_addr = UserAddress::from_access_right(&access_right)?;
         let call_kind = R::C::new(call_id, params)?;
@@ -51,8 +51,8 @@ impl<R: RuntimeExecutor<CTX, S>, CTX: ContextOps<S>, S: State> Instructions<R, C
         ctx: CTX,
         ciphertext: &Ciphertext,
         group_key: &mut GK,
-    ) -> Result<Option<impl Iterator<Item=UpdatedState<S>> + Clone>> {
-        if let Some(instructions) = Instructions::<R, CTX, S>::decrypt(ciphertext, group_key)? {
+    ) -> Result<Option<impl Iterator<Item=UpdatedState<StateType>> + Clone>> {
+        if let Some(instructions) = Instructions::<R, CTX>::decrypt(ciphertext, group_key)? {
             let state_iter = instructions
                 .stf_call(ctx)?
                 .into_iter();
@@ -74,7 +74,7 @@ impl<R: RuntimeExecutor<CTX, S>, CTX: ContextOps<S>, S: State> Instructions<R, C
         }
     }
 
-    fn stf_call(self, ctx: CTX) -> Result<Vec<UpdatedState<S>>> {
+    fn stf_call(self, ctx: CTX) -> Result<Vec<UpdatedState<StateType>>> {
         let res = R::new(ctx).execute(
             self.call_kind,
             self.my_addr,

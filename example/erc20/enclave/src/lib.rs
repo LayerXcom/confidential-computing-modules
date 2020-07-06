@@ -10,7 +10,7 @@ mod ecalls;
 
 use anonify_enclave::context::EnclaveContext;
 use anonify_enclave::config::TEST_SPID;
-use anonify_runtime::StateType;
+use anonify_common::state_types::StateType;
 
 lazy_static! {
     pub static ref ENCLAVE_CONTEXT: EnclaveContext<StateType>

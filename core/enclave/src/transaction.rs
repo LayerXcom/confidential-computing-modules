@@ -2,6 +2,7 @@ use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, traits::Ra
 use anonify_common::{
     crypto::{Sha256, AccessRight, Ciphertext},
     traits::*,
+    state_types::StateType,
 };
 use anonify_treekem::handshake::HandshakeParams;
 use anonify_runtime::traits::*;
@@ -100,21 +101,20 @@ impl EnclaveTx for InstructionTx {
 }
 
 impl InstructionTx {
-    pub fn construct<R, C, S>(
+    pub fn construct<R, C>(
         call_id: u32,
         params: &mut [u8],
         state_id: u64, // TODO: future works for separating smart contracts
         access_right: &AccessRight,
-        enclave_ctx: &EnclaveContext<S>,
+        enclave_ctx: &EnclaveContext<StateType>,
         max_mem_size: usize,
     ) -> Result<Self>
     where
-        R: RuntimeExecutor<C, S>,
-        C: ContextOps<S>,
-        S: State,
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps,
     {
         let group_key = &*enclave_ctx.group_key.read().unwrap();
-        let ciphertext = Instructions::<R, C, S>::new(call_id, params, &access_right)?
+        let ciphertext = Instructions::<R, C>::new(call_id, params, &access_right)?
             .encrypt(group_key, max_mem_size)?;
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;

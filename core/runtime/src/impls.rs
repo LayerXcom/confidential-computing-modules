@@ -97,17 +97,18 @@ macro_rules! __impl_inner_runtime {
             )*
         }
 
-        impl<G: ContextOps<S>, S: State> CallKindExecutor<G, S> for CallKind {
-            type R = Runtime<G, S>;
+        impl<G: ContextOps<S=StateType>> CallKindExecutor<G> for CallKind {
+            type R = Runtime<G>;
+            type S = StateType;
 
             fn new(id: u32, state: &mut [u8]) -> Result<Self> {
                 match id {
-                    $( $fn_id => Ok(CallKind::$fn_name($fn_name::from_bytes(state)?)), )*
+                    $( $fn_id => Ok(CallKind::$fn_name($fn_name::decode_s(state)?)), )*
                     _ => return Err(anyhow!("Invalid Call ID")),
                 }
             }
 
-            fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<S>>> {
+            fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<Self::S>>> {
                 match self {
                     $( CallKind::$fn_name($fn_name) => {
                         runtime.$fn_name(
@@ -120,38 +121,37 @@ macro_rules! __impl_inner_runtime {
             }
         }
 
-        pub struct Runtime<G: ContextOps<S>, S: State> {
+        pub struct Runtime<G: ContextOps<S=StateType>> {
             db: G,
-            phamtom: PhantomData<S>,
         }
 
-        impl<G: ContextOps<S>, S: State> RuntimeExecutor<G, S> for Runtime<G, S> {
+        impl<G: ContextOps<S=StateType>> RuntimeExecutor<G> for Runtime<G> {
             type C = CallKind;
+            type S = StateType;
 
             fn new(db: G) -> Self {
                 Runtime {
                     db,
-                    phamtom: PhantomData,
                 }
             }
 
-            fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<S>>> {
+            fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<Self::S>>> {
                 kind.execute(self, my_addr)
             }
         }
 
-        impl<G: ContextOps<S>, S: State> Runtime<G, S> {
-            pub fn get_map<SN: State>(
+        impl<G: ContextOps<S=StateType>> Runtime<G> {
+            pub fn get_map<S: State>(
                 &self,
                 key: UserAddress,
                 name: &str
-            ) -> Result<SN> {
+            ) -> Result<S> {
                 let mem_id = MemName::as_id(name);
                 let mut tmp = self.db.get_state(key, mem_id).as_bytes();
-                SN::from_bytes(&mut tmp)
+                S::decode_s(&mut tmp)
             }
 
-            pub fn get(&self, name: &str) -> S {
+            pub fn get(&self, name: &str) -> StateType {
                 let mem_id = MemName::as_id(name);
                 self.db.get_state(name, mem_id)
             }
@@ -161,7 +161,7 @@ macro_rules! __impl_inner_runtime {
                     $runtime,
                     $sender: $address
                     $(, $param_name : $param )*
-                ) -> Result<Vec<UpdatedState<S>>> {
+                ) -> Result<Vec<UpdatedState<StateType>>> {
                     $( $impl )*
                 }
             )*

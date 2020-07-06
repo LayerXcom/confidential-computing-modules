@@ -1,8 +1,11 @@
 use std::slice;
 use sgx_types::*;
 use anonify_types::*;
-use anonify_common::{UserAddress, AccessRight, Ciphertext};
-use anonify_runtime::{StateGetter, MemId, StateType};
+use anonify_common::{
+    crypto::{UserAddress, AccessRight, Ciphertext},
+    state_types::{MemId, StateType},
+};
+use anonify_runtime::traits::*;
 use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
 use codec::Decode;
@@ -17,6 +20,7 @@ use anonify_enclave::{
 };
 use erc20_state_transition::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
 use crate::ENCLAVE_CONTEXT;
+use anonify_enclave::bridges::inner_ecalls::*;
 
 type Context = EnclaveContext<StateType>;
 
@@ -27,40 +31,48 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
     ciphertext_len: usize,
     raw_updated_state: &mut RawUpdatedState,
 ) -> EnclaveStatus {
-    let buf = slice::from_raw_parts_mut(ciphertext, ciphertext_len);
-    let ciphertext = Ciphertext::from_bytes(buf, CIPHERTEXT_SIZE);
-    let group_key = &mut *match ENCLAVE_CONTEXT.group_key.write() {
-        Ok(group_key) => group_key,
-        Err(_) => return EnclaveStatus::error(),
-    };
+    inner_ecall_insert_ciphertext::<_,EnclaveContext::<StateType>>(
+        ciphertext,
+        ciphertext_len,
+        raw_updated_state,
+        CIPHERTEXT_SIZE,
+        *ENCLAVE_CONTEXT
+    )
+    // let buf = slice::from_raw_parts_mut(ciphertext, ciphertext_len);
+    // let ciphertext = Ciphertext::from_bytes(buf, CIPHERTEXT_SIZE);
+    // let group_key = &mut *match ENCLAVE_CONTEXT.group_key.write() {
+    //     Ok(group_key) => group_key,
+    //     Err(_) => return EnclaveStatus::error(),
+    // };
 
-    match Instructions::<Runtime<Context>, Context>::state_transition(ENCLAVE_CONTEXT.clone(), &ciphertext, group_key) {
-        Ok(iter_op) => {
-            if let Some(updated_state_iter) = iter_op {
-                if let Some(updated_state) = ENCLAVE_CONTEXT.update_state(updated_state_iter) {
-                    match updated_state_into_raw(updated_state) {
-                        Ok(new) => *raw_updated_state = new,
-                        Err(_) => {
-                            debug!("Failed updated_state_into_raw(updated_state)");
-                            return EnclaveStatus::error();
-                        }
-                    }
-                }
-            }
-        },
-        Err(_) => {
-            debug!("Failed Instructions::state_transition");
-            return EnclaveStatus::error();
-        },
-    }
+    // // match Instructions::<Runtime<Context, StateType>, Context, StateType>::state_transition(ENCLAVE_CONTEXT.clone(), &ciphertext, group_key) {
+    // match Instructions::<_,_,StateType>::state_transition(ENCLAVE_CONTEXT.clone(), &ciphertext, group_key) {
+    //     Ok(iter_op) => {
+    //         if let Some(updated_state_iter) = iter_op {
+    //             if let Some(updated_state) = ENCLAVE_CONTEXT.update_state(updated_state_iter) {
+    //                 match updated_state_into_raw(updated_state) {
+    //                     Ok(new) => *raw_updated_state = new,
+    //                     Err(_) => {
+    //                         debug!("Failed updated_state_into_raw(updated_state)");
+    //                         return EnclaveStatus::error();
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     },
+    //     Err(_) => {
+    //         debug!("Failed Instructions::state_transition");
+    //         return EnclaveStatus::error();
+    //     },
+    // }
 
-    let roster_idx = ciphertext.roster_idx() as usize;
-    // ratchet app keychain per a log.
-    if group_key.ratchet(roster_idx).is_err() {
-        return EnclaveStatus::error();
-    }
+    // let roster_idx = ciphertext.roster_idx() as usize;
+    // // ratchet app keychain per a log.
+    // if group_key.ratchet(roster_idx).is_err() {
+    //     return EnclaveStatus::error();
+    // }
 
-    EnclaveStatus::success()
+    // EnclaveStatus::success()
 }
 
 /// Insert handshake received from blockchain nodes into enclave.
@@ -117,7 +129,7 @@ pub unsafe extern "C" fn ecall_get_state(
         }
     };
 
-    let user_state = &ENCLAVE_CONTEXT.get_type(key, MemId::from_raw(mem_id));
+    let user_state = &*ENCLAVE_CONTEXT.get_type(key, MemId::from_raw(mem_id));
     state.0 = match save_to_host_memory(user_state.as_bytes()) {
         Ok(ptr) => ptr as *const u8,
         Err(_) => return EnclaveStatus::error(),

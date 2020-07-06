@@ -4,7 +4,7 @@ use anonify_types::*;
 use anonify_common::{
     crypto::{UserAddress, AccessRight, Ciphertext},
     traits::*,
-    state_types::MemId,
+    state_types::{MemId, StateType},
 };
 use anonify_runtime::traits::*;
 use anonify_treekem::handshake::HandshakeParams;
@@ -19,7 +19,7 @@ use crate::{
     context::EnclaveContext,
 };
 
-pub fn inner_ecall_insert_ciphertext<R, C, S>(
+pub fn inner_ecall_insert_ciphertext<R, C>(
     ciphertext: *mut u8,
     ciphertext_len: usize,
     raw_updated_state: &mut RawUpdatedState,
@@ -27,15 +27,14 @@ pub fn inner_ecall_insert_ciphertext<R, C, S>(
     enclave_context: C,
 ) -> EnclaveStatus
 where
-    R: RuntimeExecutor<C, S>,
-    C: ContextOps<S> + Clone,
-    S: State,
+    R: RuntimeExecutor<C, S=StateType>,
+    C: ContextOps<S=StateType> + Clone,
 {
     let buf = unsafe{ slice::from_raw_parts_mut(ciphertext, ciphertext_len) };
     let ciphertext = Ciphertext::from_bytes(buf, ciphertext_size);
     let group_key = &mut *enclave_context.get_group_key();
 
-    match Instructions::<R, C, S>::state_transition(enclave_context.clone(), &ciphertext, group_key) {
+    match Instructions::<R, C>::state_transition(enclave_context.clone(), &ciphertext, group_key) {
         Ok(iter_op) => {
             if let Some(updated_state_iter) = iter_op {
                 if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
@@ -86,13 +85,13 @@ pub fn inner_ecall_insert_handshake<S: State>(
     EnclaveStatus::success()
 }
 
-pub fn inner_ecall_get_state<S: State>(
+pub fn inner_ecall_get_state(
     sig: &RawSig,
     pubkey: &RawPubkey,
     challenge: &RawChallenge, // 32 bytes randomness for avoiding replay attacks.
     mem_id: u32,
     state: &mut EnclaveState,
-    enclave_context: EnclaveContext<S>,
+    enclave_context: EnclaveContext<StateType>,
 ) -> EnclaveStatus {
     let sig = match Signature::from_bytes(&sig[..]) {
         Ok(sig) => sig,
@@ -154,7 +153,7 @@ pub fn inner_ecall_join_group<S: State>(
     EnclaveStatus::success()
 }
 
-pub fn inner_ecall_instruction<R, C, S>(
+pub fn inner_ecall_instruction<R, C>(
     raw_sig: &RawSig,
     raw_pubkey: &RawPubkey,
     raw_challenge: &RawChallenge,
@@ -163,13 +162,12 @@ pub fn inner_ecall_instruction<R, C, S>(
     state_id: u64,
     call_id: u32,
     raw_instruction_tx: &mut RawInstructionTx,
-    enclave_context: EnclaveContext<S>,
+    enclave_context: EnclaveContext<StateType>,
     max_mem_size: usize,
 ) -> EnclaveStatus
 where
-    R: RuntimeExecutor<C, S>,
-    C: ContextOps<S>,
-    S: State,
+    R: RuntimeExecutor<C, S=StateType>,
+    C: ContextOps,
 {
     let params = unsafe{ slice::from_raw_parts_mut(state, state_len) };
     let ar = match AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge) {
@@ -180,7 +178,7 @@ where
         }
     };
 
-    let instruction_tx = match InstructionTx::construct::<R, C, S>(
+    let instruction_tx = match InstructionTx::construct::<R, C>(
         call_id,
         params,
         state_id,

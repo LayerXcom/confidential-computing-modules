@@ -7,7 +7,7 @@ use std::prelude::v1::*;
 use anonify_common::{
     crypto::UserAddress,
     traits::*,
-    state_types::{MemId, UpdatedState},
+    state_types::{MemId, UpdatedState, StateType},
 };
 use anonify_runtime::traits::*;
 use anonify_treekem::{
@@ -24,15 +24,17 @@ use crate::{
     group_key::GroupKey,
 };
 
-impl<S: State> StateOps<S> for EnclaveContext<S> {
-    fn get_state<U>(&self, key: U, mem_id: MemId) -> S
+impl StateOps for EnclaveContext<StateType> {
+    type S = StateType;
+
+    fn get_state<U>(&self, key: U, mem_id: MemId) -> Self::S
     where
         U: Into<UserAddress>,
     {
         let res = self.db
             .get(key.into(), mem_id);
         if res.size() == 0 {
-            return S::default();
+            return Self::S::default();
         }
 
         res
@@ -42,14 +44,14 @@ impl<S: State> StateOps<S> for EnclaveContext<S> {
     // TODO: Enables to return multiple updated states.
     fn update_state(
         &self,
-        mut state_iter: impl Iterator<Item=UpdatedState<S>> + Clone
-    ) -> Option<UpdatedState<S>> {
+        mut state_iter: impl Iterator<Item=UpdatedState<Self::S>> + Clone
+    ) -> Option<UpdatedState<Self::S>> {
         state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
         state_iter.find(|s| self.is_notified(&s.address))
     }
 }
 
-impl<S: State> GroupKeyGetter for EnclaveContext<S> {
+impl GroupKeyGetter for EnclaveContext<StateType> {
     type GK = GroupKey;
 
     fn get_group_key(&self) -> SgxRwLockWriteGuard<Self::GK> {

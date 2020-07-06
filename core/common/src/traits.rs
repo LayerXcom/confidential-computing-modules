@@ -11,18 +11,18 @@ use tiny_keccak::Keccak;
 
 /// Trait of each user's state.
 pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
-    fn as_bytes(&self) -> Vec<u8> {
+    fn encode_s(&self) -> Vec<u8> {
         self.encode()
     }
 
-    fn from_bytes(bytes: &mut [u8]) -> Result<Self> {
+    fn decode_s(bytes: &mut [u8]) -> Result<Self> {
         Self::decode(&mut &bytes[..])
             .map_err(|e| anyhow!("{:?}", e))
     }
 
     fn from_state(state: &impl State) -> Result<Self> {
-        let mut state = state.as_bytes();
-        Self::from_bytes(&mut state)
+        let mut state = state.encode();
+        Self::decode_s(&mut state)
     }
 
     fn size(&self) -> usize {

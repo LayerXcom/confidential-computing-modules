@@ -25,7 +25,7 @@ macro_rules! impl_uint {
                     return Ok(Default::default());
                 }
                 let mut buf = s;
-                $name::from_bytes(&mut buf)
+                $name::decode_s(&mut buf)
             }
         }
 
@@ -36,13 +36,13 @@ macro_rules! impl_uint {
                 if s.len() == 0 {
                     return Ok(Default::default());
                 }
-                $name::from_bytes(s)
+                $name::decode_s(s)
             }
         }
 
         impl From<$name> for StateType {
             fn from(u: $name) -> Self {
-                StateType(u.as_bytes())
+                StateType(u.encode_s())
             }
         }
 
@@ -54,7 +54,7 @@ macro_rules! impl_uint {
                     return Ok(Default::default());
                 }
                 let mut buf = s.0;
-                $name::from_bytes(&mut buf)
+                $name::decode_s(&mut buf)
             }
         }
 
@@ -139,13 +139,12 @@ impl Bytes {
 
 impl From<Bytes> for StateType {
     fn from(bs: Bytes) -> Self {
-        StateType(bs.0.as_bytes())
+        StateType(bs.0.encode_s())
     }
 }
 
 pub trait RawState: Encode + Decode + Clone + Default {}
 
-/// Do not use `as_bytes()` to get raw bytes from `StateType`, just use `StateType.0`.
 #[derive(Clone, Debug, Default, Decode, Encode)]
 pub struct StateType(Vec<u8>);
 
@@ -165,7 +164,7 @@ impl StateType {
 
 impl From<UserAddress> for StateType {
     fn from(address: UserAddress) -> Self {
-        Self(address.as_bytes().into())
+        Self(address.encode_s().into())
     }
 }
 
@@ -174,9 +173,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_from_as_bytes() {
-        let mut v = U64(10).as_bytes();
-        assert_eq!(U64(10), U64::from_bytes(&mut v).unwrap());
+    fn test_from_encode() {
+        let mut v = U64(10).encode_s();
+        assert_eq!(U64(10), U64::decode_s(&mut v).unwrap());
     }
 
     #[test]
@@ -245,7 +244,7 @@ impl Approved {
 
 impl From<Approved> for StateType {
     fn from(a: Approved) -> Self {
-        StateType(a.0.as_bytes())
+        StateType(a.0.encode_s())
     }
 }
 
@@ -257,7 +256,7 @@ impl TryFrom<Vec<u8>> for Approved {
             return Ok(Default::default());
         }
         let mut buf = s;
-        Approved::from_bytes(&mut buf)
+        Approved::decode_s(&mut buf)
     }
 }
 
@@ -289,7 +288,7 @@ impl<S: State> From<RawUpdatedState> for UpdatedState<S> {
     fn from(raw: RawUpdatedState) -> Self {
         let box_state = raw.state as *mut Box<[u8]>;
         let mut state = unsafe { Box::from_raw(box_state) };
-        let state = S::from_bytes(&mut state)
+        let state = S::decode_s(&mut state)
             .expect("Failed to read raw pointer of state in RawUpdatedState");
 
         UpdatedState {
