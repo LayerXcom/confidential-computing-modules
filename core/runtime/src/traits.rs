@@ -33,6 +33,8 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<Self::S>>>;
 }
 
+impl<T: StateOps + GroupKeyGetter> ContextOps for T {}
+
 pub trait ContextOps: StateOps + GroupKeyGetter {}
 
 /// A getter of state stored in enclave memory.

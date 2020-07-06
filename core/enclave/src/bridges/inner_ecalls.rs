@@ -24,7 +24,7 @@ pub fn inner_ecall_insert_ciphertext<R, C>(
     ciphertext_len: usize,
     raw_updated_state: &mut RawUpdatedState,
     ciphertext_size: usize,
-    enclave_context: C,
+    enclave_context: &C,
 ) -> EnclaveStatus
 where
     R: RuntimeExecutor<C, S=StateType>,
@@ -66,7 +66,7 @@ where
 pub fn inner_ecall_insert_handshake<S: State>(
     handshake: *mut u8,
     handshake_len: usize,
-    enclave_context: EnclaveContext<S>,
+    enclave_context: &EnclaveContext<S>,
 ) -> EnclaveStatus {
     let handshake_bytes = unsafe{ slice::from_raw_parts_mut(handshake, handshake_len) };
     let handshake = match HandshakeParams::decode(&mut &handshake_bytes[..]) {
@@ -91,7 +91,7 @@ pub fn inner_ecall_get_state(
     challenge: &RawChallenge, // 32 bytes randomness for avoiding replay attacks.
     mem_id: u32,
     state: &mut EnclaveState,
-    enclave_context: EnclaveContext<StateType>,
+    enclave_context: &EnclaveContext<StateType>,
 ) -> EnclaveStatus {
     let sig = match Signature::from_bytes(&sig[..]) {
         Ok(sig) => sig,
@@ -126,7 +126,7 @@ pub fn inner_ecall_get_state(
 
 pub fn inner_ecall_join_group<S: State>(
     raw_join_group_tx: &mut RawJoinGroupTx,
-    enclave_context: EnclaveContext<S>,
+    enclave_context: &EnclaveContext<S>,
     ias_url: &str,
     test_sub_key: &str,
 ) -> EnclaveStatus {
@@ -162,7 +162,7 @@ pub fn inner_ecall_instruction<R, C>(
     state_id: u64,
     call_id: u32,
     raw_instruction_tx: &mut RawInstructionTx,
-    enclave_context: EnclaveContext<StateType>,
+    enclave_context: &EnclaveContext<StateType>,
     max_mem_size: usize,
 ) -> EnclaveStatus
 where
@@ -207,7 +207,7 @@ where
 
 pub fn inner_ecall_handshake<S: State>(
     raw_handshake_tx: &mut RawHandshakeTx,
-    enclave_context: EnclaveContext<S>,
+    enclave_context: &EnclaveContext<S>,
 ) -> EnclaveStatus {
     let handshake_tx = match HandshakeTx::construct(&enclave_context) {
         Ok(handshake_tx) => handshake_tx,
@@ -232,7 +232,7 @@ pub fn inner_ecall_register_notification<S: State>(
     sig: &RawSig,
     pubkey: &RawPubkey,
     challenge: &RawChallenge,
-    enclave_context: EnclaveContext<S>,
+    enclave_context: &EnclaveContext<S>,
 ) -> EnclaveStatus {
     let sig = match Signature::from_bytes(&sig[..]) {
         Ok(sig) => sig,

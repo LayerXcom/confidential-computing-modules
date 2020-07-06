@@ -147,7 +147,7 @@ macro_rules! __impl_inner_runtime {
                 name: &str
             ) -> Result<S> {
                 let mem_id = MemName::as_id(name);
-                let mut tmp = self.db.get_state(key, mem_id).as_bytes();
+                let mut tmp = self.db.get_state(key, mem_id).encode_s();
                 S::decode_s(&mut tmp)
             }
 
