@@ -131,7 +131,7 @@ macro_rules! __impl_inner_runtime {
             fn new(db: G) -> Self {
                 Runtime {
                     db,
-                    phantom: PhantomData,
+                    phamtom: PhantomData,
                 }
             }
 
@@ -141,13 +141,14 @@ macro_rules! __impl_inner_runtime {
         }
 
         impl<G: ContextOps<S>, S: State> Runtime<G, S> {
-            pub fn get_map<SN: S>(
+            pub fn get_map<SN: State>(
                 &self,
                 key: UserAddress,
                 name: &str
-            ) -> SN {
+            ) -> Result<SN> {
                 let mem_id = MemName::as_id(name);
-                self.db.get_state(key, mem_id)
+                let mut tmp = self.db.get_state(key, mem_id).as_bytes();
+                SN::from_bytes(&mut tmp)
             }
 
             pub fn get(&self, name: &str) -> S {
@@ -171,11 +172,11 @@ macro_rules! __impl_inner_runtime {
 #[macro_export]
 macro_rules! update {
     ($addr:expr, $mem_name:expr, $value:expr) => {
-        UpdatedState::new($addr, MemName::as_id($mem_name), $value)
+        UpdatedState::new($addr, MemName::as_id($mem_name), $value)?
     };
 
     ($mem_name:expr, $value:expr) => {
-        UpdatedState::new($mem_name, MemName::as_id($mem_name), $value)
+        UpdatedState::new($mem_name, MemName::as_id($mem_name), $value)?
     };
 }
 

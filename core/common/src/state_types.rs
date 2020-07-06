@@ -273,13 +273,15 @@ impl<S: State> UpdatedState<S> {
     pub fn new(
         address: impl Into<UserAddress>,
         mem_id: MemId,
-        state: S,
-    ) -> Self {
-        UpdatedState {
+        state: impl State,
+    ) -> Result<Self> {
+        let state = S::from_state(&state)?;
+
+        Ok(UpdatedState {
             address: address.into(),
             mem_id,
-            state: state,
-        }
+            state,
+        })
     }
 }
 
@@ -296,15 +298,6 @@ impl<S: State> From<RawUpdatedState> for UpdatedState<S> {
             state,
         }
     }
-}
-
-pub fn into_trait<S: State>(s: UpdatedState<impl State>) -> Result<UpdatedState<S>> {
-    let state = S::from_state(&s.state)?;
-    Ok(UpdatedState {
-        address: s.address,
-        mem_id: s.mem_id,
-        state,
-    })
 }
 
 /// State identifier stored in memory.

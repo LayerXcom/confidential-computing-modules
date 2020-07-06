@@ -5,7 +5,7 @@ use crate::localstd::{
 };
 use crate::state_types::MemId;
 use crate::local_anyhow::{Result, anyhow};
-use codec::{Input, Output, Encode, Decode};
+use codec::{Encode, Decode};
 use ed25519_dalek::PublicKey;
 use tiny_keccak::Keccak;
 
@@ -20,21 +20,14 @@ pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
             .map_err(|e| anyhow!("{:?}", e))
     }
 
-    fn write_le<O: Output>(&self, writer: &mut O) {
-        self.encode_to(writer)
-    }
-
-    fn read_le<I: Input>(reader: &mut I) -> Result<Self> {
-        Self::decode(reader)
-            .map_err(|e| anyhow!("{:?}", e))
-    }
-
     fn from_state(state: &impl State) -> Result<Self> {
         let mut state = state.as_bytes();
         Self::from_bytes(&mut state)
     }
 
-    fn size(&self) -> usize { size_of::<Self>() }
+    fn size(&self) -> usize {
+        size_of::<Self>()
+    }
 }
 
 impl<T: Sized + Default + Clone + Encode + Decode + Debug> State for T {}
