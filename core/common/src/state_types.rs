@@ -44,14 +44,12 @@ impl<S: State> UpdatedState<S> {
     pub fn new(
         address: impl Into<UserAddress>,
         mem_id: MemId,
-        state: impl State,
+        state: impl Into<S>,
     ) -> Result<Self> {
-        let state = S::from_state(&state)?;
-
         Ok(UpdatedState {
             address: address.into(),
             mem_id,
-            state,
+            state: state.into(),
         })
     }
 }
