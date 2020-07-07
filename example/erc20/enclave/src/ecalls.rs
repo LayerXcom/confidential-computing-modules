@@ -18,13 +18,18 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
     ciphertext_len: usize,
     raw_updated_state: &mut RawUpdatedState,
 ) -> EnclaveStatus {
-    inner_ecall_insert_ciphertext::<Runtime<Context>,EnclaveContext<StateType>>(
+    if let Err(e) = inner_ecall_insert_ciphertext::<Runtime<Context>,EnclaveContext<StateType>>(
         ciphertext,
         ciphertext_len,
         raw_updated_state,
         CIPHERTEXT_SIZE,
         &*ENCLAVE_CONTEXT,
-    )
+    ) {
+        println!("Error (ecall_insert_ciphertext): {}", e);
+        return EnclaveStatus::error();
+    }
+
+    EnclaveStatus::success()
 }
 
 /// Insert handshake received from blockchain nodes into enclave.
@@ -33,11 +38,16 @@ pub unsafe extern "C" fn ecall_insert_handshake(
     handshake: *mut u8,
     handshake_len: usize,
 ) -> EnclaveStatus {
-    inner_ecall_insert_handshake::<StateType>(
+    if let Err(e) = inner_ecall_insert_handshake::<StateType>(
         handshake,
         handshake_len,
         &*ENCLAVE_CONTEXT,
-    )
+    ) {
+        println!("Error (ecall_insert_handshake): {}", e);
+        return EnclaveStatus::error();
+    }
+
+    EnclaveStatus::success()
 }
 
 /// Get current state of the user represented the given public key from enclave memory database.
@@ -49,26 +59,36 @@ pub unsafe extern "C" fn ecall_get_state(
     mem_id: u32,
     state: &mut EnclaveState,
 ) -> EnclaveStatus {
-    inner_ecall_get_state(
+    if let Err(e) = inner_ecall_get_state(
         sig,
         pubkey,
         challenge,
         mem_id,
         state,
         &*ENCLAVE_CONTEXT,
-    )
+    ) {
+        println!("Error (ecall_get_state): {}", e);
+        return EnclaveStatus::error();
+    }
+
+    EnclaveStatus::success()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_join_group(
     raw_join_group_tx: &mut RawJoinGroupTx,
 ) -> EnclaveStatus {
-    inner_ecall_join_group::<StateType>(
+    if let Err(e) = inner_ecall_join_group::<StateType>(
         raw_join_group_tx,
         &*ENCLAVE_CONTEXT,
         IAS_URL,
         TEST_SUB_KEY,
-    )
+    ) {
+        println!("Error (ecall_join_group): {}", e);
+        return EnclaveStatus::error();
+    }
+
+    EnclaveStatus::success()
 }
 
 #[no_mangle]
@@ -82,7 +102,7 @@ pub unsafe extern "C" fn ecall_instruction(
     call_id: u32,
     raw_instruction_tx: &mut RawInstructionTx,
 ) -> EnclaveStatus {
-    inner_ecall_instruction::<Runtime<Context>, EnclaveContext<StateType>>(
+    if let Err(e) = inner_ecall_instruction::<Runtime<Context>, EnclaveContext<StateType>>(
         raw_sig,
         raw_pubkey,
         raw_challenge,
@@ -93,17 +113,27 @@ pub unsafe extern "C" fn ecall_instruction(
         raw_instruction_tx,
         &*ENCLAVE_CONTEXT,
         MAX_MEM_SIZE,
-    )
+    ) {
+        println!("Error (ecall_instruction): {}", e);
+        return EnclaveStatus::error();
+    }
+
+    EnclaveStatus::success()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_handshake(
     raw_handshake_tx: &mut RawHandshakeTx,
 ) -> EnclaveStatus {
-    inner_ecall_handshake::<StateType>(
+    if let Err(e) = inner_ecall_handshake::<StateType>(
         raw_handshake_tx,
         &*ENCLAVE_CONTEXT,
-    )
+    ) {
+        println!("Error (ecall_handshake): {}", e);
+        return EnclaveStatus::error();
+    }
+
+    EnclaveStatus::success()
 }
 
 #[no_mangle]
@@ -112,10 +142,15 @@ pub unsafe extern "C" fn ecall_register_notification(
     pubkey: &RawPubkey,
     challenge: &RawChallenge,
 ) -> EnclaveStatus {
-    inner_ecall_register_notification::<StateType>(
+    if let Err(e) = inner_ecall_register_notification::<StateType>(
         sig,
         pubkey,
         challenge,
         &*ENCLAVE_CONTEXT,
-    )
+    ) {
+        println!("Error (ecall_register_notification): {}", e);
+        return EnclaveStatus::error();
+    }
+
+    EnclaveStatus::success()
 }

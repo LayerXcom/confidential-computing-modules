@@ -11,6 +11,7 @@ use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
 use codec::Decode;
 use log::debug;
+use anyhow::{Result, anyhow};
 use crate::{
     transaction::{JoinGroupTx, EnclaveTx, HandshakeTx, InstructionTx},
     instructions::Instructions,
@@ -25,7 +26,7 @@ pub fn inner_ecall_insert_ciphertext<R, C>(
     raw_updated_state: &mut RawUpdatedState,
     ciphertext_size: usize,
     enclave_context: &C,
-) -> EnclaveStatus
+) -> Result<()>
 where
     R: RuntimeExecutor<C, S=StateType>,
     C: ContextOps<S=StateType> + Clone,
@@ -34,94 +35,55 @@ where
     let ciphertext = Ciphertext::from_bytes(buf, ciphertext_size);
     let group_key = &mut *enclave_context.get_group_key();
 
-    match Instructions::<R, C>::state_transition(enclave_context.clone(), &ciphertext, group_key) {
-        Ok(iter_op) => {
-            if let Some(updated_state_iter) = iter_op {
-                if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
-                    match updated_state_into_raw(updated_state) {
-                        Ok(new) => *raw_updated_state = new,
-                        Err(_) => {
-                            debug!("Failed updated_state_into_raw(updated_state)");
-                            return EnclaveStatus::error();
-                        }
-                    }
-                }
-            }
-        },
-        Err(_) => {
-            debug!("Failed Instructions::state_transition");
-            return EnclaveStatus::error();
-        },
+    let iter_op = Instructions::<R, C>::state_transition(enclave_context.clone(), &ciphertext, group_key)?;
+    if let Some(updated_state_iter) = iter_op {
+        if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
+            *raw_updated_state = updated_state_into_raw(updated_state)?;
+        }
     }
 
     let roster_idx = ciphertext.roster_idx() as usize;
     // ratchet app keychain per a log.
-    if group_key.ratchet(roster_idx).is_err() {
-        return EnclaveStatus::error();
-    }
+    group_key.ratchet(roster_idx)?;
 
-    EnclaveStatus::success()
+    Ok(())
 }
 
 pub fn inner_ecall_insert_handshake<S: State>(
     handshake: *mut u8,
     handshake_len: usize,
     enclave_context: &EnclaveContext<S>,
-) -> EnclaveStatus {
-    let handshake_bytes = unsafe{ slice::from_raw_parts_mut(handshake, handshake_len) };
-    let handshake = match HandshakeParams::decode(&mut &handshake_bytes[..]) {
-        Ok(handshake) => handshake,
-        Err(_) => return EnclaveStatus::error(),
-    };
-    let group_key = &mut *match enclave_context.group_key.write() {
-        Ok(group_key) => group_key,
-        Err(_) => return EnclaveStatus::error(),
-    };
+) -> Result<()> {
+    let handshake_bytes = unsafe { slice::from_raw_parts_mut(handshake, handshake_len) };
+    let handshake = HandshakeParams::decode(&mut &handshake_bytes[..])
+        .map_err(|_| anyhow!("HandshakeParams::decode Error"))?;
+    let group_key = &mut *enclave_context.group_key.write()
+        .map_err(|e| anyhow!("{}", e))?;
 
-    if group_key.process_handshake(&handshake).is_err() {
-        return EnclaveStatus::error();
-    }
+    group_key.process_handshake(&handshake)?;
 
-    EnclaveStatus::success()
+    Ok(())
 }
 
 pub fn inner_ecall_get_state(
     sig: &RawSig,
     pubkey: &RawPubkey,
-    challenge: &RawChallenge, // 32 bytes randomness for avoiding replay attacks.
+    challenge: &RawChallenge,
     mem_id: u32,
     state: &mut EnclaveState,
     enclave_context: &EnclaveContext<StateType>,
-) -> EnclaveStatus {
-    let sig = match Signature::from_bytes(&sig[..]) {
-        Ok(sig) => sig,
-        Err(_) => {
-            debug!("Failed to read signatures.");
-            return EnclaveStatus::error();
-        }
-    };
-    let pubkey = match PublicKey::from_bytes(&pubkey[..]) {
-        Ok(pubkey) => pubkey,
-        Err(_) => {
-            debug!("Failed to read public key.");
-            return EnclaveStatus::error();
-        }
-    };
-    let key = match UserAddress::from_sig(&challenge[..], &sig, &pubkey) {
-        Ok(user_address) => user_address,
-        Err(_) => {
-            debug!("Failed to generate user address.");
-            return EnclaveStatus::error();
-        }
-    };
+) -> Result<()> {
+    let sig = Signature::from_bytes(&sig[..])
+        .map_err(|e| anyhow!("{}", e))?;
+    let pubkey = PublicKey::from_bytes(&pubkey[..])
+        .map_err(|e| anyhow!("{}", e))?;
+    let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey)
+        .map_err(|e| anyhow!("{}", e))?;
 
     let user_state = &enclave_context.get_state(key, MemId::from_raw(mem_id));
-    state.0 = match save_to_host_memory(&user_state.as_bytes()) {
-        Ok(ptr) => ptr as *const u8,
-        Err(_) => return EnclaveStatus::error(),
-    };
+    state.0 = save_to_host_memory(&user_state.as_bytes())? as *const u8;
 
-    EnclaveStatus::success()
+    Ok(())
 }
 
 pub fn inner_ecall_join_group<S: State>(
@@ -129,28 +91,15 @@ pub fn inner_ecall_join_group<S: State>(
     enclave_context: &EnclaveContext<S>,
     ias_url: &str,
     test_sub_key: &str,
-) -> EnclaveStatus {
-    let join_group_tx = match JoinGroupTx::construct(
+) -> Result<()> {
+    let join_group_tx = JoinGroupTx::construct(
         ias_url,
         test_sub_key,
         &enclave_context,
-    ) {
-        Ok(join_group_tx) => join_group_tx,
-        Err(_) => {
-            debug!("Failed to construct JoinGroup transaction.");
-            return EnclaveStatus::error();
-        }
-    };
+    )?;
+    *raw_join_group_tx = join_group_tx.into_raw()?;
 
-    *raw_join_group_tx = match join_group_tx.into_raw() {
-        Ok(raw) => raw,
-        Err(_) => {
-            debug!("Failed to convert into raw JoinGroup transaction.");
-            return EnclaveStatus::error();
-        }
-    };
-
-    EnclaveStatus::success()
+    Ok(())
 }
 
 pub fn inner_ecall_instruction<R, C>(
@@ -164,68 +113,37 @@ pub fn inner_ecall_instruction<R, C>(
     raw_instruction_tx: &mut RawInstructionTx,
     enclave_context: &EnclaveContext<StateType>,
     max_mem_size: usize,
-) -> EnclaveStatus
+) -> Result<()>
 where
     R: RuntimeExecutor<C, S=StateType>,
     C: ContextOps,
 {
     let params = unsafe{ slice::from_raw_parts_mut(state, state_len) };
-    let ar = match AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge) {
-        Ok(access_right) => access_right,
-        Err(_) => {
-            debug!("Failed to generate access right.");
-            return EnclaveStatus::error();
-        }
-    };
-
-    let instruction_tx = match InstructionTx::construct::<R, C>(
+    let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge)
+        .map_err(|e| anyhow!("{}", e))?;
+    let instruction_tx = InstructionTx::construct::<R, C>(
         call_id,
         params,
         state_id,
         &ar,
         &enclave_context,
         max_mem_size,
-    ) {
-        Ok(instruction_tx) => instruction_tx,
-        Err(_) => {
-            debug!("Failed to construct state tx.");
-            return EnclaveStatus::error();
-        }
-    };
+    )?;
 
     enclave_context.set_notification(ar.user_address());
-    *raw_instruction_tx = match instruction_tx.into_raw() {
-        Ok(raw) => raw,
-        Err(_) => {
-            debug!("Failed to convert into raw state transaction.");
-            return EnclaveStatus::error();
-        }
-    };
+    *raw_instruction_tx = instruction_tx.into_raw()?;
 
-    EnclaveStatus::success()
+    Ok(())
 }
 
 pub fn inner_ecall_handshake<S: State>(
     raw_handshake_tx: &mut RawHandshakeTx,
     enclave_context: &EnclaveContext<S>,
-) -> EnclaveStatus {
-    let handshake_tx = match HandshakeTx::construct(&enclave_context) {
-        Ok(handshake_tx) => handshake_tx,
-        Err(_) => {
-            debug!("Failed to construct handshake transaction.");
-            return EnclaveStatus::error();
-        }
-    };
+) -> Result<()> {
+    let handshake_tx = HandshakeTx::construct(&enclave_context)?;
+    *raw_handshake_tx = handshake_tx.into_raw()?;
 
-    *raw_handshake_tx = match handshake_tx.into_raw() {
-        Ok(raw) => raw,
-        Err(_) => {
-            debug!("Failed to convert into raw handshake transaction.");
-            return EnclaveStatus::error();
-        }
-    };
-
-    EnclaveStatus::success()
+    Ok(())
 }
 
 pub fn inner_ecall_register_notification<S: State>(
@@ -233,30 +151,15 @@ pub fn inner_ecall_register_notification<S: State>(
     pubkey: &RawPubkey,
     challenge: &RawChallenge,
     enclave_context: &EnclaveContext<S>,
-) -> EnclaveStatus {
-    let sig = match Signature::from_bytes(&sig[..]) {
-        Ok(sig) => sig,
-        Err(_) => {
-            debug!("Failed to read signatures.");
-            return EnclaveStatus::error();
-        }
-    };
-    let pubkey = match PublicKey::from_bytes(&pubkey[..]) {
-        Ok(pubkey) => pubkey,
-        Err(_) => {
-            debug!("Failed to read public key.");
-            return EnclaveStatus::error();
-        }
-    };
-    let user_address = match UserAddress::from_sig(&challenge[..], &sig, &pubkey) {
-        Ok(user_address) => user_address,
-        Err(_) => {
-            debug!("Failed to generate user address.");
-            return EnclaveStatus::error();
-        }
-    };
+) -> Result<()> {
+    let sig = Signature::from_bytes(&sig[..])
+        .map_err(|e| anyhow!("{}", e))?;
+    let pubkey = PublicKey::from_bytes(&pubkey[..])
+        .map_err(|e| anyhow!("{}", e))?;
+    let user_address = UserAddress::from_sig(&challenge[..], &sig, &pubkey)
+        .map_err(|e| anyhow!("{}", e))?;
 
     enclave_context.set_notification(user_address);
 
-    EnclaveStatus::success()
+    Ok(())
 }
