@@ -89,6 +89,7 @@ macro_rules! __impl_inner_runtime {
             }
         }
 
+        #[cfg(feature = "sgx")]
         #[derive(Debug, Clone, Encode, Decode)]
         pub enum CallKind {
             $(
@@ -97,6 +98,7 @@ macro_rules! __impl_inner_runtime {
             )*
         }
 
+        #[cfg(feature = "sgx")]
         impl<G: ContextOps<S=StateType>> CallKindExecutor<G> for CallKind {
             type R = Runtime<G>;
             type S = StateType;
@@ -121,10 +123,12 @@ macro_rules! __impl_inner_runtime {
             }
         }
 
+        #[cfg(feature = "sgx")]
         pub struct Runtime<G: ContextOps<S=StateType>> {
             db: G,
         }
 
+        #[cfg(feature = "sgx")]
         impl<G: ContextOps<S=StateType>> RuntimeExecutor<G> for Runtime<G> {
             type C = CallKind;
             type S = StateType;
@@ -140,6 +144,7 @@ macro_rules! __impl_inner_runtime {
             }
         }
 
+        #[cfg(feature = "sgx")]
         impl<G: ContextOps<S=StateType>> Runtime<G> {
             pub fn get_map<S: State>(
                 &self,

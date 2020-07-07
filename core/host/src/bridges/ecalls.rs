@@ -166,7 +166,7 @@ where
 {
     let mut rt = EnclaveStatus::default();
     let mut raw_instruction_tx = RawInstructionTx::default();
-    let state = state_info.state_as_bytes();
+    let state = state_info.state_encode();
     let call_id = state_info.call_name_to_id();
 
     let status = unsafe {

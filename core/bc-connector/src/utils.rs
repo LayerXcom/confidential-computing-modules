@@ -67,8 +67,8 @@ impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
         C::as_id(self.call_name)
     }
 
-    pub fn state_as_bytes(&self) -> Vec<u8> {
-        self.state.as_bytes()
+    pub fn state_encode(&self) -> Vec<u8> {
+        self.state.encode_s()
     }
 
     pub fn state_id(&self) -> u64 {

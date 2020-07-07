@@ -1,5 +1,5 @@
-use anyhow::Result;
-use std::{
+use crate::local_anyhow::Result;
+use crate::localstd::{
     fmt::Debug,
     vec::Vec,
     sync::SgxRwLockWriteGuard,
@@ -11,9 +11,8 @@ use anonify_common::{
     state_types::{UpdatedState, MemId},
 };
 use codec::{Encode, Decode};
-use anonify_treekem::{
-    handshake::{PathSecretRequest, HandshakeParams},
-};
+#[cfg(feature = "sgx")]
+use anonify_treekem::handshake::{PathSecretRequest, HandshakeParams};
 
 /// Execute state transiton functions from runtime
 pub trait RuntimeExecutor<G: ContextOps>: Sized {
