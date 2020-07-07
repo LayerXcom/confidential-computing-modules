@@ -6,9 +6,9 @@ use std::{
 use sgx_types::*;
 use anonify_common::{
     crypto::{AccessRight, UserAddress, COMMON_ACCESS_RIGHT},
-    state_types::{U64, Approved},
     traits::State,
 };
+use anonify_runtime::primitives::{U64, Approved};
 use erc20_state_transition::{
     CIPHERTEXT_SIZE, MemName, CallName,
     transfer, construct, approve, transfer_from, mint, burn,

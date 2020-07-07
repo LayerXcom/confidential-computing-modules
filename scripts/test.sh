@@ -19,6 +19,8 @@ echo "Start building core components."
 # Generate a `enclave.signed.so` in `$HOME/.anonify`
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
+# Testings
+
 echo "Integration testing..."
 cd ../tests/integration
 RUST_BACKTRACE=1 cargo test -- --nocapture
@@ -29,8 +31,13 @@ make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave
 cd ../tests/units/host
 RUST_BACKTRACE=1 cargo test -- --nocapture
 
+cd ../../../
+cargo test -p anonify-runtime
+
+# Buildings
+
 echo "Building ERC20 and invoice flow examples..."
-cd ../../../example/erc20/server
+cd example/erc20/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo build
 
 cd ../../invoice-flow/server
