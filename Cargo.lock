@@ -1820,6 +1820,7 @@ dependencies = [
  "anonify-common 0.1.0",
  "anonify-host 0.1.0",
  "anonify-runtime 0.1.0",
+ "erc20-state-transition 0.1.0",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
