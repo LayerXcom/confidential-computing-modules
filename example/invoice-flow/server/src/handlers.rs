@@ -1,24 +1,22 @@
-use std::{sync::{Arc, mpsc}, env, thread, time, path::PathBuf,};
+use std::{sync::{Arc, mpsc}, env, thread, time};
 use failure::Error;
 use log::debug;
 use actix_web::{
     web,
     HttpResponse,
 };
-use reqwest::Client;
 use rand::rngs::OsRng;
 use rand::Rng;
 use ed25519_dalek::Keypair;
-use sgx_types::sgx_enclave_id_t;
-
+use invoice_state_transition::{CIPHERTEXT_SIZE, send_invoice, CallName};
 use anonify_bc_connector::{
     BlockNumDB,
     traits::*,
 };
-use anonify_runtime::{Bytes, UpdatedState};
-use anonify_common::{UserAddress, AccessRight};
-use anonify_host::Dispatcher;
-use dx_app::send_invoice;
+use anonify_common::{
+    crypto::{UserAddress, AccessRight},
+    state_types::Bytes,
+};
 
 use crate::moneyforward::MFClient;
 use crate::Server;
@@ -46,7 +44,7 @@ pub fn handle_deploy<D, S, W, DB>(
     debug!("Contract address: {:?}", &contract_addr);
     server.dispatcher.set_contract_addr(&contract_addr, &server.abi_path)?;
 
-    Ok(HttpResponse::Ok().json(dx_api::deploy::post::Response(contract_addr)))
+    Ok(HttpResponse::Ok().json(invoice_api::deploy::post::Response(contract_addr)))
 }
 
 pub fn handle_start_polling_moneyforward<D, S, W, DB>(
@@ -105,22 +103,20 @@ fn inner_send_invoice<D, S, W, DB>(
     let state_id: u64 = 0;
     let signer = server.dispatcher.get_account(0)?;
     let recipient: UserAddress = UserAddress::base64_decode(DEFAULT_RECIPIENT_ADDRESS);
-    let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
 
     let invoice = Bytes::new(invoice.clone().into());
     let invoice = Bytes::from(invoice);
 
     let send_invoice_state = send_invoice { recipient, invoice };
 
-    let receipt = server.dispatcher.send_instruction(
+    let receipt = server.dispatcher.send_instruction::<_, CallName>(
         access_right,
         send_invoice_state,
         state_id,
         "send_invoice",
         signer,
         DEFAULT_SEND_GAS,
-        &contract_addr,
-        &server.abi_path,
+        CIPHERTEXT_SIZE,
     )?;
 
     Ok(receipt)
@@ -128,7 +124,6 @@ fn inner_send_invoice<D, S, W, DB>(
 
 pub fn handle_start_sync_bc<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<dx_api::state::start_sync_bc::Request>,
 ) -> Result<HttpResponse, Error>
     where
         D: Deployer + Send + Sync + 'static,
@@ -144,7 +139,7 @@ pub fn handle_start_sync_bc<D, S, W, DB>(
             debug!("event fetched...");
             let shared_invoices = server
                 .dispatcher
-                .block_on_event::<_, Bytes>(&req.contract_addr, &server.abi_path).unwrap();
+                .block_on_event::<Bytes>().unwrap();
 
             if let Some(invoices) = shared_invoices {
                 for invoice in invoices {
@@ -168,7 +163,7 @@ pub fn handle_start_sync_bc<D, S, W, DB>(
 
 pub fn handle_set_notification<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<dx_api::notification::post::Request>,
+    req: web::Json<invoice_api::notification::post::Request>,
 ) -> Result<HttpResponse, Error>
     where
         D: Deployer + Send + Sync + 'static,
@@ -187,7 +182,7 @@ pub fn handle_set_notification<D, S, W, DB>(
 
 pub fn handle_set_contract_addr<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
-    req: web::Json<dx_api::contract_addr::post::Request>,
+    req: web::Json<invoice_api::contract_addr::post::Request>,
 ) -> Result<HttpResponse, Error>
     where
         D: Deployer,

@@ -1848,26 +1848,26 @@ dependencies = [
 name = "invoice-api"
 version = "0.1.0"
 dependencies = [
- "anonify-common 0.1.0",
- "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.111 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde-big-array 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "invoice-app"
-version = "0.1.0"
-dependencies = [
- "anonify-common 0.1.0",
- "anonify-runtime 0.1.0",
- "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
 ]
 
 [[package]]
 name = "invoice-enclave"
 version = "0.1.0"
+dependencies = [
+ "anonify-common 0.1.0",
+ "anonify-enclave 0.1.0",
+ "anonify-runtime 0.1.0",
+ "anonify-treekem 0.1.0",
+ "anonify-types 0.1.0",
+ "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "invoice-state-transition 0.1.0",
+ "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log 0.4.8 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.2)",
+ "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+ "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "invoice-server"
@@ -1883,12 +1883,23 @@ dependencies = [
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "invoice-api 0.1.0",
+ "invoice-state-transition 0.1.0",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.9.24 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.56 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "invoice-state-transition"
+version = "0.1.0"
+dependencies = [
+ "anonify-common 0.1.0",
+ "anonify-runtime 0.1.0",
+ "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
 ]
 
 [[package]]
