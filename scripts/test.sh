@@ -29,10 +29,12 @@ make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave
 cd ../tests/units/host
 RUST_BACKTRACE=1 cargo test -- --nocapture
 
-# cd ../../example/erc20/server
-# echo "Build server."
-# RUST_BACKTRACE=1 RUST_LOG=debug cargo build
+echo "Building ERC20 and invoice flow examples..."
+cd ../../../example/erc20/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo build
 
-# echo "Build in root dir."
-# cd ../../
-# RUST_BACKTRACE=1 RUST_LOG=debug cargo build
+cd ../../invoice-flow/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo build
+
+cd ../enclave
+RUST_BACKTRACE=1 RUST_LOG=debug cargo build

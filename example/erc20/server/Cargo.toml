@@ -6,9 +6,9 @@ edition = "2018"
 
 [dependencies]
 erc20-api = { path = "../api" }
-anonify-common = { path = "../../../core/common" }
 anonify-host = { path = "../../../core/host" }
 anonify-bc-connector = { path = "../../../core/bc-connector" }
+anonify-runtime = { path = "../../../core/runtime" }
 erc20-state-transition = { path = "../state-transition" }
 sgx_types = "1.1.1"
 actix-web = "1.0"

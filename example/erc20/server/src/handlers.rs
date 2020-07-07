@@ -6,7 +6,7 @@ use anonify_bc_connector::{
     BlockNumDB,
     traits::*,
 };
-use anonify_common::state_types::{U64, Approved};
+use anonify_runtime::primitives::{U64, Approved};
 use erc20_state_transition::{
     CIPHERTEXT_SIZE, MemName, CallName,
     approve, transfer, construct, transfer_from, mint, burn,

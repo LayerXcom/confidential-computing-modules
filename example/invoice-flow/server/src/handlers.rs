@@ -13,9 +13,9 @@ use anonify_bc_connector::{
     BlockNumDB,
     traits::*,
 };
+use anonify_runtime::primitives::Bytes;
 use anonify_common::{
     crypto::{UserAddress, AccessRight},
-    state_types::Bytes,
 };
 
 use crate::moneyforward::MFClient;

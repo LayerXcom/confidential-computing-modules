@@ -1288,8 +1288,8 @@ version = "0.1.0"
 dependencies = [
  "actix-web 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "anonify-bc-connector 0.1.0",
- "anonify-common 0.1.0",
  "anonify-host 0.1.0",
+ "anonify-runtime 0.1.0",
  "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1878,6 +1878,7 @@ dependencies = [
  "anonify-bc-connector 0.1.0",
  "anonify-common 0.1.0",
  "anonify-host 0.1.0",
+ "anonify-runtime 0.1.0",
  "anonify-wallet 0.1.0",
  "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",

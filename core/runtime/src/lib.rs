@@ -14,5 +14,6 @@ extern crate core as localstd;
 
 pub mod impls;
 pub mod prelude;
+pub mod primitives;
 #[cfg(feature = "sgx")]
 pub mod traits;
