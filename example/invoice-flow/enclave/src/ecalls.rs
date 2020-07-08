@@ -9,8 +9,6 @@ use invoice_state_transition::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
 use crate::ENCLAVE_CONTEXT;
 use anonify_enclave::bridges::inner_ecalls::*;
 
-type Context = EnclaveContext<StateType>;
-
 /// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_insert_ciphertext(
@@ -18,7 +16,7 @@ pub unsafe extern "C" fn ecall_insert_ciphertext(
     ciphertext_len: usize,
     raw_updated_state: &mut RawUpdatedState,
 ) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_insert_ciphertext::<Runtime<Context>,EnclaveContext<StateType>>(
+    if let Err(e) = inner_ecall_insert_ciphertext::<Runtime<EnclaveContext>, EnclaveContext>(
         ciphertext,
         ciphertext_len,
         raw_updated_state,
@@ -38,7 +36,7 @@ pub unsafe extern "C" fn ecall_insert_handshake(
     handshake: *mut u8,
     handshake_len: usize,
 ) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_insert_handshake::<StateType>(
+    if let Err(e) = inner_ecall_insert_handshake(
         handshake,
         handshake_len,
         &*ENCLAVE_CONTEXT,
@@ -78,7 +76,7 @@ pub unsafe extern "C" fn ecall_get_state(
 pub unsafe extern "C" fn ecall_join_group(
     raw_join_group_tx: &mut RawJoinGroupTx,
 ) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_join_group::<StateType>(
+    if let Err(e) = inner_ecall_join_group(
         raw_join_group_tx,
         &*ENCLAVE_CONTEXT,
         IAS_URL,
@@ -102,7 +100,7 @@ pub unsafe extern "C" fn ecall_instruction(
     call_id: u32,
     raw_instruction_tx: &mut RawInstructionTx,
 ) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_instruction::<Runtime<Context>, EnclaveContext<StateType>>(
+    if let Err(e) = inner_ecall_instruction::<Runtime<EnclaveContext>, EnclaveContext>(
         raw_sig,
         raw_pubkey,
         raw_challenge,
@@ -125,7 +123,7 @@ pub unsafe extern "C" fn ecall_instruction(
 pub unsafe extern "C" fn ecall_handshake(
     raw_handshake_tx: &mut RawHandshakeTx,
 ) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_handshake::<StateType>(
+    if let Err(e) = inner_ecall_handshake(
         raw_handshake_tx,
         &*ENCLAVE_CONTEXT,
     ) {
@@ -142,7 +140,7 @@ pub unsafe extern "C" fn ecall_register_notification(
     pubkey: &RawPubkey,
     challenge: &RawChallenge,
 ) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_register_notification::<StateType>(
+    if let Err(e) = inner_ecall_register_notification(
         sig,
         pubkey,
         challenge,
