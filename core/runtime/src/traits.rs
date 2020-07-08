@@ -14,7 +14,7 @@ use codec::{Encode, Decode};
 #[cfg(feature = "sgx")]
 use anonify_treekem::handshake::{PathSecretRequest, HandshakeParams};
 
-/// Execute state transiton functions from runtime
+/// Execute state transition functions from runtime
 pub trait RuntimeExecutor<G: ContextOps>: Sized {
     type C: CallKindExecutor<G>;
     type S: State;
@@ -23,7 +23,7 @@ pub trait RuntimeExecutor<G: ContextOps>: Sized {
     fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<Self::S>>>;
 }
 
-/// Execute state traisiton functions from call kind
+/// Execute state transition functions from call kind
 pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clone {
     type R: RuntimeExecutor<G>;
     type S: State;
@@ -46,7 +46,7 @@ pub trait StateOps {
     where
         U: Into<UserAddress>;
 
-    /// Returns a updated state of registerd address in notification.
+    /// Returns a updated state of registered address in notification.
     fn update_state(
         &self,
         state_iter: impl Iterator<Item=UpdatedState<Self::S>> + Clone
