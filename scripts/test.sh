@@ -40,7 +40,10 @@ echo "Building ERC20 and invoice flow examples..."
 cd example/erc20/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo build
 
-cd ../../invoice-flow/server
+cd ../../../scripts
+make DEBUG=1 ENCLAVE_DIR=example/invoice-flow/enclave
+
+cd ../example/invoice-flow/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo build
 
 cd ../enclave
