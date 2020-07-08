@@ -3,7 +3,10 @@ use anonify_treekem::{
     GroupState, AppKeyChain, Handshake,
     handshake::{PathSecretRequest, HandshakeParams},
 };
-use anonify_common::Ciphertext;
+use anonify_common::{
+    crypto::Ciphertext,
+};
+use anonify_runtime::traits::*;
 use anyhow::Result;
 
 #[derive(Clone, Debug)]
@@ -14,8 +17,8 @@ pub struct GroupKey {
     path_secret_req: PathSecretRequest,
 }
 
-impl GroupKey {
-    pub fn new(
+impl GroupKeyOps for GroupKey {
+    fn new(
         my_roster_idx: usize,
         max_roster_idx: usize,
         path_secret_req: PathSecretRequest,
@@ -31,11 +34,11 @@ impl GroupKey {
         })
     }
 
-    pub fn create_handshake(&self) -> Result<HandshakeParams> {
+    fn create_handshake(&self) -> Result<HandshakeParams> {
         self.group_state.create_handshake(&self.path_secret_req)
     }
 
-    pub fn process_handshake(
+    fn process_handshake(
         &mut self,
         handshake: &HandshakeParams,
     ) -> Result<()> {
@@ -46,16 +49,16 @@ impl GroupKey {
         Ok(())
     }
 
-    pub fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext> {
+    fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext> {
         self.keychain.encrypt_msg(plaintext, &self.group_state)
     }
 
-    pub fn decrypt(&mut self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>> {
+    fn decrypt(&mut self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>> {
         self.keychain.decrypt_msg(&app_msg, &self.group_state)
     }
 
     /// Ratchet keychain per a transaction
-    pub fn ratchet(&mut self, roster_idx: usize) -> Result<()> {
+    fn ratchet(&mut self, roster_idx: usize) -> Result<()> {
         self.keychain.ratchet(roster_idx)
     }
 }

@@ -1,15 +1,17 @@
-use std::vec::Vec;
 use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, traits::RawEnclaveTx};
-use anonify_common::{UserAddress, Sha256, Hash256, AccessRight, IntoVec, Ciphertext};
-use anonify_runtime::{StateType, MemId, traits::*};
+use anonify_common::{
+    crypto::{Sha256, AccessRight, Ciphertext},
+    traits::*,
+    state_types::StateType,
+};
 use anonify_treekem::handshake::HandshakeParams;
+use anonify_runtime::traits::*;
 use codec::Encode;
 use remote_attestation::{RAService, AttestationReport, ReportSig};
 use crate::{
     error::Result,
     context::EnclaveContext,
     bridges::ocalls::save_to_host_memory,
-    group_key::GroupKey,
     instructions::Instructions,
 };
 
@@ -57,7 +59,7 @@ impl JoinGroupTx {
     pub fn construct(
         ias_url: &str,
         ias_api_key: &str,
-        ctx: &EnclaveContext<StateType>,
+        ctx: &EnclaveContext,
     ) -> Result<Self> {
         let quote = ctx.quote()?;
         let (report, report_sig) = RAService::remote_attestation(ias_url, ias_api_key, &quote)?;
@@ -99,21 +101,21 @@ impl EnclaveTx for InstructionTx {
 }
 
 impl InstructionTx {
-    pub fn construct<R, G>(
+    pub fn construct<R, C>(
         call_id: u32,
         params: &mut [u8],
         state_id: u64, // TODO: future works for separating smart contracts
         access_right: &AccessRight,
-        enclave_ctx: &EnclaveContext<StateType>,
+        enclave_ctx: &EnclaveContext,
         max_mem_size: usize,
     ) -> Result<Self>
     where
-        R: RuntimeExecutor<G>,
-        G: StateGetter,
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps,
     {
-        let group_key = enclave_ctx.group_key.read().unwrap();
-        let ciphertext = Instructions::<R, G>::new(call_id, params, &access_right)?
-            .encrypt(&group_key, max_mem_size)?;
+        let group_key = &*enclave_ctx.group_key.read().unwrap();
+        let ciphertext = Instructions::<R, C>::new(call_id, params, &access_right)?
+            .encrypt(group_key, max_mem_size)?;
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;
 
@@ -148,7 +150,7 @@ impl HandshakeTx {
     }
 
     pub fn construct(
-        ctx: &EnclaveContext<StateType>,
+        ctx: &EnclaveContext,
     ) -> Result<Self> {
         let group_key = ctx.group_key.read().unwrap();
         let handshake = group_key.create_handshake()?;

@@ -6,7 +6,10 @@ use secp256k1::{
     self, Message, Signature, SecretKey, PublicKey,
     util::SECRET_KEY_SIZE,
 };
-use anonify_common::{Keccak256, sgx_rand_assign};
+use anonify_common::{
+    crypto::sgx_rand_assign,
+    traits::Keccak256,
+};
 use crate::error::Result;
 
 const NONCE_SIZE: usize = 32;

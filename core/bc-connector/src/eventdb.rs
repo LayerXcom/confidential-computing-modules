@@ -1,9 +1,10 @@
 use std::sync::Arc;
 use anonify_common::{
     kvs::{KVS, MemoryDB, DBTx},
-    Ciphertext,
+    crypto::Ciphertext,
+    traits::State,
+    state_types::UpdatedState,
 };
-use anonify_runtime::{UpdatedState, traits::State};
 use sgx_types::sgx_enclave_id_t;
 use web3::types::Address;
 use byteorder::{LittleEndian, ByteOrder};

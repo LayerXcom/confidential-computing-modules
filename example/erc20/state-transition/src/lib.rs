@@ -1,22 +1,12 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
-
 #[cfg(feature = "sgx")]
 #[macro_use]
 extern crate sgx_tstd as localstd;
 #[cfg(feature = "std")]
 use std as localstd;
 
-use anonify_runtime::{
-    prelude::*,
-    state_type::*,
-    traits::*,
-};
-use crate::localstd::{
-    vec::Vec,
-    collections::BTreeMap
-};
-use anonify_common::{UserAddress, OWNER_ADDRESS};
-use codec::{Encode, Decode};
+use anonify_runtime::prelude::*;
+use crate::localstd::vec::Vec;
 
 pub const MAX_MEM_SIZE: usize = 100;
 pub const CIPHERTEXT_SIZE: usize = MAX_MEM_SIZE + 30;

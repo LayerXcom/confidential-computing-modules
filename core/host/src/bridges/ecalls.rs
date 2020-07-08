@@ -1,7 +1,10 @@
 use sgx_types::*;
 use anonify_types::{traits::SliceCPtr, EnclaveState, RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, RawUpdatedState, EnclaveStatus};
-use anonify_common::{AccessRight, IntoVec};
-use anonify_runtime::{traits::*, UpdatedState};
+use anonify_common::{
+    crypto::AccessRight,
+    traits::*,
+    state_types::UpdatedState,
+};
 use anonify_bc_connector::{
     eventdb::InnerEnclaveLog,
     utils::StateInfo,
@@ -163,7 +166,7 @@ where
 {
     let mut rt = EnclaveStatus::default();
     let mut raw_instruction_tx = RawInstructionTx::default();
-    let state = state_info.state_as_bytes();
+    let state = state_info.state_encode();
     let call_id = state_info.call_name_to_id();
 
     let status = unsafe {

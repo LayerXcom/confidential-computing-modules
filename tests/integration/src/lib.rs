@@ -4,8 +4,11 @@ use std::{
     collections::BTreeMap,
 };
 use sgx_types::*;
-use anonify_common::{AccessRight, UserAddress, COMMON_ACCESS_RIGHT};
-use anonify_runtime::{State, U64, Approved};
+use anonify_common::{
+    crypto::{AccessRight, UserAddress, COMMON_ACCESS_RIGHT},
+    traits::State,
+};
+use anonify_runtime::primitives::{U64, Approved};
 use erc20_state_transition::{
     CIPHERTEXT_SIZE, MemName, CallName,
     transfer, construct, approve, transfer_from, mint, burn,

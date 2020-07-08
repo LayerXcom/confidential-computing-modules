@@ -6,18 +6,14 @@ extern crate sgx_tstd as localstd;
 #[cfg(feature = "std")]
 use std as localstd;
 #[cfg(feature = "std")]
-use anyhow as local_anyhow;
+use anyhow_std as local_anyhow;
 #[cfg(feature = "sgx")]
-use sgx_anyhow as local_anyhow;
+use anyhow_sgx as local_anyhow;
 #[cfg(all(not(feature = "std"), not(feature = "sgx")))]
 extern crate core as localstd;
 
-pub mod state_type;
 pub mod impls;
-pub mod utils;
 pub mod prelude;
+pub mod primitives;
+#[cfg(feature = "sgx")]
 pub mod traits;
-
-pub use crate::state_type::*;
-pub use crate::traits::*;
-pub use crate::utils::*;

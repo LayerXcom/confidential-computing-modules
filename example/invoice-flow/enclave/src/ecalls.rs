@@ -5,11 +5,9 @@ use anonify_enclave::{
     config::{IAS_URL, TEST_SUB_KEY},
     context::EnclaveContext,
 };
-use erc20_state_transition::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
+use invoice_state_transition::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
 use crate::ENCLAVE_CONTEXT;
 use anonify_enclave::bridges::inner_ecalls::*;
-
-type Context = EnclaveContext;
 
 /// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
 #[no_mangle]

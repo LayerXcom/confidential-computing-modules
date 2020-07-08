@@ -2,23 +2,23 @@ use std::{
     vec::Vec,
     marker::PhantomData,
 };
-use anonify_common::{UserAddress, AccessRight, Ciphertext};
-use anonify_runtime::{UpdatedState, StateType, traits::*};
-use codec::{Encode, Decode};
-use crate::{
-    error::Result,
-    group_key::GroupKey,
-    context::EnclaveContext,
+use anonify_common::{
+    crypto::{UserAddress, AccessRight, Ciphertext},
+    traits::*,
+    state_types::{UpdatedState, StateType},
 };
+use anonify_runtime::traits::*;
+use codec::{Encode, Decode};
+use crate::error::Result;
 
 #[derive(Debug, Clone, Encode, Decode)]
-pub struct Instructions<R: RuntimeExecutor<G>, G: StateGetter> {
+pub struct Instructions<R: RuntimeExecutor<CTX>, CTX: ContextOps> {
     my_addr: UserAddress,
     call_kind: R::C,
-    phantom: PhantomData<G>,
+    phantom: PhantomData<CTX>,
 }
 
-impl<R: RuntimeExecutor<G>, G: StateGetter> Instructions<R, G> {
+impl<R: RuntimeExecutor<CTX, S=StateType>, CTX: ContextOps> Instructions<R, CTX> {
     pub fn new(call_id: u32, params: &mut [u8], access_right: &AccessRight) -> Result<Self> {
         let my_addr = UserAddress::from_access_right(&access_right)?;
         let call_kind = R::C::new(call_id, params)?;
@@ -26,11 +26,11 @@ impl<R: RuntimeExecutor<G>, G: StateGetter> Instructions<R, G> {
         Ok(Instructions {
             my_addr,
             call_kind,
-            phantom: PhantomData::<G>,
+            phantom: PhantomData,
         })
     }
 
-    pub fn encrypt(&self, key: &GroupKey, max_mem_size: usize) -> Result<Ciphertext> {
+    pub fn encrypt<GK: GroupKeyOps>(&self, key: &GK, max_mem_size: usize) -> Result<Ciphertext> {
         // Add padding to fix the ciphertext size of all state types.
         // The padding works for fixing the ciphertext size so that
         // other people cannot distinguish what state is encrypted based on the size.
@@ -47,12 +47,12 @@ impl<R: RuntimeExecutor<G>, G: StateGetter> Instructions<R, G> {
 
     /// Only if the TEE belongs to the group, you can receive ciphertext and decrypt it,
     /// otherwise do nothing.
-    pub fn state_transition(
-        ctx: G,
+    pub fn state_transition<GK: GroupKeyOps>(
+        ctx: CTX,
         ciphertext: &Ciphertext,
-        group_key: &mut GroupKey
+        group_key: &mut GK,
     ) -> Result<Option<impl Iterator<Item=UpdatedState<StateType>> + Clone>> {
-        if let Some(instructions) = Instructions::<R, G>::decrypt(ciphertext, group_key)? {
+        if let Some(instructions) = Instructions::<R, CTX>::decrypt(ciphertext, group_key)? {
             let state_iter = instructions
                 .stf_call(ctx)?
                 .into_iter();
@@ -63,7 +63,7 @@ impl<R: RuntimeExecutor<G>, G: StateGetter> Instructions<R, G> {
         Ok(None)
     }
 
-    fn decrypt(ciphertext: &Ciphertext, key: &mut GroupKey) -> Result<Option<Self>> {
+    fn decrypt<GK: GroupKeyOps>(ciphertext: &Ciphertext, key: &mut GK) -> Result<Option<Self>> {
         match key.decrypt(ciphertext)? {
             Some(plaintext) => {
                 Instructions::decode(&mut &plaintext[..])
@@ -74,8 +74,7 @@ impl<R: RuntimeExecutor<G>, G: StateGetter> Instructions<R, G> {
         }
     }
 
-    fn stf_call(self, ctx: G) -> Result<Vec<UpdatedState<StateType>>>
-    {
+    fn stf_call(self, ctx: CTX) -> Result<Vec<UpdatedState<StateType>>> {
         let res = R::new(ctx).execute(
             self.call_kind,
             self.my_addr,

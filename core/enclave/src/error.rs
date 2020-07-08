@@ -1,6 +1,4 @@
-use std::{
-    io,
-};
+use std::io;
 use thiserror::Error;
 use anyhow::anyhow;
 use anonify_types::UntrustedStatus;

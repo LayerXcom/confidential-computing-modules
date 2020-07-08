@@ -1,78 +1,82 @@
-use crate::local_anyhow::{Result, anyhow};
-use crate::utils::*;
+use crate::local_anyhow::Result;
 use crate::localstd::{
     fmt::Debug,
     vec::Vec,
-    mem::size_of,
+    sync::SgxRwLockWriteGuard,
+    boxed::Box,
 };
-use crate::state_type::StateType;
-use anonify_common::UserAddress;
-use codec::{Input, Output, Encode, Decode};
-
-/// Trait of each user's state.
-pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
-    fn as_bytes(&self) -> Vec<u8> {
-        self.encode()
-    }
-
-    fn from_bytes(bytes: &mut [u8]) -> Result<Self> {
-        Self::decode(&mut &bytes[..])
-            .map_err(|e| anyhow!("{:?}", e))
-    }
-
-    fn write_le<O: Output>(&self, writer: &mut O) {
-        self.encode_to(writer)
-    }
-
-    fn read_le<I: Input>(reader: &mut I) -> Result<Self> {
-        Self::decode(reader)
-            .map_err(|e| anyhow!("{:?}", e))
-    }
-
-    fn from_state(state: &impl State) -> Result<Self> {
-        let mut state = state.as_bytes();
-        Self::from_bytes(&mut state)
-    }
-
-    fn size(&self) -> usize { size_of::<Self>() }
-}
-
-impl<T: Sized + Default + Clone + Encode + Decode + Debug> State for T {}
-
-/// A getter of state stored in enclave memory.
-pub trait StateGetter {
-    /// Get state using memory id.
-    /// Assumed this is called in user-defined state transition functions.
-    fn get_trait<S, U>(&self, key: U, mem_id: MemId) -> Result<S>
-    where
-        S: State,
-        U: Into<UserAddress>;
-
-    fn get_type(&self, key: UserAddress, mem_id: MemId) -> StateType;
-}
+use anonify_common::{
+    crypto::{UserAddress, Ciphertext},
+    traits::*,
+    state_types::{UpdatedState, MemId},
+};
+use codec::{Encode, Decode};
+#[cfg(feature = "sgx")]
+use anonify_treekem::handshake::{PathSecretRequest, HandshakeParams};
 
 /// Execute state transiton functions from runtime
-pub trait RuntimeExecutor<G: StateGetter>: Sized {
+pub trait RuntimeExecutor<G: ContextOps>: Sized {
     type C: CallKindExecutor<G>;
+    type S: State;
 
     fn new(db: G) -> Self;
-    fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
+    fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<Self::S>>>;
 }
 
 /// Execute state traisiton functions from call kind
-pub trait CallKindExecutor<G: StateGetter>: Sized + Encode + Decode + Debug + Clone {
+pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clone {
     type R: RuntimeExecutor<G>;
+    type S: State;
 
     fn new(id: u32, state: &mut [u8]) -> Result<Self>;
-    fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<StateType>>>;
+    fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<Self::S>>>;
 }
 
-/// A converter from memory name to memory id
-pub trait MemNameConverter: Debug {
-    fn as_id(name: &str) -> MemId;
+impl<T: StateOps + GroupKeyGetter> ContextOps for T {}
+
+pub trait ContextOps: StateOps + GroupKeyGetter {}
+
+/// A getter of state stored in enclave memory.
+pub trait StateOps {
+    type S: State;
+
+    /// Get state using memory id.
+    /// Assumed this is called in user-defined state transition functions.
+    fn get_state<U>(&self, key: U, mem_id: MemId) -> Self::S
+    where
+        U: Into<UserAddress>;
+
+    /// Returns a updated state of registerd address in notification.
+    fn update_state(
+        &self,
+        state_iter: impl Iterator<Item=UpdatedState<Self::S>> + Clone
+    ) -> Option<UpdatedState<Self::S>>;
 }
 
-/// A converter from call name to call id
-pub trait CallNameConverter: Debug {
-    fn as_id(name: &str) -> u32;
+pub trait GroupKeyGetter {
+    type GK: GroupKeyOps;
+
+    fn get_group_key(&self) -> SgxRwLockWriteGuard<Self::GK>;
+}
+
+pub trait GroupKeyOps: Sized {
+    fn new(
+        my_roster_idx: usize,
+        max_roster_idx: usize,
+        path_secret_req: PathSecretRequest,
+    ) -> Result<Self>;
+
+    fn create_handshake(&self) -> Result<HandshakeParams>;
+
+    fn process_handshake(
+        &mut self,
+        handshake: &HandshakeParams,
+    ) -> Result<()>;
+
+    fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext>;
+
+    fn decrypt(&mut self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>>;
+
+    /// Ratchet keychain per a transaction
+    fn ratchet(&mut self, roster_idx: usize) -> Result<()>;
 }

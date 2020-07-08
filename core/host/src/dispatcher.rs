@@ -4,6 +4,18 @@ use std::{
     convert::{TryInto, TryFrom},
     fmt::Debug,
 };
+use anonify_bc_connector::{
+    traits::*,
+    utils::*,
+    eventdb::BlockNumDB,
+    error::{Result, HostError},
+};
+use anonify_common::{
+    crypto::AccessRight,
+    traits::{State, MemNameConverter, CallNameConverter},
+    state_types::UpdatedState,
+};
+use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use crate::bridges::ecalls::{
     join_group as join_fn,
@@ -13,15 +25,6 @@ use crate::bridges::ecalls::{
     register_notification as reg_notify_fn,
     get_state_from_enclave,
 };
-use anonify_bc_connector::{
-    traits::*,
-    utils::*,
-    eventdb::BlockNumDB,
-    error::{Result, HostError},
-};
-use anonify_common::AccessRight;
-use anonify_runtime::{traits::{State, MemNameConverter, CallNameConverter}, UpdatedState};
-use parking_lot::RwLock;
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]

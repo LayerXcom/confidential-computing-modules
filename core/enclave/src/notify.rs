@@ -2,8 +2,11 @@ use std::{
     collections::HashSet,
     sync::{SgxRwLock, Arc},
 };
-use anonify_common::UserAddress;
-use anonify_runtime::{UpdatedState, StateType};
+use anonify_common::{
+    crypto::UserAddress,
+    traits::State,
+    state_types::{UpdatedState, StateType},
+};
 use anonify_types::RawUpdatedState;
 use crate::{
     error::Result,
@@ -34,7 +37,7 @@ impl Notifier {
 }
 
 pub fn updated_state_into_raw(updated_state: UpdatedState<StateType>) -> Result<RawUpdatedState> {
-    let state = save_to_host_memory(updated_state.state.as_bytes())? as *const u8;
+    let state = save_to_host_memory(&updated_state.state.into_vec())? as *const u8;
 
     Ok(RawUpdatedState {
         address: updated_state.address.into_array(),

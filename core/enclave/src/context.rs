@@ -1,60 +1,71 @@
 use std::{
-    sync::{SgxRwLock, Arc},
+    sync::{SgxRwLock, SgxRwLockWriteGuard, Arc},
     env,
 };
 use sgx_types::*;
 use std::prelude::v1::*;
-use anonify_common::{kvs::{MemoryDB, DBValue}, UserAddress, Ciphertext};
-use anonify_runtime::{StateType, MemId, UpdatedState, traits::*};
+use anonify_common::{
+    crypto::UserAddress,
+    traits::*,
+    state_types::{MemId, UpdatedState, StateType},
+};
+use anonify_runtime::traits::*;
 use anonify_treekem::{
     handshake::{PathSecretRequest, PathSecretKVS},
     init_path_secret_kvs,
 };
-use codec::Encode;
 use crate::{
     notify::Notifier,
     crypto::EnclaveIdentityKey,
-    group_key::GroupKey,
-    config::{TEST_SPID, MY_ROSTER_IDX, MAX_ROSTER_IDX, UNTIL_ROSTER_IDX, UNTIL_EPOCH},
+    config::{UNTIL_ROSTER_IDX, UNTIL_EPOCH},
     bridges::ocalls::{sgx_init_quote, get_quote},
     error::Result,
-    kvs::{EnclaveDB, EnclaveDBTx},
-    instructions::Instructions,
+    kvs::EnclaveDB,
+    group_key::GroupKey,
 };
 
-impl StateGetter for EnclaveContext<StateType> {
-    fn get_trait<S, U>(&self, key: U, mem_id: MemId) -> anyhow::Result<S>
+impl StateOps for EnclaveContext {
+    type S = StateType;
+
+    fn get_state<U>(&self, key: U, mem_id: MemId) -> Self::S
     where
-        S: State,
         U: Into<UserAddress>,
     {
-        let mut buf = self.db
+        self.db
             .get(key.into(), mem_id)
-            .into_bytes();
-        if buf.len() == 0 {
-            return Ok(Default::default());
-        }
-
-        S::from_bytes(&mut buf)
     }
 
-    fn get_type(&self, key: UserAddress, mem_id: MemId) -> StateType {
-        self.db.get(key, mem_id)
+    /// Returns a updated state of registerd address in notification.
+    // TODO: Enables to return multiple updated states.
+    fn update_state(
+        &self,
+        mut state_iter: impl Iterator<Item=UpdatedState<Self::S>> + Clone
+    ) -> Option<UpdatedState<Self::S>> {
+        state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
+        state_iter.find(|s| self.is_notified(&s.address))
+    }
+}
+
+impl GroupKeyGetter for EnclaveContext {
+    type GK = GroupKey;
+
+    fn get_group_key(&self) -> SgxRwLockWriteGuard<Self::GK> {
+        self.group_key.write().unwrap()
     }
 }
 
 /// spid: Service provider ID for the ISV.
 #[derive(Clone)]
-pub struct EnclaveContext<S: State> {
+pub struct EnclaveContext {
     spid: sgx_spid_t,
     identity_key: EnclaveIdentityKey,
-    db: EnclaveDB<S>,
+    db: EnclaveDB,
     notifier: Notifier,
     pub group_key: Arc<SgxRwLock<GroupKey>>,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
-impl EnclaveContext<StateType> {
+impl EnclaveContext {
     pub fn new(spid: &str) -> Result<Self> {
         let spid_vec = hex::decode(spid)?;
         let mut id = [0; 16];
@@ -90,6 +101,16 @@ impl EnclaveContext<StateType> {
         })
     }
 
+    /// Returns a updated state of registerd address in notification.
+    // TODO: Enables to return multiple updated states.
+    pub fn update_state(
+        &self,
+        mut state_iter: impl Iterator<Item=UpdatedState<StateType>> + Clone
+    ) -> Option<UpdatedState<StateType>> {
+        state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
+        state_iter.find(|s| self.is_notified(&s.address))
+    }
+
     pub fn set_notification(&self, address: UserAddress) -> bool {
         self.notifier.register(address)
     }
@@ -117,16 +138,6 @@ impl EnclaveContext<StateType> {
     /// should be verified in the public available place such as smart contract on blockchain.
     pub fn sign(&self, msg: &[u8]) -> Result<secp256k1::Signature> {
         self.identity_key.sign(msg)
-    }
-
-    /// Returns a updated state of registerd address in notification.
-    // TODO: Enables to return multiple updated states.
-    pub fn update_state(
-        &self,
-        mut state_iter: impl Iterator<Item=UpdatedState<StateType>> + Clone
-    ) -> Option<UpdatedState<StateType>> {
-        state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
-        state_iter.find(|s| self.is_notified(&s.address))
     }
 
     /// Return Attestation report

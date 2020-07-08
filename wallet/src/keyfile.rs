@@ -71,7 +71,7 @@ impl KeyFile {
     }
 
     fn keypair_to_encoded_addr(key_pair: &Keypair) -> String {
-        use anonify_common::UserAddress;
+        use anonify_common::crypto::UserAddress;
 
         let user_address = UserAddress::from_pubkey(&key_pair.public);
         user_address.base64_encode()

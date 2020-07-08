@@ -1,13 +1,17 @@
-use crate::traits::State;
 use crate::localstd::{
     vec::Vec,
     collections::BTreeMap,
     ops::{Add, Sub, Mul, Div},
     convert::TryFrom,
     mem::size_of,
+    boxed::Box,
 };
 use crate::local_anyhow::{Result, Error, anyhow};
-use anonify_common::UserAddress;
+use anonify_common::{
+    crypto::UserAddress,
+    traits::State,
+    state_types::StateType,
+};
 use codec::{Encode, Decode};
 
 macro_rules! impl_uint {
@@ -23,7 +27,7 @@ macro_rules! impl_uint {
                     return Ok(Default::default());
                 }
                 let mut buf = s;
-                $name::from_bytes(&mut buf)
+                $name::decode_s(&mut buf)
             }
         }
 
@@ -34,13 +38,13 @@ macro_rules! impl_uint {
                 if s.len() == 0 {
                     return Ok(Default::default());
                 }
-                $name::from_bytes(s)
+                $name::decode_s(s)
             }
         }
 
         impl From<$name> for StateType {
             fn from(u: $name) -> Self {
-                StateType(u.as_bytes())
+                StateType::new(u.encode_s())
             }
         }
 
@@ -48,11 +52,11 @@ macro_rules! impl_uint {
             type Error = Error;
 
             fn try_from(s: StateType) -> Result<Self, Self::Error> {
-                if s.0.len() == 0 {
+                if s.len() == 0 {
                     return Ok(Default::default());
                 }
-                let mut buf = s.0;
-                $name::from_bytes(&mut buf)
+                let mut buf = s.into_vec();
+                $name::decode_s(&mut buf)
             }
         }
 
@@ -137,56 +141,7 @@ impl Bytes {
 
 impl From<Bytes> for StateType {
     fn from(bs: Bytes) -> Self {
-        StateType(bs.0.as_bytes())
-    }
-}
-
-pub trait RawState: Encode + Decode + Clone + Default {}
-
-/// Do not use `as_bytes()` to get raw bytes from `StateType`, just use `StateType.0`.
-#[derive(Clone, Debug, Default, Decode, Encode)]
-pub struct StateType(Vec<u8>);
-
-impl StateType {
-    pub fn into_bytes(self) -> Vec<u8> {
-        self.0
-    }
-
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.0[..]
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-}
-
-impl From<UserAddress> for StateType {
-    fn from(address: UserAddress) -> Self {
-        Self(address.as_bytes().into())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_from_as_bytes() {
-        let mut v = U64(10).as_bytes();
-        assert_eq!(U64(10), U64::from_bytes(&mut v).unwrap());
-    }
-
-    #[test]
-    fn test_from_state() {
-        assert_eq!(U64(100), U64::from_state(&U64(100)).unwrap());
-    }
-
-    #[test]
-    fn test_size() {
-        assert_eq!(U16(0).size(), 2);
-        assert_eq!(U32(0).size(), 4);
-        assert_eq!(U64(0).size(), 8);
+        StateType::new(bs.0.encode_s())
     }
 }
 
@@ -243,7 +198,7 @@ impl Approved {
 
 impl From<Approved> for StateType {
     fn from(a: Approved) -> Self {
-        StateType(a.0.as_bytes())
+        StateType::new(a.0.encode_s())
     }
 }
 
@@ -255,6 +210,29 @@ impl TryFrom<Vec<u8>> for Approved {
             return Ok(Default::default());
         }
         let mut buf = s;
-        Approved::from_bytes(&mut buf)
+        Approved::decode_s(&mut buf)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_from_encode() {
+        let mut v = U64(10).encode_s();
+        assert_eq!(U64(10), U64::decode_s(&mut v).unwrap());
+    }
+
+    #[test]
+    fn test_from_state() {
+        assert_eq!(U64(100), U64::from_state(&U64(100)).unwrap());
+    }
+
+    #[test]
+    fn test_size() {
+        assert_eq!(U16(0).size(), 2);
+        assert_eq!(U32(0).size(), 4);
+        assert_eq!(U64(0).size(), 8);
     }
 }
