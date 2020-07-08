@@ -56,10 +56,10 @@ impl JoinGroupTx {
         }
     }
 
-    pub fn construct<S: State>(
+    pub fn construct(
         ias_url: &str,
         ias_api_key: &str,
-        ctx: &EnclaveContext<S>,
+        ctx: &EnclaveContext,
     ) -> Result<Self> {
         let quote = ctx.quote()?;
         let (report, report_sig) = RAService::remote_attestation(ias_url, ias_api_key, &quote)?;
@@ -106,7 +106,7 @@ impl InstructionTx {
         params: &mut [u8],
         state_id: u64, // TODO: future works for separating smart contracts
         access_right: &AccessRight,
-        enclave_ctx: &EnclaveContext<StateType>,
+        enclave_ctx: &EnclaveContext,
         max_mem_size: usize,
     ) -> Result<Self>
     where
@@ -149,8 +149,8 @@ impl HandshakeTx {
         HandshakeTx { handshake }
     }
 
-    pub fn construct<S: State>(
-        ctx: &EnclaveContext<S>,
+    pub fn construct(
+        ctx: &EnclaveContext,
     ) -> Result<Self> {
         let group_key = ctx.group_key.read().unwrap();
         let handshake = group_key.create_handshake()?;

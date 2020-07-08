@@ -24,7 +24,7 @@ use crate::{
     group_key::GroupKey,
 };
 
-impl StateOps for EnclaveContext<StateType> {
+impl StateOps for EnclaveContext {
     type S = StateType;
 
     fn get_state<U>(&self, key: U, mem_id: MemId) -> Self::S
@@ -46,7 +46,7 @@ impl StateOps for EnclaveContext<StateType> {
     }
 }
 
-impl GroupKeyGetter for EnclaveContext<StateType> {
+impl GroupKeyGetter for EnclaveContext {
     type GK = GroupKey;
 
     fn get_group_key(&self) -> SgxRwLockWriteGuard<Self::GK> {
@@ -56,16 +56,16 @@ impl GroupKeyGetter for EnclaveContext<StateType> {
 
 /// spid: Service provider ID for the ISV.
 #[derive(Clone)]
-pub struct EnclaveContext<S: State> {
+pub struct EnclaveContext {
     spid: sgx_spid_t,
     identity_key: EnclaveIdentityKey,
-    db: EnclaveDB<S>,
+    db: EnclaveDB,
     notifier: Notifier,
     pub group_key: Arc<SgxRwLock<GroupKey>>,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
-impl<S: State> EnclaveContext<S> {
+impl EnclaveContext {
     pub fn new(spid: &str) -> Result<Self> {
         let spid_vec = hex::decode(spid)?;
         let mut id = [0; 16];
@@ -105,8 +105,8 @@ impl<S: State> EnclaveContext<S> {
     // TODO: Enables to return multiple updated states.
     pub fn update_state(
         &self,
-        mut state_iter: impl Iterator<Item=UpdatedState<S>> + Clone
-    ) -> Option<UpdatedState<S>> {
+        mut state_iter: impl Iterator<Item=UpdatedState<StateType>> + Clone
+    ) -> Option<UpdatedState<StateType>> {
         state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
         state_iter.find(|s| self.is_notified(&s.address))
     }

@@ -7,7 +7,7 @@ use ed25519_dalek::{PublicKey, Signature};
 use anonify_common::{
     crypto::UserAddress,
     kvs::*,
-    state_types::{MemId, UpdatedState},
+    state_types::{MemId, UpdatedState, StateType},
     traits::*,
 };
 use crate::error::Result;
@@ -23,28 +23,28 @@ impl DBKey {
 }
 
 #[derive(Debug, Clone)]
-pub struct EnclaveDB<S: State>(Arc<SgxRwLock<HashMap<DBKey, S>>>);
+pub struct EnclaveDB(Arc<SgxRwLock<HashMap<DBKey, StateType>>>);
 
-impl<S: State> EnclaveDB<S> {
+impl EnclaveDB {
     pub fn new() -> Self {
         EnclaveDB(Arc::new(SgxRwLock::new(HashMap::new())))
     }
 
-    pub fn get(&self, address: UserAddress, mem_id: MemId) -> S {
+    pub fn get(&self, address: UserAddress, mem_id: MemId) -> StateType {
         let key = DBKey::new(address, mem_id);
         match self.0.read().unwrap().get(&key) {
             Some(v) => v.clone(),
-            None => S::default(),
+            None => StateType::default(),
         }
     }
 
-    pub fn insert_by_updated_state(&self, updated_state: UpdatedState<S>) {
+    pub fn insert_by_updated_state(&self, updated_state: UpdatedState<StateType>) {
         let mut tmp = self.0.write().unwrap();
         let key = DBKey::new(updated_state.address, updated_state.mem_id);
         tmp.insert(key, updated_state.state);
     }
 
-    pub fn insert(&self, address: UserAddress, mem_id: MemId, state: S) {
+    pub fn insert(&self, address: UserAddress, mem_id: MemId, state: StateType) {
         let mut tmp = self.0.write().unwrap();
         let key = DBKey::new(address, mem_id);
         tmp.insert(key, state);

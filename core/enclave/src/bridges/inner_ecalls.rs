@@ -49,10 +49,10 @@ where
     Ok(())
 }
 
-pub fn inner_ecall_insert_handshake<S: State>(
+pub fn inner_ecall_insert_handshake(
     handshake: *mut u8,
     handshake_len: usize,
-    enclave_context: &EnclaveContext<S>,
+    enclave_context: &EnclaveContext,
 ) -> Result<()> {
     let handshake_bytes = unsafe { slice::from_raw_parts_mut(handshake, handshake_len) };
     let handshake = HandshakeParams::decode(&mut &handshake_bytes[..])
@@ -71,7 +71,7 @@ pub fn inner_ecall_get_state(
     challenge: &RawChallenge,
     mem_id: u32,
     state: &mut EnclaveState,
-    enclave_context: &EnclaveContext<StateType>,
+    enclave_context: &EnclaveContext,
 ) -> Result<()> {
     let sig = Signature::from_bytes(&sig[..])
         .map_err(|e| anyhow!("{}", e))?;
@@ -86,9 +86,9 @@ pub fn inner_ecall_get_state(
     Ok(())
 }
 
-pub fn inner_ecall_join_group<S: State>(
+pub fn inner_ecall_join_group(
     raw_join_group_tx: &mut RawJoinGroupTx,
-    enclave_context: &EnclaveContext<S>,
+    enclave_context: &EnclaveContext,
     ias_url: &str,
     test_sub_key: &str,
 ) -> Result<()> {
@@ -111,7 +111,7 @@ pub fn inner_ecall_instruction<R, C>(
     state_id: u64,
     call_id: u32,
     raw_instruction_tx: &mut RawInstructionTx,
-    enclave_context: &EnclaveContext<StateType>,
+    enclave_context: &EnclaveContext,
     max_mem_size: usize,
 ) -> Result<()>
 where
@@ -136,9 +136,9 @@ where
     Ok(())
 }
 
-pub fn inner_ecall_handshake<S: State>(
+pub fn inner_ecall_handshake(
     raw_handshake_tx: &mut RawHandshakeTx,
-    enclave_context: &EnclaveContext<S>,
+    enclave_context: &EnclaveContext,
 ) -> Result<()> {
     let handshake_tx = HandshakeTx::construct(&enclave_context)?;
     *raw_handshake_tx = handshake_tx.into_raw()?;
@@ -146,11 +146,11 @@ pub fn inner_ecall_handshake<S: State>(
     Ok(())
 }
 
-pub fn inner_ecall_register_notification<S: State>(
+pub fn inner_ecall_register_notification(
     sig: &RawSig,
     pubkey: &RawPubkey,
     challenge: &RawChallenge,
-    enclave_context: &EnclaveContext<S>,
+    enclave_context: &EnclaveContext,
 ) -> Result<()> {
     let sig = Signature::from_bytes(&sig[..])
         .map_err(|e| anyhow!("{}", e))?;
