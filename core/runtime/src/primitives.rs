@@ -44,7 +44,7 @@ macro_rules! impl_uint {
 
         impl From<$name> for StateType {
             fn from(u: $name) -> Self {
-                StateType(u.encode_s())
+                StateType::new(u.encode_s())
             }
         }
 
@@ -52,10 +52,10 @@ macro_rules! impl_uint {
             type Error = Error;
 
             fn try_from(s: StateType) -> Result<Self, Self::Error> {
-                if s.0.len() == 0 {
+                if s.len() == 0 {
                     return Ok(Default::default());
                 }
-                let mut buf = s.0;
+                let mut buf = s.into_vec();
                 $name::decode_s(&mut buf)
             }
         }
@@ -141,7 +141,7 @@ impl Bytes {
 
 impl From<Bytes> for StateType {
     fn from(bs: Bytes) -> Self {
-        StateType(bs.0.encode_s())
+        StateType::new(bs.0.encode_s())
     }
 }
 
@@ -198,7 +198,7 @@ impl Approved {
 
 impl From<Approved> for StateType {
     fn from(a: Approved) -> Self {
-        StateType(a.0.encode_s())
+        StateType::new(a.0.encode_s())
     }
 }
 

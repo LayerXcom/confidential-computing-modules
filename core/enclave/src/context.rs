@@ -31,13 +31,8 @@ impl StateOps for EnclaveContext<StateType> {
     where
         U: Into<UserAddress>,
     {
-        let res = self.db
-            .get(key.into(), mem_id);
-        if res.size() == 0 {
-            return Self::S::default();
-        }
-
-        res
+        self.db
+            .get(key.into(), mem_id)
     }
 
     /// Returns a updated state of registerd address in notification.

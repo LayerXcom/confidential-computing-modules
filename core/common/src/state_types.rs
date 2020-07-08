@@ -11,10 +11,14 @@ use anonify_types::RawUpdatedState;
 pub trait RawState: Encode + Decode + Clone + Default {}
 
 #[derive(Clone, Debug, Default, Decode, Encode)]
-pub struct StateType(pub Vec<u8>);
+pub struct StateType(Vec<u8>);
 
 impl StateType {
-    pub fn into_bytes(self) -> Vec<u8> {
+    pub fn new(v: Vec<u8>) -> Self {
+        StateType(v)
+    }
+
+    pub fn into_vec(self) -> Vec<u8> {
         self.0
     }
 
