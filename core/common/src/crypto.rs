@@ -16,6 +16,7 @@ use rand_core::{RngCore, CryptoRng};
 use rand_os::OsRng;
 use crate::local_anyhow::{anyhow, Error};
 use crate::traits::*;
+use crate::context_switch::AccessControl;
 
 const ADDRESS_SIZE: usize = 20;
 
@@ -196,6 +197,13 @@ pub struct AccessRight {
     sig: Signature,
     pubkey: PublicKey,
     challenge: [u8; CHALLENGE_SIZE],
+}
+
+impl AccessControl for AccessRight {
+    fn is_allowed(self) -> Result<(), Error> {
+        self.verify_sig()
+            .map_err(|e| anyhow!("{}", e))
+    }
 }
 
 impl AccessRight {

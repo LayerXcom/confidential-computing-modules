@@ -43,6 +43,47 @@ impl EnclaveConnector {
     }
 }
 
+
+
+pub(crate) fn encrypt_instruction<S, C>(
+    eid: sgx_enclave_id_t,
+    access_right: AccessRight,
+    state_info: StateInfo<'_, S, C>,
+) -> Result<RawInstructionTx>
+where
+    S: State,
+    C: CallNameConverter,
+{
+    let mut rt = EnclaveStatus::default();
+    let mut raw_instruction_tx = RawInstructionTx::default();
+    let state = state_info.state_encode();
+    let call_id = state_info.call_name_to_id();
+
+    let status = unsafe {
+        ecall_instruction(
+            eid,
+            &mut rt,
+            access_right.sig().to_bytes().as_ptr() as _,
+            access_right.pubkey().to_bytes().as_ptr() as _,
+            access_right.challenge().as_ptr() as _,
+            state.as_c_ptr() as *mut u8,
+            state.len(),
+            state_info.state_id(),
+            call_id,
+            &mut raw_instruction_tx,
+        )
+    };
+
+    if status != sgx_status_t::SGX_SUCCESS {
+        return Err(HostError::Sgx { status, function: "ecall_encrypt_instruction" }.into());
+    }
+    if rt.is_err() {
+        return Err(HostError::Enclave { status: rt, function: "ecall_encrypt_instruction" }.into());
+    }
+
+    Ok(raw_instruction_tx)
+}
+
 pub(crate) fn insert_logs<S: State>(
     eid: sgx_enclave_id_t,
     enclave_log: &InnerEnclaveLog,
@@ -183,45 +224,6 @@ pub(crate) fn join_group(eid: sgx_enclave_id_t) -> Result<RawJoinGroupTx> {
     }
 
     Ok(raw_reg_tx)
-}
-
-pub(crate) fn encrypt_instruction<S, C>(
-    eid: sgx_enclave_id_t,
-    access_right: AccessRight,
-    state_info: StateInfo<'_, S, C>,
-) -> Result<RawInstructionTx>
-where
-    S: State,
-    C: CallNameConverter,
-{
-    let mut rt = EnclaveStatus::default();
-    let mut raw_instruction_tx = RawInstructionTx::default();
-    let state = state_info.state_encode();
-    let call_id = state_info.call_name_to_id();
-
-    let status = unsafe {
-        ecall_instruction(
-            eid,
-            &mut rt,
-            access_right.sig().to_bytes().as_ptr() as _,
-            access_right.pubkey().to_bytes().as_ptr() as _,
-            access_right.challenge().as_ptr() as _,
-            state.as_c_ptr() as *mut u8,
-            state.len(),
-            state_info.state_id(),
-            call_id,
-            &mut raw_instruction_tx,
-        )
-    };
-
-    if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx { status, function: "ecall_encrypt_instruction" }.into());
-    }
-    if rt.is_err() {
-        return Err(HostError::Enclave { status: rt, function: "ecall_encrypt_instruction" }.into());
-    }
-
-    Ok(raw_instruction_tx)
 }
 
 /// Handshake to other group members to update the group key
