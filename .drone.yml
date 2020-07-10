@@ -16,6 +16,7 @@ steps:
   - name: sgx
     path: /dev/sgx
   commands:
+  - ls
   - /bin/bash /root/anonify/scripts/test.sh
 
 volumes:
