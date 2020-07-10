@@ -19,6 +19,7 @@ steps:
   - pwd
   - echo ${PWD}
   - echo ${HOME}
+  - printenv
   - ls /root
   - ls /root/anonify
   - /bin/bash /root/anonify/scripts/test.sh
