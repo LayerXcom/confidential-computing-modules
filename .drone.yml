@@ -15,16 +15,13 @@ steps:
     path: /root/anonify
   - name: sgx
     path: /dev/sgx
-  environment:
-    BEARER: 
-      from_secret: moneyfoward_bearer
   commands:
   - /bin/bash /root/anonify/scripts/test.sh
 
 volumes:
 - name: anonify
   host:
-    path: /home/anonify-dev-osuke/anonify
+    path: ${PWD}/anonify
 - name: sgx
   host:
     path: /dev/sgx
