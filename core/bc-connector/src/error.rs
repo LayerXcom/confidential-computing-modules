@@ -12,11 +12,13 @@ pub enum HostError {
     Sgx {
         status: sgx_status_t,
         function: &'static str,
+        // command: u32,
     },
     #[error("Enclave ecall failed function: {function:?}, status: {status:?}")]
     Enclave {
         status: EnclaveStatus,
         function: &'static str,
+        // command: u32,
     },
     #[error("Contract address have not been set.")]
     AddressNotSet,

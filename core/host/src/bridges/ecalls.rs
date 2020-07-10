@@ -16,6 +16,19 @@ use codec::{Encode, Decode};
 use crate::auto_ffi::*;
 use crate::constants::OUTPUT_MAX_LEN;
 
+extern "C" {
+    fn ecall_entry_point(
+        eid: sgx_enclave_id_t,
+        retval: *mut EnclaveStatus,
+        cmd: u32,
+        in_buf: *const u8,
+        in_len: usize,
+        out_buf: *mut u8,
+        out_max: usize,
+        out_len: &mut usize,
+    ) -> sgx_status_t;
+}
+
 pub struct EnclaveConnector{
     eid: sgx_enclave_id_t,
     output_max_len: usize,
@@ -42,7 +55,39 @@ impl EnclaveConnector {
     }
 
     fn inner_invoke_ecall(&self, cmd: u32, input: Vec<u8>) -> Result<Vec<u8>> {
-        unimplemented!();
+        let input_ptr: *const u8 = input.as_ptr();
+        let input_len = input.len();
+        let output_max = self.output_max_len;
+        let mut output_len = output_max;
+        let mut output_buf = Vec::with_capacity(output_max);
+        let output_ptr = output_buf.as_mut_ptr();
+
+        let mut ret = EnclaveStatus::default();
+
+        let status = unsafe {
+            ecall_entry_point(
+                self.eid,
+                &mut ret,
+                cmd,
+                input_ptr,
+                input_len,
+                output_ptr,
+                output_max,
+                &mut output_len,
+            )
+        };
+
+        if status != sgx_status_t::SGX_SUCCESS {
+            return Err(HostError::Sgx { status, function: "ecall_entry_point", /*cmd*/ }.into());
+        }
+        if ret.is_err() {
+            return Err(HostError::Enclave { status: ret, function: "ecall_entry_point", /*cmd*/ }.into());
+        }
+        assert!(output_len > output_max);
+
+        unsafe { output_buf.set_len(output_len); }
+
+        Ok(output_buf)
     }
 }
 
