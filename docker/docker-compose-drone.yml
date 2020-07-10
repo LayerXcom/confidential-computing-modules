@@ -48,7 +48,6 @@ services:
     devices:
       - /dev/sgx
     container_name: docker_runner1
-    hostname: docker_runner1
 
   drone-agent2:
     image: drone/drone-runner-docker:1
@@ -97,7 +96,6 @@ services:
     devices:
       - /dev/sgx
     container_name: docker_runner3
-    hostname: docker_runner3
 
 networks:
   drone_net:
