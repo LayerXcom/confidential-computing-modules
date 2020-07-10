@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  drone:
+  drone-server:
     image: drone/drone:1
     ports:
       - 3080:80
@@ -25,6 +25,78 @@ services:
       drone_net:
         ipv4_address: 172.16.238.2
 
+  drone-agent1:
+    image: drone/drone-runner-docker:1
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_RPC_PROTO=http
+      - DRONE_RPC_HOST=172.16.238.2:80
+      - DRONE_RPC_SECRET=${DRONE_RPC_SECRET}
+      - DRONE_RUNNER_CAPACITY=2
+      - DRONE_RUNNER_NAME=docker_runner1
+      - DRONE_RUNNER_NETWORKS=test-network
+      - DRONE_RUNNER_VOLUMES=/var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket
+      - DRONE_LOG_FILE=/var/log/docker_runner1.log
+      - DRONE_DEBUG=true
+      - DRONE_TRACE=true
+      - DRONE_RPC_DUMP_HTTP=true
+      - DRONE_RPC_DUMP_HTTP_BODY=true
+    networks:
+      - docker_drone_net
+    devices:
+      - /dev/sgx
+    container_name: docker_runner1
+
+  drone-agent2:
+    image: drone/drone-runner-docker:1
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_RPC_PROTO=http
+      - DRONE_RPC_HOST=172.16.238.2:80
+      - DRONE_RPC_SECRET=${DRONE_RPC_SECRET}
+      - DRONE_RUNNER_CAPACITY=2
+      - DRONE_RUNNER_NAME=docker_runner2
+      - DRONE_RUNNER_NETWORKS=test-network
+      - DRONE_RUNNER_VOLUMES=/var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket
+      - DRONE_LOG_FILE=/var/log/docker_runner2.log
+      - DRONE_DEBUG=true
+      - DRONE_TRACE=true
+      - DRONE_RPC_DUMP_HTTP=true
+      - DRONE_RPC_DUMP_HTTP_BODY=true
+    networks:
+      - docker_drone_net
+    devices:
+      - /dev/sgx
+    container_name: docker_runner2
+
+  drone-agent3:
+    image: drone/drone-runner-docker:1
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_RPC_PROTO=http
+      - DRONE_RPC_HOST=172.16.238.2:80
+      - DRONE_RPC_SECRET=${DRONE_RPC_SECRET}
+      - DRONE_RUNNER_CAPACITY=2
+      - DRONE_RUNNER_NAME=docker_runner3
+      - DRONE_RUNNER_NETWORKS=test-network
+      - DRONE_RUNNER_VOLUMES=/var/run/aesmd/aesm.socket:/var/run/aesmd/aesm.socket
+      - DRONE_LOG_FILE=/var/log/docker_runner1.log
+      - DRONE_DEBUG=true
+      - DRONE_TRACE=true
+      - DRONE_RPC_DUMP_HTTP=true
+      - DRONE_RPC_DUMP_HTTP_BODY=true
+    networks:
+      - docker_drone_net
+    devices:
+      - /dev/sgx
+    container_name: docker_runner3
+
 networks:
   drone_net:
     driver: bridge
@@ -32,3 +104,7 @@ networks:
       driver: default
       config:
         - subnet: 172.16.238.0/16
+  docker_drone_net:
+    external: true
+  test-network:
+    external: true
