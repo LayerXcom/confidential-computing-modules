@@ -8,7 +8,7 @@ platform:
 
 steps:
 - name: build
-  image: osuketh/anonify
+  image: osuketh/anonify:latest
   privileged: true
   volumes:
   - name: anonify
