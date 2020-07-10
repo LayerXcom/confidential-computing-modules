@@ -4,11 +4,12 @@ use std::{
     boxed::Box,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx};
+use anonify_types::{RawJoinGroupTx, RawHandshakeTx};
 use anonify_common::{
     crypto::{AccessRight, Ciphertext},
     traits::{State, CallNameConverter},
     state_types::UpdatedState,
+    plugin_types::output::*,
 };
 use web3::types::Address as EthAddress;
 use crate::{
@@ -174,20 +175,20 @@ impl Sender for EthSender {
     where
         ST: State,
         C: CallNameConverter,
-        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, C>) -> Result<RawInstructionTx>,
+        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, C>) -> Result<InstructionTx>,
     {
         // ecall of encrypt instruction
-        let mut instruction_tx: BoxedInstructionTx = enc_ins_fn(self.enclave_id, access_right, state_info)?.into();
+        let mut instruction_tx: InstructionTx = enc_ins_fn(self.enclave_id, access_right, state_info)?;
         let ciphertext = instruction_tx.get_ciphertext(ciphertext_len);
 
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
                 self.contract.send_instruction(
                     addr,
-                    instruction_tx.state_id,
+                    instruction_tx.state_id(),
                     ciphertext,
-                    &instruction_tx.enclave_sig,
-                    &instruction_tx.msg,
+                    &instruction_tx.enclave_sig(),
+                    &instruction_tx.msg(),
                     gas,
                 )?
             }
@@ -288,40 +289,6 @@ impl From<RawJoinGroupTx> for BoxedJoinGroupTx {
         res_tx.report = *report;
         res_tx.report_sig = *report_sig;
         res_tx.handshake = *handshake;
-
-        res_tx
-    }
-}
-
-#[derive(Debug, Clone, Default)]
-pub(crate) struct BoxedInstructionTx {
-    pub state_id: u64,
-    pub ciphertext: Box<[u8]>,
-    pub enclave_sig: Box<[u8]>,
-    pub msg: Box<[u8]>,
-}
-
-impl BoxedInstructionTx {
-    pub fn get_ciphertext(&mut self, len: usize) -> Ciphertext {
-        Ciphertext::from_bytes(&mut self.ciphertext, len)
-    }
-}
-
-impl From<RawInstructionTx> for BoxedInstructionTx {
-    fn from(raw_instruction_tx: RawInstructionTx) -> Self {
-        let mut res_tx = BoxedInstructionTx::default();
-
-        let box_ciphertext = raw_instruction_tx.ciphertext as *mut Box<[u8]>;
-        let ciphertext = unsafe { Box::from_raw(box_ciphertext) };
-        let box_enclave_sig = raw_instruction_tx.enclave_sig as *mut Box<[u8]>;
-        let enclave_sig = unsafe { Box::from_raw(box_enclave_sig) };
-        let box_msg = raw_instruction_tx.msg as *mut Box<[u8]>;
-        let msg = unsafe { Box::from_raw(box_msg) };
-
-        res_tx.state_id = raw_instruction_tx.state_id;
-        res_tx.ciphertext = *ciphertext;
-        res_tx.enclave_sig = *enclave_sig;
-        res_tx.msg = *msg;
 
         res_tx
     }

@@ -26,4 +26,6 @@ pub enum HostError {
     IoError(#[from] std::io::Error),
     #[error("Web3 error: {0}")]
     Web3Error(#[from] web3::Error),
+    #[error("Codec error: {0}")]
+    CodecError(#[from] codec::Error),
 }

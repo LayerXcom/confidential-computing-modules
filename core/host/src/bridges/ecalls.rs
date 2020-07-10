@@ -4,6 +4,7 @@ use anonify_common::{
     crypto::AccessRight,
     traits::*,
     state_types::UpdatedState,
+    plugin_types::{input::*, output::*},
 };
 use anonify_bc_connector::{
     eventdb::InnerEnclaveLog,
@@ -11,7 +12,9 @@ use anonify_bc_connector::{
     error::{HostError, Result},
 };
 use log::debug;
+use codec::{Encode, Decode};
 use crate::auto_ffi::*;
+use crate::constants::OUTPUT_MAX_LEN;
 
 pub struct EnclaveConnector{
     eid: sgx_enclave_id_t,
@@ -26,14 +29,14 @@ impl EnclaveConnector {
         }
     }
 
-    pub fn invoke_ecall(&self, cmd: u32, input: S) -> Result<D>
+    pub fn invoke_ecall<E, D>(&self, cmd: u32, input: E) -> Result<D>
     where
-        S: serde::Serialize,
-        D: for<'de> serde::Deserialize<'de>
+        E: Encode,
+        D: Decode,
     {
-        let input_payload = serde_json::to_vec(&input)?;
-        let result = self.inner_invoke_ecall(cmd, input_payload)?;
-        let response: D = serde_json::from_slice(&result)?;
+        let input_payload = input.encode();
+        let mut result = self.inner_invoke_ecall(cmd, input_payload)?;
+        let response = D::decode(&mut &result[..])?;
 
         Ok(response)
     }
@@ -43,45 +46,17 @@ impl EnclaveConnector {
     }
 }
 
-
-
 pub(crate) fn encrypt_instruction<S, C>(
     eid: sgx_enclave_id_t,
     access_right: AccessRight,
     state_info: StateInfo<'_, S, C>,
-) -> Result<RawInstructionTx>
+) -> Result<InstructionTx>
 where
     S: State,
     C: CallNameConverter,
 {
-    let mut rt = EnclaveStatus::default();
-    let mut raw_instruction_tx = RawInstructionTx::default();
-    let state = state_info.state_encode();
-    let call_id = state_info.call_name_to_id();
-
-    let status = unsafe {
-        ecall_instruction(
-            eid,
-            &mut rt,
-            access_right.sig().to_bytes().as_ptr() as _,
-            access_right.pubkey().to_bytes().as_ptr() as _,
-            access_right.challenge().as_ptr() as _,
-            state.as_c_ptr() as *mut u8,
-            state.len(),
-            state_info.state_id(),
-            call_id,
-            &mut raw_instruction_tx,
-        )
-    };
-
-    if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx { status, function: "ecall_encrypt_instruction" }.into());
-    }
-    if rt.is_err() {
-        return Err(HostError::Enclave { status: rt, function: "ecall_encrypt_instruction" }.into());
-    }
-
-    Ok(raw_instruction_tx)
+    EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
+        .invoke_ecall::<EncryptInstructionExec<S>, InstructionTx>(1, state_info.into())
 }
 
 pub(crate) fn insert_logs<S: State>(
