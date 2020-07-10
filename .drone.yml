@@ -16,6 +16,9 @@ steps:
   - name: sgx
     path: /dev/sgx
   commands:
+  - pwd
+  - echo ${PWD}
+  - ls /root
   - /bin/bash /root/anonify/scripts/test.sh
 
 volumes:
