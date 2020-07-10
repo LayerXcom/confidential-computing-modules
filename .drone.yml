@@ -18,7 +18,9 @@ steps:
   commands:
   - pwd
   - echo ${PWD}
+  - echo ${HOME}
   - ls /root
+  - ls /root/anonify
   - /bin/bash /root/anonify/scripts/test.sh
 
 volumes:
