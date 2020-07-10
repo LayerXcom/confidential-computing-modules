@@ -16,18 +16,12 @@ steps:
   - name: sgx
     path: /dev/sgx
   commands:
-  - pwd
-  - echo ${PWD}
-  - echo ${HOME}
-  - printenv
-  - ls /root
-  - ls /root/anonify
   - /bin/bash /root/anonify/scripts/test.sh
 
 volumes:
 - name: anonify
   host:
-    path: ${PWD}/anonify
+    path: /drone/src/anonify
 - name: sgx
   host:
     path: /dev/sgx
