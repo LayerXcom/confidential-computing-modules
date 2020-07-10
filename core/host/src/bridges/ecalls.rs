@@ -13,6 +13,36 @@ use anonify_bc_connector::{
 use log::debug;
 use crate::auto_ffi::*;
 
+pub struct EnclaveConnector{
+    eid: sgx_enclave_id_t,
+    output_max_len: usize,
+}
+
+impl EnclaveConnector {
+    pub fn new(eid: sgx_enclave_id_t, output_max_len: usize) -> Self {
+        EnclaveConnector {
+            eid,
+            output_max_len,
+        }
+    }
+
+    pub fn invoke_ecall(&self, cmd: u32, input: S) -> Result<D>
+    where
+        S: serde::Serialize,
+        D: for<'de> serde::Deserialize<'de>
+    {
+        let input_payload = serde_json::to_vec(&input)?;
+        let result = self.inner_invoke_ecall(cmd, input_payload)?;
+        let response: D = serde_json::from_slice(&result)?;
+
+        Ok(response)
+    }
+
+    fn inner_invoke_ecall(&self, cmd: u32, input: Vec<u8>) -> Result<Vec<u8>> {
+        unimplemented!();
+    }
+}
+
 pub(crate) fn insert_logs<S: State>(
     eid: sgx_enclave_id_t,
     enclave_log: &InnerEnclaveLog,
