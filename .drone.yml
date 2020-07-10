@@ -11,17 +11,12 @@ steps:
   image: osuketh/anonify:latest
   privileged: true
   volumes:
-  - name: anonify
-    path: /root/anonify
   - name: sgx
     path: /dev/sgx
   commands:
   - /bin/bash ./scripts/test.sh
 
 volumes:
-- name: anonify
-  host:
-    path: /drone/src/anonify
 - name: sgx
   host:
     path: /dev/sgx
