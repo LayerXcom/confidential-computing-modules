@@ -24,7 +24,7 @@ steps:
 volumes:
 - name: anonify
   host:
-    path: /home/anonify-dev-osuke/trusted-api
+    path: /home/anonify-dev-osuke/anonify
 - name: sgx
   host:
     path: /dev/sgx
