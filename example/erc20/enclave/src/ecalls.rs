@@ -1,6 +1,13 @@
+use std::{
+    vec::Vec,
+    ptr,
+};
 use anonify_types::*;
-use anonify_common::state_types::StateType;
-use anonify_runtime::traits::*;
+use anonify_common::{
+    state_types::StateType,
+    context_switch::ENCRYPT_INSTRUCTION_CMD,
+    plugin_types::*,
+};
 use anonify_enclave::{
     config::{IAS_URL, TEST_SUB_KEY},
     context::EnclaveContext,
@@ -8,8 +15,17 @@ use anonify_enclave::{
 use erc20_state_transition::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
 use crate::ENCLAVE_CONTEXT;
 use anonify_enclave::bridges::inner_ecalls::*;
+use anonify_ecalls::register_ecall;
+use anyhow::anyhow;
+use codec::Encode;
 
-type Context = EnclaveContext;
+register_ecall!(
+    &*ENCLAVE_CONTEXT,
+    MAX_MEM_SIZE,
+    Runtime<EnclaveContext>,
+    EnclaveContext,
+    (ENCRYPT_INSTRUCTION_CMD, input::EncryptInstruction<StateType>, output::InstructionTx),
+);
 
 /// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
 #[no_mangle]
@@ -85,36 +101,6 @@ pub unsafe extern "C" fn ecall_join_group(
         TEST_SUB_KEY,
     ) {
         println!("Error (ecall_join_group): {}", e);
-        return EnclaveStatus::error();
-    }
-
-    EnclaveStatus::success()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn ecall_instruction(
-    raw_sig: &RawSig,
-    raw_pubkey: &RawPubkey,
-    raw_challenge: &RawChallenge,
-    state: *mut u8,
-    state_len: usize,
-    state_id: u64,
-    call_id: u32,
-    raw_instruction_tx: &mut RawInstructionTx,
-) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_instruction::<Runtime<EnclaveContext>, EnclaveContext>(
-        raw_sig,
-        raw_pubkey,
-        raw_challenge,
-        state,
-        state_len,
-        state_id,
-        call_id,
-        raw_instruction_tx,
-        &*ENCLAVE_CONTEXT,
-        MAX_MEM_SIZE,
-    ) {
-        println!("Error (ecall_instruction): {}", e);
         return EnclaveStatus::error();
     }
 

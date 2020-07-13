@@ -16,7 +16,7 @@ enclave {
     trusted {
         public uint32_t ecall_entry_point(
             uint32_t cmd,
-            [in, size=in_len] const uint8_t* in_buf,
+            [in, size=in_len] uint8_t* in_buf,
             size_t in_len,
             [out, size=out_maxlen] uint8_t* out_buf,
             size_t out_maxlen,

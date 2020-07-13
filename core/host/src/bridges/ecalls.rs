@@ -1,5 +1,5 @@
 use sgx_types::*;
-use anonify_types::{traits::SliceCPtr, EnclaveState, RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, RawUpdatedState, EnclaveStatus};
+use anonify_types::{traits::SliceCPtr, EnclaveState, RawJoinGroupTx, RawHandshakeTx, RawUpdatedState, EnclaveStatus};
 use anonify_common::{
     crypto::AccessRight,
     traits::*,
@@ -22,7 +22,7 @@ extern "C" {
         eid: sgx_enclave_id_t,
         retval: *mut EnclaveStatus,
         cmd: u32,
-        in_buf: *const u8,
+        in_buf: *mut u8,
         in_len: usize,
         out_buf: *mut u8,
         out_max: usize,
@@ -49,14 +49,14 @@ impl EnclaveConnector {
         D: Decode,
     {
         let input_payload = input.encode();
-        let mut result = self.inner_invoke_ecall(cmd, input_payload)?;
+        let result = self.inner_invoke_ecall(cmd, input_payload)?;
         let response = D::decode(&mut &result[..])?;
 
         Ok(response)
     }
 
-    fn inner_invoke_ecall(&self, cmd: u32, input: Vec<u8>) -> Result<Vec<u8>> {
-        let input_ptr: *const u8 = input.as_ptr();
+    fn inner_invoke_ecall(&self, cmd: u32, mut input: Vec<u8>) -> Result<Vec<u8>> {
+        let input_ptr = input.as_mut_ptr();
         let input_len = input.len();
         let output_max = self.output_max_len;
         let mut output_len = output_max;
