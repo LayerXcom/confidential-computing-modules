@@ -3,16 +3,21 @@ use crate::localstd::vec::Vec;
 use crate::crypto::{AccessRight, Sha256};
 use codec::{Encode, Decode, Input, self};
 
+pub trait EcallInput {}
+pub trait EcallOutput {}
+
 pub mod input {
     use super::*;
 
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct EncryptInstruction<ST: State> {
-        access_right: AccessRight,
-        state: ST,
-        state_id: u64,
-        call_id: u32,
+        pub access_right: AccessRight,
+        pub state: ST,
+        pub state_id: u64,
+        pub call_id: u32,
     }
+
+    impl<ST: State> EcallInput for EncryptInstruction<ST> {}
 
     impl<ST: State> EncryptInstruction<ST> {
         pub fn new(access_right: AccessRight, state: ST, state_id: u64, call_id: u32) -> Self {
@@ -37,6 +42,8 @@ pub mod output {
         msg: Sha256,
         ciphertext: Ciphertext,
     }
+
+    impl EcallOutput for InstructionTx {}
 
     impl Encode for InstructionTx {
         fn encode(&self) -> Vec<u8> {

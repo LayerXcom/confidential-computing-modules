@@ -1,4 +1,7 @@
-use std::slice;
+use std::{
+    slice,
+    marker::PhantomData,
+};
 use sgx_types::*;
 use anonify_types::*;
 use anonify_common::{
@@ -14,7 +17,7 @@ use codec::{Decode, Encode};
 use log::debug;
 use anyhow::{Result, anyhow};
 use crate::{
-    transaction::{JoinGroupTx, EnclaveTx, HandshakeTx, InstructionTx},
+    transaction::*,
     instructions::Instructions,
     notify::updated_state_into_raw,
     bridges::ocalls::save_to_host_memory,
@@ -22,66 +25,34 @@ use crate::{
 };
 
 pub trait EcallHandler {
-    fn handle(&self);
+    type O: EcallOutput + Encode + Decode;
+
+    fn handle< R: RuntimeExecutor<C, S=StateType>, C: ContextOps>(self, enclave_context: &EnclaveContext, max_mem_size: usize) -> Result<Self::O>;
 }
 
-#[derive(Debug, Clone, Encode, Decode)]
-pub struct EnclaveEncryptInstruction {
-    input: input::EncryptInstruction,
-    enclave_context: EnclaveContext,
-    max_mem_size: usize,
-}
+impl EcallHandler for input::EncryptInstruction<StateType> {
+    type O = output::InstructionTx;
 
-impl EcallHandler for EnclaveEncryptInstruction {
-    fn handle(self) {
-        let state = &mut self.input.state.encode_s();
-        let enclave_context = &self.enclave_context
-        let instruction_tx = InstructionTx::construct::<R, C>(
-            self.input.call_id,
+    fn handle<R: RuntimeExecutor<C, S=StateType>, C: ContextOps>(
+        self,
+        enclave_context: &EnclaveContext,
+        max_mem_size: usize
+    ) -> Result<Self::O> {
+        let state = &mut self.state.encode_s();
+        let ar = &self.access_right;
+
+        let instruction_tx = construct::<R, C>(
+            self.call_id,
             state,
-            self.input.state_id,
-            &self.input.access_right,
+            self.state_id,
+            ar,
             enclave_context,
             max_mem_size,
         )?;
 
         enclave_context.set_notification(ar.user_address());
-        
+        Ok(instruction_tx)
     }
-}
-
-pub fn inner_ecall_instruction<R, C>(
-    raw_sig: &RawSig,
-    raw_pubkey: &RawPubkey,
-    raw_challenge: &RawChallenge,
-    state: *mut u8,
-    state_len: usize,
-    state_id: u64,
-    call_id: u32,
-    raw_instruction_tx: &mut RawInstructionTx,
-    enclave_context: &EnclaveContext,
-    max_mem_size: usize,
-) -> Result<()>
-where
-    R: RuntimeExecutor<C, S=StateType>,
-    C: ContextOps,
-{
-    let params = unsafe{ slice::from_raw_parts_mut(state, state_len) };
-    let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge)
-        .map_err(|e| anyhow!("{}", e))?;
-    let instruction_tx = InstructionTx::construct::<R, C>(
-        call_id,
-        params,
-        state_id,
-        &ar,
-        &enclave_context,
-        max_mem_size,
-    )?;
-
-    enclave_context.set_notification(ar.user_address());
-    *raw_instruction_tx = instruction_tx.into_raw()?;
-
-    Ok(())
 }
 
 pub fn inner_ecall_insert_ciphertext<R, C>(

@@ -1,7 +1,12 @@
 #[macro_export]
 macro_rules! register_ecall {
-    ( $( ($cmd: path, $input: ty, $output: ty), )* ) => {
-        fn ecall_handler(cmd: u32, input: &[u8]) -> anyhow::Result<Vec<u8>> {
+    ( $( ($cmd: path, $input: ty, $output: ty), )*
+        $ctx: expr,
+        $max_mem: expr,
+        $runtime_exec: ty,
+        $ctx_ops: ty
+    ) => {
+        fn ecall_handler(cmd: u32, input: &mut [u8]) -> anyhow::Result<Vec<u8>> {
             match cmd {
                 $(
                     $cmd => inner_ecall_handler::<$input, $output>(input),
@@ -10,12 +15,15 @@ macro_rules! register_ecall {
             }
         }
 
-        fn inner_ecall_handler<I, O>(input: &[u8]) -> anyhow::Result<Vec<u8>>
+        fn inner_ecall_handler<I, O>(input_payload: &mut [u8]) -> anyhow::Result<Vec<u8>>
         where
-            I: codec::Decode,
+            I: codec::Decode + EcallHandler,
             O: codec::Encode,
         {
-            unimplemented!();
+            let input = I::decode(input_payload)?;
+            let res = input.handle<$runtime_exec, $ctx_ops>($ctx, $max_mem)?;
+
+            Ok(res.encode())
         }
 
         #[no_mangle]
@@ -27,9 +35,9 @@ macro_rules! register_ecall {
             output_max_len: usize,
             output_len: &mut usize,
         ) -> anonify_types::EnclaveStatus {
-            let input = unsafe { std::slice::from_raw_parts(input_buf, input_len) };
+            let mut input = unsafe { std::slice::from_raw_parts(input_buf, input_len) };
             let res = unsafe {
-                match ecall_handler(command, input) {
+                match ecall_handler(command, &mut input) {
                     Ok(out) => out,
                     Err(e) => {
                         println!("Error (ecall_entry_point): command: {:?}, error: {:?}", command, e);
