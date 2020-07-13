@@ -1,21 +1,26 @@
 use crate::traits::State;
 use crate::localstd::vec::Vec;
+use crate::crypto::AccessRight;
 use codec::{Encode, Decode};
 
 pub mod input {
     use super::*;
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct EncryptInstructionExec<ST: State> {
+    pub struct EncryptInstruction<ST: State> {
+        access_right: AccessRight,
         state: ST,
         state_id: u64,
         call_id: u32,
     }
 
-    impl<ST: State> EncryptInstructionExec<ST> {
-        pub fn new(state: ST, state_id: u64, call_id: u32) -> Self {
-            EncryptInstructionExec {
-                state, state_id, call_id,
+    impl<ST: State> EncryptInstruction<ST> {
+        pub fn new(access_right: AccessRight, state: ST, state_id: u64, call_id: u32) -> Self {
+            EncryptInstruction {
+                access_right,
+                state,
+                state_id,
+                call_id,
             }
         }
     }

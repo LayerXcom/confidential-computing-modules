@@ -7,6 +7,8 @@ use crate::local_anyhow::Result;
 use crate::traits::State;
 use codec::{Encode, Decode};
 
+pub const ENCRYPT_INSTRUCTION_CMD: u32 = 1;
+
 pub trait AccessControl: Debug + Clone {
     fn is_allowed(self) -> Result<()>;
 }
@@ -31,6 +33,8 @@ impl<A: AccessControl, E: Execution> EcallInput<A, E> {
         }
     }
 }
+
+// impl From<>
 
 #[derive(Debug, Clone)]
 pub struct ExecOutput(Vec<u8>);

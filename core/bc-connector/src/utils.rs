@@ -9,7 +9,8 @@ use web3::types::Address;
 use ethabi::Contract as ContractABI;
 use anonify_common::{
     traits::*,
-    plugin_types::input::EncryptInstructionExec,
+    plugin_types::*,
+    crypto::AccessRight,
 };
 use anyhow::anyhow;
 use crate::{
@@ -77,15 +78,13 @@ impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
     pub fn state_id(&self) -> u64 {
         self.state_id
     }
-}
 
-impl<'a, ST: State, C: CallNameConverter> From<StateInfo<'a, ST, C>> for EncryptInstructionExec<ST> {
-    fn from(s: StateInfo<'a, ST, C>) -> Self {
-        let state_id = s.state_id();
-        let call_id = s.call_name_to_id();
-        let state = s.state;
+    pub fn crate_enc_instruction(self, access_right: AccessRight) -> input::EncryptInstruction<ST> {
+        let state_id = self.state_id();
+        let call_id = self.call_name_to_id();
+        let state = self.state;
 
-        EncryptInstructionExec::new(state, state_id, call_id)
+        input::EncryptInstruction::new(access_right, state, state_id, call_id)
     }
 }
 

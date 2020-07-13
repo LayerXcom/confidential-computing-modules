@@ -4,7 +4,8 @@ use anonify_common::{
     crypto::AccessRight,
     traits::*,
     state_types::UpdatedState,
-    plugin_types::{input::*, output::*},
+    plugin_types::*,
+    context_switch::*,
 };
 use anonify_bc_connector::{
     eventdb::InnerEnclaveLog,
@@ -95,13 +96,14 @@ pub(crate) fn encrypt_instruction<S, C>(
     eid: sgx_enclave_id_t,
     access_right: AccessRight,
     state_info: StateInfo<'_, S, C>,
-) -> Result<InstructionTx>
+) -> Result<output::InstructionTx>
 where
     S: State,
     C: CallNameConverter,
 {
+    let input = state_info.crate_enc_instruction(access_right);
     EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
-        .invoke_ecall::<EncryptInstructionExec<S>, InstructionTx>(1, state_info.into())
+        .invoke_ecall::<input::EncryptInstruction<S>, output::InstructionTx>(ENCRYPT_INSTRUCTION_CMD, input)
 }
 
 pub(crate) fn insert_logs<S: State>(
