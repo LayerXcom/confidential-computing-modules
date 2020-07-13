@@ -139,14 +139,14 @@ impl Web3Contract {
         &self,
         from: Address,
         _state_id: u64,
-        ciphertext: Ciphertext,
+        ciphertext: Vec<u8>,
         enclave_sig: &[u8],
         msg: &[u8],
         gas: u64,
     ) -> Result<H256> {
         let call = self.contract.call(
             "storeInstruction",
-            (ciphertext.into_vec(), enclave_sig.to_vec(), H256::from_slice(msg)),
+            (ciphertext, enclave_sig.to_vec(), H256::from_slice(msg)),
             from,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );

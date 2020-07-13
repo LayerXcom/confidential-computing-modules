@@ -1,7 +1,7 @@
 use crate::traits::State;
 use crate::localstd::vec::Vec;
-use crate::crypto::AccessRight;
-use codec::{Encode, Decode};
+use crate::crypto::{AccessRight, Sha256};
+use codec::{Encode, Decode, Input, self};
 
 pub mod input {
     use super::*;
@@ -30,33 +30,80 @@ pub mod output {
     use super::*;
     use crate::crypto::Ciphertext;
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Debug, Clone)]
     pub struct InstructionTx {
         state_id: u64,
-        ciphertext: Vec<u8>,
-        enclave_sig: Vec<u8>,
-        msg: Vec<u8>,
+        enclave_sig: secp256k1::Signature,
+        msg: Sha256,
+        ciphertext: Ciphertext,
+    }
+
+    impl Encode for InstructionTx {
+        fn encode(&self) -> Vec<u8> {
+            let mut acc = vec![];
+            acc.extend_from_slice(&self.state_id.encode());
+            acc.extend_from_slice(&self.enclave_sig_as_array());
+            acc.extend_from_slice(self.msg_as_bytes());
+            acc.extend_from_slice(&self.ciphertext_as_vec());
+
+            acc
+        }
+    }
+
+    impl Decode for InstructionTx {
+        fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
+            let mut state_id_buf = [0u8; 8];
+            let mut enclave_sig_buf = [0u8; 64];
+            let mut msg_buf = [0u8; 32];
+
+            value.read(&mut state_id_buf)?;
+            value.read(&mut enclave_sig_buf)?;
+            value.read(&mut msg_buf)?;
+
+            let ciphertext_len = value.remaining_len()?
+                .expect("Ciphertext length should not be zero");
+            let mut ciphertext_buf = Vec::with_capacity(ciphertext_len);
+            value.read(&mut ciphertext_buf)?;
+
+            let state_id = u64::decode(&mut &state_id_buf[..])?;
+            let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
+            let msg = Sha256::new(msg_buf);
+            let ciphertext = Ciphertext::decode(&mut &ciphertext_buf[..])?;
+
+            Ok(InstructionTx {
+                state_id, enclave_sig, msg, ciphertext,
+            })
+        }
     }
 
     impl InstructionTx {
-        pub fn get_ciphertext(&mut self, len: usize) -> Ciphertext {
-            Ciphertext::from_bytes(&mut self.ciphertext, len)
+        pub fn new(state_id: u64, ciphertext: Ciphertext, enclave_sig: secp256k1::Signature, msg: Sha256) -> Self {
+            InstructionTx {
+                state_id,
+                enclave_sig,
+                msg,
+                ciphertext,
+            }
+        }
+
+        pub fn ciphertext(&self) -> &Ciphertext {
+            &self.ciphertext
         }
 
         pub fn state_id(&self) -> u64 {
             self.state_id
         }
 
-        pub fn ciphertext(&self) -> &[u8] {
-            &self.ciphertext
+        pub fn ciphertext_as_vec(&self) -> Vec<u8> {
+            self.ciphertext.encode()
         }
 
-        pub fn enclave_sig(&self) -> &[u8] {
-            &self.enclave_sig
+        pub fn enclave_sig_as_array(&self) -> [u8; 64] {
+            self.enclave_sig.serialize()
         }
 
-        pub fn msg(&self) -> &[u8] {
-            &self.msg
+        pub fn msg_as_bytes(&self) -> &[u8] {
+            &self.msg.as_bytes()
         }
     }
 }

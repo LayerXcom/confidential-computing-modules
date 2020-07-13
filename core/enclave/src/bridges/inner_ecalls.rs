@@ -5,11 +5,12 @@ use anonify_common::{
     crypto::{UserAddress, AccessRight, Ciphertext},
     traits::*,
     state_types::{MemId, StateType},
+    plugin_types::*,
 };
 use anonify_runtime::traits::*;
 use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
-use codec::Decode;
+use codec::{Decode, Encode};
 use log::debug;
 use anyhow::{Result, anyhow};
 use crate::{
@@ -19,6 +20,69 @@ use crate::{
     bridges::ocalls::save_to_host_memory,
     context::EnclaveContext,
 };
+
+pub trait EcallHandler {
+    fn handle(&self);
+}
+
+#[derive(Debug, Clone, Encode, Decode)]
+pub struct EnclaveEncryptInstruction {
+    input: input::EncryptInstruction,
+    enclave_context: EnclaveContext,
+    max_mem_size: usize,
+}
+
+impl EcallHandler for EnclaveEncryptInstruction {
+    fn handle(self) {
+        let state = &mut self.input.state.encode_s();
+        let enclave_context = &self.enclave_context
+        let instruction_tx = InstructionTx::construct::<R, C>(
+            self.input.call_id,
+            state,
+            self.input.state_id,
+            &self.input.access_right,
+            enclave_context,
+            max_mem_size,
+        )?;
+
+        enclave_context.set_notification(ar.user_address());
+        
+    }
+}
+
+pub fn inner_ecall_instruction<R, C>(
+    raw_sig: &RawSig,
+    raw_pubkey: &RawPubkey,
+    raw_challenge: &RawChallenge,
+    state: *mut u8,
+    state_len: usize,
+    state_id: u64,
+    call_id: u32,
+    raw_instruction_tx: &mut RawInstructionTx,
+    enclave_context: &EnclaveContext,
+    max_mem_size: usize,
+) -> Result<()>
+where
+    R: RuntimeExecutor<C, S=StateType>,
+    C: ContextOps,
+{
+    let params = unsafe{ slice::from_raw_parts_mut(state, state_len) };
+    let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge)
+        .map_err(|e| anyhow!("{}", e))?;
+    let instruction_tx = InstructionTx::construct::<R, C>(
+        call_id,
+        params,
+        state_id,
+        &ar,
+        &enclave_context,
+        max_mem_size,
+    )?;
+
+    enclave_context.set_notification(ar.user_address());
+    *raw_instruction_tx = instruction_tx.into_raw()?;
+
+    Ok(())
+}
 
 pub fn inner_ecall_insert_ciphertext<R, C>(
     ciphertext: *mut u8,
@@ -98,40 +162,6 @@ pub fn inner_ecall_join_group(
         &enclave_context,
     )?;
     *raw_join_group_tx = join_group_tx.into_raw()?;
-
-    Ok(())
-}
-
-pub fn inner_ecall_instruction<R, C>(
-    raw_sig: &RawSig,
-    raw_pubkey: &RawPubkey,
-    raw_challenge: &RawChallenge,
-    state: *mut u8,
-    state_len: usize,
-    state_id: u64,
-    call_id: u32,
-    raw_instruction_tx: &mut RawInstructionTx,
-    enclave_context: &EnclaveContext,
-    max_mem_size: usize,
-) -> Result<()>
-where
-    R: RuntimeExecutor<C, S=StateType>,
-    C: ContextOps,
-{
-    let params = unsafe{ slice::from_raw_parts_mut(state, state_len) };
-    let ar = AccessRight::from_raw(*raw_pubkey, *raw_sig, *raw_challenge)
-        .map_err(|e| anyhow!("{}", e))?;
-    let instruction_tx = InstructionTx::construct::<R, C>(
-        call_id,
-        params,
-        state_id,
-        &ar,
-        &enclave_context,
-        max_mem_size,
-    )?;
-
-    enclave_context.set_notification(ar.user_address());
-    *raw_instruction_tx = instruction_tx.into_raw()?;
 
     Ok(())
 }

@@ -179,16 +179,15 @@ impl Sender for EthSender {
     {
         // ecall of encrypt instruction
         let mut instruction_tx: InstructionTx = enc_ins_fn(self.enclave_id, access_right, state_info)?;
-        let ciphertext = instruction_tx.get_ciphertext(ciphertext_len);
 
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
                 self.contract.send_instruction(
                     addr,
                     instruction_tx.state_id(),
-                    ciphertext,
-                    &instruction_tx.enclave_sig(),
-                    &instruction_tx.msg(),
+                    instruction_tx.ciphertext_as_vec(),
+                    &instruction_tx.enclave_sig_as_array(),
+                    &instruction_tx.msg_as_bytes(),
                     gas,
                 )?
             }

@@ -176,6 +176,10 @@ impl Hash256 for Sha256 {
 }
 
 impl Sha256 {
+    pub fn new(hash: [u8; 32]) -> Self {
+        Sha256(hash)
+    }
+
     pub fn as_array(&self) -> [u8; 32] {
         self.0
     }
