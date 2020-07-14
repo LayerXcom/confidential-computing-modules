@@ -178,13 +178,12 @@ impl Sender for EthSender {
         F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, C>) -> Result<output::Instruction>,
     {
         // ecall of encrypt instruction
-        let mut instruction_tx: output::Instruction = enc_ins_fn(self.enclave_id, access_right, state_info)?;
+        let instruction_tx: output::Instruction = enc_ins_fn(self.enclave_id, access_right, state_info)?;
 
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
                 self.contract.send_instruction(
                     addr,
-                    instruction_tx.state_id(),
                     instruction_tx.encode_ciphertext(),
                     &instruction_tx.encode_enclave_sig(),
                     &instruction_tx.msg_as_bytes(),

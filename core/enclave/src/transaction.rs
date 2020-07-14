@@ -19,7 +19,6 @@ use crate::{
 pub fn construct_instruction<R, C>(
     call_id: u32,
     params: &mut [u8],
-    state_id: u64, // TODO: future works for separating smart contracts
     access_right: &AccessRight,
     enclave_ctx: &EnclaveContext,
     max_mem_size: usize,
@@ -35,7 +34,6 @@ where
     let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;
 
     Ok(output::Instruction::new(
-        state_id,
         ciphertext,
         enclave_sig,
         msg,

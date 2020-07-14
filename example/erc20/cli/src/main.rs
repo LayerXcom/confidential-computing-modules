@@ -54,7 +54,6 @@ const ANONIFY_COMMAND: &'static str = "anonify";
 const DEFAULT_KEYFILE_INDEX: &'static str = "0";
 const DEFAULT_AMOUNT: &str = "10";
 const DEFAULT_BALANCE: &str = "100";
-const DEFAULT_STATE_ID: &str = "0";
 const DEFAULT_TARGET: &str = "7H5cyDJ9CXBKOiM8tWnGaz5vqHY=";
 
 fn subcommand_anonify<R: Rng>(
@@ -92,10 +91,6 @@ fn subcommand_anonify<R: Rng>(
                 .expect("Not found total_supply.")
                 .parse()
                 .expect("Failed to parse total_supply");
-            let state_id = matches.value_of("state_id")
-                .expect("Not found state_id")
-                .parse()
-                .expect("Failed to parse state_id");
 
             commands::init_state(
                 &mut term,
@@ -103,7 +98,6 @@ fn subcommand_anonify<R: Rng>(
                 anonify_url,
                 keyfile_index,
                 total_supply,
-                state_id,
                 rng
             )
             .expect("Failed to init_state command");
@@ -120,10 +114,6 @@ fn subcommand_anonify<R: Rng>(
             let target: &str = matches.value_of("target")
                 .expect("Not found target");
             let target_addr = UserAddress::base64_decode(target);
-            let state_id = matches.value_of("state_id")
-                .expect("Not found state_id")
-                .parse()
-                .expect("Failed to parse state_id");
 
             commands::transfer(
                 &mut term,
@@ -132,7 +122,6 @@ fn subcommand_anonify<R: Rng>(
                 keyfile_index,
                 target_addr,
                 amount,
-                state_id,
                 rng
             )
             .expect("Failed to transfer command");
@@ -149,10 +138,6 @@ fn subcommand_anonify<R: Rng>(
             let target: &str = matches.value_of("target")
                 .expect("Not found target");
             let target_addr = UserAddress::base64_decode(target);
-            let state_id = matches.value_of("state_id")
-                .expect("Not found state_id")
-                .parse()
-                .expect("Failed to parse state_id");
 
             commands::approve(
                 &mut term,
@@ -161,7 +146,6 @@ fn subcommand_anonify<R: Rng>(
                 keyfile_index,
                 target_addr,
                 amount,
-                state_id,
                 rng
             )
                 .expect("Failed to approve command");
@@ -181,10 +165,6 @@ fn subcommand_anonify<R: Rng>(
             let target: &str = matches.value_of("target")
                 .expect("Not found target");
             let target_addr = UserAddress::base64_decode(target);
-            let state_id = matches.value_of("state_id")
-                .expect("Not found state_id")
-                .parse()
-                .expect("Failed to parse state_id");
 
             commands::transfer_from(
                 &mut term,
@@ -194,7 +174,6 @@ fn subcommand_anonify<R: Rng>(
                 owner_addr,
                 target_addr,
                 amount,
-                state_id,
                 rng
             )
                 .expect("Failed to transfer_from command");
@@ -211,10 +190,6 @@ fn subcommand_anonify<R: Rng>(
             let target: &str = matches.value_of("target")
                 .expect("Not found target");
             let target_addr = UserAddress::base64_decode(target);
-            let state_id = matches.value_of("state_id")
-                .expect("Not found state_id")
-                .parse()
-                .expect("Failed to parse state_id");
 
             commands::mint(
                 &mut term,
@@ -223,7 +198,6 @@ fn subcommand_anonify<R: Rng>(
                 keyfile_index,
                 target_addr,
                 amount,
-                state_id,
                 rng
             )
                 .expect("Failed to mint command");
@@ -238,18 +212,12 @@ fn subcommand_anonify<R: Rng>(
                 .parse()
                 .expect("Failed to parse amount");
 
-            let state_id = matches.value_of("state_id")
-                .expect("Not found state_id")
-                .parse()
-                .expect("Failed to parse state_id");
-
             commands::burn(
                 &mut term,
                 root_dir,
                 anonify_url,
                 keyfile_index,
                 amount,
-                state_id,
                 rng
             )
                 .expect("Failed to burn command");
@@ -342,12 +310,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .required(true)
                 .default_value(DEFAULT_BALANCE)
             )
-            .arg(Arg::with_name("state_id")
-                .short("s")
-                .takes_value(true)
-                .required(true)
-                .default_value(DEFAULT_STATE_ID)
-            )
         )
         .subcommand(SubCommand::with_name("transfer")
             .about("Transfer the specified amount to the address")
@@ -362,12 +324,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .takes_value(true)
                 .required(true)
                 .default_value(DEFAULT_AMOUNT)
-            )
-            .arg(Arg::with_name("state_id")
-                .short("s")
-                .takes_value(true)
-                .required(true)
-                .default_value(DEFAULT_STATE_ID)
             )
             .arg(Arg::with_name("target")
                 .short("to")
@@ -390,12 +346,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .required(true)
                 .default_value(DEFAULT_AMOUNT)
             )
-            .arg(Arg::with_name("state_id")
-                .short("s")
-                .takes_value(true)
-                .required(true)
-                .default_value(DEFAULT_STATE_ID)
-            )
             .arg(Arg::with_name("target")
                 .short("to")
                 .takes_value(true)
@@ -416,12 +366,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .takes_value(true)
                 .required(true)
                 .default_value(DEFAULT_AMOUNT)
-            )
-            .arg(Arg::with_name("state_id")
-                .short("s")
-                .takes_value(true)
-                .required(true)
-                .default_value(DEFAULT_STATE_ID)
             )
             .arg(Arg::with_name("owner")
                 .short("from")
@@ -449,12 +393,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .required(true)
                 .default_value(DEFAULT_AMOUNT)
             )
-            .arg(Arg::with_name("state_id")
-                .short("s")
-                .takes_value(true)
-                .required(true)
-                .default_value(DEFAULT_STATE_ID)
-            )
             .arg(Arg::with_name("target")
                 .short("to")
                 .takes_value(true)
@@ -475,12 +413,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                 .takes_value(true)
                 .required(true)
                 .default_value(DEFAULT_AMOUNT)
-            )
-            .arg(Arg::with_name("state_id")
-                .short("s")
-                .takes_value(true)
-                .required(true)
-                .default_value(DEFAULT_STATE_ID)
             )
         )
         .subcommand(SubCommand::with_name("key_rotation")

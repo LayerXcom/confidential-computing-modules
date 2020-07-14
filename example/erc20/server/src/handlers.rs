@@ -79,7 +79,6 @@ pub fn handle_init_state<D, S, W, DB>(
     let receipt = server.dispatcher.send_instruction::<_, CallName>(
         access_right,
         init_state,
-        req.state_id,
         "construct",
         signer,
         DEFAULT_SEND_GAS,
@@ -108,7 +107,6 @@ pub fn handle_transfer<D, S, W, DB>(
     let receipt = server.dispatcher.send_instruction::<_, CallName>(
         access_right,
         transfer_state,
-        req.state_id,
         "transfer",
         signer,
         DEFAULT_SEND_GAS,
@@ -137,7 +135,6 @@ pub fn handle_approve<D, S, W, DB>(
     let receipt = server.dispatcher.send_instruction::<_, CallName>(
         access_right,
         approve_state,
-        req.state_id,
         "approve",
         signer,
         DEFAULT_SEND_GAS,
@@ -166,7 +163,6 @@ pub fn handle_mint<D, S, W, DB>(
     let receipt = server.dispatcher.send_instruction::<_, CallName>(
         access_right,
         minting_state,
-        req.state_id,
         "mint",
         signer,
         DEFAULT_SEND_GAS,
@@ -194,7 +190,6 @@ pub fn handle_burn<D, S, W, DB>(
     let receipt = server.dispatcher.send_instruction::<_, CallName>(
         access_right,
         burn_state,
-        req.state_id,
         "burn",
         signer,
         DEFAULT_SEND_GAS,
@@ -224,7 +219,6 @@ pub fn handle_transfer_from<D, S, W, DB>(
     let receipt = server.dispatcher.send_instruction::<_, CallName>(
         access_right,
         transferred_from_state,
-        req.state_id,
         "transfer_from",
         signer,
         DEFAULT_SEND_GAS,

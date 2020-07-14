@@ -53,16 +53,14 @@ impl<'a, P: AsRef<Path>> ContractInfo<'a, P> {
 #[derive(Debug, Clone)]
 pub struct StateInfo<'a, ST: State, C: CallNameConverter> {
     state: ST,
-    state_id: u64,
     call_name: &'a str,
     phantom: PhantomData<C>
 }
 
 impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
-    pub fn new(state: ST, state_id: u64, call_name: &'a str) -> Self {
+    pub fn new(state: ST, call_name: &'a str) -> Self {
         StateInfo {
             state,
-            state_id,
             call_name,
             phantom: PhantomData::<C>,
         }
@@ -76,16 +74,11 @@ impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
         self.state.encode_s()
     }
 
-    pub fn state_id(&self) -> u64 {
-        self.state_id
-    }
-
     pub fn crate_enc_instruction(self, access_right: AccessRight) -> input::Instruction {
-        let state_id = self.state_id();
         let call_id = self.call_name_to_id();
         let state = StateType::new(self.state.encode_s());
 
-        input::Instruction::new(access_right, state, state_id, call_id)
+        input::Instruction::new(access_right, state, call_id)
     }
 }
 
