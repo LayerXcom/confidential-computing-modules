@@ -25,7 +25,7 @@ use crate::{
 };
 
 pub trait EcallHandler {
-    type O: EcallOutput + Encode + Decode;
+    type O: EcallOutput + Encode;
 
     fn handle< R: RuntimeExecutor<C, S=StateType>, C: ContextOps>(
         self,
