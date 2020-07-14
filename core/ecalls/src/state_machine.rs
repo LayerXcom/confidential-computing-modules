@@ -14,7 +14,7 @@ pub enum ExecPhase<A: AccessControl, E: Execution> {
 }
 
 impl<A: AccessControl, E: Execution> ExecPhase<A, E> {
-    pub fn new(input: EcallInput<A, E>) -> Self {
+    pub fn new(input: EcallInputType<A, E>) -> Self {
         unimplemented!();
     }
 

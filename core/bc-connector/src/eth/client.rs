@@ -185,8 +185,8 @@ impl Sender for EthSender {
                 self.contract.send_instruction(
                     addr,
                     instruction_tx.state_id(),
-                    instruction_tx.ciphertext_as_vec(),
-                    &instruction_tx.enclave_sig_as_array(),
+                    instruction_tx.encode_ciphertext(),
+                    &instruction_tx.encode_enclave_sig(),
                     &instruction_tx.msg_as_bytes(),
                     gas,
                 )?

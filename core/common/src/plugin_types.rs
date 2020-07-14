@@ -50,9 +50,9 @@ pub mod output {
         fn encode(&self) -> Vec<u8> {
             let mut acc = vec![];
             acc.extend_from_slice(&self.state_id.encode());
-            acc.extend_from_slice(&self.enclave_sig_as_array());
+            acc.extend_from_slice(&self.encode_enclave_sig());
             acc.extend_from_slice(self.msg_as_bytes());
-            acc.extend_from_slice(&self.ciphertext_as_vec());
+            acc.extend_from_slice(&self.encode_ciphertext());
 
             acc
         }
@@ -70,7 +70,7 @@ pub mod output {
 
             let ciphertext_len = value.remaining_len()?
                 .expect("Ciphertext length should not be zero");
-            let mut ciphertext_buf = Vec::with_capacity(ciphertext_len);
+            let mut ciphertext_buf = vec![0u8; ciphertext_len];
             value.read(&mut ciphertext_buf)?;
 
             let state_id = u64::decode(&mut &state_id_buf[..])?;
@@ -102,11 +102,11 @@ pub mod output {
             self.state_id
         }
 
-        pub fn ciphertext_as_vec(&self) -> Vec<u8> {
+        pub fn encode_ciphertext(&self) -> Vec<u8> {
             self.ciphertext.encode()
         }
 
-        pub fn enclave_sig_as_array(&self) -> [u8; 64] {
+        pub fn encode_enclave_sig(&self) -> [u8; 64] {
             self.enclave_sig.serialize()
         }
 
