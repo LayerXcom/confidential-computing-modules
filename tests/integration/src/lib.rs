@@ -33,7 +33,6 @@ fn test_integration_eth_construct() {
     let eid = enclave.geteid();
     let my_access_right = AccessRight::new_from_rng().unwrap();
 
-    let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
@@ -54,7 +53,6 @@ fn test_integration_eth_construct() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         init_state,
-        state_id,
         "construct",
         deployer_addr.clone(),
         gas,
@@ -87,7 +85,6 @@ fn test_auto_notification() {
     let other_access_right = AccessRight::new_from_rng().unwrap();
     let third_access_right = AccessRight::new_from_rng().unwrap();
 
-    let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
@@ -108,7 +105,6 @@ fn test_auto_notification() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         init_state,
-        state_id,
         "construct",
         deployer_addr.clone(),
         gas,
@@ -133,7 +129,6 @@ fn test_auto_notification() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         transfer_state,
-        state_id,
         "transfer",
         deployer_addr,
         gas,
@@ -160,7 +155,6 @@ fn test_integration_eth_transfer() {
     let other_access_right = AccessRight::new_from_rng().unwrap();
     let third_access_right = AccessRight::new_from_rng().unwrap();
 
-    let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
@@ -181,7 +175,6 @@ fn test_integration_eth_transfer() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         init_state,
-        state_id,
         "construct",
         deployer_addr.clone(),
         gas,
@@ -211,7 +204,6 @@ fn test_integration_eth_transfer() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         transfer_state,
-        state_id,
         "transfer",
         deployer_addr,
         gas,
@@ -243,7 +235,6 @@ fn test_key_rotation() {
     let other_access_right = AccessRight::new_from_rng().unwrap();
     let third_access_right = AccessRight::new_from_rng().unwrap();
 
-    let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
@@ -271,7 +262,6 @@ fn test_key_rotation() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         init_state,
-        state_id,
         "construct",
         deployer_addr.clone(),
         gas,
@@ -300,7 +290,6 @@ fn test_integration_eth_approve() {
     let my_access_right = AccessRight::new_from_rng().unwrap();
     let other_access_right = AccessRight::new_from_rng().unwrap();
 
-    let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
@@ -321,7 +310,6 @@ fn test_integration_eth_approve() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         init_state,
-        state_id,
         "construct",
         deployer_addr.clone(),
         gas,
@@ -347,7 +335,6 @@ fn test_integration_eth_approve() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         approve_state,
-        state_id,
         "approve",
         deployer_addr,
         gas,
@@ -382,7 +369,6 @@ fn test_integration_eth_transfer_from() {
     let other_access_right = AccessRight::new_from_rng().unwrap();
     let third_access_right = AccessRight::new_from_rng().unwrap();
 
-    let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
@@ -403,7 +389,6 @@ fn test_integration_eth_transfer_from() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         init_state,
-        state_id,
         "construct",
         deployer_addr.clone(),
         gas,
@@ -438,7 +423,6 @@ fn test_integration_eth_transfer_from() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         approve_state,
-        state_id,
         "approve",
         deployer_addr.clone(),
         gas,
@@ -478,7 +462,6 @@ fn test_integration_eth_transfer_from() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         other_access_right.clone(),
         transferred_from_state,
-        state_id,
         "transfer_from",
         deployer_addr,
         gas,
@@ -520,7 +503,6 @@ fn test_integration_eth_mint() {
     let my_access_right = AccessRight::new_from_rng().unwrap();
     let other_access_right = AccessRight::new_from_rng().unwrap();
 
-    let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
@@ -541,7 +523,6 @@ fn test_integration_eth_mint() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         init_state,
-        state_id,
         "construct",
         deployer_addr.clone(),
         gas,
@@ -562,7 +543,6 @@ fn test_integration_eth_mint() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         minting_state,
-        state_id,
         "mint",
         deployer_addr,
         gas,
@@ -594,7 +574,6 @@ fn test_integration_eth_burn() {
     let my_access_right = AccessRight::new_from_rng().unwrap();
     let other_access_right = AccessRight::new_from_rng().unwrap();
 
-    let state_id = 0;
     let gas = 3_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
@@ -615,7 +594,6 @@ fn test_integration_eth_burn() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         init_state,
-        state_id,
         "construct",
         deployer_addr.clone(),
         gas,
@@ -636,7 +614,6 @@ fn test_integration_eth_burn() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         my_access_right.clone(),
         transfer_state,
-        state_id,
         "transfer",
         deployer_addr.clone(),
         gas,
@@ -655,7 +632,6 @@ fn test_integration_eth_burn() {
     let receipt = dispatcher.send_instruction::<_, CallName>(
         other_access_right.clone(),
         burn_state,
-        state_id,
         "burn",
         deployer_addr,
         gas,
