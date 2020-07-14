@@ -100,7 +100,6 @@ fn inner_send_invoice<D, S, W, DB>(
         DB: BlockNumDB,
 {
     let access_right = create_access_right(keypair);
-    let state_id: u64 = 0;
     let signer = server.dispatcher.get_account(0)?;
     let recipient: UserAddress = UserAddress::base64_decode(DEFAULT_RECIPIENT_ADDRESS);
 
@@ -112,7 +111,6 @@ fn inner_send_invoice<D, S, W, DB>(
     let receipt = server.dispatcher.send_instruction::<_, CallName>(
         access_right,
         send_invoice_state,
-        state_id,
         "send_invoice",
         signer,
         DEFAULT_SEND_GAS,
