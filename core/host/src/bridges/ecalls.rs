@@ -45,8 +45,8 @@ impl EnclaveConnector {
 
     pub fn invoke_ecall<E, D>(&self, cmd: u32, input: E) -> Result<D>
     where
-        E: Encode,
-        D: Decode,
+        E: Encode + EcallInput,
+        D: Decode + EcallOutput,
     {
         let input_payload = input.encode();
         let result = self.inner_invoke_ecall(cmd, input_payload)?;
@@ -103,7 +103,7 @@ where
 {
     let input = state_info.crate_enc_instruction(access_right);
     EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
-        .invoke_ecall::<input::EncryptInstruction<S>, output::InstructionTx>(ENCRYPT_INSTRUCTION_CMD, input)
+        .invoke_ecall::<input::EncryptInstruction, output::InstructionTx>(ENCRYPT_INSTRUCTION_CMD, input)
 }
 
 pub(crate) fn insert_logs<S: State>(

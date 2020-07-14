@@ -125,33 +125,6 @@ impl fmt::Debug for RawHandshakeTx {
     }
 }
 
-// #[repr(C)]
-// #[derive(Clone, Copy)]
-// pub struct RawAccessRight {
-//     pub sig_first: [u8; 32],
-//     pub sig_latter: [u8; 32],
-//     pub pubkey: [u8; 32],
-//     pub challenge: [u8; 32],
-// }
-
-// impl Default for RawAccessRight {
-//     fn default() -> Self {
-//         RawAccessRight {
-//             .. unsafe { mem::zeroed() }
-//         }
-//     }
-// }
-
-// impl fmt::Debug for RawAccessRight {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         let mut debug_trait_builder = f.debug_struct("RawAccessRight");
-//         // debug_trait_builder.field("sig", &(self.sig));
-//         debug_trait_builder.field("pubkey", &(self.pubkey));
-//         debug_trait_builder.field("challenge", &(self.challenge));
-//         debug_trait_builder.finish()
-//     }
-// }
-
 /// Returned from getting state operations.
 #[repr(C)]
 #[derive(Clone, Copy)]

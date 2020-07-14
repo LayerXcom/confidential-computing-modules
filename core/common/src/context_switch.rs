@@ -18,15 +18,15 @@ pub trait Execution: Debug + Clone {
 }
 
 #[derive(Encode, Decode, Debug, Clone)]
-pub struct EcallInput<A: AccessControl, E: Execution> {
+pub struct EcallInputType<A: AccessControl, E: Execution> {
     access_control: A,
     exec_params: E,
     skip_phases: BTreeSet<u8>,
 }
 
-impl<A: AccessControl, E: Execution> EcallInput<A, E> {
+impl<A: AccessControl, E: Execution> EcallInputType<A, E> {
     pub fn new(access_control: A, exec_params: E, skip_phases: BTreeSet<u8>) -> Self {
-        EcallInput {
+        EcallInputType {
             access_control,
             exec_params,
             skip_phases,
@@ -34,9 +34,5 @@ impl<A: AccessControl, E: Execution> EcallInput<A, E> {
     }
 }
 
-// impl From<>
-
 #[derive(Debug, Clone)]
 pub struct ExecOutput(Vec<u8>);
-
-

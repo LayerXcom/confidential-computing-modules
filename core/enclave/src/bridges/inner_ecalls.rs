@@ -27,18 +27,22 @@ use crate::{
 pub trait EcallHandler {
     type O: EcallOutput + Encode + Decode;
 
-    fn handle< R: RuntimeExecutor<C, S=StateType>, C: ContextOps>(self, enclave_context: &EnclaveContext, max_mem_size: usize) -> Result<Self::O>;
+    fn handle< R: RuntimeExecutor<C, S=StateType>, C: ContextOps>(
+        self,
+        enclave_context: &EnclaveContext,
+        max_mem_size: usize,
+    ) -> Result<Self::O>;
 }
 
-impl EcallHandler for input::EncryptInstruction<StateType> {
+impl EcallHandler for input::EncryptInstruction {
     type O = output::InstructionTx;
 
     fn handle<R: RuntimeExecutor<C, S=StateType>, C: ContextOps>(
-        self,
+        mut self,
         enclave_context: &EnclaveContext,
         max_mem_size: usize
     ) -> Result<Self::O> {
-        let state = &mut self.state.encode_s();
+        let state = self.state.as_mut_bytes();
         let ar = &self.access_right;
 
         let instruction_tx = construct::<R, C>(

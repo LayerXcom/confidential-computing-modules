@@ -4,7 +4,6 @@ use std::{
 };
 use anonify_types::*;
 use anonify_common::{
-    state_types::StateType,
     context_switch::ENCRYPT_INSTRUCTION_CMD,
     plugin_types::*,
 };
@@ -24,7 +23,7 @@ register_ecall!(
     MAX_MEM_SIZE,
     Runtime<EnclaveContext>,
     EnclaveContext,
-    (ENCRYPT_INSTRUCTION_CMD, input::EncryptInstruction<StateType>, output::InstructionTx),
+    (ENCRYPT_INSTRUCTION_CMD, input::EncryptInstruction, output::InstructionTx),
 );
 
 /// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.

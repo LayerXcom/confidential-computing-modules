@@ -11,6 +11,7 @@ use anonify_common::{
     traits::*,
     plugin_types::*,
     crypto::AccessRight,
+    state_types::StateType,
 };
 use anyhow::anyhow;
 use crate::{
@@ -79,10 +80,10 @@ impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
         self.state_id
     }
 
-    pub fn crate_enc_instruction(self, access_right: AccessRight) -> input::EncryptInstruction<ST> {
+    pub fn crate_enc_instruction(self, access_right: AccessRight) -> input::EncryptInstruction {
         let state_id = self.state_id();
         let call_id = self.call_name_to_id();
-        let state = self.state;
+        let state = StateType::new(self.state.encode_s());
 
         input::EncryptInstruction::new(access_right, state, state_id, call_id)
     }

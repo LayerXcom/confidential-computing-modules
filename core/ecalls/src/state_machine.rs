@@ -49,7 +49,6 @@ pub struct EnclaveStateMachine<S> {
     // kvs,
 }
 
-
 pub struct Plaintext(Vec<u8>);
 
 pub struct Ciphertext(Vec<u8>);
@@ -66,16 +65,3 @@ pub struct AccessControlImpl<A: AccessControl, E: Execution> {
 pub struct ExecutionImpl<E: Execution> {
     execution: E,
 }
-
-// pub trait Decryption {
-//     fn decrypt(self) -> Result<ExecParam>;
-// }
-
-// pub trait Encryption {
-//     fn encrypt(self, plaintext: Plaintext) -> Result<Ciphertext>;
-// }
-
-// pub trait Signature {
-//     fn sign(self, message: Message) -> Result<Signature>;
-// }
-

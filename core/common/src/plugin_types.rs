@@ -2,6 +2,7 @@ use crate::traits::State;
 use crate::localstd::vec::Vec;
 use crate::crypto::{AccessRight, Sha256};
 use codec::{Encode, Decode, Input, self};
+use crate::state_types::StateType;
 
 pub trait EcallInput {}
 pub trait EcallOutput {}
@@ -10,17 +11,17 @@ pub mod input {
     use super::*;
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct EncryptInstruction<ST: State> {
+    pub struct EncryptInstruction {
         pub access_right: AccessRight,
-        pub state: ST,
+        pub state: StateType,
         pub state_id: u64,
         pub call_id: u32,
     }
 
-    impl<ST: State> EcallInput for EncryptInstruction<ST> {}
+    impl EcallInput for EncryptInstruction {}
 
-    impl<ST: State> EncryptInstruction<ST> {
-        pub fn new(access_right: AccessRight, state: ST, state_id: u64, call_id: u32) -> Self {
+    impl EncryptInstruction {
+        pub fn new(access_right: AccessRight, state: StateType, state_id: u64, call_id: u32) -> Self {
             EncryptInstruction {
                 access_right,
                 state,
