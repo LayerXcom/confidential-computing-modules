@@ -5,11 +5,12 @@ use std::{
     sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx};
+use anonify_types::{RawJoinGroupTx, RawHandshakeTx};
 use anonify_common::{
     traits::*,
     crypto::AccessRight,
     state_types::UpdatedState,
+    plugin_types::*,
 };
 use crate::{
     error::Result,
@@ -75,7 +76,7 @@ pub trait Sender: Sized {
     where
         ST: State,
         C: CallNameConverter,
-        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, C>) -> Result<RawInstructionTx>;
+        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, C>) -> Result<output::Instruction>;
 
     /// Attestation with deployed contract.
     fn join_group<F>(

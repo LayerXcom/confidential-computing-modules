@@ -5,7 +5,7 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anonify-types = { path = "../types", default-features = false }
+anonify-types = { path = "../types" }
 anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
 anonify-runtime = { path = "../runtime", default-features = false, features = ["sgx"] }
 anonify-treekem = { path = "../treekem" }

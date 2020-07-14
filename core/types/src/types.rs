@@ -100,40 +100,6 @@ impl fmt::Debug for RawJoinGroupTx {
     }
 }
 
-/// Bridged type from enclave to host to modify state transaction.
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct RawInstructionTx {
-    pub state_id: u64,
-    pub ciphertext: *const u8,
-    pub enclave_sig: *const u8,
-    pub msg: *const u8,
-}
-
-impl RawEnclaveTx for RawInstructionTx {}
-
-impl Default for RawInstructionTx {
-    fn default() -> Self {
-        RawInstructionTx {
-            ciphertext: ptr::null(),
-            enclave_sig: ptr::null(),
-            msg: ptr::null(),
-            ..unsafe { mem::zeroed() }
-        }
-    }
-}
-
-impl fmt::Debug for RawInstructionTx {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut debug_trait_builder = f.debug_struct("RawInstructionTx");
-        debug_trait_builder.field("state_id", &(self.state_id));
-        debug_trait_builder.field("ciphertext", &(self.ciphertext));
-        debug_trait_builder.field("enclave_sig", &(self.enclave_sig));
-        debug_trait_builder.field("msg", &(self.msg));
-        debug_trait_builder.finish()
-    }
-}
-
 /// Bridged type from enclave to host to send a handshake transaction.
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -158,33 +124,6 @@ impl fmt::Debug for RawHandshakeTx {
         debug_trait_builder.finish()
     }
 }
-
-// #[repr(C)]
-// #[derive(Clone, Copy)]
-// pub struct RawAccessRight {
-//     pub sig_first: [u8; 32],
-//     pub sig_latter: [u8; 32],
-//     pub pubkey: [u8; 32],
-//     pub challenge: [u8; 32],
-// }
-
-// impl Default for RawAccessRight {
-//     fn default() -> Self {
-//         RawAccessRight {
-//             .. unsafe { mem::zeroed() }
-//         }
-//     }
-// }
-
-// impl fmt::Debug for RawAccessRight {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         let mut debug_trait_builder = f.debug_struct("RawAccessRight");
-//         // debug_trait_builder.field("sig", &(self.sig));
-//         debug_trait_builder.field("pubkey", &(self.pubkey));
-//         debug_trait_builder.field("challenge", &(self.challenge));
-//         debug_trait_builder.finish()
-//     }
-// }
 
 /// Returned from getting state operations.
 #[repr(C)]

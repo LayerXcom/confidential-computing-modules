@@ -12,11 +12,13 @@ pub enum HostError {
     Sgx {
         status: sgx_status_t,
         function: &'static str,
+        // command: u32,
     },
     #[error("Enclave ecall failed function: {function:?}, status: {status:?}")]
     Enclave {
         status: EnclaveStatus,
         function: &'static str,
+        // command: u32,
     },
     #[error("Contract address have not been set.")]
     AddressNotSet,
@@ -26,4 +28,6 @@ pub enum HostError {
     IoError(#[from] std::io::Error),
     #[error("Web3 error: {0}")]
     Web3Error(#[from] web3::Error),
+    #[error("Codec error: {0}")]
+    CodecError(#[from] codec::Error),
 }

@@ -18,6 +18,8 @@ use sgx_anyhow as local_anyhow;
 #[macro_use]
 extern crate lazy_static;
 
+pub mod context_switch;
+pub mod plugin_types;
 pub mod crypto;
 pub mod kvs;
 pub mod traits;

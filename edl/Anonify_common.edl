@@ -14,6 +14,15 @@ enclave {
     include "anonify-types.h"
 
     trusted {
+        public uint32_t ecall_entry_point(
+            uint32_t cmd,
+            [in, size=in_len] uint8_t* in_buf,
+            size_t in_len,
+            [out, size=out_maxlen] uint8_t* out_buf,
+            size_t out_maxlen,
+            [out] size_t *real_out_len
+        );
+
         public EnclaveStatus ecall_insert_ciphertext(
             [in, count=ciphertexts_len] uint8_t *ciphertexts,
             size_t ciphertexts_len,
@@ -31,17 +40,6 @@ enclave {
             [in] uint8_t challenge[32],
             uint32_t mem_id,
             [out] EnclaveState* state
-        );
-
-        public EnclaveStatus ecall_instruction(
-            [in] uint8_t sig[64],
-            [in] uint8_t pubkey[32],
-            [in] uint8_t challenge[32],
-            [in, count=state_len] uint8_t *state,
-            size_t state_len,
-            uint64_t state_id,
-            uint32_t call_id,
-            [out] RawInstructionTx* result
         );
 
         public EnclaveStatus ecall_join_group(

@@ -5,6 +5,18 @@ use anonify_types::*;
 use sgx_types::*;
 
 extern "C" {
+    pub fn ecall_entry_point(
+        eid: sgx_enclave_id_t,
+        retval: *mut u32,
+        cmd: u32,
+        in_buf: *mut u8,
+        in_len: usize,
+        out_buf: *mut u8,
+        out_maxlen: usize,
+        real_out_len: *mut usize,
+    ) -> sgx_status_t;
+}
+extern "C" {
     pub fn ecall_insert_ciphertext(
         eid: sgx_enclave_id_t,
         retval: *mut EnclaveStatus,
@@ -30,20 +42,6 @@ extern "C" {
         challenge: *mut [u8; 32usize],
         mem_id: u32,
         state: *mut EnclaveState,
-    ) -> sgx_status_t;
-}
-extern "C" {
-    pub fn ecall_instruction(
-        eid: sgx_enclave_id_t,
-        retval: *mut EnclaveStatus,
-        sig: *mut [u8; 64usize],
-        pubkey: *mut [u8; 32usize],
-        challenge: *mut [u8; 32usize],
-        state: *mut u8,
-        state_len: usize,
-        state_id: u64,
-        call_id: u32,
-        result: *mut RawInstructionTx,
     ) -> sgx_status_t;
 }
 extern "C" {

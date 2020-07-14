@@ -10,6 +10,13 @@ use anonify_types::RawUpdatedState;
 
 pub trait RawState: Encode + Decode + Clone + Default {}
 
+// TODO: Remove Encode trait bound cause StateType has already be encoded.
+// then, implement
+// impl<S: State> From<S> for StateType {
+//     fn from(state: S) -> Self {
+//         StateType::new(state.encode_s())
+//     }
+// }
 #[derive(Clone, Debug, Default, Decode, Encode)]
 pub struct StateType(Vec<u8>);
 
@@ -24,6 +31,10 @@ impl StateType {
 
     pub fn as_bytes(&self) -> &[u8] {
         &self.0[..]
+    }
+
+    pub fn as_mut_bytes(&mut self) -> &mut [u8] {
+        &mut self.0[..]
     }
 
     pub fn len(&self) -> usize {

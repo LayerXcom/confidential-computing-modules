@@ -5,8 +5,8 @@ use crate::localstd::{
     convert::TryFrom,
 };
 use crate::serde::{Serialize, Deserialize};
-use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, SignatureError, SECRET_KEY_LENGTH};
-use codec::{Encode, Decode};
+use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, SignatureError, SECRET_KEY_LENGTH, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH};
+use codec::{Encode, Decode, Input, self};
 use anonify_types::{RawPubkey, RawSig, RawChallenge};
 #[cfg(feature = "std")]
 use rand::Rng;
@@ -16,6 +16,7 @@ use rand_core::{RngCore, CryptoRng};
 use rand_os::OsRng;
 use crate::local_anyhow::{anyhow, Error};
 use crate::traits::*;
+use crate::context_switch::AccessControl;
 
 const ADDRESS_SIZE: usize = 20;
 
@@ -175,6 +176,10 @@ impl Hash256 for Sha256 {
 }
 
 impl Sha256 {
+    pub fn new(hash: [u8; 32]) -> Self {
+        Sha256(hash)
+    }
+
     pub fn as_array(&self) -> [u8; 32] {
         self.0
     }
@@ -196,6 +201,47 @@ pub struct AccessRight {
     sig: Signature,
     pubkey: PublicKey,
     challenge: [u8; CHALLENGE_SIZE],
+}
+
+impl AccessControl for AccessRight {
+    fn is_allowed(self) -> Result<(), Error> {
+        self.verify_sig()
+            .map_err(|e| anyhow!("{}", e))
+    }
+}
+
+impl Encode for AccessRight {
+    fn encode(&self) -> Vec<u8> {
+        let mut acc = vec![];
+        acc.extend_from_slice(&self.sig.to_bytes());
+        acc.extend_from_slice(self.pubkey.as_bytes());
+        acc.extend_from_slice(&self.challenge[..]);
+
+        acc
+    }
+}
+
+impl Decode for AccessRight {
+    fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let mut sig_buf = [0u8; SIGNATURE_LENGTH];
+        let mut pubkey_buf = [0u8; PUBLIC_KEY_LENGTH];
+        let mut chal_buf = [0u8; CHALLENGE_SIZE];
+
+        value.read(&mut sig_buf)?;
+        value.read(&mut pubkey_buf)?;
+        value.read(&mut chal_buf)?;
+
+        let sig = Signature::from_bytes(&sig_buf)
+            .expect("Failed to decode sig of AccessRight");
+        let pubkey = PublicKey::from_bytes(&pubkey_buf)
+            .expect("Failed to decode pubkey of AccessRight");
+
+        Ok(AccessRight{
+            sig,
+            pubkey,
+            challenge: chal_buf,
+        })
+    }
 }
 
 impl AccessRight {

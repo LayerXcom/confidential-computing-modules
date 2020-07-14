@@ -7,6 +7,7 @@ members = [
     "core/common",
     "core/types",
     "core/treekem",
+    "core/ecalls",
     "example/erc20/api",
     "example/erc20/cli",
     "example/erc20/enclave",

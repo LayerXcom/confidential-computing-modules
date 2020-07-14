@@ -1,8 +1,9 @@
-use anonify_types::{RawJoinGroupTx, RawInstructionTx, RawHandshakeTx, traits::RawEnclaveTx};
+use anonify_types::{RawJoinGroupTx, RawHandshakeTx, traits::RawEnclaveTx};
 use anonify_common::{
     crypto::{Sha256, AccessRight, Ciphertext},
     traits::*,
     state_types::StateType,
+    plugin_types::*,
 };
 use anonify_treekem::handshake::HandshakeParams;
 use anonify_runtime::traits::*;
@@ -14,6 +15,32 @@ use crate::{
     bridges::ocalls::save_to_host_memory,
     instructions::Instructions,
 };
+
+pub fn construct_instruction<R, C>(
+    call_id: u32,
+    params: &mut [u8],
+    state_id: u64, // TODO: future works for separating smart contracts
+    access_right: &AccessRight,
+    enclave_ctx: &EnclaveContext,
+    max_mem_size: usize,
+) -> Result<output::Instruction>
+where
+    R: RuntimeExecutor<C, S=StateType>,
+    C: ContextOps,
+{
+    let group_key = &*enclave_ctx.group_key.read().unwrap();
+    let ciphertext = Instructions::<R, C>::new(call_id, params, &access_right)?
+        .encrypt(group_key, max_mem_size)?;
+    let msg = Sha256::hash(&ciphertext.encode());
+    let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;
+
+    Ok(output::Instruction::new(
+        state_id,
+        ciphertext,
+        enclave_sig,
+        msg,
+    ))
+}
 
 /// A trait for exporting transactions to out-enclave.
 /// For calculated transaction in enclave which is ready to sending outside.
@@ -70,60 +97,6 @@ impl JoinGroupTx {
             report,
             report_sig,
             handshake,
-        })
-    }
-}
-
-/// A transaction components for state transition operations.
-#[derive(Debug, Clone)]
-pub struct InstructionTx {
-    state_id: u64,
-    ciphertext: Ciphertext,
-    enclave_sig: secp256k1::Signature,
-    msg: Sha256,
-}
-
-impl EnclaveTx for InstructionTx {
-    type R = RawInstructionTx;
-
-    fn into_raw(self) -> Result<Self::R> {
-        let ciphertext = save_to_host_memory(&self.ciphertext.into_vec())? as *const u8;
-        let enclave_sig = save_to_host_memory(&self.enclave_sig.serialize())? as *const u8;
-        let msg = save_to_host_memory(&self.msg.as_bytes())? as *const u8;
-
-        Ok(RawInstructionTx {
-            state_id: self.state_id,
-            ciphertext,
-            enclave_sig,
-            msg,
-        })
-    }
-}
-
-impl InstructionTx {
-    pub fn construct<R, C>(
-        call_id: u32,
-        params: &mut [u8],
-        state_id: u64, // TODO: future works for separating smart contracts
-        access_right: &AccessRight,
-        enclave_ctx: &EnclaveContext,
-        max_mem_size: usize,
-    ) -> Result<Self>
-    where
-        R: RuntimeExecutor<C, S=StateType>,
-        C: ContextOps,
-    {
-        let group_key = &*enclave_ctx.group_key.read().unwrap();
-        let ciphertext = Instructions::<R, C>::new(call_id, params, &access_right)?
-            .encrypt(group_key, max_mem_size)?;
-        let msg = Sha256::hash(&ciphertext.encode());
-        let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;
-
-        Ok(InstructionTx {
-            state_id,
-            ciphertext,
-            enclave_sig,
-            msg,
         })
     }
 }
