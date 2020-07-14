@@ -1,8 +1,8 @@
 use crate::traits::State;
 use crate::localstd::vec::Vec;
-use crate::crypto::{AccessRight, Sha256};
+use crate::crypto::{AccessRight, Sha256, Ciphertext};
 use codec::{Encode, Decode, Input, self};
-use crate::state_types::StateType;
+use crate::state_types::{StateType, MemId, UpdatedState};
 
 pub trait EcallInput {}
 pub trait EcallOutput {}
@@ -26,6 +26,69 @@ pub mod input {
                 state,
                 call_id,
             }
+        }
+    }
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct JoinGroup;
+
+    impl EcallInput for JoinGroup {}
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct Handshake;
+
+    impl EcallInput for Handshake {}
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct Ciphertext {
+        ciphertext: Ciphertext,
+    }
+
+    impl EcallInput for Ciphertext {}
+
+    impl Ciphertext {
+        pub fn new(ciphertext: Ciphertext) -> Self {
+            Ciphertext { ciphertext }
+        }
+    }
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct Handshake {
+        handshake: Vec<u8>,
+    }
+
+    impl EcallInput for Handshake {}
+
+    impl Handshake {
+        pub fn new(handshake: Vec<u8>) -> Self {
+            Handshake { handshake }
+        }
+    }
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct GetState {
+        access_right: AccessRight,
+        mem_id: MemId,
+    }
+
+    impl EcallInput for AccessRight {}
+
+    impl AccessRight {
+        pub fn new(access_right: AccessRight, mem_id: MemId) -> Self {
+            AccessRight { access_right, mem_id }
+        }
+    }
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct RegNotification {
+        access_right: AccessRight,
+    }
+
+    impl EcallInput for RegNotification {}
+
+    impl RegNotification {
+        pub fn new(access_right: AccessRight) -> Self {
+            RegNotification { access_right }
         }
     }
 }
@@ -99,6 +162,34 @@ pub mod output {
 
         pub fn msg_as_bytes(&self) -> &[u8] {
             &self.msg.as_bytes()
+        }
+    }
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct UpdatedState {
+        updated_state: Option<UpdatedState<StateType>>
+    }
+
+    impl EcallOutput for UpdatedState {}
+
+    impl UpdatedState {
+        pub fn new(updated_state: Option<UpdatedState<StateType>>) -> Self {
+            UpdatedState { updated_state }
+        }
+    }
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct JoinGroup {
+        report: Vec<u8>,
+        report_sig: Vec<u8>,
+        handshake: Vec<u8>,
+    }
+
+    impl EcallOutput for JoinGroup {}
+
+    impl JoinGroup {
+        pub fn new() -> Self {
+            unimplemented!();
         }
     }
 }

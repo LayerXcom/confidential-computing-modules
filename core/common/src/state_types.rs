@@ -48,7 +48,7 @@ impl From<UserAddress> for StateType {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Encode, Decode)]
 pub struct UpdatedState<S: State> {
     pub address: UserAddress,
     pub mem_id: MemId,

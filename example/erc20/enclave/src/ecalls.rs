@@ -14,7 +14,7 @@ use anonify_enclave::{
 use erc20_state_transition::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
 use crate::ENCLAVE_CONTEXT;
 use anonify_enclave::bridges::inner_ecalls::*;
-use anonify_ecalls::register_ecall;
+use anonify_ecalls::{register_ecall, commands::*};
 use anyhow::anyhow;
 use codec::Encode;
 
@@ -24,6 +24,7 @@ register_ecall!(
     Runtime<EnclaveContext>,
     EnclaveContext,
     (ENCRYPT_INSTRUCTION_CMD, input::Instruction, output::Instruction),
+    (INSERT_CIPHERTEXT_CMD, input::Ciphertext, output::UpdatedState),
 );
 
 /// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.

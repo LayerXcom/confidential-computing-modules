@@ -267,32 +267,6 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
 }
 
 #[derive(Debug, Clone, Default)]
-pub(crate) struct BoxedJoinGroupTx {
-    pub report: Box<[u8]>,
-    pub report_sig: Box<[u8]>,
-    pub handshake: Box<[u8]>,
-}
-
-impl From<RawJoinGroupTx> for BoxedJoinGroupTx {
-    fn from(raw_reg_tx: RawJoinGroupTx) -> Self {
-        let mut res_tx = BoxedJoinGroupTx::default();
-
-        let box_report = raw_reg_tx.report as *mut Box<[u8]>;
-        let report = unsafe { Box::from_raw(box_report) };
-        let box_report_sig = raw_reg_tx.report_sig as *mut Box<[u8]>;
-        let report_sig = unsafe { Box::from_raw(box_report_sig) };
-        let box_handshake = raw_reg_tx.handshake as *mut Box<[u8]>;
-        let handshake = unsafe { Box::from_raw(box_handshake) };
-
-        res_tx.report = *report;
-        res_tx.report_sig = *report_sig;
-        res_tx.handshake = *handshake;
-
-        res_tx
-    }
-}
-
-#[derive(Debug, Clone, Default)]
 pub(crate) struct BoxedHandshakeTx {
     pub handshake: Box<[u8]>,
 }
