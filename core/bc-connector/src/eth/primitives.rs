@@ -138,7 +138,6 @@ impl Web3Contract {
     pub fn send_instruction(
         &self,
         from: Address,
-        _state_id: u64,
         ciphertext: Vec<u8>,
         enclave_sig: &[u8],
         msg: &[u8],

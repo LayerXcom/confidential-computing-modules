@@ -86,7 +86,6 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         &self,
         access_right: AccessRight,
         state: ST,
-        state_id: u64,
         call_name: &str,
         signer: SignerAddress,
         gas: u64,
@@ -96,7 +95,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             ST: State,
             C: CallNameConverter,
     {
-        let state_info = StateInfo::<_, C>::new(state, state_id, call_name);
+        let state_info = StateInfo::<_, C>::new(state, call_name);
         self.inner
             .read()
             .send_instruction(access_right, signer, state_info, gas, ciphertext_len)

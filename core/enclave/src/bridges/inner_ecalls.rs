@@ -25,7 +25,7 @@ use crate::{
 };
 
 pub trait EcallHandler {
-    type O: EcallOutput + Encode + Decode;
+    type O: EcallOutput + Encode;
 
     fn handle< R: RuntimeExecutor<C, S=StateType>, C: ContextOps>(
         self,
@@ -48,7 +48,6 @@ impl EcallHandler for input::Instruction {
         let instruction_tx = construct_instruction::<R, C>(
             self.call_id,
             state,
-            self.state_id,
             ar,
             enclave_context,
             max_mem_size,

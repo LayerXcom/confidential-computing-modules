@@ -48,14 +48,12 @@ pub mod init_state {
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
             pub total_supply: u64,
-            pub state_id: u64,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
                 total_supply: u64,
-                state_id: u64,
                 rng: &mut R
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -67,7 +65,6 @@ pub mod init_state {
                     pubkey: keypair.public.to_bytes(),
                     challenge,
                     total_supply,
-                    state_id,
                 }
             }
 
@@ -83,8 +80,8 @@ pub mod init_state {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, total_supply: {:?}, state_id: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.total_supply, self.state_id
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, total_supply: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.total_supply
                 )
             }
         }
@@ -107,14 +104,12 @@ pub mod transfer {
             pub challenge: [u8; 32],
             pub target: UserAddress,
             pub amount: u64,
-            pub state_id: u64,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
                 amount: u64,
-                state_id: u64,
                 target: UserAddress,
                 rng: &mut R,
             ) -> Self {
@@ -128,7 +123,6 @@ pub mod transfer {
                     challenge,
                     target,
                     amount,
-                    state_id,
                 }
             }
 
@@ -168,14 +162,12 @@ pub mod approve {
             pub challenge: [u8; 32],
             pub target: UserAddress,
             pub amount: u64,
-            pub state_id: u64,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
                 amount: u64,
-                state_id: u64,
                 target: UserAddress,
                 rng: &mut R,
             ) -> Self {
@@ -189,7 +181,6 @@ pub mod approve {
                     challenge,
                     target,
                     amount,
-                    state_id,
                 }
             }
 
@@ -230,14 +221,12 @@ pub mod transfer_from {
             pub owner: UserAddress,
             pub target: UserAddress,
             pub amount: u64,
-            pub state_id: u64,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
                 amount: u64,
-                state_id: u64,
                 owner: UserAddress,
                 target: UserAddress,
                 rng: &mut R,
@@ -253,7 +242,6 @@ pub mod transfer_from {
                     owner,
                     target,
                     amount,
-                    state_id,
                 }
             }
 
@@ -293,14 +281,12 @@ pub mod mint {
             pub challenge: [u8; 32],
             pub target: UserAddress,
             pub amount: u64,
-            pub state_id: u64,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
                 amount: u64,
-                state_id: u64,
                 target: UserAddress,
                 rng: &mut R,
             ) -> Self {
@@ -314,7 +300,6 @@ pub mod mint {
                     challenge,
                     target,
                     amount,
-                    state_id,
                 }
             }
 
@@ -353,14 +338,12 @@ pub mod burn {
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
             pub amount: u64,
-            pub state_id: u64,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
                 amount: u64,
-                state_id: u64,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -372,7 +355,6 @@ pub mod burn {
                     pubkey: keypair.public.to_bytes(),
                     challenge,
                     amount,
-                    state_id,
                 }
             }
 
