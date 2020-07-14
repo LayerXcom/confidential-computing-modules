@@ -23,7 +23,7 @@ register_ecall!(
     MAX_MEM_SIZE,
     Runtime<EnclaveContext>,
     EnclaveContext,
-    (ENCRYPT_INSTRUCTION_CMD, input::EncryptInstruction, output::InstructionTx),
+    (ENCRYPT_INSTRUCTION_CMD, input::Instruction, output::Instruction),
 );
 
 /// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.

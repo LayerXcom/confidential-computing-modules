@@ -9,7 +9,7 @@ use anonify_common::{
     crypto::{AccessRight, Ciphertext},
     traits::{State, CallNameConverter},
     state_types::UpdatedState,
-    plugin_types::output::*,
+    plugin_types::*,
 };
 use web3::types::Address as EthAddress;
 use crate::{
@@ -175,10 +175,10 @@ impl Sender for EthSender {
     where
         ST: State,
         C: CallNameConverter,
-        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, C>) -> Result<InstructionTx>,
+        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, C>) -> Result<output::Instruction>,
     {
         // ecall of encrypt instruction
-        let mut instruction_tx: InstructionTx = enc_ins_fn(self.enclave_id, access_right, state_info)?;
+        let mut instruction_tx: output::Instruction = enc_ins_fn(self.enclave_id, access_right, state_info)?;
 
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {

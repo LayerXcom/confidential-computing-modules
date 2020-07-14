@@ -11,18 +11,18 @@ pub mod input {
     use super::*;
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct EncryptInstruction {
+    pub struct Instruction {
         pub access_right: AccessRight,
         pub state: StateType,
         pub state_id: u64,
         pub call_id: u32,
     }
 
-    impl EcallInput for EncryptInstruction {}
+    impl EcallInput for Instruction {}
 
-    impl EncryptInstruction {
+    impl Instruction {
         pub fn new(access_right: AccessRight, state: StateType, state_id: u64, call_id: u32) -> Self {
-            EncryptInstruction {
+            Instruction {
                 access_right,
                 state,
                 state_id,
@@ -37,16 +37,16 @@ pub mod output {
     use crate::crypto::Ciphertext;
 
     #[derive(Debug, Clone)]
-    pub struct InstructionTx {
+    pub struct Instruction {
         state_id: u64,
         enclave_sig: secp256k1::Signature,
         msg: Sha256,
         ciphertext: Ciphertext,
     }
 
-    impl EcallOutput for InstructionTx {}
+    impl EcallOutput for Instruction {}
 
-    impl Encode for InstructionTx {
+    impl Encode for Instruction {
         fn encode(&self) -> Vec<u8> {
             let mut acc = vec![];
             acc.extend_from_slice(&self.state_id.encode());
@@ -58,7 +58,7 @@ pub mod output {
         }
     }
 
-    impl Decode for InstructionTx {
+    impl Decode for Instruction {
         fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
             let mut state_id_buf = [0u8; 8];
             let mut enclave_sig_buf = [0u8; 64];
@@ -78,15 +78,15 @@ pub mod output {
             let msg = Sha256::new(msg_buf);
             let ciphertext = Ciphertext::decode(&mut &ciphertext_buf[..])?;
 
-            Ok(InstructionTx {
+            Ok(Instruction {
                 state_id, enclave_sig, msg, ciphertext,
             })
         }
     }
 
-    impl InstructionTx {
+    impl Instruction {
         pub fn new(state_id: u64, ciphertext: Ciphertext, enclave_sig: secp256k1::Signature, msg: Sha256) -> Self {
-            InstructionTx {
+            Instruction {
                 state_id,
                 enclave_sig,
                 msg,

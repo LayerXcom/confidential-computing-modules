@@ -84,7 +84,7 @@ impl EnclaveConnector {
         if ret.is_err() {
             return Err(HostError::Enclave { status: ret, function: "ecall_entry_point", /*cmd*/ }.into());
         }
-        assert!(output_len > output_max);
+        assert!(output_len < output_max);
 
         unsafe { output_buf.set_len(output_len); }
 
@@ -96,14 +96,14 @@ pub(crate) fn encrypt_instruction<S, C>(
     eid: sgx_enclave_id_t,
     access_right: AccessRight,
     state_info: StateInfo<'_, S, C>,
-) -> Result<output::InstructionTx>
+) -> Result<output::Instruction>
 where
     S: State,
     C: CallNameConverter,
 {
     let input = state_info.crate_enc_instruction(access_right);
     EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
-        .invoke_ecall::<input::EncryptInstruction, output::InstructionTx>(ENCRYPT_INSTRUCTION_CMD, input)
+        .invoke_ecall::<input::Instruction, output::Instruction>(ENCRYPT_INSTRUCTION_CMD, input)
 }
 
 pub(crate) fn insert_logs<S: State>(

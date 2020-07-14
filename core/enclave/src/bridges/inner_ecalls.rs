@@ -34,8 +34,8 @@ pub trait EcallHandler {
     ) -> Result<Self::O>;
 }
 
-impl EcallHandler for input::EncryptInstruction {
-    type O = output::InstructionTx;
+impl EcallHandler for input::Instruction {
+    type O = output::Instruction;
 
     fn handle<R: RuntimeExecutor<C, S=StateType>, C: ContextOps>(
         mut self,
@@ -45,7 +45,7 @@ impl EcallHandler for input::EncryptInstruction {
         let state = self.state.as_mut_bytes();
         let ar = &self.access_right;
 
-        let instruction_tx = construct::<R, C>(
+        let instruction_tx = construct_instruction::<R, C>(
             self.call_id,
             state,
             self.state_id,
