@@ -30,24 +30,6 @@ register_ecall!(
     (INSERT_HANDSHAKE_CMD, input::InsertHandshake, output::Empty),
 );
 
-/// Insert handshake received from blockchain nodes into enclave.
-#[no_mangle]
-pub unsafe extern "C" fn ecall_insert_handshake(
-    handshake: *mut u8,
-    handshake_len: usize,
-) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_insert_handshake(
-        handshake,
-        handshake_len,
-        &*ENCLAVE_CONTEXT,
-    ) {
-        println!("Error (ecall_insert_handshake): {}", e);
-        return EnclaveStatus::error();
-    }
-
-    EnclaveStatus::success()
-}
-
 /// Get current state of the user represented the given public key from enclave memory database.
 #[no_mangle]
 pub unsafe extern "C" fn ecall_get_state(
