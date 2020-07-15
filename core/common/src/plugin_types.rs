@@ -171,7 +171,7 @@ pub mod output {
 
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct ReturnUpdatedState {
-        updated_state: Option<UpdatedState<StateType>>,
+        pub updated_state: Option<UpdatedState<StateType>>,
     }
 
     impl EcallOutput for ReturnUpdatedState {}

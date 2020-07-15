@@ -5,6 +5,7 @@ use std::{
 use anonify_types::*;
 use anonify_common::{
     plugin_types::*,
+    commands::*,
 };
 use anonify_enclave::{
     config::{IAS_URL, TEST_SUB_KEY},
@@ -13,7 +14,7 @@ use anonify_enclave::{
 use erc20_state_transition::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
 use crate::ENCLAVE_CONTEXT;
 use anonify_enclave::bridges::inner_ecalls::*;
-use anonify_ecalls::{register_ecall, commands::*};
+use anonify_ecalls::register_ecall;
 use anyhow::anyhow;
 use codec::Encode;
 

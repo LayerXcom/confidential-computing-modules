@@ -1,11 +1,11 @@
 use sgx_types::*;
-use anonify_types::{traits::SliceCPtr, EnclaveState, RawJoinGroupTx, RawHandshakeTx, RawUpdatedState, EnclaveStatus};
+use anonify_types::{traits::SliceCPtr, EnclaveState, RawJoinGroupTx, RawHandshakeTx, EnclaveStatus};
 use anonify_common::{
     crypto::AccessRight,
     traits::*,
     state_types::UpdatedState,
     plugin_types::*,
-    context_switch::*,
+    commands::*,
 };
 use anonify_bc_connector::{
     eventdb::InnerEnclaveLog,
@@ -101,18 +101,17 @@ where
     S: State,
     C: CallNameConverter,
 {
-    let input = state_info.crate_enc_instruction(access_right);
+    let input = state_info.crate_input(access_right);
     EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
         .invoke_ecall::<input::Instruction, output::Instruction>(ENCRYPT_INSTRUCTION_CMD, input)
 }
 
 pub(crate) fn insert_logs<S: State>(
     eid: sgx_enclave_id_t,
-    enclave_log: &InnerEnclaveLog,
-    ciphertext_size: usize,
+    enclave_log: InnerEnclaveLog,
 ) -> Result<Option<Vec<UpdatedState<S>>>> {
     if enclave_log.ciphertexts.len() != 0 && enclave_log.handshakes.len() == 0 {
-        insert_ciphertexts(eid, &enclave_log, ciphertext_size)
+        insert_ciphertexts(eid, enclave_log)
     } else if enclave_log.ciphertexts.len() == 0 && enclave_log.handshakes.len() != 0 {
         // The size of handshake cannot be calculated in this host directory,
         // so the ecall_insert_handshake function is repeatedly called over the number of fetched handshakes.
@@ -130,34 +129,20 @@ pub(crate) fn insert_logs<S: State>(
 /// Insert event logs from blockchain nodes into enclave memory database.
 fn insert_ciphertexts<S: State>(
     eid: sgx_enclave_id_t,
-    enclave_log: &InnerEnclaveLog,
-    ciphertext_size: usize,
+    enclave_log: InnerEnclaveLog,
 ) -> Result<Option<Vec<UpdatedState<S>>>> {
-    let mut rt = EnclaveStatus::default();
+    let conn = EnclaveConnector::new(eid, OUTPUT_MAX_LEN);
     let mut acc = vec![];
 
-    for ciphertext in &enclave_log.ciphertexts {
-        let mut raw_updated_state = RawUpdatedState::default();
-        let status = unsafe {
-            ecall_insert_ciphertext(
-                eid,
-                &mut rt,
-                ciphertext.into_vec().as_c_ptr() as *mut u8,
-                ciphertext_size,
-                &mut raw_updated_state,
-            )
-        };
-
-        if status != sgx_status_t::SGX_SUCCESS {
-            return Err(HostError::Sgx { status, function: "ecall_insert_ciphertext" }.into());
-        }
-        if rt.is_err() {
-            return Err(HostError::Enclave { status: rt, function: "ecall_insert_ciphertext" }.into());
-        }
-
-        if raw_updated_state != Default::default() {
-            let updated_state = UpdatedState::from(raw_updated_state);
-            acc.push(updated_state)
+    for update in enclave_log
+        .into_input_iter()
+        .map(move |inp|
+            conn.invoke_ecall::<input::InsertCiphertext, output::ReturnUpdatedState>(INSERT_CIPHERTEXT_CMD, inp)
+        )
+    {
+        if let Some(upd_type) = update?.updated_state {
+            let upd_trait = UpdatedState::<S>::from_state_type(upd_type)?;
+            acc.push(upd_trait);
         }
     }
 

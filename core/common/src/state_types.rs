@@ -67,6 +67,16 @@ impl<S: State> UpdatedState<S> {
             state: state.into(),
         })
     }
+
+    pub fn from_state_type(update: UpdatedState<StateType>) -> Result<Self> {
+        let state = S::decode(&mut &update.state.as_bytes()[..])?;
+
+        Ok(UpdatedState {
+            address: update.address,
+            mem_id: update.mem_id,
+            state,
+        })
+    }
 }
 
 impl<S: State> From<RawUpdatedState> for UpdatedState<S> {

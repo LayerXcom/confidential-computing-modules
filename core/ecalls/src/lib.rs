@@ -4,4 +4,3 @@ extern crate sgx_tstd as std;
 
 mod register;
 mod state_machine;
-pub mod commands;
