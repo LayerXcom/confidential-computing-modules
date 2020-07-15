@@ -36,7 +36,7 @@ lazy_static! {
     };
 
     pub static ref OWNER_ADDRESS: UserAddress = {
-        COMMON_ACCESS_RIGHT.user_address().unwrap()
+        COMMON_ACCESS_RIGHT.user_address()
     };
 }
 
@@ -304,7 +304,11 @@ impl AccessRight {
         Ok(())
     }
 
-    pub fn user_address(&self) -> Result<UserAddress, Error> {
+    pub fn user_address(&self) -> UserAddress {
+        UserAddress::from_pubkey(&self.pubkey())
+    }
+
+    pub fn verified_user_address(&self) -> Result<UserAddress, Error> {
         self.verify_sig()?;
         Ok(UserAddress::from_pubkey(&self.pubkey()))
     }

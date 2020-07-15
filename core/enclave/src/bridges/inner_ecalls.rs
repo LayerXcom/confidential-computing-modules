@@ -59,7 +59,7 @@ impl EcallHandler for input::Instruction {
             max_mem_size,
         )?;
 
-        let addr = ar.user_address()?;
+        let addr = ar.verified_user_address()?;
         enclave_context.set_notification(addr);
         Ok(instruction_tx)
     }
@@ -129,7 +129,7 @@ impl EcallHandler for input::GetState {
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone,
     {
-        let addr = self.access_right().user_address()?;
+        let addr = self.access_right().verified_user_address()?;
         let user_state = enclave_context.get_state(addr, self.mem_id());
 
         Ok(output::ReturnState::new(user_state))

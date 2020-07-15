@@ -67,9 +67,9 @@ fn test_integration_eth_construct() {
 
 
     // Get state from enclave
-    let owner_address = get_state::<UserAddress, MemName>(&*COMMON_ACCESS_RIGHT, eid, "Owner").unwrap();
-    let my_balance = get_state::<U64, MemName>(&my_access_right, eid, "Balance").unwrap();
-    let actual_total_supply = get_state::<U64, MemName>(&*COMMON_ACCESS_RIGHT, eid, "TotalSupply").unwrap();
+    let owner_address = get_state::<UserAddress, MemName>(COMMON_ACCESS_RIGHT.clone(), eid, "Owner").unwrap();
+    let my_balance = get_state::<U64, MemName>(my_access_right.clone(), eid, "Balance").unwrap();
+    let actual_total_supply = get_state::<U64, MemName>(COMMON_ACCESS_RIGHT.clone(), eid, "TotalSupply").unwrap();
     assert_eq!(owner_address, my_access_right.user_address());
     assert_eq!(my_balance, total_supply);
     assert_eq!(actual_total_supply, total_supply);
@@ -189,9 +189,9 @@ fn test_integration_eth_transfer() {
 
 
     // Get state from enclave
-    let my_state = get_state::<U64, MemName>(&my_access_right, eid, "Balance").unwrap();
-    let other_state = get_state::<U64, MemName>(&other_access_right, eid, "Balance").unwrap();
-    let third_state = get_state::<U64, MemName>(&third_access_right, eid, "Balance").unwrap();
+    let my_state = get_state::<U64, MemName>(my_access_right.clone(), eid, "Balance").unwrap();
+    let other_state = get_state::<U64, MemName>(other_access_right.clone(), eid, "Balance").unwrap();
+    let third_state = get_state::<U64, MemName>(third_access_right.clone(), eid, "Balance").unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, U64::zero());
     assert_eq!(third_state, U64::zero());
@@ -216,9 +216,9 @@ fn test_integration_eth_transfer() {
 
 
     // Check the updated states
-    let my_updated_state = get_state::<U64, MemName>(&my_access_right, eid, "Balance").unwrap();
-    let other_updated_state = get_state::<U64, MemName>(&other_access_right, eid, "Balance").unwrap();
-    let third_updated_state = get_state::<U64, MemName>(&third_access_right, eid, "Balance").unwrap();
+    let my_updated_state = get_state::<U64, MemName>(my_access_right, eid, "Balance").unwrap();
+    let other_updated_state = get_state::<U64, MemName>(other_access_right, eid, "Balance").unwrap();
+    let third_updated_state = get_state::<U64, MemName>(third_access_right, eid, "Balance").unwrap();
 
     assert_eq!(my_updated_state, U64::from_raw(70));
     assert_eq!(other_updated_state, amount);
@@ -273,9 +273,9 @@ fn test_key_rotation() {
     dispatcher.block_on_event::<U64>().unwrap();
 
     // Get state from enclave
-    let my_state = get_state::<U64, MemName>(&my_access_right, eid, "Balance").unwrap();
-    let other_state = get_state::<U64, MemName>(&other_access_right, eid, "Balance").unwrap();
-    let third_state = get_state::<U64, MemName>(&third_access_right, eid, "Balance").unwrap();
+    let my_state = get_state::<U64, MemName>(my_access_right, eid, "Balance").unwrap();
+    let other_state = get_state::<U64, MemName>(other_access_right, eid, "Balance").unwrap();
+    let third_state = get_state::<U64, MemName>(third_access_right, eid, "Balance").unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, U64::zero());
     assert_eq!(third_state, U64::zero());
@@ -323,8 +323,8 @@ fn test_integration_eth_approve() {
     dispatcher.block_on_event::<U64>().unwrap();
 
     // Get state from enclave
-    let my_state = get_state::<Approved, MemName>(&my_access_right, eid, "Approved").unwrap();
-    let other_state = get_state::<Approved, MemName>(&other_access_right, eid, "Approved").unwrap();
+    let my_state = get_state::<Approved, MemName>(my_access_right.clone(), eid, "Approved").unwrap();
+    let other_state = get_state::<Approved, MemName>(other_access_right.clone(), eid, "Approved").unwrap();
     assert_eq!(my_state, Approved::default());
     assert_eq!(other_state, Approved::default());
 
@@ -348,8 +348,8 @@ fn test_integration_eth_approve() {
 
 
     // Check the updated states
-    let my_state = get_state::<Approved, MemName>(&my_access_right, eid, "Approved").unwrap();
-    let other_state = get_state::<Approved, MemName>(&other_access_right, eid, "Approved").unwrap();
+    let my_state = get_state::<Approved, MemName>(my_access_right, eid, "Approved").unwrap();
+    let other_state = get_state::<Approved, MemName>(other_access_right, eid, "Approved").unwrap();
     let want_my_state = Approved::new({
         let mut bt = BTreeMap::new();
         bt.insert(spender, amount);
@@ -402,16 +402,16 @@ fn test_integration_eth_transfer_from() {
     dispatcher.block_on_event::<U64>().unwrap();
 
     // Get initial state from enclave
-    let my_state_balance = get_state::<U64, MemName>(&my_access_right, eid, "Balance").unwrap();
-    let other_state_balance = get_state::<U64, MemName>(&other_access_right, eid, "Balance").unwrap();
-    let third_state_balance = get_state::<U64, MemName>(&third_access_right, eid, "Balance").unwrap();
+    let my_state_balance = get_state::<U64, MemName>(my_access_right.clone(), eid, "Balance").unwrap();
+    let other_state_balance = get_state::<U64, MemName>(other_access_right.clone(), eid, "Balance").unwrap();
+    let third_state_balance = get_state::<U64, MemName>(third_access_right.clone(), eid, "Balance").unwrap();
     assert_eq!(my_state_balance, U64::from_raw(100));
     assert_eq!(other_state_balance, U64::zero());
     assert_eq!(third_state_balance, U64::zero());
 
-    let my_state_approved = get_state::<Approved, MemName>(&my_access_right, eid, "Approved").unwrap();
-    let other_state_approved = get_state::<Approved, MemName>(&other_access_right, eid, "Approved").unwrap();
-    let third_state_approved = get_state::<Approved, MemName>(&third_access_right, eid, "Approved").unwrap();
+    let my_state_approved = get_state::<Approved, MemName>(my_access_right.clone(), eid, "Approved").unwrap();
+    let other_state_approved = get_state::<Approved, MemName>(other_access_right.clone(), eid, "Approved").unwrap();
+    let third_state_approved = get_state::<Approved, MemName>(third_access_right.clone(), eid, "Approved").unwrap();
     assert_eq!(my_state_approved, Approved::default());
     assert_eq!(other_state_approved, Approved::default());
     assert_eq!(third_state_approved, Approved::default());
@@ -435,16 +435,16 @@ fn test_integration_eth_transfer_from() {
     dispatcher.block_on_event::<U64>().unwrap();
 
     // Check the updated states
-    let my_state_balance = get_state::<U64, MemName>(&my_access_right, eid, "Balance").unwrap();
-    let other_state_balance = get_state::<U64, MemName>(&other_access_right, eid, "Balance").unwrap();
-    let third_state_balance = get_state::<U64, MemName>(&third_access_right, eid, "Balance").unwrap();
+    let my_state_balance = get_state::<U64, MemName>(my_access_right.clone(), eid, "Balance").unwrap();
+    let other_state_balance = get_state::<U64, MemName>(other_access_right.clone(), eid, "Balance").unwrap();
+    let third_state_balance = get_state::<U64, MemName>(third_access_right.clone(), eid, "Balance").unwrap();
     assert_eq!(my_state_balance, U64::from_raw(100));
     assert_eq!(other_state_balance, U64::zero());
     assert_eq!(third_state_balance, U64::zero());
 
-    let my_state_approved = get_state::<Approved, MemName>(&my_access_right, eid, "Approved").unwrap();
-    let other_state_approved = get_state::<Approved, MemName>(&other_access_right, eid, "Approved").unwrap();
-    let third_state_approved = get_state::<Approved, MemName>(&third_access_right, eid, "Approved").unwrap();
+    let my_state_approved = get_state::<Approved, MemName>(my_access_right.clone(), eid, "Approved").unwrap();
+    let other_state_approved = get_state::<Approved, MemName>(other_access_right.clone(), eid, "Approved").unwrap();
+    let third_state_approved = get_state::<Approved, MemName>(third_access_right.clone(), eid, "Approved").unwrap();
     let want_my_state = Approved::new({
         let mut bt = BTreeMap::new();
         bt.insert(spender, amount);
@@ -474,16 +474,16 @@ fn test_integration_eth_transfer_from() {
     dispatcher.block_on_event::<U64>().unwrap();
 
     // Check the final states
-    let my_state_balance = get_state::<U64, MemName>(&my_access_right, eid, "Balance").unwrap();
-    let other_state_balance = get_state::<U64, MemName>(&other_access_right, eid, "Balance").unwrap();
-    let third_state_balance = get_state::<U64, MemName>(&third_access_right, eid, "Balance").unwrap();
+    let my_state_balance = get_state::<U64, MemName>(my_access_right.clone(), eid, "Balance").unwrap();
+    let other_state_balance = get_state::<U64, MemName>(other_access_right.clone(), eid, "Balance").unwrap();
+    let third_state_balance = get_state::<U64, MemName>(third_access_right.clone(), eid, "Balance").unwrap();
     assert_eq!(my_state_balance, U64::from_raw(80));
     assert_eq!(other_state_balance, U64::zero());
     assert_eq!(third_state_balance, U64::from_raw(20));
 
-    let my_state_approved = get_state::<Approved, MemName>(&my_access_right, eid, "Approved").unwrap();
-    let other_state_approved = get_state::<Approved, MemName>(&other_access_right, eid, "Approved").unwrap();
-    let third_state_approved = get_state::<Approved, MemName>(&third_access_right, eid, "Approved").unwrap();
+    let my_state_approved = get_state::<Approved, MemName>(my_access_right, eid, "Approved").unwrap();
+    let other_state_approved = get_state::<Approved, MemName>(other_access_right, eid, "Approved").unwrap();
+    let third_state_approved = get_state::<Approved, MemName>(third_access_right, eid, "Approved").unwrap();
     let want_my_state = Approved::new({
         let mut bt = BTreeMap::new();
         bt.insert(spender, U64::from_raw(10));
@@ -557,9 +557,9 @@ fn test_integration_eth_mint() {
 
 
     // Check the final states
-    let actual_total_supply = get_state::<U64, MemName>(&*COMMON_ACCESS_RIGHT, eid, "TotalSupply").unwrap();
-    let owner_balance = get_state::<U64, MemName>(&my_access_right, eid, "Balance").unwrap();
-    let other_balance = get_state::<U64, MemName>(&other_access_right, eid, "Balance").unwrap();
+    let actual_total_supply = get_state::<U64, MemName>(COMMON_ACCESS_RIGHT.clone(), eid, "TotalSupply").unwrap();
+    let owner_balance = get_state::<U64, MemName>(my_access_right, eid, "Balance").unwrap();
+    let other_balance = get_state::<U64, MemName>(other_access_right, eid, "Balance").unwrap();
     assert_eq!(actual_total_supply, U64::from_raw(150));
     assert_eq!(owner_balance, U64::from_raw(100));
     assert_eq!(other_balance, amount);
@@ -645,9 +645,9 @@ fn test_integration_eth_burn() {
 
 
     // Check the final states
-    let actual_total_supply = get_state::<U64, MemName>(&*COMMON_ACCESS_RIGHT, eid, "TotalSupply").unwrap();
-    let owner_balance = get_state::<U64, MemName>(&my_access_right, eid, "Balance").unwrap();
-    let other_balance = get_state::<U64, MemName>(&other_access_right, eid, "Balance").unwrap();
+    let actual_total_supply = get_state::<U64, MemName>(COMMON_ACCESS_RIGHT.clone(), eid, "TotalSupply").unwrap();
+    let owner_balance = get_state::<U64, MemName>(my_access_right, eid, "Balance").unwrap();
+    let other_balance = get_state::<U64, MemName>(other_access_right, eid, "Balance").unwrap();
     assert_eq!(actual_total_supply, U64::from_raw(80)); // 100 - 20(burn)
     assert_eq!(owner_balance, U64::from_raw(70)); // 100 - 30(transfer)
     assert_eq!(other_balance, U64::from_raw(10)); // 30 - 20(burn)
