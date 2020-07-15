@@ -26,6 +26,8 @@ register_ecall!(
     (ENCRYPT_INSTRUCTION_CMD, input::Instruction, output::Instruction),
     // Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
     (INSERT_CIPHERTEXT_CMD, input::InsertCiphertext, output::ReturnUpdatedState),
+    // Insert handshake received from blockchain nodes into enclave.
+    (INSERT_HANDSHAKE_CMD, input::InsertHandshake, output::Empty),
 );
 
 /// Insert handshake received from blockchain nodes into enclave.

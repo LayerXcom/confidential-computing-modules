@@ -67,6 +67,10 @@ pub mod input {
         pub fn new(handshake: Vec<u8>) -> Self {
             InsertHandshake { handshake }
         }
+
+        pub fn handshake(&self) -> &[u8] {
+            &self.handshake[..]
+        }
     }
 
     #[derive(Encode, Decode, Debug, Clone)]
