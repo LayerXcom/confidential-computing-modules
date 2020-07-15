@@ -23,11 +23,6 @@ enclave {
             [out] size_t *real_out_len
         );
 
-        public EnclaveStatus ecall_insert_handshake(
-            [in, count=handshake_len] uint8_t *handshake,
-            size_t handshake_len
-        );
-
         public EnclaveStatus ecall_get_state(
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],
