@@ -4,7 +4,6 @@ use std::{
 };
 use anonify_types::*;
 use anonify_common::{
-    context_switch::ENCRYPT_INSTRUCTION_CMD,
     plugin_types::*,
 };
 use anonify_enclave::{
@@ -24,29 +23,8 @@ register_ecall!(
     Runtime<EnclaveContext>,
     EnclaveContext,
     (ENCRYPT_INSTRUCTION_CMD, input::Instruction, output::Instruction),
-    (INSERT_CIPHERTEXT_CMD, input::Ciphertext, output::UpdatedState),
+    (INSERT_CIPHERTEXT_CMD, input::InsertCiphertext, output::ReturnUpdatedState),
 );
-
-/// Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
-#[no_mangle]
-pub unsafe extern "C" fn ecall_insert_ciphertext(
-    ciphertext: *mut u8,
-    ciphertext_len: usize,
-    raw_updated_state: &mut RawUpdatedState,
-) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_insert_ciphertext::<Runtime<EnclaveContext>, EnclaveContext>(
-        ciphertext,
-        ciphertext_len,
-        raw_updated_state,
-        CIPHERTEXT_SIZE,
-        &*ENCLAVE_CONTEXT,
-    ) {
-        println!("Error (ecall_insert_ciphertext): {}", e);
-        return EnclaveStatus::error();
-    }
-
-    EnclaveStatus::success()
-}
 
 /// Insert handshake received from blockchain nodes into enclave.
 #[no_mangle]

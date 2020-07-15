@@ -35,33 +35,37 @@ pub mod input {
     impl EcallInput for JoinGroup {}
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct Handshake;
+    pub struct CallHandshake;
 
-    impl EcallInput for Handshake {}
+    impl EcallInput for CallHandshake {}
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct Ciphertext {
+    pub struct InsertCiphertext {
         ciphertext: Ciphertext,
     }
 
-    impl EcallInput for Ciphertext {}
+    impl EcallInput for InsertCiphertext {}
 
-    impl Ciphertext {
+    impl InsertCiphertext {
         pub fn new(ciphertext: Ciphertext) -> Self {
-            Ciphertext { ciphertext }
+            InsertCiphertext { ciphertext }
+        }
+
+        pub fn ciphertext(&self) -> &Ciphertext {
+            &self.ciphertext
         }
     }
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct Handshake {
+    pub struct InsertHandshake {
         handshake: Vec<u8>,
     }
 
-    impl EcallInput for Handshake {}
+    impl EcallInput for InsertHandshake {}
 
-    impl Handshake {
+    impl InsertHandshake {
         pub fn new(handshake: Vec<u8>) -> Self {
-            Handshake { handshake }
+            InsertHandshake { handshake }
         }
     }
 
@@ -71,11 +75,11 @@ pub mod input {
         mem_id: MemId,
     }
 
-    impl EcallInput for AccessRight {}
+    impl EcallInput for GetState {}
 
-    impl AccessRight {
+    impl GetState {
         pub fn new(access_right: AccessRight, mem_id: MemId) -> Self {
-            AccessRight { access_right, mem_id }
+            GetState { access_right, mem_id }
         }
     }
 
@@ -166,15 +170,27 @@ pub mod output {
     }
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct UpdatedState {
-        updated_state: Option<UpdatedState<StateType>>
+    pub struct ReturnUpdatedState {
+        updated_state: Option<UpdatedState<StateType>>,
     }
 
-    impl EcallOutput for UpdatedState {}
+    impl EcallOutput for ReturnUpdatedState {}
 
-    impl UpdatedState {
+    impl Default for ReturnUpdatedState {
+        fn default() -> Self {
+            ReturnUpdatedState {
+                updated_state: None,
+            }
+        }
+    }
+
+    impl ReturnUpdatedState {
         pub fn new(updated_state: Option<UpdatedState<StateType>>) -> Self {
-            UpdatedState { updated_state }
+            ReturnUpdatedState { updated_state }
+        }
+
+        pub fn update(&mut self, updated_state: UpdatedState<StateType>) {
+            self.updated_state = Some(updated_state)
         }
     }
 
