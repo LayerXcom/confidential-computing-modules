@@ -1,5 +1,5 @@
 use std::{
-    sync::{SgxRwLock, SgxRwLockWriteGuard, Arc},
+    sync::{SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard, Arc},
     env,
 };
 use sgx_types::*;
@@ -49,7 +49,11 @@ impl StateOps for EnclaveContext {
 impl GroupKeyGetter for EnclaveContext {
     type GK = GroupKey;
 
-    fn get_group_key(&self) -> SgxRwLockWriteGuard<Self::GK> {
+    fn read_group_key(&self) -> SgxRwLockReadGuard<Self::GK> {
+        self.group_key.read().unwrap()
+    }
+
+    fn write_group_key(&self) -> SgxRwLockWriteGuard<Self::GK> {
         self.group_key.write().unwrap()
     }
 }

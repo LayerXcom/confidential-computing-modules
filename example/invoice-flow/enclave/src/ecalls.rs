@@ -26,25 +26,9 @@ register_ecall!(
     (ENCRYPT_INSTRUCTION_CMD, input::Instruction, output::Instruction),
     // Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
     (INSERT_CIPHERTEXT_CMD, input::InsertCiphertext, output::ReturnUpdatedState),
+    // Insert handshake received from blockchain nodes into enclave.
+    (INSERT_HANDSHAKE_CMD, input::InsertHandshake, output::Empty),
 );
-
-/// Insert handshake received from blockchain nodes into enclave.
-#[no_mangle]
-pub unsafe extern "C" fn ecall_insert_handshake(
-    handshake: *mut u8,
-    handshake_len: usize,
-) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_insert_handshake(
-        handshake,
-        handshake_len,
-        &*ENCLAVE_CONTEXT,
-    ) {
-        println!("Error (ecall_insert_handshake): {}", e);
-        return EnclaveStatus::error();
-    }
-
-    EnclaveStatus::success()
-}
 
 /// Get current state of the user represented the given public key from enclave memory database.
 #[no_mangle]

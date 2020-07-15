@@ -27,7 +27,7 @@ where
     R: RuntimeExecutor<C, S=StateType>,
     C: ContextOps,
 {
-    let group_key = &*enclave_ctx.get_group_key();
+    let group_key = &*enclave_ctx.read_group_key();
     let ciphertext = Instructions::<R, C>::new(call_id, params, &access_right)?
         .encrypt(group_key, max_mem_size)?;
     let msg = Sha256::hash(&ciphertext.encode());

@@ -76,7 +76,7 @@ impl EcallHandler for input::InsertCiphertext {
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone,
     {
-        let group_key = &mut *enclave_context.get_group_key();
+        let group_key = &mut *enclave_context.write_group_key();
         let iter_op = Instructions::<R, C>::state_transition(enclave_context.clone(), self.ciphertext(), group_key)?;
         let mut output = output::ReturnUpdatedState::default();
 
@@ -94,20 +94,26 @@ impl EcallHandler for input::InsertCiphertext {
     }
 }
 
-pub fn inner_ecall_insert_handshake(
-    handshake: *mut u8,
-    handshake_len: usize,
-    enclave_context: &EnclaveContext,
-) -> Result<()> {
-    let handshake_bytes = unsafe { slice::from_raw_parts_mut(handshake, handshake_len) };
-    let handshake = HandshakeParams::decode(&mut &handshake_bytes[..])
-        .map_err(|_| anyhow!("HandshakeParams::decode Error"))?;
-    let group_key = &mut *enclave_context.group_key.write()
-        .map_err(|e| anyhow!("{}", e))?;
+impl EcallHandler for input::InsertHandshake {
+    type O = output::Empty;
 
-    group_key.process_handshake(&handshake)?;
+    fn handle<R, C>(
+        self,
+        enclave_context: &C,
+        _max_mem_size: usize
+    ) -> Result<Self::O>
+    where
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps<S=StateType> + Clone,
+    {
+        let group_key = &mut *enclave_context.write_group_key();
+        let handshake = HandshakeParams::decode(&mut self.handshake())
+            .map_err(|_| anyhow!("HandshakeParams::decode Error"))?;
 
-    Ok(())
+        group_key.process_handshake(&handshake)?;
+
+        Ok(output::Empty::default())
+    }
 }
 
 pub fn inner_ecall_get_state(

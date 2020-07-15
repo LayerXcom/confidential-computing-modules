@@ -1,5 +1,5 @@
 use sgx_types::*;
-use anonify_types::{traits::SliceCPtr, EnclaveState, RawJoinGroupTx, RawHandshakeTx, EnclaveStatus};
+use anonify_types::{EnclaveState, RawJoinGroupTx, RawHandshakeTx, EnclaveStatus};
 use anonify_common::{
     crypto::AccessRight,
     traits::*,
@@ -115,7 +115,7 @@ pub(crate) fn insert_logs<S: State>(
     } else if enclave_log.ciphertexts.len() == 0 && enclave_log.handshakes.len() != 0 {
         // The size of handshake cannot be calculated in this host directory,
         // so the ecall_insert_handshake function is repeatedly called over the number of fetched handshakes.
-        for handshake in &enclave_log.handshakes {
+        for handshake in enclave_log.handshakes {
             insert_handshake(eid, handshake)?;
         }
 
@@ -155,25 +155,11 @@ fn insert_ciphertexts<S: State>(
 
 fn insert_handshake(
     eid: sgx_enclave_id_t,
-    handshake: &[u8],
+    handshake: Vec<u8>,
 ) -> Result<()> {
-    let mut rt = EnclaveStatus::default();
-
-    let status = unsafe {
-        ecall_insert_handshake(
-            eid,
-            &mut rt,
-            handshake.as_c_ptr() as *mut u8,
-            handshake.len(),
-        )
-    };
-
-    if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx { status, function: "ecall_insert_handshake" }.into());
-    }
-    if rt.is_err() {
-        return Err(HostError::Enclave { status: rt, function: "ecall_insert_handshake" }.into());
-    }
+    let input = input::InsertHandshake::new(handshake);
+    EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
+        .invoke_ecall::<input::InsertHandshake, output::Empty>(INSERT_HANDSHAKE_CMD, input)?;
 
     Ok(())
 }

@@ -67,6 +67,10 @@ pub mod input {
         pub fn new(handshake: Vec<u8>) -> Self {
             InsertHandshake { handshake }
         }
+
+        pub fn handshake(&self) -> &[u8] {
+            &self.handshake[..]
+        }
     }
 
     #[derive(Encode, Decode, Debug, Clone)]
@@ -193,6 +197,11 @@ pub mod output {
             self.updated_state = Some(updated_state)
         }
     }
+
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct Empty;
+
+    impl EcallOutput for Empty {}
 
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct JoinGroup {
