@@ -23,14 +23,6 @@ enclave {
             [out] size_t *real_out_len
         );
 
-        public EnclaveStatus ecall_get_state(
-            [in] uint8_t sig[64],
-            [in] uint8_t pubkey[32],
-            [in] uint8_t challenge[32],
-            uint32_t mem_id,
-            [out] EnclaveState* state
-        );
-
         public EnclaveStatus ecall_join_group(
             [out] RawJoinGroupTx* result
         );

@@ -1,5 +1,5 @@
 use sgx_types::*;
-use anonify_types::{EnclaveState, RawJoinGroupTx, RawHandshakeTx, EnclaveStatus};
+use anonify_types::{RawJoinGroupTx, RawHandshakeTx, EnclaveStatus};
 use anonify_common::{
     crypto::AccessRight,
     traits::*,
@@ -167,32 +167,15 @@ fn insert_handshake(
 /// Get state only if the signature verification returns true.
 pub(crate) fn get_state_from_enclave<M: MemNameConverter>(
     eid: sgx_enclave_id_t,
-    access_right: &AccessRight,
+    access_right: AccessRight,
     mem_name: &str,
 ) -> Result<Vec<u8>>
 {
-    let mut rt = EnclaveStatus::default();
-    let mut state = EnclaveState::default();
-    let mem_id = M::as_id(mem_name).as_raw();
+      let mem_id = M::as_id(mem_name);
+    let input = input::GetState::new(access_right, mem_id);
 
-    let status = unsafe {
-        ecall_get_state(
-            eid,
-            &mut rt,
-            access_right.sig().to_bytes().as_ptr() as _,
-            access_right.pubkey().to_bytes().as_ptr() as _,
-            access_right.challenge().as_ptr() as _,
-            mem_id,
-            &mut state,
-        )
-    };
-
-    if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx { status, function: "ecall_get_state" }.into());
-    }
-    if rt.is_err() {
-        return Err(HostError::Enclave { status: rt, function: "ecall_get_state" }.into());
-    }
+    let state = EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
+        .invoke_ecall::<input::GetState, output::ReturnState>(GET_STATE_CMD, input)?;
 
     Ok(state.into_vec())
 }

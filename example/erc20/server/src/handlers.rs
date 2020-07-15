@@ -260,7 +260,7 @@ pub fn handle_allowance<D, S, W, DB>(
     server.dispatcher.block_on_event::<U64>()?;
 
     let access_right = req.into_access_right()?;
-    let owner_approved = get_state::<Approved, MemName>(&access_right, server.eid, "Approved")?;
+    let owner_approved = get_state::<Approved, MemName>(access_right, server.eid, "Approved")?;
     let approved_amount = owner_approved.allowance(&req.spender).unwrap();
     // TODO: stop using unwrap when switching from failure to anyhow.
 
@@ -281,7 +281,7 @@ pub fn handle_balance_of<D, S, W, DB>(
     server.dispatcher.block_on_event::<U64>()?;
 
     let access_right = req.into_access_right()?;
-    let state = get_state::<U64, MemName>(&access_right, server.eid, "Balance")?;
+    let state = get_state::<U64, MemName>(access_right, server.eid, "Balance")?;
 
     Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state.as_raw())))
 }

@@ -36,7 +36,7 @@ lazy_static! {
     };
 
     pub static ref OWNER_ADDRESS: UserAddress = {
-        COMMON_ACCESS_RIGHT.user_address()
+        COMMON_ACCESS_RIGHT.user_address().unwrap()
     };
 }
 
@@ -96,12 +96,14 @@ impl TryFrom<Vec<u8>> for UserAddress {
 
 impl UserAddress {
     /// Get a user address only if the verification of signature returns true.
-    pub fn from_sig(msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Result<Self, SignatureError> {
-        pubkey.verify(msg, &sig)?;
+    pub fn from_sig(msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Result<Self, Error> {
+        pubkey.verify(msg, &sig)
+            .map_err(|e| anyhow!("{}", e))?;
+
         Ok(Self::from_pubkey(&pubkey))
     }
 
-    pub fn from_access_right(access_right: &AccessRight) -> Result<Self, SignatureError> {
+    pub fn from_access_right(access_right: &AccessRight) -> Result<Self, Error> {
         access_right.verify_sig()?;
         Ok(Self::from_pubkey(access_right.pubkey()))
     }
@@ -295,13 +297,16 @@ impl AccessRight {
         }
     }
 
-    pub fn verify_sig(&self) -> Result<(), SignatureError> {
-        self.pubkey.verify(&self.challenge, &self.sig)?;
+    pub fn verify_sig(&self) -> Result<(), Error> {
+        self.pubkey.verify(&self.challenge, &self.sig)
+            .map_err(|e| anyhow!("{:?}", e))?;
+
         Ok(())
     }
 
-    pub fn user_address(&self) -> UserAddress {
-        UserAddress::from_pubkey(&self.pubkey())
+    pub fn user_address(&self) -> Result<UserAddress, Error> {
+        self.verify_sig()?;
+        Ok(UserAddress::from_pubkey(&self.pubkey()))
     }
 
     pub fn sig(&self) -> &Signature {

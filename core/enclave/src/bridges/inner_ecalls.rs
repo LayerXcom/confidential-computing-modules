@@ -59,7 +59,8 @@ impl EcallHandler for input::Instruction {
             max_mem_size,
         )?;
 
-        enclave_context.set_notification(ar.user_address());
+        let addr = ar.user_address()?;
+        enclave_context.set_notification(addr);
         Ok(instruction_tx)
     }
 }
@@ -116,25 +117,23 @@ impl EcallHandler for input::InsertHandshake {
     }
 }
 
-pub fn inner_ecall_get_state(
-    sig: &RawSig,
-    pubkey: &RawPubkey,
-    challenge: &RawChallenge,
-    mem_id: u32,
-    state: &mut EnclaveState,
-    enclave_context: &EnclaveContext,
-) -> Result<()> {
-    let sig = Signature::from_bytes(&sig[..])
-        .map_err(|e| anyhow!("{}", e))?;
-    let pubkey = PublicKey::from_bytes(&pubkey[..])
-        .map_err(|e| anyhow!("{}", e))?;
-    let key = UserAddress::from_sig(&challenge[..], &sig, &pubkey)
-        .map_err(|e| anyhow!("{}", e))?;
+impl EcallHandler for input::GetState {
+    type O = output::ReturnState;
 
-    let user_state = &enclave_context.get_state(key, MemId::from_raw(mem_id));
-    state.0 = save_to_host_memory(&user_state.as_bytes())? as *const u8;
+    fn handle<R, C>(
+        self,
+        enclave_context: &C,
+        _max_mem_size: usize
+    ) -> Result<Self::O>
+    where
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps<S=StateType> + Clone,
+    {
+        let addr = self.access_right().user_address()?;
+        let user_state = enclave_context.get_state(addr, self.mem_id());
 
-    Ok(())
+        Ok(output::ReturnState::new(user_state))
+    }
 }
 
 pub fn inner_ecall_join_group(

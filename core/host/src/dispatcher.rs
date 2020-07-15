@@ -269,7 +269,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
 }
 
 pub fn get_state<S, M>(
-    access_right: &AccessRight,
+    access_right: AccessRight,
     enclave_id: sgx_enclave_id_t,
     mem_name: &str,
 ) -> Result<S>

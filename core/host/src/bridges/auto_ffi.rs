@@ -17,14 +17,6 @@ extern "C" {
     ) -> sgx_status_t;
 }
 extern "C" {
-    pub fn ecall_insert_handshake(
-        eid: sgx_enclave_id_t,
-        retval: *mut EnclaveStatus,
-        handshake: *mut u8,
-        handshake_len: usize,
-    ) -> sgx_status_t;
-}
-extern "C" {
     pub fn ecall_get_state(
         eid: sgx_enclave_id_t,
         retval: *mut EnclaveStatus,

@@ -28,31 +28,9 @@ register_ecall!(
     (INSERT_CIPHERTEXT_CMD, input::InsertCiphertext, output::ReturnUpdatedState),
     // Insert handshake received from blockchain nodes into enclave.
     (INSERT_HANDSHAKE_CMD, input::InsertHandshake, output::Empty),
+    // Get current state of the user represented the given public key from enclave memory database.
+    (GET_STATE_CMD, input::GetState, output::ReturnState),
 );
-
-/// Get current state of the user represented the given public key from enclave memory database.
-#[no_mangle]
-pub unsafe extern "C" fn ecall_get_state(
-    sig: &RawSig,
-    pubkey: &RawPubkey,
-    challenge: &RawChallenge, // 32 bytes randomness for avoiding replay attacks.
-    mem_id: u32,
-    state: &mut EnclaveState,
-) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_get_state(
-        sig,
-        pubkey,
-        challenge,
-        mem_id,
-        state,
-        &*ENCLAVE_CONTEXT,
-    ) {
-        println!("Error (ecall_get_state): {}", e);
-        return EnclaveStatus::error();
-    }
-
-    EnclaveStatus::success()
-}
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_join_group(
