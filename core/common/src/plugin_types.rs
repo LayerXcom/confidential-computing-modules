@@ -194,6 +194,11 @@ pub mod output {
         }
     }
 
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct Empty;
+
+    impl EcallOutput for Empty {}
+
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct JoinGroup {
         report: Vec<u8>,

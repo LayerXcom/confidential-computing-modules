@@ -2,7 +2,7 @@ use crate::local_anyhow::Result;
 use crate::localstd::{
     fmt::Debug,
     vec::Vec,
-    sync::SgxRwLockWriteGuard,
+    sync::{SgxRwLockReadGuard, SgxRwLockWriteGuard},
     boxed::Box,
 };
 use anonify_common::{
@@ -56,7 +56,9 @@ pub trait StateOps {
 pub trait GroupKeyGetter {
     type GK: GroupKeyOps;
 
-    fn get_group_key(&self) -> SgxRwLockWriteGuard<Self::GK>;
+    fn read_group_key(&self) -> SgxRwLockReadGuard<Self::GK>;
+
+    fn write_group_key(&self) -> SgxRwLockWriteGuard<Self::GK>;
 }
 
 pub trait NotificationOps {

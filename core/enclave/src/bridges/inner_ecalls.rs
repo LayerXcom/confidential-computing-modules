@@ -76,7 +76,7 @@ impl EcallHandler for input::InsertCiphertext {
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone,
     {
-        let group_key = &mut *enclave_context.get_group_key();
+        let group_key = &mut *enclave_context.write_group_key();
         let iter_op = Instructions::<R, C>::state_transition(enclave_context.clone(), self.ciphertext(), group_key)?;
         let mut output = output::ReturnUpdatedState::default();
 
@@ -91,6 +91,22 @@ impl EcallHandler for input::InsertCiphertext {
         group_key.ratchet(roster_idx)?;
 
         Ok(output)
+    }
+}
+
+impl EcallHandler for input::InsertHandshake {
+    type O = output::Empty;
+
+    fn handle<R, C>(
+        self,
+        enclave_context: &C,
+        _max_mem_size: usize
+    ) -> Result<Self::O>
+    where
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps<S=StateType> + Clone,
+    {
+        unimplemented!();
     }
 }
 
