@@ -7,10 +7,8 @@ use anonify_common::{
     traits::State,
     state_types::{UpdatedState, StateType},
 };
-use anonify_types::RawUpdatedState;
 use crate::{
     error::Result,
-    bridges::ocalls::save_to_host_memory,
 };
 
 #[derive(Debug, Clone)]
@@ -34,14 +32,4 @@ impl Notifier {
     pub fn contains(&self, address: &UserAddress) -> bool {
         self.addresses.read().unwrap().contains(&address)
     }
-}
-
-pub fn updated_state_into_raw(updated_state: UpdatedState<StateType>) -> Result<RawUpdatedState> {
-    let state = save_to_host_memory(&updated_state.state.into_vec())? as *const u8;
-
-    Ok(RawUpdatedState {
-        address: updated_state.address.into_array(),
-        mem_id: updated_state.mem_id.as_raw(),
-        state,
-    })
 }

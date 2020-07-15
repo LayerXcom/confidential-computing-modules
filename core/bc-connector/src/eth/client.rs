@@ -249,7 +249,7 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
         insert_fn: F,
     ) -> Result<Option<Vec<UpdatedState<S>>>>
     where
-        F: FnOnce(sgx_enclave_id_t, &InnerEnclaveLog, usize) -> Result<Option<Vec<UpdatedState<S>>>>,
+        F: FnOnce(sgx_enclave_id_t, InnerEnclaveLog) -> Result<Option<Vec<UpdatedState<S>>>>,
         S: State,
     {
         let enclave_updated_state = self.contract

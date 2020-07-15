@@ -54,6 +54,25 @@ impl GroupKeyGetter for EnclaveContext {
     }
 }
 
+impl NotificationOps for EnclaveContext {
+    fn set_notification(&self, address: UserAddress) -> bool {
+        self.notifier.register(address)
+    }
+
+    fn is_notified(&self, address: &UserAddress) -> bool {
+        self.notifier.contains(&address)
+    }
+}
+
+impl Signer for EnclaveContext {
+    /// Generate a signature using enclave's identity key.
+    /// This signature is used to verify enclave's program dependencies and
+    /// should be verified in the public available place such as smart contract on blockchain.
+    fn sign(&self, msg: &[u8]) -> anyhow::Result<secp256k1::Signature> {
+        self.identity_key.sign(msg).map_err(Into::into)
+    }
+}
+
 /// spid: Service provider ID for the ISV.
 #[derive(Clone)]
 pub struct EnclaveContext {
@@ -101,24 +120,6 @@ impl EnclaveContext {
         })
     }
 
-    /// Returns a updated state of registerd address in notification.
-    // TODO: Enables to return multiple updated states.
-    pub fn update_state(
-        &self,
-        mut state_iter: impl Iterator<Item=UpdatedState<StateType>> + Clone
-    ) -> Option<UpdatedState<StateType>> {
-        state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
-        state_iter.find(|s| self.is_notified(&s.address))
-    }
-
-    pub fn set_notification(&self, address: UserAddress) -> bool {
-        self.notifier.register(address)
-    }
-
-    pub fn is_notified(&self, address: &UserAddress) -> bool {
-        self.notifier.contains(&address)
-    }
-
     /// Generate Base64-encoded QUOTE data structure.
     /// QUOTE will be sent to Attestation Service to verify SGX's status.
     /// For more information: https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf
@@ -131,13 +132,6 @@ impl EnclaveContext {
     pub(crate) fn init_quote(&self) -> Result<sgx_target_info_t> {
         let target_info = sgx_init_quote()?;
         Ok(target_info)
-    }
-
-    /// Generate a signature using enclave's identity key.
-    /// This signature is used to verify enclave's program dependencies and
-    /// should be verified in the public available place such as smart contract on blockchain.
-    pub fn sign(&self, msg: &[u8]) -> Result<secp256k1::Signature> {
-        self.identity_key.sign(msg)
     }
 
     /// Return Attestation report

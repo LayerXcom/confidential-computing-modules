@@ -17,15 +17,6 @@ extern "C" {
     ) -> sgx_status_t;
 }
 extern "C" {
-    pub fn ecall_insert_ciphertext(
-        eid: sgx_enclave_id_t,
-        retval: *mut EnclaveStatus,
-        ciphertexts: *mut u8,
-        ciphertexts_len: usize,
-        enclave_kv: *mut RawUpdatedState,
-    ) -> sgx_status_t;
-}
-extern "C" {
     pub fn ecall_insert_handshake(
         eid: sgx_enclave_id_t,
         retval: *mut EnclaveStatus,

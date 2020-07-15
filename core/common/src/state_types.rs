@@ -3,10 +3,9 @@ use crate::localstd::{
     vec::Vec,
     boxed::Box,
 };
-use crate::local_anyhow::Result;
+use crate::local_anyhow::{Result, anyhow};
 use crate::crypto::UserAddress;
 use codec::{Encode, Decode};
-use anonify_types::RawUpdatedState;
 
 pub trait RawState: Encode + Decode + Clone + Default {}
 
@@ -48,7 +47,7 @@ impl From<UserAddress> for StateType {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Encode, Decode)]
 pub struct UpdatedState<S: State> {
     pub address: UserAddress,
     pub mem_id: MemId,
@@ -67,20 +66,16 @@ impl<S: State> UpdatedState<S> {
             state: state.into(),
         })
     }
-}
 
-impl<S: State> From<RawUpdatedState> for UpdatedState<S> {
-    fn from(raw: RawUpdatedState) -> Self {
-        let box_state = raw.state as *mut Box<[u8]>;
-        let mut state = unsafe { Box::from_raw(box_state) };
-        let state = S::decode_s(&mut state)
-            .expect("Failed to read raw pointer of state in RawUpdatedState");
+    pub fn from_state_type(update: UpdatedState<StateType>) -> Result<Self> {
+        let state = S::decode(&mut &update.state.as_bytes()[..])
+            .map_err(|e| anyhow!("{:?}", e))?;
 
-        UpdatedState {
-            address: UserAddress::from_array(raw.address),
-            mem_id: MemId::from_raw(raw.mem_id),
+        Ok(UpdatedState {
+            address: update.address,
+            mem_id: update.mem_id,
             state,
-        }
+        })
     }
 }
 

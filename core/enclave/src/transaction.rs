@@ -20,14 +20,14 @@ pub fn construct_instruction<R, C>(
     call_id: u32,
     params: &mut [u8],
     access_right: &AccessRight,
-    enclave_ctx: &EnclaveContext,
+    enclave_ctx: &C,
     max_mem_size: usize,
 ) -> Result<output::Instruction>
 where
     R: RuntimeExecutor<C, S=StateType>,
     C: ContextOps,
 {
-    let group_key = &*enclave_ctx.group_key.read().unwrap();
+    let group_key = &*enclave_ctx.get_group_key();
     let ciphertext = Instructions::<R, C>::new(call_id, params, &access_right)?
         .encrypt(group_key, max_mem_size)?;
     let msg = Sha256::hash(&ciphertext.encode());

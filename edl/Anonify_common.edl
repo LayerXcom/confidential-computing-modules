@@ -23,12 +23,6 @@ enclave {
             [out] size_t *real_out_len
         );
 
-        public EnclaveStatus ecall_insert_ciphertext(
-            [in, count=ciphertexts_len] uint8_t *ciphertexts,
-            size_t ciphertexts_len,
-            [out] RawUpdatedState* enclave_kv
-        );
-
         public EnclaveStatus ecall_insert_handshake(
             [in, count=handshake_len] uint8_t *handshake,
             size_t handshake_len

@@ -74,7 +74,7 @@ impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
         self.state.encode_s()
     }
 
-    pub fn crate_enc_instruction(self, access_right: AccessRight) -> input::Instruction {
+    pub fn crate_input(self, access_right: AccessRight) -> input::Instruction {
         let call_id = self.call_name_to_id();
         let state = StateType::new(self.state.encode_s());
 

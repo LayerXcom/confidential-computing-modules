@@ -32,9 +32,9 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<Self::S>>>;
 }
 
-impl<T: StateOps + GroupKeyGetter> ContextOps for T {}
+impl<T: StateOps + GroupKeyGetter + NotificationOps + Signer> ContextOps for T {}
 
-pub trait ContextOps: StateOps + GroupKeyGetter {}
+pub trait ContextOps: StateOps + GroupKeyGetter + NotificationOps + Signer {}
 
 /// A getter of state stored in enclave memory.
 pub trait StateOps {
@@ -57,6 +57,16 @@ pub trait GroupKeyGetter {
     type GK: GroupKeyOps;
 
     fn get_group_key(&self) -> SgxRwLockWriteGuard<Self::GK>;
+}
+
+pub trait NotificationOps {
+    fn set_notification(&self, address: UserAddress) -> bool;
+
+    fn is_notified(&self, address: &UserAddress) -> bool;
+}
+
+pub trait Signer {
+    fn sign(&self, msg: &[u8]) -> Result<secp256k1::Signature>;
 }
 
 pub trait GroupKeyOps: Sized {

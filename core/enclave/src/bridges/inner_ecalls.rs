@@ -19,7 +19,6 @@ use anyhow::{Result, anyhow};
 use crate::{
     transaction::*,
     instructions::Instructions,
-    notify::updated_state_into_raw,
     bridges::ocalls::save_to_host_memory,
     context::EnclaveContext,
 };
@@ -27,21 +26,28 @@ use crate::{
 pub trait EcallHandler {
     type O: EcallOutput + Encode;
 
-    fn handle< R: RuntimeExecutor<C, S=StateType>, C: ContextOps>(
+    fn handle<R, C>(
         self,
-        enclave_context: &EnclaveContext,
+        enclave_context: &C,
         max_mem_size: usize,
-    ) -> Result<Self::O>;
+    ) -> Result<Self::O>
+    where
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps<S=StateType> + Clone;
 }
 
 impl EcallHandler for input::Instruction {
     type O = output::Instruction;
 
-    fn handle<R: RuntimeExecutor<C, S=StateType>, C: ContextOps>(
+    fn handle<R, C>(
         mut self,
-        enclave_context: &EnclaveContext,
+        enclave_context: &C,
         max_mem_size: usize
-    ) -> Result<Self::O> {
+    ) -> Result<Self::O>
+    where
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps<S=StateType> + Clone,
+    {
         let state = self.state.as_mut_bytes();
         let ar = &self.access_right;
 
@@ -58,33 +64,34 @@ impl EcallHandler for input::Instruction {
     }
 }
 
-pub fn inner_ecall_insert_ciphertext<R, C>(
-    ciphertext: *mut u8,
-    ciphertext_len: usize,
-    raw_updated_state: &mut RawUpdatedState,
-    ciphertext_size: usize,
-    enclave_context: &C,
-) -> Result<()>
-where
-    R: RuntimeExecutor<C, S=StateType>,
-    C: ContextOps<S=StateType> + Clone,
-{
-    let buf = unsafe{ slice::from_raw_parts_mut(ciphertext, ciphertext_len) };
-    let ciphertext = Ciphertext::from_bytes(buf, ciphertext_size);
-    let group_key = &mut *enclave_context.get_group_key();
+impl EcallHandler for input::InsertCiphertext {
+    type O = output::ReturnUpdatedState;
 
-    let iter_op = Instructions::<R, C>::state_transition(enclave_context.clone(), &ciphertext, group_key)?;
-    if let Some(updated_state_iter) = iter_op {
-        if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
-            *raw_updated_state = updated_state_into_raw(updated_state)?;
+    fn handle<R, C>(
+        self,
+        enclave_context: &C,
+        _max_mem_size: usize
+    ) -> Result<Self::O>
+    where
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps<S=StateType> + Clone,
+    {
+        let group_key = &mut *enclave_context.get_group_key();
+        let iter_op = Instructions::<R, C>::state_transition(enclave_context.clone(), self.ciphertext(), group_key)?;
+        let mut output = output::ReturnUpdatedState::default();
+
+        if let Some(updated_state_iter) = iter_op {
+            if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
+                output.update(updated_state);
+            }
         }
+
+        let roster_idx = self.ciphertext().roster_idx() as usize;
+        // ratchet app keychain per a log.
+        group_key.ratchet(roster_idx)?;
+
+        Ok(output)
     }
-
-    let roster_idx = ciphertext.roster_idx() as usize;
-    // ratchet app keychain per a log.
-    group_key.ratchet(roster_idx)?;
-
-    Ok(())
 }
 
 pub fn inner_ecall_insert_handshake(
