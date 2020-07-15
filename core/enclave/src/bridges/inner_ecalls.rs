@@ -19,7 +19,6 @@ use anyhow::{Result, anyhow};
 use crate::{
     transaction::*,
     instructions::Instructions,
-    notify::updated_state_into_raw,
     bridges::ocalls::save_to_host_memory,
     context::EnclaveContext,
 };
@@ -71,7 +70,7 @@ impl EcallHandler for input::InsertCiphertext {
     fn handle<R, C>(
         self,
         enclave_context: &C,
-        max_mem_size: usize
+        _max_mem_size: usize
     ) -> Result<Self::O>
     where
         R: RuntimeExecutor<C, S=StateType>,
