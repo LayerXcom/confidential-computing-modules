@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf};
+use std::env;
 
 fn main () {
     let sdk_dir = env::var("SGX_SDK")

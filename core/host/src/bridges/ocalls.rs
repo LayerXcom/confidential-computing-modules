@@ -2,7 +2,6 @@ use sgx_types::*;
 use std::{
     net::{TcpStream, SocketAddr},
     os::unix::io::IntoRawFd,
-    slice,
 };
 use anyhow::Result;
 use log::debug;

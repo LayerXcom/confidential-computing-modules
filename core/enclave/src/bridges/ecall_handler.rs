@@ -19,7 +19,6 @@ use log::debug;
 use anyhow::{Result, anyhow};
 use crate::{
     instructions::Instructions,
-    bridges::ocalls::save_to_host_memory,
     context::EnclaveContext,
     config::{IAS_URL, TEST_SUB_KEY},
 };
