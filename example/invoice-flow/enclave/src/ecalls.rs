@@ -7,13 +7,10 @@ use anonify_common::{
     plugin_types::*,
     commands::*,
 };
-use anonify_enclave::{
-    config::{IAS_URL, TEST_SUB_KEY},
-    context::EnclaveContext,
-};
-use invoice_state_transition::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
+use anonify_enclave::context::EnclaveContext;
+use invoice_state_transition::{MAX_MEM_SIZE, Runtime};
 use crate::ENCLAVE_CONTEXT;
-use anonify_enclave::bridges::inner_ecalls::*;
+use anonify_enclave::bridges::ecall_handler::*;
 use anonify_ecalls::register_ecall;
 use anyhow::anyhow;
 use codec::Encode;

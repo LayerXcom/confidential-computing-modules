@@ -8,7 +8,7 @@ use anonify_bc_connector::{
 };
 use anonify_runtime::primitives::{U64, Approved};
 use erc20_state_transition::{
-    CIPHERTEXT_SIZE, MemName, CallName,
+    MemName, CallName,
     approve, transfer, construct, transfer_from, mint, burn,
 };
 use actix_web::{

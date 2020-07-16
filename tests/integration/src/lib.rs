@@ -130,7 +130,6 @@ fn test_auto_notification() {
         "transfer",
         deployer_addr,
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
     println!("receipt: {}", receipt);
 

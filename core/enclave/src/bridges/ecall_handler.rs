@@ -5,7 +5,7 @@ use std::{
 use sgx_types::*;
 use anonify_types::*;
 use anonify_common::{
-    crypto::{UserAddress, AccessRight, Ciphertext},
+    crypto::{UserAddress, AccessRight, Ciphertext, Sha256},
     traits::*,
     state_types::{MemId, StateType},
     plugin_types::*,
@@ -190,4 +190,28 @@ pub fn inner_ecall_register_notification(
     enclave_context.set_notification(user_address);
 
     Ok(())
+}
+
+fn create_instruction_output<R, C>(
+    call_id: u32,
+    params: &mut [u8],
+    access_right: &AccessRight,
+    enclave_ctx: &C,
+    max_mem_size: usize,
+) -> Result<output::Instruction>
+where
+    R: RuntimeExecutor<C, S=StateType>,
+    C: ContextOps,
+{
+    let group_key = &*enclave_ctx.read_group_key();
+    let ciphertext = Instructions::<R, C>::new(call_id, params, &access_right)?
+        .encrypt(group_key, max_mem_size)?;
+    let msg = Sha256::hash(&ciphertext.encode());
+    let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;
+
+    Ok(output::Instruction::new(
+        ciphertext,
+        enclave_sig,
+        msg,
+    ))
 }
