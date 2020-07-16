@@ -21,7 +21,6 @@ pub mod context_switch;
 pub mod plugin_types;
 pub mod crypto;
 pub mod kvs;
-pub mod traits;
 pub mod state_types;
 pub mod commands;
 

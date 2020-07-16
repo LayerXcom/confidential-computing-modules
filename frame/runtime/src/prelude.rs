@@ -1,5 +1,5 @@
 pub use crate::{impl_memory, __impl_inner_memory, impl_runtime, __impl_inner_runtime, update, insert};
-pub use anonify_common::{
+pub use frame_common::{
     traits::*,
     state_types::*,
     crypto::{UserAddress, OWNER_ADDRESS},

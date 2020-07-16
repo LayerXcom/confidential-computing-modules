@@ -5,10 +5,10 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+frame-runtime = { path = "../../../frame/runtime" }
 erc20-api = { path = "../api" }
 anonify-host = { path = "../../../core/host" }
 anonify-bc-connector = { path = "../../../core/bc-connector" }
-anonify-runtime = { path = "../../../core/runtime" }
 erc20-state-transition = { path = "../state-transition" }
 sgx_types = "1.1.1"
 actix-web = "1.0"

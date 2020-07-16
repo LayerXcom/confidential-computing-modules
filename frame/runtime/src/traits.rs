@@ -6,14 +6,13 @@ use crate::localstd::{
     boxed::Box,
     string::String,
 };
-use anonify_common::{
+use frame_common::{
     crypto::{UserAddress, Ciphertext},
     traits::*,
     state_types::{UpdatedState, MemId},
 };
 use codec::{Encode, Decode};
-#[cfg(feature = "sgx")]
-use anonify_treekem::handshake::{PathSecretRequest, HandshakeParams};
+use frame_treekem::handshake::{PathSecretRequest, HandshakeParams};
 
 /// Execute state transition functions from runtime
 pub trait RuntimeExecutor<G: ContextOps>: Sized {
