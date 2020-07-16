@@ -5,6 +5,5 @@ mod bridges;
 pub mod init_enclave;
 mod constants;
 
-use bridges::auto_ffi;
 pub use init_enclave::EnclaveDir;
 pub use dispatcher::Dispatcher;

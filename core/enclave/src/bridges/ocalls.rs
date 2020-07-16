@@ -81,15 +81,6 @@ pub fn get_quote(report: sgx_report_t, spid: &sgx_spid_t) -> Result<Vec<u8>> {
     Ok(quote)
 }
 
-// TODO: Replace u64 with *const u8, and pass it via the ocall using *const *const u8
-pub fn save_to_host_memory(data: &[u8]) -> Result<u64> {
-    let mut ptr = 0u64;
-    match unsafe { ocall_save_to_memory(&mut ptr as *mut u64, data.as_c_ptr(), data.len()) } {
-        sgx_status_t::SGX_SUCCESS => Ok(ptr),
-        e => Err(e.into()),
-    }
-}
-
 pub fn get_update_info(buf: Vec<u8>) -> Result<()> {
     let mut update_info = sgx_update_info_bit_t::default();
     let mut rt = UntrustedStatus::default();

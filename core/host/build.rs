@@ -1,5 +1,4 @@
 use std::{env, path::PathBuf};
-use bindgen::{builder, EnumVariation, RustTarget};
 
 fn main () {
     let sdk_dir = env::var("SGX_SDK")
@@ -32,26 +31,6 @@ fn main () {
                 .compile("libAnonify_test_u");
         },
         _ => {
-            let bindings = builder()
-                .whitelist_recursively(false)
-                .array_pointers_in_arguments(true)
-                .default_enum_style(EnumVariation::Rust{ non_exhaustive: false })
-                .rust_target(RustTarget::Nightly)
-                .clang_arg(format!("-I{}/include", sdk_dir))
-                .clang_arg(format!("-I{}", edl))
-                .header("../../build/Anonify_common_u.h")
-                .raw_line("#![allow(dead_code)]")
-                .raw_line("use anonify_types::*;")
-                .raw_line("use sgx_types::*;")
-                .whitelist_function("ecall_.*")
-                .generate()
-                .expect("Unable to generate bindings");
-            let out_path = target_dir();
-
-            bindings
-                .write_to_file(out_path.join("auto_ffi.rs"))
-                .expect("Couldn't write bindings!");
-
             cc::Build::new()
                 .file("../../build/Anonify_common_u.c")
                 .include("/opt/sgxsdk/include")
@@ -59,10 +38,4 @@ fn main () {
                 .compile("libAnonify_common_u");
         }
     }
-}
-
-fn target_dir() -> PathBuf {
-    let mut target = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    target.push("src/bridges");
-    target
 }

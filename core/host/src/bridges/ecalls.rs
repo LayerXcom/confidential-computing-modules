@@ -14,7 +14,6 @@ use anonify_bc_connector::{
 };
 use log::debug;
 use codec::{Encode, Decode};
-use crate::auto_ffi::*;
 use crate::constants::OUTPUT_MAX_LEN;
 
 extern "C" {
