@@ -5,7 +5,6 @@ use std::{
     sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::RawHandshakeTx;
 use anonify_common::{
     traits::*,
     crypto::AccessRight,
@@ -94,7 +93,7 @@ pub trait Sender: Sized {
         handshake_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawHandshakeTx>;
+        F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnHandshake>;
 
     fn get_contract(self) -> ContractKind;
 }

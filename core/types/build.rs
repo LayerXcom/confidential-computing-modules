@@ -11,8 +11,6 @@ fn main() {
         .with_no_includes()
         .with_sys_include("stdbool.h")
         .with_language(Language::C)
-        .include_item("RawJoinGroupTx")
-        .include_item("RawHandshakeTx")
         .include_item("EnclaveStatus")
         .include_item("UntrustedStatus")
         .include_item("EnclaveState")

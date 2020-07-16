@@ -68,63 +68,6 @@ impl UntrustedStatus {
     }
 }
 
-/// Bridged type from enclave to host to send a JoinGroup transaction.
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct RawJoinGroupTx {
-    /// A pointer to the output of the report using `ocall_save_to_memory()`.
-    pub report: *const u8,
-    pub report_sig: *const u8,
-    pub handshake: *const u8,
-}
-
-impl RawEnclaveTx for RawJoinGroupTx {}
-
-impl Default for RawJoinGroupTx {
-    fn default() -> Self {
-        RawJoinGroupTx {
-            report: ptr::null(),
-            report_sig: ptr::null(),
-            handshake: ptr::null(),
-        }
-    }
-}
-
-impl fmt::Debug for RawJoinGroupTx {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut debug_trait_builder = f.debug_struct("RawJoinGroupTx");
-        debug_trait_builder.field("report", &(self.report));
-        debug_trait_builder.field("report_sig", &(self.report_sig));
-        debug_trait_builder.field("handshake", &(self.handshake));
-        debug_trait_builder.finish()
-    }
-}
-
-/// Bridged type from enclave to host to send a handshake transaction.
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub struct RawHandshakeTx {
-    pub handshake: *const u8,
-}
-
-impl RawEnclaveTx for RawHandshakeTx {}
-
-impl Default for RawHandshakeTx {
-    fn default() -> Self {
-        RawHandshakeTx {
-            handshake: ptr::null(),
-        }
-    }
-}
-
-impl fmt::Debug for RawHandshakeTx {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut debug_trait_builder = f.debug_struct("RawHandshakeTx");
-        debug_trait_builder.field("handshake", &(self.handshake));
-        debug_trait_builder.finish()
-    }
-}
-
 /// Returned from getting state operations.
 #[repr(C)]
 #[derive(Clone, Copy)]
