@@ -85,6 +85,14 @@ pub mod input {
         pub fn new(access_right: AccessRight, mem_id: MemId) -> Self {
             GetState { access_right, mem_id }
         }
+
+        pub fn access_right(&self) -> &AccessRight {
+            &self.access_right
+        }
+
+        pub fn mem_id(&self) -> MemId {
+            self.mem_id
+        }
     }
 
     #[derive(Encode, Decode, Debug, Clone)]
@@ -202,6 +210,23 @@ pub mod output {
     pub struct Empty;
 
     impl EcallOutput for Empty {}
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct ReturnState {
+        state: StateType,
+    }
+
+    impl EcallOutput for ReturnState {}
+
+    impl ReturnState {
+        pub fn new(state: StateType) -> Self {
+            ReturnState { state }
+        }
+
+        pub fn into_vec(self) -> Vec<u8> {
+            self.state.into_vec()
+        }
+    }
 
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct JoinGroup {

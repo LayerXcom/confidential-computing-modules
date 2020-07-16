@@ -17,25 +17,6 @@ extern "C" {
     ) -> sgx_status_t;
 }
 extern "C" {
-    pub fn ecall_insert_handshake(
-        eid: sgx_enclave_id_t,
-        retval: *mut EnclaveStatus,
-        handshake: *mut u8,
-        handshake_len: usize,
-    ) -> sgx_status_t;
-}
-extern "C" {
-    pub fn ecall_get_state(
-        eid: sgx_enclave_id_t,
-        retval: *mut EnclaveStatus,
-        sig: *mut [u8; 64usize],
-        pubkey: *mut [u8; 32usize],
-        challenge: *mut [u8; 32usize],
-        mem_id: u32,
-        state: *mut EnclaveState,
-    ) -> sgx_status_t;
-}
-extern "C" {
     pub fn ecall_join_group(
         eid: sgx_enclave_id_t,
         retval: *mut EnclaveStatus,
