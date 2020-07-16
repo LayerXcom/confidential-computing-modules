@@ -18,7 +18,6 @@ use remote_attestation::RAService;
 use log::debug;
 use anyhow::{Result, anyhow};
 use crate::{
-    transaction::*,
     instructions::Instructions,
     bridges::ocalls::save_to_host_memory,
     context::EnclaveContext,
@@ -139,7 +138,7 @@ impl EcallHandler for input::GetState {
     }
 }
 
-impl EcallHandler for input::Empty {
+impl EcallHandler for input::CallJoinGroup {
     type O = output::ReturnJoinGroup;
 
     fn handle<R, C>(
@@ -164,14 +163,23 @@ impl EcallHandler for input::Empty {
     }
 }
 
-pub fn inner_ecall_handshake(
-    raw_handshake_tx: &mut RawHandshakeTx,
-    enclave_context: &EnclaveContext,
-) -> Result<()> {
-    let handshake_tx = HandshakeTx::construct(&enclave_context)?;
-    *raw_handshake_tx = handshake_tx.into_raw()?;
+impl EcallHandler for input::CallHandshake {
+    type O = output::ReturnHandshake;
 
-    Ok(())
+    fn handle<R, C>(
+        self,
+        enclave_context: &C,
+        _max_mem_size: usize
+    ) -> Result<Self::O>
+    where
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps<S=StateType> + Clone,
+    {
+        let group_key = &*enclave_context.read_group_key();
+        let handshake = group_key.create_handshake()?;
+
+        Ok(output::ReturnHandshake::new(handshake.encode()))
+    }
 }
 
 pub fn inner_ecall_register_notification(

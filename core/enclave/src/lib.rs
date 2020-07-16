@@ -10,7 +10,6 @@ mod error;
 pub mod kvs;
 pub mod bridges;
 pub mod context;
-pub mod transaction;
 pub mod config;
 mod group_key;
 pub mod notify;

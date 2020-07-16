@@ -23,10 +23,6 @@ enclave {
             [out] size_t *real_out_len
         );
 
-        public EnclaveStatus ecall_handshake(
-            [out] RawHandshakeTx* result
-        );
-
         public EnclaveStatus ecall_register_notification(
             [in] uint8_t sig[64],
             [in] uint8_t pubkey[32],

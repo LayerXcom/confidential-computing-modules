@@ -1,10 +1,8 @@
 use std::{
     path::Path,
     sync::Arc,
-    boxed::Box,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::RawHandshakeTx;
 use anonify_common::{
     crypto::AccessRight,
     traits::{State, CallNameConverter},
@@ -201,14 +199,14 @@ impl Sender for EthSender {
         handshake_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawHandshakeTx>
+        F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnHandshake>
     {
-        let handshake_tx: BoxedHandshakeTx = handshake_fn(self.enclave_id)?.into();
+        let output = handshake_fn(self.enclave_id)?;
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
                 self.contract.handshake(
                     addr,
-                    &handshake_tx.handshake,
+                    output.handshake(),
                     gas
                 )?
             }
@@ -262,21 +260,5 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
 
     fn get_contract(self) -> ContractKind {
         ContractKind::Web3Contract(self.contract)
-    }
-}
-
-#[derive(Debug, Clone, Default)]
-pub(crate) struct BoxedHandshakeTx {
-    pub handshake: Box<[u8]>,
-}
-
-impl From<RawHandshakeTx> for BoxedHandshakeTx {
-    fn from(raw_handshake_tx: RawHandshakeTx) -> Self {
-        let mut res_tx = BoxedHandshakeTx::default();
-        let box_handshake = raw_handshake_tx.handshake as *mut Box<[u8]>;
-        let handshake = unsafe { Box::from_raw(box_handshake) };
-        res_tx.handshake = *handshake;
-
-        res_tx
     }
 }
