@@ -7,13 +7,10 @@ use anonify_common::{
     plugin_types::*,
     commands::*,
 };
-use anonify_enclave::{
-    config::{IAS_URL, TEST_SUB_KEY},
-    context::EnclaveContext,
-};
-use erc20_state_transition::{CIPHERTEXT_SIZE, MAX_MEM_SIZE, Runtime};
+use anonify_enclave::context::EnclaveContext;
+use erc20_state_transition::{MAX_MEM_SIZE, Runtime};
 use crate::ENCLAVE_CONTEXT;
-use anonify_enclave::bridges::inner_ecalls::*;
+use anonify_enclave::bridges::ecall_handler::*;
 use anonify_ecalls::register_ecall;
 use anyhow::anyhow;
 use codec::Encode;
@@ -30,24 +27,8 @@ register_ecall!(
     (INSERT_HANDSHAKE_CMD, input::InsertHandshake, output::Empty),
     // Get current state of the user represented the given public key from enclave memory database.
     (GET_STATE_CMD, input::GetState, output::ReturnState),
+    (JOIN_GROUP_CMD, input::Empty, output::ReturnJoinGroup),
 );
-
-#[no_mangle]
-pub unsafe extern "C" fn ecall_join_group(
-    raw_join_group_tx: &mut RawJoinGroupTx,
-) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_join_group(
-        raw_join_group_tx,
-        &*ENCLAVE_CONTEXT,
-        IAS_URL,
-        TEST_SUB_KEY,
-    ) {
-        println!("Error (ecall_join_group): {}", e);
-        return EnclaveStatus::error();
-    }
-
-    EnclaveStatus::success()
-}
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_handshake(

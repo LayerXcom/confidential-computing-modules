@@ -1,5 +1,5 @@
 use sgx_types::*;
-use anonify_types::{RawJoinGroupTx, RawHandshakeTx, EnclaveStatus};
+use anonify_types::{RawHandshakeTx, EnclaveStatus};
 use anonify_common::{
     crypto::AccessRight,
     traits::*,
@@ -171,7 +171,7 @@ pub(crate) fn get_state_from_enclave<M: MemNameConverter>(
     mem_name: &str,
 ) -> Result<Vec<u8>>
 {
-      let mem_id = M::as_id(mem_name);
+    let mem_id = M::as_id(mem_name);
     let input = input::GetState::new(access_right, mem_id);
 
     let state = EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
@@ -180,26 +180,10 @@ pub(crate) fn get_state_from_enclave<M: MemNameConverter>(
     Ok(state.into_vec())
 }
 
-pub(crate) fn join_group(eid: sgx_enclave_id_t) -> Result<RawJoinGroupTx> {
-    let mut rt = EnclaveStatus::default();
-    let mut raw_reg_tx = RawJoinGroupTx::default();
-
-    let status = unsafe {
-        ecall_join_group(
-            eid,
-            &mut rt,
-            &mut raw_reg_tx,
-        )
-    };
-
-    if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx { status, function: "ecall_join_group" }.into());
-    }
-    if rt.is_err() {
-        return Err(HostError::Enclave { status: rt, function: "ecall_join_group" }.into());
-    }
-
-    Ok(raw_reg_tx)
+pub(crate) fn join_group(eid: sgx_enclave_id_t) -> Result<output::ReturnJoinGroup> {
+    let input = input::Empty::default();
+    EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
+        .invoke_ecall::<input::Empty, output::ReturnJoinGroup>(JOIN_GROUP_CMD, input)
 }
 
 /// Handshake to other group members to update the group key

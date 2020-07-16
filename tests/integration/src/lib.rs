@@ -56,7 +56,6 @@ fn test_integration_eth_construct() {
         "construct",
         deployer_addr.clone(),
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
 
     println!("init state receipt: {}", receipt);
@@ -108,7 +107,6 @@ fn test_auto_notification() {
         "construct",
         deployer_addr.clone(),
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
 
     println!("init state receipt: {}", receipt);
@@ -132,7 +130,6 @@ fn test_auto_notification() {
         "transfer",
         deployer_addr,
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
     println!("receipt: {}", receipt);
 
@@ -178,7 +175,6 @@ fn test_integration_eth_transfer() {
         "construct",
         deployer_addr.clone(),
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
 
     println!("init state receipt: {}", receipt);
@@ -207,7 +203,6 @@ fn test_integration_eth_transfer() {
         "transfer",
         deployer_addr,
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
     println!("receipt: {}", receipt);
 
@@ -265,7 +260,6 @@ fn test_key_rotation() {
         "construct",
         deployer_addr.clone(),
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
     println!("init state receipt: {}", receipt);
 
@@ -313,7 +307,6 @@ fn test_integration_eth_approve() {
         "construct",
         deployer_addr.clone(),
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
 
     println!("init state receipt: {}", receipt);
@@ -338,7 +331,6 @@ fn test_integration_eth_approve() {
         "approve",
         deployer_addr,
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
     println!("receipt: {}", receipt);
 
@@ -392,7 +384,6 @@ fn test_integration_eth_transfer_from() {
         "construct",
         deployer_addr.clone(),
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
 
     println!("init state receipt: {}", receipt);
@@ -426,7 +417,6 @@ fn test_integration_eth_transfer_from() {
         "approve",
         deployer_addr.clone(),
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
     println!("receipt: {}", receipt);
 
@@ -465,7 +455,6 @@ fn test_integration_eth_transfer_from() {
         "transfer_from",
         deployer_addr,
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
     println!("receipt: {}", receipt);
 
@@ -526,7 +515,6 @@ fn test_integration_eth_mint() {
         "construct",
         deployer_addr.clone(),
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
 
     println!("init state receipt: {}", receipt);
@@ -546,7 +534,6 @@ fn test_integration_eth_mint() {
         "mint",
         deployer_addr,
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
 
     println!("minted state receipt: {}", receipt);
@@ -597,7 +584,6 @@ fn test_integration_eth_burn() {
         "construct",
         deployer_addr.clone(),
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
 
     println!("init state receipt: {}", receipt);
@@ -617,7 +603,6 @@ fn test_integration_eth_burn() {
         "transfer",
         deployer_addr.clone(),
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
     println!("receipt: {}", receipt);
 
@@ -635,7 +620,6 @@ fn test_integration_eth_burn() {
         "burn",
         deployer_addr,
         gas,
-        CIPHERTEXT_SIZE,
     ).unwrap();
     println!("receipt: {}", receipt);
 

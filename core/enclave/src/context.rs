@@ -77,6 +77,14 @@ impl Signer for EnclaveContext {
     }
 }
 
+impl QuoteGetter for EnclaveContext {
+    fn quote(&self) -> anyhow::Result<String> {
+        let target_info = self.init_quote()?;
+        let report = self.report(&target_info)?;
+        self.encoded_quote(report).map_err(Into::into)
+    }
+}
+
 /// spid: Service provider ID for the ISV.
 #[derive(Clone)]
 pub struct EnclaveContext {
@@ -122,15 +130,6 @@ impl EnclaveContext {
             notifier,
             group_key,
         })
-    }
-
-    /// Generate Base64-encoded QUOTE data structure.
-    /// QUOTE will be sent to Attestation Service to verify SGX's status.
-    /// For more information: https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf
-    pub fn quote(&self) -> Result<String> {
-        let target_info = self.init_quote()?;
-        let report = self.report(&target_info)?;
-        self.encoded_quote(report)
     }
 
     pub(crate) fn init_quote(&self) -> Result<sgx_target_info_t> {

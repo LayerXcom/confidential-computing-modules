@@ -1,5 +1,9 @@
 use crate::traits::State;
-use crate::localstd::vec::Vec;
+use crate::localstd::{
+    vec::Vec,
+    string::String,
+    str,
+};
 use crate::crypto::{AccessRight, Sha256, Ciphertext};
 use codec::{Encode, Decode, Input, self};
 use crate::state_types::{StateType, MemId, UpdatedState};
@@ -29,10 +33,10 @@ pub mod input {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
-    pub struct JoinGroup;
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct Empty;
 
-    impl EcallInput for JoinGroup {}
+    impl EcallInput for Empty {}
 
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct CallHandshake;
@@ -229,17 +233,31 @@ pub mod output {
     }
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct JoinGroup {
+    pub struct ReturnJoinGroup {
         report: Vec<u8>,
         report_sig: Vec<u8>,
         handshake: Vec<u8>,
     }
 
-    impl EcallOutput for JoinGroup {}
+    impl EcallOutput for ReturnJoinGroup {}
 
-    impl JoinGroup {
-        pub fn new() -> Self {
-            unimplemented!();
+    impl ReturnJoinGroup {
+        pub fn new(report: Vec<u8>, report_sig: Vec<u8>, handshake: Vec<u8>,) -> Self {
+            ReturnJoinGroup {
+                report, report_sig, handshake,
+            }
+        }
+
+        pub fn report(&self) -> &[u8] {
+            &self.report[..]
+        }
+
+        pub fn report_sig(&self) -> &[u8] {
+            &self.report_sig[..]
+        }
+
+        pub fn handshake(&self) -> &[u8] {
+            &self.handshake[..]
         }
     }
 }

@@ -4,9 +4,9 @@ use std::{
     boxed::Box,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::{RawJoinGroupTx, RawHandshakeTx};
+use anonify_types::RawHandshakeTx;
 use anonify_common::{
-    crypto::{AccessRight, Ciphertext},
+    crypto::AccessRight,
     traits::{State, CallNameConverter},
     state_types::UpdatedState,
     plugin_types::*,
@@ -51,17 +51,17 @@ impl Deployer for EthDeployer {
         reg_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawJoinGroupTx>,
+        F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnJoinGroup>,
     {
-        let join_group_tx: BoxedJoinGroupTx = reg_fn(self.enclave_id)?.into();
+        let output = reg_fn(self.enclave_id)?;
 
         let contract_addr = match deploy_user {
             SignerAddress::EthAddress(address) => {
                 self.web3_conn.deploy(
                     &address,
-                    &join_group_tx.report,
-                    &join_group_tx.report_sig,
-                    &join_group_tx.handshake,
+                    output.report(),
+                    output.report_sig(),
+                    output.handshake(),
                 )?
             }
         };
@@ -145,16 +145,16 @@ impl Sender for EthSender {
         reg_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawJoinGroupTx>,
+        F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnJoinGroup>,
     {
-        let join_group_tx: BoxedJoinGroupTx = reg_fn(self.enclave_id)?.into();
+        let output = reg_fn(self.enclave_id)?;
         let receipt = match signer {
             SignerAddress::EthAddress(addr) => {
                 self.contract.join_group(
                     addr,
-                    &join_group_tx.report,
-                    &join_group_tx.report_sig,
-                    &join_group_tx.handshake,
+                    output.report(),
+                    output.report_sig(),
+                    output.handshake(),
                     gas
                 )?
             }
@@ -170,7 +170,6 @@ impl Sender for EthSender {
         state_info: StateInfo<'_, ST, C>,
         gas: u64,
         enc_ins_fn: F,
-        ciphertext_len: usize,
     ) -> Result<String>
     where
         ST: State,
@@ -263,32 +262,6 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
 
     fn get_contract(self) -> ContractKind {
         ContractKind::Web3Contract(self.contract)
-    }
-}
-
-#[derive(Debug, Clone, Default)]
-pub(crate) struct BoxedJoinGroupTx {
-    pub report: Box<[u8]>,
-    pub report_sig: Box<[u8]>,
-    pub handshake: Box<[u8]>,
-}
-
-impl From<RawJoinGroupTx> for BoxedJoinGroupTx {
-    fn from(raw_reg_tx: RawJoinGroupTx) -> Self {
-        let mut res_tx = BoxedJoinGroupTx::default();
-
-        let box_report = raw_reg_tx.report as *mut Box<[u8]>;
-        let report = unsafe { Box::from_raw(box_report) };
-        let box_report_sig = raw_reg_tx.report_sig as *mut Box<[u8]>;
-        let report_sig = unsafe { Box::from_raw(box_report_sig) };
-        let box_handshake = raw_reg_tx.handshake as *mut Box<[u8]>;
-        let handshake = unsafe { Box::from_raw(box_handshake) };
-
-        res_tx.report = *report;
-        res_tx.report_sig = *report_sig;
-        res_tx.handshake = *handshake;
-
-        res_tx
     }
 }
 

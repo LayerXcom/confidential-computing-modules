@@ -89,7 +89,6 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         call_name: &str,
         signer: SignerAddress,
         gas: u64,
-        ciphertext_len: usize,
     ) -> Result<String>
         where
             ST: State,
@@ -98,7 +97,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         let state_info = StateInfo::<_, C>::new(state, call_name);
         self.inner
             .read()
-            .send_instruction(access_right, signer, state_info, gas, ciphertext_len)
+            .send_instruction(access_right, signer, state_info, gas)
     }
 
     pub fn handshake(
@@ -233,7 +232,6 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
         signer: SignerAddress,
         state_info: StateInfo<'_, ST, C>,
         gas: u64,
-        ciphertext_len: usize,
     ) -> Result<String>
         where
             ST: State,
@@ -245,7 +243,7 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
 
         self.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .send_instruction(access_right, signer, state_info, gas, enc_ins_fn, ciphertext_len)
+            .send_instruction(access_right, signer, state_info, gas, enc_ins_fn)
     }
 
     fn handshake(

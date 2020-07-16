@@ -5,7 +5,7 @@ use std::{
     sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_types::{RawJoinGroupTx, RawHandshakeTx};
+use anonify_types::RawHandshakeTx;
 use anonify_common::{
     traits::*,
     crypto::AccessRight,
@@ -31,7 +31,7 @@ pub trait Deployer: Sized {
         reg_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawJoinGroupTx>;
+        F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnJoinGroup>;
 
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;
 
@@ -71,7 +71,6 @@ pub trait Sender: Sized {
         state_info: StateInfo<'_, ST, C>,
         gas: u64,
         st_fn: F,
-        ciphertext_len: usize,
     ) -> Result<String>
     where
         ST: State,
@@ -86,7 +85,7 @@ pub trait Sender: Sized {
         reg_fn: F,
     ) -> Result<String>
     where
-        F: FnOnce(sgx_enclave_id_t) -> Result<RawJoinGroupTx>;
+        F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnJoinGroup>;
 
     fn handshake<F>(
         &self,

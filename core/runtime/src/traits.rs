@@ -4,6 +4,7 @@ use crate::localstd::{
     vec::Vec,
     sync::{SgxRwLockReadGuard, SgxRwLockWriteGuard},
     boxed::Box,
+    string::String,
 };
 use anonify_common::{
     crypto::{UserAddress, Ciphertext},
@@ -32,9 +33,9 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<Self::S>>>;
 }
 
-impl<T: StateOps + GroupKeyGetter + NotificationOps + Signer> ContextOps for T {}
+impl<T: StateOps + GroupKeyGetter + NotificationOps + Signer + QuoteGetter> ContextOps for T {}
 
-pub trait ContextOps: StateOps + GroupKeyGetter + NotificationOps + Signer {}
+pub trait ContextOps: StateOps + GroupKeyGetter + NotificationOps + Signer + QuoteGetter {}
 
 /// A getter of state stored in enclave memory.
 pub trait StateOps {
@@ -91,4 +92,11 @@ pub trait GroupKeyOps: Sized {
 
     /// Ratchet keychain per a transaction
     fn ratchet(&mut self, roster_idx: usize) -> Result<()>;
+}
+
+pub trait QuoteGetter: Sized {
+    /// Generate Base64-encoded QUOTE data structure.
+    /// QUOTE will be sent to Attestation Service to verify SGX's status.
+    /// For more information: https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf
+    fn quote(&self) -> Result<String>;
 }

@@ -5,7 +5,7 @@ use std::{
 use sgx_types::*;
 use anonify_types::*;
 use anonify_common::{
-    crypto::{UserAddress, AccessRight, Ciphertext},
+    crypto::{UserAddress, AccessRight, Ciphertext, Sha256},
     traits::*,
     state_types::{MemId, StateType},
     plugin_types::*,
@@ -14,6 +14,7 @@ use anonify_runtime::traits::*;
 use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
 use codec::{Decode, Encode};
+use remote_attestation::RAService;
 use log::debug;
 use anyhow::{Result, anyhow};
 use crate::{
@@ -21,6 +22,7 @@ use crate::{
     instructions::Instructions,
     bridges::ocalls::save_to_host_memory,
     context::EnclaveContext,
+    config::{IAS_URL, TEST_SUB_KEY},
 };
 
 pub trait EcallHandler {
@@ -51,7 +53,7 @@ impl EcallHandler for input::Instruction {
         let state = self.state.as_mut_bytes();
         let ar = &self.access_right;
 
-        let instruction_tx = construct_instruction::<R, C>(
+        let instruction_output = create_instruction_output::<R, C>(
             self.call_id,
             state,
             ar,
@@ -61,7 +63,8 @@ impl EcallHandler for input::Instruction {
 
         let addr = ar.verified_user_address()?;
         enclave_context.set_notification(addr);
-        Ok(instruction_tx)
+
+        Ok(instruction_output)
     }
 }
 
@@ -136,20 +139,29 @@ impl EcallHandler for input::GetState {
     }
 }
 
-pub fn inner_ecall_join_group(
-    raw_join_group_tx: &mut RawJoinGroupTx,
-    enclave_context: &EnclaveContext,
-    ias_url: &str,
-    test_sub_key: &str,
-) -> Result<()> {
-    let join_group_tx = JoinGroupTx::construct(
-        ias_url,
-        test_sub_key,
-        &enclave_context,
-    )?;
-    *raw_join_group_tx = join_group_tx.into_raw()?;
+impl EcallHandler for input::Empty {
+    type O = output::ReturnJoinGroup;
 
-    Ok(())
+    fn handle<R, C>(
+        self,
+        enclave_context: &C,
+        _max_mem_size: usize
+    ) -> Result<Self::O>
+    where
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps<S=StateType> + Clone,
+    {
+        let quote = enclave_context.quote()?;
+        let (report, report_sig) = RAService::remote_attestation(IAS_URL, TEST_SUB_KEY, &quote)?;
+        let group_key = &*enclave_context.read_group_key();
+        let handshake = group_key.create_handshake()?;
+
+        Ok(output::ReturnJoinGroup::new(
+            report.into_vec(),
+            report_sig.into_vec(),
+            handshake.encode(),
+        ))
+    }
 }
 
 pub fn inner_ecall_handshake(
@@ -178,4 +190,28 @@ pub fn inner_ecall_register_notification(
     enclave_context.set_notification(user_address);
 
     Ok(())
+}
+
+fn create_instruction_output<R, C>(
+    call_id: u32,
+    params: &mut [u8],
+    access_right: &AccessRight,
+    enclave_ctx: &C,
+    max_mem_size: usize,
+) -> Result<output::Instruction>
+where
+    R: RuntimeExecutor<C, S=StateType>,
+    C: ContextOps,
+{
+    let group_key = &*enclave_ctx.read_group_key();
+    let ciphertext = Instructions::<R, C>::new(call_id, params, &access_right)?
+        .encrypt(group_key, max_mem_size)?;
+    let msg = Sha256::hash(&ciphertext.encode());
+    let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;
+
+    Ok(output::Instruction::new(
+        ciphertext,
+        enclave_sig,
+        msg,
+    ))
 }
