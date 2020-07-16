@@ -16,7 +16,7 @@ use crate::{
     instructions::Instructions,
 };
 
-pub fn construct_instruction<R, C>(
+pub fn create_instruction_output<R, C>(
     call_id: u32,
     params: &mut [u8],
     access_right: &AccessRight,
@@ -38,6 +38,19 @@ where
         enclave_sig,
         msg,
     ))
+}
+
+pub fn create_join_group_output<C: ContextOps>(
+    ias_url: &str,
+    ias_api_key: &str,
+    ctx: &C,
+) -> Result<output::ReturnJoinGroup> {
+    let quote = ctx.quote()?;
+    let (report, report_sig) = RAService::remote_attestation(ias_url, ias_api_key, &quote)?;
+    let group_key = *ctx.read_group_key();
+    let handshake = group_key.create_handshake()?;
+
+    Ok(output::ReturnJoinGroup::new())
 }
 
 /// A trait for exporting transactions to out-enclave.

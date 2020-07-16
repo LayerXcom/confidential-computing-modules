@@ -30,9 +30,12 @@ pub mod input {
     }
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct JoinGroup;
+    pub struct CallJoinGroup<'a> {
+        ias_url: &'a str,
+        sub_key: &'a str,
+    }
 
-    impl EcallInput for JoinGroup {}
+    impl EcallInput for CallJoinGroup<'_> {}
 
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct CallHandshake;
@@ -229,7 +232,7 @@ pub mod output {
     }
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct JoinGroup {
+    pub struct ReturnJoinGroup {
         report: Vec<u8>,
         report_sig: Vec<u8>,
         handshake: Vec<u8>,
@@ -238,8 +241,10 @@ pub mod output {
     impl EcallOutput for JoinGroup {}
 
     impl JoinGroup {
-        pub fn new() -> Self {
-            unimplemented!();
+        pub fn new(report: Vec<u8>, report_sig: Vec<u8>, handshake: Vec<u8>,) -> Self {
+            ReturnJoinGroup {
+                report, report_sig, handshake,
+            }
         }
     }
 }

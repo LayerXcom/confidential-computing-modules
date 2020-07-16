@@ -51,7 +51,7 @@ impl EcallHandler for input::Instruction {
         let state = self.state.as_mut_bytes();
         let ar = &self.access_right;
 
-        let instruction_tx = construct_instruction::<R, C>(
+        let instruction_output = create_instruction_output::<R, C>(
             self.call_id,
             state,
             ar,
@@ -61,7 +61,8 @@ impl EcallHandler for input::Instruction {
 
         let addr = ar.verified_user_address()?;
         enclave_context.set_notification(addr);
-        Ok(instruction_tx)
+
+        Ok(instruction_output)
     }
 }
 
@@ -133,6 +134,22 @@ impl EcallHandler for input::GetState {
         let user_state = enclave_context.get_state(addr, self.mem_id());
 
         Ok(output::ReturnState::new(user_state))
+    }
+}
+
+impl EcallHandler for input::CallJoinGroup<'_> {
+    type O = output::ReturnJoinGroup;
+
+    fn handle<R, C>(
+        self,
+        enclave_context: &C,
+        _max_mem_size: usize
+    ) -> Result<Self::O>
+    where
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps<S=StateType> + Clone,
+    {
+        create_join_group_output(self.ias_url, self.sub_key, enclave_context)
     }
 }
 
