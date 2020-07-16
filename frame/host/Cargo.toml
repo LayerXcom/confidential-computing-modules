@@ -1,17 +1,13 @@
 [package]
-name = "anonify-bc-connector"
+name = "frame-host"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anonify-common = { path = "../common" }
-web3 = "0.8"
-ethabi = "8.0.0"
-byteorder = "1"
-sgx_types = "1.1.1"
+frame-types = { path = "../../frame/types" }
+frame-common = { path = "../../frame/common" }
 anyhow = "1.0"
 thiserror = "1.0"
-log = "0.4"
-hex = "0.4"
+sgx_types = "1.1.1"
 codec = { package = "parity-scale-codec", version = "1.1" }

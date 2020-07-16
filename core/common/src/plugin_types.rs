@@ -8,9 +8,6 @@ use crate::crypto::{AccessRight, Sha256, Ciphertext};
 use codec::{Encode, Decode, Input, self};
 use crate::state_types::{StateType, MemId, UpdatedState};
 
-pub trait EcallInput {}
-pub trait EcallOutput {}
-
 pub mod input {
     use super::*;
 

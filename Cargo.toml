@@ -1,13 +1,15 @@
 [workspace]
 members = [
+    "frame/enclave",
+    "frame/host",
+    "frame/common",
+    "frame/types",
     "core/enclave",
     "core/host",
     "core/runtime",
     "core/bc-connector",
     "core/common",
-    "core/types",
     "core/treekem",
-    "core/ecalls",
     "example/erc20/api",
     "example/erc20/cli",
     "example/erc20/enclave",

@@ -1,0 +1,12 @@
+[package]
+name = "frame-common"
+version = "0.1.0"
+authors = ["osuketh <dish230@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+
+[features]
+default = ["std"]
+std = []
+sgx = []
