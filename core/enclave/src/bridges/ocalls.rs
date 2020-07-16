@@ -1,5 +1,5 @@
 use sgx_types::*;
-use anonify_types::{traits::SliceCPtr, UntrustedStatus};
+use frame_types::{traits::SliceCPtr, UntrustedStatus};
 use std::vec::Vec;
 use super::auto_ffi::*;
 use crate::error::*;

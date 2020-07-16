@@ -7,7 +7,6 @@ use crate::localstd::{
 use crate::serde::{Serialize, Deserialize};
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, SignatureError, SECRET_KEY_LENGTH, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH};
 use codec::{Encode, Decode, Input, self};
-use anonify_types::{RawPubkey, RawSig, RawChallenge};
 #[cfg(feature = "std")]
 use rand::Rng;
 #[cfg(feature = "std")]
@@ -324,21 +323,6 @@ impl AccessRight {
     pub fn challenge(&self) -> &[u8] {
         &self.challenge
     }
-
-    pub fn into_raw(self) -> (RawPubkey, RawSig, RawChallenge) {
-        (self.pubkey().to_bytes(), self.sig().to_bytes(), self.challenge)
-    }
-
-    pub fn from_raw(
-        raw_pubkey: RawPubkey,
-        raw_sig: RawSig,
-        raw_challenge: RawChallenge,
-    ) -> Result<Self, SignatureError> {
-        let sig = Signature::from_bytes(&raw_sig)?;
-        let pubkey = PublicKey::from_bytes(&raw_pubkey)?;
-
-        Ok(AccessRight::new(sig, pubkey, raw_challenge))
-    }
 }
 
 impl<T: IntoVec> IntoVec for Vec<T> {
@@ -361,15 +345,6 @@ impl<T: IntoVec> IntoVec for &[T] {
 
 /// The size of initialization vector for AES-256-GCM.
 pub const IV_SIZE: usize = 12;
-
-/// Generating a random number inside the enclave.
-#[cfg(feature = "sgx")]
-pub fn sgx_rand_assign(rand: &mut [u8]) -> Result<(), Error> {
-    use sgx_trts::trts::rsgx_read_rand;
-    rsgx_read_rand(rand)
-        .map_err(|e| anyhow!("error rsgx_read_rand: {:?}", e))?;
-    Ok(())
-}
 
 /// Application message broadcasted to other members.
 #[derive(Clone, Debug, Encode, Decode)]

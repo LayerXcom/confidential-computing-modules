@@ -6,6 +6,7 @@ use crate::localstd::{
 };
 use crate::crypto::{AccessRight, Sha256, Ciphertext};
 use codec::{Encode, Decode, Input, self};
+use frame_common::{EcallInput, EcallOutput};
 use crate::state_types::{StateType, MemId, UpdatedState};
 
 pub mod input {

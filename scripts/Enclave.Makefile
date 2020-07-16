@@ -1,7 +1,7 @@
 
 Rust_Enclave_Name := libenclave.a
 Rust_Enclave_Files := $(wildcard src/*.rs)
-BINDGEN_RAW_LINES := "\#![allow(dead_code)] use anonify_types::*; use sgx_types::*;"
+BINDGEN_RAW_LINES := "\#![allow(dead_code)] use frame_types::*; use sgx_types::*;"
 BINDGEN_CLANG_FLAGS := -I/opt/sgxsdk/include -I $(HOME)/sgx/edl
 BINDGEN_FLAGS := --default-enum-style=rust --rust-target=nightly \
 	--no-recursive-whitelist --use-array-pointers-in-arguments \

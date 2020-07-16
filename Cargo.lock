@@ -329,7 +329,7 @@ dependencies = [
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "elastic-array 0.10.3 (git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.2)",
  "elastic-array 0.10.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "frame-types 0.1.0",
+ "frame-common 0.1.0",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libsecp256k1 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -355,6 +355,7 @@ dependencies = [
  "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
  "base64 0.10.1 (git+https://github.com/mesalock-linux/rust-base64-sgx?rev=sgx_1.1.2)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-enclave 0.1.0",
  "frame-types 0.1.0",
  "hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "libsecp256k1 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1371,13 +1372,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "frame-common"
 version = "0.1.0"
+dependencies = [
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+]
 
 [[package]]
 name = "frame-enclave"
 version = "0.1.0"
 dependencies = [
  "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
+ "frame-common 0.1.0",
  "frame-types 0.1.0",
+ "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
 ]
 
@@ -1389,6 +1395,8 @@ dependencies = [
  "frame-common 0.1.0",
  "frame-types 0.1.0",
  "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.111 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 1.0.56 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

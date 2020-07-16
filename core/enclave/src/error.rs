@@ -1,7 +1,7 @@
 use std::io;
 use thiserror::Error;
 use anyhow::anyhow;
-use anonify_types::UntrustedStatus;
+use frame_types::UntrustedStatus;
 
 pub type Result<T> = std::result::Result<T, EnclaveError>;
 

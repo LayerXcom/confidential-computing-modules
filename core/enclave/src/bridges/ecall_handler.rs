@@ -3,7 +3,8 @@ use std::{
     marker::PhantomData,
 };
 use sgx_types::*;
-use anonify_types::*;
+use frame_types::*;
+use frame_enclave::EcallHandler;
 use anonify_common::{
     crypto::{UserAddress, AccessRight, Ciphertext, Sha256},
     traits::*,
@@ -22,19 +23,6 @@ use crate::{
     context::EnclaveContext,
     config::{IAS_URL, TEST_SUB_KEY},
 };
-
-pub trait EcallHandler {
-    type O: EcallOutput + Encode;
-
-    fn handle<R, C>(
-        self,
-        enclave_context: &C,
-        max_mem_size: usize,
-    ) -> Result<Self::O>
-    where
-        R: RuntimeExecutor<C, S=StateType>,
-        C: ContextOps<S=StateType> + Clone;
-}
 
 impl EcallHandler for input::Instruction {
     type O = output::Instruction;

@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 frame-types = { path = "../../frame/types" }
+frame-enclave = { path = "../../frame/enclave" }
 anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
 anonify-runtime = { path = "../runtime", default-features = false, features = ["sgx"] }
 anonify-treekem = { path = "../treekem" }
