@@ -1,5 +1,5 @@
 use sgx_types::*;
-use anonify_types::{RawHandshakeTx, EnclaveStatus};
+use anonify_types::EnclaveStatus;
 use anonify_common::{
     crypto::AccessRight,
     traits::*,

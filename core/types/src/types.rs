@@ -10,7 +10,6 @@ use alloc::{
     boxed::Box,
     vec::Vec,
 };
-use crate::traits::RawEnclaveTx;
 
 pub const STATE_SIZE: usize = 8;
 pub const PUBKEY_SIZE: usize = 32;

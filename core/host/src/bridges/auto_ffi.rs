@@ -17,20 +17,6 @@ extern "C" {
     ) -> sgx_status_t;
 }
 extern "C" {
-    pub fn ecall_join_group(
-        eid: sgx_enclave_id_t,
-        retval: *mut EnclaveStatus,
-        result: *mut RawJoinGroupTx,
-    ) -> sgx_status_t;
-}
-extern "C" {
-    pub fn ecall_handshake(
-        eid: sgx_enclave_id_t,
-        retval: *mut EnclaveStatus,
-        result: *mut RawHandshakeTx,
-    ) -> sgx_status_t;
-}
-extern "C" {
     pub fn ecall_register_notification(
         eid: sgx_enclave_id_t,
         retval: *mut EnclaveStatus,

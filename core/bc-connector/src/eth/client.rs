@@ -1,7 +1,6 @@
 use std::{
     path::Path,
     sync::Arc,
-    boxed::Box,
 };
 use sgx_types::sgx_enclave_id_t;
 use anonify_common::{
