@@ -22,6 +22,7 @@ use crate::{
     instructions::Instructions,
     bridges::ocalls::save_to_host_memory,
     context::EnclaveContext,
+    config::{IAS_URL, TEST_SUB_KEY},
 };
 
 pub trait EcallHandler {
@@ -138,7 +139,7 @@ impl EcallHandler for input::GetState {
     }
 }
 
-impl EcallHandler for input::CallJoinGroup {
+impl EcallHandler for input::Empty {
     type O = output::ReturnJoinGroup;
 
     fn handle<R, C>(
@@ -151,7 +152,7 @@ impl EcallHandler for input::CallJoinGroup {
         C: ContextOps<S=StateType> + Clone,
     {
         let quote = enclave_context.quote()?;
-        let (report, report_sig) = RAService::remote_attestation(self.ias_url(), self.sub_key(), &quote)?;
+        let (report, report_sig) = RAService::remote_attestation(IAS_URL, TEST_SUB_KEY, &quote)?;
         let group_key = &*enclave_context.read_group_key();
         let handshake = group_key.create_handshake()?;
 

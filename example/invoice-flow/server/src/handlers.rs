@@ -8,7 +8,7 @@ use actix_web::{
 use rand::rngs::OsRng;
 use rand::Rng;
 use ed25519_dalek::Keypair;
-use invoice_state_transition::{CIPHERTEXT_SIZE, send_invoice, CallName};
+use invoice_state_transition::{send_invoice, CallName};
 use anonify_bc_connector::{
     BlockNumDB,
     traits::*,
@@ -114,7 +114,6 @@ fn inner_send_invoice<D, S, W, DB>(
         "send_invoice",
         signer,
         DEFAULT_SEND_GAS,
-        CIPHERTEXT_SIZE,
     )?;
 
     Ok(receipt)

@@ -33,29 +33,10 @@ pub mod input {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
-    pub struct CallJoinGroup {
-        ias_url: Vec<u8>,
-        sub_key: Vec<u8>,
-    }
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct Empty;
 
-    impl EcallInput for CallJoinGroup {}
-
-    impl CallJoinGroup {
-        pub fn new(ias_url: Vec<u8>, sub_key: Vec<u8>) -> CallJoinGroup {
-            CallJoinGroup {
-                ias_url, sub_key,
-            }
-        }
-
-        pub fn ias_url(&self) -> &str {
-            str::from_utf8(&self.ias_url).expect("Invalid utf8")
-        }
-
-        pub fn sub_key(&self) -> &str {
-            str::from_utf8(&self.sub_key).expect("Invalid utf8")
-        }
-    }
+    impl EcallInput for Empty {}
 
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct CallHandshake;
@@ -265,6 +246,18 @@ pub mod output {
             ReturnJoinGroup {
                 report, report_sig, handshake,
             }
+        }
+
+        pub fn report(&self) -> &[u8] {
+            &self.report[..]
+        }
+
+        pub fn report_sig(&self) -> &[u8] {
+            &self.report_sig[..]
+        }
+
+        pub fn handshake(&self) -> &[u8] {
+            &self.handshake[..]
         }
     }
 }

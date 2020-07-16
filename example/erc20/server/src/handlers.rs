@@ -82,7 +82,6 @@ pub fn handle_init_state<D, S, W, DB>(
         "construct",
         signer,
         DEFAULT_SEND_GAS,
-        CIPHERTEXT_SIZE,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::init_state::post::Response(receipt)))
@@ -110,7 +109,6 @@ pub fn handle_transfer<D, S, W, DB>(
         "transfer",
         signer,
         DEFAULT_SEND_GAS,
-        CIPHERTEXT_SIZE,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::transfer::post::Response(receipt)))
@@ -138,7 +136,6 @@ pub fn handle_approve<D, S, W, DB>(
         "approve",
         signer,
         DEFAULT_SEND_GAS,
-        CIPHERTEXT_SIZE
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::approve::post::Response(receipt)))
@@ -166,7 +163,6 @@ pub fn handle_mint<D, S, W, DB>(
         "mint",
         signer,
         DEFAULT_SEND_GAS,
-        CIPHERTEXT_SIZE
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::mint::post::Response(receipt)))
@@ -193,7 +189,6 @@ pub fn handle_burn<D, S, W, DB>(
         "burn",
         signer,
         DEFAULT_SEND_GAS,
-        CIPHERTEXT_SIZE,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::burn::post::Response(receipt)))
@@ -222,7 +217,6 @@ pub fn handle_transfer_from<D, S, W, DB>(
         "transfer_from",
         signer,
         DEFAULT_SEND_GAS,
-        CIPHERTEXT_SIZE,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::transfer_from::post::Response(receipt)))
