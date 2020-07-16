@@ -27,8 +27,8 @@ register_ecall!(
     (INSERT_HANDSHAKE_CMD, input::InsertHandshake, output::Empty),
     // Get current state of the user represented the given public key from enclave memory database.
     (GET_STATE_CMD, input::GetState, output::ReturnState),
-    (JOIN_GROUP_CMD, input::Empty, output::ReturnJoinGroup),
-    (HANDSHAKE_CMD, input::Empty, output::ReturnHandshake),
+    (JOIN_GROUP_CMD, input::CallJoinGroup, output::ReturnJoinGroup),
+    (HANDSHAKE_CMD, input::CallHandshake, output::ReturnHandshake),
 );
 
 #[no_mangle]
