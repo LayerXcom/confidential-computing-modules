@@ -27,25 +27,7 @@ register_ecall!(
     (INSERT_HANDSHAKE_CMD, input::InsertHandshake, output::Empty),
     // Get current state of the user represented the given public key from enclave memory database.
     (GET_STATE_CMD, input::GetState, output::ReturnState),
-    (JOIN_GROUP_CMD, input::CallJoinGroup, output::ReturnJoinGroup),
-    (HANDSHAKE_CMD, input::CallHandshake, output::ReturnHandshake),
+    (CALL_JOIN_GROUP_CMD, input::CallJoinGroup, output::ReturnJoinGroup),
+    (CALL_HANDSHAKE_CMD, input::CallHandshake, output::ReturnHandshake),
+    (REGISTER_NOTIFICATION_CMD, input::RegisterNotification, output::Empty),
 );
-
-#[no_mangle]
-pub unsafe extern "C" fn ecall_register_notification(
-    sig: &RawSig,
-    pubkey: &RawPubkey,
-    challenge: &RawChallenge,
-) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_register_notification(
-        sig,
-        pubkey,
-        challenge,
-        &*ENCLAVE_CONTEXT,
-    ) {
-        println!("Error (ecall_register_notification): {}", e);
-        return EnclaveStatus::error();
-    }
-
-    EnclaveStatus::success()
-}

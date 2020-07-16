@@ -14,7 +14,6 @@ use anonify_bc_connector::{
 };
 use log::debug;
 use codec::{Encode, Decode};
-use crate::auto_ffi::*;
 use crate::constants::OUTPUT_MAX_LEN;
 
 extern "C" {
@@ -183,7 +182,7 @@ pub(crate) fn get_state_from_enclave<M: MemNameConverter>(
 pub(crate) fn join_group(eid: sgx_enclave_id_t) -> Result<output::ReturnJoinGroup> {
     let input = input::CallJoinGroup::default();
     EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
-        .invoke_ecall::<input::CallJoinGroup, output::ReturnJoinGroup>(JOIN_GROUP_CMD, input)
+        .invoke_ecall::<input::CallJoinGroup, output::ReturnJoinGroup>(CALL_JOIN_GROUP_CMD, input)
 }
 
 /// Handshake to other group members to update the group key
@@ -192,31 +191,16 @@ pub(crate) fn handshake(
 ) -> Result<output::ReturnHandshake> {
     let input = input::CallHandshake::default();
     EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
-        .invoke_ecall::<input::CallHandshake, output::ReturnHandshake>(HANDSHAKE_CMD, input)
+        .invoke_ecall::<input::CallHandshake, output::ReturnHandshake>(CALL_HANDSHAKE_CMD, input)
 }
 
 pub(crate) fn register_notification(
     eid: sgx_enclave_id_t,
     access_right: AccessRight,
 ) -> Result<()> {
-    let mut rt = EnclaveStatus::default();
-
-    let status = unsafe {
-        ecall_register_notification(
-            eid,
-            &mut rt,
-            access_right.sig().to_bytes().as_ptr() as _,
-            access_right.pubkey().to_bytes().as_ptr() as _,
-            access_right.challenge().as_ptr() as _,
-        )
-    };
-
-    if status != sgx_status_t::SGX_SUCCESS {
-        return Err(HostError::Sgx { status, function: "ecall_register_notification" }.into());
-    }
-    if rt.is_err() {
-        return Err(HostError::Enclave { status: rt, function: "ecall_register_notification" }.into());
-    }
+    let input = input::RegisterNotification::new(access_right);
+    EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
+        .invoke_ecall::<input::RegisterNotification, output::Empty>(REGISTER_NOTIFICATION_CMD, input)?;
 
     Ok(())
 }

@@ -33,13 +33,6 @@ extern "C" {
     ) -> sgx_status_t;
 }
 extern "C" {
-    pub fn ocall_save_to_memory(
-        retval: *mut u64,
-        data_ptr: *const u8,
-        data_len: size_t,
-    ) -> sgx_status_t;
-}
-extern "C" {
     pub fn ocall_get_update_info(
         retval: *mut UntrustedStatus,
         platformBlob: *mut sgx_platform_info_t,

@@ -22,12 +22,6 @@ enclave {
             size_t out_maxlen,
             [out] size_t *real_out_len
         );
-
-        public EnclaveStatus ecall_register_notification(
-            [in] uint8_t sig[64],
-            [in] uint8_t pubkey[32],
-            [in] uint8_t challenge[32]
-        );
     };
 
     untrusted {
@@ -51,11 +45,6 @@ enclave {
 
         UntrustedStatus ocall_get_ias_socket(
             [out] int *ret_fd
-        );
-
-        uint64_t ocall_save_to_memory(
-            [in, count=data_len] const uint8_t* data_ptr,
-            size_t data_len
         );
 
         UntrustedStatus ocall_get_update_info(

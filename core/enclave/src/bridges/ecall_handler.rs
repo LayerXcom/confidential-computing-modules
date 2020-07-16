@@ -19,7 +19,6 @@ use log::debug;
 use anyhow::{Result, anyhow};
 use crate::{
     instructions::Instructions,
-    bridges::ocalls::save_to_host_memory,
     context::EnclaveContext,
     config::{IAS_URL, TEST_SUB_KEY},
 };
@@ -182,22 +181,23 @@ impl EcallHandler for input::CallHandshake {
     }
 }
 
-pub fn inner_ecall_register_notification(
-    sig: &RawSig,
-    pubkey: &RawPubkey,
-    challenge: &RawChallenge,
-    enclave_context: &EnclaveContext,
-) -> Result<()> {
-    let sig = Signature::from_bytes(&sig[..])
-        .map_err(|e| anyhow!("{}", e))?;
-    let pubkey = PublicKey::from_bytes(&pubkey[..])
-        .map_err(|e| anyhow!("{}", e))?;
-    let user_address = UserAddress::from_sig(&challenge[..], &sig, &pubkey)
-        .map_err(|e| anyhow!("{}", e))?;
+impl EcallHandler for input::RegisterNotification {
+    type O = output::Empty;
 
-    enclave_context.set_notification(user_address);
+    fn handle<R, C>(
+        self,
+        enclave_context: &C,
+        _max_mem_size: usize
+    ) -> Result<Self::O>
+    where
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps<S=StateType> + Clone,
+    {
+        let addr = self.access_right().verified_user_address()?;
+        enclave_context.set_notification(addr);
 
-    Ok(())
+        Ok(output::Empty::default())
+    }
 }
 
 fn create_instruction_output<R, C>(
