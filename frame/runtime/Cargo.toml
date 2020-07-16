@@ -9,9 +9,9 @@ frame-common = { path = "../common", default-features = false }
 frame-types = { path = "../types" }
 frame-treekem = { path = "../treekem", optional = true }
 sgx_tstd = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
-codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
 anyhow-std = { version = "1.0", package = "anyhow", optional = true }
 anyhow-sgx = { rev = "sgx_1.1.2", package = "anyhow", git = "https://github.com/mesalock-linux/anyhow-sgx.git", optional = true }
+codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
 libsecp256k1 = { version = "0.2", default-features = false }
 
 [features]

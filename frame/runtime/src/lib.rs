@@ -17,3 +17,6 @@ pub mod prelude;
 pub mod primitives;
 #[cfg(feature = "sgx")]
 pub mod traits;
+
+#[cfg(feature = "sgx")]
+pub use crate::traits::*;

@@ -4,9 +4,10 @@ use crate::localstd::{
     string::String,
     convert::TryFrom,
 };
-use crate::local_anyhow::{Result, anyhow};
 use crate::serde::{Serialize, Deserialize};
-use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, SignatureError, SECRET_KEY_LENGTH, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH};
+use crate::local_anyhow::{anyhow, Error};
+use crate::traits::{IntoVec, Hash256};
+use ed25519_dalek::{Keypair, PublicKey, Signature, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH};
 use codec::{Encode, Decode, Input, self};
 #[cfg(feature = "std")]
 use rand::Rng;
@@ -14,7 +15,6 @@ use rand::Rng;
 use rand_core::{RngCore, CryptoRng};
 #[cfg(feature = "std")]
 use rand_os::OsRng;
-use crate::local_anyhow::{anyhow, Error};
 
 const ADDRESS_SIZE: usize = 20;
 
@@ -137,7 +137,7 @@ impl UserAddress {
 
 /// Generating a random number inside the enclave.
 #[cfg(feature = "sgx")]
-pub fn sgx_rand_assign(rand: &mut [u8]) -> Result<()> {
+pub fn sgx_rand_assign(rand: &mut [u8]) -> Result<(), Error> {
     use sgx_trts::trts::rsgx_read_rand;
     rsgx_read_rand(rand)
         .map_err(|e| anyhow!("error rsgx_read_rand: {:?}", e))?;
@@ -253,6 +253,8 @@ impl AccessRight {
 
     #[cfg(feature = "sgx")]
     pub fn new_from_rng() -> Result<Self, Error> {
+        use ed25519_dalek::{SecretKey, SECRET_KEY_LENGTH};
+
         let mut seed = [0u8; SECRET_KEY_LENGTH];
         sgx_rand_assign(&mut seed)?;
         let secret = SecretKey::from_bytes(&seed)

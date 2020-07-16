@@ -12,8 +12,8 @@ use super::{
     hmac::HmacKey,
     CryptoRng,
 };
-use anonify_common::crypto::sgx_rand_assign;
 use crate::handshake::AccessKey;
+use frame_common::crypto::sgx_rand_assign;
 use anyhow::Result;
 use codec::Encode;
 

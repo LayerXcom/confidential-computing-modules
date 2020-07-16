@@ -1,5 +1,9 @@
 use codec::Encode;
-use frame_common::EcallOutput;
+use frame_common::{
+    EcallOutput,
+    state_types::StateType,
+};
+use frame_runtime::{RuntimeExecutor, ContextOps};
 
 pub trait EcallHandler {
     type O: EcallOutput + Encode;
@@ -8,7 +12,7 @@ pub trait EcallHandler {
         self,
         enclave_context: &C,
         max_mem_size: usize,
-    ) -> Result<Self::O>
+    ) -> anyhow::Result<Self::O>
     where
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone;

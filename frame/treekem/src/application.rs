@@ -15,7 +15,7 @@ use ring::aead::{
     OpeningKey, SealingKey, Nonce, UnboundKey, BoundKey,
     Aad, AES_256_GCM,
 };
-use anonify_common::crypto::Ciphertext;
+use frame_common::crypto::Ciphertext;
 
 /// Application Keychain manages each member's `AppMemberSecret' and generation.
 #[derive(Debug, Clone, Default)]
