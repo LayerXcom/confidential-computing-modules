@@ -34,14 +34,14 @@ pub mod input {
     }
 
     #[derive(Encode, Decode, Debug, Clone, Default)]
-    pub struct Empty;
-
-    impl EcallInput for Empty {}
-
-    #[derive(Encode, Decode, Debug, Clone)]
     pub struct CallHandshake;
 
     impl EcallInput for CallHandshake {}
+
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct CallJoinGroup;
+
+    impl EcallInput for CallJoinGroup {}
 
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct InsertCiphertext {
@@ -254,6 +254,24 @@ pub mod output {
 
         pub fn report_sig(&self) -> &[u8] {
             &self.report_sig[..]
+        }
+
+        pub fn handshake(&self) -> &[u8] {
+            &self.handshake[..]
+        }
+    }
+
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct ReturnHandshake {
+        handshake: Vec<u8>,
+    }
+
+    impl EcallOutput for ReturnHandshake {}
+
+    impl ReturnHandshake {
+        pub fn new(handshake: Vec<u8>) -> Self {
+            ReturnHandshake { handshake }
         }
 
         pub fn handshake(&self) -> &[u8] {

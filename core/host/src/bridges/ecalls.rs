@@ -181,15 +181,16 @@ pub(crate) fn get_state_from_enclave<M: MemNameConverter>(
 }
 
 pub(crate) fn join_group(eid: sgx_enclave_id_t) -> Result<output::ReturnJoinGroup> {
-    let input = input::Empty::default();
+    let input = input::CallJoinGroup::default();
     EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
-        .invoke_ecall::<input::Empty, output::ReturnJoinGroup>(JOIN_GROUP_CMD, input)
+        .invoke_ecall::<input::CallJoinGroup, output::ReturnJoinGroup>(JOIN_GROUP_CMD, input)
 }
 
 /// Handshake to other group members to update the group key
 pub(crate) fn handshake(
     eid: sgx_enclave_id_t,
 ) -> Result<RawHandshakeTx> {
+
     let mut rt = EnclaveStatus::default();
     let mut raw_handshake_tx = RawHandshakeTx::default();
 
