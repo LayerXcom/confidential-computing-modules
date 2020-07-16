@@ -4,7 +4,6 @@ use core::{
     fmt,
     default::Default,
     ptr,
-    mem,
 };
 use alloc::{
     boxed::Box,

@@ -100,15 +100,19 @@ pub mod input {
     }
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct RegNotification {
+    pub struct RegisterNotification {
         access_right: AccessRight,
     }
 
-    impl EcallInput for RegNotification {}
+    impl EcallInput for RegisterNotification {}
 
-    impl RegNotification {
+    impl RegisterNotification {
         pub fn new(access_right: AccessRight) -> Self {
-            RegNotification { access_right }
+            RegisterNotification { access_right }
+        }
+
+        pub fn access_right(&self) -> &AccessRight {
+            &self.access_right
         }
     }
 }
