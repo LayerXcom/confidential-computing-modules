@@ -14,6 +14,7 @@ use anonify_runtime::traits::*;
 use anonify_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
 use codec::{Decode, Encode};
+use remote_attestation::RAService;
 use log::debug;
 use anyhow::{Result, anyhow};
 use crate::{
@@ -137,7 +138,7 @@ impl EcallHandler for input::GetState {
     }
 }
 
-impl EcallHandler for input::CallJoinGroup<'_> {
+impl EcallHandler for input::CallJoinGroup {
     type O = output::ReturnJoinGroup;
 
     fn handle<R, C>(
@@ -149,24 +150,17 @@ impl EcallHandler for input::CallJoinGroup<'_> {
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone,
     {
-        create_join_group_output(self.ias_url, self.sub_key, enclave_context)
+        let quote = enclave_context.quote()?;
+        let (report, report_sig) = RAService::remote_attestation(self.ias_url(), self.sub_key(), &quote)?;
+        let group_key = &*enclave_context.read_group_key();
+        let handshake = group_key.create_handshake()?;
+
+        Ok(output::ReturnJoinGroup::new(
+            report.into_vec(),
+            report_sig.into_vec(),
+            handshake.encode(),
+        ))
     }
-}
-
-pub fn inner_ecall_join_group(
-    raw_join_group_tx: &mut RawJoinGroupTx,
-    enclave_context: &EnclaveContext,
-    ias_url: &str,
-    test_sub_key: &str,
-) -> Result<()> {
-    let join_group_tx = JoinGroupTx::construct(
-        ias_url,
-        test_sub_key,
-        &enclave_context,
-    )?;
-    *raw_join_group_tx = join_group_tx.into_raw()?;
-
-    Ok(())
 }
 
 pub fn inner_ecall_handshake(

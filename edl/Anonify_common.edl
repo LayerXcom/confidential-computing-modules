@@ -23,10 +23,6 @@ enclave {
             [out] size_t *real_out_len
         );
 
-        public EnclaveStatus ecall_join_group(
-            [out] RawJoinGroupTx* result
-        );
-
         public EnclaveStatus ecall_handshake(
             [out] RawHandshakeTx* result
         );

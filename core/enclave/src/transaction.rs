@@ -40,19 +40,6 @@ where
     ))
 }
 
-pub fn create_join_group_output<C: ContextOps>(
-    ias_url: &str,
-    ias_api_key: &str,
-    ctx: &C,
-) -> Result<output::ReturnJoinGroup> {
-    let quote = ctx.quote()?;
-    let (report, report_sig) = RAService::remote_attestation(ias_url, ias_api_key, &quote)?;
-    let group_key = *ctx.read_group_key();
-    let handshake = group_key.create_handshake()?;
-
-    Ok(output::ReturnJoinGroup::new())
-}
-
 /// A trait for exporting transactions to out-enclave.
 /// For calculated transaction in enclave which is ready to sending outside.
 pub trait EnclaveTx: Sized {
@@ -60,57 +47,6 @@ pub trait EnclaveTx: Sized {
 
     fn into_raw(self) -> Result<Self::R>;
  }
-
-/// A transaction components for JoinGroup operations.
-#[derive(Debug, Clone)]
-pub struct JoinGroupTx {
-    report: AttestationReport,
-    report_sig: ReportSig,
-    handshake: HandshakeParams,
-}
-
-impl EnclaveTx for JoinGroupTx {
-    type R = RawJoinGroupTx;
-
-    fn into_raw(self) -> Result<Self::R> {
-        let report = save_to_host_memory(&self.report.as_bytes())? as *const u8;
-        let report_sig = save_to_host_memory(&self.report_sig.as_bytes())? as *const u8;
-        let handshake = save_to_host_memory(&self.handshake.encode())? as *const u8;
-
-        Ok(RawJoinGroupTx {
-            report,
-            report_sig,
-            handshake,
-        })
-    }
-}
-
-impl JoinGroupTx {
-    pub fn new(report: AttestationReport, report_sig: ReportSig, handshake: HandshakeParams) -> Self {
-        JoinGroupTx {
-            report,
-            report_sig,
-            handshake,
-        }
-    }
-
-    pub fn construct(
-        ias_url: &str,
-        ias_api_key: &str,
-        ctx: &EnclaveContext,
-    ) -> Result<Self> {
-        let quote = ctx.quote()?;
-        let (report, report_sig) = RAService::remote_attestation(ias_url, ias_api_key, &quote)?;
-        let group_key = ctx.group_key.read().unwrap();
-        let handshake = group_key.create_handshake()?;
-
-        Ok(JoinGroupTx {
-            report,
-            report_sig,
-            handshake,
-        })
-    }
-}
 
 /// A transaction components for handshake operations.
 #[derive(Debug, Clone)]

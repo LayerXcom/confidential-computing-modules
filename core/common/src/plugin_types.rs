@@ -1,5 +1,9 @@
 use crate::traits::State;
-use crate::localstd::vec::Vec;
+use crate::localstd::{
+    vec::Vec,
+    string::String,
+    str,
+};
 use crate::crypto::{AccessRight, Sha256, Ciphertext};
 use codec::{Encode, Decode, Input, self};
 use crate::state_types::{StateType, MemId, UpdatedState};
@@ -30,12 +34,28 @@ pub mod input {
     }
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct CallJoinGroup<'a> {
-        ias_url: &'a str,
-        sub_key: &'a str,
+    pub struct CallJoinGroup {
+        ias_url: Vec<u8>,
+        sub_key: Vec<u8>,
     }
 
-    impl EcallInput for CallJoinGroup<'_> {}
+    impl EcallInput for CallJoinGroup {}
+
+    impl CallJoinGroup {
+        pub fn new(ias_url: Vec<u8>, sub_key: Vec<u8>) -> CallJoinGroup {
+            CallJoinGroup {
+                ias_url, sub_key,
+            }
+        }
+
+        pub fn ias_url(&self) -> &str {
+            str::from_utf8(&self.ias_url).expect("Invalid utf8")
+        }
+
+        pub fn sub_key(&self) -> &str {
+            str::from_utf8(&self.sub_key).expect("Invalid utf8")
+        }
+    }
 
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct CallHandshake;
@@ -238,9 +258,9 @@ pub mod output {
         handshake: Vec<u8>,
     }
 
-    impl EcallOutput for JoinGroup {}
+    impl EcallOutput for ReturnJoinGroup {}
 
-    impl JoinGroup {
+    impl ReturnJoinGroup {
         pub fn new(report: Vec<u8>, report_sig: Vec<u8>, handshake: Vec<u8>,) -> Self {
             ReturnJoinGroup {
                 report, report_sig, handshake,

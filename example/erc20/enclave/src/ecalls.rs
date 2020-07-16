@@ -30,24 +30,8 @@ register_ecall!(
     (INSERT_HANDSHAKE_CMD, input::InsertHandshake, output::Empty),
     // Get current state of the user represented the given public key from enclave memory database.
     (GET_STATE_CMD, input::GetState, output::ReturnState),
+    (JOIN_GROUP_CMD, input::CallJoinGroup, output::ReturnJoinGroup),
 );
-
-#[no_mangle]
-pub unsafe extern "C" fn ecall_join_group(
-    raw_join_group_tx: &mut RawJoinGroupTx,
-) -> EnclaveStatus {
-    if let Err(e) = inner_ecall_join_group(
-        raw_join_group_tx,
-        &*ENCLAVE_CONTEXT,
-        IAS_URL,
-        TEST_SUB_KEY,
-    ) {
-        println!("Error (ecall_join_group): {}", e);
-        return EnclaveStatus::error();
-    }
-
-    EnclaveStatus::success()
-}
 
 #[no_mangle]
 pub unsafe extern "C" fn ecall_handshake(
