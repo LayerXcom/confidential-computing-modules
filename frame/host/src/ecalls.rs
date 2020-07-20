@@ -17,7 +17,7 @@ extern "C" {
     ) -> sgx_status_t;
 }
 
-pub struct EnclaveConnector{
+pub struct EnclaveConnector {
     eid: sgx_enclave_id_t,
     output_max_len: usize,
 }
