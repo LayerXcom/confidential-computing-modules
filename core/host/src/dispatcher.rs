@@ -25,11 +25,15 @@ use crate::bridges::ecalls::{
     register_notification as reg_notify_fn,
     get_state_from_enclave,
 };
+use crate::components::*;
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
 pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
-    inner: RwLock<SgxDispatcher<D, S, W, DB>>,
+    deployer: D,
+    sender: Option<S>,
+    watcher: Option<W>,
+    event_db: Arc<DB>,
 }
 
 impl<D, S, W, DB> Dispatcher<D, S, W, DB>
@@ -44,10 +48,13 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         node_url: &str,
         event_db: Arc<DB>,
     ) -> Result<Self> {
-        let inner = SgxDispatcher::new_with_deployer(enclave_id, node_url, event_db)?;
+        let deployer = D::new(enclave_id, node_url)?;
 
         Ok(Dispatcher {
-            inner: RwLock::new(inner)
+            deployer,
+            event_db,
+            sender: None,
+            watcher: None,
         })
     }
 
@@ -55,9 +62,15 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         where
             P: AsRef<Path> + Copy,
     {
-        let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
-        inner.set_contract_addr(contract_info)?;
+
+        let enclave_id = self.deployer.get_enclave_id();
+        let node_url = self.deployer.get_node_url();
+        let sender = S::new(enclave_id, node_url, contract_info)?;
+        let watcher = W::new(node_url, contract_info, self.event_db.clone())?;
+
+        self.sender = Some(sender);
+        self.watcher = Some(watcher);
 
         Ok(())
     }
@@ -66,8 +79,8 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         &self,
         deploy_user: &SignerAddress,
     ) -> Result<String> {
-        let mut inner = self.inner.write();
-        inner.deploy(deploy_user)
+        self.deployer
+            .deploy(deploy_user, join_fn)
     }
 
     pub fn join_group<P: AsRef<Path> + Copy>(
@@ -77,9 +90,12 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         contract_addr: &str,
         abi_path: P,
     ) -> Result<String> {
-        let mut inner = self.inner.write();
         let contract_info = ContractInfo::new(abi_path, contract_addr);
-        inner.join_group(signer, gas, contract_info)
+        self.set_contract_addr(contract_info)?;
+
+        self.sender.as_ref()
+            .ok_or(HostError::AddressNotSet)?
+            .join_group(signer, gas, join_fn)
     }
 
     pub fn send_instruction<ST, C>(
@@ -94,10 +110,17 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             ST: State,
             C: CallNameConverter,
     {
-        let state_info = StateInfo::<_, C>::new(state, call_name);
-        self.inner
-            .read()
-            .send_instruction(access_right, signer, state_info, gas)
+         if self.sender.is_none() {
+            return Err(HostError::AddressNotSet);
+        }
+
+        let input = host_input::Instruction<'_, _, C>::new(state, call_name. access_right);
+
+        Instruction::new
+
+        self.sender.as_ref()
+            .ok_or(HostError::AddressNotSet)?
+            .send_instruction(ecall_input, signer, gas)
     }
 
     pub fn handshake(
@@ -105,98 +128,16 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         signer: SignerAddress,
         gas: u64,
     ) -> Result<String> {
-        self.inner
-            .read()
-            .handshake(signer, gas)
+        if self.sender.is_none() {
+            return Err(HostError::AddressNotSet);
+        }
+
+        self.sender.as_ref()
+            .ok_or(HostError::AddressNotSet)?
+            .handshake(signer, gas, handshake_fn)
     }
 
     pub fn block_on_event<St>(
-        &self,
-    ) -> Result<Option<Vec<UpdatedState<St>>>>
-        where
-            St: State,
-    {
-        self.inner
-            .read()
-            .block_on_event()
-            .into()
-    }
-
-    pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
-        self.inner
-            .read()
-            .get_account(index)
-    }
-
-    pub fn register_notification(&self, access_right: AccessRight) -> Result<()> {
-        self.inner
-            .read()
-            .register_notification(access_right)
-    }
-}
-
-#[derive(Debug)]
-struct SgxDispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
-    deployer: D,
-    sender: Option<S>,
-    watcher: Option<W>,
-    event_db: Arc<DB>,
-}
-
-impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
-    where
-        D: Deployer,
-        S: Sender,
-        W: Watcher<WatcherDB=DB>,
-        DB: BlockNumDB,
-{
-    fn new_with_deployer(
-        enclave_id: sgx_enclave_id_t,
-        node_url: &str,
-        event_db: Arc<DB>,
-    ) -> Result<Self> {
-        let deployer = D::new(enclave_id, node_url)?;
-
-        Ok(SgxDispatcher {
-            deployer,
-            event_db,
-            sender: None,
-            watcher: None,
-        })
-    }
-
-    fn set_contract_addr<P>(
-        &mut self,
-        contract_info: ContractInfo<'_, P>,
-    ) -> Result<()>
-        where
-            P: AsRef<Path> + Copy
-    {
-        let enclave_id = self.deployer.get_enclave_id();
-        let node_url = self.deployer.get_node_url();
-        let sender = S::new(enclave_id, node_url, contract_info)?;
-        let watcher = W::new(node_url, contract_info, self.event_db.clone())?;
-
-        self.sender = Some(sender);
-        self.watcher = Some(watcher);
-
-        Ok(())
-    }
-
-    fn deploy(
-        &mut self,
-        deploy_user: &SignerAddress,
-    ) -> Result<String> {
-        self.deployer
-            .deploy(deploy_user, join_fn)
-    }
-
-    fn get_account(&self, index: usize) -> Result<SignerAddress> {
-        self.deployer
-            .get_account(index)
-    }
-
-    fn block_on_event<St>(
         &self,
     ) -> Result<Option<Vec<UpdatedState<St>>>>
         where
@@ -213,55 +154,12 @@ impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
             .block_on_event(eid, insert_fn)
     }
 
-    fn join_group<P: AsRef<Path> + Copy>(
-        &mut self,
-        signer: SignerAddress,
-        gas: u64,
-        contract_info: ContractInfo<'_, P>,
-    ) -> Result<String> {
-        self.set_contract_addr(contract_info)?;
-
-        self.sender.as_ref()
-            .ok_or(HostError::AddressNotSet)?
-            .join_group(signer, gas, join_fn)
+    pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
+        self.deployer
+            .get_account(index)
     }
 
-    fn send_instruction<ST, C>(
-        &self,
-        access_right: AccessRight,
-        signer: SignerAddress,
-        state_info: StateInfo<'_, ST, C>,
-        gas: u64,
-    ) -> Result<String>
-        where
-            ST: State,
-            C: CallNameConverter,
-    {
-        if self.sender.is_none() {
-            return Err(HostError::AddressNotSet);
-        }
-
-        self.sender.as_ref()
-            .ok_or(HostError::AddressNotSet)?
-            .send_instruction(access_right, signer, state_info, gas, enc_ins_fn)
-    }
-
-    fn handshake(
-        &self,
-        signer: SignerAddress,
-        gas: u64,
-    ) -> Result<String>
-    {
-        if self.sender.is_none() {
-            return Err(HostError::AddressNotSet);
-        }
-
-        self.sender.as_ref()
-            .ok_or(HostError::AddressNotSet)?
-            .handshake(signer, gas, handshake_fn)
-    }
-
-    fn register_notification(&self, access_right: AccessRight) -> Result<()> {
+    pub fn register_notification(&self, access_right: AccessRight) -> Result<()> {
         self.deployer.register_notification(access_right, reg_notify_fn)
     }
 }

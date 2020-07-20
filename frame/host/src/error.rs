@@ -22,4 +22,6 @@ pub enum FrameHostError {
     },
     #[error("Codec error: {0}")]
     CodecError(#[from] codec::Error),
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
 }

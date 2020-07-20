@@ -10,9 +10,7 @@ frame-types = { path = "../../frame/types" }
 anonify-common = { path = "../common" }
 anonify-bc-connector = { path = "../bc-connector" }
 sgx_types = "1.1.1"
-sgx_urts = "1.1.1"
 anyhow = "1.0"
-dirs = "2.0"
 ed25519-dalek = "1.0.0-pre.2"
 parking_lot = "0.10"
 codec = { package = "parity-scale-codec", version = "1.1" }
