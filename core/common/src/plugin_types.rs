@@ -1,13 +1,14 @@
-use crate::traits::State;
 use crate::localstd::{
     vec::Vec,
     string::String,
     str,
 };
-use crate::crypto::{AccessRight, Sha256, Ciphertext};
 use codec::{Encode, Decode, Input, self};
-use frame_common::{EcallInput, EcallOutput};
-use crate::state_types::{StateType, MemId, UpdatedState};
+use frame_common::{
+    EcallInput, EcallOutput, State,
+    crypto::{AccessRight, Sha256, Ciphertext},
+    state_types::{StateType, MemId, UpdatedState},
+};
 
 pub mod input {
     use super::*;
@@ -117,7 +118,6 @@ pub mod input {
 
 pub mod output {
     use super::*;
-    use crate::crypto::Ciphertext;
 
     #[derive(Debug, Clone)]
     pub struct Instruction {

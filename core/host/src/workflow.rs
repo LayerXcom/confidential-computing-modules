@@ -9,12 +9,12 @@ pub const OUTPUT_MAX_LEN: usize = 2048;
 pub struct InstructionWorkflow;
 
 impl WorkflowEngine for InstructionWorkflow {
-    type HI = host_input::Instruction;
+    type HI<'a> = host_input::Instruction<'a>;
     type EI = input::Instruction;
     type EO = output::Instruction;
     type HO = host_output::Instruction;
-    const OUTPUT_MAX_LEN = OUTPUT_MAX_LEN;
-    const CMD = ENCRYPT_INSTRUCTION_CMD;
+    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const CMD: u32 = ENCRYPT_INSTRUCTION_CMD;
 }
 
 pub mod host_input {
@@ -79,7 +79,7 @@ pub mod host_output {
     }
 
     impl Instruction {
-        pub fn new(signer: Address. gas: u64) -> Self {
+        pub fn new(signer: Address, gas: u64) -> Self {
             Instruction {
                 signer,
                 gas,

@@ -8,7 +8,6 @@ build = "build.rs"
 [dependencies]
 frame-types = { path = "../../frame/types" }
 anonify-common = { path = "../common" }
-anonify-bc-connector = { path = "../bc-connector" }
 sgx_types = "1.1.1"
 anyhow = "1.0"
 ed25519-dalek = "1.0.0-pre.2"

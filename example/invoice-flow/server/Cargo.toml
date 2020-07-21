@@ -9,7 +9,6 @@ invoice-api = { path = "../api" }
 frame-runtime = { path = "../../../frame/runtime" }
 anonify-common = { path = "../../../core/common" }
 anonify-host = { path = "../../../core/host" }
-anonify-bc-connector = { path = "../../../core/bc-connector" }
 invoice-state-transition = { path = "../state-transition" }
 anonify-wallet = { path = "../../../wallet" }
 sgx_types = "1.1.1"

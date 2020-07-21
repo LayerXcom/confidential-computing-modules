@@ -1,20 +1,22 @@
 use sgx_types::*;
 use anonify_types::EnclaveStatus;
-use anonify_common::{
+use frame_common::{
     crypto::AccessRight,
     traits::*,
     state_types::UpdatedState,
+};
+use anonify_common::{
     plugin_types::*,
     commands::*,
-};
-use anonify_bc_connector::{
+},
+use crate::{
     eventdb::InnerEnclaveLog,
     utils::StateInfo,
     error::Result,
+    workflow::OUTPUT_MAX_LEN,
 };
 use log::debug;
 use codec::{Encode, Decode};
-use crate::constants::OUTPUT_MAX_LEN;
 
 pub(crate) fn insert_logs<S: State>(
     eid: sgx_enclave_id_t,
