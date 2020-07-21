@@ -2,9 +2,11 @@
 
 pub mod dispatcher;
 mod bridges;
-pub mod init_enclave;
-mod constants;
-mod components;
+mod workflow;
+mod eth;
+mod error;
+mod eventdb;
+mod traits;
+mod utils;
 
-pub use init_enclave::EnclaveDir;
 pub use dispatcher::Dispatcher;

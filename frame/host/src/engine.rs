@@ -9,11 +9,13 @@ pub trait WorkflowEngine {
     type EI: EcallInput + Encode;
     type EO: EcallOutput + Decode;
     type HO: HostOutput<EcallOutput = Self::EO>;
+    const OUTPUT_MAX_LEN: usize;
+    const CMD: u32;
 
-    fn exec(input: Self::HI, eid: sgx_enclave_id_t, output_max_len: usize, cmd: u32) -> anyhow::Result<Self::HO> {
+    fn exec(input: Self::HI, eid: sgx_enclave_id_t) -> anyhow::Result<Self::HO> {
         let (ecall_input, host_output) = input.apply()?;
-        let ecall_output = EnclaveConnector::new(eid, output_max_len)
-            .invoke_ecall::<Self::EI, Self::EO>(cmd, ecall_input)?;
+        let ecall_output = EnclaveConnector::new(eid, Self::OUTPUT_MAX_LEN)
+            .invoke_ecall::<Self::EI, Self::EO>(Self::CMD, ecall_input)?;
 
         host_output
             .set_ecall_output(ecall_output)

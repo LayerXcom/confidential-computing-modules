@@ -8,7 +8,6 @@ members = [
     "frame/runtime",
     "core/enclave",
     "core/host",
-    "core/bc-connector",
     "core/common",
     "example/erc20/api",
     "example/erc20/cli",

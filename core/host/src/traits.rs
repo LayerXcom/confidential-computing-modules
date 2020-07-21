@@ -65,16 +65,11 @@ pub trait Sender: Sized {
     /// Send an encrypted instruction of state transition to blockchain nodes.
     fn send_instruction<ST, F, C>(
         &self,
-        access_right: AccessRight,
-        signer: SignerAddress,
-        state_info: StateInfo<'_, ST, C>,
-        gas: u64,
-        st_fn: F,
+        host_output::Instruction,
     ) -> Result<String>
     where
         ST: State,
         C: CallNameConverter,
-        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, C>) -> Result<output::Instruction>;
 
     /// Attestation with deployed contract.
     fn join_group<F>(

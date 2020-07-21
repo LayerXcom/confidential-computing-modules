@@ -110,18 +110,17 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             ST: State,
             C: CallNameConverter,
     {
-         if self.sender.is_none() {
+        if self.sender.is_none() {
             return Err(HostError::AddressNotSet);
         }
 
         let input = host_input::Instruction<'_, _, C>::new(
             state, call_name. access_right, signer, gas,
         );
+        let eid = self.deployer.get_enclave_id();
+        let host_output = InstructionWorkflow::exec(input, eid)?;
 
-        let host_output = InstructionWorkflow::exec(input)?;
-
-        self.sender.as_ref()
-            .send_instruction(host_output)
+        self.sender.as_ref().send_instruction(host_output)
     }
 
     pub fn handshake(

@@ -4,6 +4,8 @@ use frame_common::{CallNameConverter, State};
 use anonify_common::plugin_types::*;
 use web3::types::Address;
 
+pub const OUTPUT_MAX_LEN: usize = 2048;
+
 pub struct InstructionWorkflow;
 
 impl WorkflowEngine for InstructionWorkflow {
@@ -11,6 +13,8 @@ impl WorkflowEngine for InstructionWorkflow {
     type EI = input::Instruction;
     type EO = output::Instruction;
     type HO = host_output::Instruction;
+    const OUTPUT_MAX_LEN = OUTPUT_MAX_LEN;
+    const CMD = ENCRYPT_INSTRUCTION_CMD;
 }
 
 pub mod host_input {
