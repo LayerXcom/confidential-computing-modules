@@ -114,13 +114,14 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             return Err(HostError::AddressNotSet);
         }
 
-        let input = host_input::Instruction<'_, _, C>::new(state, call_name. access_right);
+        let input = host_input::Instruction<'_, _, C>::new(
+            state, call_name. access_right, signer, gas,
+        );
 
-        Instruction::new
+        let host_output = InstructionWorkflow::exec(input)?;
 
         self.sender.as_ref()
-            .ok_or(HostError::AddressNotSet)?
-            .send_instruction(ecall_input, signer, gas)
+            .send_instruction(host_output)
     }
 
     pub fn handshake(

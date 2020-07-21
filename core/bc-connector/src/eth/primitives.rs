@@ -137,17 +137,17 @@ impl Web3Contract {
 
     pub fn send_instruction(
         &self,
-        from: Address,
-        ciphertext: Vec<u8>,
-        enclave_sig: &[u8],
-        msg: &[u8],
-        gas: u64,
+        output: host_output::Instruction,
     ) -> Result<H256> {
+        let ciphertext = output.ciphertext.unwrap();
+        let enclave_sig = output.enclave_sig.unwrap();
+        let msg = output.msg.unwrap();
+
         let call = self.contract.call(
             "storeInstruction",
-            (ciphertext, enclave_sig.to_vec(), H256::from_slice(msg)),
-            from,
-            Options::with(|opt| opt.gas = Some(gas.into())),
+            (ciphertext, &enclave_sig.to_vec(), H256::from_slice(&msg)),
+            output.signer,
+            Options::with(|opt| opt.gas = Some(output.gas.into())),
         );
 
         // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253

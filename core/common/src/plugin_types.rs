@@ -185,6 +185,10 @@ pub mod output {
         pub fn msg_as_bytes(&self) -> &[u8] {
             &self.msg.as_bytes()
         }
+
+        pub fn msg_as_array(&self) -> [u8; 32] {
+            self.msg.as_array()
+        }
     }
 
     #[derive(Encode, Decode, Debug, Clone)]

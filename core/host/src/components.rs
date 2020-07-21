@@ -2,10 +2,11 @@ use std::marker::PhantomData;
 use frame_host::engine::*;
 use frame_common::{CallNameConverter, State};
 use anonify_common::plugin_types::*;
+use web3::types::Address;
 
-pub struct Instruction;
+pub struct InstructionWorkflow;
 
-impl WorkflowEngine for Instruction {
+impl WorkflowEngine for InstructionWorkflow {
     type HI = host_input::Instruction;
     type EI = input::Instruction;
     type EO = output::Instruction;
@@ -19,21 +20,33 @@ pub mod host_input {
         state: S,
         call_name: &'a str,
         access_right: AccessRight,
+        signer: Address,
+        gas: u64,
         phantom: PhantomData<C>
     }
 
     impl<S: State, C: CallNameConverter> Instruction<'_, S, C> {
-        pub fn new(state: S, call_name: &str, access_right: AccessRight) -> Self {
-            Instruction { state, call_name, access_right }
+        pub fn new(
+            state: S,
+            call_name: &str,
+            access_right: AccessRight,
+            signer: Address,
+            gas: u64,
+        ) -> Self {
+            Instruction { state, call_name, access_right, signer, gas }
         }
     }
 
     impl<S: State, C: CallNameConverter>  HostInput for Instruction<'_, S, C> {
         type EcallInput = input::Instruction;
+        type HostOutput = host_output::Instruction;
 
-        fn into_ecall_input(self) -> anyhow::Result<Self::EcallInput> {
+        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             let state_info = StateInfo::<_, C>::new(self.state, self.call_name);
-            Ok(state_info.crate_input(self.access_right))
+            let ecall_input = state_info.crate_input(self.access_right);
+            let host_output = host_output::Instruction::new(signer, gas);
+
+            Ok((ecall_input, host_output))
         }
     }
 }
@@ -42,23 +55,34 @@ pub mod host_output {
     use super::*;
 
     pub struct Instruction {
-        pub contract: Option<>,
-        pub from: Address,
-        pub ciphertext: Vec<u8>,
-        pub enclave_sig: Vec<u8>,
-        pub msg: [u8; 32],
+        pub signer: Address,
         pub gas: u64,
+        pub ciphertext: Option<Vec<u8>>,
+        pub enclave_sig: Option<[u8; 64]>,
+        pub msg: Option<[u8; 32]>,
     }
 
     impl HostOutput for Instruction {
         type EcallOutput = output::Instruction;
 
-        fn from_ecall_output(output: Self::EcallOutput) -> anyhow::Result<Self> {
-            unimplemented!();
-        }
+        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+            self.ciphertext = Some(output.encode_ciphertext());
+            self.enclave_sig = Some(output.encode_enclave_sig());
+            self.msg = Some(output.msg_as_array());
 
-        fn emit(self) -> anyhow::Result<String> {
-            unimplemented!();
+            self
+        }
+    }
+
+    impl Instruction {
+        pub fn new(signer: Address. gas: u64) -> Self {
+            Instruction {
+                signer,
+                gas,
+                ciphertext: None,
+                enclave_sig: None,
+                msg: None,
+            }
         }
     }
 }

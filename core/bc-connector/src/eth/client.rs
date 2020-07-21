@@ -163,31 +163,14 @@ impl Sender for EthSender {
 
     fn send_instruction<ST, F, C>(
         &self,
-        access_right: AccessRight,
-        signer: SignerAddress,
-        state_info: StateInfo<'_, ST, C>,
-        gas: u64,
-        enc_ins_fn: F,
+        host_output::Instruction,
     ) -> Result<String>
     where
         ST: State,
         C: CallNameConverter,
         F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, C>) -> Result<output::Instruction>,
     {
-        // ecall of encrypt instruction
-        let instruction_tx: output::Instruction = enc_ins_fn(self.enclave_id, access_right, state_info)?;
-
-        let receipt = match signer {
-            SignerAddress::EthAddress(addr) => {
-                self.contract.send_instruction(
-                    addr,
-                    instruction_tx.encode_ciphertext(),
-                    &instruction_tx.encode_enclave_sig(),
-                    &instruction_tx.msg_as_bytes(),
-                    gas,
-                )?
-            }
-        };
+        let receipt = self.contract.send_instruction(host_output)?;
 
         Ok(hex::encode(receipt.as_bytes()))
     }

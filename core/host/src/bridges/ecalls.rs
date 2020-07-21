@@ -16,20 +16,6 @@ use log::debug;
 use codec::{Encode, Decode};
 use crate::constants::OUTPUT_MAX_LEN;
 
-// pub(crate) fn encrypt_instruction<S, C>(
-//     eid: sgx_enclave_id_t,
-//     access_right: AccessRight,
-//     state_info: StateInfo<'_, S, C>,
-// ) -> Result<output::Instruction>
-// where
-//     S: State,
-//     C: CallNameConverter,
-// {
-//     let input = state_info.crate_input(access_right);
-//     EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
-//         .invoke_ecall::<input::Instruction, output::Instruction>(ENCRYPT_INSTRUCTION_CMD, input)
-// }
-
 pub(crate) fn insert_logs<S: State>(
     eid: sgx_enclave_id_t,
     enclave_log: InnerEnclaveLog,
