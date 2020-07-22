@@ -11,22 +11,24 @@ use frame_common::{
     state_types::UpdatedState,
 };
 use anonify_common::plugin_types::*;
+use web3::types::Address;
 use crate::{
     error::Result,
     eventdb::{BlockNumDB, InnerEnclaveLog},
     utils::*,
+    workflow::*,
 };
 
 /// A trait for deploying contracts
 pub trait Deployer: Sized {
     fn new(enclave_id: sgx_enclave_id_t, node_url: &str) -> Result<Self>;
 
-    fn get_account(&self, index: usize) -> Result<SignerAddress>;
+    fn get_account(&self, index: usize) -> Result<Address>;
 
     /// Deploying contract with attestation.
     fn deploy<F>(
         &mut self,
-        deploy_user: &SignerAddress,
+        deploy_user: &Address,
         reg_fn: F,
     ) -> Result<String>
     where
@@ -60,21 +62,18 @@ pub trait Sender: Sized {
         contract: ContractKind,
     ) -> Self;
 
-    fn get_account(&self, index: usize) -> Result<SignerAddress>;
+    fn get_account(&self, index: usize) -> Result<Address>;
 
     /// Send an encrypted instruction of state transition to blockchain nodes.
-    fn send_instruction<ST, F, C>(
+    fn send_instruction(
         &self,
-        host_output::Instruction,
-    ) -> Result<String>
-    where
-        ST: State,
-        C: CallNameConverter;
+        host_output: host_output::Instruction,
+    ) -> Result<String>;
 
     /// Attestation with deployed contract.
     fn join_group<F>(
         &self,
-        signer: SignerAddress,
+        signer: Address,
         gas: u64,
         reg_fn: F,
     ) -> Result<String>
@@ -83,7 +82,7 @@ pub trait Sender: Sized {
 
     fn handshake<F>(
         &self,
-        signer: SignerAddress,
+        signer: Address,
         gas: u64,
         handshake_fn: F,
     ) -> Result<String>

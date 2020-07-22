@@ -15,6 +15,7 @@ use crate::{
     eventdb::{BlockNumDB, InnerEnclaveLog},
     traits::*,
     utils::*,
+    workflow::*,
 };
 use super::primitives::{Web3Http, Web3Contract};
 
@@ -37,15 +38,13 @@ impl Deployer for EthDeployer {
         })
     }
 
-    fn get_account(&self, index: usize) -> Result<SignerAddress> {
-        Ok(SignerAddress::Address(
-            self.web3_conn.get_account(index)?
-        ))
+    fn get_account(&self, index: usize) -> Result<Address> {
+        self.web3_conn.get_account(index)
     }
 
     fn deploy<F>(
         &mut self,
-        deploy_user: &SignerAddress,
+        deploy_user: &Address,
         reg_fn: F,
     ) -> Result<String>
     where
@@ -53,16 +52,12 @@ impl Deployer for EthDeployer {
     {
         let output = reg_fn(self.enclave_id)?;
 
-        let contract_addr = match deploy_user {
-            SignerAddress::Address(address) => {
-                self.web3_conn.deploy(
-                    &address,
-                    output.report(),
-                    output.report_sig(),
-                    output.handshake(),
-                )?
-            }
-        };
+        let contract_addr = self.web3_conn.deploy(
+            &deploy_user,
+            output.report(),
+            output.report_sig(),
+            output.handshake(),
+        )?;
         self.address = Some(contract_addr);
 
         Ok(hex::encode(contract_addr.as_bytes()))
@@ -130,15 +125,13 @@ impl Sender for EthSender {
         }
     }
 
-    fn get_account(&self, index: usize) -> Result<SignerAddress> {
-        Ok(SignerAddress::Address(
-            self.contract.get_account(index)?
-        ))
+    fn get_account(&self, index: usize) -> Result<Address> {
+        self.contract.get_account(index)
     }
 
     fn join_group<F>(
         &self,
-        signer: SignerAddress,
+        signer: Address,
         gas: u64,
         reg_fn: F,
     ) -> Result<String>
@@ -146,30 +139,21 @@ impl Sender for EthSender {
         F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnJoinGroup>,
     {
         let output = reg_fn(self.enclave_id)?;
-        let receipt = match signer {
-            SignerAddress::Address(addr) => {
-                self.contract.join_group(
-                    addr,
-                    output.report(),
-                    output.report_sig(),
-                    output.handshake(),
-                    gas
-                )?
-            }
-        };
+        let receipt = self.contract.join_group(
+            signer,
+            output.report(),
+            output.report_sig(),
+            output.handshake(),
+            gas
+        )?;
 
         Ok(hex::encode(receipt.as_bytes()))
     }
 
-    fn send_instruction<ST, F, C>(
+    fn send_instruction(
         &self,
-        host_output::Instruction,
-    ) -> Result<String>
-    where
-        ST: State,
-        C: CallNameConverter,
-        F: FnOnce(sgx_enclave_id_t, AccessRight, StateInfo<'_, ST, C>) -> Result<output::Instruction>,
-    {
+        host_output: host_output::Instruction,
+    ) -> Result<String> {
         let receipt = self.contract.send_instruction(host_output)?;
 
         Ok(hex::encode(receipt.as_bytes()))
@@ -177,7 +161,7 @@ impl Sender for EthSender {
 
     fn handshake<F>(
         &self,
-        signer: SignerAddress,
+        signer: Address,
         gas: u64,
         handshake_fn: F,
     ) -> Result<String>
@@ -185,15 +169,11 @@ impl Sender for EthSender {
         F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnHandshake>
     {
         let output = handshake_fn(self.enclave_id)?;
-        let receipt = match signer {
-            SignerAddress::Address(addr) => {
-                self.contract.handshake(
-                    addr,
-                    output.handshake(),
-                    gas
-                )?
-            }
-        };
+        let receipt = self.contract.handshake(
+            signer,
+            output.handshake(),
+            gas
+        )?;
 
         Ok(hex::encode(receipt.as_bytes()))
     }

@@ -8,6 +8,7 @@ build = "build.rs"
 [dependencies]
 frame-types = { path = "../../frame/types" }
 frame-common = { path = "../../frame/common" }
+frame-host = { path = "../../frame/host" }
 anonify-common = { path = "../common" }
 sgx_types = "1.1.1"
 thiserror = "1.0"
@@ -19,6 +20,7 @@ log = "0.4"
 web3 = "0.8"
 ethabi = "8.0.0"
 hex = "0.4"
+byteorder = "1"
 
 [build-dependencies]
 dirs = "2.0"

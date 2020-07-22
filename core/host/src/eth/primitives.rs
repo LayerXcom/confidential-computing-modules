@@ -25,6 +25,7 @@ use crate::{
     error::Result,
     eventdb::{BlockNumDB, InnerEnclaveLog, EnclaveLog},
     utils::ContractInfo,
+    workflow::*,
 };
 
 pub const CONFIRMATIONS: usize = 0;

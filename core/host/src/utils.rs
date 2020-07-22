@@ -82,12 +82,6 @@ impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
     }
 }
 
-/// A type of transaction signing address
-#[derive(Debug, Clone)]
-pub enum SignerAddress {
-    EthAddress(web3::types::Address)
-}
-
 /// A type of contract
 pub enum ContractKind {
     Web3Contract(Web3Contract)

@@ -1,6 +1,8 @@
 
-mod ecalls;
+pub mod ecalls;
 mod error;
-mod engine;
+pub mod engine;
 mod config;
 mod init_enclave;
+
+pub use error::FrameHostError as Error;

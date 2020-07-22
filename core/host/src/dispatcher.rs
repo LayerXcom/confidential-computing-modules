@@ -17,9 +17,9 @@ use frame_common::{
 };
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
+use web3::types::Address;
 use crate::bridges::ecalls::{
     join_group as join_fn,
-    encrypt_instruction as enc_ins_fn,
     handshake as handshake_fn,
     insert_logs as insert_fn,
     register_notification as reg_notify_fn,
@@ -58,12 +58,10 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         })
     }
 
-    pub fn set_contract_addr<P>(&self, contract_addr: &str, abi_path: P) -> Result<()>
-        where
-            P: AsRef<Path> + Copy,
-    {
-        let contract_info = ContractInfo::new(abi_path, contract_addr);
-
+    pub fn set_contract_addr<P: AsRef<Path> + Copy>(
+        &self,
+        contract_info: ContractInfo<P>,
+    ) -> Result<()> {
         let enclave_id = self.deployer.get_enclave_id();
         let node_url = self.deployer.get_node_url();
         let sender = S::new(enclave_id, node_url, contract_info)?;
@@ -77,7 +75,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
 
     pub fn deploy(
         &self,
-        deploy_user: &SignerAddress,
+        deploy_user: &Address,
     ) -> Result<String> {
         self.deployer
             .deploy(deploy_user, join_fn)
@@ -85,7 +83,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
 
     pub fn join_group<P: AsRef<Path> + Copy>(
         &self,
-        signer: SignerAddress,
+        signer: Address,
         gas: u64,
         contract_addr: &str,
         abi_path: P,
@@ -103,7 +101,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         access_right: AccessRight,
         state: ST,
         call_name: &str,
-        signer: SignerAddress,
+        signer: Address,
         gas: u64,
     ) -> Result<String>
         where
@@ -114,7 +112,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             return Err(HostError::AddressNotSet);
         }
 
-        let input = host_input::Instruction<'_, _, C>::new(
+        let input = host_input::Instruction::<ST, C>::new(
             state, call_name. access_right, signer, gas,
         );
         let eid = self.deployer.get_enclave_id();
@@ -125,7 +123,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
 
     pub fn handshake(
         &self,
-        signer: SignerAddress,
+        signer: Address,
         gas: u64,
     ) -> Result<String> {
         if self.sender.is_none() {
@@ -154,7 +152,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             .block_on_event(eid, insert_fn)
     }
 
-    pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
+    pub fn get_account(&self, index: usize) -> Result<Address> {
         self.deployer
             .get_account(index)
     }

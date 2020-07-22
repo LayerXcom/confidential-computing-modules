@@ -1,14 +1,15 @@
 use sgx_types::*;
-use anonify_types::EnclaveStatus;
+use frame_types::EnclaveStatus;
 use frame_common::{
     crypto::AccessRight,
     traits::*,
     state_types::UpdatedState,
 };
+use frame_host::ecalls::EnclaveConnector;
 use anonify_common::{
     plugin_types::*,
     commands::*,
-},
+};
 use crate::{
     eventdb::InnerEnclaveLog,
     utils::StateInfo,

@@ -9,13 +9,17 @@ use anonify_common::{
     commands::*,
 };
 use web3::types::Address;
+use crate::utils::StateInfo;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
 
-pub struct InstructionWorkflow;
+pub struct InstructionWorkflow<S: State, C: CallNameConverter> {
+    s: PhantomData<S>,
+    c: PhantomData<C>,
+}
 
-impl WorkflowEngine for InstructionWorkflow {
-    type HI<'a> = host_input::Instruction<'a>;
+impl<S: State, C: CallNameConverter> WorkflowEngine for InstructionWorkflow<S, C> {
+    type HI = host_input::Instruction<S, C>;
     type EI = input::Instruction;
     type EO = output::Instruction;
     type HO = host_output::Instruction;
@@ -26,19 +30,19 @@ impl WorkflowEngine for InstructionWorkflow {
 pub mod host_input {
     use super::*;
 
-    pub struct Instruction<'a, S: State, C: CallNameConverter> {
+    pub struct Instruction<S: State, C: CallNameConverter> {
         state: S,
-        call_name: &'a str,
+        call_name: String,
         access_right: AccessRight,
         signer: Address,
         gas: u64,
         phantom: PhantomData<C>
     }
 
-    impl<S: State, C: CallNameConverter> Instruction<'_, S, C> {
+    impl<S: State, C: CallNameConverter> Instruction<S, C> {
         pub fn new(
             state: S,
-            call_name: &str,
+            call_name: String,
             access_right: AccessRight,
             signer: Address,
             gas: u64,
@@ -47,14 +51,14 @@ pub mod host_input {
         }
     }
 
-    impl<S: State, C: CallNameConverter> HostInput for Instruction<'_, S, C> {
+    impl<S: State, C: CallNameConverter> HostInput for Instruction<S, C> {
         type EcallInput = input::Instruction;
         type HostOutput = host_output::Instruction;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let state_info = StateInfo::<_, C>::new(self.state, self.call_name);
+            let state_info = StateInfo::<_, C>::new(self.state, &self.call_name);
             let ecall_input = state_info.crate_input(self.access_right);
-            let host_output = host_output::Instruction::new(signer, gas);
+            let host_output = host_output::Instruction::new(self.signer, self.gas);
 
             Ok((ecall_input, host_output))
         }
@@ -80,7 +84,7 @@ pub mod host_output {
             self.enclave_sig = Some(output.encode_enclave_sig());
             self.msg = Some(output.msg_as_array());
 
-            self
+            Ok(self)
         }
     }
 
