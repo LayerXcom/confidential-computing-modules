@@ -47,11 +47,11 @@ impl EcallHandler for Instruction {
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone,
     {
-        let state = self.state.as_mut_bytes();
-        let ar = &self.access_right;
+        let state = self.inner.state.as_mut_bytes();
+        let ar = &self.inner.access_right;
 
         let instruction_output = create_instruction_output::<R, C>(
-            self.call_id,
+            self.inner.call_id,
             state,
             ar,
             enclave_context,
@@ -65,7 +65,18 @@ impl EcallHandler for Instruction {
     }
 }
 
-impl EcallHandler for input::InsertCiphertext {
+#[derive(Encode, Decode, Debug, Clone)]
+pub struct InsertCiphertext {
+    inner: input::InsertCiphertext,
+}
+
+impl From<input::InsertCiphertext> for InsertCiphertext {
+    fn from(p: input::InsertCiphertext) -> Self {
+        InsertCiphertext { inner: p }
+    }
+}
+
+impl EcallHandler for InsertCiphertext {
     type O = output::ReturnUpdatedState;
 
     fn handle<R, C>(
@@ -78,7 +89,7 @@ impl EcallHandler for input::InsertCiphertext {
         C: ContextOps<S=StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();
-        let iter_op = Instructions::<R, C>::state_transition(enclave_context.clone(), self.ciphertext(), group_key)?;
+        let iter_op = Instructions::<R, C>::state_transition(enclave_context.clone(), self.inner.ciphertext(), group_key)?;
         let mut output = output::ReturnUpdatedState::default();
 
         if let Some(updated_state_iter) = iter_op {
@@ -87,7 +98,7 @@ impl EcallHandler for input::InsertCiphertext {
             }
         }
 
-        let roster_idx = self.ciphertext().roster_idx() as usize;
+        let roster_idx = self.inner.ciphertext().roster_idx() as usize;
         // ratchet app keychain per a log.
         group_key.ratchet(roster_idx)?;
 
@@ -95,7 +106,18 @@ impl EcallHandler for input::InsertCiphertext {
     }
 }
 
-impl EcallHandler for input::InsertHandshake {
+#[derive(Encode, Decode, Debug, Clone)]
+pub struct InsertHandshake {
+    inner: input::InsertHandshake,
+}
+
+impl From<input::InsertHandshake> for InsertHandshake {
+    fn from(p: input::InsertHandshake) -> Self {
+        InsertHandshake { inner: p }
+    }
+}
+
+impl EcallHandler for InsertHandshake {
     type O = output::Empty;
 
     fn handle<R, C>(
@@ -108,7 +130,7 @@ impl EcallHandler for input::InsertHandshake {
         C: ContextOps<S=StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();
-        let handshake = HandshakeParams::decode(&mut self.handshake())
+        let handshake = HandshakeParams::decode(&mut self.inner.handshake())
             .map_err(|_| anyhow!("HandshakeParams::decode Error"))?;
 
         group_key.process_handshake(&handshake)?;
@@ -117,7 +139,18 @@ impl EcallHandler for input::InsertHandshake {
     }
 }
 
-impl EcallHandler for input::GetState {
+#[derive(Encode, Decode, Debug, Clone)]
+pub struct GetState {
+    inner: input::GetState,
+}
+
+impl From<input::GetState> for GetState {
+    fn from(p: input::GetState) -> Self {
+        GetState { inner: p }
+    }
+}
+
+impl EcallHandler for GetState {
     type O = output::ReturnState;
 
     fn handle<R, C>(
@@ -129,14 +162,25 @@ impl EcallHandler for input::GetState {
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone,
     {
-        let addr = self.access_right().verified_user_address()?;
-        let user_state = enclave_context.get_state(addr, self.mem_id());
+        let addr = self.inner.access_right().verified_user_address()?;
+        let user_state = enclave_context.get_state(addr, self.inner.mem_id());
 
         Ok(output::ReturnState::new(user_state))
     }
 }
 
-impl EcallHandler for input::CallJoinGroup {
+#[derive(Encode, Decode, Debug, Clone)]
+pub struct CallJoinGroup {
+    inner: input::CallJoinGroup,
+}
+
+impl From<input::CallJoinGroup> for CallJoinGroup {
+    fn from(p: input::CallJoinGroup) -> Self {
+        CallJoinGroup { inner: p }
+    }
+}
+
+impl EcallHandler for CallJoinGroup {
     type O = output::ReturnJoinGroup;
 
     fn handle<R, C>(
@@ -161,7 +205,18 @@ impl EcallHandler for input::CallJoinGroup {
     }
 }
 
-impl EcallHandler for input::CallHandshake {
+#[derive(Encode, Decode, Debug, Clone)]
+pub struct CallHandshake {
+    inner: input::CallHandshake,
+}
+
+impl From<input::CallHandshake> for CallHandshake {
+    fn from(p: input::CallHandshake) -> Self {
+        CallHandshake { inner: p }
+    }
+}
+
+impl EcallHandler for CallHandshake {
     type O = output::ReturnHandshake;
 
     fn handle<R, C>(
@@ -180,7 +235,18 @@ impl EcallHandler for input::CallHandshake {
     }
 }
 
-impl EcallHandler for input::RegisterNotification {
+#[derive(Encode, Decode, Debug, Clone)]
+pub struct RegisterNotification {
+    inner: input::RegisterNotification,
+}
+
+impl From<input::RegisterNotification> for RegisterNotification {
+    fn from(p: input::RegisterNotification) -> Self {
+        RegisterNotification { inner: p }
+    }
+}
+
+impl EcallHandler for RegisterNotification {
     type O = output::Empty;
 
     fn handle<R, C>(
@@ -192,7 +258,7 @@ impl EcallHandler for input::RegisterNotification {
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone,
     {
-        let addr = self.access_right().verified_user_address()?;
+        let addr = self.inner.access_right().verified_user_address()?;
         enclave_context.set_notification(addr);
 
         Ok(output::Empty::default())
