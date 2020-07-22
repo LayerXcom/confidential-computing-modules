@@ -3,13 +3,13 @@ use std::{
     sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_common::{
+use anonify_common::plugin_types::*;
+use frame_common::{
+    traits::*,
     crypto::AccessRight,
-    traits::{State, CallNameConverter},
     state_types::UpdatedState,
-    plugin_types::*,
 };
-use web3::types::Address as EthAddress;
+use web3::types::Address;
 use crate::{
     error::Result,
     eventdb::{BlockNumDB, InnerEnclaveLog},
@@ -23,7 +23,7 @@ use super::primitives::{Web3Http, Web3Contract};
 pub struct EthDeployer {
     enclave_id: sgx_enclave_id_t,
     web3_conn: Web3Http,
-    address: Option<EthAddress>, // contract address
+    address: Option<Address>, // contract address
 }
 
 impl Deployer for EthDeployer {
@@ -38,7 +38,7 @@ impl Deployer for EthDeployer {
     }
 
     fn get_account(&self, index: usize) -> Result<SignerAddress> {
-        Ok(SignerAddress::EthAddress(
+        Ok(SignerAddress::Address(
             self.web3_conn.get_account(index)?
         ))
     }
@@ -54,7 +54,7 @@ impl Deployer for EthDeployer {
         let output = reg_fn(self.enclave_id)?;
 
         let contract_addr = match deploy_user {
-            SignerAddress::EthAddress(address) => {
+            SignerAddress::Address(address) => {
                 self.web3_conn.deploy(
                     &address,
                     output.report(),
@@ -131,7 +131,7 @@ impl Sender for EthSender {
     }
 
     fn get_account(&self, index: usize) -> Result<SignerAddress> {
-        Ok(SignerAddress::EthAddress(
+        Ok(SignerAddress::Address(
             self.contract.get_account(index)?
         ))
     }
@@ -147,7 +147,7 @@ impl Sender for EthSender {
     {
         let output = reg_fn(self.enclave_id)?;
         let receipt = match signer {
-            SignerAddress::EthAddress(addr) => {
+            SignerAddress::Address(addr) => {
                 self.contract.join_group(
                     addr,
                     output.report(),
@@ -186,7 +186,7 @@ impl Sender for EthSender {
     {
         let output = handshake_fn(self.enclave_id)?;
         let receipt = match signer {
-            SignerAddress::EthAddress(addr) => {
+            SignerAddress::Address(addr) => {
                 self.contract.handshake(
                     addr,
                     output.handshake(),

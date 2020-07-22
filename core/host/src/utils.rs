@@ -7,9 +7,9 @@ use std::{
 };
 use web3::types::Address;
 use ethabi::Contract as ContractABI;
-use anonify_common::{
+use anonify_common::plugin_types::*;
+use frame_common::{
     traits::*,
-    plugin_types::*,
     crypto::AccessRight,
     state_types::StateType,
 };

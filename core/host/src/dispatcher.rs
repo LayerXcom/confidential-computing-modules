@@ -4,15 +4,15 @@ use std::{
     convert::{TryInto, TryFrom},
     fmt::Debug,
 };
-use anonify_bc_connector::{
+use crate::{
     traits::*,
     utils::*,
     eventdb::BlockNumDB,
     error::{Result, HostError},
 };
-use anonify_common::{
+use frame_common::{
     crypto::AccessRight,
-    traits::{State, MemNameConverter, CallNameConverter},
+    traits::*,
     state_types::UpdatedState,
 };
 use parking_lot::RwLock;
@@ -25,7 +25,7 @@ use crate::bridges::ecalls::{
     register_notification as reg_notify_fn,
     get_state_from_enclave,
 };
-use crate::components::*;
+use crate::workflow::*;
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]

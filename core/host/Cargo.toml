@@ -7,13 +7,18 @@ build = "build.rs"
 
 [dependencies]
 frame-types = { path = "../../frame/types" }
+frame-common = { path = "../../frame/common" }
 anonify-common = { path = "../common" }
 sgx_types = "1.1.1"
+thiserror = "1.0"
 anyhow = "1.0"
 ed25519-dalek = "1.0.0-pre.2"
 parking_lot = "0.10"
 codec = { package = "parity-scale-codec", version = "1.1" }
 log = "0.4"
+web3 = "0.8"
+ethabi = "8.0.0"
+hex = "0.4"
 
 [build-dependencies]
 dirs = "2.0"

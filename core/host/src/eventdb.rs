@@ -1,10 +1,12 @@
 use std::sync::Arc;
 use anonify_common::{
     kvs::{KVS, MemoryDB, DBTx},
+    plugin_types::*,
+};
+use frame_common::{
     crypto::Ciphertext,
     traits::State,
     state_types::UpdatedState,
-    plugin_types::*,
 };
 use sgx_types::sgx_enclave_id_t;
 use web3::types::Address;

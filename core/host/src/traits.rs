@@ -5,12 +5,12 @@ use std::{
     sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_common::{
+use frame_common::{
     traits::*,
     crypto::AccessRight,
     state_types::UpdatedState,
-    plugin_types::*,
 };
+use anonify_common::plugin_types::*;
 use crate::{
     error::Result,
     eventdb::{BlockNumDB, InnerEnclaveLog},
@@ -69,7 +69,7 @@ pub trait Sender: Sized {
     ) -> Result<String>
     where
         ST: State,
-        C: CallNameConverter,
+        C: CallNameConverter;
 
     /// Attestation with deployed contract.
     fn join_group<F>(

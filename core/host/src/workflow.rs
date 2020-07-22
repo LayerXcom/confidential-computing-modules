@@ -1,7 +1,13 @@
 use std::marker::PhantomData;
 use frame_host::engine::*;
-use frame_common::{CallNameConverter, State};
-use anonify_common::plugin_types::*;
+use frame_common::{
+    crypto::AccessRight,
+    traits::*,
+};
+use anonify_common::{
+    plugin_types::*,
+    commands::*,
+};
 use web3::types::Address;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
@@ -41,7 +47,7 @@ pub mod host_input {
         }
     }
 
-    impl<S: State, C: CallNameConverter>  HostInput for Instruction<'_, S, C> {
+    impl<S: State, C: CallNameConverter> HostInput for Instruction<'_, S, C> {
         type EcallInput = input::Instruction;
         type HostOutput = host_output::Instruction;
 

@@ -5,8 +5,10 @@ use std::{
 };
 use anyhow::Result;
 use log::debug;
-use anonify_types::UntrustedStatus;
-use crate::constants::{DEV_HOSTNAME, HTTPS_PORT};
+use frame_types::UntrustedStatus;
+
+const DEV_HOSTNAME: &str = "api.trustedservices.intel.com";
+const HTTPS_PORT: u16 = 443;
 
 #[no_mangle]
 pub extern "C" fn ocall_sgx_init_quote(
