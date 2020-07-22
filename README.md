@@ -16,7 +16,7 @@ $ solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.so
 ```
 
 ## Running anonify protocol
-By using docker-compose, three nodes will be up by default. [The ERC20-like application](https://github.com/LayerXcom/anonify/blob/master/example/app/src/lib.rs) is implemented as the initial state transition functions. (Assumed your hardware supports Intel SGX.)
+By using docker-compose, three nodes will be up by default. [The ERC20-like application](example/erc20/state-transition/src/lib.rs) is implemented as the initial state transition functions. (Assumed your hardware supports Intel SGX.)
 
 ```
 $ docker-compose -f docker/docker-compose-anonify.yml up -d
