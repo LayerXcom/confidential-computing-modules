@@ -17,10 +17,11 @@ macro_rules! register_ecall {
 
         fn inner_ecall_handler<I, O>(input_payload: &mut [u8]) -> anyhow::Result<Vec<u8>>
         where
-            I: codec::Decode + EcallInput + EcallHandler,
-            O: codec::Encode + EcallOutput,
+            I: Into<II> + EcallInput + codec::Decode,
+            II: EcallHandler + codec::Decode,
+            O: EcallOutput + codec::Encode,
         {
-            let input = I::decode(&mut &input_payload[..])
+            let input = II::decode(&mut &input_payload[..])
                 .map_err(|e| anyhow!("{:?}", e))?;
             let res = input.handle::<$runtime_exec, $ctx_ops>($ctx, $max_mem)?;
 

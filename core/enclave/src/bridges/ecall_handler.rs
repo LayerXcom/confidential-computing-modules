@@ -24,7 +24,18 @@ use crate::{
     config::{IAS_URL, TEST_SUB_KEY},
 };
 
-impl EcallHandler for input::Instruction {
+#[derive(Encode, Decode, Debug, Clone)]
+pub struct Instruction {
+    inner: input::Instruction,
+}
+
+impl From<input::Instruction> for Instruction {
+    fn from(p: input::Instruction) -> Self {
+        Instruction { inner: p }
+    }
+}
+
+impl EcallHandler for Instruction {
     type O = output::Instruction;
 
     fn handle<R, C>(
