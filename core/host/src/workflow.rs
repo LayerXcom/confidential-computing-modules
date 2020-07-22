@@ -47,7 +47,10 @@ pub mod host_input {
             signer: Address,
             gas: u64,
         ) -> Self {
-            Instruction { state, call_name, access_right, signer, gas }
+            Instruction {
+                state, call_name, access_right, signer, gas,
+                phantom: PhantomData,
+            }
         }
     }
 

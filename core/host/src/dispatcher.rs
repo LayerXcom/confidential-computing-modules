@@ -15,6 +15,7 @@ use frame_common::{
     traits::*,
     state_types::UpdatedState,
 };
+use frame_host::engine::WorkflowEngine;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use web3::types::Address;
@@ -30,6 +31,11 @@ use crate::workflow::*;
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
 pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
+    inner: RwLock<InnerDispatcher<D, S, W, DB>>,
+}
+
+#[derive(Debug)]
+struct InnerDispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
     deployer: D,
     sender: Option<S>,
     watcher: Option<W>,
@@ -49,26 +55,30 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         event_db: Arc<DB>,
     ) -> Result<Self> {
         let deployer = D::new(enclave_id, node_url)?;
+        let inner = RwLock::new(
+            InnerDispatcher {
+                deployer,
+                event_db,
+                sender: None,
+                watcher: None,
+            }
+        );
 
-        Ok(Dispatcher {
-            deployer,
-            event_db,
-            sender: None,
-            watcher: None,
-        })
+        Ok(Dispatcher { inner })
     }
 
     pub fn set_contract_addr<P: AsRef<Path> + Copy>(
         &self,
         contract_info: ContractInfo<P>,
     ) -> Result<()> {
-        let enclave_id = self.deployer.get_enclave_id();
-        let node_url = self.deployer.get_node_url();
+        let mut inner = self.inner.write();
+        let enclave_id = inner.deployer.get_enclave_id();
+        let node_url = inner.deployer.get_node_url();
         let sender = S::new(enclave_id, node_url, contract_info)?;
-        let watcher = W::new(node_url, contract_info, self.event_db.clone())?;
+        let watcher = W::new(node_url, contract_info, inner.event_db.clone())?;
 
-        self.sender = Some(sender);
-        self.watcher = Some(watcher);
+        inner.sender = Some(sender);
+        inner.watcher = Some(watcher);
 
         Ok(())
     }
@@ -77,7 +87,8 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         &self,
         deploy_user: &Address,
     ) -> Result<String> {
-        self.deployer
+        let mut inner = self.inner.write();
+        inner.deployer
             .deploy(deploy_user, join_fn)
     }
 
@@ -91,7 +102,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         self.set_contract_addr(contract_info)?;
 
-        self.sender.as_ref()
+        self.inner.read().sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
             .join_group(signer, gas, join_fn)
     }
@@ -108,17 +119,17 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             ST: State,
             C: CallNameConverter,
     {
-        if self.sender.is_none() {
-            return Err(HostError::AddressNotSet);
-        }
-
+        let inner = self.inner.read();
         let input = host_input::Instruction::<ST, C>::new(
-            state, call_name. access_right, signer, gas,
+            state, call_name.to_string(), access_right, signer, gas,
         );
-        let eid = self.deployer.get_enclave_id();
+        let eid = inner.deployer.get_enclave_id();
         let host_output = InstructionWorkflow::exec(input, eid)?;
 
-        self.sender.as_ref().send_instruction(host_output)
+        match &inner.sender {
+            Some(s) => s.send_instruction(host_output),
+            None => Err(HostError::AddressNotSet),
+        }
     }
 
     pub fn handshake(
@@ -126,11 +137,12 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         signer: Address,
         gas: u64,
     ) -> Result<String> {
-        if self.sender.is_none() {
+        let inner = self.inner.read();
+        if inner.sender.is_none() {
             return Err(HostError::AddressNotSet);
         }
 
-        self.sender.as_ref()
+        inner.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
             .handshake(signer, gas, handshake_fn)
     }
@@ -141,24 +153,30 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         where
             St: State,
     {
-        if self.watcher.is_none() {
+        let inner = self.inner.read();
+        if inner.watcher.is_none() {
             return Err(HostError::EventWatcherNotSet);
         }
 
-        let eid = self.deployer.get_enclave_id();
-        self.watcher
+        let eid = inner.deployer.get_enclave_id();
+        inner.watcher
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
             .block_on_event(eid, insert_fn)
     }
 
     pub fn get_account(&self, index: usize) -> Result<Address> {
-        self.deployer
+        self.inner
+            .read()
+            .deployer
             .get_account(index)
     }
 
     pub fn register_notification(&self, access_right: AccessRight) -> Result<()> {
-        self.deployer.register_notification(access_right, reg_notify_fn)
+        self.inner
+            .read()
+            .deployer
+            .register_notification(access_right, reg_notify_fn)
     }
 }
 
