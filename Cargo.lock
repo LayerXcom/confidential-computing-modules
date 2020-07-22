@@ -1166,6 +1166,7 @@ dependencies = [
  "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "erc20-state-transition 0.1.0",
+ "frame-common 0.1.0",
  "frame-enclave 0.1.0",
  "frame-treekem 0.1.0",
  "frame-types 0.1.0",
