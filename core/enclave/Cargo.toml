@@ -9,6 +9,7 @@ frame-types = { path = "../../frame/types" }
 frame-enclave = { path = "../../frame/enclave" }
 frame-runtime = { path = "../../frame/runtime", default-features = false, features = ["sgx"] }
 frame-treekem = { path = "../../frame/treekem" }
+frame-common = { path = "../../frame/common", default-features = false, features = ["sgx"] }
 anonify-common = { path = "../common", default-features = false, features = ["sgx"] }
 
 remote-attestation = { git = "https://github.com/LayerXcom/libsgx-rs" }

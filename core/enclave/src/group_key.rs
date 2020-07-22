@@ -1,12 +1,10 @@
 use std::vec::Vec;
-use anonify_treekem::{
+use frame_treekem::{
     GroupState, AppKeyChain, Handshake,
     handshake::{PathSecretRequest, HandshakeParams},
 };
-use anonify_common::{
-    crypto::Ciphertext,
-};
-use anonify_runtime::traits::*;
+use frame_common::crypto::Ciphertext;
+use frame_runtime::traits::*;
 use anyhow::Result;
 
 #[derive(Clone, Debug)]

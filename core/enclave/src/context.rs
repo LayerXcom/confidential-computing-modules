@@ -4,13 +4,13 @@ use std::{
 };
 use sgx_types::*;
 use std::prelude::v1::*;
-use anonify_common::{
+use frame_common::{
     crypto::UserAddress,
     traits::*,
     state_types::{MemId, UpdatedState, StateType},
 };
-use anonify_runtime::traits::*;
-use anonify_treekem::{
+use frame_runtime::traits::*;
+use frame_treekem::{
     handshake::{PathSecretRequest, PathSecretKVS},
     init_path_secret_kvs,
 };

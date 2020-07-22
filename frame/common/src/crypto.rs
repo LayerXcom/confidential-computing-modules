@@ -271,9 +271,7 @@ impl AccessRight {
     }
 
     #[cfg(feature = "sgx")]
-    pub fn new_from_rng() -> Result<Self, Error> {
-        use ed25519_dalek::{SecretKey, SECRET_KEY_LENGTH};
-
+    pub fn new_from_rng() -> Result<Self, Error> {        
         let mut seed = [0u8; SECRET_KEY_LENGTH];
         sgx_rand_assign(&mut seed)?;
         let secret = SecretKey::from_bytes(&seed)

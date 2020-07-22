@@ -5,14 +5,14 @@ use std::{
 use sgx_types::*;
 use frame_types::*;
 use frame_enclave::EcallHandler;
-use anonify_common::{
+use anonify_common::plugin_types::*;
+use frame_common::{
     crypto::{UserAddress, AccessRight, Ciphertext, Sha256},
     traits::*,
     state_types::{MemId, StateType},
-    plugin_types::*,
 };
-use anonify_runtime::traits::*;
-use anonify_treekem::handshake::HandshakeParams;
+use frame_runtime::traits::*;
+use frame_treekem::handshake::HandshakeParams;
 use ed25519_dalek::{PublicKey, Signature};
 use codec::{Decode, Encode};
 use remote_attestation::RAService;
