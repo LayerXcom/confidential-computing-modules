@@ -1,7 +1,7 @@
 use reqwest::{Client, header};
 use anyhow::Result;
-use anonify_common::state_types::UpdatedState;
-use anonify_runtime::primitives::Bytes;
+use frame_common::state_types::UpdatedState;
+use frame_runtime::primitives::Bytes;
 use serde_json::Value;
 
 const ENDPOINT_TRANSFER_REQUEST: &str = "https://api.sunabar.gmo-aozora.com/personal/v1/transfer/request";

@@ -3,10 +3,7 @@ use std::{
     ptr,
 };
 use frame_types::*;
-use anonify_common::{
-    // plugin_types::*,
-    commands::*,
-};
+use anonify_common::commands::*;
 use frame_common::traits::{EcallInput, EcallOutput};
 use anonify_enclave::{
     context::EnclaveContext,

@@ -13,6 +13,7 @@ frame-enclave = { path = "../../../frame/enclave" }
 frame-types = { path = "../../../frame/types" }
 anonify-enclave = { path = "../../../core/enclave" }
 frame-treekem = { path = "../../../frame/treekem" }
+frame-common = { path = "../../../frame/common", default-features = false, features = ["sgx"] }
 anonify-common = { path = "../../../core/common", default-features = false, features = ["sgx"] }
 invoice-state-transition = { path = "../state-transition", default-features = false, features = ["sgx"] }
 sgx_tstd = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git"}

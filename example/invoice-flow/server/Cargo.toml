@@ -7,6 +7,8 @@ edition = "2018"
 [dependencies]
 invoice-api = { path = "../api" }
 frame-runtime = { path = "../../../frame/runtime" }
+frame-common = { path = "../../../frame/common" }
+frame-host = { path = "../../../frame/host" }
 anonify-common = { path = "../../../core/common" }
 anonify-host = { path = "../../../core/host" }
 invoice-state-transition = { path = "../state-transition" }

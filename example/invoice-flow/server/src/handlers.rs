@@ -9,12 +9,12 @@ use rand::rngs::OsRng;
 use rand::Rng;
 use ed25519_dalek::Keypair;
 use invoice_state_transition::{send_invoice, CallName};
-use anonify_bc_connector::{
+use anonify_host::{
     BlockNumDB,
     traits::*,
 };
-use anonify_runtime::primitives::Bytes;
-use anonify_common::{
+use frame_runtime::primitives::Bytes;
+use frame_common::{
     crypto::{UserAddress, AccessRight},
 };
 

@@ -4,10 +4,8 @@ version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-anonify-common = { path = "../core/common" }
+frame-common = { path = "../frame/common" }
 ed25519-dalek = "1.0.0-pre.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
