@@ -4,23 +4,21 @@ use std::{
     collections::BTreeMap,
 };
 use sgx_types::*;
-use anonify_common::{
+use frame_common::{
     crypto::{AccessRight, UserAddress, COMMON_ACCESS_RIGHT},
     traits::State,
 };
-use anonify_runtime::primitives::{U64, Approved};
+use frame_runtime::primitives::{U64, Approved};
 use erc20_state_transition::{
     CIPHERTEXT_SIZE, MemName, CallName,
     transfer, construct, approve, transfer_from, mint, burn,
 };
-use anonify_bc_connector::{
-    eventdb::{EventDB, BlockNumDB},
-    eth::*,
-};
 use anonify_host::{
-    init_enclave::EnclaveDir,
+    EventDB, BlockNumDB,
+    eth::*,
     dispatcher::*,
 };
+use frame_host::EnclaveDir;
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
 const ANONYMOUS_ASSET_ABI_PATH: &str = "../../contract-build/Anonify.abi";

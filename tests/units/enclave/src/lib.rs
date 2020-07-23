@@ -10,7 +10,7 @@ use std::prelude::v1::*;
 #[no_mangle]
 pub fn ecall_run_tests() {
     let ret = check_all_passed!(
-        anonify_treekem::tests::run_tests(),
+        frame_treekem::tests::run_tests(),
     );
 
     assert!(ret);
