@@ -1,12 +1,12 @@
 use std::{sync::Arc, thread, time};
 use failure::Error;
 use log::debug;
-use anonify_host::dispatcher::get_state;
-use anonify_bc_connector::{
+use anonify_host::{
+    dispatcher::get_state,
     BlockNumDB,
     traits::*,
 };
-use anonify_runtime::primitives::{U64, Approved};
+use frame_runtime::primitives::{U64, Approved};
 use erc20_state_transition::{
     MemName, CallName,
     approve, transfer, construct, transfer_from, mint, burn,

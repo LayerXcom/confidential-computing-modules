@@ -69,11 +69,14 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
 
     pub fn set_contract_addr<P: AsRef<Path> + Copy>(
         &self,
-        contract_info: ContractInfo<P>,
+        contract_addr: &str,
+        abi_path: P,
     ) -> Result<()> {
         let mut inner = self.inner.write();
         let enclave_id = inner.deployer.get_enclave_id();
         let node_url = inner.deployer.get_node_url();
+
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
         let sender = S::new(enclave_id, node_url, contract_info)?;
         let watcher = W::new(node_url, contract_info, inner.event_db.clone())?;
 
@@ -99,8 +102,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         contract_addr: &str,
         abi_path: P,
     ) -> Result<String> {
-        let contract_info = ContractInfo::new(abi_path, contract_addr);
-        self.set_contract_addr(contract_info)?;
+        self.set_contract_addr(contract_addr, abi_path)?;
 
         self.inner.read().sender.as_ref()
             .ok_or(HostError::AddressNotSet)?

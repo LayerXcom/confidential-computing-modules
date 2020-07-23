@@ -1130,8 +1130,8 @@ dependencies = [
 name = "erc20-api"
 version = "0.1.0"
 dependencies = [
- "anonify-common 0.1.0",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-common 0.1.0",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.111 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde-big-array 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1189,6 +1189,7 @@ dependencies = [
  "erc20-api 0.1.0",
  "erc20-state-transition 0.1.0",
  "failure 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-host 0.1.0",
  "frame-runtime 0.1.0",
  "hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",

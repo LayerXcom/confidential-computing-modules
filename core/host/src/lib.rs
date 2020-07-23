@@ -3,10 +3,11 @@
 pub mod dispatcher;
 mod bridges;
 mod workflow;
-mod eth;
+pub mod eth;
 mod error;
 mod eventdb;
-mod traits;
+pub mod traits;
 mod utils;
 
 pub use dispatcher::Dispatcher;
+pub use eventdb::{BlockNumDB, EventDB};
