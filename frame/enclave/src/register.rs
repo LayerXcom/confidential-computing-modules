@@ -4,26 +4,26 @@ macro_rules! register_ecall {
         $max_mem: expr,
         $runtime_exec: ty,
         $ctx_ops: ty,
-        $( ($cmd: path, $input: ty, $output: ty), )*
+        $( ($cmd: path, $handler: ty), )*
     ) => {
         fn ecall_handler(cmd: u32, input: &mut [u8]) -> anyhow::Result<Vec<u8>> {
             match cmd {
                 $(
-                    $cmd => inner_ecall_handler::<$input, From<$input>, $output>(input),
+                    $cmd => inner_ecall_handler::<$handler>(input),
                 )*
                 _ => anyhow::bail!("Not registered the ecall command"),
             }
         }
 
-        fn inner_ecall_handler<I, II, O>(input_payload: &mut [u8]) -> anyhow::Result<Vec<u8>>
+        fn inner_ecall_handler<EH>(input_payload: &mut [u8]) -> anyhow::Result<Vec<u8>>
         where
-            I: Into<II> + EcallInput + codec::Decode,
-            II: EcallHandler + codec::Decode,
-            O: EcallOutput + codec::Encode,
+            EH: EcallHandler,
+            EH::EI: EcallInput + codec::Decode,
+            EH::EO: EcallOutput + codec::Encode,
         {
-            let input = II::decode(&mut &input_payload[..])
+            let input = EH::EI::decode(&mut &input_payload[..])
                 .map_err(|e| anyhow!("{:?}", e))?;
-            let res = input.handle::<$runtime_exec, $ctx_ops>($ctx, $max_mem)?;
+            let res = EH::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?;
 
             Ok(res.encode())
         }
