@@ -14,11 +14,11 @@ use frame_treekem::{
     handshake::{PathSecretRequest, PathSecretKVS},
     init_path_secret_kvs,
 };
+use frame_enclave::ocalls::{sgx_init_quote, get_quote};
 use crate::{
     notify::Notifier,
     crypto::EnclaveIdentityKey,
     config::{UNTIL_ROSTER_IDX, UNTIL_EPOCH},
-    bridges::ocalls::{sgx_init_quote, get_quote},
     error::Result,
     kvs::EnclaveDB,
     group_key::GroupKey,
