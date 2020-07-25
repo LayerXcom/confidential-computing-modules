@@ -31,7 +31,7 @@ cd ../tests/units/host
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 
 cd ../../../
-cargo test -p anonify-runtime
+cargo test -p frame-runtime
 
 # Buildings
 
