@@ -1,6 +1,7 @@
 SGX_SDK_RUST ?= $(HOME)/sgx
 ANONIFY_ROOT_DIR := ..
 ANONIFY_CORE_ROOT := $(ANONIFY_ROOT_DIR)/core
+FRAME_ROOT := $(ANONIFY_ROOT_DIR)/frame
 ANONIFY_ENCLAVE_DIR := $(ANONIFY_CORE_ROOT)/enclave
 ANONIFY_HOST_DIR := $(ANONIFY_CORE_ROOT)/host
 ANONIFY_BIN_DIR := $(HOME)/.anonify
@@ -135,5 +136,5 @@ $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 
 .PHONY: enclave
 enclave: $(Enclave_EDL_Files)
-	@cd $(ANONIFY_CORE_ROOT)/types && cargo build
+	@cd $(FRAME_ROOT)/types && cargo build
 	$(MAKE) -f Enclave.Makefile CARGO_FLAGS=$(Host_Rust_Flags) Rust_target_dir=$(Rust_target_dir) CARGO=$(CARGO) BINDGEN=$(BINDGEN) RUSTFMT=$(RUSTFMT) ANONIFY_ENCLAVE_DIR=$(ANONIFY_ENCLAVE_DIR) CUSTOM_LIBRARY_PATH=$(CUSTOM_LIBRARY_PATH) ANONIFY_ROOT_DIR=$(ANONIFY_ROOT_DIR) ENCLAVE_DIR=$(ENCLAVE_DIR) T_H_FILE=$(T_H_FILE) ANONIFY_BUILD_DIR=$(ANONIFY_BUILD_DIR)

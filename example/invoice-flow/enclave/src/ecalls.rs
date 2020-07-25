@@ -7,11 +7,10 @@ use anonify_common::commands::*;
 use frame_common::traits::{EcallInput, EcallOutput};
 use anonify_enclave::{
     context::EnclaveContext,
-    bridges::ecall_handler::*,
+    ecall_handler::*,
 };
 use invoice_state_transition::{MAX_MEM_SIZE, Runtime};
 use crate::ENCLAVE_CONTEXT;
-use anonify_enclave::bridges::ecall_handler::*;
 use frame_enclave::{register_ecall, EcallHandler};
 use anyhow::anyhow;
 use codec::{Encode, Decode};
