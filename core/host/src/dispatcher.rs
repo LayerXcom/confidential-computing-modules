@@ -19,7 +19,7 @@ use frame_host::engine::WorkflowEngine;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use web3::types::Address;
-use crate::bridges::ecalls::{
+use crate::ecalls::{
     join_group as join_fn,
     handshake as handshake_fn,
     insert_logs as insert_fn,
