@@ -1,8 +1,44 @@
-use sgx_types::*;
 use frame_types::{traits::SliceCPtr, UntrustedStatus};
+use sgx_types::*;
 use std::vec::Vec;
-use super::auto_ffi::*;
-use crate::error::*;
+use crate::error::{Result, FrameEnclaveError};
+
+extern "C" {
+    pub fn ocall_sgx_init_quote(
+        retval: *mut UntrustedStatus,
+        ret_ti: *mut sgx_target_info_t,
+        ret_gid: *mut sgx_epid_group_id_t,
+    ) -> sgx_status_t;
+}
+extern "C" {
+    pub fn ocall_get_quote(
+        retval: *mut UntrustedStatus,
+        p_sigrl: *const u8,
+        sigrl_len: u32,
+        report: *const sgx_report_t,
+        quote_type: sgx_quote_sign_type_t,
+        p_spid: *const sgx_spid_t,
+        p_nonce: *const sgx_quote_nonce_t,
+        p_qe_report: *mut sgx_report_t,
+        p_quote: *mut sgx_quote_t,
+        maxlen: u32,
+        p_quote_len: *mut u32,
+    ) -> sgx_status_t;
+}
+extern "C" {
+    pub fn ocall_get_ias_socket(
+        retval: *mut UntrustedStatus,
+        ret_fd: *mut ::std::os::raw::c_int,
+    ) -> sgx_status_t;
+}
+extern "C" {
+    pub fn ocall_get_update_info(
+        retval: *mut UntrustedStatus,
+        platformBlob: *mut sgx_platform_info_t,
+        enclaveTrusted: i32,
+        update_info: *mut sgx_update_info_bit_t,
+    ) -> sgx_status_t;
+}
 
 pub fn get_ias_socket() -> Result<i32> {
     let mut rt = UntrustedStatus::default();
@@ -16,10 +52,10 @@ pub fn get_ias_socket() -> Result<i32> {
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(EnclaveError::SgxError{ err: status });
+		return Err(FrameEnclaveError::SgxError{ err: status });
 	}
 	if rt.is_err() {
-		return Err(EnclaveError::UntrustedError{ status: rt, function: "ocall_get_ias_socket" });
+		return Err(FrameEnclaveError::UntrustedError{ status: rt, function: "ocall_get_ias_socket" });
     }
 
     Ok(ias_sock)
@@ -39,10 +75,10 @@ pub fn sgx_init_quote() -> Result<sgx_target_info_t> {
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(EnclaveError::SgxError{ err: status });
+		return Err(FrameEnclaveError::SgxError{ err: status });
 	}
 	if rt.is_err() {
-        return Err(EnclaveError::UntrustedError{ status: rt, function: "ocall_sgx_init_quote" });
+        return Err(FrameEnclaveError::UntrustedError{ status: rt, function: "ocall_sgx_init_quote" });
     }
 
     Ok(target_info)
@@ -71,10 +107,10 @@ pub fn get_quote(report: sgx_report_t, spid: &sgx_spid_t) -> Result<Vec<u8>> {
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(EnclaveError::SgxError{ err: status });
+		return Err(FrameEnclaveError::SgxError{ err: status });
 	}
 	if rt.is_err() {
-        return Err(EnclaveError::UntrustedError{ status: rt, function: "ocall_get_quote" });
+        return Err(FrameEnclaveError::UntrustedError{ status: rt, function: "ocall_get_quote" });
     }
 
     let _ = quote.split_off(quote_len as usize);
@@ -95,10 +131,10 @@ pub fn get_update_info(buf: Vec<u8>) -> Result<()> {
     };
 
     if status != sgx_status_t::SGX_SUCCESS {
-		return Err(EnclaveError::SgxError{ err: status });
+		return Err(FrameEnclaveError::SgxError{ err: status });
 	}
 	if rt.is_err() {
-        return Err(EnclaveError::UntrustedError{ status: rt, function: "ocall_get_update_info" });
+        return Err(FrameEnclaveError::UntrustedError{ status: rt, function: "ocall_get_update_info" });
     }
 
     Ok(())

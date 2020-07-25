@@ -3,6 +3,7 @@ name = "frame-host"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
+build = "build.rs"
 
 [dependencies]
 frame-types = { path = "../../frame/types" }
@@ -15,3 +16,7 @@ codec = { package = "parity-scale-codec", version = "1.1" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0"
 dirs = "2.0"
+
+[build-dependencies]
+dirs = "2.0"
+cc = "1.0"

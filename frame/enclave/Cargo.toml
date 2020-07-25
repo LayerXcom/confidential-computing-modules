@@ -11,3 +11,5 @@ frame-runtime = { path = "../runtime", default-features = false, features = ["sg
 sgx_tstd = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net","backtrace"] }
 anyhow = { rev = "sgx_1.1.2", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
 codec = { package = "parity-scale-codec", version = "1.1", default-features = false }
+thiserror = { git = "https://github.com/mesalock-linux/thiserror-sgx.git" }
+sgx_types = "1.1.1"
