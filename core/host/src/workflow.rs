@@ -83,6 +83,17 @@ impl HostEngine for InsertCiphertextWorkflow {
     const CMD: u32 = INSERT_CIPHERTEXT_CMD;
 }
 
+pub struct InsertHandshakeWorkflow;
+
+impl HostEngine for InsertHandshakeWorkflow {
+    type HI = host_input::InsertHandshake;
+    type EI = input::InsertHandshake;
+    type EO = output::Empty;
+    type HO = host_output::InsertHandshake;
+    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const CMD: u32 = INSERT_HANDSHAKE_CMD;
+}
+
 pub mod host_input {
     use super::*;
 
@@ -230,6 +241,27 @@ pub mod host_input {
             Ok((ecall_input, Self::HostOutput::new()))
         }
     }
+
+    pub struct InsertHandshake {
+        handshake: Vec<u8>,
+    }
+
+    impl InsertHandshake {
+        pub fn new(handshake: handshake) -> Self {
+            InsertHandshake { handshake }
+        }
+    }
+
+    impl HostInput for InsertHandshake {
+        type EcallInput = input::InsertHandshake;
+        type HostOutput = host_output::InsertHandshake;
+
+        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+            let ecall_input = Self::EcallInput::new(self.handshake);
+
+            Ok((ecall_input, Self::HostOutput::default()))
+        }
+    }
 }
 
 pub mod host_output {
@@ -358,5 +390,13 @@ pub mod host_output {
         pub fn new() -> Self {
             InsertCiphertext { ecall_output: None }
         }
+    }
+
+    #[derive(Default)]
+    pub struct InsertHandshake;
+
+    impl HostOutput for InsertHandshake {
+        type EcallOutput = output::Empty;
+
     }
 }

@@ -14,7 +14,7 @@ use crate::{
     eventdb::InnerEnclaveLog,
     utils::StateInfo,
     error::Result,
-    workflow::{OUTPUT_MAX_LEN, InsertCiphertextWorkflow},
+    workflow::{OUTPUT_MAX_LEN, InsertCiphertextWorkflow, InsertHandshakeWorkflow},
 };
 use log::debug;
 use codec::{Encode, Decode};
@@ -50,7 +50,7 @@ fn insert_ciphertexts<S: State>(
         .into_input_iter()
         .map(move |inp|
             InsertCiphertextWorkflow::exec(inp, eid)
-                .map(|e| e.ecall_output.unwrap())
+                .map(|e| e.ecall_output.unwrap()) // ecall_output must be set.
         )
     {
         if let Some(upd_type) = update?.updated_state {
@@ -70,9 +70,8 @@ fn insert_handshake(
     eid: sgx_enclave_id_t,
     handshake: Vec<u8>,
 ) -> Result<()> {
-    let input = input::InsertHandshake::new(handshake);
-    EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
-        .invoke_ecall::<input::InsertHandshake, output::Empty>(INSERT_HANDSHAKE_CMD, input)?;
+    let input = host_input::InsertHandshake::new(handshake);
+    InsertHandshakeWorkflow::exec(input, eid)?;
 
     Ok(())
 }
