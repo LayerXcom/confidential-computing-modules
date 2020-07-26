@@ -21,7 +21,6 @@ use sgx_types::sgx_enclave_id_t;
 use web3::types::Address;
 use crate::ecalls::{
     insert_logs as insert_fn,
-    register_notification as reg_notify_fn,
     get_state_from_enclave,
 };
 use crate::workflow::*;
@@ -178,10 +177,12 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
     }
 
     pub fn register_notification(&self, access_right: AccessRight) -> Result<()> {
-        self.inner
-            .read()
-            .deployer
-            .register_notification(access_right, reg_notify_fn)
+        let inner = self.inner.read();
+        let input = host_input::RegisterNotification::new(access_right);
+        let eid = inner.deployer.get_enclave_id();
+        let host_output = RegisterNotificationWorkflow::exec(input, eid)?;
+
+        Ok(())
     }
 }
 

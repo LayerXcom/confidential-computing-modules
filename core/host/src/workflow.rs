@@ -49,6 +49,16 @@ impl HostEngine for HandshakeWorkflow {
     const CMD: u32 = CALL_HANDSHAKE_CMD;
 }
 
+pub struct RegisterNotificationWorkflow;
+
+impl HostEngine for RegisterNotificationWorkflow {
+    type HI = host_input::RegisterNotification;
+    type EI = input::RegisterNotification;
+    type EO = output::Empty;
+    type HO = host_output::RegisterNotification;
+    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const CMD: u32 = REGISTER_NOTIFICATION_CMD;
+}
 
 pub mod host_input {
     use super::*;
@@ -133,6 +143,27 @@ pub mod host_input {
             Ok((Self::EcallInput::default(), host_output))
         }
     }
+
+    pub struct RegisterNotification {
+        access_right: AccessRight,
+    }
+
+    impl RegisterNotification {
+        pub fn new(access_right: AccessRight) -> Self {
+            RegisterNotification { access_right }
+        }
+    }
+
+    impl HostInput for RegisterNotification {
+        type EcallInput = input::RegisterNotification;
+        type HostOutput = host_output::RegisterNotification;
+
+        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+            let ecall_input = Self::EcallInput::new(self.access_right);
+
+            Ok((ecall_input, Self::HostOutput::default()))
+        }
+    }
 }
 
 pub mod host_output {
@@ -214,6 +245,13 @@ pub mod host_output {
                 ecall_output: None
             }
         }
+    }
+
+    #[derive(Default)]
+    pub struct RegisterNotification;
+
+    impl HostOutput for RegisterNotification {
+        type EcallOutput = output::Empty;
     }
 }
 

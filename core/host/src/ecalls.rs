@@ -92,14 +92,3 @@ pub(crate) fn get_state_from_enclave<M: MemNameConverter>(
 
     Ok(state.into_vec())
 }
-
-pub(crate) fn register_notification(
-    eid: sgx_enclave_id_t,
-    access_right: AccessRight,
-) -> Result<()> {
-    let input = input::RegisterNotification::new(access_right);
-    EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
-        .invoke_ecall::<input::RegisterNotification, output::Empty>(REGISTER_NOTIFICATION_CMD, input)?;
-
-    Ok(())
-}
