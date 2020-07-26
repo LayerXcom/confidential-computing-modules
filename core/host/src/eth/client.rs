@@ -44,20 +44,9 @@ impl Deployer for EthDeployer {
 
     fn deploy<F>(
         &mut self,
-        deploy_user: &Address,
-        reg_fn: F,
-    ) -> Result<String>
-    where
-        F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnJoinGroup>,
-    {
-        let output = reg_fn(self.enclave_id)?;
-
-        let contract_addr = self.web3_conn.deploy(
-            &deploy_user,
-            output.report(),
-            output.report_sig(),
-            output.handshake(),
-        )?;
+        host_output: host_output::JoinGroup,
+    ) -> Result<String> {
+        let contract_addr = self.web3_conn.deploy(host_output)?;
         self.address = Some(contract_addr);
 
         Ok(hex::encode(contract_addr.as_bytes()))

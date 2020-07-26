@@ -26,13 +26,10 @@ pub trait Deployer: Sized {
     fn get_account(&self, index: usize) -> Result<Address>;
 
     /// Deploying contract with attestation.
-    fn deploy<F>(
+    fn deploy(
         &mut self,
-        deploy_user: &Address,
-        reg_fn: F,
-    ) -> Result<String>
-    where
-        F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnJoinGroup>;
+        host_output: host_output::JoinGroup,
+    ) -> Result<String>;
 
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;
 

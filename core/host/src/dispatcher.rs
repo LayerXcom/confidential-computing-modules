@@ -85,11 +85,16 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
 
     pub fn deploy(
         &self,
-        deploy_user: &Address,
+        deploy_user: Address,
+        gas: u64,
     ) -> Result<String> {
         let mut inner = self.inner.write();
+        let eid = inner.deployer.get_enclave_id();
+        let input = host_input::JoinGroup::new(deploy_user, gas);
+        let host_output = JoinGroupWorkflow::exec(input, eid)?;
+
         inner.deployer
-            .deploy(deploy_user, join_fn)
+            .deploy(host_output)
     }
 
     pub fn join_group<P: AsRef<Path> + Copy>(
@@ -104,7 +109,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         let inner = self.inner.read();
         let eid = inner.deployer.get_enclave_id();
         let input = host_input::JoinGroup::new(signer, gas);
-        let host_output = JoinGroupWorkflow::exec(input. eid)?;
+        let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
         inner.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?

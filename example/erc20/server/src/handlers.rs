@@ -17,7 +17,7 @@ use actix_web::{
 };
 use crate::Server;
 
-const DEFAULT_SEND_GAS: u64 = 3_000_000;
+const DEFAULT_GAS: u64 = 5_000_000;
 
 pub fn handle_deploy<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
@@ -32,7 +32,7 @@ pub fn handle_deploy<D, S, W, DB>(
 
     let deployer_addr = server.dispatcher.get_account(0)?;
     let contract_addr = server.dispatcher
-        .deploy(&deployer_addr)?;
+        .deploy(deployer_addr, DEFAULT_GAS)?;
 
     debug!("Contract address: {:?}", &contract_addr);
     server.dispatcher.set_contract_addr(&contract_addr, &server.abi_path)?;
@@ -53,7 +53,7 @@ pub fn handle_join_group<D, S, W, DB>(
     let signer = server.dispatcher.get_account(0)?;
     let receipt = server.dispatcher.join_group(
         signer,
-        DEFAULT_SEND_GAS,
+        DEFAULT_GAS,
         &req.contract_addr,
         &server.abi_path,
     )?;
@@ -81,7 +81,7 @@ pub fn handle_init_state<D, S, W, DB>(
         init_state,
         "construct",
         signer,
-        DEFAULT_SEND_GAS,
+        DEFAULT_GAS,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::init_state::post::Response(receipt)))
@@ -108,7 +108,7 @@ pub fn handle_transfer<D, S, W, DB>(
         transfer_state,
         "transfer",
         signer,
-        DEFAULT_SEND_GAS,
+        DEFAULT_GAS,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::transfer::post::Response(receipt)))
@@ -135,7 +135,7 @@ pub fn handle_approve<D, S, W, DB>(
         approve_state,
         "approve",
         signer,
-        DEFAULT_SEND_GAS,
+        DEFAULT_GAS,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::approve::post::Response(receipt)))
@@ -162,7 +162,7 @@ pub fn handle_mint<D, S, W, DB>(
         minting_state,
         "mint",
         signer,
-        DEFAULT_SEND_GAS,
+        DEFAULT_GAS,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::mint::post::Response(receipt)))
@@ -188,7 +188,7 @@ pub fn handle_burn<D, S, W, DB>(
         burn_state,
         "burn",
         signer,
-        DEFAULT_SEND_GAS,
+        DEFAULT_GAS,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::burn::post::Response(receipt)))
@@ -216,7 +216,7 @@ pub fn handle_transfer_from<D, S, W, DB>(
         transferred_from_state,
         "transfer_from",
         signer,
-        DEFAULT_SEND_GAS,
+        DEFAULT_GAS,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::transfer_from::post::Response(receipt)))
@@ -234,7 +234,7 @@ pub fn handle_key_rotation<D, S, W, DB>(
     let signer = server.dispatcher.get_account(0)?;
     let receipt = server.dispatcher.handshake(
         signer,
-        DEFAULT_SEND_GAS,
+        DEFAULT_GAS,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::key_rotation::post::Response(receipt)))

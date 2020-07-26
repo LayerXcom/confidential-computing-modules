@@ -18,7 +18,6 @@ use web3::{
 };
 
 pub const CONFIRMATIONS: usize = 0;
-pub const DEPLOY_GAS: u64 = 5_000_000;
 
 /// Basic web3 connection components via HTTP.
 #[derive(Debug)]
@@ -50,24 +49,24 @@ impl Web3Http {
         Ok(logs)
     }
 
-    pub fn deploy(
-        &self,
-        deployer: &Address,
-        report: &[u8],
-        report_sig: &[u8],
-        handshake: &[u8],
-    ) -> Result<Address> {
+    pub fn deploy(&self, output: host_output::JoinGroup) -> Result<Address> {
         let abi = include_bytes!("../../../../contract-build/Anonify.abi");
         let bin = include_str!("../../../../contract-build/Anonify.bin");
+
+        let ecall_output = output.ecall_output.unwrap();
+        let report = ecall_output.report().to_vec();
+        let report_sig = ecall_output.report_sig().to_vec();
+        let handshake = ecall_output.handshake().to_vec();
+        let gas = output.gas;
 
         let contract = Contract::deploy(self.web3.eth(), abi)
             .map_err(|e| anyhow!("{:?}", e))?
             .confirmations(CONFIRMATIONS)
-            .options(Options::with(|opt| opt.gas = Some(DEPLOY_GAS.into())))
+            .options(Options::with(|opt| opt.gas = Some(gas.into())))
             .execute(
                 bin,
-                (report.to_vec(), report_sig.to_vec(), handshake.to_vec()), // Parameters are got from ecall, so these have to be allocated.
-                *deployer,
+                (report, report_sig, handshake),
+                output.signer,
             )
             .map_err(|e| anyhow!("{:?}", e))?
             .wait()

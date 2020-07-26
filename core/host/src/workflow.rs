@@ -239,7 +239,7 @@ pub mod host_output {
 
     impl Handshake {
         pub fn new(signer: Address, gas: u64) -> Self {
-            JoinGroup {
+            Handshake {
                 signer,
                 gas,
                 ecall_output: None
