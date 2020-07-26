@@ -46,7 +46,7 @@ services:
     networks:
       - docker_drone_net
     devices:
-      - /dev/sgx
+      - /dev/sgx/enclave
     container_name: docker_runner1
 
   drone-agent2:
@@ -70,7 +70,7 @@ services:
     networks:
       - docker_drone_net
     devices:
-      - /dev/sgx
+      - /dev/sgx/enclave
     container_name: docker_runner2
 
   drone-agent3:
@@ -94,7 +94,7 @@ services:
     networks:
       - docker_drone_net
     devices:
-      - /dev/sgx
+      - /dev/sgx/enclave
     container_name: docker_runner3
 
 networks:
