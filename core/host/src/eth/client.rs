@@ -42,7 +42,7 @@ impl Deployer for EthDeployer {
         self.web3_conn.get_account(index)
     }
 
-    fn deploy<F>(
+    fn deploy(
         &mut self,
         host_output: host_output::JoinGroup,
     ) -> Result<String> {

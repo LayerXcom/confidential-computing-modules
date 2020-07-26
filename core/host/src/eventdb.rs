@@ -11,6 +11,7 @@ use frame_common::{
 use sgx_types::sgx_enclave_id_t;
 use web3::types::Address;
 use byteorder::{LittleEndian, ByteOrder};
+use crate::workflow::host_input;
 use crate::error::Result;
 
 pub trait BlockNumDB {
@@ -66,9 +67,9 @@ pub struct InnerEnclaveLog {
 }
 
 impl InnerEnclaveLog {
-    pub fn into_input_iter(self) -> impl Iterator<Item=input::InsertCiphertext> {
+    pub fn into_input_iter(self) -> impl Iterator<Item=host_input::InsertCiphertext> {
         self.ciphertexts.into_iter()
-            .map(|c| input::InsertCiphertext::new(c))
+            .map(|c| host_input::InsertCiphertext::new(c))
     }
 }
 

@@ -21,7 +21,6 @@ use sgx_types::sgx_enclave_id_t;
 use web3::types::Address;
 use crate::ecalls::{
     insert_logs as insert_fn,
-    get_state_from_enclave,
 };
 use crate::workflow::*;
 
@@ -163,14 +162,12 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             St: State,
     {
         let inner = self.inner.read();
-        if inner.watcher.is_none() {
-            return Err(HostError::EventWatcherNotSet);
-        }
+        
 
         let eid = inner.deployer.get_enclave_id();
         inner.watcher
             .as_ref()
-            .ok_or(HostError::AddressNotSet)?
+            .ok_or(HostError::EventWatcherNotSet)?
             .block_on_event(eid, insert_fn)
     }
 

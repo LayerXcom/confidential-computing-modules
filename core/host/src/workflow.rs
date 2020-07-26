@@ -72,6 +72,17 @@ impl HostEngine for GetStateWorkflow {
     const CMD: u32 = GET_STATE_CMD;
 }
 
+pub struct InsertCiphertextWorkflow;
+
+impl HostEngine for InsertCiphertextWorkflow {
+    type HI = host_input::InsertCiphertext;
+    type EI = input::InsertCiphertext;
+    type EO = output::ReturnUpdatedState;
+    type HO = host_output::InsertCiphertext;
+    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const CMD: u32 = INSERT_CIPHERTEXT_CMD;
+}
+
 pub mod host_input {
     use super::*;
 
@@ -198,6 +209,27 @@ pub mod host_input {
             Ok((ecall_input, Self::HostOutput::new()))
         }
     }
+
+    pub struct InsertCiphertext {
+        ciphertext: Ciphertext,
+    }
+
+    impl InsertCiphertext {
+        pub fn new(ciphertext: Ciphertext) -> Self {
+            InsertCiphertext { ciphertext }
+        }
+    }
+
+    impl HostInput for InsertCiphertext {
+        type EcallInput = input::InsertCiphertext;
+        type HostOutput = host_output::InsertCiphertext;
+
+        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+            let ecall_input = Self::EcallInput::new(self.ciphertext);
+
+            Ok((ecall_input, Self::HostOutput::new()))
+        }
+    }
 }
 
 pub mod host_output {
@@ -305,6 +337,26 @@ pub mod host_output {
     impl GetState {
         pub fn new() -> Self {
             GetState { ecall_output: None }
+        }
+    }
+
+    pub struct InsertCiphertext {
+        pub ecall_output: Option<output::ReturnUpdatedState>,
+    }
+
+    impl HostOutput for InsertCiphertext {
+        type EcallOutput = output::ReturnUpdatedState;
+
+        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+            self.ecall_output = Some(output);
+
+            Ok(self)
+        }
+    }
+
+    impl InsertCiphertext {
+        pub fn new() -> Self {
+            InsertCiphertext { ecall_output: None }
         }
     }
 }

@@ -14,7 +14,7 @@ use crate::{
     eventdb::InnerEnclaveLog,
     utils::StateInfo,
     error::Result,
-    workflow::OUTPUT_MAX_LEN,
+    workflow::{OUTPUT_MAX_LEN, InsertCiphertextWorkflow},
 };
 use log::debug;
 use codec::{Encode, Decode};
@@ -44,13 +44,13 @@ fn insert_ciphertexts<S: State>(
     eid: sgx_enclave_id_t,
     enclave_log: InnerEnclaveLog,
 ) -> Result<Option<Vec<UpdatedState<S>>>> {
-    let conn = EnclaveConnector::new(eid, OUTPUT_MAX_LEN);
     let mut acc = vec![];
 
     for update in enclave_log
         .into_input_iter()
         .map(move |inp|
-            conn.invoke_ecall::<input::InsertCiphertext, output::ReturnUpdatedState>(INSERT_CIPHERTEXT_CMD, inp)
+            InsertCiphertextWorkflow::exec(inp, eid)
+                .map(|e| e.ecall_output.unwrap())
         )
     {
         if let Some(upd_type) = update?.updated_state {
