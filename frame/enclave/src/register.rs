@@ -15,15 +15,15 @@ macro_rules! register_ecall {
             }
         }
 
-        fn inner_ecall_handler<EH>(input_payload: &mut [u8]) -> anyhow::Result<Vec<u8>>
+        fn inner_ecall_handler<EE>(input_payload: &mut [u8]) -> anyhow::Result<Vec<u8>>
         where
-            EH: EcallHandler,
-            EH::EI: EcallInput + codec::Decode,
-            EH::EO: EcallOutput + codec::Encode,
+            EE: EnclaveEngine,
+            EE::EI: EcallInput + codec::Decode,
+            EE::EO: EcallOutput + codec::Encode,
         {
-            let input = EH::EI::decode(&mut &input_payload[..])
+            let input = EE::EI::decode(&mut &input_payload[..])
                 .map_err(|e| anyhow!("{:?}", e))?;
-            let res = EH::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?;
+            let res = EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?;
 
             Ok(res.encode())
         }

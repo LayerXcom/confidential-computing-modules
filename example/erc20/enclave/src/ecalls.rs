@@ -2,16 +2,15 @@ use std::{
     vec::Vec,
     ptr,
 };
-use frame_types::*;
 use anonify_common::commands::*;
 use frame_common::traits::{EcallInput, EcallOutput};
 use anonify_enclave::{
     context::EnclaveContext,
-    ecall_handler::*,
+    workflow::*,
 };
 use erc20_state_transition::{MAX_MEM_SIZE, Runtime};
 use crate::ENCLAVE_CONTEXT;
-use frame_enclave::{register_ecall, EcallHandler};
+use frame_enclave::{register_ecall, EnclaveEngine};
 use anyhow::anyhow;
 use codec::{Encode, Decode};
 

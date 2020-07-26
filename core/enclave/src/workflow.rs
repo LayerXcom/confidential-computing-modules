@@ -4,7 +4,7 @@ use std::{
 };
 use sgx_types::*;
 use frame_types::*;
-use frame_enclave::EcallHandler;
+use frame_enclave::EnclaveEngine;
 use anonify_common::plugin_types::*;
 use frame_common::{
     crypto::{UserAddress, AccessRight, Ciphertext, Sha256},
@@ -27,7 +27,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct Instruction;
 
-impl EcallHandler for Instruction {
+impl EnclaveEngine for Instruction {
     type EI = input::Instruction;
     type EO = output::Instruction;
 
@@ -61,7 +61,7 @@ impl EcallHandler for Instruction {
 #[derive(Encode, Decode, Debug, Clone)]
 pub struct InsertCiphertext;
 
-impl EcallHandler for InsertCiphertext {
+impl EnclaveEngine for InsertCiphertext {
     type EI = input::InsertCiphertext;
     type EO = output::ReturnUpdatedState;
 
@@ -95,7 +95,7 @@ impl EcallHandler for InsertCiphertext {
 #[derive(Debug, Clone)]
 pub struct InsertHandshake;
 
-impl EcallHandler for InsertHandshake {
+impl EnclaveEngine for InsertHandshake {
     type EI = input::InsertHandshake;
     type EO = output::Empty;
 
@@ -121,7 +121,7 @@ impl EcallHandler for InsertHandshake {
 #[derive(Debug, Clone)]
 pub struct GetState;
 
-impl EcallHandler for GetState {
+impl EnclaveEngine for GetState {
     type EI = input::GetState;
     type EO = output::ReturnState;
 
@@ -144,7 +144,7 @@ impl EcallHandler for GetState {
 #[derive(Debug, Clone)]
 pub struct CallJoinGroup;
 
-impl EcallHandler for CallJoinGroup {
+impl EnclaveEngine for CallJoinGroup {
     type EI = input::CallJoinGroup;
     type EO = output::ReturnJoinGroup;
 
@@ -173,7 +173,7 @@ impl EcallHandler for CallJoinGroup {
 #[derive(Debug, Clone)]
 pub struct CallHandshake;
 
-impl EcallHandler for CallHandshake {
+impl EnclaveEngine for CallHandshake {
     type EI = input::CallHandshake;
     type EO = output::ReturnHandshake;
 
@@ -196,7 +196,7 @@ impl EcallHandler for CallHandshake {
 #[derive(Debug, Clone)]
 pub struct RegisterNotification;
 
-impl EcallHandler for RegisterNotification {
+impl EnclaveEngine for RegisterNotification {
     type EI = input::RegisterNotification;
     type EO = output::Empty;
 

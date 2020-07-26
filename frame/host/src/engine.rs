@@ -4,7 +4,7 @@ use frame_common::{EcallInput, EcallOutput};
 use serde::de::DeserializeOwned;
 use codec::{Encode, Decode};
 
-pub trait WorkflowEngine {
+pub trait HostEngine {
     type HI: HostInput<EcallInput = Self::EI, HostOutput = Self::HO>;
     type EI: EcallInput + Encode;
     type EO: EcallOutput + Decode;

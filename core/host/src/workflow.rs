@@ -18,7 +18,7 @@ pub struct InstructionWorkflow<S: State, C: CallNameConverter> {
     c: PhantomData<C>,
 }
 
-impl<S: State, C: CallNameConverter> WorkflowEngine for InstructionWorkflow<S, C> {
+impl<S: State, C: CallNameConverter> HostEngine for InstructionWorkflow<S, C> {
     type HI = host_input::Instruction<S, C>;
     type EI = input::Instruction;
     type EO = output::Instruction;

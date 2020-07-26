@@ -5,7 +5,7 @@ use frame_common::{
 };
 use frame_runtime::{RuntimeExecutor, ContextOps};
 
-pub trait EcallHandler {
+pub trait EnclaveEngine {
     type EI: EcallInput + Decode;
     type EO: EcallOutput + Encode;
 

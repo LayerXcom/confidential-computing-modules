@@ -13,4 +13,4 @@ pub mod config;
 mod group_key;
 pub mod notify;
 pub mod instructions;
-pub mod ecall_handler;
+pub mod workflow;
