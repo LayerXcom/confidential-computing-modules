@@ -2,6 +2,7 @@ SGX_SDK_RUST ?= $(HOME)/sgx
 ANONIFY_ROOT_DIR := ..
 ANONIFY_CORE_ROOT := $(ANONIFY_ROOT_DIR)/core
 FRAME_ROOT := $(ANONIFY_ROOT_DIR)/frame
+CONFIG_DIR := $(ANONIFY_ROOT_DIR)/config
 ANONIFY_ENCLAVE_DIR := $(ANONIFY_CORE_ROOT)/enclave
 ANONIFY_HOST_DIR := $(ANONIFY_CORE_ROOT)/host
 ANONIFY_BIN_DIR := $(HOME)/.anonify
@@ -103,7 +104,7 @@ RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nod
 	-Wl,-pie,-eenclave_entry -Wl,--export-dynamic  \
 	-Wl,--defsym,__ImageBase=0 \
 	-Wl,--gc-sections \
-	-Wl,--version-script=$(ANONIFY_ENCLAVE_DIR)/Enclave.lds
+	-Wl,--version-script=$(CONFIG_DIR)/Enclave.lds
 
 RustEnclave_Name := $(ANONIFY_BUILD_DIR)/enclave.so
 Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/enclave.signed.so
@@ -138,5 +139,5 @@ $(RustEnclave_Name): $(Rust_Enclave_Name) $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
 
 $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 	mkdir -p $(ANONIFY_BIN_DIR)
-	@$(SGX_ENCLAVE_SIGNER) sign -key $(ANONIFY_ENCLAVE_DIR)/Enclave_private.pem -enclave $(RustEnclave_Name) -out $@ -config $(ANONIFY_ENCLAVE_DIR)/Enclave.config.xml
+	@$(SGX_ENCLAVE_SIGNER) sign -key $(CONFIG_DIR)/Enclave_private.pem -enclave $(RustEnclave_Name) -out $@ -config $(CONFIG_DIR)/Enclave.config.xml
 	@echo "SIGN =>  $@"
