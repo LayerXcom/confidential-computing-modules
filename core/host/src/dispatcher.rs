@@ -13,7 +13,7 @@ use crate::{
 use frame_common::{
     crypto::AccessRight,
     traits::*,
-    state_types::UpdatedState,
+    state_types::{UpdatedState, StateType},
 };
 use frame_host::engine::HostEngine;
 use parking_lot::RwLock;
@@ -201,13 +201,11 @@ pub fn get_state<S, M>(
         <S as TryFrom<Vec<u8>>>::Error: Debug,
         M: MemNameConverter,
 {
-    let state = get_state_from_enclave::<M>(
-        enclave_id,
-        access_right,
-        mem_name,
-    )?
-        .try_into()
-        .expect("Failed to convert into State trait.");
+    let mem_id = M::as_id(mem_name);
+    let input = host_input::GetState::new(access_right, mem_id);
+    let mut host_output = GetStateWorkflow::exec(input, enclave_id)
+        .ecall_output.unwrap();
+    let state = S::decode_s(host_output.as_mut_bytes())
 
     Ok(state)
 }

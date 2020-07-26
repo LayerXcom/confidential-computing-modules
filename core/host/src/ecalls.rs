@@ -76,19 +76,3 @@ fn insert_handshake(
 
     Ok(())
 }
-
-/// Get state only if the signature verification returns true.
-pub(crate) fn get_state_from_enclave<M: MemNameConverter>(
-    eid: sgx_enclave_id_t,
-    access_right: AccessRight,
-    mem_name: &str,
-) -> Result<Vec<u8>>
-{
-    let mem_id = M::as_id(mem_name);
-    let input = input::GetState::new(access_right, mem_id);
-
-    let state = EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
-        .invoke_ecall::<input::GetState, output::ReturnState>(GET_STATE_CMD, input)?;
-
-    Ok(state.into_vec())
-}

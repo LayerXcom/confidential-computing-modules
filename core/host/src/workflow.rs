@@ -3,6 +3,7 @@ use frame_host::engine::*;
 use frame_common::{
     crypto::AccessRight,
     traits::*,
+    state_types::MemId,
 };
 use anonify_common::{
     plugin_types::*,
@@ -58,6 +59,17 @@ impl HostEngine for RegisterNotificationWorkflow {
     type HO = host_output::RegisterNotification;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
     const CMD: u32 = REGISTER_NOTIFICATION_CMD;
+}
+
+pub struct GetStateWorkflow;
+
+impl HostEngine for GetStateWorkflow {
+    type HI = host_input::GetState;
+    type EI = input::GetState;
+    type EO = output::ReturnState;
+    type HO = host_output::GetState;
+    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const CMD: u32 = GET_STATE_CMD;
 }
 
 pub mod host_input {
@@ -164,6 +176,28 @@ pub mod host_input {
             Ok((ecall_input, Self::HostOutput::default()))
         }
     }
+
+    pub struct GetState {
+        access_right: AccessRight,
+        mem_id: MemId,
+    }
+
+    impl GetState {
+        pub fn new(access_right: AccessRight, mem_id: MemId) -> Self {
+            GetState { access_right, mem_id }
+        }
+    }
+
+    impl HostInput for GetState {
+        type EcallInput = input::GetState;
+        type HostOutput = host_output::GetState;
+
+        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+            let ecall_input = Self::EcallInput::new(self.access_right, self.mem_id);
+
+            Ok((ecall_input, Self::HostOutput::new()))
+        }
+    }
 }
 
 pub mod host_output {
@@ -253,5 +287,24 @@ pub mod host_output {
     impl HostOutput for RegisterNotification {
         type EcallOutput = output::Empty;
     }
-}
 
+    pub struct GetState {
+        pub ecall_output: Option<output::ReturnState>,
+    }
+
+    impl HostOutput for GetState {
+        type EcallOutput = output::ReturnState;
+
+        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+            self.ecall_output = Some(output);
+
+            Ok(self)
+        }
+    }
+
+    impl GetState {
+        pub fn new() -> Self {
+            GetState { ecall_output: None }
+        }
+    }
+}
