@@ -76,14 +76,10 @@ pub trait Sender: Sized {
         host_output: host_output::JoinGroup,
     ) -> Result<String>;
 
-    fn handshake<F>(
+    fn handshake(
         &self,
-        signer: Address,
-        gas: u64,
-        handshake_fn: F,
-    ) -> Result<String>
-    where
-        F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnHandshake>;
+        host_output: host_output::Handshake,
+    ) -> Result<String>;
 
     fn get_contract(self) -> ContractKind;
 }

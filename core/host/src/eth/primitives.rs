@@ -111,7 +111,7 @@ impl Web3Contract {
         let report_sig = ecall_output.report_sig().to_vec();
         let handshake = ecall_output.handshake().to_vec();
         let gas = output.gas;
-        
+
         let call = self.contract.call(
             "join_group",
             (report, report_sig, handshake),
@@ -143,16 +143,18 @@ impl Web3Contract {
         Ok(res)
     }
 
-    pub fn handshake<G: Into<U256>>(
+    pub fn handshake(
         &self,
-        from: Address,
-        handshake: &[u8],
-        gas: G,
+        output: host_output::Handshake,
     ) -> Result<H256> {
+        let ecall_output = output.ecall_output.unwrap();
+        let handshake = ecall_output.handshake().to_vec();
+        let gas = output.gas;
+
         let call = self.contract.call(
             "handshake",
-            handshake.to_vec(),
-            from,
+            handshake,
+            output.signer,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );
 

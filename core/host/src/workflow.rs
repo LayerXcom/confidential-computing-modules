@@ -38,6 +38,18 @@ impl HostEngine for JoinGroupWorkflow {
     const CMD: u32 = CALL_JOIN_GROUP_CMD;
 }
 
+pub struct HandshakeWorkflow;
+
+impl HostEngine for HandshakeWorkflow {
+    type HI = host_input::Handshake;
+    type EI = input::CallHandshake;
+    type EO = output::ReturnHandshake;
+    type HO = host_output::Handshake;
+    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const CMD: u32 = CALL_HANDSHAKE_CMD;
+}
+
+
 pub mod host_input {
     use super::*;
 
@@ -99,6 +111,28 @@ pub mod host_input {
             Ok((Self::EcallInput::default(), host_output))
         }
     }
+
+    pub struct Handshake {
+        signer: Address,
+        gas: u64,
+    }
+
+    impl Handshake {
+        pub fn new(signer: Address, gas: u64) -> Self {
+            Handshake { signer, gas }
+        }
+    }
+
+    impl HostInput for Handshake {
+        type EcallInput = input::CallHandshake;
+        type HostOutput = host_output::Handshake;
+
+        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+            let host_output = host_output::Handshake::new(self.signer, self.gas);
+
+            Ok((Self::EcallInput::default(), host_output))
+        }
+    }
 }
 
 pub mod host_output {
@@ -147,6 +181,32 @@ pub mod host_output {
     }
 
     impl JoinGroup {
+        pub fn new(signer: Address, gas: u64) -> Self {
+            JoinGroup {
+                signer,
+                gas,
+                ecall_output: None
+            }
+        }
+    }
+
+    pub struct Handshake {
+        pub signer: Address,
+        pub gas: u64,
+        pub ecall_output: Option<output::ReturnHandshake>,
+    }
+
+    impl HostOutput for Handshake {
+        type EcallOutput = output::ReturnHandshake;
+
+        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+            self.ecall_output = Some(output);
+
+            Ok(self)
+        }
+    }
+
+    impl Handshake {
         pub fn new(signer: Address, gas: u64) -> Self {
             JoinGroup {
                 signer,

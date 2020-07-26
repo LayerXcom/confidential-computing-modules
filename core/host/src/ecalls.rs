@@ -93,23 +93,6 @@ pub(crate) fn get_state_from_enclave<M: MemNameConverter>(
     Ok(state.into_vec())
 }
 
-pub(crate) fn join_group(eid: sgx_enclave_id_t) -> Result<output::ReturnJoinGroup> {
-    let input = input::CallJoinGroup::default();
-    EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
-        .invoke_ecall::<input::CallJoinGroup, output::ReturnJoinGroup>(CALL_JOIN_GROUP_CMD, input)
-        .map_err(Into::into)
-}
-
-/// Handshake to other group members to update the group key
-pub(crate) fn handshake(
-    eid: sgx_enclave_id_t,
-) -> Result<output::ReturnHandshake> {
-    let input = input::CallHandshake::default();
-    EnclaveConnector::new(eid, OUTPUT_MAX_LEN)
-        .invoke_ecall::<input::CallHandshake, output::ReturnHandshake>(CALL_HANDSHAKE_CMD, input)
-        .map_err(Into::into)
-}
-
 pub(crate) fn register_notification(
     eid: sgx_enclave_id_t,
     access_right: AccessRight,

@@ -147,21 +147,11 @@ impl Sender for EthSender {
         Ok(hex::encode(receipt.as_bytes()))
     }
 
-    fn handshake<F>(
+    fn handshake(
         &self,
-        signer: Address,
-        gas: u64,
-        handshake_fn: F,
-    ) -> Result<String>
-    where
-        F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnHandshake>
-    {
-        let output = handshake_fn(self.enclave_id)?;
-        let receipt = self.contract.handshake(
-            signer,
-            output.handshake(),
-            gas
-        )?;
+        host_output: host_output::Handshake,
+    ) -> Result<String> {
+        let receipt = self.contract.handshake(host_output)?;
 
         Ok(hex::encode(receipt.as_bytes()))
     }
