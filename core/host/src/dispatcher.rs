@@ -15,7 +15,7 @@ use frame_common::{
     traits::*,
     state_types::UpdatedState,
 };
-use frame_host::engine::WorkflowEngine;
+use frame_host::engine::HostEngine;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use web3::types::Address;
@@ -104,9 +104,14 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
     ) -> Result<String> {
         self.set_contract_addr(contract_addr, abi_path)?;
 
-        self.inner.read().sender.as_ref()
+        let inner = self.inner.read();
+        let eid = inner.deployer.get_enclave_id();
+        let input = host_input::JoinGroup::new(signer, gas);
+        let host_output = JoinGroupWorkflow::exec(input. eid)?;
+
+        inner.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .join_group(signer, gas, join_fn)
+            .join_group(host_output)
     }
 
     pub fn send_instruction<ST, C>(

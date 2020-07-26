@@ -27,6 +27,17 @@ impl<S: State, C: CallNameConverter> HostEngine for InstructionWorkflow<S, C> {
     const CMD: u32 = ENCRYPT_INSTRUCTION_CMD;
 }
 
+pub struct JoinGroupWorkflow;
+
+impl HostEngine for JoinGroupWorkflow {
+    type HI = host_input::JoinGroup;
+    type EI = input::CallJoinGroup;
+    type EO = output::ReturnJoinGroup;
+    type HO = host_output::JoinGroup;
+    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const CMD: u32 = CALL_JOIN_GROUP_CMD;
+}
+
 pub mod host_input {
     use super::*;
 
@@ -66,6 +77,28 @@ pub mod host_input {
             Ok((ecall_input, host_output))
         }
     }
+
+    pub struct JoinGroup {
+        signer: Address,
+        gas: u64,
+    }
+
+    impl JoinGroup {
+        pub fn new(signer: Address, gas: u64) -> Self {
+            JoinGroup { signer, gas }
+        }
+    }
+
+    impl HostInput for JoinGroup {
+        type EcallInput = input::CallJoinGroup;
+        type HostOutput = host_output::JoinGroup;
+
+        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+            let host_output = host_output::JoinGroup::new(self.signer, self.gas);
+
+            Ok((Self::EcallInput::default(), host_output))
+        }
+    }
 }
 
 pub mod host_output {
@@ -74,18 +107,14 @@ pub mod host_output {
     pub struct Instruction {
         pub signer: Address,
         pub gas: u64,
-        pub ciphertext: Option<Vec<u8>>,
-        pub enclave_sig: Option<[u8; 64]>,
-        pub msg: Option<[u8; 32]>,
+        pub ecall_output: Option<output::Instruction>,
     }
 
     impl HostOutput for Instruction {
         type EcallOutput = output::Instruction;
 
         fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
-            self.ciphertext = Some(output.encode_ciphertext());
-            self.enclave_sig = Some(output.encode_enclave_sig());
-            self.msg = Some(output.msg_as_array());
+            self.ecall_output = Some(output);
 
             Ok(self)
         }
@@ -96,9 +125,33 @@ pub mod host_output {
             Instruction {
                 signer,
                 gas,
-                ciphertext: None,
-                enclave_sig: None,
-                msg: None,
+                ecall_output: None,
+            }
+        }
+    }
+
+    pub struct JoinGroup {
+        pub signer: Address,
+        pub gas: u64,
+        pub ecall_output: Option<output::ReturnJoinGroup>,
+    }
+
+    impl HostOutput for JoinGroup {
+        type EcallOutput = output::ReturnJoinGroup;
+
+        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+            self.ecall_output = Some(output);
+
+            Ok(self)
+        }
+    }
+
+    impl JoinGroup {
+        pub fn new(signer: Address, gas: u64) -> Self {
+            JoinGroup {
+                signer,
+                gas,
+                ecall_output: None
             }
         }
     }

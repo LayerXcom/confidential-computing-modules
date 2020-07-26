@@ -1,31 +1,20 @@
-use log::debug;
-use std::{
-    path::Path,
-    sync::Arc,
-};
-use web3::{
-    Web3,
-    transports::{EventLoopHandle, Http},
-    contract::{Contract, Options},
-    types::{Address, H256, U256, Filter, FilterBuilder, Log, BlockNumber},
-    futures::Future,
-};
-use ethabi::{
-    Topic,
-    TopicFilter,
-    Event,
-    EventParam,
-    ParamType,
-    decode,
-    Hash,
-};
-use frame_common::crypto::Ciphertext;
-use anyhow::anyhow;
 use crate::{
     error::Result,
-    eventdb::{BlockNumDB, InnerEnclaveLog, EnclaveLog},
+    eventdb::{BlockNumDB, EnclaveLog, InnerEnclaveLog},
     utils::ContractInfo,
     workflow::*,
+};
+use anyhow::anyhow;
+use ethabi::{decode, Event, EventParam, Hash, ParamType, Topic, TopicFilter};
+use frame_common::crypto::Ciphertext;
+use log::debug;
+use std::{path::Path, sync::Arc};
+use web3::{
+    contract::{Contract, Options},
+    futures::Future,
+    transports::{EventLoopHandle, Http},
+    types::{Address, BlockNumber, Filter, FilterBuilder, Log, H256, U256},
+    Web3,
 };
 
 pub const CONFIRMATIONS: usize = 0;
@@ -103,7 +92,7 @@ pub struct Web3Contract {
 impl Web3Contract {
     pub fn new<P: AsRef<Path>>(
         web3_conn: Web3Http,
-        contract_info: ContractInfo<'_, P>
+        contract_info: ContractInfo<'_, P>,
     ) -> Result<Self> {
         let abi = contract_info.contract_abi()?;
         let address = contract_info.address()?;
@@ -116,18 +105,17 @@ impl Web3Contract {
         })
     }
 
-    pub fn join_group<G: Into<U256>>(
-        &self,
-        from: Address,
-        report: &[u8],
-        report_sig: &[u8],
-        handshake: &[u8],
-        gas: G,
-    ) -> Result<H256> {
+    pub fn join_group(&self, output: host_output::JoinGroup) -> Result<H256> {
+        let ecall_output = output.ecall_output.unwrap();
+        let report = ecall_output.report().to_vec();
+        let report_sig = ecall_output.report_sig().to_vec();
+        let handshake = ecall_output.handshake().to_vec();
+        let gas = output.gas;
+        
         let call = self.contract.call(
             "join_group",
-            (report.to_vec(), report_sig.to_vec(), handshake.to_vec()),
-            from,
+            (report, report_sig, handshake),
+            output.signer,
             Options::with(|opt| opt.gas = Some(gas.into())),
         );
 
@@ -136,13 +124,11 @@ impl Web3Contract {
         Ok(res)
     }
 
-    pub fn send_instruction(
-        &self,
-        output: host_output::Instruction,
-    ) -> Result<H256> {
-        let ciphertext = output.ciphertext.unwrap();
-        let enclave_sig = output.enclave_sig.unwrap();
-        let msg = output.msg.unwrap();
+    pub fn send_instruction(&self, output: host_output::Instruction) -> Result<H256> {
+        let ecall_output = output.ecall_output.unwrap();
+        let ciphertext = ecall_output.encode_ciphertext();
+        let enclave_sig = &ecall_output.encode_enclave_sig();
+        let msg = ecall_output.msg_as_bytes();
         let gas = output.gas;
 
         let call = self.contract.call(
@@ -222,7 +208,7 @@ impl Web3Contract {
 
 /// Event fetched logs from smart contracts.
 #[derive(Debug)]
-pub struct Web3Logs<D: BlockNumDB>{
+pub struct Web3Logs<D: BlockNumDB> {
     logs: Vec<Log>,
     db: Arc<D>,
     events: EthEvent,
@@ -236,7 +222,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
         // If log data is not fetched currently, return empty EnclaveLog.
         // This is occurred when it fetched data of dupulicated block number.
         if self.logs.len() == 0 {
-            return Ok(EnclaveLog{
+            return Ok(EnclaveLog {
                 inner: None,
                 db: self.db,
             });
@@ -249,15 +235,19 @@ impl<D: BlockNumDB> Web3Logs<D> {
         for (i, log) in self.logs.iter().enumerate() {
             debug!("log: {:?}, \nindex: {:?}", log, i);
             if contract_addr != log.address {
-                return Err(anyhow!("Each log should have same contract address.: index: {}", i).into());
+                return Err(
+                    anyhow!("Each log should have same contract address.: index: {}", i).into(),
+                );
             }
 
             let mut data = Self::decode_data(&log);
 
             // Processing conditions by ciphertext or handshake event
             if log.topics[0] == self.events.ciphertext_signature() {
-                if ciphertext_size != data.len() && data.len() != 0  {
-                    return Err(anyhow!("Each log should have same size of data.: index: {}", i).into());
+                if ciphertext_size != data.len() && data.len() != 0 {
+                    return Err(
+                        anyhow!("Each log should have same size of data.: index: {}", i).into(),
+                    );
                 }
                 let res = Ciphertext::from_bytes(&mut data[..], ciphertext_size);
 
@@ -278,7 +268,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
         }
 
         Ok(EnclaveLog {
-            inner : Some(InnerEnclaveLog {
+            inner: Some(InnerEnclaveLog {
                 contract_addr: contract_addr.to_fixed_bytes(),
                 latest_blc_num: latest_blc_num,
                 ciphertexts,
@@ -293,8 +283,11 @@ impl<D: BlockNumDB> Web3Logs<D> {
         let mut res = vec![];
 
         for token in tokens {
-            res.extend_from_slice(&token.to_bytes()
-                .expect("Failed to convert token into bytes."));
+            res.extend_from_slice(
+                &token
+                    .to_bytes()
+                    .expect("Failed to convert token into bytes."),
+            );
         }
 
         res
@@ -310,26 +303,22 @@ impl EthEvent {
         let events = vec![
             Event {
                 name: "StoreCiphertext".to_owned(),
-                inputs: vec![
-                    EventParam {
-                        name: "ciphertext".to_owned(),
-                        kind: ParamType::Bytes,
-                        indexed: false,
-                    },
-                ],
+                inputs: vec![EventParam {
+                    name: "ciphertext".to_owned(),
+                    kind: ParamType::Bytes,
+                    indexed: false,
+                }],
                 anonymous: false,
             },
             Event {
                 name: "StoreHandshake".to_owned(),
-                inputs: vec![
-                    EventParam {
-                        name: "handshake".to_owned(),
-                        kind: ParamType::Bytes,
-                        indexed: false,
-                    },
-                ],
+                inputs: vec![EventParam {
+                    name: "handshake".to_owned(),
+                    kind: ParamType::Bytes,
+                    indexed: false,
+                }],
                 anonymous: false,
-            }
+            },
         ];
 
         EthEvent(events)

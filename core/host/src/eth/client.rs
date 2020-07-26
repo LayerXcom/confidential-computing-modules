@@ -129,23 +129,11 @@ impl Sender for EthSender {
         self.contract.get_account(index)
     }
 
-    fn join_group<F>(
+    fn join_group(
         &self,
-        signer: Address,
-        gas: u64,
-        reg_fn: F,
-    ) -> Result<String>
-    where
-        F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnJoinGroup>,
-    {
-        let output = reg_fn(self.enclave_id)?;
-        let receipt = self.contract.join_group(
-            signer,
-            output.report(),
-            output.report_sig(),
-            output.handshake(),
-            gas
-        )?;
+        host_output: host_output::JoinGroup,
+    ) -> Result<String> {
+        let receipt = self.contract.join_group(host_output)?;
 
         Ok(hex::encode(receipt.as_bytes()))
     }

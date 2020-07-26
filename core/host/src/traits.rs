@@ -71,14 +71,10 @@ pub trait Sender: Sized {
     ) -> Result<String>;
 
     /// Attestation with deployed contract.
-    fn join_group<F>(
+    fn join_group(
         &self,
-        signer: Address,
-        gas: u64,
-        reg_fn: F,
-    ) -> Result<String>
-    where
-        F: FnOnce(sgx_enclave_id_t) -> Result<output::ReturnJoinGroup>;
+        host_output: host_output::JoinGroup,
+    ) -> Result<String>;
 
     fn handshake<F>(
         &self,

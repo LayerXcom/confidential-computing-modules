@@ -32,7 +32,9 @@ pub trait HostInput: Sized {
 pub trait HostOutput: Sized {
     type EcallOutput: EcallOutput;
 
-    fn set_ecall_output(self, output: Self::EcallOutput) -> anyhow::Result<Self>;
+    fn set_ecall_output(self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+        Ok(self)
+    }
 
     // TODO
     // fn emit(self) -> anyhow::Result<String>;
