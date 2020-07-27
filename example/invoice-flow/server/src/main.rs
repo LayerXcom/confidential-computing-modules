@@ -5,15 +5,14 @@ extern crate reqwest;
 use std::{sync::Arc, io, env};
 use actix_web::{web, App, HttpServer};
 use sgx_types::sgx_enclave_id_t;
-
-use anonify_host::{EnclaveDir, Dispatcher};
-use anonify_bc_connector::{
+use frame_host::EnclaveDir;
+use anonify_host::{
+    Dispatcher,
     EventDB,
     BlockNumDB,
     traits::*,
     eth::*,
 };
-
 use handlers::*;
 
 mod moneyforward;

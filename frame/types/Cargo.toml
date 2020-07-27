@@ -1,0 +1,11 @@
+[package]
+name = "frame-types"
+version = "0.1.0"
+authors = ["osuketh <dish230@gmail.com>"]
+edition = "2018"
+build = "build.rs"
+
+[dependencies]
+
+[build-dependencies]
+cbindgen = "0.13"

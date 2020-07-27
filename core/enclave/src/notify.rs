@@ -2,7 +2,7 @@ use std::{
     collections::HashSet,
     sync::{SgxRwLock, Arc},
 };
-use anonify_common::{
+use frame_common::{
     crypto::UserAddress,
     traits::State,
     state_types::{UpdatedState, StateType},

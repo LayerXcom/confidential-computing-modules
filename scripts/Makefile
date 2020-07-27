@@ -1,6 +1,8 @@
 SGX_SDK_RUST ?= $(HOME)/sgx
 ANONIFY_ROOT_DIR := ..
 ANONIFY_CORE_ROOT := $(ANONIFY_ROOT_DIR)/core
+FRAME_ROOT := $(ANONIFY_ROOT_DIR)/frame
+CONFIG_DIR := $(ANONIFY_ROOT_DIR)/config
 ANONIFY_ENCLAVE_DIR := $(ANONIFY_CORE_ROOT)/enclave
 ANONIFY_HOST_DIR := $(ANONIFY_CORE_ROOT)/host
 ANONIFY_BIN_DIR := $(HOME)/.anonify
@@ -102,10 +104,12 @@ RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nod
 	-Wl,-pie,-eenclave_entry -Wl,--export-dynamic  \
 	-Wl,--defsym,__ImageBase=0 \
 	-Wl,--gc-sections \
-	-Wl,--version-script=$(ANONIFY_ENCLAVE_DIR)/Enclave.lds
+	-Wl,--version-script=$(CONFIG_DIR)/Enclave.lds
 
 RustEnclave_Name := $(ANONIFY_BUILD_DIR)/enclave.so
 Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/enclave.signed.so
+Rust_Enclave_Name := libenclave.a
+Rust_Enclave_Files := $(wildcard src/*.rs)
 
 .PHONY: all
 all: $(Signed_RustEnclave_Name)
@@ -124,16 +128,16 @@ $(ANONIFY_BUILD_DIR)/$(T_O_FILE): $(Enclave_EDL_Files)
 	@$(CC) $(RustEnclave_Compile_Flags) -c $(ANONIFY_BUILD_DIR)/$(T_C_FILE) -o $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
 	@echo "CC   <=  $<"
 
-$(RustEnclave_Name): enclave $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
+$(Rust_Enclave_Name): $(Rust_Enclave_Files)
+	@cd $(ANONIFY_ROOT_DIR)/$(ENCLAVE_DIR) && RUST_LOG=debug cargo build $(CARGO_FLAGS) $(FEATURE_FLAGS)
+	mkdir -p $(CUSTOM_LIBRARY_PATH)
+	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/libenclave.a
+
+$(RustEnclave_Name): $(Rust_Enclave_Name) $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
 	@$(CXX) $(ANONIFY_BUILD_DIR)/$(T_O_FILE) -o $@ $(RustEnclave_Link_Flags)
 	@echo "LINK =>  $@"
 
 $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 	mkdir -p $(ANONIFY_BIN_DIR)
-	@$(SGX_ENCLAVE_SIGNER) sign -key $(ANONIFY_ENCLAVE_DIR)/Enclave_private.pem -enclave $(RustEnclave_Name) -out $@ -config $(ANONIFY_ENCLAVE_DIR)/Enclave.config.xml
+	@$(SGX_ENCLAVE_SIGNER) sign -key $(CONFIG_DIR)/Enclave_private.pem -enclave $(RustEnclave_Name) -out $@ -config $(CONFIG_DIR)/Enclave.config.xml
 	@echo "SIGN =>  $@"
-
-.PHONY: enclave
-enclave: $(Enclave_EDL_Files)
-	@cd $(ANONIFY_CORE_ROOT)/types && cargo build
-	$(MAKE) -f Enclave.Makefile CARGO_FLAGS=$(Host_Rust_Flags) Rust_target_dir=$(Rust_target_dir) CARGO=$(CARGO) BINDGEN=$(BINDGEN) RUSTFMT=$(RUSTFMT) ANONIFY_ENCLAVE_DIR=$(ANONIFY_ENCLAVE_DIR) CUSTOM_LIBRARY_PATH=$(CUSTOM_LIBRARY_PATH) ANONIFY_ROOT_DIR=$(ANONIFY_ROOT_DIR) ENCLAVE_DIR=$(ENCLAVE_DIR) T_H_FILE=$(T_H_FILE) ANONIFY_BUILD_DIR=$(ANONIFY_BUILD_DIR)

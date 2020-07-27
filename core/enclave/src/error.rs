@@ -1,7 +1,7 @@
 use std::io;
 use thiserror::Error;
 use anyhow::anyhow;
-use anonify_types::UntrustedStatus;
+use frame_types::UntrustedStatus;
 
 pub type Result<T> = std::result::Result<T, EnclaveError>;
 
@@ -12,9 +12,6 @@ pub enum EnclaveError {
 
     #[error("Ed25519 error: {0}")]
     Ed25519Error(ed25519_dalek::SignatureError),
-
-    #[error("Sgx Error: {err:?}")]
-    SgxError { err: sgx_types::sgx_status_t },
 
     #[error("Hex error: {0}")]
     HexError(hex::FromHexError),
@@ -31,11 +28,8 @@ pub enum EnclaveError {
     #[error("Anyhow error: {0}")]
     AnyhowError(#[from] anyhow::Error),
 
-    #[error("Enclave ocall failed function: {function:?}, status: {status:?}")]
-    UntrustedError {
-        status: UntrustedStatus,
-        function: &'static str,
-    },
+    #[error("Frame Enclave error: {0}")]
+    FrameEnclaveError(#[from] frame_enclave::Error),
 }
 
 impl From<ed25519_dalek::SignatureError> for EnclaveError {

@@ -6,7 +6,7 @@ use secp256k1::{
     self, Message, Signature, SecretKey, PublicKey,
     util::SECRET_KEY_SIZE,
 };
-use anonify_common::{
+use frame_common::{
     crypto::sgx_rand_assign,
     traits::Keccak256,
 };

@@ -3,21 +3,20 @@ name = "anonify-host"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
-build = "build.rs"
 
 [dependencies]
-anonify-types = { path = "../types" }
+frame-types = { path = "../../frame/types" }
+frame-common = { path = "../../frame/common" }
+frame-host = { path = "../../frame/host" }
 anonify-common = { path = "../common" }
-anonify-bc-connector = { path = "../bc-connector" }
 sgx_types = "1.1.1"
-sgx_urts = "1.1.1"
+thiserror = "1.0"
 anyhow = "1.0"
-dirs = "2.0"
 ed25519-dalek = "1.0.0-pre.2"
 parking_lot = "0.10"
 codec = { package = "parity-scale-codec", version = "1.1" }
+web3 = "0.8"
+ethabi = "8.0.0"
+hex = "0.4"
+byteorder = "1"
 log = "0.4"
-
-[build-dependencies]
-dirs = "2.0"
-cc = "1.0"

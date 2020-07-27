@@ -304,56 +304,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "anonify-bc-connector"
-version = "0.1.0"
-dependencies = [
- "anonify-common 0.1.0",
- "anonify-types 0.1.0",
- "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
- "byteorder 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "ethabi 8.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "thiserror 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
- "web3 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "anonify-common"
 version = "0.1.0"
 dependencies = [
- "anonify-types 0.1.0",
  "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
  "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "elastic-array 0.10.3 (git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.2)",
  "elastic-array 0.10.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-common 0.1.0",
  "libsecp256k1 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand_core 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand_os 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.106 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.2)",
- "serde 1.0.111 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_trts 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
  "sha2 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "tiny-keccak 1.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "web3 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "anonify-ecalls"
-version = "0.1.0"
-dependencies = [
- "anonify-common 0.1.0",
- "anonify-types 0.1.0",
- "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
- "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
 ]
 
 [[package]]
@@ -361,18 +325,19 @@ name = "anonify-enclave"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
- "anonify-runtime 0.1.0",
- "anonify-treekem 0.1.0",
- "anonify-types 0.1.0",
  "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
  "base64 0.10.1 (git+https://github.com/mesalock-linux/rust-base64-sgx?rev=sgx_1.1.2)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-common 0.1.0",
+ "frame-enclave 0.1.0",
+ "frame-runtime 0.1.0",
+ "frame-treekem 0.1.0",
+ "frame-types 0.1.0",
  "hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "libsecp256k1 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.2)",
  "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "remote-attestation 0.1.0 (git+https://github.com/LayerXcom/libsgx-rs)",
- "sgx_tcrypto 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tse 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -383,65 +348,30 @@ dependencies = [
 name = "anonify-host"
 version = "0.1.0"
 dependencies = [
- "anonify-bc-connector 0.1.0",
  "anonify-common 0.1.0",
- "anonify-types 0.1.0",
  "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
- "cc 1.0.54 (registry+https://github.com/rust-lang/crates.io-index)",
- "dirs 2.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "byteorder 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ethabi 8.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-common 0.1.0",
+ "frame-host 0.1.0",
+ "frame-types 0.1.0",
+ "hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "parking_lot 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_urts 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "anonify-runtime"
-version = "0.1.0"
-dependencies = [
- "anonify-common 0.1.0",
- "anonify-treekem 0.1.0",
- "anonify-types 0.1.0",
- "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
- "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
- "libsecp256k1 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
-]
-
-[[package]]
-name = "anonify-treekem"
-version = "0.1.0"
-dependencies = [
- "anonify-common 0.1.0",
- "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
- "libsecp256k1 0.3.5 (git+https://github.com/mesalock-linux/libsecp256k1-rs-sgx?rev=sgx_1.1.2)",
- "libsgx-test-utils 0.1.0 (git+https://github.com/LayerXcom/libsgx-rs)",
- "log 0.4.8 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.2)",
- "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand 0.7.3 (git+https://github.com/mesalock-linux/rand-sgx?rev=v0.6.5_sgx1.1.2)",
- "rand_core 0.5.1 (git+https://github.com/mesalock-linux/rand-sgx?rev=v0.6.5_sgx1.1.2)",
- "ring 0.16.11 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)",
- "sgx_trts 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
-]
-
-[[package]]
-name = "anonify-types"
-version = "0.1.0"
-dependencies = [
- "cbindgen 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "web3 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "anonify-wallet"
 version = "0.1.0"
 dependencies = [
- "anonify-common 0.1.0",
  "chrono 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-common 0.1.0",
  "parity-crypto 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.111 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1153,7 +1083,7 @@ dependencies = [
 name = "enclave"
 version = "0.1.0"
 dependencies = [
- "anonify-treekem 0.1.0",
+ "frame-treekem 0.1.0",
  "libsgx-test-utils 0.1.0 (git+https://github.com/LayerXcom/libsgx-rs)",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
 ]
@@ -1197,8 +1127,8 @@ dependencies = [
 name = "erc20-api"
 version = "0.1.0"
 dependencies = [
- "anonify-common 0.1.0",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-common 0.1.0",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.111 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde-big-array 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1229,13 +1159,14 @@ name = "erc20-enclave"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
- "anonify-ecalls 0.1.0",
  "anonify-enclave 0.1.0",
- "anonify-treekem 0.1.0",
- "anonify-types 0.1.0",
  "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "erc20-state-transition 0.1.0",
+ "frame-common 0.1.0",
+ "frame-enclave 0.1.0",
+ "frame-treekem 0.1.0",
+ "frame-types 0.1.0",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.2)",
  "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1248,15 +1179,15 @@ name = "erc20-server"
 version = "0.1.0"
 dependencies = [
  "actix-web 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "anonify-bc-connector 0.1.0",
  "anonify-host 0.1.0",
- "anonify-runtime 0.1.0",
  "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "erc20-api 0.1.0",
  "erc20-state-transition 0.1.0",
  "failure 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-host 0.1.0",
+ "frame-runtime 0.1.0",
  "hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1267,7 +1198,7 @@ name = "erc20-state-transition"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
- "anonify-runtime 0.1.0",
+ "frame-runtime 0.1.0",
  "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
 ]
@@ -1385,6 +1316,97 @@ dependencies = [
 name = "foreign-types-shared"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "frame-common"
+version = "0.1.0"
+dependencies = [
+ "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
+ "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
+ "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand_core 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand_os 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.106 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.2)",
+ "serde 1.0.111 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_trts 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+ "sha2 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tiny-keccak 1.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "web3 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "frame-enclave"
+version = "0.1.0"
+dependencies = [
+ "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
+ "frame-common 0.1.0",
+ "frame-runtime 0.1.0",
+ "frame-types 0.1.0",
+ "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+ "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror 1.0.9 (git+https://github.com/mesalock-linux/thiserror-sgx.git)",
+]
+
+[[package]]
+name = "frame-host"
+version = "0.1.0"
+dependencies = [
+ "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cc 1.0.54 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dirs 2.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-common 0.1.0",
+ "frame-types 0.1.0",
+ "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.111 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 1.0.56 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_urts 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "frame-runtime"
+version = "0.1.0"
+dependencies = [
+ "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
+ "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-common 0.1.0",
+ "frame-treekem 0.1.0",
+ "frame-types 0.1.0",
+ "libsecp256k1 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+]
+
+[[package]]
+name = "frame-treekem"
+version = "0.1.0"
+dependencies = [
+ "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
+ "frame-common 0.1.0",
+ "libsecp256k1 0.3.5 (git+https://github.com/mesalock-linux/libsecp256k1-rs-sgx?rev=sgx_1.1.2)",
+ "libsgx-test-utils 0.1.0 (git+https://github.com/LayerXcom/libsgx-rs)",
+ "log 0.4.8 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.2)",
+ "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.7.3 (git+https://github.com/mesalock-linux/rand-sgx?rev=v0.6.5_sgx1.1.2)",
+ "rand_core 0.5.1 (git+https://github.com/mesalock-linux/rand-sgx?rev=v0.6.5_sgx1.1.2)",
+ "ring 0.16.11 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+]
+
+[[package]]
+name = "frame-types"
+version = "0.1.0"
+dependencies = [
+ "cbindgen 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "fuchsia-cprng"
@@ -1595,9 +1617,9 @@ dependencies = [
 name = "host"
 version = "0.1.0"
 dependencies = [
- "anonify-host 0.1.0",
  "cc 1.0.54 (registry+https://github.com/rust-lang/crates.io-index)",
  "dirs 2.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-host 0.1.0",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1772,11 +1794,11 @@ dependencies = [
 name = "integration-tests"
 version = "0.1.0"
 dependencies = [
- "anonify-bc-connector 0.1.0",
- "anonify-common 0.1.0",
  "anonify-host 0.1.0",
- "anonify-runtime 0.1.0",
  "erc20-state-transition 0.1.0",
+ "frame-common 0.1.0",
+ "frame-host 0.1.0",
+ "frame-runtime 0.1.0",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1813,12 +1835,13 @@ name = "invoice-enclave"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
- "anonify-ecalls 0.1.0",
  "anonify-enclave 0.1.0",
- "anonify-treekem 0.1.0",
- "anonify-types 0.1.0",
  "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-common 0.1.0",
+ "frame-enclave 0.1.0",
+ "frame-treekem 0.1.0",
+ "frame-types 0.1.0",
  "invoice-state-transition 0.1.0",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.2)",
@@ -1832,15 +1855,16 @@ name = "invoice-server"
 version = "0.1.0"
 dependencies = [
  "actix-web 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "anonify-bc-connector 0.1.0",
  "anonify-common 0.1.0",
  "anonify-host 0.1.0",
- "anonify-runtime 0.1.0",
  "anonify-wallet 0.1.0",
  "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-common 0.1.0",
+ "frame-host 0.1.0",
+ "frame-runtime 0.1.0",
  "invoice-api 0.1.0",
  "invoice-state-transition 0.1.0",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1856,7 +1880,7 @@ name = "invoice-state-transition"
 version = "0.1.0"
 dependencies = [
  "anonify-common 0.1.0",
- "anonify-runtime 0.1.0",
+ "frame-runtime 0.1.0",
  "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
 ]
@@ -3157,14 +3181,6 @@ version = "1.1.2"
 source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2#8f065be7a442157bf16dc7106feb795ea1c578eb"
 dependencies = [
  "sgx_types 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
-]
-
-[[package]]
-name = "sgx_tcrypto"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -4476,7 +4492,6 @@ dependencies = [
 "checksum sgx_demangle 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
 "checksum sgx_libc 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "fee2c4cbe19e311ed879fa44471208cc0dc63ea7eb84cc65c65d3c0e5909242f"
 "checksum sgx_libc 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
-"checksum sgx_tcrypto 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "fab75120c28a11c13f4e9879c6ab9ef1203ba91a59de1d2fbf42b854d10b3bae"
 "checksum sgx_tprotected_fs 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
 "checksum sgx_trts 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "63e3a84fb7cc0151f9c0d83c57dce4a29a9a619b8259e2473cca6b4aba0a94bc"
 "checksum sgx_trts 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"

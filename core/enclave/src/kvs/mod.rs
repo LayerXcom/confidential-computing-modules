@@ -4,9 +4,9 @@ use std::{
     sync::{SgxRwLock, Arc},
 };
 use ed25519_dalek::{PublicKey, Signature};
-use anonify_common::{
+use anonify_common::kvs::*;
+use frame_common::{
     crypto::UserAddress,
-    kvs::*,
     state_types::{MemId, UpdatedState, StateType},
     traits::*,
 };

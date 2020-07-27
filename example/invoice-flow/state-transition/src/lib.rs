@@ -5,7 +5,7 @@ extern crate sgx_tstd as localstd;
 #[cfg(feature = "std")]
 use std as localstd;
 
-use anonify_runtime::prelude::*;
+use frame_runtime::prelude::*;
 use crate::localstd::vec::Vec;
 
 pub const MAX_MEM_SIZE: usize = 5000;

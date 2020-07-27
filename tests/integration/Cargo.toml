@@ -6,8 +6,8 @@ edition = "2018"
 
 [dependencies]
 sgx_types = "1.1.1"
-anonify-common = { path = "../../core/common" }
-anonify-runtime = { path = "../../core/runtime" }
-anonify-bc-connector = { path = "../../core/bc-connector" }
+frame-common = { path = "../../frame/common" }
+frame-runtime = { path = "../../frame/runtime" }
+frame-host = { path = "../../frame/host" }
 anonify-host = { path = "../../core/host" }
 erc20-state-transition = { path = "../../example/erc20/state-transition" }

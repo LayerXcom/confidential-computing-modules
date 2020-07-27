@@ -1,9 +1,12 @@
 #![crate_type = "lib"]
 
 pub mod dispatcher;
-mod bridges;
-pub mod init_enclave;
-mod constants;
+mod workflow;
+pub mod eth;
+mod error;
+mod eventdb;
+pub mod traits;
+mod utils;
 
-pub use init_enclave::EnclaveDir;
 pub use dispatcher::Dispatcher;
+pub use eventdb::{BlockNumDB, EventDB};

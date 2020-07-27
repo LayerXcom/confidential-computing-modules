@@ -6,7 +6,7 @@ edition = "2018"
 build = "build.rs"
 
 [dependencies]
-anonify-host = { path = "../../../core/host" }
+frame-host = { path = "../../../frame/host" }
 sgx_types = "1.1.1"
 
 [build-dependencies]

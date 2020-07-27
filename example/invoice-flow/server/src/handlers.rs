@@ -9,12 +9,12 @@ use rand::rngs::OsRng;
 use rand::Rng;
 use ed25519_dalek::Keypair;
 use invoice_state_transition::{send_invoice, CallName};
-use anonify_bc_connector::{
+use anonify_host::{
     BlockNumDB,
     traits::*,
 };
-use anonify_runtime::primitives::Bytes;
-use anonify_common::{
+use frame_runtime::primitives::Bytes;
+use frame_common::{
     crypto::{UserAddress, AccessRight},
 };
 
@@ -23,7 +23,7 @@ use crate::Server;
 use crate::config::get_keypair_from_keystore;
 use crate::sunabar::SunabarClient;
 
-const DEFAULT_SEND_GAS: u64 = 3_000_000;
+const DEFAULT_GAS: u64 = 5_000_000;
 const DEFAULT_RECIPIENT_ADDRESS: &str = "KDY06J2T4bIldIq5Pjxo0Mq3ocY=";
 
 pub fn handle_deploy<D, S, W, DB>(
@@ -39,7 +39,7 @@ pub fn handle_deploy<D, S, W, DB>(
 
     let deployer_addr = server.dispatcher.get_account(0)?;
     let contract_addr = server.dispatcher
-        .deploy(&deployer_addr)?;
+        .deploy(deployer_addr, DEFAULT_GAS)?;
 
     debug!("Contract address: {:?}", &contract_addr);
     server.dispatcher.set_contract_addr(&contract_addr, &server.abi_path)?;
@@ -113,7 +113,7 @@ fn inner_send_invoice<D, S, W, DB>(
         send_invoice_state,
         "send_invoice",
         signer,
-        DEFAULT_SEND_GAS,
+        DEFAULT_GAS,
     )?;
 
     Ok(receipt)

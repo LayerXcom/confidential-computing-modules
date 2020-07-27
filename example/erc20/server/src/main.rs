@@ -1,14 +1,12 @@
 use std::{sync::Arc, io, env};
 use sgx_types::sgx_enclave_id_t;
 use anonify_host::{
-    EnclaveDir,
     Dispatcher,
-};
-use anonify_bc_connector::{
     EventDB, BlockNumDB,
     traits::*,
     eth::*,
 };
+use frame_host::EnclaveDir;
 use handlers::*;
 use actix_web::{web, App, HttpServer};
 

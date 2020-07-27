@@ -4,32 +4,36 @@ use std::{
     convert::{TryInto, TryFrom},
     fmt::Debug,
 };
-use anonify_bc_connector::{
+use crate::{
     traits::*,
     utils::*,
     eventdb::BlockNumDB,
     error::{Result, HostError},
+    workflow::host_input,
 };
-use anonify_common::{
+use frame_common::{
     crypto::AccessRight,
-    traits::{State, MemNameConverter, CallNameConverter},
-    state_types::UpdatedState,
+    traits::*,
+    state_types::{UpdatedState, StateType},
 };
+use frame_host::engine::HostEngine;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use crate::bridges::ecalls::{
-    join_group as join_fn,
-    encrypt_instruction as enc_ins_fn,
-    handshake as handshake_fn,
-    insert_logs as insert_fn,
-    register_notification as reg_notify_fn,
-    get_state_from_enclave,
-};
+use web3::types::Address;
+use crate::workflow::*;
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
 pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
-    inner: RwLock<SgxDispatcher<D, S, W, DB>>,
+    inner: RwLock<InnerDispatcher<D, S, W, DB>>,
+}
+
+#[derive(Debug)]
+struct InnerDispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
+    deployer: D,
+    sender: Option<S>,
+    watcher: Option<W>,
+    event_db: Arc<DB>,
 }
 
 impl<D, S, W, DB> Dispatcher<D, S, W, DB>
@@ -44,42 +48,69 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         node_url: &str,
         event_db: Arc<DB>,
     ) -> Result<Self> {
-        let inner = SgxDispatcher::new_with_deployer(enclave_id, node_url, event_db)?;
+        let deployer = D::new(enclave_id, node_url)?;
+        let inner = RwLock::new(
+            InnerDispatcher {
+                deployer,
+                event_db,
+                sender: None,
+                watcher: None,
+            }
+        );
 
-        Ok(Dispatcher {
-            inner: RwLock::new(inner)
-        })
+        Ok(Dispatcher { inner })
     }
 
-    pub fn set_contract_addr<P>(&self, contract_addr: &str, abi_path: P) -> Result<()>
-        where
-            P: AsRef<Path> + Copy,
-    {
+    pub fn set_contract_addr<P: AsRef<Path> + Copy>(
+        &self,
+        contract_addr: &str,
+        abi_path: P,
+    ) -> Result<()> {
         let mut inner = self.inner.write();
+        let enclave_id = inner.deployer.get_enclave_id();
+        let node_url = inner.deployer.get_node_url();
+
         let contract_info = ContractInfo::new(abi_path, contract_addr);
-        inner.set_contract_addr(contract_info)?;
+        let sender = S::new(enclave_id, node_url, contract_info)?;
+        let watcher = W::new(node_url, contract_info, inner.event_db.clone())?;
+
+        inner.sender = Some(sender);
+        inner.watcher = Some(watcher);
 
         Ok(())
     }
 
     pub fn deploy(
         &self,
-        deploy_user: &SignerAddress,
+        deploy_user: Address,
+        gas: u64,
     ) -> Result<String> {
         let mut inner = self.inner.write();
-        inner.deploy(deploy_user)
+        let eid = inner.deployer.get_enclave_id();
+        let input = host_input::JoinGroup::new(deploy_user, gas);
+        let host_output = JoinGroupWorkflow::exec(input, eid)?;
+
+        inner.deployer
+            .deploy(host_output)
     }
 
     pub fn join_group<P: AsRef<Path> + Copy>(
         &self,
-        signer: SignerAddress,
+        signer: Address,
         gas: u64,
         contract_addr: &str,
         abi_path: P,
     ) -> Result<String> {
-        let mut inner = self.inner.write();
-        let contract_info = ContractInfo::new(abi_path, contract_addr);
-        inner.join_group(signer, gas, contract_info)
+        self.set_contract_addr(contract_addr, abi_path)?;
+
+        let inner = self.inner.read();
+        let eid = inner.deployer.get_enclave_id();
+        let input = host_input::JoinGroup::new(signer, gas);
+        let host_output = JoinGroupWorkflow::exec(input, eid)?;
+
+        inner.sender.as_ref()
+            .ok_or(HostError::AddressNotSet)?
+            .join_group(host_output)
     }
 
     pub fn send_instruction<ST, C>(
@@ -87,27 +118,39 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         access_right: AccessRight,
         state: ST,
         call_name: &str,
-        signer: SignerAddress,
+        signer: Address,
         gas: u64,
     ) -> Result<String>
         where
             ST: State,
             C: CallNameConverter,
     {
-        let state_info = StateInfo::<_, C>::new(state, call_name);
-        self.inner
-            .read()
-            .send_instruction(access_right, signer, state_info, gas)
+        let inner = self.inner.read();
+        let input = host_input::Instruction::<ST, C>::new(
+            state, call_name.to_string(), access_right, signer, gas,
+        );
+        let eid = inner.deployer.get_enclave_id();
+        let host_output = InstructionWorkflow::exec(input, eid)?;
+
+        match &inner.sender {
+            Some(s) => s.send_instruction(host_output),
+            None => Err(HostError::AddressNotSet),
+        }
     }
 
     pub fn handshake(
         &self,
-        signer: SignerAddress,
+        signer: Address,
         gas: u64,
     ) -> Result<String> {
-        self.inner
-            .read()
-            .handshake(signer, gas)
+        let inner = self.inner.read();
+        let input = host_input::Handshake::new(signer, gas);
+        let eid = inner.deployer.get_enclave_id();
+        let host_output = HandshakeWorkflow::exec(input, eid)?;
+
+        inner.sender.as_ref()
+            .ok_or(HostError::AddressNotSet)?
+            .handshake(host_output)
     }
 
     pub fn block_on_event<St>(
@@ -116,153 +159,29 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         where
             St: State,
     {
-        self.inner
-            .read()
-            .block_on_event()
-            .into()
+        let inner = self.inner.read();
+
+        let eid = inner.deployer.get_enclave_id();
+        inner.watcher
+            .as_ref()
+            .ok_or(HostError::EventWatcherNotSet)?
+            .block_on_event(eid)
     }
 
-    pub fn get_account(&self, index: usize) -> Result<SignerAddress> {
+    pub fn get_account(&self, index: usize) -> Result<Address> {
         self.inner
             .read()
+            .deployer
             .get_account(index)
     }
 
     pub fn register_notification(&self, access_right: AccessRight) -> Result<()> {
-        self.inner
-            .read()
-            .register_notification(access_right)
-    }
-}
-
-#[derive(Debug)]
-struct SgxDispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
-    deployer: D,
-    sender: Option<S>,
-    watcher: Option<W>,
-    event_db: Arc<DB>,
-}
-
-impl<D, S, W, DB> SgxDispatcher<D, S, W, DB>
-    where
-        D: Deployer,
-        S: Sender,
-        W: Watcher<WatcherDB=DB>,
-        DB: BlockNumDB,
-{
-    fn new_with_deployer(
-        enclave_id: sgx_enclave_id_t,
-        node_url: &str,
-        event_db: Arc<DB>,
-    ) -> Result<Self> {
-        let deployer = D::new(enclave_id, node_url)?;
-
-        Ok(SgxDispatcher {
-            deployer,
-            event_db,
-            sender: None,
-            watcher: None,
-        })
-    }
-
-    fn set_contract_addr<P>(
-        &mut self,
-        contract_info: ContractInfo<'_, P>,
-    ) -> Result<()>
-        where
-            P: AsRef<Path> + Copy
-    {
-        let enclave_id = self.deployer.get_enclave_id();
-        let node_url = self.deployer.get_node_url();
-        let sender = S::new(enclave_id, node_url, contract_info)?;
-        let watcher = W::new(node_url, contract_info, self.event_db.clone())?;
-
-        self.sender = Some(sender);
-        self.watcher = Some(watcher);
+        let inner = self.inner.read();
+        let input = host_input::RegisterNotification::new(access_right);
+        let eid = inner.deployer.get_enclave_id();
+        let host_output = RegisterNotificationWorkflow::exec(input, eid)?;
 
         Ok(())
-    }
-
-    fn deploy(
-        &mut self,
-        deploy_user: &SignerAddress,
-    ) -> Result<String> {
-        self.deployer
-            .deploy(deploy_user, join_fn)
-    }
-
-    fn get_account(&self, index: usize) -> Result<SignerAddress> {
-        self.deployer
-            .get_account(index)
-    }
-
-    fn block_on_event<St>(
-        &self,
-    ) -> Result<Option<Vec<UpdatedState<St>>>>
-        where
-            St: State,
-    {
-        if self.watcher.is_none() {
-            return Err(HostError::EventWatcherNotSet);
-        }
-
-        let eid = self.deployer.get_enclave_id();
-        self.watcher
-            .as_ref()
-            .ok_or(HostError::AddressNotSet)?
-            .block_on_event(eid, insert_fn)
-    }
-
-    fn join_group<P: AsRef<Path> + Copy>(
-        &mut self,
-        signer: SignerAddress,
-        gas: u64,
-        contract_info: ContractInfo<'_, P>,
-    ) -> Result<String> {
-        self.set_contract_addr(contract_info)?;
-
-        self.sender.as_ref()
-            .ok_or(HostError::AddressNotSet)?
-            .join_group(signer, gas, join_fn)
-    }
-
-    fn send_instruction<ST, C>(
-        &self,
-        access_right: AccessRight,
-        signer: SignerAddress,
-        state_info: StateInfo<'_, ST, C>,
-        gas: u64,
-    ) -> Result<String>
-        where
-            ST: State,
-            C: CallNameConverter,
-    {
-        if self.sender.is_none() {
-            return Err(HostError::AddressNotSet);
-        }
-
-        self.sender.as_ref()
-            .ok_or(HostError::AddressNotSet)?
-            .send_instruction(access_right, signer, state_info, gas, enc_ins_fn)
-    }
-
-    fn handshake(
-        &self,
-        signer: SignerAddress,
-        gas: u64,
-    ) -> Result<String>
-    {
-        if self.sender.is_none() {
-            return Err(HostError::AddressNotSet);
-        }
-
-        self.sender.as_ref()
-            .ok_or(HostError::AddressNotSet)?
-            .handshake(signer, gas, handshake_fn)
-    }
-
-    fn register_notification(&self, access_right: AccessRight) -> Result<()> {
-        self.deployer.register_notification(access_right, reg_notify_fn)
     }
 }
 
@@ -276,13 +195,13 @@ pub fn get_state<S, M>(
         <S as TryFrom<Vec<u8>>>::Error: Debug,
         M: MemNameConverter,
 {
-    let state = get_state_from_enclave::<M>(
-        enclave_id,
-        access_right,
-        mem_name,
-    )?
-        .try_into()
-        .expect("Failed to convert into State trait.");
+    let mem_id = M::as_id(mem_name);
+    let input = host_input::GetState::new(access_right, mem_id);
+
+    let state = GetStateWorkflow::exec(input, enclave_id)?
+        .ecall_output.unwrap()
+        .into_vec()
+        .try_into().unwrap();
 
     Ok(state)
 }

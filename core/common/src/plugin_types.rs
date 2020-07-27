@@ -1,15 +1,14 @@
-use crate::traits::State;
 use crate::localstd::{
     vec::Vec,
     string::String,
     str,
 };
-use crate::crypto::{AccessRight, Sha256, Ciphertext};
 use codec::{Encode, Decode, Input, self};
-use crate::state_types::{StateType, MemId, UpdatedState};
-
-pub trait EcallInput {}
-pub trait EcallOutput {}
+use frame_common::{
+    EcallInput, EcallOutput, State,
+    crypto::{AccessRight, Sha256, Ciphertext},
+    state_types::{StateType, MemId, UpdatedState},
+};
 
 pub mod input {
     use super::*;
@@ -119,7 +118,6 @@ pub mod input {
 
 pub mod output {
     use super::*;
-    use crate::crypto::Ciphertext;
 
     #[derive(Debug, Clone)]
     pub struct Instruction {
@@ -187,6 +185,10 @@ pub mod output {
         pub fn msg_as_bytes(&self) -> &[u8] {
             &self.msg.as_bytes()
         }
+
+        pub fn msg_as_array(&self) -> [u8; 32] {
+            self.msg.as_array()
+        }
     }
 
     #[derive(Encode, Decode, Debug, Clone)]
@@ -233,6 +235,10 @@ pub mod output {
 
         pub fn into_vec(self) -> Vec<u8> {
             self.state.into_vec()
+        }
+
+        pub fn as_mut_bytes(&mut self) -> &mut [u8] {
+            self.state.as_mut_bytes()
         }
     }
 

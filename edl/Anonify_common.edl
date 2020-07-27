@@ -11,7 +11,7 @@ enclave {
     from "sgx_pthread.edl" import *;
 
     include "sgx_quote.h"
-    include "anonify-types.h"
+    include "frame-types.h"
 
     trusted {
         public uint32_t ecall_entry_point(
