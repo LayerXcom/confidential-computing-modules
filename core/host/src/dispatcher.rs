@@ -197,9 +197,11 @@ pub fn get_state<S, M>(
 {
     let mem_id = M::as_id(mem_name);
     let input = host_input::GetState::new(access_right, mem_id);
-    let mut host_output = GetStateWorkflow::exec(input, enclave_id)?
-        .ecall_output.unwrap();
 
-    S::decode_s(host_output.as_mut_bytes())
-        .map_err(Into::into)
+    let state = GetStateWorkflow::exec(input, enclave_id)?
+        .ecall_output.unwrap()
+        .into_vec()
+        .try_into().unwrap();
+
+    Ok(state)
 }
