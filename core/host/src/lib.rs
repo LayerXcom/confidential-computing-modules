@@ -7,7 +7,6 @@ mod error;
 mod eventdb;
 pub mod traits;
 mod utils;
-mod ecalls;
 
 pub use dispatcher::Dispatcher;
 pub use eventdb::{BlockNumDB, EventDB};

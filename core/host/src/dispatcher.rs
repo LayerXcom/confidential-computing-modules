@@ -20,9 +20,6 @@ use frame_host::engine::HostEngine;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use web3::types::Address;
-use crate::ecalls::{
-    insert_logs as insert_fn,
-};
 use crate::workflow::*;
 
 /// This dispatcher communicates with a blockchain node.
@@ -164,12 +161,11 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
     {
         let inner = self.inner.read();
 
-
         let eid = inner.deployer.get_enclave_id();
         inner.watcher
             .as_ref()
             .ok_or(HostError::EventWatcherNotSet)?
-            .block_on_event(eid, insert_fn)
+            .block_on_event(eid)
     }
 
     pub fn get_account(&self, index: usize) -> Result<Address> {

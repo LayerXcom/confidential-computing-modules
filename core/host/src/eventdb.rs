@@ -8,10 +8,12 @@ use frame_common::{
     traits::State,
     state_types::UpdatedState,
 };
+use frame_host::engine::HostEngine;
 use sgx_types::sgx_enclave_id_t;
 use web3::types::Address;
 use byteorder::{LittleEndian, ByteOrder};
-use crate::workflow::host_input;
+use log::debug;
+use crate::workflow::*;
 use crate::error::Result;
 
 pub trait BlockNumDB {
@@ -71,6 +73,61 @@ impl InnerEnclaveLog {
         self.ciphertexts.into_iter()
             .map(|c| host_input::InsertCiphertext::new(c))
     }
+
+    pub fn invoke_ecall<S: State>(
+        self,
+        eid: sgx_enclave_id_t,
+    ) -> Result<Option<Vec<UpdatedState<S>>>> {
+        if self.ciphertexts.len() != 0 && self.handshakes.len() == 0 {
+            self.insert_ciphertexts(eid)
+        } else if self.ciphertexts.len() == 0 && self.handshakes.len() != 0 {
+            // The size of handshake cannot be calculated in this host directory,
+            // so the ecall_insert_handshake function is repeatedly called over the number of fetched handshakes.
+            for handshake in self.handshakes {
+                Self::insert_handshake(eid, handshake)?;
+            }
+
+            Ok(None)
+        } else {
+            debug!("No logs to insert into the enclave.");
+            Ok(None)
+        }
+    }
+
+    fn insert_ciphertexts<S: State>(
+        self,
+        eid: sgx_enclave_id_t,
+    ) -> Result<Option<Vec<UpdatedState<S>>>> {
+        let mut acc = vec![];
+
+        for update in self.into_input_iter()
+            .map(move |inp|
+                InsertCiphertextWorkflow::exec(inp, eid)
+                    .map(|e| e.ecall_output.unwrap()) // ecall_output must be set.
+            )
+        {
+            if let Some(upd_type) = update?.updated_state {
+                let upd_trait = UpdatedState::<S>::from_state_type(upd_type)?;
+                acc.push(upd_trait);
+            }
+        }
+
+        if acc.is_empty() {
+            return Ok(None);
+        } else {
+            return Ok(Some(acc));
+        }
+    }
+
+    fn insert_handshake(
+        eid: sgx_enclave_id_t,
+        handshake: Vec<u8>,
+    ) -> Result<()> {
+        let input = host_input::InsertHandshake::new(handshake);
+        InsertHandshakeWorkflow::exec(input, eid)?;
+
+        Ok(())
+    }
 }
 
 /// A wrapper type of enclave logs.
@@ -83,19 +140,14 @@ pub struct EnclaveLog<DB: BlockNumDB> {
 impl<DB: BlockNumDB> EnclaveLog<DB> {
     /// Store logs into enclave in-memory.
     /// This returns a latest block number specified by fetched logs.
-    pub fn insert_enclave<F, S>(
+    pub fn insert_enclave<S: State>(
         self,
         eid: sgx_enclave_id_t,
-        insert_fn: F,
-    ) -> Result<EnclaveUpdatedState<DB, S>>
-    where
-        F: FnOnce(sgx_enclave_id_t, InnerEnclaveLog) -> Result<Option<Vec<UpdatedState<S>>>>,
-        S: State,
-    {
+    ) -> Result<EnclaveUpdatedState<DB, S>> {
         match self.inner {
             Some(log) => {
                 let next_blc_num = log.latest_blc_num + 1;
-                let updated_states = insert_fn(eid, log)?;
+                let updated_states = log.invoke_ecall(eid)?;
 
                 return Ok(EnclaveUpdatedState {
                     block_num: Some(next_blc_num),

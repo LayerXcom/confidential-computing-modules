@@ -159,19 +159,14 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
         Ok(EventWatcher { contract, event_db })
     }
 
-    fn block_on_event<F, S>(
+    fn block_on_event<S: State>(
         &self,
         eid: sgx_enclave_id_t,
-        insert_fn: F,
-    ) -> Result<Option<Vec<UpdatedState<S>>>>
-    where
-        F: FnOnce(sgx_enclave_id_t, InnerEnclaveLog) -> Result<Option<Vec<UpdatedState<S>>>>,
-        S: State,
-    {
+    ) -> Result<Option<Vec<UpdatedState<S>>>> {
         let enclave_updated_state = self.contract
             .get_event(self.event_db.clone(), self.contract.address())?
             .into_enclave_log()?
-            .insert_enclave(eid, insert_fn)?
+            .insert_enclave(eid)?
             .set_to_db(self.contract.address());
 
         Ok(enclave_updated_state.updated_states())
