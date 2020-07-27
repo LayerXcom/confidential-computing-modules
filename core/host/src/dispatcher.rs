@@ -9,6 +9,7 @@ use crate::{
     utils::*,
     eventdb::BlockNumDB,
     error::{Result, HostError},
+    workflow::host_input,
 };
 use frame_common::{
     crypto::AccessRight,
@@ -162,7 +163,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             St: State,
     {
         let inner = self.inner.read();
-        
+
 
         let eid = inner.deployer.get_enclave_id();
         inner.watcher
@@ -200,9 +201,9 @@ pub fn get_state<S, M>(
 {
     let mem_id = M::as_id(mem_name);
     let input = host_input::GetState::new(access_right, mem_id);
-    let mut host_output = GetStateWorkflow::exec(input, enclave_id)
+    let mut host_output = GetStateWorkflow::exec(input, enclave_id)?
         .ecall_output.unwrap();
-    let state = S::decode_s(host_output.as_mut_bytes())
 
-    Ok(state)
+    S::decode_s(host_output.as_mut_bytes())
+        .map_err(Into::into)
 }

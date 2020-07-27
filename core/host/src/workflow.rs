@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 use frame_host::engine::*;
 use frame_common::{
-    crypto::AccessRight,
+    crypto::{AccessRight, Ciphertext},
     traits::*,
     state_types::MemId,
 };
@@ -247,7 +247,7 @@ pub mod host_input {
     }
 
     impl InsertHandshake {
-        pub fn new(handshake: handshake) -> Self {
+        pub fn new(handshake: Vec<u8>) -> Self {
             InsertHandshake { handshake }
         }
     }

@@ -236,6 +236,10 @@ pub mod output {
         pub fn into_vec(self) -> Vec<u8> {
             self.state.into_vec()
         }
+
+        pub fn as_mut_bytes(&mut self) -> &mut [u8] {
+            self.state.as_mut_bytes()
+        }
     }
 
     #[derive(Encode, Decode, Debug, Clone)]

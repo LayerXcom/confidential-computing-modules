@@ -5,7 +5,10 @@ use frame_common::{
     traits::*,
     state_types::UpdatedState,
 };
-use frame_host::ecalls::EnclaveConnector;
+use frame_host::{
+    ecalls::EnclaveConnector,
+    engine::HostEngine,
+};
 use anonify_common::{
     plugin_types::*,
     commands::*,
@@ -14,7 +17,7 @@ use crate::{
     eventdb::InnerEnclaveLog,
     utils::StateInfo,
     error::Result,
-    workflow::{OUTPUT_MAX_LEN, InsertCiphertextWorkflow, InsertHandshakeWorkflow},
+    workflow::*,
 };
 use log::debug;
 use codec::{Encode, Decode};
