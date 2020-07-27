@@ -31,13 +31,13 @@ fn test_integration_eth_construct() {
     let eid = enclave.geteid();
     let my_access_right = AccessRight::new_from_rng().unwrap();
 
-    let gas = 3_000_000;
+    let gas = 5_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -82,13 +82,13 @@ fn test_auto_notification() {
     let other_access_right = AccessRight::new_from_rng().unwrap();
     let third_access_right = AccessRight::new_from_rng().unwrap();
 
-    let gas = 3_000_000;
+    let gas = 5_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -150,13 +150,13 @@ fn test_integration_eth_transfer() {
     let other_access_right = AccessRight::new_from_rng().unwrap();
     let third_access_right = AccessRight::new_from_rng().unwrap();
 
-    let gas = 3_000_000;
+    let gas = 5_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -228,13 +228,13 @@ fn test_key_rotation() {
     let other_access_right = AccessRight::new_from_rng().unwrap();
     let third_access_right = AccessRight::new_from_rng().unwrap();
 
-    let gas = 3_000_000;
+    let gas = 5_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -282,13 +282,13 @@ fn test_integration_eth_approve() {
     let my_access_right = AccessRight::new_from_rng().unwrap();
     let other_access_right = AccessRight::new_from_rng().unwrap();
 
-    let gas = 3_000_000;
+    let gas = 5_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -359,13 +359,13 @@ fn test_integration_eth_transfer_from() {
     let other_access_right = AccessRight::new_from_rng().unwrap();
     let third_access_right = AccessRight::new_from_rng().unwrap();
 
-    let gas = 3_000_000;
+    let gas = 5_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -490,13 +490,13 @@ fn test_integration_eth_mint() {
     let my_access_right = AccessRight::new_from_rng().unwrap();
     let other_access_right = AccessRight::new_from_rng().unwrap();
 
-    let gas = 3_000_000;
+    let gas = 5_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -559,13 +559,13 @@ fn test_integration_eth_burn() {
     let my_access_right = AccessRight::new_from_rng().unwrap();
     let other_access_right = AccessRight::new_from_rng().unwrap();
 
-    let gas = 3_000_000;
+    let gas = 5_000_000;
     let event_db = Arc::new(EventDB::new());
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
