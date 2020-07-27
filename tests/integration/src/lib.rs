@@ -37,7 +37,7 @@ fn test_integration_eth_construct() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -88,7 +88,7 @@ fn test_auto_notification() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -156,7 +156,7 @@ fn test_integration_eth_transfer() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -234,7 +234,7 @@ fn test_key_rotation() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -288,7 +288,7 @@ fn test_integration_eth_approve() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -365,7 +365,7 @@ fn test_integration_eth_transfer_from() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -496,7 +496,7 @@ fn test_integration_eth_mint() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
@@ -565,7 +565,7 @@ fn test_integration_eth_burn() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(&deployer_addr).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone()).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer address: {:?}", deployer_addr);
     println!("deployed contract address: {}", contract_addr);
