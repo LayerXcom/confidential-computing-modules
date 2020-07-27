@@ -18,6 +18,7 @@ members = [
     "example/invoice-flow/enclave",
     "example/invoice-flow/server",
     "example/invoice-flow/state-transition",
+    "config",
     "wallet",
     "tests/integration",
     "tests/units/enclave",
