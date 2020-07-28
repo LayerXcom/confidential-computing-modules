@@ -1,5 +1,5 @@
 [package]
-name = "anonify-host"
+name = "anonify-eth-driver"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
