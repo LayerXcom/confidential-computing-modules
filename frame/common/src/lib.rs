@@ -20,4 +20,6 @@ extern crate lazy_static;
 pub mod crypto;
 pub mod traits;
 pub mod state_types;
+pub mod kvs;
+
 pub use traits::*;
