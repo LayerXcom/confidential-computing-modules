@@ -2,12 +2,12 @@ use std::{
     vec::Vec,
     ptr,
 };
-use anonify_common::commands::*;
 use frame_common::traits::{EcallInput, EcallOutput};
 use anonify_enclave::{
     context::EnclaveContext,
     workflow::*,
 };
+use config::constants::*;
 use invoice_state_transition::{MAX_MEM_SIZE, Runtime};
 use crate::ENCLAVE_CONTEXT;
 use frame_enclave::{register_ecall, EnclaveEngine};

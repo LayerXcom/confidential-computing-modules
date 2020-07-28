@@ -5,6 +5,7 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+config = { path = "../../config" }
 frame-types = { path = "../../frame/types" }
 frame-common = { path = "../../frame/common" }
 frame-host = { path = "../../frame/host" }

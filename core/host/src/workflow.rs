@@ -7,8 +7,8 @@ use frame_common::{
 };
 use anonify_common::{
     plugin_types::*,
-    commands::*,
 };
+use config::constants::*;
 use web3::types::Address;
 use crate::utils::StateInfo;
 
