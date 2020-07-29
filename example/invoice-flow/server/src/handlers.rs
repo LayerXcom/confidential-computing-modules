@@ -9,7 +9,7 @@ use rand::rngs::OsRng;
 use rand::Rng;
 use ed25519_dalek::Keypair;
 use invoice_state_transition::{send_invoice, CallName};
-use anonify_host::{
+use anonify_eth_driver::{
     BlockNumDB,
     traits::*,
 };

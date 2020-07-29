@@ -1,7 +1,7 @@
 use std::{sync::Arc, thread, time};
 use failure::Error;
 use log::debug;
-use anonify_host::{
+use anonify_eth_driver::{
     dispatcher::get_state,
     BlockNumDB,
     traits::*,

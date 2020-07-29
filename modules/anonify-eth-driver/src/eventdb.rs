@@ -1,9 +1,7 @@
 use std::sync::Arc;
-use anonify_common::{
-    kvs::{KVS, MemoryDB, DBTx},
-    plugin_types::*,
-};
+use anonify_io_types::*;
 use frame_common::{
+    kvs::{KVS, MemoryDB, DBTx},
     crypto::Ciphertext,
     traits::State,
     state_types::UpdatedState,

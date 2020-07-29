@@ -1,6 +1,6 @@
 use std::{sync::Arc, io, env};
 use sgx_types::sgx_enclave_id_t;
-use anonify_host::{
+use anonify_eth_driver::{
     Dispatcher,
     EventDB, BlockNumDB,
     traits::*,

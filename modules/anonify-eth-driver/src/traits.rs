@@ -10,7 +10,7 @@ use frame_common::{
     crypto::AccessRight,
     state_types::UpdatedState,
 };
-use anonify_common::plugin_types::*;
+use anonify_io_types::*;
 use web3::types::Address;
 use crate::{
     error::Result,

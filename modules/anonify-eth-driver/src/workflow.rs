@@ -5,10 +5,8 @@ use frame_common::{
     traits::*,
     state_types::MemId,
 };
-use anonify_common::{
-    plugin_types::*,
-    commands::*,
-};
+use anonify_io_types::*;
+use config::constants::*;
 use web3::types::Address;
 use crate::utils::StateInfo;
 

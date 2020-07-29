@@ -7,7 +7,7 @@ use std::{
 };
 use web3::types::Address;
 use ethabi::Contract as ContractABI;
-use anonify_common::plugin_types::*;
+use anonify_io_types::*;
 use frame_common::{
     traits::*,
     crypto::AccessRight,

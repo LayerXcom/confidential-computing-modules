@@ -3,7 +3,7 @@ use std::{
     sync::Arc,
 };
 use sgx_types::sgx_enclave_id_t;
-use anonify_common::plugin_types::*;
+use anonify_io_types::*;
 use frame_common::{
     traits::*,
     crypto::AccessRight,

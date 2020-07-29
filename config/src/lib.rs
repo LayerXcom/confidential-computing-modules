@@ -7,19 +7,20 @@ use std as localstd;
 #[cfg(all(not(feature = "std"), not(feature = "sgx")))]
 extern crate core as localstd;
 #[cfg(feature = "std")]
-use anyhow as local_anyhow;
+use anyhow_std as local_anyhow;
 #[cfg(feature = "sgx")]
-use sgx_anyhow as local_anyhow;
+use anyhow_sgx as local_anyhow;
 #[cfg(all(feature = "sgx", not(feature = "std")))]
-use serde_sgx as serde;
+use serde_sgx as local_serde;
 #[cfg(feature = "std")]
-use serde_std as serde;
+use serde_std as local_serde;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
+use toml_sgx as local_toml;
+#[cfg(feature = "std")]
+use toml_std as local_toml;
 #[macro_use]
 extern crate lazy_static;
 
-pub mod crypto;
-pub mod traits;
-pub mod state_types;
-pub mod kvs;
+pub mod constants;
 
-pub use traits::*;
+pub use crate::constants::*;

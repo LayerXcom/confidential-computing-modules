@@ -5,10 +5,11 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+config = { path = "../../config" }
 frame-types = { path = "../../frame/types" }
 frame-common = { path = "../../frame/common" }
 frame-host = { path = "../../frame/host" }
-anonify-common = { path = "../common" }
+anonify-io-types = { path = "../anonify-io-types" }
 sgx_types = "1.1.1"
 thiserror = "1.0"
 anyhow = "1.0"

@@ -2,8 +2,10 @@ use std::{
     vec::Vec,
     ptr,
 };
-use anonify_common::commands::*;
-use frame_common::traits::{EcallInput, EcallOutput};
+use frame_common::{
+    traits::{EcallInput, EcallOutput},
+};
+use config::constants::*;
 use anonify_enclave::{
     context::EnclaveContext,
     workflow::*,

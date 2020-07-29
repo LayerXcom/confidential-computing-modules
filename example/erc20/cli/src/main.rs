@@ -5,7 +5,7 @@ use std::{path::PathBuf, env};
 use clap::{Arg, App, SubCommand, AppSettings, ArgMatches};
 use rand::{rngs::OsRng, Rng};
 use term::Term;
-use anonify_common::crypto::UserAddress;
+use frame_common::crypto::UserAddress;
 use crate::config::*;
 
 mod term;
