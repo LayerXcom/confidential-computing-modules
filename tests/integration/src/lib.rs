@@ -13,7 +13,7 @@ use erc20_state_transition::{
     CIPHERTEXT_SIZE, MemName, CallName,
     transfer, construct, approve, transfer_from, mint, burn,
 };
-use anonify_host::{
+use anonify_eth_driver::{
     EventDB, BlockNumDB,
     eth::*,
     dispatcher::*,
