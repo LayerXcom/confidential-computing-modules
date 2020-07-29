@@ -9,5 +9,5 @@ sgx_types = "1.1.1"
 frame-common = { path = "../../frame/common" }
 frame-runtime = { path = "../../frame/runtime" }
 frame-host = { path = "../../frame/host" }
-anonify-host = { path = "../../core/host" }
+anonify-eth-driver = { path = "../../modules/anonify-eth-driver" }
 erc20-state-transition = { path = "../../example/erc20/state-transition" }

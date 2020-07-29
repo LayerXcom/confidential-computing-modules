@@ -6,7 +6,7 @@ use std::{sync::Arc, io, env};
 use actix_web::{web, App, HttpServer};
 use sgx_types::sgx_enclave_id_t;
 use frame_host::EnclaveDir;
-use anonify_host::{
+use anonify_eth_driver::{
     Dispatcher,
     EventDB,
     BlockNumDB,

@@ -5,7 +5,7 @@ use std::{
 use sgx_types::*;
 use frame_types::*;
 use frame_enclave::EnclaveEngine;
-use anonify_common::plugin_types::*;
+use anonify_io_types::*;
 use frame_common::{
     crypto::{UserAddress, AccessRight, Ciphertext, Sha256},
     traits::*,

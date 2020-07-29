@@ -9,8 +9,7 @@ invoice-api = { path = "../api" }
 frame-runtime = { path = "../../../frame/runtime" }
 frame-common = { path = "../../../frame/common" }
 frame-host = { path = "../../../frame/host" }
-anonify-common = { path = "../../../core/common" }
-anonify-host = { path = "../../../core/host" }
+anonify-eth-driver = { path = "../../../modules/anonify-eth-driver" }
 invoice-state-transition = { path = "../state-transition" }
 anonify-wallet = { path = "../../../wallet" }
 sgx_types = "1.1.1"

@@ -7,4 +7,5 @@ use std as localstd;
 #[cfg(all(not(feature = "std"), not(feature = "sgx")))]
 extern crate core as localstd;
 
-pub mod plugin_types;
+pub mod types;
+pub use crate::types::*;
