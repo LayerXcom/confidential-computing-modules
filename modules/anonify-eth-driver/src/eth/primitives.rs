@@ -112,7 +112,7 @@ impl Web3Contract {
         let gas = output.gas;
 
         let call = self.contract.call(
-            "join_group",
+            "joinGroup",
             (report, report_sig, handshake),
             output.signer,
             Options::with(|opt| opt.gas = Some(gas.into())),
