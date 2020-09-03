@@ -16,6 +16,8 @@ pub use crate::application::AppKeyChain;
 pub use crate::group_state::GroupState;
 pub use crate::handshake::Handshake;
 pub use crate::crypto::secrets::PathSecret;
+pub use crate::crypto::ecies::EciesCiphertext;
+pub use crate::crypto::{DhPrivateKey, DhPubKey};
 
 // temporary
 pub use crate::test_utils::init_path_secret_kvs;
