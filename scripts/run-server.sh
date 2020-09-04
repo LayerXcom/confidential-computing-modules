@@ -8,7 +8,7 @@ export SGX_MODE=HW
 export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
 export ANONIFY_URL=172.18.0.4:8080
 export ETH_URL=http://172.18.0.2:8545
-export ANONYMOUS_ASSET_ABI_PATH="../../../build/Anonify.abi"
+export ANONYMOUS_ASSET_ABI_PATH="../../../contract-build/Anonify.abi"
 
 solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
 
