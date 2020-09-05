@@ -39,12 +39,10 @@ $ ./scripts/build-cli.sh --release
 
 ###  Building in simulation mode
 
-Anonify assumes your hardware supports Intel SGX. Without such hardware, you can build the core component in simulation mode, which allows you to build on macOS.
+Anonify assumes your hardware supports Intel SGX. Without such hardware, you can build it in simulation mode, which allows you to build on macOS.
 
 ```
 $ docker run -v `pwd`:/root/anonify --rm -it osuketh/anonify
-$ cd anonify/core
-$ make DEBUG=1
 ```
 
 ### Testing
