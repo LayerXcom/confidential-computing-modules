@@ -8,7 +8,7 @@ use super::{
     hmac::HmacKey,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct DhPrivateKey(SecretKey);
 
 impl Encode for DhPrivateKey {

@@ -10,23 +10,25 @@ use frame_common::{
     crypto::sgx_rand_assign,
     traits::Keccak256,
 };
+use frame_treekem::{DhPrivateKey, DhPubKey};
+use codec::Encode;
 use crate::error::Result;
 
-const NONCE_SIZE: usize = 32;
-const ADDRESS_SIZE: usize = 20;
-const FILLED_REPORT_DATA_SIZE: usize = ADDRESS_SIZE + NONCE_SIZE;
+const HASHED_PUBKEY_SIZE: usize = 20;
+const ENCRYPTING_KEY_SIZE: usize = 33;
+const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCRYPTING_KEY_SIZE;
 const REPORT_DATA_SIZE: usize = 64;
 
 /// Enclave Identity Key
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct EnclaveIdentityKey {
-    secret: SecretKey,
-    nonce: [u8; NONCE_SIZE],
+    signing_privkey: SecretKey,
+    decrypting_privkey: DhPrivateKey,
 }
 
 impl EnclaveIdentityKey {
     pub fn new() -> Result<Self> {
-        let secret = loop {
+        let signing_privkey = loop {
             let mut ret = [0u8; SECRET_KEY_SIZE];
             sgx_rand_assign(&mut ret)?;
 
@@ -36,49 +38,58 @@ impl EnclaveIdentityKey {
             }
         };
 
-        let mut nonce = [0u8; NONCE_SIZE];
-        sgx_rand_assign(&mut nonce)?;
+        let decrypting_privkey = DhPrivateKey::from_random()?;
 
         Ok(EnclaveIdentityKey {
-            secret,
-            nonce,
+            signing_privkey,
+            decrypting_privkey,
         })
     }
 
     pub fn sign(&self, msg: &[u8]) -> Result<Signature> {
         let msg = Message::parse_slice(msg)?;
-        let sig = secp256k1::sign(&msg, &self.secret)?;
+        let sig = secp256k1::sign(&msg, &self.signing_privkey)?;
         Ok(sig.0)
     }
 
-    pub fn public_key(&self) -> PublicKey {
-        PublicKey::from_secret_key(&self.secret)
+    pub fn verifying_key(&self) -> PublicKey {
+        PublicKey::from_secret_key(&self.signing_privkey)
+    }
+
+    pub fn encrypting_key(&self) -> DhPubKey {
+        DhPubKey::from_private_key(&self.decrypting_privkey)
     }
 
     /// Generate a value of REPORTDATA field in REPORT struct.
-    /// REPORTDATA consists of a compressed secp256k1 public key and nonce.
-    /// The public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
+    /// REPORTDATA consists of a hashed sining public key and a encrypting public key.
+    /// The hashed sining public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
     /// because this enclave identity key is binding to enclave's code.
-    /// The nonce is used for preventing from replay attacks.
-    /// 20bytes: Address
-    /// 32bytes: nonce
-    /// 12bytes: zero padding
+    /// The encrypting public key is used for secure communication between clients and TEE.
+    /// 20 bytes: hashed sining public key
+    /// 33 bytes: encrypting public key
+    /// 11 bytes: zero padding
     pub fn report_data(&self) -> Result<sgx_report_data_t> {
         let mut report_data = [0u8; REPORT_DATA_SIZE];
-        report_data[..ADDRESS_SIZE].copy_from_slice(&self.address()[..]);
-        report_data[ADDRESS_SIZE..FILLED_REPORT_DATA_SIZE].copy_from_slice(&&self.nonce[..]);
+        report_data[..HASHED_PUBKEY_SIZE].copy_from_slice(&self.verifying_key_into_array()[..]);
+        report_data[HASHED_PUBKEY_SIZE..FILLED_REPORT_DATA_SIZE].copy_from_slice(&&self.encrypting_key_into_vec()[..]);
 
         Ok(sgx_report_data_t {
             d: report_data
         })
     }
 
-    fn address(&self) -> [u8; ADDRESS_SIZE] {
-        let pubkey = &self.public_key().serialize();
+    fn verifying_key_into_array(&self) -> [u8; HASHED_PUBKEY_SIZE] {
+        let pubkey = &self.verifying_key().serialize();
         let address = &pubkey.keccak256()[12..];
-        assert_eq!(address.len(), ADDRESS_SIZE);
-        let mut res = [0u8; ADDRESS_SIZE];
+        assert_eq!(address.len(), HASHED_PUBKEY_SIZE);
+        let mut res = [0u8; HASHED_PUBKEY_SIZE];
         res.copy_from_slice(address);
+        res
+    }
+
+    fn encrypting_key_into_vec(&self) -> Vec<u8> {
+        let res = self.encrypting_key().encode();
+        assert_eq!(res.len(), ENCRYPTING_KEY_SIZE);
         res
     }
 }

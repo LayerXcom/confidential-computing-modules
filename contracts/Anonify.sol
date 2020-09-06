@@ -33,8 +33,8 @@ contract Anonify is ReportHandle {
         bytes memory _enclaveSig,
         bytes32 _msg
     ) public {
-        address inpEnclaveAddr = Secp256k1.recover(_msg, _enclaveSig);
-        require(enclaveAddress[inpEnclaveAddr] == inpEnclaveAddr, "Invalid enclave signature.");
+        address verifyingKey = Secp256k1.recover(_msg, _enclaveSig);
+        require(verifyingKeyMapping[verifyingKey] == verifyingKey, "Invalid enclave signature.");
 
         emit StoreCiphertext(_newCiphertext);
     }
