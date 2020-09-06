@@ -15,7 +15,7 @@ Building an Anonify contract.
 $ solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
 ```
 
-## Running anonify protocol
+## Running anonify nodes
 
 ### docker-compose (Currently unavailable)
 By using docker-compose, three nodes will be up by default. [The ERC20-like application](example/erc20/state-transition/src/lib.rs) is implemented as the initial state transition functions. (Assumed your hardware supports Intel SGX.)
@@ -26,7 +26,23 @@ $ docker-compose -f docker/docker-compose-anonify.yml up -d
 
 ### shell scripts
 
+Running node1
+```
+$ ./scripts/start-docker.sh
+$ export MY_ROSTER_IDX=0
+$ export MAX_ROSTER_IDX=2
+$ export ANONIFY_URL=172.18.0.4:8080
+$ ./scripts/run-server.sh
+```
 
+Running node2
+```
+$ ./scripts/start-docker.sh
+$ export MY_ROSTER_IDX=0
+$ export MAX_ROSTER_IDX=2
+$ export ANONIFY_URL=172.18.0.5:8080
+$ ./scripts/run-server.sh
+```
 
 ## Using CLI
 You can use anonify-cli to communicate with a whole anonify system. See the [transfer tutorial section](https://layerxcom.github.io/anonify-book-en/Tutorials/ERC20/transfer/) for usage.
@@ -59,7 +75,7 @@ Assumed your hardware supports Intel SGX or run it on [Azure Confidential Comput
 
 The very first thing you need to do is starting aesm service in a SGX-enabled environment. For more details, see: https://github.com/apache/incubator-teaclave-sgx-sdk/blob/master/documents/sgx_in_mesalock_linux.md#solution-overview
 ```
-LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
+LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service
 ```
 
 If you haven't create docker and ganache network for testing:
