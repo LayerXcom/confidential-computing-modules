@@ -4,12 +4,17 @@ use frame_common::{
     state_types::StateType,
 };
 use frame_runtime::{RuntimeExecutor, ContextOps};
+use crate::error::Result;
 
 pub trait EnclaveEngine {
     type EI: EcallInput + Decode;
     type EO: EcallOutput + Encode;
 
-    fn is_accessible(ecall_input: Self::EI) -> bool {}
+    fn eval_policy<R, C>(ecall_input: &Self::EI) -> anyhow::Result<()>
+    where
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps<S=StateType> + Clone,
+    { Ok(()) }
 
     fn handle<R, C>(
         ecall_input: Self::EI,

@@ -211,13 +211,6 @@ pub struct AccessRight {
     challenge: [u8; CHALLENGE_SIZE],
 }
 
-// impl AccessControl for AccessRight {
-//     fn is_allowed(self) -> Result<(), Error> {
-//         self.verify_sig()
-//             .map_err(|e| anyhow!("{}", e))
-//     }
-// }
-
 impl Encode for AccessRight {
     fn encode(&self) -> Vec<u8> {
         let mut acc = vec![];
@@ -271,7 +264,7 @@ impl AccessRight {
     }
 
     #[cfg(feature = "sgx")]
-    pub fn new_from_rng() -> Result<Self, Error> {        
+    pub fn new_from_rng() -> Result<Self, Error> {
         let mut seed = [0u8; SECRET_KEY_LENGTH];
         sgx_rand_assign(&mut seed)?;
         let secret = SecretKey::from_bytes(&seed)

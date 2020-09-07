@@ -125,6 +125,14 @@ impl EnclaveEngine for GetState {
     type EI = input::GetState;
     type EO = output::ReturnState;
 
+    fn eval_policy<R, C>(ecall_input: &Self::EI) -> anyhow::Result<()>
+    where
+        R: RuntimeExecutor<C, S=StateType>,
+        C: ContextOps<S=StateType> + Clone,
+    {
+        unimplemented!();
+    }
+
     fn handle<R, C>(
         ecall_input: Self::EI,
         enclave_context: &C,
