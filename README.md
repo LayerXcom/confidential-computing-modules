@@ -31,16 +31,18 @@ Running node1
 $ ./scripts/start-docker.sh
 $ export MY_ROSTER_IDX=0
 $ export MAX_ROSTER_IDX=2
-$ export ANONIFY_URL=172.18.0.4:8080
+$ export ANONIFY_URL=172.18.0.2:8080 // depends on the container's ip in the docker network
+$ cd anonify
 $ ./scripts/run-server.sh
 ```
 
 Running node2
 ```
 $ ./scripts/start-docker.sh
-$ export MY_ROSTER_IDX=0
+$ export MY_ROSTER_IDX=1
 $ export MAX_ROSTER_IDX=2
-$ export ANONIFY_URL=172.18.0.5:8080
+$ export ANONIFY_URL=172.18.0.3:8080 // depends on the container's ip in the docker network
+$ cd anonify
 $ ./scripts/run-server.sh
 ```
 
