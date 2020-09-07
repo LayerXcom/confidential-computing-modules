@@ -15,11 +15,35 @@ Building an Anonify contract.
 $ solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
 ```
 
-## Running anonify protocol
+## Running anonify nodes
+
+### docker-compose (Currently unavailable)
 By using docker-compose, three nodes will be up by default. [The ERC20-like application](example/erc20/state-transition/src/lib.rs) is implemented as the initial state transition functions. (Assumed your hardware supports Intel SGX.)
 
 ```
 $ docker-compose -f docker/docker-compose-anonify.yml up -d
+```
+
+### shell scripts
+
+Running node1
+```
+$ ./scripts/start-docker.sh
+$ export MY_ROSTER_IDX=0
+$ export MAX_ROSTER_IDX=2
+$ export ANONIFY_URL=172.18.0.2:8080 // depends on the container's ip in the docker network
+$ cd anonify
+$ ./scripts/run-server.sh
+```
+
+Running node2
+```
+$ ./scripts/start-docker.sh
+$ export MY_ROSTER_IDX=1
+$ export MAX_ROSTER_IDX=2
+$ export ANONIFY_URL=172.18.0.3:8080 // depends on the container's ip in the docker network
+$ cd anonify
+$ ./scripts/run-server.sh
 ```
 
 ## Using CLI
@@ -37,6 +61,8 @@ $ ./scripts/build-cli.sh --release
 
 ## Developing
 
+You can try to build the codebase on your local machine or test it in sgx-enabled environment.
+
 ###  Building in simulation mode
 
 Anonify assumes your hardware supports Intel SGX. Without such hardware, you can build it in simulation mode, which allows you to build on macOS.
@@ -45,40 +71,26 @@ Anonify assumes your hardware supports Intel SGX. Without such hardware, you can
 $ docker run -v `pwd`:/root/anonify --rm -it osuketh/anonify
 ```
 
-### Testing
+### Testing (ERC20 app)
 
 Assumed your hardware supports Intel SGX or run it on [Azure Confidential Computing](https://azure.microsoft.com/ja-jp/solutions/confidential-compute/), you can test the core component you built works correctly.
 
 The very first thing you need to do is starting aesm service in a SGX-enabled environment. For more details, see: https://github.com/apache/incubator-teaclave-sgx-sdk/blob/master/documents/sgx_in_mesalock_linux.md#solution-overview
 ```
-LD_LIBRARY_PATH=/opt/intel/libsgx-enclave-common/aesm /opt/intel/libsgx-enclave-common/aesm/aesm_service
+LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service
 ```
 
-If you haven't create a docker network for testing:
+If you haven't create docker and ganache network for testing:
 ```
 $ docker network create --subnet=172.18.0.0/16 test-network
-```
-
-Running ganache-cli
-```
 $ docker run -d --name ganache --net=test-network --rm -it trufflesuite/ganache-cli
 ```
 
-Running intel SGX environment
+Running intel SGX environment, and then, you can build in HW mode.
 ```
 $ ./scripts/start-docker.sh
-```
-
-and then, you can build in HW mode.
-```
-$ cd anonify/core
-$ make DEBUG=1
-```
-
-Finally, you can test SGX parts.
-```
-$ cd host
-$ cargo test
+$ cd anonify
+$ ./scripts/test.sh
 ```
 
 ## Documentations
