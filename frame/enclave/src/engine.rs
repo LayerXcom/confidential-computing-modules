@@ -9,6 +9,8 @@ pub trait EnclaveEngine {
     type EI: EcallInput + Decode;
     type EO: EcallOutput + Encode;
 
+    fn is_accessible(ecall_input: Self::EI) -> bool {}
+
     fn handle<R, C>(
         ecall_input: Self::EI,
         enclave_context: &C,
