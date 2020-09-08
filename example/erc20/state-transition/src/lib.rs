@@ -15,28 +15,28 @@ impl_memory! {
     (0, "Balance", U64),
     (1, "Approved", Approved),
     (2, "TotalSupply", U64),
-    (3, "Owner", UserAddress)
+    (3, "Owner", AccountId)
 }
 
 impl_runtime! {
     #[fn_id=0]
     pub fn construct(
         self,
-        sender: UserAddress,
+        sender: AccountId,
         total_supply: U64
     ) {
-        let owner_address = update!(*OWNER_ADDRESS, "Owner", sender);
+        let owner_account_id = update!(*OWNER_ACCOUNT_ID, "Owner", sender);
         let sender_balance = update!(sender, "Balance", total_supply);
-        let total_supply = update!(*OWNER_ADDRESS, "TotalSupply", total_supply);
+        let total_supply = update!(*OWNER_ACCOUNT_ID, "TotalSupply", total_supply);
 
-        insert![owner_address, sender_balance, total_supply]
+        insert![owner_account_id, sender_balance, total_supply]
     }
 
     #[fn_id=1]
     pub fn transfer(
         self,
-        sender: UserAddress,
-        recipient: UserAddress,
+        sender: AccountId,
+        recipient: AccountId,
         amount: U64
     ) {
         let sender_balance = self.get_map::<U64>(sender, "Balance")?;
@@ -53,8 +53,8 @@ impl_runtime! {
     #[fn_id=2]
     pub fn approve(
         self,
-        owner: UserAddress,
-        spender: UserAddress,
+        owner: AccountId,
+        spender: AccountId,
         amount: U64
     ) {
         let owner_balance = self.get_map::<U64>(owner, "Balance")?;
@@ -73,9 +73,9 @@ impl_runtime! {
     #[fn_id=3]
     pub fn transfer_from(
         self,
-        sender: UserAddress,
-        owner: UserAddress,
-        recipient: UserAddress,
+        sender: AccountId,
+        owner: AccountId,
+        recipient: AccountId,
         amount: U64
     ) {
         let owner_balance = self.get_map::<U64>(owner, "Balance")?;
@@ -106,18 +106,18 @@ impl_runtime! {
     #[fn_id=4]
     pub fn mint(
         self,
-        executer: UserAddress,
-        recipient: UserAddress,
+        executer: AccountId,
+        recipient: AccountId,
         amount: U64
     ) {
-        let owner_address = self.get_map::<UserAddress>(*OWNER_ADDRESS, "Owner")?;
-        ensure!(executer == owner_address, "only owner can mint");
+        let owner_account_id = self.get_map::<AccountId>(*OWNER_ACCOUNT_ID, "Owner")?;
+        ensure!(executer == owner_account_id, "only owner can mint");
 
         let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
         let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount);
 
-        let total_supply = self.get_map::<U64>(*OWNER_ADDRESS, "TotalSupply")?;
-        let total_supply_update = update!(*OWNER_ADDRESS, "TotalSupply", total_supply + amount);
+        let total_supply = self.get_map::<U64>(*OWNER_ACCOUNT_ID, "TotalSupply")?;
+        let total_supply_update = update!(*OWNER_ACCOUNT_ID, "TotalSupply", total_supply + amount);
 
         insert![recipient_balance_update, total_supply_update]
     }
@@ -125,15 +125,15 @@ impl_runtime! {
     #[fn_id=5]
     pub fn burn(
         self,
-        sender: UserAddress,
+        sender: AccountId,
         amount: U64
     ) {
         let balance = self.get_map::<U64>(sender, "Balance")?;
         ensure!(balance >= amount, "not enough balance to burn");
         let balance_update = update!(sender, "Balance", balance - amount);
 
-        let total_supply = self.get_map::<U64>(*OWNER_ADDRESS, "TotalSupply")?;
-        let total_supply_update = update!(*OWNER_ADDRESS, "TotalSupply", total_supply - amount);
+        let total_supply = self.get_map::<U64>(*OWNER_ACCOUNT_ID, "TotalSupply")?;
+        let total_supply_update = update!(*OWNER_ACCOUNT_ID, "TotalSupply", total_supply - amount);
 
         insert![balance_update, total_supply_update]
     }

@@ -2,7 +2,7 @@ pub use crate::{impl_memory, __impl_inner_memory, impl_runtime, __impl_inner_run
 pub use frame_common::{
     traits::*,
     state_types::*,
-    crypto::{UserAddress, OWNER_ADDRESS},
+    crypto::{AccountId, OWNER_ACCOUNT_ID},
 };
 pub use codec::{Encode, Decode};
 pub use crate::local_anyhow::{ensure, Result, anyhow};

@@ -32,7 +32,7 @@ lazy_static! {
         Ed25519ChallengeResponse::new(sig, keypair.public, COMMON_CHALLENGE)
     };
 
-    pub static ref OWNER_ACCOUNT_ID: AccountID = {
+    pub static ref OWNER_ACCOUNT_ID: AccountId = {
         COMMON_ACCESS_RIGHT.account_id()
     };
 }
@@ -41,25 +41,25 @@ lazy_static! {
 /// A signature verification must return true to generate a user account_id.
 #[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
-pub struct AccountID([u8; ACCOUNT_ID_SIZE]);
+pub struct AccountId([u8; ACCOUNT_ID_SIZE]);
 
 #[cfg(feature = "std")]
-impl From<AccountID> for web3::types::Address {
-    fn from(account_id: AccountID) -> Self {
+impl From<AccountId> for web3::types::Address {
+    fn from(account_id: AccountId) -> Self {
         let bytes = account_id.as_bytes();
         web3::types::Address::from_slice(bytes)
     }
 }
 
 #[cfg(feature = "std")]
-impl From<&AccountID> for web3::types::Address {
-    fn from(account_id: &AccountID) -> Self {
+impl From<&AccountId> for web3::types::Address {
+    fn from(account_id: &AccountId) -> Self {
         let bytes = account_id.as_bytes();
         web3::types::Address::from_slice(bytes)
     }
 }
 
-impl From<&str> for AccountID {
+impl From<&str> for AccountId {
     fn from(s: &str) -> Self {
         let mut res = [0u8; ACCOUNT_ID_SIZE];
         res.copy_from_slice(&s.as_bytes()[..ACCOUNT_ID_SIZE]);
@@ -68,7 +68,7 @@ impl From<&str> for AccountID {
     }
 }
 
-impl From<String> for AccountID {
+impl From<String> for AccountId {
     fn from(s: String) -> Self {
         let mut res = [0u8; ACCOUNT_ID_SIZE];
         res.copy_from_slice(&s.as_bytes()[..ACCOUNT_ID_SIZE]);
@@ -77,7 +77,7 @@ impl From<String> for AccountID {
     }
 }
 
-impl TryFrom<Vec<u8>> for AccountID {
+impl TryFrom<Vec<u8>> for AccountId {
     type Error = Error;
 
     fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
@@ -91,7 +91,7 @@ impl TryFrom<Vec<u8>> for AccountID {
     }
 }
 
-impl AccountID {
+impl AccountId {
     /// Get a user account_id only if the verification of signature returns true.
     pub fn from_sig(msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Result<Self, Error> {
         pubkey.verify(msg, &sig)
@@ -111,11 +111,11 @@ impl AccountID {
 
     pub fn from_pubkey(pubkey: &PublicKey) -> Self {
         let hash = Sha256::from_pubkey(pubkey);
-        let addr = &hash.as_array()[12..];
+        let account_id = &hash.as_array()[12..];
         let mut res = [0u8; ACCOUNT_ID_SIZE];
-        res.copy_from_slice(addr);
+        res.copy_from_slice(account_id);
 
-        AccountID(res)
+        AccountId(res)
     }
 
     pub fn write<W: Write>(&self, writer: &mut W) -> io::Result<()> {
@@ -126,7 +126,7 @@ impl AccountID {
     pub fn read<R: Read>(reader: &mut R) -> io::Result<Self> {
         let mut res = [0u8; ACCOUNT_ID_SIZE];
         reader.read_exact(&mut res)?;
-        Ok(AccountID(res))
+        Ok(AccountId(res))
     }
 
     #[cfg(feature = "std")]
@@ -142,7 +142,7 @@ impl AccountID {
         let mut arr = [0u8; ACCOUNT_ID_SIZE];
         arr.copy_from_slice(&decoded_vec[..]);
 
-        AccountID::from_array(arr)
+        AccountId::from_array(arr)
     }
 
     pub fn as_bytes(&self) -> &[u8] {
@@ -150,7 +150,7 @@ impl AccountID {
     }
 
     pub fn from_array(array: [u8; ACCOUNT_ID_SIZE]) -> Self {
-        AccountID(array)
+        AccountId(array)
     }
 
     pub fn into_array(self) -> [u8; ACCOUNT_ID_SIZE] {
@@ -216,7 +216,7 @@ pub struct Ed25519ChallengeResponse {
 }
 
 impl AccessPolicy for Ed25519ChallengeResponse {
-    fn verify(&self) -> Result<()> {
+    fn verify(&self) -> Result<(), Error> {
         self.verify_sig()
     }
 
@@ -317,13 +317,13 @@ impl Ed25519ChallengeResponse {
         Ok(())
     }
 
-    pub fn account_id(&self) -> AccountID {
-        AccountID::from_pubkey(&self.pubkey())
+    pub fn account_id(&self) -> AccountId {
+        AccountId::from_pubkey(&self.pubkey())
     }
 
-    pub fn verified_account_id(&self) -> Result<AccountID, Error> {
+    pub fn verified_account_id(&self) -> Result<AccountId, Error> {
         self.verify_sig()?;
-        Ok(AccountID::from_pubkey(&self.pubkey()))
+        Ok(AccountId::from_pubkey(&self.pubkey()))
     }
 
     pub fn sig(&self) -> &Signature {

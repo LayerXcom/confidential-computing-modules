@@ -6,19 +6,19 @@ use std::{
 use ed25519_dalek::{PublicKey, Signature};
 use frame_common::{
     kvs::*,
-    crypto::UserAddress,
+    crypto::AccountId,
     state_types::{MemId, UpdatedState, StateType},
     traits::*,
 };
 use crate::error::Result;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct DBKey((UserAddress, MemId));
+pub struct DBKey((AccountId, MemId));
 
-// TODO: UserAddress+MemId is not sufficient size for hash digest in terms of collision resistance.
+// TODO: AccountId+MemId is not sufficient size for hash digest in terms of collision resistance.
 impl DBKey {
-    pub fn new(addr: UserAddress, mem_id: MemId) -> Self {
-        DBKey((addr, mem_id))
+    pub fn new(account_id: AccountId, mem_id: MemId) -> Self {
+        DBKey((account_id, mem_id))
     }
 }
 
@@ -30,8 +30,8 @@ impl EnclaveDB {
         EnclaveDB(Arc::new(SgxRwLock::new(HashMap::new())))
     }
 
-    pub fn get(&self, address: UserAddress, mem_id: MemId) -> StateType {
-        let key = DBKey::new(address, mem_id);
+    pub fn get(&self, account_id: AccountId, mem_id: MemId) -> StateType {
+        let key = DBKey::new(account_id, mem_id);
         match self.0.read().unwrap().get(&key) {
             Some(v) => v.clone(),
             None => StateType::default(),
@@ -40,19 +40,19 @@ impl EnclaveDB {
 
     pub fn insert_by_updated_state(&self, updated_state: UpdatedState<StateType>) {
         let mut tmp = self.0.write().unwrap();
-        let key = DBKey::new(updated_state.address, updated_state.mem_id);
+        let key = DBKey::new(updated_state.account_id, updated_state.mem_id);
         tmp.insert(key, updated_state.state);
     }
 
-    pub fn insert(&self, address: UserAddress, mem_id: MemId, state: StateType) {
+    pub fn insert(&self, account_id: AccountId, mem_id: MemId, state: StateType) {
         let mut tmp = self.0.write().unwrap();
-        let key = DBKey::new(address, mem_id);
+        let key = DBKey::new(account_id, mem_id);
         tmp.insert(key, state);
     }
 
-    pub fn delete(&self, address: UserAddress, mem_id: MemId) {
+    pub fn delete(&self, account_id: AccountId, mem_id: MemId) {
         let mut tmp = self.0.write().unwrap();
-        let key = DBKey::new(address, mem_id);
+        let key = DBKey::new(account_id, mem_id);
         tmp.remove(&key);
     }
 }
@@ -70,10 +70,10 @@ impl EnclaveDBTx {
     /// Put instruction is added to a transaction only if the verification of provided signature returns true.
     pub fn put(
         &mut self,
-        user_address: &UserAddress,
+        account_id: &AccountId,
         msg: &[u8],
     ) {
-        self.0.put(user_address.as_bytes(), msg);
+        self.0.put(account_id.as_bytes(), msg);
     }
 
     /// Delete instruction is added to a transaction only if the verification of provided signature returns true.
@@ -83,7 +83,7 @@ impl EnclaveDBTx {
         sig: &Signature,
         pubkey: &PublicKey,
     ) -> Result<()> {
-        let key = UserAddress::from_sig(&msg, &sig, &pubkey)?;
+        let key = AccountId::from_sig(&msg, &sig, &pubkey)?;
         self.0.delete(key.as_bytes());
 
         Ok(())

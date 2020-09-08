@@ -7,7 +7,7 @@ use crate::localstd::{
 };
 use crate::local_anyhow::{Result, Error, anyhow};
 use frame_common::{
-    crypto::UserAddress,
+    crypto::AccountId,
     traits::State,
     state_types::StateType,
 };
@@ -145,10 +145,10 @@ impl From<Bytes> for StateType {
 }
 
 #[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct Approved(BTreeMap<UserAddress, U64>);
+pub struct Approved(BTreeMap<AccountId, U64>);
 
 impl Approved {
-    pub fn new(inner: BTreeMap<UserAddress, U64>) -> Self {
+    pub fn new(inner: BTreeMap<AccountId, U64>) -> Self {
         Approved(inner)
     }
 
@@ -158,40 +158,40 @@ impl Approved {
         sum
     }
 
-    pub fn approve(&mut self, user_address: UserAddress, amount: U64) {
-        match self.allowance(&user_address) {
+    pub fn approve(&mut self, account_id: AccountId, amount: U64) {
+        match self.allowance(&account_id) {
             Some(&existing_amount) => {
-                self.0.insert(user_address, existing_amount + amount);
+                self.0.insert(account_id, existing_amount + amount);
             }
             None => {
-                self.0.insert(user_address, amount);
+                self.0.insert(account_id, amount);
             }
         }
     }
 
-    pub fn consume(&mut self, user_address: UserAddress, amount: U64) -> Result<(), Error> {
-        match self.allowance(&user_address) {
+    pub fn consume(&mut self, account_id: AccountId, amount: U64) -> Result<(), Error> {
+        match self.allowance(&account_id) {
             Some(&existing_amount) => {
                 if existing_amount < amount {
                     return Err(anyhow!(
                     "{:?} doesn't have enough balance to consume {:?}.",
-                     user_address,
+                     account_id,
                      amount,
                      ).into());
                 }
-                self.0.insert(user_address, existing_amount - amount);
+                self.0.insert(account_id, existing_amount - amount);
                 Ok(())
             }
-            None => return Err(anyhow!("{:?} doesn't have any balance.", user_address).into())
+            None => return Err(anyhow!("{:?} doesn't have any balance.", account_id).into())
         }
     }
 
-    pub fn allowance(&self, user_address: &UserAddress) -> Option<&U64> {
-        self.0.get(user_address)
+    pub fn allowance(&self, account_id: &AccountId) -> Option<&U64> {
+        self.0.get(account_id)
     }
 
     pub fn size(&self) -> usize {
-        self.0.len() * (UserAddress::default().size() + U64::default().size())
+        self.0.len() * (AccountId::default().size() + U64::default().size())
     }
 }
 

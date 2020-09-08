@@ -1,7 +1,7 @@
 use crate::traits::State;
 use crate::localstd::vec::Vec;
 use crate::local_anyhow::{Result, anyhow};
-use crate::crypto::UserAddress;
+use crate::crypto::AccountId;
 use codec::{Encode, Decode};
 
 pub trait RawState: Encode + Decode + Clone + Default {}
@@ -38,27 +38,27 @@ impl StateType {
     }
 }
 
-impl From<UserAddress> for StateType {
-    fn from(address: UserAddress) -> Self {
-        Self(address.encode_s().into())
+impl From<AccountId> for StateType {
+    fn from(account_id: AccountId) -> Self {
+        Self(account_id.encode_s().into())
     }
 }
 
 #[derive(Debug, Clone, Default, Encode, Decode)]
 pub struct UpdatedState<S: State> {
-    pub address: UserAddress,
+    pub account_id: AccountId,
     pub mem_id: MemId,
     pub state: S,
 }
 
 impl<S: State> UpdatedState<S> {
     pub fn new(
-        address: impl Into<UserAddress>,
+        account_id: impl Into<AccountId>,
         mem_id: MemId,
         state: impl Into<S>,
     ) -> Result<Self> {
         Ok(UpdatedState {
-            address: address.into(),
+            account_id: account_id.into(),
             mem_id,
             state: state.into(),
         })
@@ -69,7 +69,7 @@ impl<S: State> UpdatedState<S> {
             .map_err(|e| anyhow!("{:?}", e))?;
 
         Ok(UpdatedState {
-            address: update.address,
+            account_id: update.account_id,
             mem_id: update.mem_id,
             state,
         })

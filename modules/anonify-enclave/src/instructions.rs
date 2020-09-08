@@ -3,7 +3,7 @@ use std::{
     marker::PhantomData,
 };
 use frame_common::{
-    crypto::{UserAddress, AccessRight, Ciphertext},
+    crypto::{AccountId, Ciphertext},
     traits::*,
     state_types::{UpdatedState, StateType},
 };
@@ -13,19 +13,17 @@ use crate::error::Result;
 
 #[derive(Debug, Clone, Encode, Decode)]
 pub struct Instructions<R: RuntimeExecutor<CTX>, CTX: ContextOps> {
-    my_addr: UserAddress,
+    my_account_id: AccountId,
     call_kind: R::C,
     phantom: PhantomData<CTX>,
 }
 
 impl<R: RuntimeExecutor<CTX, S=StateType>, CTX: ContextOps> Instructions<R, CTX> {
-    pub fn new(call_id: u32, params: &mut [u8], access_right: &AccessRight) -> Result<Self> {
-        // Don't verify the signature here because the access policy has already applied.
-        let my_addr = UserAddress::from_access_right(&access_right);
+    pub fn new(call_id: u32, params: &mut [u8], my_account_id: AccountId) -> Result<Self> {
         let call_kind = R::C::new(call_id, params)?;
 
         Ok(Instructions {
-            my_addr,
+            my_account_id,
             call_kind,
             phantom: PhantomData,
         })
@@ -78,7 +76,7 @@ impl<R: RuntimeExecutor<CTX, S=StateType>, CTX: ContextOps> Instructions<R, CTX>
     fn stf_call(self, ctx: CTX) -> Result<Vec<UpdatedState<StateType>>> {
         let res = R::new(ctx).execute(
             self.call_kind,
-            self.my_addr,
+            self.my_account_id,
         )?;
 
         Ok(res)

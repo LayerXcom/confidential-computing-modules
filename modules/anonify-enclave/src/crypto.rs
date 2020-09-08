@@ -80,10 +80,10 @@ impl EnclaveIdentityKey {
 
     fn verifying_key_into_array(&self) -> [u8; HASHED_PUBKEY_SIZE] {
         let pubkey = &self.verifying_key().serialize();
-        let address = &pubkey.keccak256()[12..];
-        assert_eq!(address.len(), HASHED_PUBKEY_SIZE);
+        let account_id = &pubkey.keccak256()[12..];
+        assert_eq!(account_id.len(), HASHED_PUBKEY_SIZE);
         let mut res = [0u8; HASHED_PUBKEY_SIZE];
-        res.copy_from_slice(address);
+        res.copy_from_slice(account_id);
         res
     }
 

@@ -7,7 +7,7 @@ use crate::localstd::{
     string::String,
 };
 use frame_common::{
-    crypto::{UserAddress, Ciphertext},
+    crypto::{AccountId, Ciphertext},
     traits::*,
     state_types::{UpdatedState, MemId},
 };
@@ -20,7 +20,7 @@ pub trait RuntimeExecutor<G: ContextOps>: Sized {
     type S: State;
 
     fn new(db: G) -> Self;
-    fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<Self::S>>>;
+    fn execute(self, kind: Self::C, my_account_id: AccountId) -> Result<Vec<UpdatedState<Self::S>>>;
 }
 
 /// Execute state transition functions from call kind
@@ -29,7 +29,7 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     type S: State;
 
     fn new(id: u32, state: &mut [u8]) -> Result<Self>;
-    fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<Self::S>>>;
+    fn execute(self, runtime: Self::R, my_account_id: AccountId) -> Result<Vec<UpdatedState<Self::S>>>;
 }
 
 impl<T: StateOps + GroupKeyGetter + NotificationOps + Signer + QuoteGetter> ContextOps for T {}
@@ -44,9 +44,9 @@ pub trait StateOps {
     /// Assumed this is called in user-defined state transition functions.
     fn get_state<U>(&self, key: U, mem_id: MemId) -> Self::S
     where
-        U: Into<UserAddress>;
+        U: Into<AccountId>;
 
-    /// Returns a updated state of registered address in notification.
+    /// Returns a updated state of registered account_id in notification.
     fn update_state(
         &self,
         state_iter: impl Iterator<Item=UpdatedState<Self::S>> + Clone
@@ -62,9 +62,9 @@ pub trait GroupKeyGetter {
 }
 
 pub trait NotificationOps {
-    fn set_notification(&self, address: UserAddress) -> bool;
+    fn set_notification(&self, account_id: AccountId) -> bool;
 
-    fn is_notified(&self, address: &UserAddress) -> bool;
+    fn is_notified(&self, account_id: &AccountId) -> bool;
 }
 
 pub trait Signer {

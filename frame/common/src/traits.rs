@@ -5,7 +5,7 @@ use crate::localstd::{
 };
 use crate::state_types::MemId;
 use crate::local_anyhow::{Result, anyhow};
-use crate::crypto::AccountID;
+use crate::crypto::AccountId;
 use codec::{Encode, Decode};
 use ed25519_dalek::PublicKey;
 use tiny_keccak::Keccak;
