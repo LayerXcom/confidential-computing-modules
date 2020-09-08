@@ -4,7 +4,7 @@ use serde_big_array::big_array;
 use rand::Rng;
 use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
 use frame_common::{
-    crypto::{AccessRight, UserAddress},
+    crypto::{Ed25519ChallengeResponse, AccountId},
     traits::State,
 };
 
@@ -68,11 +68,11 @@ pub mod init_state {
                 }
             }
 
-            pub fn into_access_right(&self) -> Result<AccessRight, SignatureError> {
+            pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
                 let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
-                Ok(AccessRight::new(sig, pubkey, self.challenge))
+                Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
             }
         }
 
@@ -102,7 +102,7 @@ pub mod transfer {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub target: UserAddress,
+            pub target: AccountId,
             pub amount: u64,
         }
 
@@ -110,7 +110,7 @@ pub mod transfer {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
                 amount: u64,
-                target: UserAddress,
+                target: AccountId,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -126,11 +126,11 @@ pub mod transfer {
                 }
             }
 
-            pub fn into_access_right(&self) -> Result<AccessRight, SignatureError> {
+            pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
                 let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
-                Ok(AccessRight::new(sig, pubkey, self.challenge))
+                Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
             }
         }
 
@@ -160,7 +160,7 @@ pub mod approve {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub target: UserAddress,
+            pub target: AccountId,
             pub amount: u64,
         }
 
@@ -168,7 +168,7 @@ pub mod approve {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
                 amount: u64,
-                target: UserAddress,
+                target: AccountId,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -184,11 +184,11 @@ pub mod approve {
                 }
             }
 
-            pub fn into_access_right(&self) -> Result<AccessRight, SignatureError> {
+            pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
                 let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
-                Ok(AccessRight::new(sig, pubkey, self.challenge))
+                Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
             }
         }
 
@@ -218,8 +218,8 @@ pub mod transfer_from {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub owner: UserAddress,
-            pub target: UserAddress,
+            pub owner: AccountId,
+            pub target: AccountId,
             pub amount: u64,
         }
 
@@ -227,8 +227,8 @@ pub mod transfer_from {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
                 amount: u64,
-                owner: UserAddress,
-                target: UserAddress,
+                owner: AccountId,
+                target: AccountId,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -245,11 +245,11 @@ pub mod transfer_from {
                 }
             }
 
-            pub fn into_access_right(&self) -> Result<AccessRight, SignatureError> {
+            pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
                 let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
-                Ok(AccessRight::new(sig, pubkey, self.challenge))
+                Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
             }
         }
 
@@ -279,7 +279,7 @@ pub mod mint {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub target: UserAddress,
+            pub target: AccountId,
             pub amount: u64,
         }
 
@@ -287,7 +287,7 @@ pub mod mint {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
                 amount: u64,
-                target: UserAddress,
+                target: AccountId,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -303,11 +303,11 @@ pub mod mint {
                 }
             }
 
-            pub fn into_access_right(&self) -> Result<AccessRight, SignatureError> {
+            pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
                 let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
-                Ok(AccessRight::new(sig, pubkey, self.challenge))
+                Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
             }
         }
 
@@ -358,11 +358,11 @@ pub mod burn {
                 }
             }
 
-            pub fn into_access_right(&self) -> Result<AccessRight, SignatureError> {
+            pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
                 let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
-                Ok(AccessRight::new(sig, pubkey, self.challenge))
+                Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
             }
         }
 
@@ -401,13 +401,13 @@ pub mod allowance {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub spender: UserAddress,
+            pub spender: AccountId,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                spender: UserAddress,
+                spender: AccountId,
                 rng: &mut R
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -422,11 +422,11 @@ pub mod allowance {
                 }
             }
 
-            pub fn into_access_right(&self) -> Result<AccessRight, SignatureError> {
+            pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
                 let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
-                Ok(AccessRight::new(sig, pubkey, self.challenge))
+                Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
             }
         }
 
@@ -474,11 +474,11 @@ pub mod state {
                 }
             }
 
-            pub fn into_access_right(&self) -> Result<AccessRight, SignatureError> {
+            pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
                 let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
-                Ok(AccessRight::new(sig, pubkey, self.challenge))
+                Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
             }
         }
 
@@ -543,11 +543,11 @@ pub mod register_notification {
                 }
             }
 
-            pub fn into_access_right(&self) -> Result<AccessRight, SignatureError> {
+            pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
                 let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
-                Ok(AccessRight::new(sig, pubkey, self.challenge))
+                Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
             }
         }
     }

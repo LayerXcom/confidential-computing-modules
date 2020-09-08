@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 use frame_host::engine::*;
 use frame_common::{
-    crypto::{AccessRight, Ciphertext},
+    crypto::Ciphertext,
     traits::*,
     state_types::MemId,
 };
@@ -12,14 +12,15 @@ use crate::utils::StateInfo;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
 
-pub struct InstructionWorkflow<S: State, C: CallNameConverter> {
+pub struct InstructionWorkflow<S: State, C: CallNameConverter, AP: AccessPolicy> {
     s: PhantomData<S>,
     c: PhantomData<C>,
+    ap: PhantomData<AP>,
 }
 
-impl<S: State, C: CallNameConverter> HostEngine for InstructionWorkflow<S, C> {
-    type HI = host_input::Instruction<S, C>;
-    type EI = input::Instruction;
+impl<S: State, C: CallNameConverter, AP: AccessPolicy> HostEngine for InstructionWorkflow<S, C, AP> {
+    type HI = host_input::Instruction<S, C, AP>;
+    type EI = input::Instruction<AP>;
     type EO = output::Instruction;
     type HO = host_output::Instruction;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -48,22 +49,26 @@ impl HostEngine for HandshakeWorkflow {
     const CMD: u32 = CALL_HANDSHAKE_CMD;
 }
 
-pub struct RegisterNotificationWorkflow;
+pub struct RegisterNotificationWorkflow<AP: AccessPolicy> {
+    ap: PhantomData<AP>,
+}
 
-impl HostEngine for RegisterNotificationWorkflow {
-    type HI = host_input::RegisterNotification;
-    type EI = input::RegisterNotification;
+impl<AP: AccessPolicy> HostEngine for RegisterNotificationWorkflow<AP> {
+    type HI = host_input::RegisterNotification<AP>;
+    type EI = input::RegisterNotification<AP>;
     type EO = output::Empty;
     type HO = host_output::RegisterNotification;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
     const CMD: u32 = REGISTER_NOTIFICATION_CMD;
 }
 
-pub struct GetStateWorkflow;
+pub struct GetStateWorkflow<AP: AccessPolicy> {
+    ap: PhantomData<AP>,
+}
 
-impl HostEngine for GetStateWorkflow {
-    type HI = host_input::GetState;
-    type EI = input::GetState;
+impl<AP: AccessPolicy> HostEngine for GetStateWorkflow<AP> {
+    type HI = host_input::GetState<AP>;
+    type EI = input::GetState<AP>;
     type EO = output::ReturnState;
     type HO = host_output::GetState;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -95,37 +100,37 @@ impl HostEngine for InsertHandshakeWorkflow {
 pub mod host_input {
     use super::*;
 
-    pub struct Instruction<S: State, C: CallNameConverter> {
+    pub struct Instruction<S: State, C: CallNameConverter, AP: AccessPolicy> {
         state: S,
         call_name: String,
-        access_right: AccessRight,
+        access_policy: AP,
         signer: Address,
         gas: u64,
         phantom: PhantomData<C>
     }
 
-    impl<S: State, C: CallNameConverter> Instruction<S, C> {
+    impl<S: State, C: CallNameConverter, AP: AccessPolicy> Instruction<S, C, AP> {
         pub fn new(
             state: S,
             call_name: String,
-            access_right: AccessRight,
+            access_policy: AP,
             signer: Address,
             gas: u64,
         ) -> Self {
             Instruction {
-                state, call_name, access_right, signer, gas,
+                state, call_name, access_policy, signer, gas,
                 phantom: PhantomData,
             }
         }
     }
 
-    impl<S: State, C: CallNameConverter> HostInput for Instruction<S, C> {
-        type EcallInput = input::Instruction;
+    impl<S: State, C: CallNameConverter, AP: AccessPolicy> HostInput for Instruction<S, C, AP> {
+        type EcallInput = input::Instruction<AP>;
         type HostOutput = host_output::Instruction;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             let state_info = StateInfo::<_, C>::new(self.state, &self.call_name);
-            let ecall_input = state_info.crate_input(self.access_right);
+            let ecall_input = state_info.crate_input(self.access_policy);
             let host_output = host_output::Instruction::new(self.signer, self.gas);
 
             Ok((ecall_input, host_output))
@@ -176,44 +181,44 @@ pub mod host_input {
         }
     }
 
-    pub struct RegisterNotification {
-        access_right: AccessRight,
+    pub struct RegisterNotification<AP: AccessPolicy> {
+        access_policy: AP,
     }
 
-    impl RegisterNotification {
-        pub fn new(access_right: AccessRight) -> Self {
-            RegisterNotification { access_right }
+    impl<AP: AccessPolicy> RegisterNotification<AP> {
+        pub fn new(access_policy: AP) -> Self {
+            RegisterNotification { access_policy }
         }
     }
 
-    impl HostInput for RegisterNotification {
-        type EcallInput = input::RegisterNotification;
+    impl<AP: AccessPolicy> HostInput for RegisterNotification<AP> {
+        type EcallInput = input::RegisterNotification<AP>;
         type HostOutput = host_output::RegisterNotification;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let ecall_input = Self::EcallInput::new(self.access_right);
+            let ecall_input = Self::EcallInput::new(self.access_policy);
 
             Ok((ecall_input, Self::HostOutput::default()))
         }
     }
 
-    pub struct GetState {
-        access_right: AccessRight,
+    pub struct GetState<AP: AccessPolicy> {
+        access_policy: AP,
         mem_id: MemId,
     }
 
-    impl GetState {
-        pub fn new(access_right: AccessRight, mem_id: MemId) -> Self {
-            GetState { access_right, mem_id }
+    impl<AP: AccessPolicy> GetState<AP> {
+        pub fn new(access_policy: AP, mem_id: MemId) -> Self {
+            GetState { access_policy, mem_id }
         }
     }
 
-    impl HostInput for GetState {
-        type EcallInput = input::GetState;
+    impl<AP: AccessPolicy> HostInput for GetState<AP> {
+        type EcallInput = input::GetState<AP>;
         type HostOutput = host_output::GetState;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let ecall_input = Self::EcallInput::new(self.access_right, self.mem_id);
+            let ecall_input = Self::EcallInput::new(self.access_policy, self.mem_id);
 
             Ok((ecall_input, Self::HostOutput::new()))
         }

@@ -6,7 +6,7 @@ use crate::localstd::{
 };
 use crate::serde::{Serialize, Deserialize};
 use crate::local_anyhow::{anyhow, Error};
-use crate::traits::{IntoVec, Hash256};
+use crate::traits::{IntoVec, Hash256, AccessPolicy};
 use ed25519_dalek::{Keypair, SecretKey, PublicKey, Signature, SECRET_KEY_LENGTH, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH};
 use codec::{Encode, Decode, Input, self};
 #[cfg(feature = "std")]
@@ -16,12 +16,12 @@ use rand_core::{RngCore, CryptoRng};
 #[cfg(feature = "std")]
 use rand_os::OsRng;
 
-const ADDRESS_SIZE: usize = 20;
+const ACCOUNT_ID_SIZE: usize = 20;
 pub const COMMON_SECRET: [u8; SECRET_KEY_LENGTH] = [182, 93, 72, 157, 114, 225, 213, 95, 237, 176, 179, 23, 11, 100, 177, 16, 129, 8, 41, 4, 158, 209, 227, 21, 89, 47, 118, 0, 232, 162, 217, 203];
 pub const COMMON_CHALLENGE: [u8; CHALLENGE_SIZE] = [39, 79, 228, 49, 240, 219, 135, 53, 169, 47, 65, 111, 236, 125, 2, 195, 214, 154, 18, 77, 254, 135, 35, 77, 36, 45, 164, 254, 64, 8, 169, 238];
 
 lazy_static! {
-    pub static ref COMMON_ACCESS_RIGHT: AccessRight = {
+    pub static ref COMMON_ACCESS_POLICY: Ed25519ChallengeResponse = {
         let secret = SecretKey::from_bytes(&COMMON_SECRET).unwrap();
         let pubkey = PublicKey::from(&secret);
         let keypair = Keypair { secret, public: pubkey };
@@ -29,70 +29,70 @@ lazy_static! {
         let sig = keypair.sign(&COMMON_CHALLENGE);
 
         assert!(keypair.verify(&COMMON_CHALLENGE, &sig).is_ok());
-        AccessRight::new(sig, keypair.public, COMMON_CHALLENGE)
+        Ed25519ChallengeResponse::new(sig, keypair.public, COMMON_CHALLENGE)
     };
 
-    pub static ref OWNER_ADDRESS: UserAddress = {
-        COMMON_ACCESS_RIGHT.user_address()
+    pub static ref OWNER_ACCOUNT_ID: AccountId = {
+        COMMON_ACCESS_POLICY.account_id()
     };
 }
 
-/// User address represents last 20 bytes of digest of user's public key.
-/// A signature verification must return true to generate a user address.
+/// User account_id represents last 20 bytes of digest of user's public key.
+/// A signature verification must return true to generate a user account_id.
 #[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
-pub struct UserAddress([u8; ADDRESS_SIZE]);
+pub struct AccountId([u8; ACCOUNT_ID_SIZE]);
 
 #[cfg(feature = "std")]
-impl From<UserAddress> for web3::types::Address {
-    fn from(address: UserAddress) -> Self {
-        let bytes = address.as_bytes();
+impl From<AccountId> for web3::types::Address {
+    fn from(account_id: AccountId) -> Self {
+        let bytes = account_id.as_bytes();
         web3::types::Address::from_slice(bytes)
     }
 }
 
 #[cfg(feature = "std")]
-impl From<&UserAddress> for web3::types::Address {
-    fn from(address: &UserAddress) -> Self {
-        let bytes = address.as_bytes();
+impl From<&AccountId> for web3::types::Address {
+    fn from(account_id: &AccountId) -> Self {
+        let bytes = account_id.as_bytes();
         web3::types::Address::from_slice(bytes)
     }
 }
 
-impl From<&str> for UserAddress {
+impl From<&str> for AccountId {
     fn from(s: &str) -> Self {
-        let mut res = [0u8; ADDRESS_SIZE];
-        res.copy_from_slice(&s.as_bytes()[..ADDRESS_SIZE]);
+        let mut res = [0u8; ACCOUNT_ID_SIZE];
+        res.copy_from_slice(&s.as_bytes()[..ACCOUNT_ID_SIZE]);
 
         Self::from_array(res)
     }
 }
 
-impl From<String> for UserAddress {
+impl From<String> for AccountId {
     fn from(s: String) -> Self {
-        let mut res = [0u8; ADDRESS_SIZE];
-        res.copy_from_slice(&s.as_bytes()[..ADDRESS_SIZE]);
+        let mut res = [0u8; ACCOUNT_ID_SIZE];
+        res.copy_from_slice(&s.as_bytes()[..ACCOUNT_ID_SIZE]);
 
         Self::from_array(res)
     }
 }
 
-impl TryFrom<Vec<u8>> for UserAddress {
+impl TryFrom<Vec<u8>> for AccountId {
     type Error = Error;
 
     fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
-        if s.len() < ADDRESS_SIZE {
-            return Err(anyhow!("source length must be {}", ADDRESS_SIZE));
+        if s.len() < ACCOUNT_ID_SIZE {
+            return Err(anyhow!("source length must be {}", ACCOUNT_ID_SIZE));
         }
 
-        let mut res = [0u8; ADDRESS_SIZE];
-        res.copy_from_slice(&s.as_slice()[..ADDRESS_SIZE]);
+        let mut res = [0u8; ACCOUNT_ID_SIZE];
+        res.copy_from_slice(&s.as_slice()[..ACCOUNT_ID_SIZE]);
         Ok(Self::from_array(res))
     }
 }
 
-impl UserAddress {
-    /// Get a user address only if the verification of signature returns true.
+impl AccountId {
+    /// Get a user account_id only if the verification of signature returns true.
     pub fn from_sig(msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Result<Self, Error> {
         pubkey.verify(msg, &sig)
             .map_err(|e| anyhow!("{}", e))?;
@@ -100,22 +100,22 @@ impl UserAddress {
         Ok(Self::from_pubkey(&pubkey))
     }
 
-    pub fn try_from_access_right(access_right: &AccessRight) -> Result<Self, Error> {
-        access_right.verify_sig()?;
-        Ok(Self::from_pubkey(access_right.pubkey()))
+    pub fn try_from_access_policy<AP: AccessPolicy>(access_policy: &AP) -> Result<Self, Error> {
+        access_policy.verify()?;
+        Ok(access_policy.into_account_id())
     }
 
-    pub fn from_access_right(access_right: &AccessRight) -> Self {
-        Self::from_pubkey(access_right.pubkey())
+    pub fn from_access_policy<AP: AccessPolicy>(access_policy: &AP) -> Self {
+        access_policy.into_account_id()
     }
 
     pub fn from_pubkey(pubkey: &PublicKey) -> Self {
         let hash = Sha256::from_pubkey(pubkey);
-        let addr = &hash.as_array()[12..];
-        let mut res = [0u8; ADDRESS_SIZE];
-        res.copy_from_slice(addr);
+        let account_id = &hash.as_array()[12..];
+        let mut res = [0u8; ACCOUNT_ID_SIZE];
+        res.copy_from_slice(account_id);
 
-        UserAddress(res)
+        AccountId(res)
     }
 
     pub fn write<W: Write>(&self, writer: &mut W) -> io::Result<()> {
@@ -124,9 +124,9 @@ impl UserAddress {
     }
 
     pub fn read<R: Read>(reader: &mut R) -> io::Result<Self> {
-        let mut res = [0u8; ADDRESS_SIZE];
+        let mut res = [0u8; ACCOUNT_ID_SIZE];
         reader.read_exact(&mut res)?;
-        Ok(UserAddress(res))
+        Ok(AccountId(res))
     }
 
     #[cfg(feature = "std")]
@@ -137,23 +137,23 @@ impl UserAddress {
     #[cfg(feature = "std")]
     pub fn base64_decode(encoded_str: &str) -> Self {
         let decoded_vec = base64::decode(encoded_str).expect("Failed to decode base64.");
-        assert_eq!(decoded_vec.len(), ADDRESS_SIZE);
+        assert_eq!(decoded_vec.len(), ACCOUNT_ID_SIZE);
 
-        let mut arr = [0u8; ADDRESS_SIZE];
+        let mut arr = [0u8; ACCOUNT_ID_SIZE];
         arr.copy_from_slice(&decoded_vec[..]);
 
-        UserAddress::from_array(arr)
+        AccountId::from_array(arr)
     }
 
     pub fn as_bytes(&self) -> &[u8] {
         &self.0[..]
     }
 
-    pub fn from_array(array: [u8; ADDRESS_SIZE]) -> Self {
-        UserAddress(array)
+    pub fn from_array(array: [u8; ACCOUNT_ID_SIZE]) -> Self {
+        AccountId(array)
     }
 
-    pub fn into_array(self) -> [u8; ADDRESS_SIZE] {
+    pub fn into_array(self) -> [u8; ACCOUNT_ID_SIZE] {
         self.0
     }
 }
@@ -207,15 +207,25 @@ impl Sha256 {
 
 const CHALLENGE_SIZE: usize = 32;
 
-/// Access right of Read/Write to anonify's enclave mem db.
+/// A challenge and response authentication parameter to read and write to anonify's enclave mem db.
 #[derive(Debug, Clone)]
-pub struct AccessRight {
+pub struct Ed25519ChallengeResponse {
     sig: Signature,
     pubkey: PublicKey,
     challenge: [u8; CHALLENGE_SIZE],
 }
 
-impl Encode for AccessRight {
+impl AccessPolicy for Ed25519ChallengeResponse {
+    fn verify(&self) -> Result<(), Error> {
+        self.verify_sig()
+    }
+
+    fn into_account_id(&self) -> AccountId {
+        AccountId::from_pubkey(&self.pubkey())
+    }
+}
+
+impl Encode for Ed25519ChallengeResponse {
     fn encode(&self) -> Vec<u8> {
         let mut acc = vec![];
         acc.extend_from_slice(&self.sig.to_bytes());
@@ -226,7 +236,7 @@ impl Encode for AccessRight {
     }
 }
 
-impl Decode for AccessRight {
+impl Decode for Ed25519ChallengeResponse {
     fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
         let mut sig_buf = [0u8; SIGNATURE_LENGTH];
         let mut pubkey_buf = [0u8; PUBLIC_KEY_LENGTH];
@@ -237,11 +247,11 @@ impl Decode for AccessRight {
         value.read(&mut chal_buf)?;
 
         let sig = Signature::from_bytes(&sig_buf)
-            .expect("Failed to decode sig of AccessRight");
+            .expect("Failed to decode sig of Ed25519ChallengeResponse");
         let pubkey = PublicKey::from_bytes(&pubkey_buf)
-            .expect("Failed to decode pubkey of AccessRight");
+            .expect("Failed to decode pubkey of Ed25519ChallengeResponse");
 
-        Ok(AccessRight{
+        Ok(Ed25519ChallengeResponse{
             sig,
             pubkey,
             challenge: chal_buf,
@@ -249,7 +259,7 @@ impl Decode for AccessRight {
     }
 }
 
-impl AccessRight {
+impl Ed25519ChallengeResponse {
     #[cfg(feature = "std")]
     fn inner_new_from_rng<R: RngCore + CryptoRng>(rng: &mut R) -> Self {
         let keypair = Keypair::generate(rng);
@@ -293,7 +303,7 @@ impl AccessRight {
     ) -> Self {
         assert!(pubkey.verify(&challenge, &sig).is_ok());
 
-        AccessRight {
+        Ed25519ChallengeResponse {
             sig,
             pubkey,
             challenge,
@@ -307,13 +317,13 @@ impl AccessRight {
         Ok(())
     }
 
-    pub fn user_address(&self) -> UserAddress {
-        UserAddress::from_pubkey(&self.pubkey())
+    pub fn account_id(&self) -> AccountId {
+        AccountId::from_pubkey(&self.pubkey())
     }
 
-    pub fn verified_user_address(&self) -> Result<UserAddress, Error> {
+    pub fn verified_account_id(&self) -> Result<AccountId, Error> {
         self.verify_sig()?;
-        Ok(UserAddress::from_pubkey(&self.pubkey()))
+        Ok(AccountId::from_pubkey(&self.pubkey()))
     }
 
     pub fn sig(&self) -> &Signature {

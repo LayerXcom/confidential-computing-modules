@@ -5,7 +5,7 @@ use std::{
 use sgx_types::*;
 use std::prelude::v1::*;
 use frame_common::{
-    crypto::UserAddress,
+    crypto::AccountId,
     traits::*,
     state_types::{MemId, UpdatedState, StateType},
 };
@@ -29,20 +29,20 @@ impl StateOps for EnclaveContext {
 
     fn get_state<U>(&self, key: U, mem_id: MemId) -> Self::S
     where
-        U: Into<UserAddress>,
+        U: Into<AccountId>,
     {
         self.db
             .get(key.into(), mem_id)
     }
 
-    /// Returns a updated state of registerd address in notification.
+    /// Returns a updated state of registerd account_id in notification.
     // TODO: Enables to return multiple updated states.
     fn update_state(
         &self,
         mut state_iter: impl Iterator<Item=UpdatedState<Self::S>> + Clone
     ) -> Option<UpdatedState<Self::S>> {
         state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
-        state_iter.find(|s| self.is_notified(&s.address))
+        state_iter.find(|s| self.is_notified(&s.account_id))
     }
 }
 
@@ -59,12 +59,12 @@ impl GroupKeyGetter for EnclaveContext {
 }
 
 impl NotificationOps for EnclaveContext {
-    fn set_notification(&self, address: UserAddress) -> bool {
-        self.notifier.register(address)
+    fn set_notification(&self, account_id: AccountId) -> bool {
+        self.notifier.register(account_id)
     }
 
-    fn is_notified(&self, address: &UserAddress) -> bool {
-        self.notifier.contains(&address)
+    fn is_notified(&self, account_id: &AccountId) -> bool {
+        self.notifier.contains(&account_id)
     }
 }
 

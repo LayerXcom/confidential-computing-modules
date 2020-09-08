@@ -62,7 +62,7 @@ macro_rules! __impl_inner_runtime {
             #[fn_id=$fn_id:expr]
             pub fn $fn_name:ident(
                 $runtime:ident,
-                $sender:ident : $address:ty
+                $sender:ident : $account_id:ty
                 $(, $param_name:ident : $param:ty )*
             ) {
                 $( $impl:tt )*
@@ -110,11 +110,11 @@ macro_rules! __impl_inner_runtime {
                 }
             }
 
-            fn execute(self, runtime: Self::R, my_addr: UserAddress) -> Result<Vec<UpdatedState<Self::S>>> {
+            fn execute(self, runtime: Self::R, my_account_id: AccountId) -> Result<Vec<UpdatedState<Self::S>>> {
                 match self {
                     $( CallKind::$fn_name($fn_name) => {
                         runtime.$fn_name(
-                            my_addr,
+                            my_account_id,
                             $( $fn_name.$param_name, )*
                         )
                     }, )*
@@ -139,8 +139,8 @@ macro_rules! __impl_inner_runtime {
                 }
             }
 
-            fn execute(self, kind: Self::C, my_addr: UserAddress) -> Result<Vec<UpdatedState<Self::S>>> {
-                kind.execute(self, my_addr)
+            fn execute(self, kind: Self::C, my_account_id: AccountId) -> Result<Vec<UpdatedState<Self::S>>> {
+                kind.execute(self, my_account_id)
             }
         }
 
@@ -148,7 +148,7 @@ macro_rules! __impl_inner_runtime {
         impl<G: ContextOps<S=StateType>> Runtime<G> {
             pub fn get_map<S: State>(
                 &self,
-                key: UserAddress,
+                key: AccountId,
                 name: &str
             ) -> Result<S> {
                 let mem_id = MemName::as_id(name);
@@ -168,7 +168,7 @@ macro_rules! __impl_inner_runtime {
             $(
                 pub fn $fn_name (
                     $runtime,
-                    $sender: $address
+                    $sender: $account_id
                     $(, $param_name : $param )*
                 ) -> Result<Vec<UpdatedState<StateType>>> {
                     $( $impl )*
@@ -180,8 +180,8 @@ macro_rules! __impl_inner_runtime {
 
 #[macro_export]
 macro_rules! update {
-    ($addr:expr, $mem_name:expr, $value:expr) => {
-        UpdatedState::new($addr, MemName::as_id($mem_name), $value)?
+    ($account_id:expr, $mem_name:expr, $value:expr) => {
+        UpdatedState::new($account_id, MemName::as_id($mem_name), $value)?
     };
 
     ($mem_name:expr, $value:expr) => {

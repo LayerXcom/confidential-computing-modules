@@ -10,7 +10,6 @@ use ethabi::Contract as ContractABI;
 use anonify_io_types::*;
 use frame_common::{
     traits::*,
-    crypto::AccessRight,
     state_types::StateType,
 };
 use anyhow::anyhow;
@@ -74,11 +73,11 @@ impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
         self.state.encode_s()
     }
 
-    pub fn crate_input(self, access_right: AccessRight) -> input::Instruction {
+    pub fn crate_input<AP: AccessPolicy>(self, access_policy: AP) -> input::Instruction<AP> {
         let call_id = self.call_name_to_id();
         let state = StateType::new(self.state.encode_s());
 
-        input::Instruction::new(access_right, state, call_id)
+        input::Instruction::new(access_policy, state, call_id)
     }
 }
 

@@ -70,40 +70,11 @@ impl KeyFile {
     }
 
     fn keypair_to_encoded_addr(key_pair: &Keypair) -> String {
-        use frame_common::crypto::UserAddress;
+        use frame_common::crypto::AccountId;
 
-        let user_address = UserAddress::from_pubkey(&key_pair.public);
+        let user_address = AccountId::from_pubkey(&key_pair.public);
         user_address.base64_encode()
     }
-
-    // pub fn create_master<R: Rng>(
-    //     account_name: &str,
-    //     version: u32,
-    //     password: &[u8],
-    //     iters: u32,
-    //     rng: &mut R,
-    //     seed: &[u8],
-    // ) -> Result<Self> {
-    //     let xsk_master = ExtendedSpendingKey::master(seed);
-
-    //     let encrypted_key = KeyCiphertext::encrypt(&xsk_master, password, iters, rng)?;
-    //     let ss58_master_addr = (&xsk_master).try_into()?;
-
-    //     Ok(KeyFile {
-    //         file_name: None,
-    //         account_name: account_name.to_string(),
-    //         ss58_address: ss58_master_addr,
-    //         version,
-    //         encrypted_key,
-    //     })
-    // }
-
-    // pub fn get_child_xsk(&self, password: &[u8], index: ChildIndex) -> Result<ExtendedSpendingKey> {
-    //     let xsk = self.encrypted_key.decrypt(password)?;
-    //     let xsk_child = xsk.derive_child(index)?;
-
-    //     Ok(xsk_child)
-    // }
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]

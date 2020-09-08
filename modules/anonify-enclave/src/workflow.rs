@@ -7,7 +7,7 @@ use frame_types::*;
 use frame_enclave::EnclaveEngine;
 use anonify_io_types::*;
 use frame_common::{
-    crypto::{UserAddress, AccessRight, Ciphertext, Sha256},
+    crypto::{Ciphertext, Sha256, AccountId},
     traits::*,
     state_types::{MemId, StateType},
 };
@@ -25,14 +25,16 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-pub struct Instruction;
+pub struct Instruction<AP: AccessPolicy> {
+    phantom: PhantomData<AP>,
+}
 
-impl EnclaveEngine for Instruction {
-    type EI = input::Instruction;
+impl<AP: AccessPolicy> EnclaveEngine for Instruction<AP> {
+    type EI = input::Instruction<AP>;
     type EO = output::Instruction;
 
     fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
-        ecall_input.access_right().verify_sig()
+        ecall_input.access_policy().verify()
     }
 
     fn handle<R, C>(
@@ -44,19 +46,17 @@ impl EnclaveEngine for Instruction {
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone,
     {
+        let account_id = ecall_input.access_policy().into_account_id();
         let state = ecall_input.state.as_mut_bytes();
-        let ar = &ecall_input.access_right;
 
         let instruction_output = create_instruction_output::<R, C>(
             ecall_input.call_id,
             state,
-            ar,
+            account_id.clone(),
             enclave_context,
             max_mem_size,
         )?;
-
-        let addr = ar.user_address();
-        enclave_context.set_notification(addr);
+        enclave_context.set_notification(account_id);
 
         Ok(instruction_output)
     }
@@ -123,14 +123,16 @@ impl EnclaveEngine for InsertHandshake {
 }
 
 #[derive(Debug, Clone)]
-pub struct GetState;
+pub struct GetState<AP: AccessPolicy> {
+    phantom: PhantomData<AP>,
+}
 
-impl EnclaveEngine for GetState {
-    type EI = input::GetState;
+impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
+    type EI = input::GetState<AP>;
     type EO = output::ReturnState;
 
     fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
-        ecall_input.access_right().verify_sig()
+        ecall_input.access_policy().verify()
     }
 
     fn handle<R, C>(
@@ -142,8 +144,8 @@ impl EnclaveEngine for GetState {
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone,
     {
-        let addr = ecall_input.access_right().user_address();
-        let user_state = enclave_context.get_state(addr, ecall_input.mem_id());
+        let account_id = ecall_input.access_policy().into_account_id();
+        let user_state = enclave_context.get_state(account_id, ecall_input.mem_id());
 
         Ok(output::ReturnState::new(user_state))
     }
@@ -202,14 +204,16 @@ impl EnclaveEngine for CallHandshake {
 }
 
 #[derive(Debug, Clone)]
-pub struct RegisterNotification;
+pub struct RegisterNotification<AP: AccessPolicy> {
+    phantom: PhantomData<AP>,
+}
 
-impl EnclaveEngine for RegisterNotification {
-    type EI = input::RegisterNotification;
+impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
+    type EI = input::RegisterNotification<AP>;
     type EO = output::Empty;
 
     fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
-        ecall_input.access_right().verify_sig()
+        ecall_input.access_policy().verify()
     }
 
     fn handle<R, C>(
@@ -221,8 +225,8 @@ impl EnclaveEngine for RegisterNotification {
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone,
     {
-        let addr = ecall_input.access_right().user_address();
-        enclave_context.set_notification(addr);
+        let account_id = ecall_input.access_policy().into_account_id();
+        enclave_context.set_notification(account_id);
 
         Ok(output::Empty::default())
     }
@@ -231,7 +235,7 @@ impl EnclaveEngine for RegisterNotification {
 fn create_instruction_output<R, C>(
     call_id: u32,
     params: &mut [u8],
-    access_right: &AccessRight,
+    account_id: AccountId,
     enclave_ctx: &C,
     max_mem_size: usize,
 ) -> Result<output::Instruction>
@@ -240,7 +244,7 @@ where
     C: ContextOps,
 {
     let group_key = &*enclave_ctx.read_group_key();
-    let ciphertext = Instructions::<R, C>::new(call_id, params, &access_right)?
+    let ciphertext = Instructions::<R, C>::new(call_id, params, account_id)?
         .encrypt(group_key, max_mem_size)?;
     let msg = Sha256::hash(&ciphertext.encode());
     let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;

@@ -2,7 +2,10 @@ use std::{
     vec::Vec,
     ptr,
 };
-use frame_common::traits::{EcallInput, EcallOutput};
+use frame_common::{
+    traits::{EcallInput, EcallOutput},
+    crypto::Ed25519ChallengeResponse,
+};
 use anonify_enclave::{
     context::EnclaveContext,
     workflow::*,
@@ -19,14 +22,14 @@ register_ecall!(
     MAX_MEM_SIZE,
     Runtime<EnclaveContext>,
     EnclaveContext,
-    (ENCRYPT_INSTRUCTION_CMD, Instruction),
+    (ENCRYPT_INSTRUCTION_CMD, Instruction<Ed25519ChallengeResponse>),
     // Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
     (INSERT_CIPHERTEXT_CMD, InsertCiphertext),
     // Insert handshake received from blockchain nodes into enclave.
     (INSERT_HANDSHAKE_CMD, InsertHandshake),
     // Get current state of the user represented the given public key from enclave memory database.
-    (GET_STATE_CMD, GetState),
+    (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
     (CALL_JOIN_GROUP_CMD, CallJoinGroup),
     (CALL_HANDSHAKE_CMD, CallHandshake),
-    (REGISTER_NOTIFICATION_CMD, RegisterNotification),
+    (REGISTER_NOTIFICATION_CMD, RegisterNotification<Ed25519ChallengeResponse>),
 );

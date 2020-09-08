@@ -6,33 +6,34 @@ use crate::localstd::{
 use codec::{Encode, Decode, Input, self};
 use frame_common::{
     EcallInput, EcallOutput, State,
-    crypto::{AccessRight, Sha256, Ciphertext},
+    crypto::{Sha256, Ciphertext},
     state_types::{StateType, MemId, UpdatedState},
+    traits::AccessPolicy,
 };
 
 pub mod input {
     use super::*;
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct Instruction {
-        pub access_right: AccessRight,
+    pub struct Instruction<AP: AccessPolicy> {
+        pub access_policy: AP,
         pub state: StateType,
         pub call_id: u32,
     }
 
-    impl EcallInput for Instruction {}
+    impl<AP: AccessPolicy> EcallInput for Instruction<AP> {}
 
-    impl Instruction {
-        pub fn new(access_right: AccessRight, state: StateType, call_id: u32) -> Self {
+    impl<AP: AccessPolicy> Instruction<AP> {
+        pub fn new(access_policy: AP, state: StateType, call_id: u32) -> Self {
             Instruction {
-                access_right,
+                access_policy,
                 state,
                 call_id,
             }
         }
 
-        pub fn access_right(&self) -> &AccessRight {
-            &self.access_right
+        pub fn access_policy(&self) -> &AP {
+            &self.access_policy
         }
     }
 
@@ -81,20 +82,20 @@ pub mod input {
     }
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct GetState {
-        access_right: AccessRight,
+    pub struct GetState<AP: AccessPolicy> {
+        access_policy: AP,
         mem_id: MemId,
     }
 
-    impl EcallInput for GetState {}
+    impl<AP: AccessPolicy> EcallInput for GetState<AP> {}
 
-    impl GetState {
-        pub fn new(access_right: AccessRight, mem_id: MemId) -> Self {
-            GetState { access_right, mem_id }
+    impl<AP: AccessPolicy> GetState<AP> {
+        pub fn new(access_policy: AP, mem_id: MemId) -> Self {
+            GetState { access_policy, mem_id }
         }
 
-        pub fn access_right(&self) -> &AccessRight {
-            &self.access_right
+        pub fn access_policy(&self) -> &AP {
+            &self.access_policy
         }
 
         pub fn mem_id(&self) -> MemId {
@@ -103,19 +104,19 @@ pub mod input {
     }
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct RegisterNotification {
-        access_right: AccessRight,
+    pub struct RegisterNotification<AP: AccessPolicy> {
+        access_policy: AP,
     }
 
-    impl EcallInput for RegisterNotification {}
+    impl<AP: AccessPolicy> EcallInput for RegisterNotification<AP> {}
 
-    impl RegisterNotification {
-        pub fn new(access_right: AccessRight) -> Self {
-            RegisterNotification { access_right }
+    impl<AP: AccessPolicy> RegisterNotification<AP> {
+        pub fn new(access_policy: AP) -> Self {
+            RegisterNotification { access_policy }
         }
 
-        pub fn access_right(&self) -> &AccessRight {
-            &self.access_right
+        pub fn access_policy(&self) -> &AP {
+            &self.access_policy
         }
     }
 }

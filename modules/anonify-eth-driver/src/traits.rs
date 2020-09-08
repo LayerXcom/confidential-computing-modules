@@ -7,7 +7,6 @@ use std::{
 use sgx_types::sgx_enclave_id_t;
 use frame_common::{
     traits::*,
-    crypto::AccessRight,
     state_types::UpdatedState,
 };
 use anonify_io_types::*;
