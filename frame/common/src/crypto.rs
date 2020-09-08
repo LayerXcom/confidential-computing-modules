@@ -21,7 +21,7 @@ pub const COMMON_SECRET: [u8; SECRET_KEY_LENGTH] = [182, 93, 72, 157, 114, 225, 
 pub const COMMON_CHALLENGE: [u8; CHALLENGE_SIZE] = [39, 79, 228, 49, 240, 219, 135, 53, 169, 47, 65, 111, 236, 125, 2, 195, 214, 154, 18, 77, 254, 135, 35, 77, 36, 45, 164, 254, 64, 8, 169, 238];
 
 lazy_static! {
-    pub static ref COMMON_ACCESS_RIGHT: Ed25519ChallengeResponse = {
+    pub static ref COMMON_ACCESS_POLICY: Ed25519ChallengeResponse = {
         let secret = SecretKey::from_bytes(&COMMON_SECRET).unwrap();
         let pubkey = PublicKey::from(&secret);
         let keypair = Keypair { secret, public: pubkey };
@@ -33,7 +33,7 @@ lazy_static! {
     };
 
     pub static ref OWNER_ACCOUNT_ID: AccountId = {
-        COMMON_ACCESS_RIGHT.account_id()
+        COMMON_ACCESS_POLICY.account_id()
     };
 }
 
