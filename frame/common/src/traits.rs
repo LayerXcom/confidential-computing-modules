@@ -5,9 +5,17 @@ use crate::localstd::{
 };
 use crate::state_types::MemId;
 use crate::local_anyhow::{Result, anyhow};
+use crate::crypto::AccountID;
 use codec::{Encode, Decode};
 use ed25519_dalek::PublicKey;
 use tiny_keccak::Keccak;
+
+/// A trait to verify policy to access resources in the enclave
+pub trait AccessPolicy: Encode + Decode + Clone + Debug {
+    fn verify(&self) -> Result<()>;
+
+    fn into_account_id(&self) -> AccountId;
+}
 
 pub trait EcallInput {}
 pub trait EcallOutput {}

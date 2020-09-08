@@ -12,7 +12,6 @@ use crate::{
     workflow::host_input,
 };
 use frame_common::{
-    crypto::AccessRight,
     traits::*,
     state_types::{UpdatedState, StateType},
 };
@@ -113,9 +112,9 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             .join_group(host_output)
     }
 
-    pub fn send_instruction<ST, C>(
+    pub fn send_instruction<ST, C, AP>(
         &self,
-        access_right: AccessRight,
+        access_policy: AP,
         state: ST,
         call_name: &str,
         signer: Address,
@@ -124,10 +123,11 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         where
             ST: State,
             C: CallNameConverter,
+            AP: AccessPolicy,
     {
         let inner = self.inner.read();
         let input = host_input::Instruction::<ST, C>::new(
-            state, call_name.to_string(), access_right, signer, gas,
+            state, call_name.to_string(), access_policy, signer, gas,
         );
         let eid = inner.deployer.get_enclave_id();
         let host_output = InstructionWorkflow::exec(input, eid)?;
@@ -175,9 +175,12 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             .get_account(index)
     }
 
-    pub fn register_notification(&self, access_right: AccessRight) -> Result<()> {
+    pub fn register_notification<AP>(&self, access_policy: AP) -> Result<()>
+    where
+        AP: AccessPolicy,
+    {
         let inner = self.inner.read();
-        let input = host_input::RegisterNotification::new(access_right);
+        let input = host_input::RegisterNotification::new(access_policy);
         let eid = inner.deployer.get_enclave_id();
         let host_output = RegisterNotificationWorkflow::exec(input, eid)?;
 
@@ -185,8 +188,8 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
     }
 }
 
-pub fn get_state<S, M>(
-    access_right: AccessRight,
+pub fn get_state<S, M, AP>(
+    access_policy: AP,
     enclave_id: sgx_enclave_id_t,
     mem_name: &str,
 ) -> Result<S>
@@ -194,9 +197,10 @@ pub fn get_state<S, M>(
         S: State + TryFrom<Vec<u8>>,
         <S as TryFrom<Vec<u8>>>::Error: Debug,
         M: MemNameConverter,
+        AP: AccessPolicy,
 {
     let mem_id = M::as_id(mem_name);
-    let input = host_input::GetState::new(access_right, mem_id);
+    let input = host_input::GetState::new(access_policy, mem_id);
 
     let state = GetStateWorkflow::exec(input, enclave_id)?
         .ecall_output.unwrap()
