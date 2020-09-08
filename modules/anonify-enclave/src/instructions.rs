@@ -20,7 +20,8 @@ pub struct Instructions<R: RuntimeExecutor<CTX>, CTX: ContextOps> {
 
 impl<R: RuntimeExecutor<CTX, S=StateType>, CTX: ContextOps> Instructions<R, CTX> {
     pub fn new(call_id: u32, params: &mut [u8], access_right: &AccessRight) -> Result<Self> {
-        let my_addr = UserAddress::from_access_right(&access_right)?;
+        // Don't verify the signature here because the access policy has already applied.
+        let my_addr = UserAddress::from_access_right(&access_right);
         let call_kind = R::C::new(call_id, params)?;
 
         Ok(Instructions {

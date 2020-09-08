@@ -10,11 +10,9 @@ pub trait EnclaveEngine {
     type EI: EcallInput + Decode;
     type EO: EcallOutput + Encode;
 
-    fn eval_policy<R, C>(ecall_input: &Self::EI) -> anyhow::Result<()>
-    where
-        R: RuntimeExecutor<C, S=StateType>,
-        C: ContextOps<S=StateType> + Clone,
-    { Ok(()) }
+    fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
+        Ok(())
+    }
 
     fn handle<R, C>(
         ecall_input: Self::EI,

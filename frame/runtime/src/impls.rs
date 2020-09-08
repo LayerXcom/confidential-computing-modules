@@ -68,16 +68,6 @@ macro_rules! __impl_inner_runtime {
                 $( $impl:tt )*
             }
         )*
-
-        $(
-            #[policy_id=$policy_id:expr]
-            pub fn $policy_fn_name:ident(
-                $policy_runtime:ident,
-                $policy_param:ident : $policy_type:ty
-            ) {
-                $( $policy_impl:tt )*
-            }
-        )*
     ) => {
         $(
             #[derive(Encode, Decode, Debug, Clone, Default)]
@@ -184,8 +174,6 @@ macro_rules! __impl_inner_runtime {
                     $( $impl )*
                 }
             )*
-
-            
         }
     };
 }

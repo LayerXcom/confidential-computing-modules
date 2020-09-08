@@ -137,9 +137,4 @@ impl_runtime! {
 
         insert![balance_update, total_supply_update]
     }
-
-    #[policy_id=0]
-    pub fn read_write_state(self, policy: &AccessRight) {
-        policy.verify_sig()
-    }
 }

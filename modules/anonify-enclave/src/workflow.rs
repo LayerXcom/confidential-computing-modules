@@ -31,6 +31,10 @@ impl EnclaveEngine for Instruction {
     type EI = input::Instruction;
     type EO = output::Instruction;
 
+    fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
+        ecall_input.access_right().verify_sig()
+    }
+
     fn handle<R, C>(
         mut ecall_input: Self::EI,
         enclave_context: &C,
@@ -51,7 +55,7 @@ impl EnclaveEngine for Instruction {
             max_mem_size,
         )?;
 
-        let addr = ar.verified_user_address()?;
+        let addr = ar.user_address();
         enclave_context.set_notification(addr);
 
         Ok(instruction_output)
@@ -125,12 +129,8 @@ impl EnclaveEngine for GetState {
     type EI = input::GetState;
     type EO = output::ReturnState;
 
-    fn eval_policy<R, C>(ecall_input: &Self::EI) -> anyhow::Result<()>
-    where
-        R: RuntimeExecutor<C, S=StateType>,
-        C: ContextOps<S=StateType> + Clone,
-    {
-        unimplemented!();
+    fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
+        ecall_input.access_right().verify_sig()
     }
 
     fn handle<R, C>(
@@ -142,7 +142,7 @@ impl EnclaveEngine for GetState {
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone,
     {
-        let addr = ecall_input.access_right().verified_user_address()?;
+        let addr = ecall_input.access_right().user_address();
         let user_state = enclave_context.get_state(addr, ecall_input.mem_id());
 
         Ok(output::ReturnState::new(user_state))
@@ -208,6 +208,10 @@ impl EnclaveEngine for RegisterNotification {
     type EI = input::RegisterNotification;
     type EO = output::Empty;
 
+    fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
+        ecall_input.access_right().verify_sig()
+    }
+
     fn handle<R, C>(
         ecall_input: Self::EI,
         enclave_context: &C,
@@ -217,7 +221,7 @@ impl EnclaveEngine for RegisterNotification {
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone,
     {
-        let addr = ecall_input.access_right().verified_user_address()?;
+        let addr = ecall_input.access_right().user_address();
         enclave_context.set_notification(addr);
 
         Ok(output::Empty::default())

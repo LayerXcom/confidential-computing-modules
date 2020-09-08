@@ -100,9 +100,13 @@ impl UserAddress {
         Ok(Self::from_pubkey(&pubkey))
     }
 
-    pub fn from_access_right(access_right: &AccessRight) -> Result<Self, Error> {
+    pub fn try_from_access_right(access_right: &AccessRight) -> Result<Self, Error> {
         access_right.verify_sig()?;
         Ok(Self::from_pubkey(access_right.pubkey()))
+    }
+
+    pub fn from_access_right(access_right: &AccessRight) -> Self {
+        Self::from_pubkey(access_right.pubkey())
     }
 
     pub fn from_pubkey(pubkey: &PublicKey) -> Self {
