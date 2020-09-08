@@ -100,9 +100,13 @@ impl UserAddress {
         Ok(Self::from_pubkey(&pubkey))
     }
 
-    pub fn from_access_right(access_right: &AccessRight) -> Result<Self, Error> {
+    pub fn try_from_access_right(access_right: &AccessRight) -> Result<Self, Error> {
         access_right.verify_sig()?;
         Ok(Self::from_pubkey(access_right.pubkey()))
+    }
+
+    pub fn from_access_right(access_right: &AccessRight) -> Self {
+        Self::from_pubkey(access_right.pubkey())
     }
 
     pub fn from_pubkey(pubkey: &PublicKey) -> Self {
@@ -211,13 +215,6 @@ pub struct AccessRight {
     challenge: [u8; CHALLENGE_SIZE],
 }
 
-// impl AccessControl for AccessRight {
-//     fn is_allowed(self) -> Result<(), Error> {
-//         self.verify_sig()
-//             .map_err(|e| anyhow!("{}", e))
-//     }
-// }
-
 impl Encode for AccessRight {
     fn encode(&self) -> Vec<u8> {
         let mut acc = vec![];
@@ -271,7 +268,7 @@ impl AccessRight {
     }
 
     #[cfg(feature = "sgx")]
-    pub fn new_from_rng() -> Result<Self, Error> {        
+    pub fn new_from_rng() -> Result<Self, Error> {
         let mut seed = [0u8; SECRET_KEY_LENGTH];
         sgx_rand_assign(&mut seed)?;
         let secret = SecretKey::from_bytes(&seed)

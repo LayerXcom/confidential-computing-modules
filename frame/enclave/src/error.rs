@@ -24,4 +24,7 @@ pub enum FrameEnclaveError {
         status: UntrustedStatus,
         function: &'static str,
     },
+
+    #[error("Policy violation")]
+    PolicyError,
 }

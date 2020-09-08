@@ -30,6 +30,10 @@ pub mod input {
                 call_id,
             }
         }
+
+        pub fn access_right(&self) -> &AccessRight {
+            &self.access_right
+        }
     }
 
     #[derive(Encode, Decode, Debug, Clone, Default)]

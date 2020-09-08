@@ -23,6 +23,7 @@ macro_rules! register_ecall {
         {
             let input = EE::EI::decode(&mut &input_payload[..])
                 .map_err(|e| anyhow!("{:?}", e))?;
+            EE::eval_policy(&input)?;
             let res = EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?;
 
             Ok(res.encode())
