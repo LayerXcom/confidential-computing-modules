@@ -14,9 +14,7 @@ use anonify_eth_driver::{
     traits::*,
 };
 use frame_runtime::primitives::Bytes;
-use frame_common::{
-    crypto::{UserAddress, AccessRight},
-};
+use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
 
 use crate::moneyforward::MFClient;
 use crate::Server;
@@ -99,17 +97,17 @@ fn inner_send_invoice<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
-    let access_right = create_access_right(keypair);
+    let access_policy = create_access_policy(keypair);
     let signer = server.dispatcher.get_account(0)?;
-    let recipient: UserAddress = UserAddress::base64_decode(DEFAULT_RECIPIENT_ADDRESS);
+    let recipient = AccountId::base64_decode(DEFAULT_RECIPIENT_ADDRESS);
 
     let invoice = Bytes::new(invoice.clone().into());
     let invoice = Bytes::from(invoice);
 
     let send_invoice_state = send_invoice { recipient, invoice };
 
-    let receipt = server.dispatcher.send_instruction::<_, CallName>(
-        access_right,
+    let receipt = server.dispatcher.send_instruction::<_, CallName, _>(
+        access_policy,
         send_invoice_state,
         "send_invoice",
         signer,
@@ -170,9 +168,9 @@ pub fn handle_set_notification<D, S, W, DB>(
 {
     let keypair = get_keypair_from_keystore("as".as_bytes(), req.keyfile_index)
         .expect("failed to get keypair");
-    let access_right = create_access_right(keypair);
+    let access_policy = create_access_policy(keypair);
 
-    server.dispatcher.register_notification(access_right).unwrap();
+    server.dispatcher.register_notification(access_policy).unwrap();
 
     Ok(HttpResponse::Ok().finish())
 }
@@ -196,10 +194,10 @@ pub fn handle_set_contract_addr<D, S, W, DB>(
 }
 
 
-fn create_access_right(keypair: Keypair) -> AccessRight {
+fn create_access_policy(keypair: Keypair) -> Ed25519ChallengeResponse {
     let rng = &mut OsRng;
     let challenge: [u8; 32] = rng.gen();
     let sig = keypair.sign(&challenge[..]);
 
-    AccessRight::new(sig, keypair.public, challenge)
+    Ed25519ChallengeResponse::new(sig, keypair.public, challenge)
 }

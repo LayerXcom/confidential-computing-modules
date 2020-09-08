@@ -19,8 +19,8 @@ impl_runtime! {
     #[fn_id=0]
     pub fn send_invoice(
         self,
-        _sender: UserAddress,
-        recipient: UserAddress,
+        _sender: AccountId,
+        recipient: AccountId,
         invoice: Bytes
     ) {
         let invoice_update = update!(recipient, "Invoice", invoice);
