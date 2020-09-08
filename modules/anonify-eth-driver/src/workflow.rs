@@ -12,14 +12,15 @@ use crate::utils::StateInfo;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
 
-pub struct InstructionWorkflow<S: State, C: CallNameConverter> {
+pub struct InstructionWorkflow<S: State, C: CallNameConverter, AP: AccessPolicy> {
     s: PhantomData<S>,
     c: PhantomData<C>,
+    ap: PhantomData<AP>,
 }
 
-impl<S: State, C: CallNameConverter> HostEngine for InstructionWorkflow<S, C> {
-    type HI = host_input::Instruction<S, C>;
-    type EI = input::Instruction;
+impl<S: State, C: CallNameConverter, AP: AccessPolicy> HostEngine for InstructionWorkflow<S, C, AP> {
+    type HI = host_input::Instruction<S, C, AP>;
+    type EI = input::Instruction<AP>;
     type EO = output::Instruction;
     type HO = host_output::Instruction;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -48,22 +49,26 @@ impl HostEngine for HandshakeWorkflow {
     const CMD: u32 = CALL_HANDSHAKE_CMD;
 }
 
-pub struct RegisterNotificationWorkflow;
+pub struct RegisterNotificationWorkflow<AP: AccessPolicy> {
+    ap: PhantomData<AP>,
+}
 
-impl HostEngine for RegisterNotificationWorkflow {
-    type HI = host_input::RegisterNotification;
-    type EI = input::RegisterNotification;
+impl<AP: AccessPolicy> HostEngine for RegisterNotificationWorkflow<AP> {
+    type HI = host_input::RegisterNotification<AP>;
+    type EI = input::RegisterNotification<AP>;
     type EO = output::Empty;
     type HO = host_output::RegisterNotification;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
     const CMD: u32 = REGISTER_NOTIFICATION_CMD;
 }
 
-pub struct GetStateWorkflow;
+pub struct GetStateWorkflow<AP: AccessPolicy> {
+    ap: PhantomData<AP>,
+}
 
-impl HostEngine for GetStateWorkflow {
-    type HI = host_input::GetState;
-    type EI = input::GetState;
+impl<AP: AccessPolicy> HostEngine for GetStateWorkflow<AP> {
+    type HI = host_input::GetState<AP>;
+    type EI = input::GetState<AP>;
     type EO = output::ReturnState;
     type HO = host_output::GetState;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -119,8 +124,8 @@ pub mod host_input {
         }
     }
 
-    impl<S: State, C: CallNameConverter> HostInput for Instruction<S, C> {
-        type EcallInput = input::Instruction;
+    impl<S: State, C: CallNameConverter, AP: AccessPolicy> HostInput for Instruction<S, C, AP> {
+        type EcallInput = input::Instruction<AP>;
         type HostOutput = host_output::Instruction;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
@@ -186,8 +191,8 @@ pub mod host_input {
         }
     }
 
-    impl HostInput for RegisterNotification {
-        type EcallInput = input::RegisterNotification;
+    impl<AP: AccessPolicy> HostInput for RegisterNotification<AP> {
+        type EcallInput = input::RegisterNotification<AP>;
         type HostOutput = host_output::RegisterNotification;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
@@ -208,8 +213,8 @@ pub mod host_input {
         }
     }
 
-    impl HostInput for GetState {
-        type EcallInput = input::GetState;
+    impl<AP: AccessPolicy> HostInput for GetState<AP> {
+        type EcallInput = input::GetState<AP>;
         type HostOutput = host_output::GetState;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {

@@ -76,7 +76,7 @@ pub fn handle_init_state<D, S, W, DB>(
     let total_supply = U64::from_raw(req.total_supply);
     let init_state = construct{ total_supply };
 
-    let receipt = server.dispatcher.send_instruction::<_, CallName>(
+    let receipt = server.dispatcher.send_instruction::<_, CallName, _>(
         access_right,
         init_state,
         "construct",
@@ -103,7 +103,7 @@ pub fn handle_transfer<D, S, W, DB>(
     let recipient = req.target;
     let transfer_state = transfer{ amount, recipient };
 
-    let receipt = server.dispatcher.send_instruction::<_, CallName>(
+    let receipt = server.dispatcher.send_instruction::<_, CallName, _>(
         access_right,
         transfer_state,
         "transfer",
@@ -130,7 +130,7 @@ pub fn handle_approve<D, S, W, DB>(
     let spender = req.target;
     let approve_state = approve { amount, spender };
 
-    let receipt = server.dispatcher.send_instruction::<_, CallName>(
+    let receipt = server.dispatcher.send_instruction::<_, CallName, _>(
         access_right,
         approve_state,
         "approve",
@@ -157,7 +157,7 @@ pub fn handle_mint<D, S, W, DB>(
     let recipient = req.target;
     let minting_state = mint{ amount, recipient };
 
-    let receipt = server.dispatcher.send_instruction::<_, CallName>(
+    let receipt = server.dispatcher.send_instruction::<_, CallName, _>(
         access_right,
         minting_state,
         "mint",
@@ -183,7 +183,7 @@ pub fn handle_burn<D, S, W, DB>(
     let amount = U64::from_raw(req.amount);
     let burn_state = burn{ amount };
 
-    let receipt = server.dispatcher.send_instruction::<_, CallName>(
+    let receipt = server.dispatcher.send_instruction::<_, CallName, _>(
         access_right,
         burn_state,
         "burn",
@@ -211,7 +211,7 @@ pub fn handle_transfer_from<D, S, W, DB>(
     let recipient = req.target;
     let transferred_from_state = transfer_from { owner, recipient, amount };
 
-    let receipt = server.dispatcher.send_instruction::<_, CallName>(
+    let receipt = server.dispatcher.send_instruction::<_, CallName, _>(
         access_right,
         transferred_from_state,
         "transfer_from",
@@ -254,7 +254,7 @@ pub fn handle_allowance<D, S, W, DB>(
     server.dispatcher.block_on_event::<U64>()?;
 
     let access_right = req.into_access_right()?;
-    let owner_approved = get_state::<Approved, MemName>(access_right, server.eid, "Approved")?;
+    let owner_approved = get_state::<Approved, MemName, _>(access_right, server.eid, "Approved")?;
     let approved_amount = owner_approved.allowance(&req.spender).unwrap();
     // TODO: stop using unwrap when switching from failure to anyhow.
 
@@ -275,7 +275,7 @@ pub fn handle_balance_of<D, S, W, DB>(
     server.dispatcher.block_on_event::<U64>()?;
 
     let access_right = req.into_access_right()?;
-    let state = get_state::<U64, MemName>(access_right, server.eid, "Balance")?;
+    let state = get_state::<U64, MemName, _>(access_right, server.eid, "Balance")?;
 
     Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state.as_raw())))
 }

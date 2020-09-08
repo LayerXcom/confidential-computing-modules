@@ -6,7 +6,6 @@ use sgx_types::sgx_enclave_id_t;
 use anonify_io_types::*;
 use frame_common::{
     traits::*,
-    crypto::AccessRight,
     state_types::UpdatedState,
 };
 use web3::types::Address;

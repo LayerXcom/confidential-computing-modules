@@ -126,7 +126,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             AP: AccessPolicy,
     {
         let inner = self.inner.read();
-        let input = host_input::Instruction::<ST, C>::new(
+        let input = host_input::Instruction::<ST, C, AP>::new(
             state, call_name.to_string(), access_policy, signer, gas,
         );
         let eid = inner.deployer.get_enclave_id();

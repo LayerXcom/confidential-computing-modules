@@ -46,8 +46,8 @@ impl<AP: AccessPolicy> EnclaveEngine for Instruction<AP> {
         R: RuntimeExecutor<C, S=StateType>,
         C: ContextOps<S=StateType> + Clone,
     {
-        let state = ecall_input.state.as_mut_bytes();
         let account_id = ecall_input.access_policy().into_account_id();
+        let state = ecall_input.state.as_mut_bytes();
 
         let instruction_output = create_instruction_output::<R, C>(
             ecall_input.call_id,
