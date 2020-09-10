@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use rand::Rng;
 use anonify_wallet::{WalletDirectory, KeystoreDirectory, KeyFile, DirOperations};
-use frame_common::crypto::UserAddress;
+use frame_common::crypto::AccountId;
 use bip39::{Mnemonic, Language, MnemonicType, Seed};
 use reqwest::Client;
 use ed25519_dalek::Keypair;
@@ -67,7 +67,7 @@ pub(crate) fn transfer<R: Rng>(
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
-    target: UserAddress,
+    target: AccountId,
     amount: u64,
     rng: &mut R
 ) -> Result<()> {
@@ -90,7 +90,7 @@ pub(crate) fn approve<R: Rng>(
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
-    target: UserAddress,
+    target: AccountId,
     amount: u64,
     rng: &mut R
 ) -> Result<()> {
@@ -113,8 +113,8 @@ pub(crate) fn transfer_from<R: Rng>(
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
-    owner: UserAddress,
-    target: UserAddress,
+    owner: AccountId,
+    target: AccountId,
     amount: u64,
     rng: &mut R
 ) -> Result<()> {
@@ -137,7 +137,7 @@ pub(crate) fn mint<R: Rng>(
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
-    target: UserAddress,
+    target: AccountId,
     amount: u64,
     rng: &mut R
 ) -> Result<()> {
@@ -195,7 +195,7 @@ pub(crate) fn allowance<R: Rng>(
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
-    spender: UserAddress,
+    spender: AccountId,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
