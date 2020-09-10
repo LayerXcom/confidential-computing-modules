@@ -35,6 +35,8 @@ cargo test -p frame-runtime
 
 # Buildings
 
+./scripts/build-cli.sh
+
 echo "Building ERC20 and invoice flow examples..."
 cd example/erc20/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo build
