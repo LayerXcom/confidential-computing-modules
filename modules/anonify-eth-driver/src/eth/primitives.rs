@@ -183,7 +183,7 @@ impl Web3Contract {
                     topic2: Topic::Any,
                     topic3: Topic::Any,
                 })
-                .from_block(BlockNumber::Number(latest_fetched_num))
+                .from_block(BlockNumber::Number(latest_fetched_num.into()))
                 .to_block(BlockNumber::Latest)
                 .build();
 
