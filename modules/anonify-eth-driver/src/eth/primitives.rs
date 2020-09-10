@@ -1,5 +1,5 @@
 use crate::{
-    error::Result,
+    error::{Result, HostError},
     eventdb::{BlockNumDB, EnclaveLog, InnerEnclaveLog},
     utils::ContractInfo,
     workflow::*,
@@ -41,6 +41,10 @@ impl Web3Http {
 
     pub fn get_account(&self, index: usize) -> Result<Address> {
         let account = self.web3.eth().accounts().wait()?[index];
+        if !self.web3.personal().unlock_account(account, "anonify0101", Some(60)).wait()? {
+            return Err(HostError::UnlockError);
+        }
+
         Ok(account)
     }
 
@@ -67,7 +71,6 @@ impl Web3Http {
                 bin,
                 (report, report_sig, handshake),
                 output.signer,
-                "anonify0101"
             )
             .map_err(|e| anyhow!("{:?}", e))?
             .wait()
