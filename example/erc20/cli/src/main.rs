@@ -5,7 +5,7 @@ use std::{path::PathBuf, env};
 use clap::{Arg, App, SubCommand, AppSettings, ArgMatches};
 use rand::{rngs::OsRng, Rng};
 use term::Term;
-use frame_common::crypto::UserAddress;
+use frame_common::crypto::AccountId;
 use crate::config::*;
 
 mod term;
@@ -113,7 +113,7 @@ fn subcommand_anonify<R: Rng>(
                 .expect("Failed to parse amount");
             let target: &str = matches.value_of("target")
                 .expect("Not found target");
-            let target_addr = UserAddress::base64_decode(target);
+            let target_addr = AccountId::base64_decode(target);
 
             commands::transfer(
                 &mut term,
@@ -137,7 +137,7 @@ fn subcommand_anonify<R: Rng>(
                 .expect("Failed to parse amount");
             let target: &str = matches.value_of("target")
                 .expect("Not found target");
-            let target_addr = UserAddress::base64_decode(target);
+            let target_addr = AccountId::base64_decode(target);
 
             commands::approve(
                 &mut term,
@@ -161,10 +161,10 @@ fn subcommand_anonify<R: Rng>(
                 .expect("Failed to parse amount");
             let owner: &str = matches.value_of("owner")
                 .expect("Not found owner");
-            let owner_addr = UserAddress::base64_decode(owner);
+            let owner_addr = AccountId::base64_decode(owner);
             let target: &str = matches.value_of("target")
                 .expect("Not found target");
-            let target_addr = UserAddress::base64_decode(target);
+            let target_addr = AccountId::base64_decode(target);
 
             commands::transfer_from(
                 &mut term,
@@ -189,7 +189,7 @@ fn subcommand_anonify<R: Rng>(
                 .expect("Failed to parse amount");
             let target: &str = matches.value_of("target")
                 .expect("Not found target");
-            let target_addr = UserAddress::base64_decode(target);
+            let target_addr = AccountId::base64_decode(target);
 
             commands::mint(
                 &mut term,
@@ -233,7 +233,7 @@ fn subcommand_anonify<R: Rng>(
                 .expect("Failed to parse keyfile-index");
             let spender = matches.value_of("spender")
                 .expect("Not found spender");
-            let spender_addr = UserAddress::base64_decode(spender);
+            let spender_addr = AccountId::base64_decode(spender);
 
             commands::allowance(
                 &mut term,
