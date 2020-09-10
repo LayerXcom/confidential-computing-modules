@@ -63,7 +63,7 @@ impl Web3Http {
             .map_err(|e| anyhow!("{:?}", e))?
             .confirmations(CONFIRMATIONS)
             .options(Options::with(|opt| opt.gas = Some(gas.into())))
-            .sign_and_execute(
+            .execute(
                 bin,
                 (report, report_sig, handshake),
                 output.signer,
