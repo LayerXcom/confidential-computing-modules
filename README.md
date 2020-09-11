@@ -26,19 +26,11 @@ $ docker-compose -f docker/docker-compose-anonify.yml up -d
 
 ### shell scripts
 
-Running node1
+Running nodes
 ```
 $ ./scripts/start-docker.sh
-$ ./scripts/env-anonify.sh // Change env vars depending on your environment
 $ cd anonify
-$ ./scripts/run-server.sh
-```
-
-Running node2
-```
-$ ./scripts/start-docker.sh
 $ ./scripts/env-anonify.sh // Change env vars depending on your environment
-$ cd anonify
 $ ./scripts/run-server.sh
 ```
 
