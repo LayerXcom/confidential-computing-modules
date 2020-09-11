@@ -22,7 +22,9 @@ use frame_host::EnclaveDir;
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
 const ANONYMOUS_ASSET_ABI_PATH: &str = "../../contract-build/Anonify.abi";
-
+const CONFIRMATIONS: usize = 0;
+const ACCOUNT_INDEX: usize = 0;
+const PASSWORD: &str = "anonify0101";
 
 #[test]
 fn test_integration_eth_construct() {
@@ -37,8 +39,8 @@ fn test_integration_eth_construct() {
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -55,9 +57,10 @@ fn test_integration_eth_construct() {
         "construct",
         deployer_addr.clone(),
         gas,
+        CONFIRMATIONS,
     ).unwrap();
 
-    println!("init state receipt: {}", receipt);
+    println!("init state receipt: {:?}", receipt);
 
 
     // Get logs from contract and update state inside enclave.
@@ -88,8 +91,8 @@ fn test_auto_notification() {
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -106,9 +109,10 @@ fn test_auto_notification() {
         "construct",
         deployer_addr.clone(),
         gas,
+        CONFIRMATIONS,
     ).unwrap();
 
-    println!("init state receipt: {}", receipt);
+    println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
     let updated_state = dispatcher
@@ -129,8 +133,9 @@ fn test_auto_notification() {
         "transfer",
         deployer_addr,
         gas,
+        CONFIRMATIONS,
     ).unwrap();
-    println!("receipt: {}", receipt);
+    println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
     let updated_state = dispatcher.block_on_event::<U64>().unwrap().unwrap();
@@ -156,8 +161,8 @@ fn test_integration_eth_transfer() {
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -174,9 +179,10 @@ fn test_integration_eth_transfer() {
         "construct",
         deployer_addr.clone(),
         gas,
+        CONFIRMATIONS,
     ).unwrap();
 
-    println!("init state receipt: {}", receipt);
+    println!("init state receipt: {:?}", receipt);
 
 
     // Get logs from contract and update state inside enclave.
@@ -202,8 +208,9 @@ fn test_integration_eth_transfer() {
         "transfer",
         deployer_addr,
         gas,
+        CONFIRMATIONS,
     ).unwrap();
-    println!("receipt: {}", receipt);
+    println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
     dispatcher.block_on_event::<U64>().unwrap();
@@ -234,8 +241,8 @@ fn test_key_rotation() {
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -244,8 +251,8 @@ fn test_key_rotation() {
     dispatcher.block_on_event::<U64>().unwrap();
 
     // Send handshake
-    let receipt = dispatcher.handshake(deployer_addr.clone(), gas).unwrap();
-    println!("handshake receipt: {}", receipt);
+    let receipt = dispatcher.handshake(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
+    println!("handshake receipt: {:?}", receipt);
 
     // Get handshake from contract
     dispatcher.block_on_event::<U64>().unwrap();
@@ -259,8 +266,9 @@ fn test_key_rotation() {
         "construct",
         deployer_addr.clone(),
         gas,
+        CONFIRMATIONS,
     ).unwrap();
-    println!("init state receipt: {}", receipt);
+    println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
     dispatcher.block_on_event::<U64>().unwrap();
@@ -288,8 +296,8 @@ fn test_integration_eth_approve() {
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -306,9 +314,10 @@ fn test_integration_eth_approve() {
         "construct",
         deployer_addr.clone(),
         gas,
+        CONFIRMATIONS,
     ).unwrap();
 
-    println!("init state receipt: {}", receipt);
+    println!("init state receipt: {:?}", receipt);
 
 
     // Get logs from contract and update state inside enclave.
@@ -330,8 +339,9 @@ fn test_integration_eth_approve() {
         "approve",
         deployer_addr,
         gas,
+        CONFIRMATIONS,
     ).unwrap();
-    println!("receipt: {}", receipt);
+    println!("receipt: {:?}", receipt);
 
 
     // Update state inside enclave
@@ -365,8 +375,8 @@ fn test_integration_eth_transfer_from() {
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -383,9 +393,10 @@ fn test_integration_eth_transfer_from() {
         "construct",
         deployer_addr.clone(),
         gas,
+        CONFIRMATIONS,
     ).unwrap();
 
-    println!("init state receipt: {}", receipt);
+    println!("init state receipt: {:?}", receipt);
 
 
     // Get logs from contract and update state inside enclave.
@@ -416,8 +427,9 @@ fn test_integration_eth_transfer_from() {
         "approve",
         deployer_addr.clone(),
         gas,
+        CONFIRMATIONS,
     ).unwrap();
-    println!("receipt: {}", receipt);
+    println!("receipt: {:?}", receipt);
 
 
     // Update state inside enclave
@@ -454,8 +466,9 @@ fn test_integration_eth_transfer_from() {
         "transfer_from",
         deployer_addr,
         gas,
+        CONFIRMATIONS,
     ).unwrap();
-    println!("receipt: {}", receipt);
+    println!("receipt: {:?}", receipt);
 
 
     // Update state inside enclave
@@ -496,8 +509,8 @@ fn test_integration_eth_mint() {
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -514,9 +527,10 @@ fn test_integration_eth_mint() {
         "construct",
         deployer_addr.clone(),
         gas,
+        CONFIRMATIONS,
     ).unwrap();
 
-    println!("init state receipt: {}", receipt);
+    println!("init state receipt: {:?}", receipt);
 
 
     // Get logs from contract and update state inside enclave.
@@ -533,9 +547,10 @@ fn test_integration_eth_mint() {
         "mint",
         deployer_addr,
         gas,
+        CONFIRMATIONS,
     ).unwrap();
 
-    println!("minted state receipt: {}", receipt);
+    println!("minted state receipt: {:?}", receipt);
 
 
     // Update state inside enclave
@@ -565,8 +580,8 @@ fn test_integration_eth_burn() {
     let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(eid, ETH_URL, event_db).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(0).unwrap();
-    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let contract_addr = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
     dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -583,9 +598,10 @@ fn test_integration_eth_burn() {
         "construct",
         deployer_addr.clone(),
         gas,
+        CONFIRMATIONS,
     ).unwrap();
 
-    println!("init state receipt: {}", receipt);
+    println!("init state receipt: {:?}", receipt);
 
 
     // Get logs from contract and update state inside enclave.
@@ -602,8 +618,9 @@ fn test_integration_eth_burn() {
         "transfer",
         deployer_addr.clone(),
         gas,
+        CONFIRMATIONS,
     ).unwrap();
-    println!("receipt: {}", receipt);
+    println!("receipt: {:?}", receipt);
 
 
     // Update state inside enclave
@@ -619,8 +636,9 @@ fn test_integration_eth_burn() {
         "burn",
         deployer_addr,
         gas,
+        CONFIRMATIONS,
     ).unwrap();
-    println!("receipt: {}", receipt);
+    println!("receipt: {:?}", receipt);
 
 
     // Update state inside enclave

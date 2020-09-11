@@ -33,11 +33,11 @@ where
     pub fn new(eid: sgx_enclave_id_t) -> Self {
         let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
         let abi_path = env::var("ANONYMOUS_ASSET_ABI_PATH").expect("ANONYMOUS_ASSET_ABI_PATH is not set");
-        let ACCOUNT_INDEX: usize = env::var("ACCOUNT_INDEX")
+        let account_index: usize = env::var("ACCOUNT_INDEX")
             .expect("ACCOUNT_INDEX is not set")
             .parse()
             .expect("Failed to parse ACCOUNT_INDEX to usize");
-        let PASSWORD = env::var("PASSWORD").expect("PASSWORD is not set");
+        let password = env::var("PASSWORD").expect("PASSWORD is not set");
         let confirmations: usize = env::var("CONFIRMATIONS")
             .expect("CONFIRMATIONS is not set")
             .parse()
@@ -45,7 +45,7 @@ where
 
         let event_db = Arc::new(DB::new());
         let dispatcher = Dispatcher::<D,S,W,DB>::new(eid, &eth_url, event_db).unwrap();
-        let sender_address = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD.as_str()).unwrap();
+        let sender_address = dispatcher.get_account(account_index, password.as_str()).unwrap();
 
         Server {
             eid,
