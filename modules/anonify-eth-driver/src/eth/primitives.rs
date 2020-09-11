@@ -13,11 +13,11 @@ use web3::{
     contract::{Contract, Options},
     futures::Future,
     transports::{EventLoopHandle, Http},
-    types::{Address, BlockNumber, Filter, FilterBuilder, Log, H256, U256},
+    types::{Address, BlockNumber, Filter, FilterBuilder, Log, H256, U256, TransactionReceipt},
     Web3,
 };
 
-pub const CONFIRMATIONS: usize = 0;
+const UNLOCK_DURATION: u16 = 60;
 
 /// Basic web3 connection components via HTTP.
 #[derive(Debug)]
@@ -39,9 +39,9 @@ impl Web3Http {
         })
     }
 
-    pub fn get_account(&self, index: usize) -> Result<Address> {
+    pub fn get_account(&self, index: usize, password: &str) -> Result<Address> {
         let account = self.web3.eth().accounts().wait()?[index];
-        if !self.web3.personal().unlock_account(account, "anonify0101", Some(60)).wait()? {
+        if !self.web3.personal().unlock_account(account, password, Some(UNLOCK_DURATION)).wait()? {
             return Err(HostError::UnlockError);
         }
 
@@ -53,7 +53,7 @@ impl Web3Http {
         Ok(logs)
     }
 
-    pub fn deploy(&self, output: host_output::JoinGroup) -> Result<Address> {
+    pub fn deploy(&self, output: host_output::JoinGroup, confirmations: usize) -> Result<Address> {
         let abi = include_bytes!("../../../../contract-build/Anonify.abi");
         let bin = include_str!("../../../../contract-build/Anonify.bin");
 
@@ -65,7 +65,7 @@ impl Web3Http {
 
         let contract = Contract::deploy(self.web3.eth(), abi)
             .map_err(|e| anyhow!("{:?}", e))?
-            .confirmations(CONFIRMATIONS)
+            .confirmations(confirmations)
             .options(Options::with(|opt| opt.gas = Some(gas.into())))
             .execute(
                 bin,
@@ -108,18 +108,19 @@ impl Web3Contract {
         })
     }
 
-    pub fn join_group(&self, output: host_output::JoinGroup) -> Result<H256> {
+    pub fn join_group(&self, output: host_output::JoinGroup, confirmations: usize) -> Result<TransactionReceipt> {
         let ecall_output = output.ecall_output.unwrap();
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
         let handshake = ecall_output.handshake().to_vec();
         let gas = output.gas;
 
-        let call = self.contract.call(
+        let call = self.contract.call_with_confirmations(
             "joinGroup",
             (report, report_sig, handshake),
             output.signer,
             Options::with(|opt| opt.gas = Some(gas.into())),
+            confirmations,
         );
 
         // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253
@@ -127,18 +128,19 @@ impl Web3Contract {
         Ok(res)
     }
 
-    pub fn send_instruction(&self, output: host_output::Instruction) -> Result<H256> {
+    pub fn send_instruction(&self, output: host_output::Instruction, confirmations: usize) -> Result<TransactionReceipt> {
         let ecall_output = output.ecall_output.unwrap();
         let ciphertext = ecall_output.encode_ciphertext();
         let enclave_sig = &ecall_output.encode_enclave_sig();
         let msg = ecall_output.msg_as_bytes();
         let gas = output.gas;
 
-        let call = self.contract.call(
+        let call = self.contract.call_with_confirmations(
             "storeInstruction",
             (ciphertext, enclave_sig.to_vec(), H256::from_slice(&msg)),
             output.signer,
             Options::with(|opt| opt.gas = Some(gas.into())),
+            confirmations,
         );
 
         // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253
@@ -149,16 +151,18 @@ impl Web3Contract {
     pub fn handshake(
         &self,
         output: host_output::Handshake,
-    ) -> Result<H256> {
+        confirmations: usize,
+    ) -> Result<TransactionReceipt> {
         let ecall_output = output.ecall_output.unwrap();
         let handshake = ecall_output.handshake().to_vec();
         let gas = output.gas;
 
-        let call = self.contract.call(
+        let call = self.contract.call_with_confirmations(
             "handshake",
             handshake,
             output.signer,
             Options::with(|opt| opt.gas = Some(gas.into())),
+            confirmations,
         );
 
         // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253
@@ -202,8 +206,8 @@ impl Web3Contract {
         })
     }
 
-    pub fn get_account(&self, index: usize) -> Result<Address> {
-        self.web3_conn.get_account(index)
+    pub fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+        self.web3_conn.get_account(index, password)
     }
 
     pub fn address(&self) -> Address {

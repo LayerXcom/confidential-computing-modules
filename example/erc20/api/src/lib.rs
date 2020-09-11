@@ -7,6 +7,7 @@ use frame_common::{
     crypto::{Ed25519ChallengeResponse, AccountId},
     traits::State,
 };
+use web3::types::TransactionReceipt;
 
 // ----------------------
 //  GET and POST types
@@ -31,8 +32,8 @@ pub mod join_group {
             pub contract_addr: String,
         }
 
-        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub String);
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Response(pub TransactionReceipt);
     }
 }
 
@@ -86,8 +87,8 @@ pub mod init_state {
             }
         }
 
-        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub String);
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Response(pub TransactionReceipt);
     }
 }
 
@@ -144,8 +145,8 @@ pub mod transfer {
             }
         }
 
-        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub String);
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Response(pub TransactionReceipt);
     }
 }
 
@@ -202,8 +203,8 @@ pub mod approve {
             }
         }
 
-        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub String);
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Response(pub TransactionReceipt);
     }
 }
 
@@ -263,8 +264,8 @@ pub mod transfer_from {
             }
         }
 
-        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub String);
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Response(pub TransactionReceipt);
     }
 }
 
@@ -321,8 +322,8 @@ pub mod mint {
             }
         }
 
-        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub String);
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Response(pub TransactionReceipt);
     }
 }
 
@@ -376,8 +377,8 @@ pub mod burn {
             }
         }
 
-        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub String);
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Response(pub TransactionReceipt);
     }
 }
 
@@ -385,8 +386,8 @@ pub mod key_rotation {
     pub mod post {
         use super::super::*;
 
-        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub String);
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Response(pub TransactionReceipt);
     }
 }
 

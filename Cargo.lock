@@ -1163,7 +1163,7 @@ dependencies = [
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.111 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde-big-array 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "web3 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "web3 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1222,6 +1222,7 @@ dependencies = [
  "hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "web3 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

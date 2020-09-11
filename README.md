@@ -29,9 +29,7 @@ $ docker-compose -f docker/docker-compose-anonify.yml up -d
 Running node1
 ```
 $ ./scripts/start-docker.sh
-$ export MY_ROSTER_IDX=0
-$ export MAX_ROSTER_IDX=2
-$ export ANONIFY_URL=172.18.0.2:8080 // depends on the container's ip in the docker network
+$ ./scripts/env-anonify.sh // Change env vars depending on your environment
 $ cd anonify
 $ ./scripts/run-server.sh
 ```
@@ -39,9 +37,7 @@ $ ./scripts/run-server.sh
 Running node2
 ```
 $ ./scripts/start-docker.sh
-$ export MY_ROSTER_IDX=1
-$ export MAX_ROSTER_IDX=2
-$ export ANONIFY_URL=172.18.0.3:8080 // depends on the container's ip in the docker network
+$ ./scripts/env-anonify.sh // Change env vars depending on your environment
 $ cd anonify
 $ ./scripts/run-server.sh
 ```
@@ -51,11 +47,13 @@ You can use anonify-cli to communicate with a whole anonify system. See the [tra
 
 Build Anonify's command line utilities.
 ```
+$ ./scripts/env-cli.sh // Change env vars depending on your environment
 $ ./scripts/build-cli.sh
 ```
 
 If you want to build artifacts in release mode, pass a `--release` argument.
 ```
+$ ./scripts/env-cli.sh // Change env vars depending on your environment
 $ ./scripts/build-cli.sh --release
 ```
 
