@@ -31,9 +31,8 @@ pub fn handle_deploy<D, S, W, DB>(
 {
     debug!("Starting deploy a contract...");
 
-    let deployer_addr = server.dispatcher.get_account(ACCOUNT_INDEX, PASSWORD)?;
     let contract_addr = server.dispatcher
-        .deploy(deployer_addr, DEFAULT_GAS)?;
+        .deploy(server.sender_address, DEFAULT_GAS)?;
 
     debug!("Contract address: {:?}", &contract_addr);
     server.dispatcher.set_contract_addr(&contract_addr, &server.abi_path)?;
@@ -51,9 +50,8 @@ pub fn handle_join_group<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
-    let signer = server.dispatcher.get_account(ACCOUNT_INDEX)?;
     let receipt = server.dispatcher.join_group(
-        signer,
+        server.sender_address,
         DEFAULT_GAS,
         &req.contract_addr,
         &server.abi_path,
@@ -73,7 +71,6 @@ pub fn handle_init_state<D, S, W, DB>(
         DB: BlockNumDB,
 {
     let access_right = req.into_access_right()?;
-    let signer = server.dispatcher.get_account(ACCOUNT_INDEX)?;
     let total_supply = U64::from_raw(req.total_supply);
     let init_state = construct{ total_supply };
 
@@ -81,7 +78,7 @@ pub fn handle_init_state<D, S, W, DB>(
         access_right,
         init_state,
         "construct",
-        signer,
+        server.sender_address,
         DEFAULT_GAS,
     )?;
 
@@ -99,7 +96,6 @@ pub fn handle_transfer<D, S, W, DB>(
         DB: BlockNumDB,
 {
     let access_right = req.into_access_right()?;
-    let signer = server.dispatcher.get_account(ACCOUNT_INDEX)?;
     let amount = U64::from_raw(req.amount);
     let recipient = req.target;
     let transfer_state = transfer{ amount, recipient };
@@ -108,7 +104,7 @@ pub fn handle_transfer<D, S, W, DB>(
         access_right,
         transfer_state,
         "transfer",
-        signer,
+        server.sender_address,
         DEFAULT_GAS,
     )?;
 
@@ -126,7 +122,6 @@ pub fn handle_approve<D, S, W, DB>(
         DB: BlockNumDB,
 {
     let access_right = req.into_access_right()?;
-    let signer = server.dispatcher.get_account(ACCOUNT_INDEX)?;
     let amount = U64::from_raw(req.amount);
     let spender = req.target;
     let approve_state = approve { amount, spender };
@@ -135,7 +130,7 @@ pub fn handle_approve<D, S, W, DB>(
         access_right,
         approve_state,
         "approve",
-        signer,
+        server.sender_address,
         DEFAULT_GAS,
     )?;
 
@@ -153,7 +148,6 @@ pub fn handle_mint<D, S, W, DB>(
         DB: BlockNumDB,
 {
     let access_right = req.into_access_right()?;
-    let signer = server.dispatcher.get_account(ACCOUNT_INDEX)?;
     let amount = U64::from_raw(req.amount);
     let recipient = req.target;
     let minting_state = mint{ amount, recipient };
@@ -162,7 +156,7 @@ pub fn handle_mint<D, S, W, DB>(
         access_right,
         minting_state,
         "mint",
-        signer,
+        server.sender_address,
         DEFAULT_GAS,
     )?;
 
@@ -180,7 +174,6 @@ pub fn handle_burn<D, S, W, DB>(
         DB: BlockNumDB,
 {
     let access_right = req.into_access_right()?;
-    let signer = server.dispatcher.get_account(ACCOUNT_INDEX)?;
     let amount = U64::from_raw(req.amount);
     let burn_state = burn{ amount };
 
@@ -188,7 +181,7 @@ pub fn handle_burn<D, S, W, DB>(
         access_right,
         burn_state,
         "burn",
-        signer,
+        server.sender_address,
         DEFAULT_GAS,
     )?;
 
@@ -206,7 +199,6 @@ pub fn handle_transfer_from<D, S, W, DB>(
         DB: BlockNumDB,
 {
     let access_right = req.into_access_right()?;
-    let signer = server.dispatcher.get_account(ACCOUNT_INDEX)?;
     let amount = U64::from_raw(req.amount);
     let owner = req.owner;
     let recipient = req.target;
@@ -216,7 +208,7 @@ pub fn handle_transfer_from<D, S, W, DB>(
         access_right,
         transferred_from_state,
         "transfer_from",
-        signer,
+        server.sender_address,
         DEFAULT_GAS,
     )?;
 
@@ -232,9 +224,8 @@ pub fn handle_key_rotation<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
-    let signer = server.dispatcher.get_account(ACCOUNT_INDEX)?;
     let receipt = server.dispatcher.handshake(
-        signer,
+        server.sender_address,
         DEFAULT_GAS,
     )?;
 

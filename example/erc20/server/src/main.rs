@@ -19,6 +19,7 @@ pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNum
     pub eth_url: String,
     pub abi_path: String,
     pub dispatcher: Dispatcher<D, S, W, DB>,
+    pub sender_address: Address,
 }
 
 impl<D, S, W, DB> Server<D, S, W, DB>
@@ -29,16 +30,24 @@ where
     DB: BlockNumDB,
 {
     pub fn new(eid: sgx_enclave_id_t) -> Self {
-        let eth_url = env::var("ETH_URL").expect("ETH_URL is not set.");
-        let abi_path = env::var("ANONYMOUS_ASSET_ABI_PATH").expect("ANONYMOUS_ASSET_ABI_PATH is not set.");
+        let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
+        let abi_path = env::var("ANONYMOUS_ASSET_ABI_PATH").expect("ANONYMOUS_ASSET_ABI_PATH is not set");
+        let ACCOUNT_INDEX: usize = env::var("ACCOUNT_INDEX")
+            .expect("ACCOUNT_INDEX is not set")
+            .parse()
+            .expect("Failed to parse ACCOUNT_INDEX to usize");
+        let PASSWORD = env::var("PASSWORD").expect("PASSWORD is not set");
+
         let event_db = Arc::new(DB::new());
         let dispatcher = Dispatcher::<D,S,W,DB>::new(eid, &eth_url, event_db).unwrap();
+        let sender_address = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD.as_str()).unwrap();
 
         Server {
             eid,
             eth_url,
             abi_path,
-            dispatcher
+            dispatcher,
+            sender_address,
         }
     }
 }

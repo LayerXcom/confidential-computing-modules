@@ -34,7 +34,7 @@ pub(crate) fn join_group(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {}", res);
+    println!("Transaction Receipt: {:?}", res);
 
     Ok(())
 }
@@ -57,7 +57,7 @@ pub(crate) fn init_state<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {}", res);
+    println!("Transaction Receipt: {:?}", res);
 
     Ok(())
 }
@@ -81,7 +81,7 @@ pub(crate) fn transfer<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {}", res);
+    println!("Transaction Receipt: {:?}", res);
     Ok(())
 }
 
@@ -104,7 +104,7 @@ pub(crate) fn approve<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {}", res);
+    println!("Transaction Receipt: {:?}", res);
     Ok(())
 }
 
@@ -128,7 +128,7 @@ pub(crate) fn transfer_from<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {}", res);
+    println!("Transaction Receipt: {:?}", res);
     Ok(())
 }
 
@@ -151,7 +151,7 @@ pub(crate) fn mint<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {}", res);
+    println!("Transaction Receipt: {:?}", res);
     Ok(())
 }
 
@@ -173,7 +173,7 @@ pub(crate) fn burn<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {}", res);
+    println!("Transaction Receipt: {:?}", res);
     Ok(())
 }
 
@@ -185,7 +185,7 @@ pub(crate) fn key_rotation(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {}", res);
+    println!("Transaction Receipt: {:?}", res);
 
     Ok(())
 }
@@ -208,7 +208,7 @@ pub(crate) fn allowance<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Current State: {}", res);
+    println!("Current State: {:?}", res);
     Ok(())
 }
 
@@ -229,7 +229,7 @@ pub(crate) fn balance_of<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Current State: {}", res);
+    println!("Current State: {:?}", res);
     Ok(())
 }
 
