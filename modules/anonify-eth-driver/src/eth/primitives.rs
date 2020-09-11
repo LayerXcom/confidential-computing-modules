@@ -17,7 +17,7 @@ use web3::{
     Web3,
 };
 
-pub const CONFIRMATIONS: usize = 1;
+pub const CONFIRMATIONS: usize = 0;
 
 /// Basic web3 connection components via HTTP.
 #[derive(Debug)]
