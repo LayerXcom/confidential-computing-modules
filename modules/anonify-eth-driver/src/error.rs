@@ -10,6 +10,8 @@ pub enum HostError {
     AddressNotSet,
     #[error("Event watcher have not been set.")]
     EventWatcherNotSet,
+    #[error("Failed unlock the account")]
+    UnlockError,
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
     #[error("Web3 error: {0}")]

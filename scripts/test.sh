@@ -35,6 +35,7 @@ cargo test -p frame-runtime
 
 # Buildings
 
+export ANONIFY_URL=http://172.28.1.1:8080
 ./scripts/build-cli.sh
 
 echo "Building ERC20 and invoice flow examples..."
