@@ -9,6 +9,7 @@ use anonify_eth_driver::{
 use frame_host::EnclaveDir;
 use handlers::*;
 use actix_web::{web, App, HttpServer};
+use web3::types::Address;
 
 mod handlers;
 

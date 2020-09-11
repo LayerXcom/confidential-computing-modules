@@ -37,15 +37,16 @@ impl Deployer for EthDeployer {
         })
     }
 
-    fn get_account(&self, index: usize) -> Result<Address> {
-        self.web3_conn.get_account(index)
+    fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+        self.web3_conn.get_account(index, password)
     }
 
     fn deploy(
         &mut self,
         host_output: host_output::JoinGroup,
+        confirmations: usize,
     ) -> Result<String> {
-        let contract_addr = self.web3_conn.deploy(host_output)?;
+        let contract_addr = self.web3_conn.deploy(host_output, confirmations)?;
         self.address = Some(contract_addr);
 
         Ok(hex::encode(contract_addr.as_bytes()))
@@ -102,15 +103,16 @@ impl Sender for EthSender {
         }
     }
 
-    fn get_account(&self, index: usize) -> Result<Address> {
-        self.contract.get_account(index)
+    fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+        self.contract.get_account(index, password)
     }
 
     fn join_group(
         &self,
         host_output: host_output::JoinGroup,
+        confirmations: usize,
     ) -> Result<String> {
-        let receipt = self.contract.join_group(host_output)?;
+        let receipt = self.contract.join_group(host_output, confirmations)?;
 
         Ok(hex::encode(receipt.as_bytes()))
     }
@@ -118,8 +120,9 @@ impl Sender for EthSender {
     fn send_instruction(
         &self,
         host_output: host_output::Instruction,
+        confirmations: usize,
     ) -> Result<String> {
-        let receipt = self.contract.send_instruction(host_output)?;
+        let receipt = self.contract.send_instruction(host_output, confirmations)?;
 
         Ok(hex::encode(receipt.as_bytes()))
     }
@@ -127,8 +130,9 @@ impl Sender for EthSender {
     fn handshake(
         &self,
         host_output: host_output::Handshake,
+        confirmations: usize,
     ) -> Result<String> {
-        let receipt = self.contract.handshake(host_output)?;
+        let receipt = self.contract.handshake(host_output, confirmations)?;
 
         Ok(hex::encode(receipt.as_bytes()))
     }

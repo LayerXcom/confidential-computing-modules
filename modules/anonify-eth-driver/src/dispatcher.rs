@@ -83,6 +83,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         &self,
         deploy_user: Address,
         gas: u64,
+        confirmations: usize,
     ) -> Result<String> {
         let mut inner = self.inner.write();
         let eid = inner.deployer.get_enclave_id();
@@ -90,7 +91,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
         inner.deployer
-            .deploy(host_output)
+            .deploy(host_output, confirmations)
     }
 
     pub fn join_group<P: AsRef<Path> + Copy>(
@@ -99,6 +100,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         gas: u64,
         contract_addr: &str,
         abi_path: P,
+        confirmations: usize,
     ) -> Result<String> {
         self.set_contract_addr(contract_addr, abi_path)?;
 
@@ -109,7 +111,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
 
         inner.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .join_group(host_output)
+            .join_group(host_output, confirmations)
     }
 
     pub fn send_instruction<ST, C, AP>(
@@ -119,6 +121,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         call_name: &str,
         signer: Address,
         gas: u64,
+        confirmations: usize,
     ) -> Result<String>
         where
             ST: State,
@@ -133,7 +136,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         let host_output = InstructionWorkflow::exec(input, eid)?;
 
         match &inner.sender {
-            Some(s) => s.send_instruction(host_output),
+            Some(s) => s.send_instruction(host_output, confirmations),
             None => Err(HostError::AddressNotSet),
         }
     }
@@ -142,6 +145,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         &self,
         signer: Address,
         gas: u64,
+        confirmations: usize,
     ) -> Result<String> {
         let inner = self.inner.read();
         let input = host_input::Handshake::new(signer, gas);
@@ -150,7 +154,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
 
         inner.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .handshake(host_output)
+            .handshake(host_output, confirmations)
     }
 
     pub fn block_on_event<St>(
@@ -168,11 +172,11 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
             .block_on_event(eid)
     }
 
-    pub fn get_account(&self, index: usize) -> Result<Address> {
+    pub fn get_account(&self, index: usize, password: &str) -> Result<Address> {
         self.inner
             .read()
             .deployer
-            .get_account(index)
+            .get_account(index, password)
     }
 
     pub fn register_notification<AP>(&self, access_policy: AP) -> Result<()>

@@ -31,7 +31,7 @@ pub fn handle_deploy<D, S, W, DB>(
 {
     debug!("Starting deploy a contract...");
 
-    let deployer_addr = server.dispatcher.get_account(ACCOUNT_INDEX)?;
+    let deployer_addr = server.dispatcher.get_account(ACCOUNT_INDEX, PASSWORD)?;
     let contract_addr = server.dispatcher
         .deploy(deployer_addr, DEFAULT_GAS)?;
 

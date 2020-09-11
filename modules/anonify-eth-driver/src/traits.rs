@@ -22,12 +22,13 @@ use crate::{
 pub trait Deployer: Sized {
     fn new(enclave_id: sgx_enclave_id_t, node_url: &str) -> Result<Self>;
 
-    fn get_account(&self, index: usize) -> Result<Address>;
+    fn get_account(&self, index: usize, password: &str) -> Result<Address>;
 
     /// Deploying contract with attestation.
     fn deploy(
         &mut self,
         host_output: host_output::JoinGroup,
+        confirmations: usize,
     ) -> Result<String>;
 
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;
@@ -50,23 +51,26 @@ pub trait Sender: Sized {
         contract: ContractKind,
     ) -> Self;
 
-    fn get_account(&self, index: usize) -> Result<Address>;
+    fn get_account(&self, index: usize, password: &str) -> Result<Address>;
 
     /// Send an encrypted instruction of state transition to blockchain nodes.
     fn send_instruction(
         &self,
         host_output: host_output::Instruction,
+        confirmations: usize,
     ) -> Result<String>;
 
     /// Attestation with deployed contract.
     fn join_group(
         &self,
         host_output: host_output::JoinGroup,
+        confirmations: usize,
     ) -> Result<String>;
 
     fn handshake(
         &self,
         host_output: host_output::Handshake,
+        confirmations: usize,
     ) -> Result<String>;
 
     fn get_contract(self) -> ContractKind;
