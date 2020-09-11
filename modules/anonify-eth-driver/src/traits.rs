@@ -10,7 +10,7 @@ use frame_common::{
     state_types::UpdatedState,
 };
 use anonify_io_types::*;
-use web3::types::Address;
+use web3::types::{Address, TransactionReceipt};
 use crate::{
     error::Result,
     eventdb::{BlockNumDB, InnerEnclaveLog},
@@ -58,20 +58,20 @@ pub trait Sender: Sized {
         &self,
         host_output: host_output::Instruction,
         confirmations: usize,
-    ) -> Result<String>;
+    ) -> Result<TransactionReceipt>;
 
     /// Attestation with deployed contract.
     fn join_group(
         &self,
         host_output: host_output::JoinGroup,
         confirmations: usize,
-    ) -> Result<String>;
+    ) -> Result<TransactionReceipt>;
 
     fn handshake(
         &self,
         host_output: host_output::Handshake,
         confirmations: usize,
-    ) -> Result<String>;
+    ) -> Result<TransactionReceipt>;
 
     fn get_contract(self) -> ContractKind;
 }

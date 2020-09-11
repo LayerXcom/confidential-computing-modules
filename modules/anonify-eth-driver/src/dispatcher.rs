@@ -18,7 +18,7 @@ use frame_common::{
 use frame_host::engine::HostEngine;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use web3::types::Address;
+use web3::types::{Address, TransactionReceipt};
 use crate::workflow::*;
 
 /// This dispatcher communicates with a blockchain node.
@@ -101,7 +101,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         contract_addr: &str,
         abi_path: P,
         confirmations: usize,
-    ) -> Result<String> {
+    ) -> Result<TransactionReceipt> {
         self.set_contract_addr(contract_addr, abi_path)?;
 
         let inner = self.inner.read();
@@ -122,7 +122,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         signer: Address,
         gas: u64,
         confirmations: usize,
-    ) -> Result<String>
+    ) -> Result<TransactionReceipt>
         where
             ST: State,
             C: CallNameConverter,
@@ -146,7 +146,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         signer: Address,
         gas: u64,
         confirmations: usize,
-    ) -> Result<String> {
+    ) -> Result<TransactionReceipt> {
         let inner = self.inner.read();
         let input = host_input::Handshake::new(signer, gas);
         let eid = inner.deployer.get_enclave_id();

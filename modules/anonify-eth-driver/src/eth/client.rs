@@ -8,7 +8,7 @@ use frame_common::{
     traits::*,
     state_types::UpdatedState,
 };
-use web3::types::Address;
+use web3::types::{Address, TransactionReceipt};
 use crate::{
     error::Result,
     eventdb::{BlockNumDB, InnerEnclaveLog},
@@ -111,30 +111,24 @@ impl Sender for EthSender {
         &self,
         host_output: host_output::JoinGroup,
         confirmations: usize,
-    ) -> Result<String> {
-        let receipt = self.contract.join_group(host_output, confirmations)?;
-
-        Ok(hex::encode(receipt.as_bytes()))
+    ) -> Result<TransactionReceipt> {
+        self.contract.join_group(host_output, confirmations)
     }
 
     fn send_instruction(
         &self,
         host_output: host_output::Instruction,
         confirmations: usize,
-    ) -> Result<String> {
-        let receipt = self.contract.send_instruction(host_output, confirmations)?;
-
-        Ok(hex::encode(receipt.as_bytes()))
+    ) -> Result<TransactionReceipt> {
+        self.contract.send_instruction(host_output, confirmations)
     }
 
     fn handshake(
         &self,
         host_output: host_output::Handshake,
         confirmations: usize,
-    ) -> Result<String> {
-        let receipt = self.contract.handshake(host_output, confirmations)?;
-
-        Ok(hex::encode(receipt.as_bytes()))
+    ) -> Result<TransactionReceipt> {
+        self.contract.handshake(host_output, confirmations)
     }
 
     fn get_contract(self) -> ContractKind {
