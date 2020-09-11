@@ -23,6 +23,7 @@ use frame_host::EnclaveDir;
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
 const ANONYMOUS_ASSET_ABI_PATH: &str = "../../contract-build/Anonify.abi";
 
+
 #[test]
 fn test_integration_eth_construct() {
     env::set_var("MY_ROSTER_IDX", "0");

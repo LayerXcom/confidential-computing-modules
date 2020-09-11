@@ -18,7 +18,6 @@ use actix_web::{
 use crate::Server;
 
 const DEFAULT_GAS: u64 = 5_000_000;
-const ACCOUNT_INDEX: usize = 1;
 
 pub fn handle_deploy<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
@@ -32,7 +31,7 @@ pub fn handle_deploy<D, S, W, DB>(
     debug!("Starting deploy a contract...");
 
     let contract_addr = server.dispatcher
-        .deploy(server.sender_address, DEFAULT_GAS)?;
+        .deploy(server.sender_address, DEFAULT_GAS, server.confirmations)?;
 
     debug!("Contract address: {:?}", &contract_addr);
     server.dispatcher.set_contract_addr(&contract_addr, &server.abi_path)?;
@@ -55,6 +54,7 @@ pub fn handle_join_group<D, S, W, DB>(
         DEFAULT_GAS,
         &req.contract_addr,
         &server.abi_path,
+        server.confirmations,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::join_group::post::Response(receipt)))
@@ -80,6 +80,7 @@ pub fn handle_init_state<D, S, W, DB>(
         "construct",
         server.sender_address,
         DEFAULT_GAS,
+        server.confirmations,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::init_state::post::Response(receipt)))
@@ -106,6 +107,7 @@ pub fn handle_transfer<D, S, W, DB>(
         "transfer",
         server.sender_address,
         DEFAULT_GAS,
+        server.confirmations,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::transfer::post::Response(receipt)))
@@ -132,6 +134,7 @@ pub fn handle_approve<D, S, W, DB>(
         "approve",
         server.sender_address,
         DEFAULT_GAS,
+        server.confirmations,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::approve::post::Response(receipt)))
@@ -158,6 +161,7 @@ pub fn handle_mint<D, S, W, DB>(
         "mint",
         server.sender_address,
         DEFAULT_GAS,
+        server.confirmations,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::mint::post::Response(receipt)))
@@ -183,6 +187,7 @@ pub fn handle_burn<D, S, W, DB>(
         "burn",
         server.sender_address,
         DEFAULT_GAS,
+        server.confirmations,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::burn::post::Response(receipt)))
@@ -210,6 +215,7 @@ pub fn handle_transfer_from<D, S, W, DB>(
         "transfer_from",
         server.sender_address,
         DEFAULT_GAS,
+        server.confirmations,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::transfer_from::post::Response(receipt)))
@@ -227,6 +233,7 @@ pub fn handle_key_rotation<D, S, W, DB>(
     let receipt = server.dispatcher.handshake(
         server.sender_address,
         DEFAULT_GAS,
+        server.confirmations,
     )?;
 
     Ok(HttpResponse::Ok().json(erc20_api::key_rotation::post::Response(receipt)))

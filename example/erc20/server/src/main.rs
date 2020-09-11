@@ -18,6 +18,7 @@ pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNum
     pub eid: sgx_enclave_id_t,
     pub eth_url: String,
     pub abi_path: String,
+    pub confirmations: usize,
     pub dispatcher: Dispatcher<D, S, W, DB>,
     pub sender_address: Address,
 }
@@ -37,6 +38,10 @@ where
             .parse()
             .expect("Failed to parse ACCOUNT_INDEX to usize");
         let PASSWORD = env::var("PASSWORD").expect("PASSWORD is not set");
+        let confirmations: usize = env::var("CONFIRMATIONS")
+            .expect("CONFIRMATIONS is not set")
+            .parse()
+            .expect("Failed to parse ACCOUNT_INDEX to usize");
 
         let event_db = Arc::new(DB::new());
         let dispatcher = Dispatcher::<D,S,W,DB>::new(eid, &eth_url, event_db).unwrap();
@@ -46,6 +51,7 @@ where
             eid,
             eth_url,
             abi_path,
+            confirmations,
             dispatcher,
             sender_address,
         }
