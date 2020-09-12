@@ -18,11 +18,13 @@ use frame_enclave::ocalls::{sgx_init_quote, get_quote};
 use crate::{
     notify::Notifier,
     crypto::EnclaveIdentityKey,
-    config::{UNTIL_ROSTER_IDX, UNTIL_EPOCH},
     error::Result,
     kvs::EnclaveDB,
     group_key::GroupKey,
 };
+
+const UNTIL_ROSTER_IDX: usize = 10;
+const UNTIL_EPOCH: usize = 30;
 
 impl StateOps for EnclaveContext {
     type S = StateType;
