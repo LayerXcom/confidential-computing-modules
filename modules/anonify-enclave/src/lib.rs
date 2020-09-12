@@ -9,7 +9,6 @@ mod crypto;
 mod error;
 pub mod kvs;
 pub mod context;
-pub mod config;
 mod group_key;
 pub mod notify;
 pub mod instructions;
