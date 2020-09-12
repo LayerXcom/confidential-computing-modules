@@ -1,6 +1,7 @@
 use std::{
     slice,
     marker::PhantomData,
+    env,
 };
 use sgx_types::*;
 use frame_types::*;
@@ -21,7 +22,6 @@ use anyhow::{Result, anyhow};
 use crate::{
     instructions::Instructions,
     context::EnclaveContext,
-    config::{IAS_URL, TEST_SUB_KEY},
 };
 
 #[derive(Debug, Clone)]
@@ -168,7 +168,9 @@ impl EnclaveEngine for CallJoinGroup {
         C: ContextOps<S=StateType> + Clone,
     {
         let quote = enclave_context.quote()?;
-        let (report, report_sig) = RAService::remote_attestation(IAS_URL, TEST_SUB_KEY, &quote)?;
+        let ias_url = env::var("IAS_URL")?;
+        let sub_key = env::var("SUB_KEY")?;
+        let (report, report_sig) = RAService::remote_attestation(ias_url.as_str(), sub_key.as_str(), &quote)?;
         let group_key = &*enclave_context.read_group_key();
         let handshake = group_key.create_handshake()?;
 

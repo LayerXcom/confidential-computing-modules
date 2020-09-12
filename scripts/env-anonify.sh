@@ -12,3 +12,5 @@ export ACCOUNT_INDEX=1
 export PASSWORD=anonify0101
 
 export SPID=2C149BFC94A61D306A96211AED155BE9
+export IAS_URL=https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report
+export SUB_KEY=77e2533de0624df28dc3be3a5b9e50d9
