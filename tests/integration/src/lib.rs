@@ -30,6 +30,7 @@ const PASSWORD: &str = "anonify0101";
 fn test_integration_eth_construct() {
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
+    env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -80,6 +81,7 @@ fn test_integration_eth_construct() {
 fn test_auto_notification() {
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
+    env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -150,6 +152,7 @@ fn test_auto_notification() {
 fn test_integration_eth_transfer() {
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
+    env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -230,6 +233,7 @@ fn test_integration_eth_transfer() {
 fn test_key_rotation() {
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
+    env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -286,6 +290,7 @@ fn test_key_rotation() {
 fn test_integration_eth_approve() {
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
+    env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -364,6 +369,7 @@ fn test_integration_eth_approve() {
 fn test_integration_eth_transfer_from() {
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
+    env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -499,6 +505,7 @@ fn test_integration_eth_transfer_from() {
 fn test_integration_eth_mint() {
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
+    env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -570,6 +577,7 @@ fn test_integration_eth_mint() {
 fn test_integration_eth_burn() {
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
+    env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
