@@ -15,11 +15,11 @@ use super::{
 use crate::handshake::AccessKey;
 use frame_common::crypto::sgx_rand_assign;
 use anyhow::{Result, anyhow};
-use codec::Encode;
+use codec::{Encode, Decode, Input};
 use sgx_tseal::SgxSealedData;
-use sgx_types::sgx_attributes_t;
+use sgx_types::{sgx_attributes_t, sgx_sealed_data_t, SGX_KEYPOLICY_MRENCLAVE};
 
-const KEYPOLICY_MRENCLAVE: u16 = 0x0001;
+const SEALED_DATA_SIZE: usize = 256;
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);
@@ -193,17 +193,51 @@ impl PathSecret {
         self.0.as_bytes()
     }
 
-    pub fn seal(&self) -> Result<SgxSealedData<Self>> {
+    pub fn seal(&self) -> Result<SealedPathSecret> {
         let additional = [0u8; 0];
         let attribute_mask = sgx_attributes_t { flags: 0xffff_ffff_ffff_fff3, xfrm: 0 };
 
-        SgxSealedData::<Self>::seal_data_ex(
-            KEYPOLICY_MRENCLAVE,
+        let sealed_data = SgxSealedData::<Self>::seal_data_ex(
+            SGX_KEYPOLICY_MRENCLAVE,
             attribute_mask,
             0, //misc mask
             &additional,
             &self
         )
-        .map_err(|e| anyhow!("error: {:?}", e))
+        .map_err(|e| anyhow!("error: {:?}", e))?;
+
+        Ok(SealedPathSecret::new(sealed_data))
+    }
+}
+
+#[derive(Default, Clone)]
+pub struct SealedPathSecret<'a>(SgxSealedData<'a, PathSecret>);
+
+impl<'a> SealedPathSecret<'a> {
+    pub fn new(sealed_data: SgxSealedData<'a, PathSecret>) -> Self {
+        SealedPathSecret(sealed_data)
+    }
+
+    pub fn unseal(&self) -> Result<PathSecret> {
+        let unsealed_data = self.0.unseal_data()
+            .map_err(|e| anyhow!("error: {:?}", e))?;
+
+        Ok(*unsealed_data.get_decrypt_txt())
+    }
+}
+
+impl Encode for SealedPathSecret<'_> {
+    fn encode(&self) -> Vec<u8> {
+        let mut res = vec![0u8; SEALED_DATA_SIZE];
+        unsafe {
+            self.0.to_raw_sealed_data_t(res.as_mut_ptr() as *mut sgx_sealed_data_t, SEALED_DATA_SIZE as u32);
+        }
+        res
+    }
+}
+
+impl Decode for SealedPathSecret<'_> {
+    fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
+        unimplemented!();
     }
 }
