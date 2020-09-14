@@ -232,12 +232,20 @@ impl Encode for SealedPathSecret<'_> {
         unsafe {
             self.0.to_raw_sealed_data_t(res.as_mut_ptr() as *mut sgx_sealed_data_t, SEALED_DATA_SIZE as u32);
         }
+
         res
     }
 }
 
 impl Decode for SealedPathSecret<'_> {
     fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
-        unimplemented!();
+        let mut buf = [0u8; SEALED_DATA_SIZE];
+        value.read(&mut buf)?;
+        let sealed_data = unsafe {
+            SgxSealedData::<PathSecret>::from_raw_sealed_data_t(buf.as_mut_ptr() as *mut sgx_sealed_data_t,  SEALED_DATA_SIZE as u32)
+        }
+        .expect("Failed decoding to SgxSealedData");
+
+        Ok(SealedPathSecret::new(sealed_data))
     }
 }
