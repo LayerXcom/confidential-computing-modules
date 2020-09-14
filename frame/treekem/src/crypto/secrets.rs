@@ -14,7 +14,7 @@ use super::{
 };
 use crate::handshake::AccessKey;
 use frame_common::crypto::sgx_rand_assign;
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use codec::Encode;
 use sgx_tseal::SgxSealedData;
 use sgx_types::sgx_attributes_t;
@@ -194,7 +194,7 @@ impl PathSecret {
     }
 
     pub fn seal(&self) -> Result<SgxSealedData<Self>> {
-        let additional = [0u8; 0]; // todo: epoch
+        let additional = [0u8; 0];
         let attribute_mask = sgx_attributes_t { flags: 0xffff_ffff_ffff_fff3, xfrm: 0 };
 
         SgxSealedData::<Self>::seal_data_ex(
@@ -204,5 +204,6 @@ impl PathSecret {
             &additional,
             &self
         )
+        .map_err(|e| anyhow!("error: {:?}", e))
     }
 }
