@@ -16,6 +16,10 @@ use crate::handshake::AccessKey;
 use frame_common::crypto::sgx_rand_assign;
 use anyhow::Result;
 use codec::Encode;
+use sgx_tseal::SgxSealedData;
+use sgx_types::sgx_attributes_t;
+
+const KEYPOLICY_MRENCLAVE: u16 = 0x0001;
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);
@@ -126,6 +130,8 @@ impl From<&[u8]> for NodeSecret {
 #[derive(Debug, Clone)]
 pub struct PathSecret(HmacKey);
 
+unsafe impl sgx_types::marker::ContiguousMemory for PathSecret {}
+
 impl From<PathSecret> for HmacKey {
     fn from(path: PathSecret) -> Self {
         path.0
@@ -185,5 +191,18 @@ impl PathSecret {
 
     pub fn as_bytes(&self) -> &[u8] {
         self.0.as_bytes()
+    }
+
+    pub fn seal(&self) -> Result<SgxSealedData<Self>> {
+        let additional = [0u8; 0]; // todo: epoch
+        let attribute_mask = sgx_attributes_t { flags: 0xffff_ffff_ffff_fff3, xfrm: 0 };
+
+        SgxSealedData::seal_data_ex(
+            KEYPOLICY_MRENCLAVE,
+            attribute_mask,
+            0, //misc mask
+            &additional,
+            &self
+        )
     }
 }
