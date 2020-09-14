@@ -10,7 +10,6 @@ use frame_common::{
     state_types::{StateType, MemId, UpdatedState},
     traits::AccessPolicy,
 };
-use frame_treekem::SealedPathSecret;
 
 pub mod input {
     use super::*;
