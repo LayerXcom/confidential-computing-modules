@@ -15,7 +15,7 @@ mod test_utils;
 pub use crate::application::AppKeyChain;
 pub use crate::group_state::GroupState;
 pub use crate::handshake::Handshake;
-pub use crate::crypto::secrets::PathSecret;
+pub use crate::crypto::secrets::{PathSecret, SealedPathSecret};
 pub use crate::crypto::ecies::EciesCiphertext;
 pub use crate::crypto::dh::{DhPrivateKey, DhPubKey};
 

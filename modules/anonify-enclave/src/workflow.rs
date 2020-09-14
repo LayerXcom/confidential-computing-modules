@@ -13,7 +13,10 @@ use frame_common::{
     state_types::{MemId, StateType},
 };
 use frame_runtime::traits::*;
-use frame_treekem::handshake::HandshakeParams;
+use frame_treekem::{
+    SealedPathSecret,
+    handshake::HandshakeParams
+};
 use ed25519_dalek::{PublicKey, Signature};
 use codec::{Decode, Encode};
 use remote_attestation::RAService;
@@ -29,7 +32,7 @@ pub struct Instruction<AP: AccessPolicy> {
     phantom: PhantomData<AP>,
 }
 
-impl<AP: AccessPolicy> EnclaveEngine for Instruction<AP> {
+impl<'a, AP: AccessPolicy> EnclaveEngine for Instruction<AP> {
     type EI = input::Instruction<AP>;
     type EO = output::Instruction;
 
@@ -127,7 +130,7 @@ pub struct GetState<AP: AccessPolicy> {
     phantom: PhantomData<AP>,
 }
 
-impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
+impl<'a, AP: AccessPolicy> EnclaveEngine for GetState<AP> {
     type EI = input::GetState<AP>;
     type EO = output::ReturnState;
 
@@ -172,12 +175,14 @@ impl EnclaveEngine for CallJoinGroup {
         let sub_key = env::var("SUB_KEY")?;
         let (report, report_sig) = RAService::remote_attestation(ias_url.as_str(), sub_key.as_str(), &quote)?;
         let group_key = &*enclave_context.read_group_key();
-        let handshake = group_key.create_handshake()?;
+        let (handshake, path_secret) = group_key.create_handshake()?;
+        let sealed_path_secret = path_secret.seal()?;
 
         Ok(output::ReturnJoinGroup::new(
             report.into_vec(),
             report_sig.into_vec(),
             handshake.encode(),
+            sealed_path_secret,
         ))
     }
 }
@@ -199,9 +204,10 @@ impl EnclaveEngine for CallHandshake {
         C: ContextOps<S=StateType> + Clone,
     {
         let group_key = &*enclave_context.read_group_key();
-        let handshake = group_key.create_handshake()?;
+        let (handshake, path_secret) = group_key.create_handshake()?;
+        let sealed_path_secret = path_secret.seal()?;
 
-        Ok(output::ReturnHandshake::new(handshake.encode()))
+        Ok(output::ReturnHandshake::new(handshake.encode(), sealed_path_secret))
     }
 }
 
@@ -210,7 +216,7 @@ pub struct RegisterNotification<AP: AccessPolicy> {
     phantom: PhantomData<AP>,
 }
 
-impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
+impl<'a, AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
     type EI = input::RegisterNotification<AP>;
     type EO = output::Empty;
 

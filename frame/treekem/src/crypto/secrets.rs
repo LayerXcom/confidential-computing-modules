@@ -6,6 +6,7 @@
 //! -> app_keychain
 
 use std::vec::Vec;
+use std::fmt;
 use super::{
     SHA256_OUTPUT_LEN, hkdf,
     dh::{DhPrivateKey, DhPubKey},
@@ -193,20 +194,19 @@ impl PathSecret {
         self.0.as_bytes()
     }
 
-    pub fn seal(&self) -> Result<SealedPathSecret> {
+    pub fn seal(self) -> Result<Vec<u8>> {
         let additional = [0u8; 0];
         let attribute_mask = sgx_attributes_t { flags: 0xffff_ffff_ffff_fff3, xfrm: 0 };
-
         let sealed_data = SgxSealedData::<Self>::seal_data_ex(
             SGX_KEYPOLICY_MRENCLAVE,
             attribute_mask,
             0, //misc mask
             &additional,
-            &self
+            &self,
         )
         .map_err(|e| anyhow!("error: {:?}", e))?;
 
-        Ok(SealedPathSecret::new(sealed_data))
+        Ok(SealedPathSecret::new(sealed_data).encode())
     }
 }
 
@@ -247,5 +247,12 @@ impl Decode for SealedPathSecret<'_> {
         .expect("Failed decoding to SgxSealedData");
 
         Ok(SealedPathSecret::new(sealed_data))
+    }
+}
+
+impl fmt::Debug for SealedPathSecret<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SealedPathSecret")
+         .finish()
     }
 }
