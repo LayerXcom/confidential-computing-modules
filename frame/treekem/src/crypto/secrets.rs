@@ -128,7 +128,7 @@ impl From<&[u8]> for NodeSecret {
 }
 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PathSecret(HmacKey);
 
 unsafe impl sgx_types::marker::ContiguousMemory for PathSecret {}
@@ -194,7 +194,7 @@ impl PathSecret {
         self.0.as_bytes()
     }
 
-    pub fn seal(self) -> Result<Vec<u8>> {
+    pub fn encoded_seal(self) -> Result<Vec<u8>> {
         let additional = [0u8; 0];
         let attribute_mask = sgx_attributes_t { flags: 0xffff_ffff_ffff_fff3, xfrm: 0 };
         let sealed_data = SgxSealedData::<Self>::seal_data_ex(
@@ -254,5 +254,27 @@ impl fmt::Debug for SealedPathSecret<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("SealedPathSecret")
          .finish()
+    }
+}
+
+#[cfg(debug_assertions)]
+pub(crate) mod tests {
+    use super::*;
+    use libsgx_test_utils::*;
+    use std::string::String;
+
+    pub(crate) fn run_tests() -> bool {
+        run_tests!(
+            test_seal_unseal_path_secret,
+        )
+    }
+
+    fn test_seal_unseal_path_secret() {
+        let path_secret = PathSecret::new_from_random_sgx();
+        let encoded_sealed_path_secret = path_secret.encoded_seal().unwrap();
+        println!("encoded_sealed_path_secret: {:?}", encoded_sealed_path_secret);
+        let sealed_path_secret = SealedPathSecret::decode(&mut &encoded_sealed_path_secret[..]).unwrap();
+        let unsealed_path_secret = sealed_path_secret.unseal().unwrap();
+        assert_eq!(path_secret, unsealed_path_secret);
     }
 }

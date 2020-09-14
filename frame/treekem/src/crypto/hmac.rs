@@ -5,7 +5,7 @@ use ring::{
 };
 use codec::Encode;
 
-#[derive(Debug, Clone, Encode, Default, Copy)]
+#[derive(Debug, Clone, Encode, Default, Copy, PartialEq)]
 pub struct HmacKey([u8; SHA256_OUTPUT_LEN]);
 
 impl HmacKey {

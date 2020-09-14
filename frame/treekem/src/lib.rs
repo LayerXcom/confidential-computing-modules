@@ -32,6 +32,7 @@ pub mod tests {
         run_tests!(
             application::tests::run_tests,
             crypto::ecies::tests::run_tests,
+            crypto::secrets::tests::run_tests,
         )
     }
 }
