@@ -127,7 +127,7 @@ impl From<&[u8]> for NodeSecret {
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct PathSecret(HmacKey);
 
 unsafe impl sgx_types::marker::ContiguousMemory for PathSecret {}
@@ -197,7 +197,7 @@ impl PathSecret {
         let additional = [0u8; 0]; // todo: epoch
         let attribute_mask = sgx_attributes_t { flags: 0xffff_ffff_ffff_fff3, xfrm: 0 };
 
-        SgxSealedData::seal_data_ex(
+        SgxSealedData::<Self>::seal_data_ex(
             KEYPOLICY_MRENCLAVE,
             attribute_mask,
             0, //misc mask

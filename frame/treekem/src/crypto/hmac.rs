@@ -5,14 +5,10 @@ use ring::{
 };
 use codec::Encode;
 
-#[derive(Debug, Clone, Encode, Default)]
-pub struct HmacKey(Vec<u8>);
+#[derive(Debug, Clone, Encode, Default, Copy)]
+pub struct HmacKey([u8; SHA256_OUTPUT_LEN]);
 
 impl HmacKey {
-    pub fn zero(len: usize) -> Self {
-        HmacKey(vec![0u8; len])
-    }
-
     pub fn as_bytes(&self) -> &[u8] {
         &self.0[..]
     }
@@ -21,12 +17,12 @@ impl HmacKey {
         &mut self.0[..]
     }
 
-    pub fn into_bytes(self) -> Vec<u8> {
-        self.0
+    pub fn into_vec(self) -> Vec<u8> {
+        self.0.to_vec()
     }
 
      pub fn new_from_random<R: CryptoRng>(csprng: &mut R) -> HmacKey {
-        let mut buf = vec![0u8; SHA256_OUTPUT_LEN];
+        let mut buf = [0u8; SHA256_OUTPUT_LEN];
         csprng.fill_bytes(&mut buf);
         HmacKey(buf)
     }
@@ -39,14 +35,26 @@ impl HmacKey {
     }
 }
 
+impl From<[u8; SHA256_OUTPUT_LEN]> for HmacKey {
+    fn from(array: [u8; SHA256_OUTPUT_LEN]) -> Self {
+        HmacKey(array)
+    }
+}
+
 impl From<Vec<u8>> for HmacKey {
     fn from(vec: Vec<u8>) -> Self {
-        HmacKey(vec)
+        assert_eq!(vec.len(), SHA256_OUTPUT_LEN);
+        let mut res = [0u8; SHA256_OUTPUT_LEN];
+        &res.copy_from_slice(&vec);
+        HmacKey(res)
     }
 }
 
 impl From<&[u8]> for HmacKey {
     fn from(bytes: &[u8]) -> Self {
-        HmacKey(bytes.to_vec())
+        assert_eq!(bytes.len(), SHA256_OUTPUT_LEN);
+        let mut res = [0u8; SHA256_OUTPUT_LEN];
+        &res.copy_from_slice(&bytes);
+        HmacKey(res)
     }
 }
