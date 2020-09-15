@@ -5,14 +5,10 @@ use ring::{
 };
 use codec::Encode;
 
-#[derive(Debug, Clone, Encode, Default)]
+#[derive(Debug, Clone, Encode, Default, PartialEq)]
 pub struct HmacKey(Vec<u8>);
 
 impl HmacKey {
-    pub fn zero(len: usize) -> Self {
-        HmacKey(vec![0u8; len])
-    }
-
     pub fn as_bytes(&self) -> &[u8] {
         &self.0[..]
     }
@@ -21,14 +17,14 @@ impl HmacKey {
         &mut self.0[..]
     }
 
-    pub fn into_bytes(self) -> Vec<u8> {
+    pub fn into_vec(self) -> Vec<u8> {
         self.0
     }
 
      pub fn new_from_random<R: CryptoRng>(csprng: &mut R) -> HmacKey {
-        let mut buf = vec![0u8; SHA256_OUTPUT_LEN];
+        let mut buf = [0u8; SHA256_OUTPUT_LEN];
         csprng.fill_bytes(&mut buf);
-        HmacKey(buf)
+        HmacKey(buf.to_vec())
     }
 
     pub fn sign(&self, msg: &[u8]) -> Vec<u8> {
@@ -36,6 +32,12 @@ impl HmacKey {
         let mut ctx = SigningContext::with_key(&signing_key);
         ctx.update(&msg);
         ctx.sign().as_ref().to_vec()
+    }
+}
+
+impl From<[u8; SHA256_OUTPUT_LEN]> for HmacKey {
+    fn from(array: [u8; SHA256_OUTPUT_LEN]) -> Self {
+        HmacKey(array.to_vec())
     }
 }
 

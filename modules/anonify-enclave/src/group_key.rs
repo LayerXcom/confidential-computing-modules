@@ -1,6 +1,6 @@
 use std::vec::Vec;
 use frame_treekem::{
-    GroupState, AppKeyChain, Handshake,
+    GroupState, AppKeyChain, Handshake, PathSecret,
     handshake::{PathSecretRequest, HandshakeParams},
 };
 use frame_common::crypto::Ciphertext;
@@ -32,7 +32,7 @@ impl GroupKeyOps for GroupKey {
         })
     }
 
-    fn create_handshake(&self) -> Result<HandshakeParams> {
+    fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret)> {
         self.group_state.create_handshake(&self.path_secret_req)
     }
 

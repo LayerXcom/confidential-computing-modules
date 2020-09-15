@@ -37,7 +37,7 @@ pub fn do_handshake_three_party<R: CryptoRng>(
 ) -> (AppKeyChain, AppKeyChain, AppKeyChain) {
     let max_roster_idx = 2;
     let new_path_secret = PathSecret::new_from_random(csprng);
-    let handshake = my_group.create_handshake(req).unwrap();
+    let (handshake, _) = my_group.create_handshake(req).unwrap();
 
     let my_keychain = my_group.process_handshake(&handshake, req, max_roster_idx).unwrap();
     let others_keychain1 = others_group1.process_handshake(&handshake, req, max_roster_idx).unwrap();

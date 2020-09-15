@@ -252,14 +252,15 @@ pub mod output {
         report: Vec<u8>,
         report_sig: Vec<u8>,
         handshake: Vec<u8>,
+        sealed_path_secret: Vec<u8>,
     }
 
     impl EcallOutput for ReturnJoinGroup {}
 
     impl ReturnJoinGroup {
-        pub fn new(report: Vec<u8>, report_sig: Vec<u8>, handshake: Vec<u8>,) -> Self {
+        pub fn new(report: Vec<u8>, report_sig: Vec<u8>, handshake: Vec<u8>, sealed_path_secret: Vec<u8>) -> Self {
             ReturnJoinGroup {
-                report, report_sig, handshake,
+                report, report_sig, handshake, sealed_path_secret,
             }
         }
 
@@ -280,13 +281,14 @@ pub mod output {
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct ReturnHandshake {
         handshake: Vec<u8>,
+        sealed_path_secret: Vec<u8>,
     }
 
     impl EcallOutput for ReturnHandshake {}
 
     impl ReturnHandshake {
-        pub fn new(handshake: Vec<u8>) -> Self {
-            ReturnHandshake { handshake }
+        pub fn new(handshake: Vec<u8>, sealed_path_secret: Vec<u8>) -> Self {
+            ReturnHandshake { handshake, sealed_path_secret }
         }
 
         pub fn handshake(&self) -> &[u8] {

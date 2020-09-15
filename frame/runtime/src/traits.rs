@@ -12,7 +12,10 @@ use frame_common::{
     state_types::{UpdatedState, MemId},
 };
 use codec::{Encode, Decode};
-use frame_treekem::handshake::{PathSecretRequest, HandshakeParams};
+use frame_treekem::{
+    PathSecret,
+    handshake::{PathSecretRequest, HandshakeParams}
+};
 
 /// Execute state transition functions from runtime
 pub trait RuntimeExecutor<G: ContextOps>: Sized {
@@ -78,7 +81,7 @@ pub trait GroupKeyOps: Sized {
         path_secret_req: PathSecretRequest,
     ) -> Result<Self>;
 
-    fn create_handshake(&self) -> Result<HandshakeParams>;
+    fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret)>;
 
     fn process_handshake(
         &mut self,

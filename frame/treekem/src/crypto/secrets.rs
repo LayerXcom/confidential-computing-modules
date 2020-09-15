@@ -6,6 +6,7 @@
 //! -> app_keychain
 
 use std::vec::Vec;
+use std::fmt;
 use super::{
     SHA256_OUTPUT_LEN, hkdf,
     dh::{DhPrivateKey, DhPubKey},
@@ -14,8 +15,13 @@ use super::{
 };
 use crate::handshake::AccessKey;
 use frame_common::crypto::sgx_rand_assign;
-use anyhow::Result;
-use codec::Encode;
+use anyhow::{Result, anyhow};
+use codec::{Encode, Decode, Input};
+use sgx_tseal::SgxSealedData;
+use sgx_types::{sgx_attributes_t, sgx_sealed_data_t, SGX_KEYPOLICY_MRENCLAVE};
+
+// Calculated by `SgxSealedData<PathSecret>::calc_raw_sealed_data_size(add_mac_txt_size: u32, encrypt_txt_size: u32) -> u32`
+const SEALED_DATA_SIZE: usize = 592;
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);
@@ -123,7 +129,7 @@ impl From<&[u8]> for NodeSecret {
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PathSecret(HmacKey);
 
 impl From<PathSecret> for HmacKey {
@@ -185,5 +191,114 @@ impl PathSecret {
 
     pub fn as_bytes(&self) -> &[u8] {
         self.0.as_bytes()
+    }
+
+    pub fn len(&self) -> usize {
+        self.as_bytes().len()
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct UnsealedPathSecret([u8; SHA256_OUTPUT_LEN]);
+
+impl UnsealedPathSecret {
+    pub fn encoded_seal(self) -> Result<Vec<u8>> {
+        let additional = [0u8; 0];
+        let attribute_mask = sgx_attributes_t { flags: 0xffff_ffff_ffff_fff3, xfrm: 0 };
+        let sealed_data = SgxSealedData::<Self>::seal_data_ex(
+            SGX_KEYPOLICY_MRENCLAVE,
+            attribute_mask,
+            0, //misc mask
+            &additional,
+            &self,
+        )
+        .map_err(|e| anyhow!("error: {:?}", e))?;
+
+        Ok(SealedPathSecret::new(sealed_data).encode())
+    }
+}
+
+unsafe impl sgx_types::marker::ContiguousMemory for UnsealedPathSecret {}
+
+impl From<PathSecret> for UnsealedPathSecret {
+    fn from(ps: PathSecret) -> Self {
+        assert_eq!(ps.len(), SHA256_OUTPUT_LEN);
+        let mut res = [0u8; SHA256_OUTPUT_LEN];
+        &res.copy_from_slice(ps.as_bytes());
+        UnsealedPathSecret(res)
+    }
+}
+
+impl From<UnsealedPathSecret> for PathSecret {
+    fn from(ups: UnsealedPathSecret) -> Self {
+        ups.0.as_ref().into()
+    }
+}
+
+#[derive(Default, Clone)]
+pub struct SealedPathSecret<'a>(SgxSealedData<'a, UnsealedPathSecret>);
+
+impl<'a> SealedPathSecret<'a> {
+    pub fn new(sealed_data: SgxSealedData<'a, UnsealedPathSecret>) -> Self {
+        SealedPathSecret(sealed_data)
+    }
+
+    pub fn unseal(&self) -> Result<UnsealedPathSecret> {
+        let unsealed_data = self.0.unseal_data()
+            .map_err(|e| anyhow!("error: {:?}", e))?;
+
+        Ok(*unsealed_data.get_decrypt_txt())
+    }
+}
+
+impl Encode for SealedPathSecret<'_> {
+    fn encode(&self) -> Vec<u8> {
+        let mut res = vec![0u8; SEALED_DATA_SIZE];
+        unsafe {
+            self.0.to_raw_sealed_data_t(res.as_mut_ptr() as *mut sgx_sealed_data_t, SEALED_DATA_SIZE as u32);
+        }
+
+        res
+    }
+}
+
+impl Decode for SealedPathSecret<'_> {
+    fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let mut buf = [0u8; SEALED_DATA_SIZE];
+        value.read(&mut buf)?;
+        let sealed_data = unsafe {
+            SgxSealedData::<UnsealedPathSecret>::from_raw_sealed_data_t(buf.as_mut_ptr() as *mut sgx_sealed_data_t,  SEALED_DATA_SIZE as u32)
+        }
+        .expect("Failed decoding to SgxSealedData");
+
+        Ok(SealedPathSecret::new(sealed_data))
+    }
+}
+
+impl fmt::Debug for SealedPathSecret<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SealedPathSecret")
+         .finish()
+    }
+}
+
+#[cfg(debug_assertions)]
+pub(crate) mod tests {
+    use super::*;
+    use libsgx_test_utils::*;
+    use std::string::String;
+
+    pub(crate) fn run_tests() -> bool {
+        run_tests!(
+            test_seal_unseal_path_secret,
+        )
+    }
+
+    fn test_seal_unseal_path_secret() {
+        let path_secret = PathSecret::new_from_random_sgx();
+        let encoded_sealed_path_secret = UnsealedPathSecret::from(path_secret.clone()).encoded_seal().unwrap();
+        let sealed_path_secret = SealedPathSecret::decode(&mut &encoded_sealed_path_secret[..]).unwrap();
+        let unsealed_path_secret = sealed_path_secret.unseal().unwrap();
+        assert_eq!(path_secret, unsealed_path_secret.into());
     }
 }

@@ -13,7 +13,10 @@ use frame_common::{
     state_types::{MemId, StateType},
 };
 use frame_runtime::traits::*;
-use frame_treekem::handshake::HandshakeParams;
+use frame_treekem::{
+    SealedPathSecret, UnsealedPathSecret,
+    handshake::HandshakeParams
+};
 use ed25519_dalek::{PublicKey, Signature};
 use codec::{Decode, Encode};
 use remote_attestation::RAService;
@@ -172,12 +175,14 @@ impl EnclaveEngine for CallJoinGroup {
         let sub_key = env::var("SUB_KEY")?;
         let (report, report_sig) = RAService::remote_attestation(ias_url.as_str(), sub_key.as_str(), &quote)?;
         let group_key = &*enclave_context.read_group_key();
-        let handshake = group_key.create_handshake()?;
+        let (handshake, path_secret) = group_key.create_handshake()?;
+        let sealed_path_secret = UnsealedPathSecret::from(path_secret).encoded_seal()?;
 
         Ok(output::ReturnJoinGroup::new(
             report.into_vec(),
             report_sig.into_vec(),
             handshake.encode(),
+            sealed_path_secret,
         ))
     }
 }
@@ -199,9 +204,10 @@ impl EnclaveEngine for CallHandshake {
         C: ContextOps<S=StateType> + Clone,
     {
         let group_key = &*enclave_context.read_group_key();
-        let handshake = group_key.create_handshake()?;
+        let (handshake, path_secret) = group_key.create_handshake()?;
+        let sealed_path_secret = UnsealedPathSecret::from(path_secret).encoded_seal()?;
 
-        Ok(output::ReturnHandshake::new(handshake.encode()))
+        Ok(output::ReturnHandshake::new(handshake.encode(), sealed_path_secret))
     }
 }
 
