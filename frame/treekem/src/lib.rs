@@ -29,10 +29,10 @@ pub mod tests {
     use libsgx_test_utils::*;
 
     pub fn run_tests() -> bool {
-        run_tests!(
-            application::tests::run_tests,
-            crypto::ecies::tests::run_tests,
-            crypto::secrets::tests::run_tests,
+        check_all_passed!(
+            application::tests::run_tests(),
+            crypto::ecies::tests::run_tests(),
+            crypto::secrets::tests::run_tests(),
         )
     }
 }

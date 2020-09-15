@@ -32,7 +32,7 @@ pub struct Instruction<AP: AccessPolicy> {
     phantom: PhantomData<AP>,
 }
 
-impl<'a, AP: AccessPolicy> EnclaveEngine for Instruction<AP> {
+impl<AP: AccessPolicy> EnclaveEngine for Instruction<AP> {
     type EI = input::Instruction<AP>;
     type EO = output::Instruction;
 
@@ -130,7 +130,7 @@ pub struct GetState<AP: AccessPolicy> {
     phantom: PhantomData<AP>,
 }
 
-impl<'a, AP: AccessPolicy> EnclaveEngine for GetState<AP> {
+impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
     type EI = input::GetState<AP>;
     type EO = output::ReturnState;
 
@@ -216,7 +216,7 @@ pub struct RegisterNotification<AP: AccessPolicy> {
     phantom: PhantomData<AP>,
 }
 
-impl<'a, AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
+impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
     type EI = input::RegisterNotification<AP>;
     type EO = output::Empty;
 
