@@ -9,7 +9,7 @@ trigger:
       - 'LICENSE'
 
 pool:
-  name: 'Azure Pipelines'
+  name: 'Anonify'
 
 steps:
 - script: echo Hello, world!
