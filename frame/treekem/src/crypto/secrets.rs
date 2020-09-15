@@ -129,10 +129,8 @@ impl From<&[u8]> for NodeSecret {
 }
 
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PathSecret(HmacKey);
-
-unsafe impl sgx_types::marker::ContiguousMemory for PathSecret {}
 
 impl From<PathSecret> for HmacKey {
     fn from(path: PathSecret) -> Self {
@@ -195,6 +193,15 @@ impl PathSecret {
         self.0.as_bytes()
     }
 
+    pub fn len(&self) -> usize {
+        self.as_bytes().len()
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct UnsealedPathSecret([u8; SHA256_OUTPUT_LEN]);
+
+impl UnsealedPathSecret {
     pub fn encoded_seal(self) -> Result<Vec<u8>> {
         let additional = [0u8; 0];
         let attribute_mask = sgx_attributes_t { flags: 0xffff_ffff_ffff_fff3, xfrm: 0 };
@@ -211,15 +218,32 @@ impl PathSecret {
     }
 }
 
+unsafe impl sgx_types::marker::ContiguousMemory for UnsealedPathSecret {}
+
+impl From<PathSecret> for UnsealedPathSecret {
+    fn from(ps: PathSecret) -> Self {
+        assert_eq!(ps.len(), SHA256_OUTPUT_LEN);
+        let mut res = [0u8; SHA256_OUTPUT_LEN];
+        &res.copy_from_slice(ps.as_bytes());
+        UnsealedPathSecret(res)
+    }
+}
+
+impl From<UnsealedPathSecret> for PathSecret {
+    fn from(ups: UnsealedPathSecret) -> Self {
+        ups.0.as_ref().into()
+    }
+}
+
 #[derive(Default, Clone)]
-pub struct SealedPathSecret<'a>(SgxSealedData<'a, PathSecret>);
+pub struct SealedPathSecret<'a>(SgxSealedData<'a, UnsealedPathSecret>);
 
 impl<'a> SealedPathSecret<'a> {
-    pub fn new(sealed_data: SgxSealedData<'a, PathSecret>) -> Self {
+    pub fn new(sealed_data: SgxSealedData<'a, UnsealedPathSecret>) -> Self {
         SealedPathSecret(sealed_data)
     }
 
-    pub fn unseal(&self) -> Result<PathSecret> {
+    pub fn unseal(&self) -> Result<UnsealedPathSecret> {
         let unsealed_data = self.0.unseal_data()
             .map_err(|e| anyhow!("error: {:?}", e))?;
 
@@ -243,7 +267,7 @@ impl Decode for SealedPathSecret<'_> {
         let mut buf = [0u8; SEALED_DATA_SIZE];
         value.read(&mut buf)?;
         let sealed_data = unsafe {
-            SgxSealedData::<PathSecret>::from_raw_sealed_data_t(buf.as_mut_ptr() as *mut sgx_sealed_data_t,  SEALED_DATA_SIZE as u32)
+            SgxSealedData::<UnsealedPathSecret>::from_raw_sealed_data_t(buf.as_mut_ptr() as *mut sgx_sealed_data_t,  SEALED_DATA_SIZE as u32)
         }
         .expect("Failed decoding to SgxSealedData");
 
@@ -272,10 +296,9 @@ pub(crate) mod tests {
 
     fn test_seal_unseal_path_secret() {
         let path_secret = PathSecret::new_from_random_sgx();
-        let encoded_sealed_path_secret = path_secret.encoded_seal().unwrap();
-        println!("encoded_sealed_path_secret: {:?}", encoded_sealed_path_secret);
+        let encoded_sealed_path_secret = UnsealedPathSecret::from(path_secret.clone()).encoded_seal().unwrap();
         let sealed_path_secret = SealedPathSecret::decode(&mut &encoded_sealed_path_secret[..]).unwrap();
         let unsealed_path_secret = sealed_path_secret.unseal().unwrap();
-        assert_eq!(path_secret, unsealed_path_secret);
+        assert_eq!(path_secret, unsealed_path_secret.into());
     }
 }
