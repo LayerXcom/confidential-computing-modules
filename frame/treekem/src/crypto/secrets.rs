@@ -204,15 +204,8 @@ pub struct UnsealedPathSecret([u8; SHA256_OUTPUT_LEN]);
 impl UnsealedPathSecret {
     pub fn encoded_seal(self) -> Result<Vec<u8>> {
         let additional = [0u8; 0];
-        let attribute_mask = sgx_attributes_t { flags: 0xffff_ffff_ffff_fff3, xfrm: 0 };
-        let sealed_data = SgxSealedData::<Self>::seal_data_ex(
-            SGX_KEYPOLICY_MRENCLAVE,
-            attribute_mask,
-            0, //misc mask
-            &additional,
-            &self,
-        )
-        .map_err(|e| anyhow!("error: {:?}", e))?;
+        let sealed_data = SgxSealedData::<Self>::seal_data(&additional, &self)
+            .map_err(|e| anyhow!("error: {:?}", e))?;
 
         Ok(SealedPathSecret::new(sealed_data).encode())
     }
