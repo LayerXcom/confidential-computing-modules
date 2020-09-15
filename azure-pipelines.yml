@@ -9,7 +9,7 @@ trigger:
       - 'LICENSE'
 
 pool:
-  name: 'Hosted Agenet'
+  name: 'Azure Pipelines'
 
 steps:
 - script: echo Hello, world!
