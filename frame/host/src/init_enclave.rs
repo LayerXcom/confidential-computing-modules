@@ -11,12 +11,9 @@ pub struct EnclaveDir(PathBuf);
 
 impl EnclaveDir {
     pub fn new() -> Self {
-        let enclave_dir = env::current_dir()
-            .expect("Cannot the current directory.")
-            .parent()
-            .expect("the path terminates in a root")
-            .parent()
-            .expect("the path terminates in a root")
+        let pj_root_dir = env::var("PJ_ROOT_DIR")
+            .unwrap_or_else(|_| format!("{}/anonify", dirs::home_dir().unwrap().into_os_string().to_str().unwrap()));
+        let enclave_dir = PathBuf::from(pj_root_dir)
             .join(ENCLAVE_DIR);
 
         if !enclave_dir.is_dir() {
