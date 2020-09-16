@@ -9,13 +9,14 @@ use crate::crypto::{
     ecies::EciesCiphertext,
     secrets::PathSecret,
 };
+use frame_common::crypto::ExportPathSecret;
 use anyhow::Result;
 use codec::{Encode, Decode};
 
 /// A handshake operates sharing a group key to each member.
 pub trait Handshake: Sized {
     /// Create a handshake to broadcast other members.
-    fn create_handshake(&self, req: &PathSecretRequest) -> Result<(HandshakeParams, PathSecret)>;
+    fn create_handshake(&self, req: &PathSecretRequest) -> Result<(HandshakeParams, ExportPathSecret)>;
 
     /// Process a received handshake from other members.
     fn process_handshake(

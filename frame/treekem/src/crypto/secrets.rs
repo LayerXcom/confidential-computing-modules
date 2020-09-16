@@ -14,7 +14,7 @@ use super::{
     CryptoRng,
 };
 use crate::handshake::AccessKey;
-use frame_common::crypto::sgx_rand_assign;
+use frame_common::crypto::{sgx_rand_assign, ExportPathSecret};
 use anyhow::{Result, anyhow};
 use codec::{Encode, Decode, Input};
 use sgx_tseal::SgxSealedData;
@@ -195,6 +195,11 @@ impl PathSecret {
 
     pub fn len(&self) -> usize {
         self.as_bytes().len()
+    }
+
+    pub fn try_into_exporting(self, epoch: u32) -> Result<ExportPathSecret> {
+        let encoded_sealed = UnsealedPathSecret::from(self).encoded_seal()?;
+        Ok(ExportPathSecret::new(encoded_sealed, epoch))
     }
 }
 

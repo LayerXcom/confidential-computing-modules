@@ -7,6 +7,7 @@ use crate::application::AppKeyChain;
 use crate::handshake::{Handshake, HandshakeParams, PathSecretRequest, AccessKey};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use crate::tree_math;
+use frame_common::crypto::ExportPathSecret;
 use anyhow::{Result, anyhow, ensure};
 use codec::Encode;
 
@@ -27,7 +28,7 @@ pub struct GroupState {
 }
 
 impl Handshake for GroupState {
-    fn create_handshake(&self, req: &PathSecretRequest) -> Result<(HandshakeParams, PathSecret)> {
+    fn create_handshake(&self, req: &PathSecretRequest) -> Result<(HandshakeParams, ExportPathSecret)> {
         let my_roster_idx = self.my_roster_idx;
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(my_roster_idx)?;
 
@@ -47,8 +48,9 @@ impl Handshake for GroupState {
             roster_idx: my_roster_idx,
             path: direct_path_msg,
         };
+        let export_path_secret = path_secret.try_into_exporting(self.epoch)?;
 
-        Ok((handshake, path_secret))
+        Ok((handshake, export_path_secret))
     }
 
     fn process_handshake(

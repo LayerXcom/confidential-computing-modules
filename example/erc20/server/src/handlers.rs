@@ -30,10 +30,11 @@ pub fn handle_deploy<D, S, W, DB>(
 {
     debug!("Starting deploy a contract...");
 
-    let contract_addr = server.dispatcher
+    let (contract_addr, export_path_secret) = server.dispatcher
         .deploy(server.sender_address, DEFAULT_GAS, server.confirmations)?;
 
     debug!("Contract address: {:?}", &contract_addr);
+    debug!("export_path_secret: {:?}", export_path_secret);
     server.dispatcher.set_contract_addr(&contract_addr, &server.abi_path)?;
 
     Ok(HttpResponse::Ok().json(erc20_api::deploy::post::Response(contract_addr)))
@@ -49,7 +50,7 @@ pub fn handle_join_group<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
-    let receipt = server.dispatcher.join_group(
+    let (receipt, _) = server.dispatcher.join_group(
         server.sender_address,
         DEFAULT_GAS,
         &req.contract_addr,
@@ -230,7 +231,7 @@ pub fn handle_key_rotation<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
-    let receipt = server.dispatcher.handshake(
+    let (receipt, _) = server.dispatcher.handshake(
         server.sender_address,
         DEFAULT_GAS,
         server.confirmations,

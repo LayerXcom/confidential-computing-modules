@@ -14,6 +14,7 @@ use crate::{
 use frame_common::{
     traits::*,
     state_types::{UpdatedState, StateType},
+    crypto::ExportPathSecret,
 };
 use frame_host::engine::HostEngine;
 use parking_lot::RwLock;
@@ -84,14 +85,19 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         deploy_user: Address,
         gas: u64,
         confirmations: usize,
-    ) -> Result<String> {
+    ) -> Result<(String, ExportPathSecret)> {
         let mut inner = self.inner.write();
         let eid = inner.deployer.get_enclave_id();
         let input = host_input::JoinGroup::new(deploy_user, gas);
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
-        inner.deployer
-            .deploy(host_output, confirmations)
+        let contract_addr = inner.deployer
+            .deploy(host_output.clone(), confirmations)?;
+        let export_path_secret = host_output.ecall_output
+            .expect("must have ecall_output")
+            .export_path_secret();
+
+        Ok((contract_addr, export_path_secret))
     }
 
     pub fn join_group<P: AsRef<Path> + Copy>(
@@ -101,7 +107,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         contract_addr: &str,
         abi_path: P,
         confirmations: usize,
-    ) -> Result<TransactionReceipt> {
+    ) -> Result<(TransactionReceipt, ExportPathSecret)> {
         self.set_contract_addr(contract_addr, abi_path)?;
 
         let inner = self.inner.read();
@@ -109,9 +115,15 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         let input = host_input::JoinGroup::new(signer, gas);
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
-        inner.sender.as_ref()
+        let receipt = inner.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .join_group(host_output, confirmations)
+            .join_group(host_output.clone(), confirmations)?;
+
+        let export_path_secret = host_output.ecall_output
+            .expect("must have ecall_output")
+            .export_path_secret();
+
+        Ok((receipt, export_path_secret))
     }
 
     pub fn send_instruction<ST, C, AP>(
@@ -146,15 +158,20 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         signer: Address,
         gas: u64,
         confirmations: usize,
-    ) -> Result<TransactionReceipt> {
+    ) -> Result<(TransactionReceipt, ExportPathSecret)> {
         let inner = self.inner.read();
         let input = host_input::Handshake::new(signer, gas);
         let eid = inner.deployer.get_enclave_id();
         let host_output = HandshakeWorkflow::exec(input, eid)?;
 
-        inner.sender.as_ref()
+        let receipt = inner.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .handshake(host_output, confirmations)
+            .handshake(host_output.clone(), confirmations)?;
+        let export_path_secret = host_output.ecall_output
+            .expect("must have ecall_output")
+            .export_path_secret();
+
+        Ok((receipt, export_path_secret))
     }
 
     pub fn block_on_event<St>(
