@@ -101,7 +101,11 @@ impl EnclaveContext {
 
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
-        let source = PathSecretSource::Local; // TODO: case:env
+
+        let source = match env::var("AUDITOR_ENDPOINT") {
+            Err(_) => PathSecretSource::Local,
+            Ok(url) => PathSecretSource::Remote(url),
+        };
 
         let my_roster_idx: usize = env::var("MY_ROSTER_IDX")
             .expect("MY_ROSTER_IDX is not set")
