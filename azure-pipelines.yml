@@ -1,13 +1,3 @@
-trigger:
-  branches:
-    include:
-    - '*'
-  paths:
-    exclude:
-      - '*.md'
-      - '.gitignore'
-      - 'LICENSE'
-
 pool:
   name: 'Anonify'
 
