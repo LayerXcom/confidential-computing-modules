@@ -275,6 +275,14 @@ pub mod output {
         pub fn handshake(&self) -> &[u8] {
             &self.handshake[..]
         }
+
+        pub fn encoded_sealed_path_secret(&self) -> &[u8] {
+            &self.sealed_path_secret[..]
+        }
+
+        pub fn encoded_sealed_path_secret(self) -> Vec<u8> {
+            self.sealed_path_secret
+        }
     }
 
 
@@ -293,6 +301,14 @@ pub mod output {
 
         pub fn handshake(&self) -> &[u8] {
             &self.handshake[..]
+        }
+
+        pub fn encoded_sealed_path_secret_as_ref(&self) -> &[u8] {
+            &self.sealed_path_secret[..]
+        }
+
+        pub fn encoded_sealed_path_secret(self) -> Vec<u8> {
+            self.sealed_path_secret
         }
     }
 }
