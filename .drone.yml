@@ -13,6 +13,8 @@ steps:
   volumes:
   - name: sgx
     path: /dev/sgx
+  environment:
+    PJ_ROOT_DIR: /drone/src
   commands:
   - /bin/bash ./scripts/test.sh
 
