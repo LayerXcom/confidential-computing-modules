@@ -10,7 +10,7 @@ use frame_common::{
     state_types::{MemId, UpdatedState, StateType},
 };
 use frame_runtime::traits::*;
-use frame_treekem::handshake::PathSecretRequest;
+use frame_treekem::handshake::PathSecretSource;
 use frame_enclave::ocalls::{sgx_init_quote, get_quote};
 use crate::{
     notify::Notifier,
@@ -101,7 +101,7 @@ impl EnclaveContext {
 
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
-        let req = PathSecretRequest::Local; // TODO: case:env
+        let source = PathSecretSource::Local; // TODO: case:env
 
         let my_roster_idx: usize = env::var("MY_ROSTER_IDX")
             .expect("MY_ROSTER_IDX is not set")
@@ -112,7 +112,7 @@ impl EnclaveContext {
             .parse()
             .expect("Failed to parse MAX_ROSTER_IDX to usize");
 
-        let group_key = Arc::new(SgxRwLock::new(GroupKey::new(my_roster_idx, max_roster_idx, req)?));
+        let group_key = Arc::new(SgxRwLock::new(GroupKey::new(my_roster_idx, max_roster_idx, source)?));
         let notifier = Notifier::new();
 
         Ok(EnclaveContext{

@@ -4,7 +4,7 @@ use crate::crypto::{
     hmac::HmacKey,
 };
 use crate::application::AppKeyChain;
-use crate::handshake::{Handshake, HandshakeParams, PathSecretRequest, AccessKey};
+use crate::handshake::{Handshake, HandshakeParams, PathSecretSource, AccessKey};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use crate::tree_math;
 use frame_common::crypto::ExportPathSecret;
@@ -28,11 +28,11 @@ pub struct GroupState {
 }
 
 impl Handshake for GroupState {
-    fn create_handshake(&self, req: &PathSecretRequest) -> Result<(HandshakeParams, ExportPathSecret)> {
+    fn create_handshake(&self, source: &PathSecretSource) -> Result<(HandshakeParams, ExportPathSecret)> {
         let my_roster_idx = self.my_roster_idx;
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(my_roster_idx)?;
 
-        let path_secret = Self::request_new_path_secret(req, my_roster_idx, self.epoch)?;
+        let path_secret = Self::request_new_path_secret(source, my_roster_idx, self.epoch)?;
         let mut new_group_state = self.clone();
 
         if my_tree_idx == self.tree.size() {
@@ -56,7 +56,7 @@ impl Handshake for GroupState {
     fn process_handshake(
         &mut self,
         handshake: &HandshakeParams,
-        req: &PathSecretRequest,
+        source: &PathSecretSource,
         max_roster_idx: u32,
     ) -> Result<AppKeyChain> {
         ensure!(handshake.prior_epoch == self.epoch, "Handshake's prior epoch isn't the current epoch.");
@@ -83,7 +83,7 @@ impl Handshake for GroupState {
             // Only if the received handshake sent from my own,
             // request path secret to external key vault and then update the leaf node.
             if sender_tree_idx == my_tree_idx {
-                let path_secret = Self::request_new_path_secret(req, self.my_roster_idx, self.epoch)?;
+                let path_secret = Self::request_new_path_secret(source, self.my_roster_idx, self.epoch)?;
                 let (node_pubkey, node_privkey, _, _) = path_secret.clone().derive_node_values()?;
 
                 my_leaf.update_pub_key(node_pubkey);
@@ -120,21 +120,21 @@ impl GroupState {
     }
 
     /// Request own new path secret to external key vault
-    pub fn request_new_path_secret(req: &PathSecretRequest, roster_idx: u32, epoch: u32) -> Result<PathSecret> {
-        match req {
-            PathSecretRequest::Local => Ok(PathSecret::new_from_random_sgx()),
+    pub fn request_new_path_secret(source: &PathSecretSource, roster_idx: u32, epoch: u32) -> Result<PathSecret> {
+        match source {
+            PathSecretSource::Local => Ok(PathSecret::new_from_random_sgx()),
             // just for test use to derive new path secret depending on current path secret.
-            PathSecretRequest::LocalTest(current_path_secret) => {
+            PathSecretSource::LocalTest(current_path_secret) => {
                 let access_key = AccessKey::new(roster_idx, epoch);
                 let mut current = current_path_secret.0.write().unwrap();
                 let next = current.clone().derive_next(access_key)?;
                 *current = next.clone();
                 Ok(next)
             },
-            PathSecretRequest::LocalTestKV(db) => {
+            PathSecretSource::LocalTestKV(db) => {
                 db.get(roster_idx, epoch).cloned().ok_or(anyhow!("Not found Path Secret from local PathSecretKVS with provided roster_idx and epoch"))
             }
-            PathSecretRequest::Remote(url) => unimplemented!(),
+            PathSecretSource::Remote(url) => unimplemented!(),
         }
     }
 

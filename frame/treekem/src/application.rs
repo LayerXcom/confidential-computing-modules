@@ -144,7 +144,7 @@ pub(crate) mod tests {
     use libsgx_test_utils::*;
     use crate::test_utils;
     use rand::{self, SeedableRng};
-    use crate::handshake::{PathSecretKVS, PathSecretRequest};
+    use crate::handshake::{PathSecretKVS, PathSecretSource};
 
     pub(crate) fn run_tests() -> bool {
         run_tests!(
@@ -158,7 +158,7 @@ pub(crate) mod tests {
 
         let mut kvs = PathSecretKVS::new();
         test_utils::init_path_secret_kvs(&mut kvs, 10, 10);
-        let req = PathSecretRequest::LocalTestKV(kvs);
+        let source = PathSecretSource::LocalTestKV(kvs);
 
         let mut group_state1 = GroupState::new(0).unwrap();
         let mut group_state2 = GroupState::new(1).unwrap();
@@ -169,7 +169,7 @@ pub(crate) mod tests {
             &mut group_state1,
             &mut group_state2,
             &mut group_state3,
-            &req,
+            &source,
             &mut rng
         );
 
@@ -178,7 +178,7 @@ pub(crate) mod tests {
             &mut group_state2,
             &mut group_state1,
             &mut group_state3,
-            &req,
+            &source,
             &mut rng
         );
 
@@ -231,7 +231,7 @@ pub(crate) mod tests {
             &mut group_state2,
             &mut group_state1,
             &mut group_state3,
-            &req,
+            &source,
             &mut rng
         );
 
@@ -273,7 +273,7 @@ pub(crate) mod tests {
             &mut group_state3,
             &mut group_state1,
             &mut group_state2,
-            &req,
+            &source,
             &mut rng
         );
 
@@ -326,7 +326,7 @@ pub(crate) mod tests {
             &mut group_state3,
             &mut group_state1,
             &mut group_state2,
-            &req,
+            &source,
             &mut rng
         );
 
@@ -335,7 +335,7 @@ pub(crate) mod tests {
             &mut group_state3,
             &mut group_state1,
             &mut group_state2,
-            &req,
+            &source,
             &mut rng
         );
 
@@ -344,7 +344,7 @@ pub(crate) mod tests {
             &mut group_state1,
             &mut group_state3,
             &mut group_state2,
-            &req,
+            &source,
             &mut rng
         );
 
