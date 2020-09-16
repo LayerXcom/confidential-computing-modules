@@ -1,5 +1,5 @@
 use std::{
-    fs, path::{Path, PathBuf},
+    fs, path::{Path, PathBuf}, env,
     io::{Read, Write, BufReader, BufWriter},
 };
 use sgx_types::*;
@@ -11,8 +11,12 @@ pub struct EnclaveDir(PathBuf);
 
 impl EnclaveDir {
     pub fn new() -> Self {
-        let enclave_dir = dirs::home_dir()
-            .expect("Cannot get enclave directory.")
+        let enclave_dir = env::current_dir()
+            .expect("Cannot the current directory.")
+            .parent()
+            .expect("the path terminates in a root")
+            .parent()
+            .expect("the path terminates in a root")
             .join(ENCLAVE_DIR);
 
         if !enclave_dir.is_dir() {
