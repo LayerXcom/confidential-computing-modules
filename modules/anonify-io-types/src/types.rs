@@ -6,7 +6,7 @@ use crate::localstd::{
 use codec::{Encode, Decode, Input, self};
 use frame_common::{
     EcallInput, EcallOutput, State,
-    crypto::{Sha256, Ciphertext},
+    crypto::{Sha256, Ciphertext, ExportPathSecret},
     state_types::{StateType, MemId, UpdatedState},
     traits::AccessPolicy,
 };
@@ -252,15 +252,15 @@ pub mod output {
         report: Vec<u8>,
         report_sig: Vec<u8>,
         handshake: Vec<u8>,
-        sealed_path_secret: Vec<u8>,
+        export_path_secret: ExportPathSecret,
     }
 
     impl EcallOutput for ReturnJoinGroup {}
 
     impl ReturnJoinGroup {
-        pub fn new(report: Vec<u8>, report_sig: Vec<u8>, handshake: Vec<u8>, sealed_path_secret: Vec<u8>) -> Self {
+        pub fn new(report: Vec<u8>, report_sig: Vec<u8>, handshake: Vec<u8>, export_path_secret: ExportPathSecret) -> Self {
             ReturnJoinGroup {
-                report, report_sig, handshake, sealed_path_secret,
+                report, report_sig, handshake, export_path_secret,
             }
         }
 
@@ -276,12 +276,12 @@ pub mod output {
             &self.handshake[..]
         }
 
-        pub fn encoded_sealed_path_secret_as_ref(&self) -> &[u8] {
-            &self.sealed_path_secret[..]
+        pub fn export_path_secret_as_ref(&self) -> &ExportPathSecret {
+            &self.export_path_secret
         }
 
-        pub fn encoded_sealed_path_secret(self) -> Vec<u8> {
-            self.sealed_path_secret
+        pub fn export_path_secret(self) -> ExportPathSecret {
+            self.export_path_secret
         }
     }
 
@@ -289,26 +289,26 @@ pub mod output {
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct ReturnHandshake {
         handshake: Vec<u8>,
-        sealed_path_secret: Vec<u8>,
+        export_path_secret: ExportPathSecret,
     }
 
     impl EcallOutput for ReturnHandshake {}
 
     impl ReturnHandshake {
-        pub fn new(handshake: Vec<u8>, sealed_path_secret: Vec<u8>) -> Self {
-            ReturnHandshake { handshake, sealed_path_secret }
+        pub fn new(handshake: Vec<u8>, export_path_secret: ExportPathSecret) -> Self {
+            ReturnHandshake { handshake, export_path_secret }
         }
 
         pub fn handshake(&self) -> &[u8] {
             &self.handshake[..]
         }
 
-        pub fn encoded_sealed_path_secret_as_ref(&self) -> &[u8] {
-            &self.sealed_path_secret[..]
+        pub fn export_path_secret_as_ref(&self) -> &ExportPathSecret {
+            &self.export_path_secret
         }
 
-        pub fn encoded_sealed_path_secret(self) -> Vec<u8> {
-            self.sealed_path_secret
+        pub fn export_path_secret(self) -> ExportPathSecret {
+            self.export_path_secret
         }
     }
 }

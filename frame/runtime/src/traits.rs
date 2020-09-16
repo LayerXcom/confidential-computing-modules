@@ -7,7 +7,7 @@ use crate::localstd::{
     string::String,
 };
 use frame_common::{
-    crypto::{AccountId, Ciphertext},
+    crypto::{AccountId, Ciphertext, ExportPathSecret},
     traits::*,
     state_types::{UpdatedState, MemId},
 };
@@ -81,7 +81,7 @@ pub trait GroupKeyOps: Sized {
         path_secret_req: PathSecretRequest,
     ) -> Result<Self>;
 
-    fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret)>;
+    fn create_handshake(&self) -> Result<(HandshakeParams, ExportPathSecret)>;
 
     fn process_handshake(
         &mut self,

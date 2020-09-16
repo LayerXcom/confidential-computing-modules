@@ -3,7 +3,7 @@ use frame_treekem::{
     GroupState, AppKeyChain, Handshake, PathSecret,
     handshake::{PathSecretRequest, HandshakeParams},
 };
-use frame_common::crypto::Ciphertext;
+use frame_common::crypto::{Ciphertext, ExportPathSecret};
 use frame_runtime::traits::*;
 use anyhow::Result;
 
@@ -32,7 +32,7 @@ impl GroupKeyOps for GroupKey {
         })
     }
 
-    fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret)> {
+    fn create_handshake(&self) -> Result<(HandshakeParams, ExportPathSecret)> {
         self.group_state.create_handshake(&self.path_secret_req)
     }
 

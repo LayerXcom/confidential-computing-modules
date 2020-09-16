@@ -403,3 +403,16 @@ impl IntoVec for Ciphertext {
         self.encode()
     }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode)]
+#[serde(crate = "crate::serde")]
+pub struct ExportPathSecret {
+    encoded_sealed: Vec<u8>,
+    epoch: u32,
+}
+
+impl ExportPathSecret {
+    pub fn new(encoded_sealed: Vec<u8>, epoch: u32) -> Self {
+        ExportPathSecret { encoded_sealed, epoch }
+    }
+}
