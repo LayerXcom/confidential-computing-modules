@@ -84,19 +84,19 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         deploy_user: Address,
         gas: u64,
         confirmations: usize,
-    ) -> Result<String> {
+    ) -> Result<(String, Vec<u8>)> {
         let mut inner = self.inner.write();
         let eid = inner.deployer.get_enclave_id();
         let input = host_input::JoinGroup::new(deploy_user, gas);
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
-        let receipt = inner.deployer
-            .deploy(host_output, confirmations)?;
+        let contract_addr = inner.deployer
+            .deploy(host_output.clone(), confirmations)?;
         let encoded_sealed_path_secret = host_output.ecall_output
             .expect("must have ecall_output")
             .encoded_sealed_path_secret();
 
-        Ok((receipt, encoded_sealed_path_secret))
+        Ok((contract_addr, encoded_sealed_path_secret))
     }
 
     pub fn join_group<P: AsRef<Path> + Copy>(
@@ -116,7 +116,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
 
         let receipt = inner.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .join_group(host_output, confirmations)?;
+            .join_group(host_output.clone(), confirmations)?;
 
         let encoded_sealed_path_secret = host_output.ecall_output
             .expect("must have ecall_output")
@@ -165,7 +165,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
 
         let receipt = inner.sender.as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .handshake(host_output, confirmations)?;
+            .handshake(host_output.clone(), confirmations)?;
         let encoded_sealed_path_secret = host_output.ecall_output
             .expect("must have ecall_output")
             .encoded_sealed_path_secret();

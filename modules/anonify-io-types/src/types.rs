@@ -276,7 +276,7 @@ pub mod output {
             &self.handshake[..]
         }
 
-        pub fn encoded_sealed_path_secret(&self) -> &[u8] {
+        pub fn encoded_sealed_path_secret_as_ref(&self) -> &[u8] {
             &self.sealed_path_secret[..]
         }
 
