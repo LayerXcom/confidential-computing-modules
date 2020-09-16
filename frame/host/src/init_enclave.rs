@@ -15,7 +15,7 @@ impl EnclaveDir {
             .unwrap_or_else(|_| format!("{}/anonify", dirs::home_dir().unwrap().into_os_string().to_str().unwrap()));
         let enclave_dir = PathBuf::from(pj_root_dir)
             .join(ENCLAVE_DIR);
-
+println!("enclave_dir: {:?}", enclave_dir);
         if !enclave_dir.is_dir() {
             fs::create_dir_all(&enclave_dir)
                 .expect("Cannot create enclave directory.");
