@@ -1,5 +1,5 @@
 use std::{
-    fs, path::{Path, PathBuf},
+    fs, path::{Path, PathBuf}, env,
     io::{Read, Write, BufReader, BufWriter},
 };
 use sgx_types::*;
@@ -11,10 +11,11 @@ pub struct EnclaveDir(PathBuf);
 
 impl EnclaveDir {
     pub fn new() -> Self {
-        let enclave_dir = dirs::home_dir()
-            .expect("Cannot get enclave directory.")
+        let pj_root_dir = env::var("PJ_ROOT_DIR")
+            .unwrap_or_else(|_| format!("{}/anonify", dirs::home_dir().unwrap().into_os_string().to_str().unwrap()));
+        let enclave_dir = PathBuf::from(pj_root_dir)
             .join(ENCLAVE_DIR);
-
+println!("enclave_dir: {:?}", enclave_dir);
         if !enclave_dir.is_dir() {
             fs::create_dir_all(&enclave_dir)
                 .expect("Cannot create enclave directory.");

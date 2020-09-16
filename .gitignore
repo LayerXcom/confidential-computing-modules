@@ -55,3 +55,4 @@ anonify-types.h
 /contract-build
 /build
 .env
+.anonify
