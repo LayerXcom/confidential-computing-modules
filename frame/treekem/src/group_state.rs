@@ -122,9 +122,7 @@ impl GroupState {
     /// Request own new path secret to external key vault
     pub fn request_new_path_secret(req: &PathSecretRequest, roster_idx: u32, epoch: u32) -> Result<PathSecret> {
         match req {
-            PathSecretRequest::Local(db) => {
-                db.get(roster_idx, epoch).cloned().ok_or(anyhow!("Not found Path Secret from local PathSecretKVS with provided roster_idx and epoch"))
-            },
+            PathSecretRequest::Local => Ok(PathSecret::new_from_random_sgx()),
             // just for test use to derive new path secret depending on current path secret.
             PathSecretRequest::LocalTest(current_path_secret) => {
                 let access_key = AccessKey::new(roster_idx, epoch);
@@ -133,6 +131,9 @@ impl GroupState {
                 *current = next.clone();
                 Ok(next)
             },
+            PathSecretRequest::LocalTestKV(db) => {
+                db.get(roster_idx, epoch).cloned().ok_or(anyhow!("Not found Path Secret from local PathSecretKVS with provided roster_idx and epoch"))
+            }
             PathSecretRequest::Remote(url) => unimplemented!(),
         }
     }

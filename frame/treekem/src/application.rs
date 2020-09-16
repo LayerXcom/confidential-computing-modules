@@ -158,7 +158,7 @@ pub(crate) mod tests {
 
         let mut kvs = PathSecretKVS::new();
         test_utils::init_path_secret_kvs(&mut kvs, 10, 10);
-        let req = PathSecretRequest::Local(kvs);
+        let req = PathSecretRequest::LocalTestKV(kvs);
 
         let mut group_state1 = GroupState::new(0).unwrap();
         let mut group_state2 = GroupState::new(1).unwrap();

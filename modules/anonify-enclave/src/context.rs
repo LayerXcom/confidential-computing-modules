@@ -10,10 +10,7 @@ use frame_common::{
     state_types::{MemId, UpdatedState, StateType},
 };
 use frame_runtime::traits::*;
-use frame_treekem::{
-    handshake::{PathSecretRequest, PathSecretKVS},
-    init_path_secret_kvs,
-};
+use frame_treekem::handshake::PathSecretRequest;
 use frame_enclave::ocalls::{sgx_init_quote, get_quote};
 use crate::{
     notify::Notifier,
@@ -22,9 +19,6 @@ use crate::{
     kvs::EnclaveDB,
     group_key::GroupKey,
 };
-
-const UNTIL_ROSTER_IDX: usize = 10;
-const UNTIL_EPOCH: usize = 30;
 
 impl StateOps for EnclaveContext {
     type S = StateType;
@@ -107,11 +101,7 @@ impl EnclaveContext {
 
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
-
-        // temporary path secrets are generated in local.
-        let mut kvs = PathSecretKVS::new();
-        init_path_secret_kvs(&mut kvs, UNTIL_ROSTER_IDX, UNTIL_EPOCH);
-        let req = PathSecretRequest::Local(kvs);
+        let req = PathSecretRequest::Local; // TODO: case:env
 
         let my_roster_idx: usize = env::var("MY_ROSTER_IDX")
             .expect("MY_ROSTER_IDX is not set")
