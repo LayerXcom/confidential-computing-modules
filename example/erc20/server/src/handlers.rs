@@ -31,7 +31,7 @@ pub fn handle_deploy<D, S, W, DB>(
     debug!("Starting deploy a contract...");
 
     let (contract_addr, export_path_secret) = server.dispatcher
-        .deploy(server.sender_address, DEFAULT_GAS, server.confirmations)?;
+        .deploy(server.sender_address, DEFAULT_GAS, server.confirmations, &server.abi_path, &server.bin_path)?;
 
     debug!("Contract address: {:?}", &contract_addr);
     debug!("export_path_secret: {:?}", export_path_secret);

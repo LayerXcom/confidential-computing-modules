@@ -8,7 +8,7 @@ use anyhow::anyhow;
 use ethabi::{decode, Event, EventParam, Hash, ParamType, Topic, TopicFilter};
 use frame_common::crypto::Ciphertext;
 use log::debug;
-use std::{path::Path, sync::Arc};
+use std::{path::Path, sync::Arc, fs};
 use web3::{
     contract::{Contract, Options},
     futures::Future,
@@ -53,9 +53,15 @@ impl Web3Http {
         Ok(logs)
     }
 
-    pub fn deploy(&self, output: host_output::JoinGroup, confirmations: usize) -> Result<Address> {
-        let abi = include_bytes!("../../../../contract-build/Anonify.abi");
-        let bin = include_str!("../../../../contract-build/Anonify.bin");
+    pub fn deploy<P: AsRef<Path>>(
+        &self,
+        output: host_output::JoinGroup,
+        confirmations: usize,
+        abi_path: P,
+        bin_path: P,
+    ) -> Result<Address> {
+        let abi = fs::read(abi_path)?;
+        let bin = fs::read_to_string(bin_path)?;
 
         let ecall_output = output.ecall_output.unwrap();
         let report = ecall_output.report().to_vec();
@@ -63,12 +69,12 @@ impl Web3Http {
         let handshake = ecall_output.handshake().to_vec();
         let gas = output.gas;
 
-        let contract = Contract::deploy(self.web3.eth(), abi)
+        let contract = Contract::deploy(self.web3.eth(), abi.as_slice())
             .map_err(|e| anyhow!("{:?}", e))?
             .confirmations(confirmations)
             .options(Options::with(|opt| opt.gas = Some(gas.into())))
             .execute(
-                bin,
+                bin.as_str(),
                 (report, report_sig, handshake),
                 output.signer,
             )

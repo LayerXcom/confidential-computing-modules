@@ -18,6 +18,7 @@ pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNum
     pub eid: sgx_enclave_id_t,
     pub eth_url: String,
     pub abi_path: String,
+    pub bin_path: String,
     pub confirmations: usize,
     pub dispatcher: Dispatcher<D, S, W, DB>,
     pub sender_address: Address,
@@ -32,7 +33,8 @@ where
 {
     pub fn new(eid: sgx_enclave_id_t) -> Self {
         let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
-        let abi_path = env::var("ANONYMOUS_ASSET_ABI_PATH").expect("ANONYMOUS_ASSET_ABI_PATH is not set");
+        let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
+        let bin_path = env::var("BIN_PATH").expect("BIN_PATH is not set");
         let account_index: usize = env::var("ACCOUNT_INDEX")
             .expect("ACCOUNT_INDEX is not set")
             .parse()
@@ -51,6 +53,7 @@ where
             eid,
             eth_url,
             abi_path,
+            bin_path,
             confirmations,
             dispatcher,
             sender_address,
