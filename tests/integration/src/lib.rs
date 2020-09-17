@@ -21,7 +21,8 @@ use anonify_eth_driver::{
 use frame_host::EnclaveDir;
 
 const ETH_URL: &'static str = "http://172.18.0.2:8545";
-const ANONYMOUS_ASSET_ABI_PATH: &str = "../../contract-build/Anonify.abi";
+const ABI_PATH: &str = "../../contract-build/Anonify.abi";
+const BIN_PATH: &str = "../../contract-build/Anonify.bin";
 const CONFIRMATIONS: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
@@ -39,11 +40,11 @@ fn test_integration_eth_construct() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
-    let (contract_addr, encoded_sealed_path_secret) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
-    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    let (contract_addr, export_path_secret) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS, ABI_PATH, BIN_PATH).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
-    println!("encoded_sealed_path_secret: {:?}", encoded_sealed_path_secret);
+    println!("export_path_secret: {:?}", export_path_secret);
 
     // Get handshake from contract
     dispatcher.block_on_event::<U64>().unwrap();
@@ -91,8 +92,8 @@ fn test_auto_notification() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
-    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
-    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS, ABI_PATH, BIN_PATH).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
 
@@ -160,8 +161,8 @@ fn test_integration_eth_transfer() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
-    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
-    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS, ABI_PATH, BIN_PATH).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
 
@@ -239,8 +240,8 @@ fn test_key_rotation() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
-    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
-    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS, ABI_PATH, BIN_PATH).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
 
@@ -293,8 +294,8 @@ fn test_integration_eth_approve() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
-    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
-    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS, ABI_PATH, BIN_PATH).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
 
@@ -371,8 +372,8 @@ fn test_integration_eth_transfer_from() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
-    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
-    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS, ABI_PATH, BIN_PATH).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
 
@@ -504,8 +505,8 @@ fn test_integration_eth_mint() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
-    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
-    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS, ABI_PATH, BIN_PATH).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
 
@@ -574,8 +575,8 @@ fn test_integration_eth_burn() {
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
-    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS).unwrap();
-    dispatcher.set_contract_addr(&contract_addr, ANONYMOUS_ASSET_ABI_PATH).unwrap();
+    let (contract_addr, _) = dispatcher.deploy(deployer_addr.clone(), gas, CONFIRMATIONS, ABI_PATH, BIN_PATH).unwrap();
+    dispatcher.set_contract_addr(&contract_addr, ABI_PATH).unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
 

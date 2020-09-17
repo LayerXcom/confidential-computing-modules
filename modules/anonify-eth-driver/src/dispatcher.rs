@@ -80,11 +80,13 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         Ok(())
     }
 
-    pub fn deploy(
+    pub fn deploy<P: AsRef<Path>>(
         &self,
         deploy_user: Address,
         gas: u64,
         confirmations: usize,
+        abi_path: P,
+        bin_path: P,
     ) -> Result<(String, ExportPathSecret)> {
         let mut inner = self.inner.write();
         let eid = inner.deployer.get_enclave_id();
@@ -92,7 +94,7 @@ impl<D, S, W, DB> Dispatcher<D, S, W, DB>
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
         let contract_addr = inner.deployer
-            .deploy(host_output.clone(), confirmations)?;
+            .deploy(host_output.clone(), confirmations, abi_path, bin_path)?;
         let export_path_secret = host_output.ecall_output
             .expect("must have ecall_output")
             .export_path_secret();
