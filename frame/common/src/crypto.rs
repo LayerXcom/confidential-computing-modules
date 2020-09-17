@@ -423,4 +423,8 @@ impl ExportPathSecret {
     pub fn epoch(&self) -> u32 {
         self.epoch
     }
+
+    pub fn encoded_sealed(&self) -> &[u8] {
+        &self.encoded_sealed[..]
+    }
 }

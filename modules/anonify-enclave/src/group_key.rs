@@ -41,7 +41,11 @@ impl GroupKeyOps for GroupKey {
         handshake: &HandshakeParams,
     ) -> Result<()> {
         let keychain = self.group_state
-            .process_handshake(handshake, &self.source, self.max_roster_idx as u32)?;
+            .process_handshake(
+                handshake,
+                self.max_roster_idx as u32,
+                frame_enclave::ocalls::import_path_secret,
+        )?;
         self.keychain = keychain;
 
         Ok(())

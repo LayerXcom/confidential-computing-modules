@@ -198,6 +198,14 @@ impl PathSecret {
         let encoded_sealed = UnsealedPathSecret::from(self).encoded_seal()?;
         Ok(ExportPathSecret::new(encoded_sealed, epoch))
     }
+
+    pub fn try_from_importing(imp_path_secret: ExportPathSecret) -> Result<Self> {
+        let sealed_path_secret = SealedPathSecret::decode(&mut imp_path_secret.encoded_sealed())
+            .map_err(|e| anyhow!("error: {:?}", e))?
+            .unseal()?;
+
+        Ok(sealed_path_secret.into())
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

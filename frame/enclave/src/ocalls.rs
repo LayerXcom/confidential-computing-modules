@@ -51,7 +51,11 @@ extern "C" {
     ) -> sgx_status_t;
 }
 
-pub fn import_path_secret(epoch: u32) -> Result<ExportPathSecret> {
+pub fn imported_path_secret(epoch: u32) -> anyhow::Result<ExportPathSecret> {
+    inner_import_path_secret(epoch).map_err(Into::into)
+}
+
+fn inner_import_path_secret(epoch: u32) -> Result<ExportPathSecret> {
     let mut rt = UntrustedStatus::default();
     let mut buf = [0u8; EXPORT_PATH_SECRET_SIZE];
 

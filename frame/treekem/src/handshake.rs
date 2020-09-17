@@ -19,12 +19,14 @@ pub trait Handshake: Sized {
     fn create_handshake(&self, source: &PathSecretSource) -> Result<(HandshakeParams, ExportPathSecret)>;
 
     /// Process a received handshake from other members.
-    fn process_handshake(
+    fn process_handshake<F>(
         &mut self,
         handshake: &HandshakeParams,
-        req: &PathSecretSource,
-        max_roster_idx: u32
-    ) -> Result<AppKeyChain>;
+        max_roster_idx: u32,
+        req_path_secret_fn: F,
+    ) -> Result<AppKeyChain>
+    where
+        F: FnOnce(u32) -> Result<ExportPathSecret>;
 }
 
 // TODO: Does need signature over the group's history?

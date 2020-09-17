@@ -53,12 +53,15 @@ impl Handshake for GroupState {
         Ok((handshake, export_path_secret))
     }
 
-    fn process_handshake(
+    fn process_handshake<F>(
         &mut self,
         handshake: &HandshakeParams,
-        source: &PathSecretSource,
         max_roster_idx: u32,
-    ) -> Result<AppKeyChain> {
+        req_path_secret_fn: F,
+    ) -> Result<AppKeyChain>
+    where
+        F: FnOnce(u32) -> Result<ExportPathSecret>
+    {
         ensure!(handshake.prior_epoch == self.epoch, "Handshake's prior epoch isn't the current epoch.");
         let sender_tree_idx = RatchetTree::roster_idx_to_tree_idx(handshake.roster_idx)?;
         ensure!(sender_tree_idx <= self.tree.size(), "Invalid tree index");
@@ -83,7 +86,9 @@ impl Handshake for GroupState {
             // Only if the received handshake sent from my own,
             // request path secret to external key vault and then update the leaf node.
             if sender_tree_idx == my_tree_idx {
-                let path_secret = Self::request_new_path_secret(source, self.my_roster_idx, self.epoch)?;
+                let imported_path_secret = req_path_secret_fn(self.epoch)?;
+                ensure!(imported_path_secret.epoch() == self.epoch, "imported_path_secret's epoch isn't the current epoch");
+                let path_secret = PathSecret::try_from_importing(imported_path_secret)?;
                 let (node_pubkey, node_privkey, _, _) = path_secret.clone().derive_node_values()?;
 
                 my_leaf.update_pub_key(node_pubkey);
