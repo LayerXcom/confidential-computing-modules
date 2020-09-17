@@ -1,13 +1,31 @@
-trigger: none
+trigger: 
+- master
 
-pool:
-  name: 'Anonify'
+stages:
+- stage: Test
+  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
+  jobs:
+  - job: CI
+    pool:
+      name: 'Anonify'
+    steps:
+    - script: |
+        ./scripts/start-docker.sh
+        ./scripts/test.sh
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- stage: Docker Build and Push
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  jobs:
+  - job: Docker
+    pool:
+      name: 'Anonify'
+    steps:
+    - task: Docker@2
+      displayName: Build and Push
+      inputs:
+        command: buildAndPush
+        containerRegistry: anonifydev
+        repository: anonifydev.azurecr.io/anonifydev
+        tags: latest
+        dockerfile: ./docker/server.Dockerfile
+        buildContext: .
