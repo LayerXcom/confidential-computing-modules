@@ -16,15 +16,18 @@ use codec::{Encode, Decode};
 /// A handshake operates sharing a group key to each member.
 pub trait Handshake: Sized {
     /// Create a handshake to broadcast other members.
-    fn create_handshake(&self, req: &PathSecretRequest) -> Result<(HandshakeParams, ExportPathSecret)>;
+    fn create_handshake(&self, source: &PathSecretSource) -> Result<(HandshakeParams, ExportPathSecret)>;
 
     /// Process a received handshake from other members.
-    fn process_handshake(
+    fn process_handshake<F>(
         &mut self,
         handshake: &HandshakeParams,
-        req: &PathSecretRequest,
-        max_roster_idx: u32
-    ) -> Result<AppKeyChain>;
+        source: &PathSecretSource,
+        max_roster_idx: u32,
+        req_path_secret_fn: F,
+    ) -> Result<AppKeyChain>
+    where
+        F: FnOnce(u32) -> Result<ExportPathSecret>;
 }
 
 // TODO: Does need signature over the group's history?
@@ -64,11 +67,12 @@ impl DirectPathNodeMsg {
 }
 
 #[derive(Debug, Clone)]
-pub enum PathSecretRequest {
-    Local(PathSecretKVS),
+pub enum PathSecretSource {
+    Local,
     Remote(String),
     /// just for test use to derive new path secret depending on current path secret.
     LocalTest(CurrentPathSecret),
+    LocalTestKV(PathSecretKVS)
 }
 
 #[derive(Debug, Clone)]

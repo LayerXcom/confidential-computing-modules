@@ -11,6 +11,16 @@ const DEV_HOSTNAME: &str = "api.trustedservices.intel.com";
 const HTTPS_PORT: u16 = 443;
 
 #[no_mangle]
+pub extern "C" fn ocall_import_path_secret(
+    path_secret: *mut u8,
+    ps_len: usize,
+    epoch: u32,
+) -> UntrustedStatus {
+
+    UntrustedStatus::success()
+}
+
+#[no_mangle]
 pub extern "C" fn ocall_sgx_init_quote(
     ret_ti: *mut sgx_target_info_t,
     ret_gid: *mut sgx_epid_group_id_t,

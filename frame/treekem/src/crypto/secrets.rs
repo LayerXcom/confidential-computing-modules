@@ -14,14 +14,11 @@ use super::{
     CryptoRng,
 };
 use crate::handshake::AccessKey;
-use frame_common::crypto::{sgx_rand_assign, ExportPathSecret};
+use frame_common::crypto::{sgx_rand_assign, ExportPathSecret, SEALED_DATA_SIZE};
 use anyhow::{Result, anyhow};
 use codec::{Encode, Decode, Input};
 use sgx_tseal::SgxSealedData;
 use sgx_types::{sgx_attributes_t, sgx_sealed_data_t, SGX_KEYPOLICY_MRENCLAVE};
-
-// Calculated by `SgxSealedData<PathSecret>::calc_raw_sealed_data_size(add_mac_txt_size: u32, encrypt_txt_size: u32) -> u32`
-const SEALED_DATA_SIZE: usize = 592;
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);
@@ -200,6 +197,14 @@ impl PathSecret {
     pub fn try_into_exporting(self, epoch: u32) -> Result<ExportPathSecret> {
         let encoded_sealed = UnsealedPathSecret::from(self).encoded_seal()?;
         Ok(ExportPathSecret::new(encoded_sealed, epoch))
+    }
+
+    pub fn try_from_importing(imp_path_secret: ExportPathSecret) -> Result<Self> {
+        let sealed_path_secret = SealedPathSecret::decode(&mut imp_path_secret.encoded_sealed())
+            .map_err(|e| anyhow!("error: {:?}", e))?
+            .unseal()?;
+
+        Ok(sealed_path_secret.into())
     }
 }
 

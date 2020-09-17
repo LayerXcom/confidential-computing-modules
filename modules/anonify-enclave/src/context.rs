@@ -11,7 +11,7 @@ use frame_common::{
 };
 use frame_runtime::traits::*;
 use frame_treekem::{
-    handshake::{PathSecretRequest, PathSecretKVS},
+    handshake::{PathSecretSource, PathSecretKVS},
     init_path_secret_kvs,
 };
 use frame_enclave::ocalls::{sgx_init_quote, get_quote};
@@ -22,9 +22,6 @@ use crate::{
     kvs::EnclaveDB,
     group_key::GroupKey,
 };
-
-const UNTIL_ROSTER_IDX: usize = 10;
-const UNTIL_EPOCH: usize = 30;
 
 impl StateOps for EnclaveContext {
     type S = StateType;
@@ -108,10 +105,17 @@ impl EnclaveContext {
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
 
-        // temporary path secrets are generated in local.
-        let mut kvs = PathSecretKVS::new();
-        init_path_secret_kvs(&mut kvs, UNTIL_ROSTER_IDX, UNTIL_EPOCH);
-        let req = PathSecretRequest::Local(kvs);
+        let source = match env::var("AUDITOR_ENDPOINT") {
+            Err(_) => PathSecretSource::Local,
+            Ok(test) if test == "test".to_string() => {
+                const UNTIL_ROSTER_IDX: usize = 10;
+                const UNTIL_EPOCH: usize = 30;
+                let mut kvs = PathSecretKVS::new();
+                init_path_secret_kvs(&mut kvs, UNTIL_ROSTER_IDX, UNTIL_EPOCH);
+                PathSecretSource::LocalTestKV(kvs)
+            },
+            Ok(url) => PathSecretSource::Remote(url),
+        };
 
         let my_roster_idx: usize = env::var("MY_ROSTER_IDX")
             .expect("MY_ROSTER_IDX is not set")
@@ -122,7 +126,7 @@ impl EnclaveContext {
             .parse()
             .expect("Failed to parse MAX_ROSTER_IDX to usize");
 
-        let group_key = Arc::new(SgxRwLock::new(GroupKey::new(my_roster_idx, max_roster_idx, req)?));
+        let group_key = Arc::new(SgxRwLock::new(GroupKey::new(my_roster_idx, max_roster_idx, source)?));
         let notifier = Notifier::new();
 
         Ok(EnclaveContext{

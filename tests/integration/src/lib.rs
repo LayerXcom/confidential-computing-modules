@@ -654,4 +654,5 @@ fn set_env_vars() {
     env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");
     env::set_var("IAS_URL", "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report");
     env::set_var("SUB_KEY", "77e2533de0624df28dc3be3a5b9e50d9");
+    env::set_var("AUDITOR_ENDPOINT", "test");
 }
