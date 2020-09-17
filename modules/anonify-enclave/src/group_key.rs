@@ -45,7 +45,7 @@ impl GroupKeyOps for GroupKey {
                 handshake,
                 &self.source,
                 self.max_roster_idx as u32,
-                Some(frame_enclave::ocalls::import_path_secret),
+                frame_enclave::ocalls::import_path_secret,
         )?;
         self.keychain = keychain;
 

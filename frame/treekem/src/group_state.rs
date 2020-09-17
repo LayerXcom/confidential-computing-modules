@@ -58,7 +58,7 @@ impl Handshake for GroupState {
         handshake: &HandshakeParams,
         source: &PathSecretSource,
         max_roster_idx: u32,
-        req_path_secret_fn: Option<F>,
+        req_path_secret_fn: F,
     ) -> Result<AppKeyChain>
     where
         F: FnOnce(u32) -> Result<ExportPathSecret>
@@ -89,7 +89,7 @@ impl Handshake for GroupState {
             if sender_tree_idx == my_tree_idx {
                 let path_secret = match source {
                     PathSecretSource::Local => {
-                        let imported_path_secret = req_path_secret_fn.unwrap()(self.epoch)?;
+                        let imported_path_secret = req_path_secret_fn(self.epoch)?;
                         ensure!(imported_path_secret.epoch() == self.epoch, "imported_path_secret's epoch isn't the current epoch");
                         PathSecret::try_from_importing(imported_path_secret)?
                     },

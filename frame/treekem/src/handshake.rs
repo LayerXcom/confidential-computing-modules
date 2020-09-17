@@ -24,7 +24,7 @@ pub trait Handshake: Sized {
         handshake: &HandshakeParams,
         source: &PathSecretSource,
         max_roster_idx: u32,
-        req_path_secret_fn: Option<F>,
+        req_path_secret_fn: F,
     ) -> Result<AppKeyChain>
     where
         F: FnOnce(u32) -> Result<ExportPathSecret>;

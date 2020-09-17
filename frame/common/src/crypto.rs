@@ -408,7 +408,7 @@ impl IntoVec for Ciphertext {
 pub const SEALED_DATA_SIZE: usize = 592;
 pub const EXPORT_PATH_SECRET_SIZE: usize = SEALED_DATA_SIZE + 4;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode)]
+#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
 #[serde(crate = "crate::serde")]
 pub struct ExportPathSecret {
     encoded_sealed: Vec<u8>,
