@@ -11,7 +11,7 @@ stages:
     steps:
     - script: |
         docker run -v `pwd`:/root/anonify -v /var/run/aesmd:/var/run/aesmd --device /dev/sgx/enclave --net=test-network --name anonify --rm osuketh/anonify
-        ./scripts/test.sh
+        /bin/bash ./scripts/test.sh
 
 - stage: Docker_Build_and_Push
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')

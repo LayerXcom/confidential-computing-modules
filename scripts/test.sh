@@ -2,7 +2,8 @@
 
 set -e
 
-sudo -s
+echo "$(id)"
+echo "$(cat /root/.docker_bashrc)"
 source /root/.docker_bashrc
 export PATH=~/.cargo/bin:$PATH
 export SGX_MODE=HW
