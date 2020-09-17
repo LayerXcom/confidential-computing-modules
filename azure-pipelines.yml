@@ -21,14 +21,10 @@ stages:
       name: 'Anonify'
     steps:
     - task: Docker@2
-      displayName: Login
-      inputs:
-        command: Login
-        containerRegistry: anonifydev
-    - task: Docker@2
       displayName: Build and Push
       inputs:
         command: buildAndPush
+        containerRegistry: anonifydevdocker
         repository: anonifydev.azurecr.io/anonifydev
         tags: latest
         dockerfile: ./docker/server.Dockerfile
