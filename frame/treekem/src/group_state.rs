@@ -56,8 +56,9 @@ impl Handshake for GroupState {
     fn process_handshake<F>(
         &mut self,
         handshake: &HandshakeParams,
+        source: &PathSecretSource,
         max_roster_idx: u32,
-        req_path_secret_fn: F,
+        req_path_secret_fn: Option<F>,
     ) -> Result<AppKeyChain>
     where
         F: FnOnce(u32) -> Result<ExportPathSecret>
@@ -86,14 +87,22 @@ impl Handshake for GroupState {
             // Only if the received handshake sent from my own,
             // request path secret to external key vault and then update the leaf node.
             if sender_tree_idx == my_tree_idx {
-                let imported_path_secret = req_path_secret_fn(self.epoch)?;
-                ensure!(imported_path_secret.epoch() == self.epoch, "imported_path_secret's epoch isn't the current epoch");
-                let path_secret = PathSecret::try_from_importing(imported_path_secret)?;
+                let path_secret = match source {
+                    PathSecretSource::Local => {
+                        let imported_path_secret = req_path_secret_fn.unwrap()(self.epoch)?;
+                        ensure!(imported_path_secret.epoch() == self.epoch, "imported_path_secret's epoch isn't the current epoch");
+                        PathSecret::try_from_importing(imported_path_secret)?
+                    },
+                    PathSecretSource::LocalTestKV(_) => {
+                        Self::request_new_path_secret(source, self.my_roster_idx, self.epoch)?
+                    },
+                    _ => unimplemented!(),
+                };
+
                 let (node_pubkey, node_privkey, _, _) = path_secret.clone().derive_node_values()?;
 
                 my_leaf.update_pub_key(node_pubkey);
                 my_leaf.update_priv_key(node_privkey);
-
                 my_path_secret = Some(path_secret);
             }
         }

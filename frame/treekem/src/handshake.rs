@@ -22,8 +22,9 @@ pub trait Handshake: Sized {
     fn process_handshake<F>(
         &mut self,
         handshake: &HandshakeParams,
+        source: &PathSecretSource,
         max_roster_idx: u32,
-        req_path_secret_fn: F,
+        req_path_secret_fn: Option<F>,
     ) -> Result<AppKeyChain>
     where
         F: FnOnce(u32) -> Result<ExportPathSecret>;

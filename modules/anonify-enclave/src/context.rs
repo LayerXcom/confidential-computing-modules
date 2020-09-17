@@ -10,7 +10,10 @@ use frame_common::{
     state_types::{MemId, UpdatedState, StateType},
 };
 use frame_runtime::traits::*;
-use frame_treekem::handshake::PathSecretSource;
+use frame_treekem::{
+    handshake::{PathSecretSource, PathSecretKVS},
+    init_path_secret_kvs,
+};
 use frame_enclave::ocalls::{sgx_init_quote, get_quote};
 use crate::{
     notify::Notifier,
@@ -104,6 +107,13 @@ impl EnclaveContext {
 
         let source = match env::var("AUDITOR_ENDPOINT") {
             Err(_) => PathSecretSource::Local,
+            Ok(test) if test == "test".to_string() => {
+                const UNTIL_ROSTER_IDX: usize = 10;
+                const UNTIL_EPOCH: usize = 30;
+                let mut kvs = PathSecretKVS::new();
+                init_path_secret_kvs(&mut kvs, UNTIL_ROSTER_IDX, UNTIL_EPOCH);
+                PathSecretSource::LocalTestKV(kvs)
+            },
             Ok(url) => PathSecretSource::Remote(url),
         };
 

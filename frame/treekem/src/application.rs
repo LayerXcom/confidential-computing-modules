@@ -153,6 +153,7 @@ pub(crate) mod tests {
     }
 
     fn test_app_msg_correctness() {
+        std::env::set_var("AUDITOR_ENDPOINT", "test");
         let mut rng = rand::rngs::StdRng::seed_from_u64(1);
         let msg = b"app msg correctnesss test";
 
