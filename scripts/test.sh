@@ -2,6 +2,7 @@
 
 set -e
 
+sudo source /root/.docker_bashrc
 export PATH=~/.cargo/bin:$PATH
 export SGX_MODE=HW
 export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
