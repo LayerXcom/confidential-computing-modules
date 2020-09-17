@@ -14,14 +14,11 @@ use super::{
     CryptoRng,
 };
 use crate::handshake::AccessKey;
-use frame_common::crypto::{sgx_rand_assign, ExportPathSecret};
+use frame_common::crypto::{sgx_rand_assign, ExportPathSecret, SEALED_DATA_SIZE};
 use anyhow::{Result, anyhow};
 use codec::{Encode, Decode, Input};
 use sgx_tseal::SgxSealedData;
 use sgx_types::{sgx_attributes_t, sgx_sealed_data_t, SGX_KEYPOLICY_MRENCLAVE};
-
-// Calculated by `SgxSealedData<PathSecret>::calc_raw_sealed_data_size(add_mac_txt_size: u32, encrypt_txt_size: u32) -> u32`
-const SEALED_DATA_SIZE: usize = 592;
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);

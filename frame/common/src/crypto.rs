@@ -404,6 +404,10 @@ impl IntoVec for Ciphertext {
     }
 }
 
+// Calculated by `SgxSealedData<PathSecret>::calc_raw_sealed_data_size(add_mac_txt_size: u32, encrypt_txt_size: u32) -> u32`
+pub const SEALED_DATA_SIZE: usize = 592;
+pub const EXPORT_PATH_SECRET_SIZE: usize = SEALED_DATA_SIZE + 4;
+
 #[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode)]
 #[serde(crate = "crate::serde")]
 pub struct ExportPathSecret {
@@ -414,5 +418,9 @@ pub struct ExportPathSecret {
 impl ExportPathSecret {
     pub fn new(encoded_sealed: Vec<u8>, epoch: u32) -> Self {
         ExportPathSecret { encoded_sealed, epoch }
+    }
+
+    pub fn epoch(&self) -> u32 {
+        self.epoch
     }
 }
