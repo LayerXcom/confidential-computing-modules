@@ -13,7 +13,7 @@ stages:
         ./scripts/start-docker.sh
         ./scripts/test.sh
 
-- stage: Docker Build and Push
+- stage: Docker_Build_and_Push
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
   jobs:
   - job: Docker
