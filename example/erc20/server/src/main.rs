@@ -20,8 +20,9 @@ pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNum
     pub abi_path: String,
     pub bin_path: String,
     pub confirmations: usize,
+    pub account_index: usize,
+    pub password: String,
     pub dispatcher: Dispatcher<D, S, W, DB>,
-    pub sender_address: Address,
 }
 
 impl<D, S, W, DB> Server<D, S, W, DB>
@@ -47,7 +48,6 @@ where
 
         let event_db = Arc::new(DB::new());
         let dispatcher = Dispatcher::<D,S,W,DB>::new(eid, &eth_url, event_db).unwrap();
-        let sender_address = dispatcher.get_account(account_index, password.as_str()).unwrap();
 
         Server {
             eid,
@@ -55,8 +55,9 @@ where
             abi_path,
             bin_path,
             confirmations,
+            account_index,
+            password,
             dispatcher,
-            sender_address,
         }
     }
 }
