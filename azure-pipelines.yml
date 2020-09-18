@@ -8,12 +8,8 @@ stages:
   - job: CI
     pool:
       name: 'Anonify'
-    variables:
-      PJ_ROOT_DIR: $HOME/myagent/_work/1/s
     steps:
-    - script: |
-        pwd
-        ls
+    - script: |        
         docker-compose up -d
         docker-compose exec -T sgx_machine bash -c "cd anonify && ./scripts/test.sh"
       displayName: 'Run tests'
