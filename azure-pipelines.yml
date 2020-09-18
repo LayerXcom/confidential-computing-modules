@@ -8,13 +8,15 @@ stages:
   - job: CI
     pool:
       name: 'Anonify'
-    container:
-      image: osuketh/anonify:latest
-      options: -v /root/anonify:/root/anonify -v /var/run/aesmd:/var/run/aesmd --device /dev/sgx/enclave
-    variables:
-      PJ_ROOT_DIR: /__w/1/s
+    # container:
+    #   image: osuketh/anonify:latest
+    #   options: -v /root/anonify:/root/anonify -v /var/run/aesmd:/var/run/aesmd --device /dev/sgx/enclave
+    # variables:
+    #   PJ_ROOT_DIR: /__w/1/s
     steps:
-    - bash: ./scripts/test.sh
+    - script: |
+      docker-compose -f ./docker/docker-compose-ci.yml up -d --exit-code-from sgx_machine ganache
+      docker-compose exec sgx_machine ./scripts/test.sh
 
 - stage: Docker_Build_and_Push
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
