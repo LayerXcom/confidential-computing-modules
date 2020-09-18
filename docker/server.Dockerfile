@@ -38,9 +38,9 @@ FROM baiduxlab/sgx-rust:1804-1.1.2
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 WORKDIR /root/anonify
-COPY --from=builder /root/anonify/contract-build/Anonify.abi ./contract-build/
-COPY --from=builder /root/anonify/contract-build/Anonify.bin ./contract-build/
-COPY --from=builder /root/anonify/.anonify/enclave.signed.so ./.anonify/enclave.signed.so
-COPY --from=builder /root/anonify/target/debug/erc20-server ./target/debug/
+COPY --from=builder ./contract-build/Anonify.abi ./contract-build/
+COPY --from=builder ./contract-build/Anonify.bin ./contract-build/
+COPY --from=builder ./.anonify/enclave.signed.so ./.anonify/enclave.signed.so
+COPY --from=builder ./target/debug/erc20-server ./target/debug/
 
 CMD ["./target/debug/erc20-server"]
