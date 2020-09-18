@@ -14,7 +14,7 @@ steps:
   - name: sgx
     path: /dev/sgx
   environment:
-    PJ_ROOT_DIR: /drone/src
+    PJ_ROOT_DIR: /drone/src/anonify
   commands:
   - /bin/bash ./scripts/test.sh
 

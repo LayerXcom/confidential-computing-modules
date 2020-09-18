@@ -11,6 +11,8 @@ stages:
     container:
       image: osuketh/anonify:latest
       options: -v /root/anonify:/root/anonify -v /var/run/aesmd:/var/run/aesmd --device /dev/sgx/enclave
+    variables:
+      PJ_ROOT_DIR: /__w/1/s
     steps:
     - bash: ./scripts/test.sh
 
