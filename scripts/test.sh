@@ -4,16 +4,7 @@ set -e
 
 echo "$(id)"
 echo "$(cat /root/.docker_bashrc)"
-
-# export SGX_SDK=/opt/sgxsdk
-# export PATH=$PATH:$SGX_SDK/bin:$SGX_SDK/bin/x64
-# export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SGX_SDK/pkgconfig
-# if [ -z "$LD_LIBRARY_PATH" ]; then
-#      export LD_LIBRARY_PATH=$SGX_SDK/sdk_libs
-# else
-#      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SGX_SDK/sdk_libs
-# fi
-# export PATH="/root/.cargo/bin:$PATH"
+echo "$(pwd)"
 
 source /root/.docker_bashrc
 
@@ -36,6 +27,7 @@ make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
 echo "Integration testing..."
 cd ../tests/integration
+echo "$(pwd)"
 RUST_BACKTRACE=1 RUST_LOG=debug "/root/.cargo/bin/cargo" test -- --nocapture
 
 echo "Unit testing..."
