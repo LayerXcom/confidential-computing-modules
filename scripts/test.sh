@@ -4,8 +4,18 @@ set -e
 
 echo "$(id)"
 echo "$(cat /root/.docker_bashrc)"
-source /root/.docker_bashrc
-export PATH=~/.cargo/bin:$PATH
+
+export SGX_SDK=/opt/sgxsdk
+export PATH=$PATH:$SGX_SDK/bin:$SGX_SDK/bin/x64
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SGX_SDK/pkgconfig
+if [ -z "$LD_LIBRARY_PATH" ]; then
+     export LD_LIBRARY_PATH=$SGX_SDK/sdk_libs
+else
+     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SGX_SDK/sdk_libs
+fi
+export PATH="$HOME/.cargo/bin:$PATH"
+
+
 export SGX_MODE=HW
 export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
 
