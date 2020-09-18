@@ -27,7 +27,7 @@ RUN source /opt/sgxsdk/environment && \
     export PATH="$HOME/.cargo/bin:$PATH" && \
     export SGX_MODE=HW && \
     export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
-    solc -o build --bin --abi --optimize --overwrite contracts/Anonify.sol && \
+    solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol && \
     cd scripts && \
     make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave && \
     cd ../example/erc20/server && \
