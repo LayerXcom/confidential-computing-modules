@@ -8,11 +8,8 @@ stages:
   - job: CI
     pool:
       name: 'Anonify'
-    # container:
-    #   image: osuketh/anonify:latest
-    #   options: -v /root/anonify:/root/anonify -v /var/run/aesmd:/var/run/aesmd --device /dev/sgx/enclave
-    # variables:
-    #   PJ_ROOT_DIR: /__w/1/s
+    variables:
+      PJ_ROOT_DIR: $HOME/myagent/_work/1/s
     steps:
     - script: |
         pwd

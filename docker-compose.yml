@@ -7,11 +7,9 @@ services:
       - /var/run/aesmd:/var/run/aesmd
     devices:
       - "/dev/sgx/enclave"
-    # working_dir: /root/anonify
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug
-      PJ_ROOT_DIR: /__w/1/s
     stdin_open: true
     tty: true
     networks:
