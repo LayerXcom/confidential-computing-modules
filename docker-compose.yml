@@ -1,0 +1,34 @@
+version: "3.7"
+services:
+  sgx_machine:
+    image: osuketh/anonify:latest
+    volumes:
+      - .:/root/anonify
+      - /var/run/aesmd:/var/run/aesmd
+    devices:
+      - "/dev/sgx/enclave"
+    environment:
+      RUST_BACKTRACE: 1
+      RUST_LOG: debug
+    stdin_open: true
+    tty: true
+    networks:
+      testing_net:
+        ipv4_address: 172.28.1.1
+
+  ganache:
+      image: trufflesuite/ganache-cli:latest
+      ports:
+        - "8545:8545"
+      volumes:
+        - ./ganache_data:/ganache_data
+      networks:
+        testing_net:
+          ipv4_address: 172.28.0.2
+
+networks:
+  testing_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
