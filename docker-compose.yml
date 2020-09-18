@@ -3,7 +3,7 @@ services:
   sgx_machine:
     image: osuketh/anonify:latest
     volumes:
-      - /root/anonify:/root/anonify
+      - .:/root/anonify
       - /var/run/aesmd:/var/run/aesmd
     devices:
       - "/dev/sgx/enclave"

@@ -15,8 +15,10 @@ stages:
     #   PJ_ROOT_DIR: /__w/1/s
     steps:
     - script: |
+        pwd
+        ls
         docker-compose up -d
-        docker-compose exec -T sgx_machine bash -c "pwd && ./scripts/test.sh"
+        docker-compose exec -T sgx_machine bash -c "cd anonify && ./scripts/test.sh"
       displayName: 'Run tests'
     - script: docker-compose down
       condition: always()
