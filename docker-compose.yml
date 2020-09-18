@@ -13,7 +13,7 @@ services:
       RUST_LOG: debug
       PJ_ROOT_DIR: /__w/1/s
     stdin_open: true
-    tty: false
+    tty: true
     networks:
       testing_net:
         ipv4_address: 172.28.1.1

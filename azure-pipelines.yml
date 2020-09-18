@@ -16,7 +16,7 @@ stages:
     steps:
     - script: |
         docker-compose up -d
-        docker-compose exec sgx_machine bash -c "pwd && ./scripts/test.sh"
+        docker-compose exec -T sgx_machine bash -c "pwd && ./scripts/test.sh"
       displayName: 'Run tests'
     - script: docker-compose down
       condition: always()
