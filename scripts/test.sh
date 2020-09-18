@@ -13,7 +13,7 @@ if [ -z "$LD_LIBRARY_PATH" ]; then
 else
      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SGX_SDK/sdk_libs
 fi
-export PATH="$HOME/.cargo/bin:$PATH"
+export PATH="/root/.cargo/bin:$PATH"
 
 export SGX_MODE=HW
 export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
@@ -23,7 +23,7 @@ cd "${dirpath}/.."
 sudo solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
 
 cd frame/types
-"$HOME/.cargo/bin/cargo" build
+"/root/.cargo/bin/cargo" build
 
 cd ../../scripts
 # Generate a `enclave.signed.so` in `$HOME/.anonify`
@@ -33,7 +33,7 @@ make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
 echo "Integration testing..."
 cd ../tests/integration
-RUST_BACKTRACE=1 RUST_LOG=debug "$HOME/.cargo/bin/cargo" test -- --nocapture
+RUST_BACKTRACE=1 RUST_LOG=debug "/root/.cargo/bin/cargo" test -- --nocapture
 
 echo "Unit testing..."
 cd ../../scripts
