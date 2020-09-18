@@ -10,7 +10,7 @@ stages:
       name: 'Anonify'
     container:
       image: osuketh/anonify:latest
-      options: -v /root/anonify:/root/anonify -v /var/run/aesmd:/var/run/aesmd --device /dev/sgx/enclave
+      options: -v /root/anonify:/root/anonify -v /var/run/aesmd:/var/run/aesmd -v /etc/passwd:/etc/passwd:ro -v /etc/group:/etc/group:ro --device /dev/sgx/enclave
     steps:
     - bash: ./scripts/test.sh
 
