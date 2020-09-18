@@ -19,7 +19,7 @@ stages:
         pwd
         docker-compose exec sgx_machine bash
         pwd
-        ls
+        ls -a /root
         ./scripts/test.sh
       displayName: 'Run tests'
     - script: docker-compose down
