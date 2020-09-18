@@ -24,7 +24,7 @@ cd "${dirpath}/.."
 sudo solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
 
 cd frame/types
-cargo build
+"$HOME/.cargo/bin/cargo" build
 
 cd ../../scripts
 # Generate a `enclave.signed.so` in `$HOME/.anonify`
