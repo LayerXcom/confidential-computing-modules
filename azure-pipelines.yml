@@ -1,0 +1,35 @@
+trigger:
+- master
+
+stages:
+- stage: Test
+  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
+  jobs:
+  - job: CI
+    pool:
+      name: 'Anonify'
+    steps:
+    - script: |
+        docker-compose up -d
+        docker-compose exec -T sgx_machine bash -c "cd anonify && ./scripts/test.sh"
+      displayName: 'Run tests'
+    - script: docker-compose down
+      condition: always()
+      displayName: 'Shutdown'
+
+- stage: Docker_Build_and_Push
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  jobs:
+  - job: Docker
+    pool:
+      name: 'Anonify'
+    steps:
+    - task: Docker@2
+      displayName: Build and Push
+      inputs:
+        command: buildAndPush
+        containerRegistry: anonifydevdocker
+        repository: anonifydev.azurecr.io/anonifydev
+        tags: latest
+        dockerfile: ./docker/server.Dockerfile
+        buildContext: .
