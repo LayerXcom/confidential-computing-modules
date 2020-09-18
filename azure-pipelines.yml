@@ -15,6 +15,7 @@ stages:
     #   PJ_ROOT_DIR: /__w/1/s
     steps:
     - script: |
+        pwd
         docker-compose -f ./docker/docker-compose-ci.yml up -d --exit-code-from sgx_machine ganache
         docker-compose exec sgx_machine ./scripts/test.sh
 
