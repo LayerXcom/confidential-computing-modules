@@ -34,7 +34,7 @@ make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
 echo "Integration testing..."
 cd ../tests/integration
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
+RUST_BACKTRACE=1 RUST_LOG=debug "$HOME/.cargo/bin/cargo" test -- --nocapture
 
 echo "Unit testing..."
 cd ../../scripts
