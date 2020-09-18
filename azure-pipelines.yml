@@ -15,10 +15,13 @@ stages:
     #   PJ_ROOT_DIR: /__w/1/s
     steps:
     - script: |
-        pwd
-        ls docker/
         docker-compose up -d
-        docker-compose exec sgx_machine ./scripts/test.sh
+        pwd
+        docker-compose exec s_sgx_machine_1 ./scripts/test.sh
+      displayName: 'Run tests'
+    - script: docker-compose down
+      condition: always()
+      displayName: 'Shutdown'
 
 - stage: Docker_Build_and_Push
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
