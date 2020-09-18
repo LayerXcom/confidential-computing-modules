@@ -41,12 +41,14 @@ impl Deployer for EthDeployer {
         self.web3_conn.get_account(index, password)
     }
 
-    fn deploy(
+    fn deploy<P: AsRef<Path>>(
         &mut self,
         host_output: host_output::JoinGroup,
         confirmations: usize,
+        abi_path: P,
+        bin_path: P,
     ) -> Result<String> {
-        let contract_addr = self.web3_conn.deploy(host_output, confirmations)?;
+        let contract_addr = self.web3_conn.deploy(host_output, confirmations, abi_path, bin_path)?;
         self.address = Some(contract_addr);
 
         Ok(hex::encode(contract_addr.as_bytes()))

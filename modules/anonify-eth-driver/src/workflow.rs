@@ -296,6 +296,7 @@ pub mod host_output {
         }
     }
 
+    #[derive(Debug, Clone)]
     pub struct JoinGroup {
         pub signer: Address,
         pub gas: u64,
@@ -322,6 +323,7 @@ pub mod host_output {
         }
     }
 
+    #[derive(Debug, Clone)]
     pub struct Handshake {
         pub signer: Address,
         pub gas: u64,

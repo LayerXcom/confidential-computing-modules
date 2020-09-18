@@ -30,10 +30,12 @@ pub fn handle_deploy<D, S, W, DB>(
 {
     debug!("Starting deploy a contract...");
 
-    let contract_addr = server.dispatcher
-        .deploy(server.sender_address, DEFAULT_GAS, server.confirmations)?;
+    let sender_address = server.dispatcher.get_account(server.account_index, &server.password)?;
+    let (contract_addr, export_path_secret) = server.dispatcher
+        .deploy(sender_address, DEFAULT_GAS, server.confirmations, &server.abi_path, &server.bin_path)?;
 
     debug!("Contract address: {:?}", &contract_addr);
+    debug!("export_path_secret: {:?}", export_path_secret);
     server.dispatcher.set_contract_addr(&contract_addr, &server.abi_path)?;
 
     Ok(HttpResponse::Ok().json(erc20_api::deploy::post::Response(contract_addr)))
@@ -49,8 +51,9 @@ pub fn handle_join_group<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
-    let receipt = server.dispatcher.join_group(
-        server.sender_address,
+    let sender_address = server.dispatcher.get_account(server.account_index, &server.password)?;
+    let (receipt, _) = server.dispatcher.join_group(
+        sender_address,
         DEFAULT_GAS,
         &req.contract_addr,
         &server.abi_path,
@@ -70,6 +73,7 @@ pub fn handle_init_state<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
+    let sender_address = server.dispatcher.get_account(server.account_index, &server.password)?;
     let access_right = req.into_access_right()?;
     let total_supply = U64::from_raw(req.total_supply);
     let init_state = construct{ total_supply };
@@ -78,7 +82,7 @@ pub fn handle_init_state<D, S, W, DB>(
         access_right,
         init_state,
         "construct",
-        server.sender_address,
+        sender_address,
         DEFAULT_GAS,
         server.confirmations,
     )?;
@@ -96,6 +100,7 @@ pub fn handle_transfer<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
+    let sender_address = server.dispatcher.get_account(server.account_index, &server.password)?;
     let access_right = req.into_access_right()?;
     let amount = U64::from_raw(req.amount);
     let recipient = req.target;
@@ -105,7 +110,7 @@ pub fn handle_transfer<D, S, W, DB>(
         access_right,
         transfer_state,
         "transfer",
-        server.sender_address,
+        sender_address,
         DEFAULT_GAS,
         server.confirmations,
     )?;
@@ -123,6 +128,7 @@ pub fn handle_approve<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
+    let sender_address = server.dispatcher.get_account(server.account_index, &server.password)?;
     let access_right = req.into_access_right()?;
     let amount = U64::from_raw(req.amount);
     let spender = req.target;
@@ -132,7 +138,7 @@ pub fn handle_approve<D, S, W, DB>(
         access_right,
         approve_state,
         "approve",
-        server.sender_address,
+        sender_address,
         DEFAULT_GAS,
         server.confirmations,
     )?;
@@ -150,6 +156,7 @@ pub fn handle_mint<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
+    let sender_address = server.dispatcher.get_account(server.account_index, &server.password)?;
     let access_right = req.into_access_right()?;
     let amount = U64::from_raw(req.amount);
     let recipient = req.target;
@@ -159,7 +166,7 @@ pub fn handle_mint<D, S, W, DB>(
         access_right,
         minting_state,
         "mint",
-        server.sender_address,
+        sender_address,
         DEFAULT_GAS,
         server.confirmations,
     )?;
@@ -177,6 +184,7 @@ pub fn handle_burn<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
+    let sender_address = server.dispatcher.get_account(server.account_index, &server.password)?;
     let access_right = req.into_access_right()?;
     let amount = U64::from_raw(req.amount);
     let burn_state = burn{ amount };
@@ -185,7 +193,7 @@ pub fn handle_burn<D, S, W, DB>(
         access_right,
         burn_state,
         "burn",
-        server.sender_address,
+        sender_address,
         DEFAULT_GAS,
         server.confirmations,
     )?;
@@ -203,6 +211,7 @@ pub fn handle_transfer_from<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
+    let sender_address = server.dispatcher.get_account(server.account_index, &server.password)?;
     let access_right = req.into_access_right()?;
     let amount = U64::from_raw(req.amount);
     let owner = req.owner;
@@ -213,7 +222,7 @@ pub fn handle_transfer_from<D, S, W, DB>(
         access_right,
         transferred_from_state,
         "transfer_from",
-        server.sender_address,
+        sender_address,
         DEFAULT_GAS,
         server.confirmations,
     )?;
@@ -230,8 +239,9 @@ pub fn handle_key_rotation<D, S, W, DB>(
         W: Watcher<WatcherDB=DB>,
         DB: BlockNumDB,
 {
-    let receipt = server.dispatcher.handshake(
-        server.sender_address,
+    let sender_address = server.dispatcher.get_account(server.account_index, &server.password)?;
+    let (receipt, _) = server.dispatcher.handshake(
+        sender_address,
         DEFAULT_GAS,
         server.confirmations,
     )?;

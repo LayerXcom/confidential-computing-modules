@@ -1,8 +1,19 @@
 use frame_types::{traits::SliceCPtr, UntrustedStatus};
+use frame_common::crypto::{ExportPathSecret, EXPORT_PATH_SECRET_SIZE};
 use sgx_types::*;
 use std::vec::Vec;
+use anyhow::anyhow;
+use codec::Decode;
 use crate::error::{Result, FrameEnclaveError};
 
+extern "C" {
+    pub fn ocall_import_path_secret(
+        retval: *mut UntrustedStatus,
+        path_secret: *mut u8,
+        ps_len: usize,
+        epoch: u32,
+    ) -> sgx_status_t;
+}
 extern "C" {
     pub fn ocall_sgx_init_quote(
         retval: *mut UntrustedStatus,
@@ -38,6 +49,39 @@ extern "C" {
         enclaveTrusted: i32,
         update_info: *mut sgx_update_info_bit_t,
     ) -> sgx_status_t;
+}
+
+pub fn import_path_secret(epoch: u32) -> anyhow::Result<ExportPathSecret> {
+    inner_import_path_secret(epoch).map_err(Into::into)
+}
+
+fn inner_import_path_secret(epoch: u32) -> Result<ExportPathSecret> {
+    let mut rt = UntrustedStatus::default();
+    let mut buf = [0u8; EXPORT_PATH_SECRET_SIZE];
+
+    let status = unsafe {
+        ocall_import_path_secret(
+            &mut rt as *mut UntrustedStatus,
+            buf.as_mut_ptr() as *mut u8,
+            EXPORT_PATH_SECRET_SIZE,
+            epoch,
+        )
+    };
+
+    if status != sgx_status_t::SGX_SUCCESS {
+		return Err(FrameEnclaveError::SgxError{ err: status });
+	}
+	if rt.is_err() {
+		return Err(FrameEnclaveError::UntrustedError{ status: rt, function: "ocall_import_path_secret" });
+    }
+
+    let exported_path_secret = ExportPathSecret::decode(&mut &buf[..])
+        .map_err(|e| FrameEnclaveError::CodecError(e))?;
+    if epoch == exported_path_secret.epoch() {
+        return Err(anyhow!("Invalid path_secret's epoch").into());
+    }
+
+    Ok(exported_path_secret)
 }
 
 pub fn get_ias_socket() -> Result<i32> {

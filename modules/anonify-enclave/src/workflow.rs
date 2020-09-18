@@ -175,14 +175,13 @@ impl EnclaveEngine for CallJoinGroup {
         let sub_key = env::var("SUB_KEY")?;
         let (report, report_sig) = RAService::remote_attestation(ias_url.as_str(), sub_key.as_str(), &quote)?;
         let group_key = &*enclave_context.read_group_key();
-        let (handshake, path_secret) = group_key.create_handshake()?;
-        let sealed_path_secret = UnsealedPathSecret::from(path_secret).encoded_seal()?;
+        let (handshake, export_path_secret) = group_key.create_handshake()?;
 
         Ok(output::ReturnJoinGroup::new(
             report.into_vec(),
             report_sig.into_vec(),
             handshake.encode(),
-            sealed_path_secret,
+            export_path_secret,
         ))
     }
 }
@@ -204,10 +203,9 @@ impl EnclaveEngine for CallHandshake {
         C: ContextOps<S=StateType> + Clone,
     {
         let group_key = &*enclave_context.read_group_key();
-        let (handshake, path_secret) = group_key.create_handshake()?;
-        let sealed_path_secret = UnsealedPathSecret::from(path_secret).encoded_seal()?;
+        let (handshake, export_path_secret) = group_key.create_handshake()?;
 
-        Ok(output::ReturnHandshake::new(handshake.encode(), sealed_path_secret))
+        Ok(output::ReturnHandshake::new(handshake.encode(), export_path_secret))
     }
 }
 

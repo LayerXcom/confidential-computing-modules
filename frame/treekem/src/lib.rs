@@ -18,8 +18,6 @@ pub use crate::handshake::Handshake;
 pub use crate::crypto::secrets::{PathSecret, SealedPathSecret, UnsealedPathSecret};
 pub use crate::crypto::ecies::EciesCiphertext;
 pub use crate::crypto::dh::{DhPrivateKey, DhPubKey};
-
-// temporary
 pub use crate::test_utils::init_path_secret_kvs;
 
 #[cfg(debug_assertions)]

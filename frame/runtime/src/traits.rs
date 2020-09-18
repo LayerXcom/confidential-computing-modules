@@ -7,14 +7,14 @@ use crate::localstd::{
     string::String,
 };
 use frame_common::{
-    crypto::{AccountId, Ciphertext},
+    crypto::{AccountId, Ciphertext, ExportPathSecret},
     traits::*,
     state_types::{UpdatedState, MemId},
 };
 use codec::{Encode, Decode};
 use frame_treekem::{
     PathSecret,
-    handshake::{PathSecretRequest, HandshakeParams}
+    handshake::{PathSecretSource, HandshakeParams}
 };
 
 /// Execute state transition functions from runtime
@@ -78,10 +78,10 @@ pub trait GroupKeyOps: Sized {
     fn new(
         my_roster_idx: usize,
         max_roster_idx: usize,
-        path_secret_req: PathSecretRequest,
+        source: PathSecretSource,
     ) -> Result<Self>;
 
-    fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret)>;
+    fn create_handshake(&self) -> Result<(HandshakeParams, ExportPathSecret)>;
 
     fn process_handshake(
         &mut self,

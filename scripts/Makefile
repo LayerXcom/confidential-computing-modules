@@ -5,7 +5,7 @@ FRAME_ROOT := $(ANONIFY_ROOT_DIR)/frame
 CONFIG_DIR := $(ANONIFY_ROOT_DIR)/config
 ANONIFY_ENCLAVE_DIR := $(ANONIFY_CORE_ROOT)/enclave
 ANONIFY_HOST_DIR := $(ANONIFY_CORE_ROOT)/host
-ANONIFY_BIN_DIR := $(HOME)/.anonify
+ANONIFY_BIN_DIR := $(ANONIFY_ROOT_DIR)/.anonify
 ANONIFY_EDL_DIR := $(ANONIFY_ROOT_DIR)/edl
 ANONIFY_BUILD_DIR := $(ANONIFY_ROOT_DIR)/build
 
@@ -129,6 +129,7 @@ $(ANONIFY_BUILD_DIR)/$(T_O_FILE): $(Enclave_EDL_Files)
 	@echo "CC   <=  $<"
 
 $(Rust_Enclave_Name): $(Rust_Enclave_Files)
+	@echo "Rust_Enclave_Name <= $(PWD)"
 	@cd $(ANONIFY_ROOT_DIR)/$(ENCLAVE_DIR) && RUST_LOG=debug cargo build $(CARGO_FLAGS) $(FEATURE_FLAGS)
 	mkdir -p $(CUSTOM_LIBRARY_PATH)
 	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/libenclave.a

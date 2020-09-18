@@ -1,11 +1,13 @@
 use crate::group_state::GroupState;
 use crate::application::AppKeyChain;
-use crate::handshake::{Handshake, PathSecretRequest, PathSecretKVS};
+use crate::handshake::{Handshake, PathSecretSource, PathSecretKVS};
 use crate::crypto::{
     CryptoRng,
     secrets::PathSecret,
 };
 use rand_core::SeedableRng;
+use frame_common::crypto::ExportPathSecret;
+use anyhow::anyhow;
 
 pub fn init_path_secret_kvs(kvs: &mut PathSecretKVS, until_roster_idx: usize, until_epoch: usize) {
     let mut csprng = rand::rngs::StdRng::seed_from_u64(1);
@@ -32,16 +34,17 @@ pub fn do_handshake_three_party<R: CryptoRng>(
     my_group: &mut GroupState,
     others_group1: &mut GroupState,
     others_group2: &mut GroupState,
-    req: &PathSecretRequest,
+    source: &PathSecretSource,
     csprng: &mut R,
 ) -> (AppKeyChain, AppKeyChain, AppKeyChain) {
     let max_roster_idx = 2;
     let new_path_secret = PathSecret::new_from_random(csprng);
-    let (handshake, _) = my_group.create_handshake(req).unwrap();
+    let (handshake, _) = my_group.create_handshake(source).unwrap();
+    let dummy_fn = |_| Err(anyhow!("This is dummy_fn"));
 
-    let my_keychain = my_group.process_handshake(&handshake, req, max_roster_idx).unwrap();
-    let others_keychain1 = others_group1.process_handshake(&handshake, req, max_roster_idx).unwrap();
-    let others_keychain2 = others_group2.process_handshake(&handshake, req, max_roster_idx).unwrap();
+    let my_keychain = my_group.process_handshake(&handshake, source, max_roster_idx, dummy_fn).unwrap();
+    let others_keychain1 = others_group1.process_handshake(&handshake, source, max_roster_idx, dummy_fn).unwrap();
+    let others_keychain2 = others_group2.process_handshake(&handshake, source, max_roster_idx, dummy_fn).unwrap();
 
     (my_keychain, others_keychain1, others_keychain2)
 }
