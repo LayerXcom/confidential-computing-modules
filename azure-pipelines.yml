@@ -16,7 +16,8 @@ stages:
     steps:
     - script: |
         pwd
-        docker-compose -f ./docker/docker-compose-ci.yml up -d --exit-code-from sgx_machine ganache
+        ls
+        docker-compose -f docker/docker-compose-ci.yml up -d --exit-code-from sgx_machine ganache
         docker-compose exec sgx_machine ./scripts/test.sh
 
 - stage: Docker_Build_and_Push
