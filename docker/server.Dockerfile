@@ -36,8 +36,8 @@ WORKDIR /root/anonify
 
 RUN cd /root/anonify
 COPY --from=builder /root/anonify/.anonify/enclave.signed.so ./.anonify/enclave.signed.so
-COPY --from=builder /root/anonify/target/debug/erc20-server ./target/debug/
+COPY --from=builder /root/anonify/target/release/erc20-server ./target/release/
 COPY --from=builder /root/anonify/contract-build/Anonify.abi ./contract-build/
 COPY --from=builder /root/anonify/contract-build/Anonify.bin ./contract-build/
 
-CMD ["./target/debug/erc20-server"]
+CMD ["./target/release/erc20-server"]
