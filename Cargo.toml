@@ -6,6 +6,7 @@ members = [
     "frame/types",
     "frame/treekem",
     "frame/runtime",
+    "frame/remote-attestation",
     "modules/anonify-enclave",
     "modules/anonify-eth-driver",
     "modules/anonify-io-types",
