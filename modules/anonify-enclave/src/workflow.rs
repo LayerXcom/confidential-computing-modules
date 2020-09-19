@@ -1,31 +1,20 @@
 use std::{
-    slice,
     marker::PhantomData,
     env,
 };
-use sgx_types::*;
-use frame_types::*;
 use frame_enclave::EnclaveEngine;
 use anonify_io_types::*;
 use frame_common::{
-    crypto::{Ciphertext, Sha256, AccountId},
+    crypto::{Sha256, AccountId},
     traits::*,
-    state_types::{MemId, StateType},
+    state_types::StateType,
 };
 use frame_runtime::traits::*;
-use frame_treekem::{
-    SealedPathSecret, UnsealedPathSecret,
-    handshake::HandshakeParams
-};
-use ed25519_dalek::{PublicKey, Signature};
+use frame_treekem::handshake::HandshakeParams;
 use codec::{Decode, Encode};
 use remote_attestation::RAService;
-use log::debug;
 use anyhow::{Result, anyhow};
-use crate::{
-    instructions::Instructions,
-    context::EnclaveContext,
-};
+use crate::instructions::Instructions;
 
 #[derive(Debug, Clone)]
 pub struct Instruction<AP: AccessPolicy> {
@@ -162,7 +151,7 @@ impl EnclaveEngine for CallJoinGroup {
     type EO = output::ReturnJoinGroup;
 
     fn handle<R, C>(
-        ecall_input: Self::EI,
+        _ecall_input: Self::EI,
         enclave_context: &C,
         _max_mem_size: usize
     ) -> Result<Self::EO>
@@ -194,7 +183,7 @@ impl EnclaveEngine for CallHandshake {
     type EO = output::ReturnHandshake;
 
     fn handle<R, C>(
-        ecall_input: Self::EI,
+        _ecall_input: Self::EI,
         enclave_context: &C,
         _max_mem_size: usize
     ) -> Result<Self::EO>

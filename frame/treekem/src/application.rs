@@ -143,7 +143,6 @@ pub(crate) mod tests {
     use super::*;
     use test_utils::*;
     use crate::test_funcs;
-    use rand::{self, SeedableRng};
     use crate::handshake::{PathSecretKVS, PathSecretSource};
 
     pub(crate) fn run_tests() -> bool {
@@ -154,7 +153,6 @@ pub(crate) mod tests {
 
     fn test_app_msg_correctness() {
         std::env::set_var("AUDITOR_ENDPOINT", "test");
-        let mut rng = rand::rngs::StdRng::seed_from_u64(1);
         let msg = b"app msg correctnesss test";
 
         let mut kvs = PathSecretKVS::new();
@@ -171,7 +169,6 @@ pub(crate) mod tests {
             &mut group_state2,
             &mut group_state3,
             &source,
-            &mut rng
         );
 
         // Add member2
@@ -180,7 +177,6 @@ pub(crate) mod tests {
             &mut group_state1,
             &mut group_state3,
             &source,
-            &mut rng
         );
 
         // 1 --> 2
@@ -233,7 +229,6 @@ pub(crate) mod tests {
             &mut group_state1,
             &mut group_state3,
             &source,
-            &mut rng
         );
 
         // 1 --> 2
@@ -275,7 +270,6 @@ pub(crate) mod tests {
             &mut group_state1,
             &mut group_state2,
             &source,
-            &mut rng
         );
 
         // 3 --> 1,2
@@ -328,16 +322,14 @@ pub(crate) mod tests {
             &mut group_state1,
             &mut group_state2,
             &source,
-            &mut rng
         );
 
         // update member3
-        let (key_chain1_epoch5, key_chain2_epoch5, key_chain3_epoch5) = test_funcs::do_handshake_three_party(
+        let (_key_chain1_epoch5, _key_chain2_epoch5, _key_chain3_epoch5) = test_funcs::do_handshake_three_party(
             &mut group_state3,
             &mut group_state1,
             &mut group_state2,
             &source,
-            &mut rng
         );
 
         // update member1
@@ -346,7 +338,6 @@ pub(crate) mod tests {
             &mut group_state3,
             &mut group_state2,
             &source,
-            &mut rng
         );
 
         // 3 --> 1,2

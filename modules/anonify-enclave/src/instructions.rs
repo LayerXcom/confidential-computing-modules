@@ -4,7 +4,6 @@ use std::{
 };
 use frame_common::{
     crypto::{AccountId, Ciphertext},
-    traits::*,
     state_types::{UpdatedState, StateType},
 };
 use frame_runtime::traits::*;

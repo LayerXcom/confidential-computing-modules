@@ -1,11 +1,8 @@
 use std::{
     prelude::v1::*,
-    net::TcpStream,
     str,
-    time::{SystemTime, UNIX_EPOCH},
-    untrusted::time::SystemTimeEx,
+    time::SystemTime,
     io::{BufReader, Write},
-    collections::HashMap,
 };
 use http_req::{request::{Request, Method}, uri::Uri, response::{Headers, Response}};
 use anyhow::{Result, anyhow, bail, ensure};
@@ -175,7 +172,7 @@ impl RAResponse {
 
     /// Verify report's timestamp is within 24H (90day is recommended by Intel)
     fn verify_timestamp(&self, attn_report: &Value) -> Result<()> {
-        if let Value::String(time) = &attn_report["timestamp"] {
+        if let Value::String(_time) = &attn_report["timestamp"] {
             Ok(())
             // TODO
             // let time_fixed = time.clone() + "+0000";

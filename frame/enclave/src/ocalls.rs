@@ -1,4 +1,4 @@
-use frame_types::{traits::SliceCPtr, UntrustedStatus};
+use frame_types::UntrustedStatus;
 use frame_common::crypto::{ExportPathSecret, EXPORT_PATH_SECRET_SIZE, EXPORT_ID_SIZE};
 use sgx_types::*;
 use std::vec::Vec;

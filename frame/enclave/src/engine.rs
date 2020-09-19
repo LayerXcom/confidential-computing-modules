@@ -4,13 +4,12 @@ use frame_common::{
     state_types::StateType,
 };
 use frame_runtime::{RuntimeExecutor, ContextOps};
-use crate::error::Result;
 
 pub trait EnclaveEngine {
     type EI: EcallInput + Decode;
     type EO: EcallOutput + Encode;
 
-    fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
+    fn eval_policy(_ecall_input: &Self::EI) -> anyhow::Result<()> {
         Ok(())
     }
 

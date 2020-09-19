@@ -8,7 +8,6 @@ use frame_common::{
     kvs::*,
     crypto::AccountId,
     state_types::{MemId, UpdatedState, StateType},
-    traits::*,
 };
 use crate::error::Result;
 

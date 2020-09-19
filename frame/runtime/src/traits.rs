@@ -3,7 +3,6 @@ use crate::localstd::{
     fmt::Debug,
     vec::Vec,
     sync::{SgxRwLockReadGuard, SgxRwLockWriteGuard},
-    boxed::Box,
     string::String,
 };
 use frame_common::{
@@ -13,7 +12,6 @@ use frame_common::{
 };
 use codec::{Encode, Decode};
 use frame_treekem::{
-    PathSecret,
     handshake::{PathSecretSource, HandshakeParams}
 };
 

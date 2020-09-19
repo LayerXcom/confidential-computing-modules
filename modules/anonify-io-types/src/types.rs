@@ -1,11 +1,7 @@
-use crate::localstd::{
-    vec::Vec,
-    string::String,
-    str,
-};
+use crate::localstd::vec::Vec;
 use codec::{Encode, Decode, Input, self};
 use frame_common::{
-    EcallInput, EcallOutput, State,
+    EcallInput, EcallOutput,
     crypto::{Sha256, Ciphertext, ExportPathSecret},
     state_types::{StateType, MemId, UpdatedState},
     traits::AccessPolicy,

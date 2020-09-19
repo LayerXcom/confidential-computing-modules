@@ -6,7 +6,6 @@ use sgx_types::*;
 use std::prelude::v1::*;
 use frame_common::{
     crypto::AccountId,
-    traits::*,
     state_types::{MemId, UpdatedState, StateType},
 };
 use frame_runtime::traits::*;

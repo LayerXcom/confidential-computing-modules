@@ -1,6 +1,6 @@
 use std::vec::Vec;
 use frame_treekem::{
-    GroupState, AppKeyChain, Handshake, PathSecret,
+    GroupState, AppKeyChain, Handshake,
     handshake::{PathSecretSource, HandshakeParams},
 };
 use frame_common::crypto::{Ciphertext, ExportPathSecret};

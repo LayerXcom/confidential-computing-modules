@@ -1,6 +1,5 @@
 use std::io;
 use thiserror::Error;
-use anyhow::anyhow;
 use frame_types::UntrustedStatus;
 
 pub type Result<T> = std::result::Result<T, FrameEnclaveError>;

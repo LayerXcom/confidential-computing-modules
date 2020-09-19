@@ -1,12 +1,7 @@
 use crate::group_state::GroupState;
 use crate::application::AppKeyChain;
 use crate::handshake::{Handshake, PathSecretSource, PathSecretKVS};
-use crate::crypto::{
-    CryptoRng,
-    secrets::PathSecret,
-};
 use rand_core::SeedableRng;
-use frame_common::crypto::ExportPathSecret;
 use anyhow::anyhow;
 
 pub fn init_path_secret_kvs(kvs: &mut PathSecretKVS, until_roster_idx: usize, until_epoch: usize) {
@@ -30,15 +25,13 @@ pub fn change_group_state_idx(
     new_group_state
 }
 
-pub fn do_handshake_three_party<R: CryptoRng>(
+pub fn do_handshake_three_party(
     my_group: &mut GroupState,
     others_group1: &mut GroupState,
     others_group2: &mut GroupState,
     source: &PathSecretSource,
-    csprng: &mut R,
 ) -> (AppKeyChain, AppKeyChain, AppKeyChain) {
     let max_roster_idx = 2;
-    let new_path_secret = PathSecret::new_from_random(csprng);
     let (handshake, _) = my_group.create_handshake(source).unwrap();
     let dummy_fn = |_: &[u8]| Err(anyhow!("This is dummy_fn"));
 

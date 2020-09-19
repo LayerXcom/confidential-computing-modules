@@ -40,7 +40,7 @@ impl Handshake for GroupState {
             new_group_state.tree.propagate_blank(my_roster_idx as usize);
         }
 
-        let update_secret = new_group_state.set_new_path_secret(path_secret.clone(), my_tree_idx)?;
+        let _ = new_group_state.set_new_path_secret(path_secret.clone(), my_tree_idx)?;
         let direct_path_msg = new_group_state.tree.encrypt_direct_path_secret(my_tree_idx, path_secret.clone())?;
 
         let handshake = HandshakeParams {
@@ -148,7 +148,7 @@ impl GroupState {
             PathSecretSource::LocalTestKV(db) => {
                 db.get(roster_idx, epoch).cloned().ok_or(anyhow!("Not found Path Secret from local PathSecretKVS with provided roster_idx and epoch"))
             }
-            PathSecretSource::Remote(url) => unimplemented!(),
+            PathSecretSource::Remote(_url) => unimplemented!(),
         }
     }
 

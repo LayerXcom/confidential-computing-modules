@@ -1,7 +1,7 @@
 use std::vec::Vec;
 use super::{CryptoRng, SHA256_OUTPUT_LEN};
 use ring::{
-    hmac::{SigningKey, SigningContext, HMAC_SHA256},
+    hmac::{Key, Context, HMAC_SHA256},
 };
 use codec::Encode;
 
@@ -28,8 +28,8 @@ impl HmacKey {
     }
 
     pub fn sign(&self, msg: &[u8]) -> Vec<u8> {
-        let signing_key = SigningKey::new(HMAC_SHA256, &self.0);
-        let mut ctx = SigningContext::with_key(&signing_key);
+        let signing_key = Key::new(HMAC_SHA256, &self.0);
+        let mut ctx = Context::with_key(&signing_key);
         ctx.update(&msg);
         ctx.sign().as_ref().to_vec()
     }
