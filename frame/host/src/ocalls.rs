@@ -2,10 +2,14 @@ use sgx_types::*;
 use std::{
     net::{TcpStream, SocketAddr},
     os::unix::io::IntoRawFd,
+    slice,
+    ptr,
 };
 use anyhow::Result;
 use log::debug;
+use codec::Encode;
 use frame_types::UntrustedStatus;
+use crate::StorePathSecrets;
 
 const DEV_HOSTNAME: &str = "api.trustedservices.intel.com";
 const HTTPS_PORT: u16 = 443;
@@ -17,6 +21,17 @@ pub extern "C" fn ocall_import_path_secret(
     id: *const u8,
     id_len: usize,
 ) -> UntrustedStatus {
+    let id = unsafe { slice::from_raw_parts(id, id_len) };
+
+    match StorePathSecrets::new().load_from_local_filesystem(&id) {
+        Ok(eps) => unsafe {
+            ptr::copy_nonoverlapping(eps.encode().as_ptr(), path_secret, ps_len);
+        },
+        Err(e) => {
+            println!("Failed to load path secret from local filesystem {:?}", e);
+            return UntrustedStatus::error();
+        }
+    }
 
     UntrustedStatus::success()
 }

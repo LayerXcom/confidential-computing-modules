@@ -24,4 +24,8 @@ pub enum FrameHostError {
     CodecError(#[from] codec::Error),
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
+    #[error("Utf8Error error: {0}")]
+    Utf8Error(#[from] std::str::Utf8Error),
+    #[error("SerdeJsonError error: {0}")]
+    SerdeJsonError(#[from] serde_json::Error),
 }

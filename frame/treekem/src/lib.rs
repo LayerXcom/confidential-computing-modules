@@ -9,7 +9,7 @@ pub mod handshake;
 mod ratchet_tree;
 mod tree_math;
 mod crypto;
-#[cfg(debug_assertions)]
+// #[cfg(debug_assertions)]
 mod test_utils;
 
 pub use crate::application::AppKeyChain;

@@ -6,14 +6,12 @@ use anonify_eth_driver::{
     traits::*,
     eth::*,
 };
-use frame_host::EnclaveDir;
+use frame_host::{EnclaveDir, StorePathSecrets};
 use handlers::*;
 use actix_web::{web, App, HttpServer};
 use web3::types::Address;
-use crate::store_path_secrets::StorePathSecrets;
 
 mod handlers;
-mod store_path_secrets;
 
 #[derive(Debug)]
 pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
