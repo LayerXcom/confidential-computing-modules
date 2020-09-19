@@ -29,7 +29,9 @@ stages:
       inputs:
         command: buildAndPush
         containerRegistry: anonifydevdocker
-        repository: anonifydev.azurecr.io/anonifydev
+        repository: anonifydev
         tags: latest
         dockerfile: ./docker/server.Dockerfile
         buildContext: .
+    - script: docker image prune -f
+      displayName: Remove dangling images
