@@ -1,4 +1,4 @@
-use std::{sync::Arc, thread, time};
+use std::{sync::Arc, thread, time, env};
 use failure::Error;
 use log::debug;
 use anonify_eth_driver::{
