@@ -14,7 +14,8 @@ const HTTPS_PORT: u16 = 443;
 pub extern "C" fn ocall_import_path_secret(
     path_secret: *mut u8,
     ps_len: usize,
-    epoch: u32,
+    id: *const u8,
+    id_len: usize,
 ) -> UntrustedStatus {
 
     UntrustedStatus::success()

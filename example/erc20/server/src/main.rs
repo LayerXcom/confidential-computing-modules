@@ -10,8 +10,10 @@ use frame_host::EnclaveDir;
 use handlers::*;
 use actix_web::{web, App, HttpServer};
 use web3::types::Address;
+use crate::store_path_secrets::StorePathSecrets;
 
 mod handlers;
+mod store_path_secrets;
 
 #[derive(Debug)]
 pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
@@ -22,6 +24,7 @@ pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNum
     pub confirmations: usize,
     pub account_index: usize,
     pub password: String,
+    pub store_path_secrets: StorePathSecrets,
     pub dispatcher: Dispatcher<D, S, W, DB>,
 }
 
@@ -46,6 +49,7 @@ where
             .parse()
             .expect("Failed to parse ACCOUNT_INDEX to usize");
 
+        let store_path_secrets = StorePathSecrets::new();
         let event_db = Arc::new(DB::new());
         let dispatcher = Dispatcher::<D,S,W,DB>::new(eid, &eth_url, event_db).unwrap();
 
@@ -57,6 +61,7 @@ where
             confirmations,
             account_index,
             password,
+            store_path_secrets,
             dispatcher,
         }
     }

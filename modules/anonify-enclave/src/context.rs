@@ -23,6 +23,16 @@ use crate::{
     group_key::GroupKey,
 };
 
+/// spid: Service provider ID for the ISV.
+#[derive(Clone)]
+pub struct EnclaveContext {
+    spid: sgx_spid_t,
+    identity_key: EnclaveIdentityKey,
+    db: EnclaveDB,
+    notifier: Notifier,
+    pub group_key: Arc<SgxRwLock<GroupKey>>,
+}
+
 impl StateOps for EnclaveContext {
     type S = StateType;
 
@@ -82,16 +92,6 @@ impl QuoteGetter for EnclaveContext {
         let report = self.report(&target_info)?;
         self.encoded_quote(report).map_err(Into::into)
     }
-}
-
-/// spid: Service provider ID for the ISV.
-#[derive(Clone)]
-pub struct EnclaveContext {
-    spid: sgx_spid_t,
-    identity_key: EnclaveIdentityKey,
-    db: EnclaveDB,
-    notifier: Notifier,
-    pub group_key: Arc<SgxRwLock<GroupKey>>,
 }
 
 // TODO: Consider SGX_ERROR_BUSY.

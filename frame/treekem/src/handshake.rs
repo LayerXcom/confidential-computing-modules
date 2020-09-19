@@ -8,7 +8,9 @@ use crate::crypto::{
     dh::DhPubKey,
     ecies::EciesCiphertext,
     secrets::PathSecret,
+    hash::hash_encodable,
 };
+use ring::digest::Digest;
 use frame_common::crypto::ExportPathSecret;
 use anyhow::Result;
 use codec::{Encode, Decode};
@@ -27,7 +29,7 @@ pub trait Handshake: Sized {
         req_path_secret_fn: F,
     ) -> Result<AppKeyChain>
     where
-        F: FnOnce(u32) -> Result<ExportPathSecret>;
+        F: FnOnce(&[u8]) -> Result<ExportPathSecret>;
 }
 
 // TODO: Does need signature over the group's history?
@@ -39,6 +41,12 @@ pub struct HandshakeParams {
     pub prior_epoch: u32,
     pub roster_idx: u32,
     pub path: DirectPathMsg,
+}
+
+impl HandshakeParams {
+    pub fn hash(&self) -> Digest {
+        hash_encodable(&self)
+    }
 }
 
 /// Encrypted direct path
