@@ -12,6 +12,7 @@ use actix_web::{web, App, HttpServer};
 use web3::types::Address;
 
 mod handlers;
+mod store_path_secrets;
 
 #[derive(Debug)]
 pub struct Server<D: Deployer, S: Sender, W: Watcher<WatcherDB=DB>, DB: BlockNumDB> {
