@@ -4,7 +4,7 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
-use libsgx_test_utils::*;
+use test_utils::*;
 use std::prelude::v1::*;
 
 #[no_mangle]

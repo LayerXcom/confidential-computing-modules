@@ -23,4 +23,5 @@ members = [
     "tests/integration",
     "tests/units/enclave",
     "tests/units/host",
+    "tests/utils",
 ]
