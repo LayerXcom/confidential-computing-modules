@@ -302,7 +302,7 @@ pub fn handle_start_sync_bc<D, S, W, DB>(
         DB: BlockNumDB + Send + Sync + 'static,
 {
     let sync_time: u64 = env::var("SYNC_BC_TIME")
-         .unwrap_or_else(|| "3".to_string())
+         .unwrap_or_else(|_| "3".to_string())
          .parse()
          .expect("Failed to parse SYNC_BC_TIME to u64");
     let _ = thread::spawn(move || {
