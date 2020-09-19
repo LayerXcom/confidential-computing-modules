@@ -54,5 +54,6 @@ anonify-types.h
 
 /contract-build
 /build
+/pathsecrets
 .env
 .anonify

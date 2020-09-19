@@ -36,6 +36,7 @@ pub fn handle_deploy<D, S, W, DB>(
 
     debug!("Contract address: {:?}", &contract_addr);
     debug!("export_path_secret: {:?}", export_path_secret);
+    server.store_path_secrets.save_to_local_filesystem(&export_path_secret)?;
     server.dispatcher.set_contract_addr(&contract_addr, &server.abi_path)?;
 
     Ok(HttpResponse::Ok().json(erc20_api::deploy::post::Response(contract_addr)))
@@ -52,13 +53,14 @@ pub fn handle_join_group<D, S, W, DB>(
         DB: BlockNumDB,
 {
     let sender_address = server.dispatcher.get_account(server.account_index, &server.password)?;
-    let (receipt, _) = server.dispatcher.join_group(
+    let (receipt, export_path_secret) = server.dispatcher.join_group(
         sender_address,
         DEFAULT_GAS,
         &req.contract_addr,
         &server.abi_path,
         server.confirmations,
     )?;
+    server.store_path_secrets.save_to_local_filesystem(&export_path_secret)?;
 
     Ok(HttpResponse::Ok().json(erc20_api::join_group::post::Response(receipt)))
 }
@@ -240,11 +242,12 @@ pub fn handle_key_rotation<D, S, W, DB>(
         DB: BlockNumDB,
 {
     let sender_address = server.dispatcher.get_account(server.account_index, &server.password)?;
-    let (receipt, _) = server.dispatcher.handshake(
+    let (receipt, export_path_secret) = server.dispatcher.handshake(
         sender_address,
         DEFAULT_GAS,
         server.confirmations,
     )?;
+    server.store_path_secrets.save_to_local_filesystem(&export_path_secret)?;
 
     Ok(HttpResponse::Ok().json(erc20_api::key_rotation::post::Response(receipt)))
 }
