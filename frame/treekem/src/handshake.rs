@@ -10,6 +10,7 @@ use crate::crypto::{
     secrets::PathSecret,
     hash::hash_encodable,
 };
+use ring::digest::Digest;
 use frame_common::crypto::ExportPathSecret;
 use anyhow::Result;
 use codec::{Encode, Decode};
@@ -43,8 +44,8 @@ pub struct HandshakeParams {
 }
 
 impl HandshakeParams {
-    pub fn hash(&self) -> &[u8] {
-        hash_encodable(&self).as_ref()
+    pub fn hash(&self) -> Digest {
+        hash_encodable(&self)
     }
 }
 

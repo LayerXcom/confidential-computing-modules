@@ -48,7 +48,7 @@ impl Handshake for GroupState {
             roster_idx: my_roster_idx,
             path: direct_path_msg,
         };
-        let export_path_secret = path_secret.try_into_exporting(self.epoch, handshake.hash())?;
+        let export_path_secret = path_secret.try_into_exporting(self.epoch, handshake.hash().as_ref())?;
 
         Ok((handshake, export_path_secret))
     }
@@ -89,7 +89,7 @@ impl Handshake for GroupState {
             if sender_tree_idx == my_tree_idx {
                 let path_secret = match source {
                     PathSecretSource::Local => {
-                        let imported_path_secret = req_path_secret_fn(handshake.hash())?;
+                        let imported_path_secret = req_path_secret_fn(handshake.hash().as_ref())?;
                         ensure!(imported_path_secret.epoch() == self.epoch, "imported_path_secret's epoch isn't the current epoch");
                         PathSecret::try_from_importing(imported_path_secret)?
                     },

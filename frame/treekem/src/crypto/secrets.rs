@@ -199,7 +199,7 @@ impl PathSecret {
         let mut id_arr = [0u8; EXPORT_ID_SIZE];
         id_arr.copy_from_slice(&id[..]);
 
-        Ok(ExportPathSecret::new(encoded_sealed, epoch, id))
+        Ok(ExportPathSecret::new(encoded_sealed, epoch, id_arr))
     }
 
     pub fn try_from_importing(imp_path_secret: ExportPathSecret) -> Result<Self> {

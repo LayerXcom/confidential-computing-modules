@@ -40,7 +40,7 @@ pub fn do_handshake_three_party<R: CryptoRng>(
     let max_roster_idx = 2;
     let new_path_secret = PathSecret::new_from_random(csprng);
     let (handshake, _) = my_group.create_handshake(source).unwrap();
-    let dummy_fn = |_| Err(anyhow!("This is dummy_fn"));
+    let dummy_fn = |_: &[u8]| Err(anyhow!("This is dummy_fn"));
 
     let my_keychain = my_group.process_handshake(&handshake, source, max_roster_idx, dummy_fn).unwrap();
     let others_keychain1 = others_group1.process_handshake(&handshake, source, max_roster_idx, dummy_fn).unwrap();

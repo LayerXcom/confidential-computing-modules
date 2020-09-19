@@ -1,5 +1,5 @@
 use frame_types::{traits::SliceCPtr, UntrustedStatus};
-use frame_common::crypto::{ExportPathSecret, EXPORT_PATH_SECRET_SIZE. EXPORT_ID_SIZE};
+use frame_common::crypto::{ExportPathSecret, EXPORT_PATH_SECRET_SIZE, EXPORT_ID_SIZE};
 use sgx_types::*;
 use std::vec::Vec;
 use anyhow::anyhow;
@@ -81,8 +81,8 @@ fn inner_import_path_secret(id: [u8; EXPORT_ID_SIZE]) -> Result<ExportPathSecret
 
     let exported_path_secret = ExportPathSecret::decode(&mut &buf[..])
         .map_err(|e| FrameEnclaveError::CodecError(e))?;
-    if epoch == exported_path_secret.epoch() {
-        return Err(anyhow!("Invalid path_secret's epoch").into());
+    if id == exported_path_secret.id() {
+        return Err(anyhow!("Invalid path_secret's id").into());
     }
 
     Ok(exported_path_secret)
