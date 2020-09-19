@@ -31,18 +31,18 @@ RUN source /opt/sgxsdk/environment && \
     cd scripts && \
     make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave && \
     cd ../example/erc20/server && \
-    RUST_BACKTRACE=1 RUST_LOG=debug /root/.cargo/bin/cargo build && \
-    pwd
+    RUST_BACKTRACE=1 RUST_LOG=debug /root/.cargo/bin/cargo build
 
 # ===== SECOND STAGE ======
 FROM baiduxlab/sgx-rust:1804-1.1.2
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 WORKDIR /root/anonify
-RUN pwd
-COPY --from=builder $HOME/myagent/_work/1/s/contract-build/Anonify.abi ./contract-build/
-COPY --from=builder $HOME/myagent/_work/1/s/contract-build/Anonify.bin ./contract-build/
-COPY --from=builder $HOME/myagent/_work/1/s/.anonify/enclave.signed.so ./.anonify/enclave.signed.so
-COPY --from=builder $HOME/myagent/_work/1/s/target/debug/erc20-server ./target/debug/
+
+RUN cd /root/anonify && ls
+COPY --from=builder /root/anonify/.anonify/enclave.signed.so ./.anonify/enclave.signed.so
+COPY --from=builder /root/anonify/target/debug/erc20-server ./target/debug/
+COPY --from=builder /root/anonify/contract-build/Anonify.abi ./contract-build/
+COPY --from=builder /root/anonify/contract-build/Anonify.bin ./contract-build/
 
 CMD ["./target/debug/erc20-server"]
