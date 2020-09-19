@@ -434,4 +434,8 @@ impl ExportPathSecret {
     pub fn id(&self) -> [u8; EXPORT_ID_SIZE] {
         self.id
     }
+
+    pub fn id_as_ref(&self) -> &[u8] {
+        &self.id[..]
+    }
 }

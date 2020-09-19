@@ -2,10 +2,12 @@ use sgx_types::*;
 use std::{
     net::{TcpStream, SocketAddr},
     os::unix::io::IntoRawFd,
+    slice,
 };
 use anyhow::Result;
 use log::debug;
 use frame_types::UntrustedStatus;
+use crate::StorePathSecrets;
 
 const DEV_HOSTNAME: &str = "api.trustedservices.intel.com";
 const HTTPS_PORT: u16 = 443;
@@ -17,6 +19,8 @@ pub extern "C" fn ocall_import_path_secret(
     id: *const u8,
     id_len: usize,
 ) -> UntrustedStatus {
+    let path_secret = unsafe { slice::from_raw_parts_mut(path_secret, ps_len) };
+    let id = unsafe { slice::from_raw_parts(id, id_len) };
 
     UntrustedStatus::success()
 }
