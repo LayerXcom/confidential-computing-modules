@@ -291,7 +291,7 @@ impl fmt::Debug for SealedPathSecret<'_> {
 #[cfg(debug_assertions)]
 pub(crate) mod tests {
     use super::*;
-    use libsgx_test_utils::*;
+    use test_utils::*;
     use std::string::String;
 
     pub(crate) fn run_tests() -> bool {

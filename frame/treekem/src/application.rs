@@ -141,8 +141,8 @@ impl AppKeyChain {
 #[cfg(debug_assertions)]
 pub(crate) mod tests {
     use super::*;
-    use libsgx_test_utils::*;
-    use crate::test_utils;
+    use test_utils::*;
+    use crate::test_funcs;
     use rand::{self, SeedableRng};
     use crate::handshake::{PathSecretKVS, PathSecretSource};
 
@@ -158,7 +158,7 @@ pub(crate) mod tests {
         let msg = b"app msg correctnesss test";
 
         let mut kvs = PathSecretKVS::new();
-        test_utils::init_path_secret_kvs(&mut kvs, 10, 10);
+        test_funcs::init_path_secret_kvs(&mut kvs, 10, 10);
         let source = PathSecretSource::LocalTestKV(kvs);
 
         let mut group_state1 = GroupState::new(0).unwrap();
@@ -166,7 +166,7 @@ pub(crate) mod tests {
         let mut group_state3 = GroupState::new(2).unwrap();
 
         // Add member1
-        let (_key_chain1_epoch1, _key_chain2_epoch1, _key_chain3_epoch1) = test_utils::do_handshake_three_party(
+        let (_key_chain1_epoch1, _key_chain2_epoch1, _key_chain3_epoch1) = test_funcs::do_handshake_three_party(
             &mut group_state1,
             &mut group_state2,
             &mut group_state3,
@@ -175,7 +175,7 @@ pub(crate) mod tests {
         );
 
         // Add member2
-        let (mut key_chain1_epoch1, mut key_chain2_epoch1, mut key_chain3_epoch1) = test_utils::do_handshake_three_party(
+        let (mut key_chain1_epoch1, mut key_chain2_epoch1, mut key_chain3_epoch1) = test_funcs::do_handshake_three_party(
             &mut group_state2,
             &mut group_state1,
             &mut group_state3,
@@ -184,7 +184,7 @@ pub(crate) mod tests {
         );
 
         // 1 --> 2
-        test_utils::encrypt_decrypt_helper(
+        test_funcs::encrypt_decrypt_helper(
             msg,
             &group_state1,
             &mut key_chain1_epoch1,
@@ -195,7 +195,7 @@ pub(crate) mod tests {
         );
 
         // 2 --> 1
-        test_utils::encrypt_decrypt_helper(
+        test_funcs::encrypt_decrypt_helper(
             msg,
             &group_state2,
             &mut key_chain2_epoch1,
@@ -206,7 +206,7 @@ pub(crate) mod tests {
         );
 
         // 2 --> 1
-        test_utils::encrypt_decrypt_helper(
+        test_funcs::encrypt_decrypt_helper(
             msg,
             &group_state2,
             &mut key_chain2_epoch1,
@@ -217,7 +217,7 @@ pub(crate) mod tests {
         );
 
         // 1 --> 2
-        test_utils::encrypt_decrypt_helper(
+        test_funcs::encrypt_decrypt_helper(
             msg,
             &group_state1,
             &mut key_chain1_epoch1,
@@ -228,7 +228,7 @@ pub(crate) mod tests {
         );
 
         // Update member2
-        let (mut key_chain1_epoch2, mut key_chain2_epoch2, mut key_chain3_epoch2) = test_utils::do_handshake_three_party(
+        let (mut key_chain1_epoch2, mut key_chain2_epoch2, mut key_chain3_epoch2) = test_funcs::do_handshake_three_party(
             &mut group_state2,
             &mut group_state1,
             &mut group_state3,
@@ -237,7 +237,7 @@ pub(crate) mod tests {
         );
 
         // 1 --> 2
-        test_utils::encrypt_decrypt_helper(
+        test_funcs::encrypt_decrypt_helper(
             msg,
             &group_state1,
             &mut key_chain1_epoch2,
@@ -248,7 +248,7 @@ pub(crate) mod tests {
         );
 
         // 1 --> 2
-        test_utils::encrypt_decrypt_helper(
+        test_funcs::encrypt_decrypt_helper(
             msg,
             &group_state1,
             &mut key_chain1_epoch2,
@@ -259,7 +259,7 @@ pub(crate) mod tests {
         );
 
         // 2 --> 1
-        test_utils::encrypt_decrypt_helper(
+        test_funcs::encrypt_decrypt_helper(
             msg,
             &group_state2,
             &mut key_chain2_epoch2,
@@ -270,7 +270,7 @@ pub(crate) mod tests {
         );
 
         // Add member3
-        let (mut key_chain1_epoch3, mut key_chain2_epoch3, mut key_chain3_epoch3) = test_utils::do_handshake_three_party(
+        let (mut key_chain1_epoch3, mut key_chain2_epoch3, mut key_chain3_epoch3) = test_funcs::do_handshake_three_party(
             &mut group_state3,
             &mut group_state1,
             &mut group_state2,
@@ -279,7 +279,7 @@ pub(crate) mod tests {
         );
 
         // 3 --> 1,2
-        test_utils::encrypt_decrypt_helper(
+        test_funcs::encrypt_decrypt_helper(
             msg,
             &group_state3,
             &mut key_chain3_epoch3,
@@ -290,7 +290,7 @@ pub(crate) mod tests {
         );
 
         // 3 --> 1,2
-        test_utils::encrypt_decrypt_helper(
+        test_funcs::encrypt_decrypt_helper(
             msg,
             &group_state3,
             &mut key_chain3_epoch3,
@@ -301,7 +301,7 @@ pub(crate) mod tests {
         );
 
         // 1 --> 2,3
-        test_utils::encrypt_decrypt_helper(
+        test_funcs::encrypt_decrypt_helper(
             msg,
             &group_state1,
             &mut key_chain1_epoch3,
@@ -312,7 +312,7 @@ pub(crate) mod tests {
         );
 
         // 1 --> 2,3
-        test_utils::encrypt_decrypt_helper(
+        test_funcs::encrypt_decrypt_helper(
             msg,
             &group_state1,
             &mut key_chain1_epoch3,
@@ -323,7 +323,7 @@ pub(crate) mod tests {
         );
 
         // update member3
-        let (_key_chain1_epoch4, _key_chain2_epoch4, _key_chain3_epoch4) = test_utils::do_handshake_three_party(
+        let (_key_chain1_epoch4, _key_chain2_epoch4, _key_chain3_epoch4) = test_funcs::do_handshake_three_party(
             &mut group_state3,
             &mut group_state1,
             &mut group_state2,
@@ -332,7 +332,7 @@ pub(crate) mod tests {
         );
 
         // update member3
-        let (key_chain1_epoch5, key_chain2_epoch5, key_chain3_epoch5) = test_utils::do_handshake_three_party(
+        let (key_chain1_epoch5, key_chain2_epoch5, key_chain3_epoch5) = test_funcs::do_handshake_three_party(
             &mut group_state3,
             &mut group_state1,
             &mut group_state2,
@@ -341,7 +341,7 @@ pub(crate) mod tests {
         );
 
         // update member1
-        let (mut key_chain1_epoch6, mut key_chain2_epoch6, mut key_chain3_epoch6) = test_utils::do_handshake_three_party(
+        let (mut key_chain1_epoch6, mut key_chain2_epoch6, mut key_chain3_epoch6) = test_funcs::do_handshake_three_party(
             &mut group_state1,
             &mut group_state3,
             &mut group_state2,
@@ -350,7 +350,7 @@ pub(crate) mod tests {
         );
 
         // 3 --> 1,2
-        test_utils::encrypt_decrypt_helper(
+        test_funcs::encrypt_decrypt_helper(
             msg,
             &group_state3,
             &mut key_chain3_epoch6,

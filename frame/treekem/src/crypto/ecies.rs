@@ -104,7 +104,7 @@ impl NonceSequence for OneNonceSequence {
 #[cfg(debug_assertions)]
 pub(crate) mod tests {
     use super::*;
-    use libsgx_test_utils::*;
+    use test_utils::*;
 
     pub(crate) fn run_tests() -> bool {
         run_tests!(

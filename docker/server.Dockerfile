@@ -34,6 +34,7 @@ LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 WORKDIR /root/anonify
 
+RUN cd /root/anonify
 COPY --from=builder /root/anonify/.anonify/enclave.signed.so ./.anonify/enclave.signed.so
 COPY --from=builder /root/anonify/target/debug/erc20-server ./target/debug/
 COPY --from=builder /root/anonify/contract-build/Anonify.abi ./contract-build/
