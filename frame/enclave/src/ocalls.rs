@@ -1,5 +1,5 @@
 use frame_types::{traits::SliceCPtr, UntrustedStatus};
-use frame_common::crypto::{ExportPathSecret, EXPORT_PATH_SECRET_SIZE};
+use frame_common::crypto::{ExportPathSecret, EXPORT_PATH_SECRET_SIZE. EXPORT_ID_SIZE};
 use sgx_types::*;
 use std::vec::Vec;
 use anyhow::anyhow;
@@ -11,7 +11,8 @@ extern "C" {
         retval: *mut UntrustedStatus,
         path_secret: *mut u8,
         ps_len: usize,
-        epoch: u32,
+        id: *const u8,
+        id_len: usize,
     ) -> sgx_status_t;
 }
 extern "C" {
@@ -51,11 +52,13 @@ extern "C" {
     ) -> sgx_status_t;
 }
 
-pub fn import_path_secret(epoch: u32) -> anyhow::Result<ExportPathSecret> {
-    inner_import_path_secret(epoch).map_err(Into::into)
+pub fn import_path_secret(id: &[u8]) -> anyhow::Result<ExportPathSecret> {
+    let mut id_arr = [0u8; EXPORT_ID_SIZE];
+    id_arr.copy_from_slice(&id);
+    inner_import_path_secret(id_arr).map_err(Into::into)
 }
 
-fn inner_import_path_secret(epoch: u32) -> Result<ExportPathSecret> {
+fn inner_import_path_secret(id: [u8; EXPORT_ID_SIZE]) -> Result<ExportPathSecret> {
     let mut rt = UntrustedStatus::default();
     let mut buf = [0u8; EXPORT_PATH_SECRET_SIZE];
 
@@ -64,7 +67,8 @@ fn inner_import_path_secret(epoch: u32) -> Result<ExportPathSecret> {
             &mut rt as *mut UntrustedStatus,
             buf.as_mut_ptr() as *mut u8,
             EXPORT_PATH_SECRET_SIZE,
-            epoch,
+            id.as_ptr() as *const u8,
+            EXPORT_ID_SIZE
         )
     };
 

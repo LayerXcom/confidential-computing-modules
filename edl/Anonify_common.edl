@@ -28,7 +28,8 @@ enclave {
         UntrustedStatus ocall_import_path_secret(
             [in, size=ps_len] uint8_t* path_secret,
             size_t ps_len,
-            uint32_t epoch
+            [in, size=id_len] const uint8_t* id,
+            size_t id_len
         );
 
         UntrustedStatus ocall_sgx_init_quote(
