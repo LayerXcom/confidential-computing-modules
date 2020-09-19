@@ -301,11 +301,15 @@ pub fn handle_start_sync_bc<D, S, W, DB>(
         W: Watcher<WatcherDB=DB> + Send + Sync + 'static,
         DB: BlockNumDB + Send + Sync + 'static,
 {
+    let sync_time: u64 = env::var("SYNC_BC_TIME")
+         .unwrap_or_else(|| "3".to_string())
+         .parse()
+         .expect("Failed to parse SYNC_BC_TIME to u64");
     let _ = thread::spawn(move || {
         loop {
             server.dispatcher.block_on_event::<U64>().unwrap();
             debug!("event fetched...");
-            thread::sleep(time::Duration::from_secs(3));
+            thread::sleep(time::Duration::from_secs(sync_time));
         }
     });
 
