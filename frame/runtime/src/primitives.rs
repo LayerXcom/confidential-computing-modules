@@ -151,8 +151,7 @@ impl Approved {
     }
 
     pub fn total(&self) -> U64 {
-        let sum = self.0.iter().fold(U64(0), |acc, (_, &amount)| acc + amount);
-        sum
+        self.0.iter().fold(U64(0), |acc, (_, &amount)| acc + amount)
     }
 
     pub fn approve(&mut self, account_id: AccountId, amount: U64) {
@@ -174,13 +173,12 @@ impl Approved {
                         "{:?} doesn't have enough balance to consume {:?}.",
                         account_id,
                         amount,
-                    )
-                    .into());
+                    ));
                 }
                 self.0.insert(account_id, existing_amount - amount);
                 Ok(())
             }
-            None => return Err(anyhow!("{:?} doesn't have any balance.", account_id).into()),
+            None => return Err(anyhow!("{:?} doesn't have any balance.", account_id)),
         }
     }
 
@@ -203,7 +201,7 @@ impl TryFrom<Vec<u8>> for Approved {
     type Error = Error;
 
     fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
-        if s.len() == 0 {
+        if s.is_empty() {
             return Ok(Default::default());
         }
         let mut buf = s;

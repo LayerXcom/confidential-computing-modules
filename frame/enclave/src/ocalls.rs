@@ -83,7 +83,7 @@ fn inner_import_path_secret(id: [u8; EXPORT_ID_SIZE]) -> Result<ExportPathSecret
     }
 
     let exported_path_secret =
-        ExportPathSecret::decode(&mut &buf[..]).map_err(|e| FrameEnclaveError::CodecError(e))?;
+        ExportPathSecret::decode(&mut &buf[..]).map_err(FrameEnclaveError::CodecError)?;
     if id == exported_path_secret.id() {
         return Err(anyhow!("Invalid path_secret's id").into());
     }

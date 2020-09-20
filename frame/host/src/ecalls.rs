@@ -70,16 +70,14 @@ impl EnclaveConnector {
                 status,
                 function: "ecall_entry_point",
                 cmd,
-            }
-            .into());
+            });
         }
         if ret.is_err() {
             return Err(FrameHostError::EnclaveError {
                 status: ret,
                 function: "ecall_entry_point",
                 cmd,
-            }
-            .into());
+            });
         }
         assert!(output_len < output_max);
 

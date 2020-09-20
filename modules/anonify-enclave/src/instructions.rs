@@ -31,7 +31,7 @@ impl<R: RuntimeExecutor<CTX, S = StateType>, CTX: ContextOps> Instructions<R, CT
         // other people cannot distinguish what state is encrypted based on the size.
         fn append_padding(buf: &mut Vec<u8>, max_mem_size: usize) {
             let padding_size = max_mem_size - buf.len();
-            let mut padding = vec![0u8; padding_size];
+            let padding = vec![0u8; padding_size];
             buf.extend_from_slice(&padding);
         }
 

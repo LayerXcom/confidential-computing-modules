@@ -85,7 +85,7 @@ impl_runtime! {
 
         let mut owner_approved = self.get_map::<Approved>(owner, "Approved")?;
         let approved_amount = owner_approved.allowance(&sender)
-            .ok_or(anyhow!("not enough amount approved."))?;
+            .ok_or_else(|| anyhow!("not enough amount approved."))?;
         ensure!(
             amount <= *approved_amount,
             "transferring amount exceeds approved amount of sender."

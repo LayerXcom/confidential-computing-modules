@@ -245,7 +245,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
 
         // If log data is not fetched currently, return empty EnclaveLog.
         // This is occurred when it fetched data of dupulicated block number.
-        if self.logs.len() == 0 {
+        if self.logs.is_empty() {
             return Ok(EnclaveLog {
                 inner: None,
                 db: self.db,
@@ -268,7 +268,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
 
             // Processing conditions by ciphertext or handshake event
             if log.topics[0] == self.events.ciphertext_signature() {
-                if ciphertext_size != data.len() && data.len() != 0 {
+                if ciphertext_size != data.len() && !data.is_empty() {
                     return Err(
                         anyhow!("Each log should have same size of data.: index: {}", i).into(),
                     );
@@ -294,7 +294,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
         Ok(EnclaveLog {
             inner: Some(InnerEnclaveLog {
                 contract_addr: contract_addr.to_fixed_bytes(),
-                latest_blc_num: latest_blc_num,
+                latest_blc_num,
                 ciphertexts,
                 handshakes,
             }),
