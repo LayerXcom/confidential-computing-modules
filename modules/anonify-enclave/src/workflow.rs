@@ -1,31 +1,17 @@
-use std::{
-    slice,
-    marker::PhantomData,
-    env,
-};
-use sgx_types::*;
-use frame_types::*;
-use frame_enclave::EnclaveEngine;
+use crate::instructions::Instructions;
 use anonify_io_types::*;
-use frame_common::{
-    crypto::{Ciphertext, Sha256, AccountId},
-    traits::*,
-    state_types::{MemId, StateType},
-};
-use frame_runtime::traits::*;
-use frame_treekem::{
-    SealedPathSecret, UnsealedPathSecret,
-    handshake::HandshakeParams
-};
-use ed25519_dalek::{PublicKey, Signature};
+use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
-use remote_attestation::RAService;
-use log::debug;
-use anyhow::{Result, anyhow};
-use crate::{
-    instructions::Instructions,
-    context::EnclaveContext,
+use frame_common::{
+    crypto::{AccountId, Sha256},
+    state_types::StateType,
+    traits::*,
 };
+use frame_enclave::EnclaveEngine;
+use frame_runtime::traits::*;
+use frame_treekem::handshake::HandshakeParams;
+use remote_attestation::RAService;
+use std::{env, marker::PhantomData};
 
 #[derive(Debug, Clone)]
 pub struct Instruction<AP: AccessPolicy> {
@@ -43,11 +29,11 @@ impl<AP: AccessPolicy> EnclaveEngine for Instruction<AP> {
     fn handle<R, C>(
         mut ecall_input: Self::EI,
         enclave_context: &C,
-        max_mem_size: usize
+        max_mem_size: usize,
     ) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S=StateType>,
-        C: ContextOps<S=StateType> + Clone,
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
     {
         let account_id = ecall_input.access_policy().into_account_id();
         let state = ecall_input.state.as_mut_bytes();
@@ -55,7 +41,7 @@ impl<AP: AccessPolicy> EnclaveEngine for Instruction<AP> {
         let instruction_output = create_instruction_output::<R, C>(
             ecall_input.call_id,
             state,
-            account_id.clone(),
+            account_id,
             enclave_context,
             max_mem_size,
         )?;
@@ -75,14 +61,18 @@ impl EnclaveEngine for InsertCiphertext {
     fn handle<R, C>(
         ecall_input: Self::EI,
         enclave_context: &C,
-        _max_mem_size: usize
+        _max_mem_size: usize,
     ) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S=StateType>,
-        C: ContextOps<S=StateType> + Clone,
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();
-        let iter_op = Instructions::<R, C>::state_transition(enclave_context.clone(), ecall_input.ciphertext(), group_key)?;
+        let iter_op = Instructions::<R, C>::state_transition(
+            enclave_context.clone(),
+            ecall_input.ciphertext(),
+            group_key,
+        )?;
         let mut output = output::ReturnUpdatedState::default();
 
         if let Some(updated_state_iter) = iter_op {
@@ -109,11 +99,11 @@ impl EnclaveEngine for InsertHandshake {
     fn handle<R, C>(
         ecall_input: Self::EI,
         enclave_context: &C,
-        _max_mem_size: usize
+        _max_mem_size: usize,
     ) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S=StateType>,
-        C: ContextOps<S=StateType> + Clone,
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();
         let handshake = HandshakeParams::decode(&mut ecall_input.handshake())
@@ -141,11 +131,11 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
     fn handle<R, C>(
         ecall_input: Self::EI,
         enclave_context: &C,
-        _max_mem_size: usize
+        _max_mem_size: usize,
     ) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S=StateType>,
-        C: ContextOps<S=StateType> + Clone,
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
     {
         let account_id = ecall_input.access_policy().into_account_id();
         let user_state = enclave_context.get_state(account_id, ecall_input.mem_id());
@@ -162,18 +152,19 @@ impl EnclaveEngine for CallJoinGroup {
     type EO = output::ReturnJoinGroup;
 
     fn handle<R, C>(
-        ecall_input: Self::EI,
+        _ecall_input: Self::EI,
         enclave_context: &C,
-        _max_mem_size: usize
+        _max_mem_size: usize,
     ) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S=StateType>,
-        C: ContextOps<S=StateType> + Clone,
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
     {
         let quote = enclave_context.quote()?;
         let ias_url = env::var("IAS_URL")?;
         let sub_key = env::var("SUB_KEY")?;
-        let (report, report_sig) = RAService::remote_attestation(ias_url.as_str(), sub_key.as_str(), &quote)?;
+        let (report, report_sig) =
+            RAService::remote_attestation(ias_url.as_str(), sub_key.as_str(), &quote)?;
         let group_key = &*enclave_context.read_group_key();
         let (handshake, export_path_secret) = group_key.create_handshake()?;
 
@@ -194,18 +185,21 @@ impl EnclaveEngine for CallHandshake {
     type EO = output::ReturnHandshake;
 
     fn handle<R, C>(
-        ecall_input: Self::EI,
+        _ecall_input: Self::EI,
         enclave_context: &C,
-        _max_mem_size: usize
+        _max_mem_size: usize,
     ) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S=StateType>,
-        C: ContextOps<S=StateType> + Clone,
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &*enclave_context.read_group_key();
         let (handshake, export_path_secret) = group_key.create_handshake()?;
 
-        Ok(output::ReturnHandshake::new(handshake.encode(), export_path_secret))
+        Ok(output::ReturnHandshake::new(
+            handshake.encode(),
+            export_path_secret,
+        ))
     }
 }
 
@@ -225,11 +219,11 @@ impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
     fn handle<R, C>(
         ecall_input: Self::EI,
         enclave_context: &C,
-        _max_mem_size: usize
+        _max_mem_size: usize,
     ) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S=StateType>,
-        C: ContextOps<S=StateType> + Clone,
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
     {
         let account_id = ecall_input.access_policy().into_account_id();
         enclave_context.set_notification(account_id);
@@ -246,18 +240,14 @@ fn create_instruction_output<R, C>(
     max_mem_size: usize,
 ) -> Result<output::Instruction>
 where
-    R: RuntimeExecutor<C, S=StateType>,
+    R: RuntimeExecutor<C, S = StateType>,
     C: ContextOps,
 {
     let group_key = &*enclave_ctx.read_group_key();
-    let ciphertext = Instructions::<R, C>::new(call_id, params, account_id)?
-        .encrypt(group_key, max_mem_size)?;
+    let ciphertext =
+        Instructions::<R, C>::new(call_id, params, account_id)?.encrypt(group_key, max_mem_size)?;
     let msg = Sha256::hash(&ciphertext.encode());
     let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;
 
-    Ok(output::Instruction::new(
-        ciphertext,
-        enclave_sig,
-        msg,
-    ))
+    Ok(output::Instruction::new(ciphertext, enclave_sig, msg))
 }

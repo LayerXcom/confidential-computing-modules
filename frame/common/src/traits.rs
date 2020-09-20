@@ -1,12 +1,8 @@
-use crate::localstd::{
-    vec::Vec,
-    fmt::Debug,
-    mem::size_of,
-};
-use crate::state_types::MemId;
-use crate::local_anyhow::{Result, anyhow};
 use crate::crypto::AccountId;
-use codec::{Encode, Decode};
+use crate::local_anyhow::{anyhow, Result};
+use crate::localstd::{fmt::Debug, mem::size_of, vec::Vec};
+use crate::state_types::MemId;
+use codec::{Decode, Encode};
 use ed25519_dalek::PublicKey;
 use tiny_keccak::Keccak;
 
@@ -27,8 +23,7 @@ pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
     }
 
     fn decode_s(bytes: &mut [u8]) -> Result<Self> {
-        Self::decode(&mut &bytes[..])
-            .map_err(|e| anyhow!("{:?}", e))
+        Self::decode(&mut &bytes[..]).map_err(|e| anyhow!("{:?}", e))
     }
 
     fn from_state(state: &impl State) -> Result<Self> {
@@ -67,7 +62,9 @@ pub trait Hash256 {
 /// A trait that will hash using Keccak256 the object it's implemented on.
 pub trait Keccak256<T> {
     /// This will return a sized object with the hash
-    fn keccak256(&self) -> T where T: Sized;
+    fn keccak256(&self) -> T
+    where
+        T: Sized;
 }
 
 impl Keccak256<[u8; 32]> for [u8] {

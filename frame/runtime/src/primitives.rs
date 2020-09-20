@@ -1,21 +1,19 @@
+use crate::local_anyhow::{anyhow, Error, Result};
 use crate::localstd::{
-    vec::Vec,
     collections::BTreeMap,
-    ops::{Add, Sub, Mul, Div},
     convert::TryFrom,
     mem::size_of,
+    ops::{Add, Div, Mul, Sub},
+    vec::Vec,
 };
-use crate::local_anyhow::{Result, Error, anyhow};
-use frame_common::{
-    crypto::AccountId,
-    traits::State,
-    state_types::StateType,
-};
-use codec::{Encode, Decode};
+use codec::{Decode, Encode};
+use frame_common::{crypto::AccountId, state_types::StateType, traits::State};
 
 macro_rules! impl_uint {
     ($name:ident, $raw:ident) => {
-        #[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
+        #[derive(
+            Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash,
+        )]
         pub struct $name($raw);
 
         impl TryFrom<Vec<u8>> for $name {
@@ -153,9 +151,7 @@ impl Approved {
     }
 
     pub fn total(&self) -> U64 {
-        let sum = self.0.iter()
-            .fold(U64(0), |acc, (_, &amount)| acc + amount);
-        sum
+        self.0.iter().fold(U64(0), |acc, (_, &amount)| acc + amount)
     }
 
     pub fn approve(&mut self, account_id: AccountId, amount: U64) {
@@ -174,15 +170,15 @@ impl Approved {
             Some(&existing_amount) => {
                 if existing_amount < amount {
                     return Err(anyhow!(
-                    "{:?} doesn't have enough balance to consume {:?}.",
-                     account_id,
-                     amount,
-                     ).into());
+                        "{:?} doesn't have enough balance to consume {:?}.",
+                        account_id,
+                        amount,
+                    ));
                 }
                 self.0.insert(account_id, existing_amount - amount);
                 Ok(())
             }
-            None => return Err(anyhow!("{:?} doesn't have any balance.", account_id).into())
+            None => return Err(anyhow!("{:?} doesn't have any balance.", account_id)),
         }
     }
 
@@ -205,7 +201,7 @@ impl TryFrom<Vec<u8>> for Approved {
     type Error = Error;
 
     fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
-        if s.len() == 0 {
+        if s.is_empty() {
             return Ok(Default::default());
         }
         let mut buf = s;

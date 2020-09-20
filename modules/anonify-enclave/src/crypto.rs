@@ -1,18 +1,12 @@
 //! This module contains enclave specific cryptographic logics.
 
+use crate::error::Result;
+use codec::Encode;
+use frame_common::{crypto::sgx_rand_assign, traits::Keccak256};
+use frame_treekem::{DhPrivateKey, DhPubKey};
+use secp256k1::{self, util::SECRET_KEY_SIZE, Message, PublicKey, SecretKey, Signature};
 use sgx_types::sgx_report_data_t;
 use std::prelude::v1::Vec;
-use secp256k1::{
-    self, Message, Signature, SecretKey, PublicKey,
-    util::SECRET_KEY_SIZE,
-};
-use frame_common::{
-    crypto::sgx_rand_assign,
-    traits::Keccak256,
-};
-use frame_treekem::{DhPrivateKey, DhPubKey};
-use codec::Encode;
-use crate::error::Result;
 
 const HASHED_PUBKEY_SIZE: usize = 20;
 const ENCRYPTING_KEY_SIZE: usize = 33;
@@ -32,9 +26,8 @@ impl EnclaveIdentityKey {
             let mut ret = [0u8; SECRET_KEY_SIZE];
             sgx_rand_assign(&mut ret)?;
 
-            match SecretKey::parse(&ret) {
-                Ok(key) => break key,
-                Err(_) => (),
+            if let Ok(key) = SecretKey::parse(&ret) {
+                break key;
             }
         };
 
@@ -71,11 +64,10 @@ impl EnclaveIdentityKey {
     pub fn report_data(&self) -> Result<sgx_report_data_t> {
         let mut report_data = [0u8; REPORT_DATA_SIZE];
         report_data[..HASHED_PUBKEY_SIZE].copy_from_slice(&self.verifying_key_into_array()[..]);
-        report_data[HASHED_PUBKEY_SIZE..FILLED_REPORT_DATA_SIZE].copy_from_slice(&&self.encrypting_key_into_vec()[..]);
+        report_data[HASHED_PUBKEY_SIZE..FILLED_REPORT_DATA_SIZE]
+            .copy_from_slice(&&self.encrypting_key_into_vec()[..]);
 
-        Ok(sgx_report_data_t {
-            d: report_data
-        })
+        Ok(sgx_report_data_t { d: report_data })
     }
 
     fn verifying_key_into_array(&self) -> [u8; HASHED_PUBKEY_SIZE] {

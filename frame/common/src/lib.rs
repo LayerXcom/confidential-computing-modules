@@ -8,18 +8,18 @@ use std as localstd;
 extern crate core as localstd;
 #[cfg(feature = "std")]
 use anyhow as local_anyhow;
-#[cfg(feature = "sgx")]
-use sgx_anyhow as local_anyhow;
 #[cfg(all(feature = "sgx", not(feature = "std")))]
 use serde_sgx as serde;
 #[cfg(feature = "std")]
 use serde_std as serde;
+#[cfg(feature = "sgx")]
+use sgx_anyhow as local_anyhow;
 #[macro_use]
 extern crate lazy_static;
 
 pub mod crypto;
-pub mod traits;
-pub mod state_types;
 pub mod kvs;
+pub mod state_types;
+pub mod traits;
 
 pub use traits::*;

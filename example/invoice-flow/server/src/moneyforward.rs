@@ -1,9 +1,9 @@
 pub const ENDPOINT_BILLINGS: &str = "https://invoice.moneyforward.com/api/v2/billings";
 
-use reqwest::{Client, header};
+use anyhow::{anyhow, Result};
+use reqwest::{header, Client};
 use serde_json::Value;
 use std::collections::HashMap;
-use anyhow::{Result, anyhow};
 
 lazy_static! {
     static ref MONEYFORWARD_SECRET: String = {
@@ -21,8 +21,14 @@ pub struct MFClient {
 impl MFClient {
     pub fn new() -> Self {
         let mut headers = header::HeaderMap::new();
-        headers.insert("accept", header::HeaderValue::from_static("application/json"));
-        headers.insert("Authorization", header::HeaderValue::from_static(&MONEYFORWARD_SECRET));
+        headers.insert(
+            "accept",
+            header::HeaderValue::from_static("application/json"),
+        );
+        headers.insert(
+            "Authorization",
+            header::HeaderValue::from_static(&MONEYFORWARD_SECRET),
+        );
 
         let client = Client::builder()
             .default_headers(headers)
@@ -38,7 +44,8 @@ impl MFClient {
         params.insert("per_pag", "100");
         params.insert("excise_type", "boolean");
 
-        let res = self.inner
+        let res = self
+            .inner
             .get(ENDPOINT_BILLINGS)
             .form(&params)
             .send()?
@@ -50,7 +57,8 @@ impl MFClient {
     pub fn exists_new(&self) -> Result<bool> {
         let resp = self.get_invoices()?;
         let v: Value = serde_json::from_str(&resp)?;
-        let n = v["meta"]["total_count"].as_u64()
+        let n = v["meta"]["total_count"]
+            .as_u64()
             .ok_or(anyhow!("total_count not contained in response body"))?;
         Ok(n > 0)
     }

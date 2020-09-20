@@ -1,19 +1,18 @@
-use crate::localstd::{
-    collections::HashMap,
-    vec::Vec,
-};
-#[cfg(feature = "std")]
-use elastic_array::{ElasticArray128, ElasticArray32};
 #[cfg(feature = "std")]
 use crate::localstd::sync::RwLock;
 #[cfg(feature = "sgx")]
-use sgx_elastic_array::{ElasticArray128, ElasticArray32};
-#[cfg(feature = "sgx")]
 use crate::localstd::sync::SgxRwLock as RwLock;
+use crate::localstd::{collections::HashMap, vec::Vec};
+#[cfg(feature = "std")]
+use elastic_array::{ElasticArray128, ElasticArray32};
+#[cfg(feature = "sgx")]
+use sgx_elastic_array::{ElasticArray128, ElasticArray32};
 
 /// Inner trait of key-value store instructions
 pub trait KVS: Sync + Send {
-    fn tx(&self) -> DBTx { DBTx::new() }
+    fn tx(&self) -> DBTx {
+        DBTx::new()
+    }
 
     fn inner_get(&self, key: &[u8]) -> Option<DBValue>;
 
@@ -43,10 +42,10 @@ impl KVS for MemoryDB {
             match op {
                 DBOp::Insert { key, value } => {
                     d.insert(key.into_vec(), value);
-                },
+                }
                 DBOp::Delete { key } => {
                     d.remove(&*key);
-                },
+                }
             }
         }
     }
@@ -75,7 +74,7 @@ pub enum DBOp {
     },
     Delete {
         key: ElasticArray32<u8>,
-    }
+    },
 }
 
 impl DBOp {
@@ -102,7 +101,7 @@ impl DBTx {
 
     pub fn with_capacity(cap: usize) -> Self {
         DBTx {
-            ops: Vec::with_capacity(cap)
+            ops: Vec::with_capacity(cap),
         }
     }
 
@@ -118,8 +117,6 @@ impl DBTx {
     pub fn delete(&mut self, key: &[u8]) {
         let mut ekey = ElasticArray32::new();
         ekey.append_slice(key);
-        self.ops.push(DBOp::Delete {
-            key: ekey,
-        });
+        self.ops.push(DBOp::Delete { key: ekey });
     }
 }

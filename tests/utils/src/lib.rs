@@ -4,10 +4,10 @@ extern crate sgx_tstd as std;
 #[macro_use]
 extern crate inventory;
 
-pub use test_utils_proc_macro::test_case;
-use std::vec::Vec;
-use std::string::String;
 use serde::{Deserialize, Serialize};
+use std::string::String;
+use std::vec::Vec;
+pub use test_utils_proc_macro::test_case;
 
 #[derive(Default, Serialize, Deserialize, Debug)]
 pub struct RunTestInput {
@@ -29,22 +29,22 @@ inventory::collect!(TestCase);
 
 #[macro_export]
 macro_rules! run_inventory_tests {
-     ($predicate:expr) => {{
-         test_utils::test_start();
-         let mut ntestcases: u64 = 0u64;
-         let mut failurecases: Vec<String> = Vec::new();
+    ($predicate:expr) => {{
+        test_utils::test_start();
+        let mut ntestcases: u64 = 0u64;
+        let mut failurecases: Vec<String> = Vec::new();
 
-         for t in inventory::iter::<test_utils::TestCase>.into_iter() {
-             if $predicate(&t.0) {
-                 test_utils::test(&mut ntestcases, &mut failurecases, t.1, &t.0);
-             }
-         }
+        for t in inventory::iter::<test_utils::TestCase>.into_iter() {
+            if $predicate(&t.0) {
+                test_utils::test(&mut ntestcases, &mut failurecases, t.1, &t.0);
+            }
+        }
 
-         test_utils::test_end(ntestcases, failurecases)
-     }};
-     () => {
-         run_inventory_tests!(|_| true);
-     };
+        test_utils::test_end(ntestcases, failurecases)
+    }};
+    () => {
+        run_inventory_tests!(|_| true);
+    };
 }
 
 #[macro_export]
@@ -96,8 +96,8 @@ macro_rules! should_panic {
 
 #[allow(clippy::print_literal)]
 pub fn test<F, R>(ncases: &mut u64, failurecases: &mut Vec<String>, f: F, name: &str)
-    where
-        F: FnOnce() -> R + std::panic::UnwindSafe,
+where
+    F: FnOnce() -> R + std::panic::UnwindSafe,
 {
     *ncases += 1;
     let t = || {

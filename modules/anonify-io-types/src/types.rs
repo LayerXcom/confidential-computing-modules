@@ -1,14 +1,10 @@
-use crate::localstd::{
-    vec::Vec,
-    string::String,
-    str,
-};
-use codec::{Encode, Decode, Input, self};
+use crate::localstd::vec::Vec;
+use codec::{self, Decode, Encode, Input};
 use frame_common::{
-    EcallInput, EcallOutput, State,
-    crypto::{Sha256, Ciphertext, ExportPathSecret},
-    state_types::{StateType, MemId, UpdatedState},
+    crypto::{Ciphertext, ExportPathSecret, Sha256},
+    state_types::{MemId, StateType, UpdatedState},
     traits::AccessPolicy,
+    EcallInput, EcallOutput,
 };
 
 pub mod input {
@@ -91,7 +87,10 @@ pub mod input {
 
     impl<AP: AccessPolicy> GetState<AP> {
         pub fn new(access_policy: AP, mem_id: MemId) -> Self {
-            GetState { access_policy, mem_id }
+            GetState {
+                access_policy,
+                mem_id,
+            }
         }
 
         pub fn access_policy(&self) -> &AP {
@@ -151,7 +150,8 @@ pub mod output {
             value.read(&mut enclave_sig_buf)?;
             value.read(&mut msg_buf)?;
 
-            let ciphertext_len = value.remaining_len()?
+            let ciphertext_len = value
+                .remaining_len()?
                 .expect("Ciphertext length should not be zero");
             let mut ciphertext_buf = vec![0u8; ciphertext_len];
             value.read(&mut ciphertext_buf)?;
@@ -161,7 +161,9 @@ pub mod output {
             let ciphertext = Ciphertext::decode(&mut &ciphertext_buf[..])?;
 
             Ok(Instruction {
-                enclave_sig, msg, ciphertext,
+                enclave_sig,
+                msg,
+                ciphertext,
             })
         }
     }
@@ -258,9 +260,17 @@ pub mod output {
     impl EcallOutput for ReturnJoinGroup {}
 
     impl ReturnJoinGroup {
-        pub fn new(report: Vec<u8>, report_sig: Vec<u8>, handshake: Vec<u8>, export_path_secret: ExportPathSecret) -> Self {
+        pub fn new(
+            report: Vec<u8>,
+            report_sig: Vec<u8>,
+            handshake: Vec<u8>,
+            export_path_secret: ExportPathSecret,
+        ) -> Self {
             ReturnJoinGroup {
-                report, report_sig, handshake, export_path_secret,
+                report,
+                report_sig,
+                handshake,
+                export_path_secret,
             }
         }
 
@@ -285,7 +295,6 @@ pub mod output {
         }
     }
 
-
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct ReturnHandshake {
         handshake: Vec<u8>,
@@ -296,7 +305,10 @@ pub mod output {
 
     impl ReturnHandshake {
         pub fn new(handshake: Vec<u8>, export_path_secret: ExportPathSecret) -> Self {
-            ReturnHandshake { handshake, export_path_secret }
+            ReturnHandshake {
+                handshake,
+                export_path_secret,
+            }
         }
 
         pub fn handshake(&self) -> &[u8] {

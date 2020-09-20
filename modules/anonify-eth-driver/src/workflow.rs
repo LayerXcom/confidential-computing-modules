@@ -1,14 +1,10 @@
-use std::marker::PhantomData;
-use frame_host::engine::*;
-use frame_common::{
-    crypto::Ciphertext,
-    traits::*,
-    state_types::MemId,
-};
+use crate::utils::StateInfo;
 use anonify_io_types::*;
 use config::constants::*;
+use frame_common::{crypto::Ciphertext, state_types::MemId, traits::*};
+use frame_host::engine::*;
+use std::marker::PhantomData;
 use web3::types::Address;
-use crate::utils::StateInfo;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
 
@@ -18,7 +14,9 @@ pub struct InstructionWorkflow<S: State, C: CallNameConverter, AP: AccessPolicy>
     ap: PhantomData<AP>,
 }
 
-impl<S: State, C: CallNameConverter, AP: AccessPolicy> HostEngine for InstructionWorkflow<S, C, AP> {
+impl<S: State, C: CallNameConverter, AP: AccessPolicy> HostEngine
+    for InstructionWorkflow<S, C, AP>
+{
     type HI = host_input::Instruction<S, C, AP>;
     type EI = input::Instruction<AP>;
     type EO = output::Instruction;
@@ -106,7 +104,7 @@ pub mod host_input {
         access_policy: AP,
         signer: Address,
         gas: u64,
-        phantom: PhantomData<C>
+        phantom: PhantomData<C>,
     }
 
     impl<S: State, C: CallNameConverter, AP: AccessPolicy> Instruction<S, C, AP> {
@@ -118,7 +116,11 @@ pub mod host_input {
             gas: u64,
         ) -> Self {
             Instruction {
-                state, call_name, access_policy, signer, gas,
+                state,
+                call_name,
+                access_policy,
+                signer,
+                gas,
                 phantom: PhantomData,
             }
         }
@@ -209,7 +211,10 @@ pub mod host_input {
 
     impl<AP: AccessPolicy> GetState<AP> {
         pub fn new(access_policy: AP, mem_id: MemId) -> Self {
-            GetState { access_policy, mem_id }
+            GetState {
+                access_policy,
+                mem_id,
+            }
         }
     }
 
@@ -318,7 +323,7 @@ pub mod host_output {
             JoinGroup {
                 signer,
                 gas,
-                ecall_output: None
+                ecall_output: None,
             }
         }
     }
@@ -345,7 +350,7 @@ pub mod host_output {
             Handshake {
                 signer,
                 gas,
-                ecall_output: None
+                ecall_output: None,
             }
         }
     }
@@ -402,6 +407,5 @@ pub mod host_output {
 
     impl HostOutput for InsertHandshake {
         type EcallOutput = output::Empty;
-
     }
 }

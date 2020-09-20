@@ -1,18 +1,18 @@
-use std::sync::Arc;
-use anonify_io_types::*;
+use crate::error::Result;
+use crate::workflow::*;
+
+use byteorder::{ByteOrder, LittleEndian};
 use frame_common::{
-    kvs::{KVS, MemoryDB, DBTx},
     crypto::Ciphertext,
-    traits::State,
+    kvs::{DBTx, MemoryDB, KVS},
     state_types::UpdatedState,
+    traits::State,
 };
 use frame_host::engine::HostEngine;
-use sgx_types::sgx_enclave_id_t;
-use web3::types::Address;
-use byteorder::{LittleEndian, ByteOrder};
 use log::debug;
-use crate::workflow::*;
-use crate::error::Result;
+use sgx_types::sgx_enclave_id_t;
+use std::sync::Arc;
+use web3::types::Address;
 
 pub trait BlockNumDB {
     fn new() -> Self;
@@ -67,18 +67,19 @@ pub struct InnerEnclaveLog {
 }
 
 impl InnerEnclaveLog {
-    pub fn into_input_iter(self) -> impl Iterator<Item=host_input::InsertCiphertext> {
-        self.ciphertexts.into_iter()
-            .map(|c| host_input::InsertCiphertext::new(c))
+    pub fn into_input_iter(self) -> impl Iterator<Item = host_input::InsertCiphertext> {
+        self.ciphertexts
+            .into_iter()
+            .map(host_input::InsertCiphertext::new)
     }
 
     pub fn invoke_ecall<S: State>(
         self,
         eid: sgx_enclave_id_t,
     ) -> Result<Option<Vec<UpdatedState<S>>>> {
-        if self.ciphertexts.len() != 0 && self.handshakes.len() == 0 {
+        if !self.ciphertexts.is_empty() && self.handshakes.is_empty() {
             self.insert_ciphertexts(eid)
-        } else if self.ciphertexts.len() == 0 && self.handshakes.len() != 0 {
+        } else if self.ciphertexts.is_empty() && !self.handshakes.is_empty() {
             // The size of handshake cannot be calculated in this host directory,
             // so the ecall_insert_handshake function is repeatedly called over the number of fetched handshakes.
             for handshake in self.handshakes {
@@ -98,12 +99,9 @@ impl InnerEnclaveLog {
     ) -> Result<Option<Vec<UpdatedState<S>>>> {
         let mut acc = vec![];
 
-        for update in self.into_input_iter()
-            .map(move |inp|
-                InsertCiphertextWorkflow::exec(inp, eid)
-                    .map(|e| e.ecall_output.unwrap()) // ecall_output must be set.
-            )
-        {
+        for update in self.into_input_iter().map(
+            move |inp| InsertCiphertextWorkflow::exec(inp, eid).map(|e| e.ecall_output.unwrap()), // ecall_output must be set.
+        ) {
             if let Some(upd_type) = update?.updated_state {
                 let upd_trait = UpdatedState::<S>::from_state_type(upd_type)?;
                 acc.push(upd_trait);
@@ -111,16 +109,13 @@ impl InnerEnclaveLog {
         }
 
         if acc.is_empty() {
-            return Ok(None);
+            Ok(None)
         } else {
-            return Ok(Some(acc));
+            Ok(Some(acc))
         }
     }
 
-    fn insert_handshake(
-        eid: sgx_enclave_id_t,
-        handshake: Vec<u8>,
-    ) -> Result<()> {
+    fn insert_handshake(eid: sgx_enclave_id_t, handshake: Vec<u8>) -> Result<()> {
         let input = host_input::InsertHandshake::new(handshake);
         InsertHandshakeWorkflow::exec(input, eid)?;
 
@@ -147,13 +142,13 @@ impl<DB: BlockNumDB> EnclaveLog<DB> {
                 let next_blc_num = log.latest_blc_num + 1;
                 let updated_states = log.invoke_ecall(eid)?;
 
-                return Ok(EnclaveUpdatedState {
+                Ok(EnclaveUpdatedState {
                     block_num: Some(next_blc_num),
-                    updated_states: updated_states,
+                    updated_states,
                     db: self.db,
-                });
-            },
-            None => return Ok(EnclaveUpdatedState {
+                })
+            }
+            None => Ok(EnclaveUpdatedState {
                 block_num: None,
                 updated_states: None,
                 db: self.db,
@@ -178,8 +173,8 @@ impl<DB: BlockNumDB, S: State> EnclaveUpdatedState<DB, S> {
                 let mut dbtx = EventDBTx::new();
                 dbtx.put(key, *block_num);
                 self.db.set_next_block_num(dbtx);
-            },
-            None => { },
+            }
+            None => {}
         }
 
         self

@@ -4,20 +4,20 @@
 extern crate sgx_tstd as std;
 
 mod application;
+mod crypto;
 mod group_state;
 pub mod handshake;
 mod ratchet_tree;
 mod tree_math;
-mod crypto;
 // #[cfg(debug_assertions)]
 mod test_funcs;
 
 pub use crate::application::AppKeyChain;
+pub use crate::crypto::dh::{DhPrivateKey, DhPubKey};
+pub use crate::crypto::ecies::EciesCiphertext;
+pub use crate::crypto::secrets::{PathSecret, SealedPathSecret, UnsealedPathSecret};
 pub use crate::group_state::GroupState;
 pub use crate::handshake::Handshake;
-pub use crate::crypto::secrets::{PathSecret, SealedPathSecret, UnsealedPathSecret};
-pub use crate::crypto::ecies::EciesCiphertext;
-pub use crate::crypto::dh::{DhPrivateKey, DhPubKey};
 pub use crate::test_funcs::init_path_secret_kvs;
 
 #[cfg(debug_assertions)]

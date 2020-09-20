@@ -1,14 +1,7 @@
+use frame_common::crypto::AccountId;
 use std::{
     collections::HashSet,
-    sync::{SgxRwLock, Arc},
-};
-use frame_common::{
-    crypto::AccountId,
-    traits::State,
-    state_types::{UpdatedState, StateType},
-};
-use crate::{
-    error::Result,
+    sync::{Arc, SgxRwLock},
 };
 
 #[derive(Debug, Clone)]

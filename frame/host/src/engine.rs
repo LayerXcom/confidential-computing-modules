@@ -1,8 +1,8 @@
 use crate::ecalls::EnclaveConnector;
-use sgx_types::sgx_enclave_id_t;
+use codec::{Decode, Encode};
 use frame_common::{EcallInput, EcallOutput};
-use serde::de::DeserializeOwned;
-use codec::{Encode, Decode};
+
+use sgx_types::sgx_enclave_id_t;
 
 pub trait HostEngine {
     type HI: HostInput<EcallInput = Self::EI, HostOutput = Self::HO>;
@@ -17,8 +17,7 @@ pub trait HostEngine {
         let ecall_output = EnclaveConnector::new(eid, Self::OUTPUT_MAX_LEN)
             .invoke_ecall::<Self::EI, Self::EO>(Self::CMD, ecall_input)?;
 
-        host_output
-            .set_ecall_output(ecall_output)
+        host_output.set_ecall_output(ecall_output)
     }
 }
 
@@ -32,7 +31,7 @@ pub trait HostInput: Sized {
 pub trait HostOutput: Sized {
     type EcallOutput: EcallOutput;
 
-    fn set_ecall_output(self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+    fn set_ecall_output(self, _output: Self::EcallOutput) -> anyhow::Result<Self> {
         Ok(self)
     }
 

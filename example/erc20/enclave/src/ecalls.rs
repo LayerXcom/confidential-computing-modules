@@ -1,28 +1,25 @@
-use std::{
-    vec::Vec,
-    ptr,
-};
-use frame_common::{
-    traits::{EcallInput, EcallOutput},
-    crypto::Ed25519ChallengeResponse,
-};
-use config::constants::*;
-use anonify_enclave::{
-    context::EnclaveContext,
-    workflow::*,
-};
-use erc20_state_transition::{MAX_MEM_SIZE, Runtime};
 use crate::ENCLAVE_CONTEXT;
-use frame_enclave::{register_ecall, EnclaveEngine};
+use anonify_enclave::{context::EnclaveContext, workflow::*};
 use anyhow::anyhow;
-use codec::{Encode, Decode};
+use codec::{Decode, Encode};
+use config::constants::*;
+use erc20_state_transition::{Runtime, MAX_MEM_SIZE};
+use frame_common::{
+    crypto::Ed25519ChallengeResponse,
+    traits::{EcallInput, EcallOutput},
+};
+use frame_enclave::{register_ecall, EnclaveEngine};
+use std::{ptr, vec::Vec};
 
 register_ecall!(
     &*ENCLAVE_CONTEXT,
     MAX_MEM_SIZE,
     Runtime<EnclaveContext>,
     EnclaveContext,
-    (ENCRYPT_INSTRUCTION_CMD, Instruction<Ed25519ChallengeResponse>),
+    (
+        ENCRYPT_INSTRUCTION_CMD,
+        Instruction<Ed25519ChallengeResponse>
+    ),
     // Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
     (INSERT_CIPHERTEXT_CMD, InsertCiphertext),
     // Insert handshake received from blockchain nodes into enclave.
@@ -31,5 +28,8 @@ register_ecall!(
     (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
     (CALL_JOIN_GROUP_CMD, CallJoinGroup),
     (CALL_HANDSHAKE_CMD, CallHandshake),
-    (REGISTER_NOTIFICATION_CMD, RegisterNotification<Ed25519ChallengeResponse>),
+    (
+        REGISTER_NOTIFICATION_CMD,
+        RegisterNotification<Ed25519ChallengeResponse>
+    ),
 );

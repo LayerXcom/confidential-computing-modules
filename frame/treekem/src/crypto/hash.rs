@@ -1,5 +1,5 @@
 use codec::Encode;
-use ring::digest::{Context, SHA256, Digest};
+use ring::digest::{Context, Digest, SHA256};
 
 pub fn hash_encodable<E: Encode>(msg: &E) -> Digest {
     let buf = msg.encode();

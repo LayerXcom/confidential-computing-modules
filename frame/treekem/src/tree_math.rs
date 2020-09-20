@@ -278,13 +278,3 @@ impl Iterator for DirectPathIter {
         }
     }
 }
-
-/// Returns a list of indices for leaf nodes in a tree of given size. The list is in ascending
-/// index order.
-///
-/// Panics: when `num_leaves == 0` or `num_leaves > MAX_LEAVES`
-pub(crate) fn tree_leaves(num_leaves: usize) -> impl DoubleEndedIterator<Item = usize> {
-    assert!(num_leaves > 0 && num_leaves <= MAX_LEAVES);
-    // The leaves are just all the even indices
-    (0..num_leaves).map(|i| 2 * i)
-}

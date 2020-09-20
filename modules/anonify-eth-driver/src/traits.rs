@@ -1,22 +1,11 @@
 #![allow(dead_code)]
 
-use std::{
-    path::Path,
-    sync::Arc,
-};
+use crate::{error::Result, eventdb::BlockNumDB, utils::*, workflow::*};
+
+use frame_common::{state_types::UpdatedState, traits::*};
 use sgx_types::sgx_enclave_id_t;
-use frame_common::{
-    traits::*,
-    state_types::UpdatedState,
-};
-use anonify_io_types::*;
+use std::{path::Path, sync::Arc};
 use web3::types::{Address, TransactionReceipt};
-use crate::{
-    error::Result,
-    eventdb::{BlockNumDB, InnerEnclaveLog},
-    utils::*,
-    workflow::*,
-};
 
 /// A trait for deploying contracts
 pub trait Deployer: Sized {
@@ -48,10 +37,7 @@ pub trait Sender: Sized {
         contract_info: ContractInfo<'_, P>,
     ) -> Result<Self>;
 
-    fn from_contract(
-        enclave_id: sgx_enclave_id_t,
-        contract: ContractKind,
-    ) -> Self;
+    fn from_contract(enclave_id: sgx_enclave_id_t, contract: ContractKind) -> Self;
 
     fn get_account(&self, index: usize, password: &str) -> Result<Address>;
 

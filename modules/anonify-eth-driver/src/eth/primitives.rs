@@ -1,5 +1,5 @@
 use crate::{
-    error::{Result, HostError},
+    error::{HostError, Result},
     eventdb::{BlockNumDB, EnclaveLog, InnerEnclaveLog},
     utils::ContractInfo,
     workflow::*,
@@ -8,12 +8,12 @@ use anyhow::anyhow;
 use ethabi::{decode, Event, EventParam, Hash, ParamType, Topic, TopicFilter};
 use frame_common::crypto::Ciphertext;
 use log::debug;
-use std::{path::Path, sync::Arc, fs};
+use std::{fs, path::Path, sync::Arc};
 use web3::{
     contract::{Contract, Options},
     futures::Future,
     transports::{EventLoopHandle, Http},
-    types::{Address, BlockNumber, Filter, FilterBuilder, Log, H256, U256, TransactionReceipt},
+    types::{Address, BlockNumber, Filter, FilterBuilder, Log, TransactionReceipt, H256},
     Web3,
 };
 
@@ -41,7 +41,12 @@ impl Web3Http {
 
     pub fn get_account(&self, index: usize, password: &str) -> Result<Address> {
         let account = self.web3.eth().accounts().wait()?[index];
-        if !self.web3.personal().unlock_account(account, password, Some(UNLOCK_DURATION)).wait()? {
+        if !self
+            .web3
+            .personal()
+            .unlock_account(account, password, Some(UNLOCK_DURATION))
+            .wait()?
+        {
             return Err(HostError::UnlockError);
         }
 
@@ -73,11 +78,7 @@ impl Web3Http {
             .map_err(|e| anyhow!("{:?}", e))?
             .confirmations(confirmations)
             .options(Options::with(|opt| opt.gas = Some(gas.into())))
-            .execute(
-                bin.as_str(),
-                (report, report_sig, handshake),
-                output.signer,
-            )
+            .execute(bin.as_str(), (report, report_sig, handshake), output.signer)
             .map_err(|e| anyhow!("{:?}", e))?
             .wait()
             .map_err(|e| anyhow!("{:?}", e))?;
@@ -114,7 +115,11 @@ impl Web3Contract {
         })
     }
 
-    pub fn join_group(&self, output: host_output::JoinGroup, confirmations: usize) -> Result<TransactionReceipt> {
+    pub fn join_group(
+        &self,
+        output: host_output::JoinGroup,
+        confirmations: usize,
+    ) -> Result<TransactionReceipt> {
         let ecall_output = output.ecall_output.unwrap();
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
@@ -134,7 +139,11 @@ impl Web3Contract {
         Ok(res)
     }
 
-    pub fn send_instruction(&self, output: host_output::Instruction, confirmations: usize) -> Result<TransactionReceipt> {
+    pub fn send_instruction(
+        &self,
+        output: host_output::Instruction,
+        confirmations: usize,
+    ) -> Result<TransactionReceipt> {
         let ecall_output = output.ecall_output.unwrap();
         let ciphertext = ecall_output.encode_ciphertext();
         let enclave_sig = &ecall_output.encode_enclave_sig();
@@ -236,7 +245,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
 
         // If log data is not fetched currently, return empty EnclaveLog.
         // This is occurred when it fetched data of dupulicated block number.
-        if self.logs.len() == 0 {
+        if self.logs.is_empty() {
             return Ok(EnclaveLog {
                 inner: None,
                 db: self.db,
@@ -259,7 +268,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
 
             // Processing conditions by ciphertext or handshake event
             if log.topics[0] == self.events.ciphertext_signature() {
-                if ciphertext_size != data.len() && data.len() != 0 {
+                if ciphertext_size != data.len() && !data.is_empty() {
                     return Err(
                         anyhow!("Each log should have same size of data.: index: {}", i).into(),
                     );
@@ -285,7 +294,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
         Ok(EnclaveLog {
             inner: Some(InnerEnclaveLog {
                 contract_addr: contract_addr.to_fixed_bytes(),
-                latest_blc_num: latest_blc_num,
+                latest_blc_num,
                 ciphertexts,
                 handshakes,
             }),

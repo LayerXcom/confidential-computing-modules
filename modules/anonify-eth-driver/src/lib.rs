@@ -1,12 +1,12 @@
 #![crate_type = "lib"]
 
 pub mod dispatcher;
-mod workflow;
-pub mod eth;
 mod error;
+pub mod eth;
 mod eventdb;
 pub mod traits;
 mod utils;
+mod workflow;
 
 pub use dispatcher::Dispatcher;
 pub use eventdb::{BlockNumDB, EventDB};

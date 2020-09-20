@@ -1,5 +1,5 @@
-use std::fmt;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 pub mod deploy {
     pub mod post {
@@ -20,20 +20,14 @@ pub mod notification {
         }
 
         impl Request {
-            pub fn new(
-                keyfile_index: usize,
-            ) -> Self {
-                Request{ keyfile_index }
+            pub fn new(keyfile_index: usize) -> Self {
+                Request { keyfile_index }
             }
         }
 
         impl fmt::Debug for Request {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                write!(
-                    f,
-                    "Request {{ keyfile_index: {:?} }}",
-                    &self.keyfile_index
-                )
+                write!(f, "Request {{ keyfile_index: {:?} }}", &self.keyfile_index)
             }
         }
     }

@@ -1,11 +1,11 @@
-use std::vec::Vec;
-use frame_treekem::{
-    GroupState, AppKeyChain, Handshake, PathSecret,
-    handshake::{PathSecretSource, HandshakeParams},
-};
+use anyhow::Result;
 use frame_common::crypto::{Ciphertext, ExportPathSecret};
 use frame_runtime::traits::*;
-use anyhow::Result;
+use frame_treekem::{
+    handshake::{HandshakeParams, PathSecretSource},
+    AppKeyChain, GroupState, Handshake,
+};
+use std::vec::Vec;
 
 #[derive(Clone, Debug)]
 pub struct GroupKey {
@@ -16,11 +16,7 @@ pub struct GroupKey {
 }
 
 impl GroupKeyOps for GroupKey {
-    fn new(
-        my_roster_idx: usize,
-        max_roster_idx: usize,
-        source: PathSecretSource,
-    ) -> Result<Self> {
+    fn new(my_roster_idx: usize, max_roster_idx: usize, source: PathSecretSource) -> Result<Self> {
         let group_state = GroupState::new(my_roster_idx)?;
         let keychain = AppKeyChain::default();
 
@@ -36,16 +32,12 @@ impl GroupKeyOps for GroupKey {
         self.group_state.create_handshake(&self.source)
     }
 
-    fn process_handshake(
-        &mut self,
-        handshake: &HandshakeParams,
-    ) -> Result<()> {
-        let keychain = self.group_state
-            .process_handshake(
-                handshake,
-                &self.source,
-                self.max_roster_idx as u32,
-                frame_enclave::ocalls::import_path_secret,
+    fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()> {
+        let keychain = self.group_state.process_handshake(
+            handshake,
+            &self.source,
+            self.max_roster_idx as u32,
+            frame_enclave::ocalls::import_path_secret,
         )?;
         self.keychain = keychain;
 

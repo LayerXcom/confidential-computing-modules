@@ -1,7 +1,4 @@
-use std::{
-    io,
-    fmt,
-};
+use std::{fmt, io};
 
 pub type Result<T> = std::result::Result<T, ClientError>;
 

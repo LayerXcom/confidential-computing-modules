@@ -1,7 +1,7 @@
 use super::{
-    hmac::HmacKey,
+    ecies::{AES_256_GCM_KEY_SIZE, AES_256_GCM_NONCE_SIZE},
     hash::hash_encodable,
-    ecies::{AES_256_GCM_NONCE_SIZE, AES_256_GCM_KEY_SIZE},
+    hmac::HmacKey,
     SHA256_OUTPUT_LEN,
 };
 use anyhow::Result;
@@ -18,6 +18,7 @@ struct HkdfLabel<'a> {
 }
 
 /// An implementation of HKDF-extract.
+#[allow(dead_code)]
 pub fn extract(salt: &HmacKey, secret: &[u8]) -> HmacKey {
     let prk = salt.sign(secret);
     HmacKey::from(prk)

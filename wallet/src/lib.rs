@@ -1,7 +1,7 @@
+use crate::error::Result;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
-use rand::Rng;
-use crate::error::Result;
 
 mod constants;
 mod derive;
@@ -9,8 +9,8 @@ mod disk;
 mod error;
 mod keyfile;
 
+pub use disk::{KeystoreDirectory, WalletDirectory};
 pub use error::WalletError as Error;
-pub use disk::{WalletDirectory, KeystoreDirectory};
 pub use keyfile::KeyFile;
 
 /// Operations in a wallet directory
@@ -30,10 +30,7 @@ pub trait DirOperations {
 
 /// Serializable and deserializable bytes
 #[derive(Deserialize, Serialize, PartialEq, Eq, Debug, Clone)]
-pub struct SerdeBytes(
-    #[serde(with = "serde_bytes")]
-    pub Vec<u8>
-);
+pub struct SerdeBytes(#[serde(with = "serde_bytes")] pub Vec<u8>);
 
 impl From<Vec<u8>> for SerdeBytes {
     fn from(v: Vec<u8>) -> Self {

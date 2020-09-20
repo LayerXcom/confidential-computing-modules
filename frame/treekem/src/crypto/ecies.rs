@@ -1,12 +1,14 @@
-use std::prelude::v1::*;
 use super::{
-    dh::{DhPubKey, DhPrivateKey, encapsulate, decapsulate},
-    hmac::HmacKey,
+    dh::{decapsulate, encapsulate, DhPrivateKey, DhPubKey},
     hkdf,
+    hmac::HmacKey,
 };
-use ring::aead::{Nonce, NonceSequence, UnboundKey, BoundKey, OpeningKey, Aad, SealingKey, AES_256_GCM};
 use anyhow::Result;
-use codec::{Encode, Decode};
+use codec::{Decode, Encode};
+use ring::aead::{
+    Aad, BoundKey, Nonce, NonceSequence, OpeningKey, SealingKey, UnboundKey, AES_256_GCM,
+};
+use std::prelude::v1::*;
 
 #[derive(Debug, Clone, Encode, Decode)]
 pub struct EciesCiphertext {
@@ -15,10 +17,7 @@ pub struct EciesCiphertext {
 }
 
 impl EciesCiphertext {
-    pub fn encrypt(
-        others_pub_key: &DhPubKey,
-        mut plaintext: Vec<u8>,
-    ) -> Result<Self> {
+    pub fn encrypt(others_pub_key: &DhPubKey, mut plaintext: Vec<u8>) -> Result<Self> {
         let my_ephemeral_secret = DhPrivateKey::from_random()?;
         let my_ephemeral_pub_key = DhPubKey::from_private_key(&my_ephemeral_secret);
 
@@ -62,9 +61,7 @@ impl EciesLabel {
     }
 }
 
-fn derive_ecies_key_nonce(
-    shared_secret_bytes: &[u8],
-) -> Result<(UnboundKey, OneNonceSequence)> {
+fn derive_ecies_key_nonce(shared_secret_bytes: &[u8]) -> Result<(UnboundKey, OneNonceSequence)> {
     let key_label = EciesLabel::new(b"key", AES_256_GCM_KEY_SIZE as u16);
     let nonce_label = EciesLabel::new(b"nonce", AES_256_GCM_NONCE_SIZE as u16);
 
@@ -97,7 +94,7 @@ impl OneNonceSequence {
 
 impl NonceSequence for OneNonceSequence {
     fn advance(&mut self) -> std::result::Result<Nonce, ring::error::Unspecified> {
-        self.0.take().ok_or(ring::error::Unspecified).into()
+        self.0.take().ok_or(ring::error::Unspecified)
     }
 }
 
@@ -107,9 +104,7 @@ pub(crate) mod tests {
     use test_utils::*;
 
     pub(crate) fn run_tests() -> bool {
-        run_tests!(
-            test_ecies_correctness,
-        )
+        run_tests!(test_ecies_correctness,)
     }
 
     fn test_ecies_correctness() {

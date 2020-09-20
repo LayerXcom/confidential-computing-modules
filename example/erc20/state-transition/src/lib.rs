@@ -6,7 +6,6 @@ extern crate sgx_tstd as localstd;
 use std as localstd;
 
 use frame_runtime::prelude::*;
-use crate::localstd::vec::Vec;
 
 pub const MAX_MEM_SIZE: usize = 100;
 pub const CIPHERTEXT_SIZE: usize = MAX_MEM_SIZE + 30;
@@ -86,7 +85,7 @@ impl_runtime! {
 
         let mut owner_approved = self.get_map::<Approved>(owner, "Approved")?;
         let approved_amount = owner_approved.allowance(&sender)
-            .ok_or(anyhow!("not enough amount approved."))?;
+            .ok_or_else(|| anyhow!("not enough amount approved."))?;
         ensure!(
             amount <= *approved_amount,
             "transferring amount exceeds approved amount of sender."

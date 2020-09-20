@@ -1,8 +1,7 @@
 use std::env;
 
-fn main () {
-    let sdk_dir = env::var("SGX_SDK")
-                    .unwrap_or_else(|_| "/opt/intel/sgxsdk".to_string());
+fn main() {
+    let sdk_dir = env::var("SGX_SDK").unwrap_or_else(|_| "/opt/intel/sgxsdk".to_string());
     let rust_sgx_sdk = env::var("SGX_SDK_RUST")
         .unwrap_or_else(|_| format!("{}/sgx", dirs::home_dir().unwrap().display()));
     let is_sim = env::var("SGX_MODE").unwrap_or_else(|_| "HW".to_string());
@@ -32,7 +31,7 @@ fn main () {
                 .include("/opt/sgxsdk/include")
                 .include(edl)
                 .compile("libAnonify_test_u");
-        },
+        }
         _ => {
             cc::Build::new()
                 .file(common_u_c_path)

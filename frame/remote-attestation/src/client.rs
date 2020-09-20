@@ -1,16 +1,17 @@
-use std::{
-    prelude::v1::*,
-    net::TcpStream,
-    str,
-    time::{SystemTime, UNIX_EPOCH},
-    untrusted::time::SystemTimeEx,
-    io::{BufReader, Write},
-    collections::HashMap,
+use anyhow::{anyhow, bail, ensure, Result};
+use http_req::{
+    request::{Method, Request},
+    response::{Headers, Response},
+    uri::Uri,
 };
-use http_req::{request::{Request, Method}, uri::Uri, response::{Headers, Response}};
-use anyhow::{Result, anyhow, bail, ensure};
-use serde_json::Value;
 use log::debug;
+use serde_json::Value;
+use std::{
+    io::{BufReader, Write},
+    prelude::v1::*,
+    str,
+    time::SystemTime,
+};
 
 pub const IAS_REPORT_CA: &[u8] = include_bytes!("../AttestationReportSigningCACert.pem");
 type SignatureAlgorithms = &'static [&'static webpki::SignatureAlgorithm];
@@ -46,8 +47,7 @@ impl RAService {
             .quote_body_mut(&body.as_bytes())
             .send(&mut writer)?;
 
-        let ra_resp = RAResponse::from_response(writer, response)?
-            .verify_attestation_report()?;
+        let ra_resp = RAResponse::from_response(writer, response)?.verify_attestation_report()?;
 
         Ok((ra_resp.attestation_report, ra_resp.report_sig))
     }
@@ -63,7 +63,7 @@ impl<'a> RAClient<'a> {
     pub fn new(uri: &'a Uri) -> Self {
         let host = uri.host_header().expect("Not found host in the uri");
 
-        RAClient{
+        RAClient {
             request: Request::new(&uri),
             host,
         }
@@ -93,7 +93,8 @@ impl<'a> RAClient<'a> {
     }
 
     pub fn send<T: Write>(&self, writer: &mut T) -> Result<Response> {
-        self.request.send(writer)
+        self.request
+            .send(writer)
             .map_err(|e| anyhow!("{:?}", e))
             .map_err(Into::into)
     }
@@ -112,12 +113,14 @@ impl RAResponse {
         debug!("RA response: {:?}", resp);
 
         let headers = resp.headers();
-        let sig = headers.get("X-IASReport-Signature")
-            .ok_or(anyhow!("Not found X-IASReport-Signature header"))?;
+        let sig = headers
+            .get("X-IASReport-Signature")
+            .ok_or_else(|| anyhow!("Not found X-IASReport-Signature header"))?;
         let report_sig = ReportSig::base64_decode(sig.as_bytes())?;
 
-        let cert = headers.get("X-IASReport-Signing-Certificate")
-            .ok_or(anyhow!("Not found X-IASReport-Signing-Certificate"))?
+        let cert = headers
+            .get("X-IASReport-Signing-Certificate")
+            .ok_or_else(|| anyhow!("Not found X-IASReport-Signing-Certificate"))?
             .replace("%0A", "");
         let cert = percent_decode(cert)?;
 
@@ -138,7 +141,9 @@ impl RAResponse {
 
         let mut ca_reader = BufReader::new(&IAS_REPORT_CA[..]);
         let mut root_store = rustls::RootCertStore::empty();
-        root_store.add_pem_file(&mut ca_reader).expect("Failed to add CA");
+        root_store
+            .add_pem_file(&mut ca_reader)
+            .expect("Failed to add CA");
 
         let trust_anchors: Vec<webpki::TrustAnchor> = root_store
             .roots
@@ -147,7 +152,7 @@ impl RAResponse {
             .collect();
 
         let ias_cert_dec = Self::decode_ias_report_ca()?;
-        let mut chain:Vec<&[u8]> = Vec::new();
+        let mut chain: Vec<&[u8]> = Vec::new();
         chain.push(&ias_cert_dec);
 
         let sig_cert = webpki::EndEntityCert::from(&self.cert)?;
@@ -172,16 +177,15 @@ impl RAResponse {
         Ok(self)
     }
 
-
     /// Verify report's timestamp is within 24H (90day is recommended by Intel)
     fn verify_timestamp(&self, attn_report: &Value) -> Result<()> {
-        if let Value::String(time) = &attn_report["timestamp"] {
+        if let Value::String(_time) = &attn_report["timestamp"] {
             Ok(())
-            // TODO
-            // let time_fixed = time.clone() + "+0000";
-            // let ts = DateTime::parse_from_str(&time_fixed, "%Y-%m-%dT%H:%M:%S%.f%z").unwrap().timestamp();
-            // let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
-            // ensure!(now - ts > 0, "")
+        // TODO
+        // let time_fixed = time.clone() + "+0000";
+        // let ts = DateTime::parse_from_str(&time_fixed, "%Y-%m-%dT%H:%M:%S%.f%z").unwrap().timestamp();
+        // let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
+        // ensure!(now - ts > 0, "")
         } else {
             bail!("Failed to fetch timestamp from attestation report");
         }
@@ -195,7 +199,7 @@ impl RAResponse {
                 "GROUP_OUT_OF_DATE" => {
                     println!("Enclave Quote Status: GROUP_OUT_OF_DATE");
                     Ok(())
-                },
+                }
                 _ => bail!("Invalid Enclave Quote Status: {}", quote_status),
             }
         } else {
@@ -210,7 +214,7 @@ impl RAResponse {
         let tail_len = "-----END CERTIFICATE-----".len();
 
         let full_len = ias_ca_stripped.len();
-        let ias_ca_core : &[u8] = &ias_ca_stripped[head_len..full_len - tail_len];
+        let ias_ca_core: &[u8] = &ias_ca_stripped[head_len..full_len - tail_len];
         let ias_cert_dec = base64::decode(ias_ca_core)?;
         Ok(ias_cert_dec)
     }
@@ -262,8 +266,8 @@ impl ReportSig {
 }
 
 fn percent_decode(orig: String) -> Result<Vec<u8>> {
-    let v:Vec<&str> = orig.split('%').collect();
-    ensure!(v.len() != 0, "Certificate is blank");
+    let v: Vec<&str> = orig.split('%').collect();
+    ensure!(!v.is_empty(), "Certificate is blank");
     let mut ret = String::new();
     ret.push_str(v[0]);
     if v.len() > 1 {

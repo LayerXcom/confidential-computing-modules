@@ -5,8 +5,8 @@ extern crate sgx_tstd as localstd;
 #[cfg(feature = "std")]
 use std as localstd;
 
-use frame_runtime::prelude::*;
 use crate::localstd::vec::Vec;
+use frame_runtime::prelude::*;
 
 pub const MAX_MEM_SIZE: usize = 5000;
 pub const CIPHERTEXT_SIZE: usize = MAX_MEM_SIZE + 30;

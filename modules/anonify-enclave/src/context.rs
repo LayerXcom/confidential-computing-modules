@@ -1,26 +1,22 @@
-use std::{
-    sync::{SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard, Arc},
-    env,
+use crate::{
+    crypto::EnclaveIdentityKey, error::Result, group_key::GroupKey, kvs::EnclaveDB,
+    notify::Notifier,
+};
+use frame_common::{
+    crypto::AccountId,
+    state_types::{MemId, StateType, UpdatedState},
+};
+use frame_enclave::ocalls::{get_quote, sgx_init_quote};
+use frame_runtime::traits::*;
+use frame_treekem::{
+    handshake::{PathSecretKVS, PathSecretSource},
+    init_path_secret_kvs,
 };
 use sgx_types::*;
 use std::prelude::v1::*;
-use frame_common::{
-    crypto::AccountId,
-    traits::*,
-    state_types::{MemId, UpdatedState, StateType},
-};
-use frame_runtime::traits::*;
-use frame_treekem::{
-    handshake::{PathSecretSource, PathSecretKVS},
-    init_path_secret_kvs,
-};
-use frame_enclave::ocalls::{sgx_init_quote, get_quote};
-use crate::{
-    notify::Notifier,
-    crypto::EnclaveIdentityKey,
-    error::Result,
-    kvs::EnclaveDB,
-    group_key::GroupKey,
+use std::{
+    env,
+    sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
 };
 
 /// spid: Service provider ID for the ISV.
@@ -40,17 +36,18 @@ impl StateOps for EnclaveContext {
     where
         U: Into<AccountId>,
     {
-        self.db
-            .get(key.into(), mem_id)
+        self.db.get(key.into(), mem_id)
     }
 
     /// Returns a updated state of registerd account_id in notification.
     // TODO: Enables to return multiple updated states.
     fn update_state(
         &self,
-        mut state_iter: impl Iterator<Item=UpdatedState<Self::S>> + Clone
+        mut state_iter: impl Iterator<Item = UpdatedState<Self::S>> + Clone,
     ) -> Option<UpdatedState<Self::S>> {
-        state_iter.clone().for_each(|s| self.db.insert_by_updated_state(s));
+        state_iter
+            .clone()
+            .for_each(|s| self.db.insert_by_updated_state(s));
         state_iter.find(|s| self.is_notified(&s.account_id))
     }
 }
@@ -107,13 +104,13 @@ impl EnclaveContext {
 
         let source = match env::var("AUDITOR_ENDPOINT") {
             Err(_) => PathSecretSource::Local,
-            Ok(test) if test == "test".to_string() => {
+            Ok(test) if test == "test" => {
                 const UNTIL_ROSTER_IDX: usize = 10;
                 const UNTIL_EPOCH: usize = 30;
                 let mut kvs = PathSecretKVS::new();
                 init_path_secret_kvs(&mut kvs, UNTIL_ROSTER_IDX, UNTIL_EPOCH);
                 PathSecretSource::LocalTestKV(kvs)
-            },
+            }
             Ok(url) => PathSecretSource::Remote(url),
         };
 
@@ -126,10 +123,14 @@ impl EnclaveContext {
             .parse()
             .expect("Failed to parse MAX_ROSTER_IDX to usize");
 
-        let group_key = Arc::new(SgxRwLock::new(GroupKey::new(my_roster_idx, max_roster_idx, source)?));
+        let group_key = Arc::new(SgxRwLock::new(GroupKey::new(
+            my_roster_idx,
+            max_roster_idx,
+            source,
+        )?));
         let notifier = Notifier::new();
 
-        Ok(EnclaveContext{
+        Ok(EnclaveContext {
             spid,
             identity_key,
             db,

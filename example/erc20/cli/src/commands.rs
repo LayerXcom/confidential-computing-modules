@@ -1,19 +1,17 @@
-use std::path::PathBuf;
-use rand::Rng;
-use anonify_wallet::{WalletDirectory, KeystoreDirectory, KeyFile, DirOperations};
-use frame_common::crypto::AccountId;
-use bip39::{Mnemonic, Language, MnemonicType, Seed};
-use reqwest::Client;
-use ed25519_dalek::Keypair;
 use crate::{
-    term::Term,
+    config::{ITERS, VERSION},
     error::Result,
-    config::{VERSION, ITERS},
+    term::Term,
 };
+use anonify_wallet::{DirOperations, KeyFile, KeystoreDirectory, WalletDirectory};
+use bip39::{Language, Mnemonic, MnemonicType, Seed};
+use ed25519_dalek::Keypair;
+use frame_common::crypto::AccountId;
+use rand::Rng;
+use reqwest::Client;
+use std::path::PathBuf;
 
-pub(crate) fn deploy(
-    anonify_url: String,
-) -> Result<()> {
+pub(crate) fn deploy(anonify_url: String) -> Result<()> {
     let res = Client::new()
         .post(&format!("{}/api/v1/deploy", &anonify_url))
         .send()?
@@ -23,11 +21,8 @@ pub(crate) fn deploy(
     Ok(())
 }
 
-pub(crate) fn join_group(
-    anonify_url: String,
-    contract_addr: String,
-) -> Result<()> {
-    let req = erc20_api::join_group::post::Request{ contract_addr };
+pub(crate) fn join_group(anonify_url: String, contract_addr: String) -> Result<()> {
+    let req = erc20_api::join_group::post::Request { contract_addr };
     let res = Client::new()
         .post(&format!("{}/api/v1/join_group", &anonify_url))
         .json(&req)
@@ -45,7 +40,7 @@ pub(crate) fn init_state<R: Rng>(
     anonify_url: String,
     index: usize,
     total_supply: u64,
-    rng: &mut R
+    rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
@@ -69,7 +64,7 @@ pub(crate) fn transfer<R: Rng>(
     index: usize,
     target: AccountId,
     amount: u64,
-    rng: &mut R
+    rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
@@ -92,7 +87,7 @@ pub(crate) fn approve<R: Rng>(
     index: usize,
     target: AccountId,
     amount: u64,
-    rng: &mut R
+    rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
@@ -116,7 +111,7 @@ pub(crate) fn transfer_from<R: Rng>(
     owner: AccountId,
     target: AccountId,
     amount: u64,
-    rng: &mut R
+    rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
@@ -139,7 +134,7 @@ pub(crate) fn mint<R: Rng>(
     index: usize,
     target: AccountId,
     amount: u64,
-    rng: &mut R
+    rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
@@ -161,7 +156,7 @@ pub(crate) fn burn<R: Rng>(
     anonify_url: String,
     index: usize,
     amount: u64,
-    rng: &mut R
+    rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
@@ -177,9 +172,7 @@ pub(crate) fn burn<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn key_rotation(
-    anonify_url: String,
-) -> Result<()> {
+pub(crate) fn key_rotation(anonify_url: String) -> Result<()> {
     let res = Client::new()
         .post(&format!("{}/api/v1/key_rotation", &anonify_url))
         .send()?
@@ -233,9 +226,7 @@ pub(crate) fn balance_of<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn start_sync_bc(
-    anonify_url: String,
-) -> Result<()> {
+pub(crate) fn start_sync_bc(anonify_url: String) -> Result<()> {
     Client::new()
         .get(&format!("{}/api/v1/start_sync_bc", &anonify_url))
         .send()?
@@ -244,10 +235,7 @@ pub(crate) fn start_sync_bc(
     Ok(())
 }
 
-pub(crate) fn set_contract_addr(
-    anonify_url: String,
-    contract_addr: String,
-) -> Result<()> {
+pub(crate) fn set_contract_addr(anonify_url: String, contract_addr: String) -> Result<()> {
     let req = erc20_api::contract_addr::post::Request::new(contract_addr);
     Client::new()
         .get(&format!("{}/api/v1/set_contract_addr", &anonify_url))
@@ -265,7 +253,11 @@ pub(crate) fn new_wallet<R: Rng>(term: &mut Term, root_dir: PathBuf, rng: &mut R
 
     // 2. configure user-defined password
     term.info("Set a wallet password. This is for local use only. It allows you to protect your cached private key and prevents the creation of non-desired transactions.\n")?;
-    let password = term.new_password("wallet password", "confirm wallet password", "password mismatch")?;
+    let password = term.new_password(
+        "wallet password",
+        "confirm wallet password",
+        "password mismatch",
+    )?;
 
     // 3. generate the mnemonics
     let mnemonic = Mnemonic::new(MnemonicType::Words12, Language::English);
@@ -286,7 +278,7 @@ pub(crate) fn new_wallet<R: Rng>(term: &mut Term, root_dir: PathBuf, rng: &mut R
         &password,
         ITERS,
         &seed_vec,
-        rng
+        rng,
     )?;
 
     // 6. store a keyfile
@@ -295,8 +287,7 @@ pub(crate) fn new_wallet<R: Rng>(term: &mut Term, root_dir: PathBuf, rng: &mut R
     term.success(&format!(
         "wallet and a new account successfully created.\n
         {}: {}\n\n",
-        keyfile.account_name,
-        keyfile.base64_address
+        keyfile.account_name, keyfile.base64_address
     ))?;
 
     Ok(())
@@ -309,7 +300,11 @@ pub(crate) fn add_account<R: Rng>(term: &mut Term, root_dir: PathBuf, rng: &mut 
 
     // 2. configure user-defined password
     term.info("Set a wallet password. This is for local use only. It allows you to protect your cached private key and prevents the creation of non-desired transactions.\n")?;
-    let password = term.new_password("wallet password", "confirm wallet password", "password mismatch")?;
+    let password = term.new_password(
+        "wallet password",
+        "confirm wallet password",
+        "password mismatch",
+    )?;
 
     // 3. generate the mnemonics
     let mnemonic = Mnemonic::new(MnemonicType::Words12, Language::English);
@@ -330,7 +325,7 @@ pub(crate) fn add_account<R: Rng>(term: &mut Term, root_dir: PathBuf, rng: &mut 
         &password,
         ITERS,
         &seed_vec,
-        rng
+        rng,
     )?;
 
     // 6. store a keyfile
@@ -339,18 +334,13 @@ pub(crate) fn add_account<R: Rng>(term: &mut Term, root_dir: PathBuf, rng: &mut 
     term.success(&format!(
         "wallet and a new account successfully created.\n
         {}: {}\n\n",
-        keyfile.account_name,
-        keyfile.base64_address
+        keyfile.account_name, keyfile.base64_address
     ))?;
 
     Ok(())
 }
 
-
-pub(crate) fn show_list(
-    term: &mut Term,
-    root_dir: PathBuf,
-) -> Result<()> {
+pub(crate) fn show_list(term: &mut Term, root_dir: PathBuf) -> Result<()> {
     let (_wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
 
     let keyfiles = keystore_dir.load_all()?;
@@ -364,9 +354,9 @@ pub(crate) fn show_list(
     for (i, keyfile) in keyfiles.iter().enumerate() {
         let (name, address) = (&*keyfile.account_name, &*keyfile.base64_address);
         // if i == default_index {
-            // term.success(&format!("* {}: {}\n", name, address))?;
+        // term.success(&format!("* {}: {}\n", name, address))?;
         // } else {
-            term.success(&format!("{}: {}\n", name, address))?;
+        term.success(&format!("{}: {}\n", name, address))?;
         // }
     }
 
@@ -391,7 +381,11 @@ pub fn prompt_password(term: &mut Term) -> Result<Vec<u8>> {
     Ok(password)
 }
 
-pub fn get_keypair_from_keystore(root_dir: PathBuf, password: &[u8], keyfile_index: usize) -> Result<Keypair> {
+pub fn get_keypair_from_keystore(
+    root_dir: PathBuf,
+    password: &[u8],
+    keyfile_index: usize,
+) -> Result<Keypair> {
     let (_wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
     let keyfile = &keystore_dir.load_all()?[keyfile_index];
     let keypair = keyfile.get_key_pair(password)?;

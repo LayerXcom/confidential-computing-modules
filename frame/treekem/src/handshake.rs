@@ -1,24 +1,23 @@
-use std::vec::Vec;
-use std::collections::HashMap;
-use std::string::String;
-use std::sync::{SgxRwLock, Arc};
 use crate::application::AppKeyChain;
 use crate::crypto::{
-    CryptoRng,
-    dh::DhPubKey,
-    ecies::EciesCiphertext,
-    secrets::PathSecret,
-    hash::hash_encodable,
+    dh::DhPubKey, ecies::EciesCiphertext, hash::hash_encodable, secrets::PathSecret, CryptoRng,
 };
-use ring::digest::Digest;
-use frame_common::crypto::ExportPathSecret;
 use anyhow::Result;
-use codec::{Encode, Decode};
+use codec::{Decode, Encode};
+use frame_common::crypto::ExportPathSecret;
+use ring::digest::Digest;
+use std::collections::HashMap;
+use std::string::String;
+use std::sync::{Arc, SgxRwLock};
+use std::vec::Vec;
 
 /// A handshake operates sharing a group key to each member.
 pub trait Handshake: Sized {
     /// Create a handshake to broadcast other members.
-    fn create_handshake(&self, source: &PathSecretSource) -> Result<(HandshakeParams, ExportPathSecret)>;
+    fn create_handshake(
+        &self,
+        source: &PathSecretSource,
+    ) -> Result<(HandshakeParams, ExportPathSecret)>;
 
     /// Process a received handshake from other members.
     fn process_handshake<F>(
@@ -70,7 +69,10 @@ pub struct DirectPathNodeMsg {
 
 impl DirectPathNodeMsg {
     pub fn new(public_key: DhPubKey, node_secrets: Vec<EciesCiphertext>) -> Self {
-        DirectPathNodeMsg { public_key, node_secrets }
+        DirectPathNodeMsg {
+            public_key,
+            node_secrets,
+        }
     }
 }
 
@@ -80,14 +82,14 @@ pub enum PathSecretSource {
     Remote(String),
     /// just for test use to derive new path secret depending on current path secret.
     LocalTest(CurrentPathSecret),
-    LocalTestKV(PathSecretKVS)
+    LocalTestKV(PathSecretKVS),
 }
 
 #[derive(Debug, Clone)]
 pub struct PathSecretKVS(HashMap<AccessKey, PathSecret>);
 
 #[derive(Encode, Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
-pub struct AccessKey{
+pub struct AccessKey {
     roster_idx: u32,
     epoch: u32,
 }
@@ -105,12 +107,17 @@ impl PathSecretKVS {
     }
 
     pub fn get(&self, roster_idx: u32, epoch: u32) -> Option<&PathSecret> {
-        let key = AccessKey{roster_idx, epoch};
+        let key = AccessKey { roster_idx, epoch };
         self.0.get(&key)
     }
 
-    pub fn insert_random_path_secret<R: CryptoRng>(&mut self, roster_idx: u32, epoch: u32, csprng: &mut R) {
-        let key = AccessKey{roster_idx, epoch};
+    pub fn insert_random_path_secret<R: CryptoRng>(
+        &mut self,
+        roster_idx: u32,
+        epoch: u32,
+        csprng: &mut R,
+    ) {
+        let key = AccessKey { roster_idx, epoch };
         let value = PathSecret::new_from_random(csprng);
         self.0.insert(key, value);
     }

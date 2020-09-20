@@ -1,8 +1,8 @@
-use crate::traits::State;
-use crate::localstd::vec::Vec;
-use crate::local_anyhow::{Result, anyhow};
 use crate::crypto::AccountId;
-use codec::{Encode, Decode};
+use crate::local_anyhow::{anyhow, Result};
+use crate::localstd::vec::Vec;
+use crate::traits::State;
+use codec::{Decode, Encode};
 
 pub trait RawState: Encode + Decode + Clone + Default {}
 
@@ -40,7 +40,7 @@ impl StateType {
 
 impl From<AccountId> for StateType {
     fn from(account_id: AccountId) -> Self {
-        Self(account_id.encode_s().into())
+        Self(account_id.encode_s())
     }
 }
 
@@ -65,8 +65,7 @@ impl<S: State> UpdatedState<S> {
     }
 
     pub fn from_state_type(update: UpdatedState<StateType>) -> Result<Self> {
-        let state = S::decode(&mut &update.state.as_bytes()[..])
-            .map_err(|e| anyhow!("{:?}", e))?;
+        let state = S::decode(&mut &update.state.as_bytes()[..]).map_err(|e| anyhow!("{:?}", e))?;
 
         Ok(UpdatedState {
             account_id: update.account_id,
@@ -81,7 +80,7 @@ impl<S: State> UpdatedState<S> {
 pub struct MemId(u32);
 
 impl MemId {
-    pub fn as_raw(&self) -> u32 {
+    pub fn as_raw(self) -> u32 {
         self.0
     }
 
