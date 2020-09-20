@@ -41,12 +41,3 @@ export ANONIFY_URL=http://172.28.1.1:8080
 echo "Building ERC20 server..."
 cd example/erc20/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo build
-
-# cd ../../../scripts
-# make DEBUG=1 ENCLAVE_DIR=example/invoice-flow/enclave
-
-# cd ../example/invoice-flow/server
-# RUST_BACKTRACE=1 RUST_LOG=debug cargo build
-
-# cd ../enclave
-# RUST_BACKTRACE=1 RUST_LOG=debug cargo build

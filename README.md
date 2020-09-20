@@ -20,7 +20,9 @@ $ solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.so
 ### docker-compose (Currently unavailable)
 By using docker-compose, three nodes will be up by default. [The ERC20-like application](example/erc20/state-transition/src/lib.rs) is implemented as the initial state transition functions. (Assumed your hardware supports Intel SGX.)
 
+You can build latest docker images:
 ```
+$ docker build -t osuketh/anonify-server:latest -f docker/server.Dockerfile ./
 $ docker-compose -f docker/docker-compose-anonify.yml up -d
 ```
 
@@ -70,17 +72,11 @@ The very first thing you need to do is starting aesm service in a SGX-enabled en
 LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service
 ```
 
-If you haven't create docker and ganache network for testing:
-```
-$ docker network create --subnet=172.18.0.0/16 test-network
-$ docker run -d --name ganache --net=test-network --rm -it trufflesuite/ganache-cli
-```
-
 Running intel SGX environment, and then, you can build in HW mode.
 ```
-$ ./scripts/start-docker.sh
-$ cd anonify
-$ ./scripts/test.sh
+$ docker-compose up -d
+$ docker-compose exec sgx_machine bash
+$ cd anonify && ./scripts/test.sh
 ```
 
 ## Documentations
