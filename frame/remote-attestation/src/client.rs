@@ -12,8 +12,8 @@ use std::{
     str,
     time::SystemTime,
 };
+use crate::IAS_REPORT_CA;
 
-pub const IAS_REPORT_CA: &[u8] = include_bytes!("../AttestationReportSigningCACert.pem");
 type SignatureAlgorithms = &'static [&'static webpki::SignatureAlgorithm];
 static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
     &webpki::ECDSA_P256_SHA256,
@@ -139,7 +139,7 @@ impl RAResponse {
     fn verify_attestation_report(self) -> Result<Self> {
         let now_func = webpki::Time::try_from(SystemTime::now())?;
 
-        let mut ca_reader = BufReader::new(&IAS_REPORT_CA[..]);
+        let mut ca_reader = BufReader::new(IAS_REPORT_CA.as_bytes());
         let mut root_store = rustls::RootCertStore::empty();
         root_store
             .add_pem_file(&mut ca_reader)
@@ -208,7 +208,7 @@ impl RAResponse {
     }
 
     fn decode_ias_report_ca() -> Result<Vec<u8>> {
-        let mut ias_ca_stripped = IAS_REPORT_CA.to_vec();
+        let mut ias_ca_stripped = IAS_REPORT_CA.as_bytes().to_vec();
         ias_ca_stripped.retain(|&x| x != 0x0d && x != 0x0a);
         let head_len = "-----BEGIN CERTIFICATE-----".len();
         let tail_len = "-----END CERTIFICATE-----".len();
