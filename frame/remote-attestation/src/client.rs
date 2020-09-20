@@ -1,3 +1,4 @@
+use crate::IAS_REPORT_CA;
 use anyhow::{anyhow, bail, ensure, Result};
 use http_req::{
     request::{Method, Request},
@@ -12,7 +13,6 @@ use std::{
     str,
     time::SystemTime,
 };
-use crate::IAS_REPORT_CA;
 
 type SignatureAlgorithms = &'static [&'static webpki::SignatureAlgorithm];
 static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[

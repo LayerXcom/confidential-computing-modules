@@ -20,7 +20,7 @@ impl StorePathSecrets {
     }
 
     pub fn save_to_local_filesystem(&self, eps: &ExportPathSecret) -> Result<()> {
-        let file_name = str::from_utf8(&eps.id_as_ref())?;
+        let file_name = hex::encode(&eps.id_as_ref());
         let file_path = self.local_dir_path.join(file_name);
         let mut file = Self::create_new_file(&file_path)?;
         serde_json::to_writer(&mut file, &eps)?;
@@ -31,7 +31,7 @@ impl StorePathSecrets {
     }
 
     pub fn load_from_local_filesystem(&self, id: &[u8]) -> Result<ExportPathSecret> {
-        let file_name = str::from_utf8(&id)?;
+        let file_name = hex::encode(&id);
         let file_path = self.local_dir_path.join(file_name);
         let file = fs::File::open(file_path)?;
         let reader = BufReader::new(file);
