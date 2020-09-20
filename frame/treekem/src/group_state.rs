@@ -1,15 +1,11 @@
-use crate::crypto::{
-    hkdf,
-    secrets::*,
-    hmac::HmacKey,
-};
 use crate::application::AppKeyChain;
-use crate::handshake::{Handshake, HandshakeParams, PathSecretSource, AccessKey};
+use crate::crypto::{hkdf, hmac::HmacKey, secrets::*};
+use crate::handshake::{AccessKey, Handshake, HandshakeParams, PathSecretSource};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use crate::tree_math;
-use frame_common::crypto::ExportPathSecret;
-use anyhow::{Result, anyhow, ensure};
+use anyhow::{anyhow, ensure, Result};
 use codec::Encode;
+use frame_common::crypto::ExportPathSecret;
 
 #[derive(Clone, Debug, Encode)]
 pub struct GroupState {
@@ -28,7 +24,10 @@ pub struct GroupState {
 }
 
 impl Handshake for GroupState {
-    fn create_handshake(&self, source: &PathSecretSource) -> Result<(HandshakeParams, ExportPathSecret)> {
+    fn create_handshake(
+        &self,
+        source: &PathSecretSource,
+    ) -> Result<(HandshakeParams, ExportPathSecret)> {
         let my_roster_idx = self.my_roster_idx;
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(my_roster_idx)?;
 
@@ -41,14 +40,17 @@ impl Handshake for GroupState {
         }
 
         let _ = new_group_state.set_new_path_secret(path_secret.clone(), my_tree_idx)?;
-        let direct_path_msg = new_group_state.tree.encrypt_direct_path_secret(my_tree_idx, path_secret.clone())?;
+        let direct_path_msg = new_group_state
+            .tree
+            .encrypt_direct_path_secret(my_tree_idx, path_secret.clone())?;
 
         let handshake = HandshakeParams {
             prior_epoch: self.epoch,
             roster_idx: my_roster_idx,
             path: direct_path_msg,
         };
-        let export_path_secret = path_secret.try_into_exporting(self.epoch, handshake.hash().as_ref())?;
+        let export_path_secret =
+            path_secret.try_into_exporting(self.epoch, handshake.hash().as_ref())?;
 
         Ok((handshake, export_path_secret))
     }
@@ -61,9 +63,12 @@ impl Handshake for GroupState {
         req_path_secret_fn: F,
     ) -> Result<AppKeyChain>
     where
-        F: FnOnce(&[u8]) -> Result<ExportPathSecret>
+        F: FnOnce(&[u8]) -> Result<ExportPathSecret>,
     {
-        ensure!(handshake.prior_epoch == self.epoch, "Handshake's prior epoch isn't the current epoch.");
+        ensure!(
+            handshake.prior_epoch == self.epoch,
+            "Handshake's prior epoch isn't the current epoch."
+        );
         let sender_tree_idx = RatchetTree::roster_idx_to_tree_idx(handshake.roster_idx)?;
         ensure!(sender_tree_idx <= self.tree.size(), "Invalid tree index");
 
@@ -90,12 +95,15 @@ impl Handshake for GroupState {
                 let path_secret = match source {
                     PathSecretSource::Local => {
                         let imported_path_secret = req_path_secret_fn(handshake.hash().as_ref())?;
-                        ensure!(imported_path_secret.epoch() == self.epoch, "imported_path_secret's epoch isn't the current epoch");
+                        ensure!(
+                            imported_path_secret.epoch() == self.epoch,
+                            "imported_path_secret's epoch isn't the current epoch"
+                        );
                         PathSecret::try_from_importing(imported_path_secret)?
-                    },
+                    }
                     PathSecretSource::LocalTestKV(_) => {
                         Self::request_new_path_secret(source, self.my_roster_idx, self.epoch)?
-                    },
+                    }
                     _ => unimplemented!(),
                 };
 
@@ -107,9 +115,14 @@ impl Handshake for GroupState {
             }
         }
 
-        let (update_secret, common_ancestor) = self.apply_handshake(handshake, sender_tree_idx, my_path_secret)?;
+        let (update_secret, common_ancestor) =
+            self.apply_handshake(handshake, sender_tree_idx, my_path_secret)?;
         let direct_path_pub_keys = handshake.path.node_msgs.iter().map(|m| &m.public_key);
-        self.tree.set_public_keys(sender_tree_idx, common_ancestor, direct_path_pub_keys.clone())?;
+        self.tree.set_public_keys(
+            sender_tree_idx,
+            common_ancestor,
+            direct_path_pub_keys.clone(),
+        )?;
         self.increment_epoch()?;
 
         let app_secret = self.update_epoch_secret(&update_secret)?;
@@ -134,7 +147,11 @@ impl GroupState {
     }
 
     /// Request own new path secret to external key vault
-    pub fn request_new_path_secret(source: &PathSecretSource, roster_idx: u32, epoch: u32) -> Result<PathSecret> {
+    pub fn request_new_path_secret(
+        source: &PathSecretSource,
+        roster_idx: u32,
+        epoch: u32,
+    ) -> Result<PathSecret> {
         match source {
             PathSecretSource::Local => Ok(PathSecret::new_from_random_sgx()),
             // just for test use to derive new path secret depending on current path secret.
@@ -144,10 +161,10 @@ impl GroupState {
                 let next = current.clone().derive_next(access_key)?;
                 *current = next.clone();
                 Ok(next)
-            },
-            PathSecretSource::LocalTestKV(db) => {
-                db.get(roster_idx, epoch).cloned().ok_or(anyhow!("Not found Path Secret from local PathSecretKVS with provided roster_idx and epoch"))
             }
+            PathSecretSource::LocalTestKV(db) => db.get(roster_idx, epoch).cloned().ok_or(anyhow!(
+                "Not found Path Secret from local PathSecretKVS with provided roster_idx and epoch"
+            )),
             PathSecretSource::Remote(_url) => unimplemented!(),
         }
     }
@@ -156,15 +173,15 @@ impl GroupState {
         &mut self,
         handshake: &HandshakeParams,
         sender_tree_idx: usize,
-        path_secret: Option<PathSecret>
+        path_secret: Option<PathSecret>,
     ) -> Result<(UpdateSecret, usize)> {
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
 
         // If the received handshake sent from my own, set the requested path secret.
         if sender_tree_idx == my_tree_idx {
-                let update_secret = self.set_new_path_secret(path_secret.unwrap(), my_tree_idx)?;
+            let update_secret = self.set_new_path_secret(path_secret.unwrap(), my_tree_idx)?;
 
-                Ok((update_secret, my_tree_idx))
+            Ok((update_secret, my_tree_idx))
         } else {
             // What the node is still blank means the member hasn't join the group yet.
             // More precisely, the member hasn't send an add handshake yet.
@@ -173,10 +190,11 @@ impl GroupState {
             match self.tree.get(my_tree_idx).unwrap() {
                 RatchetTreeNode::Blank => {
                     let num_leaves = tree_math::num_leaves_in_tree(self.tree.size());
-                    let common_ancestor = tree_math::common_ancestor(sender_tree_idx, my_tree_idx, num_leaves);
+                    let common_ancestor =
+                        tree_math::common_ancestor(sender_tree_idx, my_tree_idx, num_leaves);
 
                     Ok((UpdateSecret::default(), common_ancestor))
-                },
+                }
                 _ => {
                     let (path_secret, common_ancestor) = self.tree.decrypt_direct_path_msg(
                         &handshake.path,
@@ -196,16 +214,16 @@ impl GroupState {
     fn set_new_path_secret(
         &mut self,
         new_path_secret: PathSecret,
-        leaf_idx: usize
+        leaf_idx: usize,
     ) -> Result<UpdateSecret> {
-        self
-            .tree
+        self.tree
             .propagate_new_path_secret(new_path_secret, leaf_idx)
             .map(Into::into)
     }
 
     fn increment_epoch(&mut self) -> Result<()> {
-        let new_epoch = self.epoch
+        let new_epoch = self
+            .epoch
             .checked_add(1)
             .ok_or(anyhow!("Cannot increment epoch past its maximum"))?;
         self.epoch = new_epoch;
@@ -214,10 +232,7 @@ impl GroupState {
     }
 
     /// Set the next generation of Group Epoch Secret.
-    fn update_epoch_secret(
-        &mut self,
-        update_secret: &UpdateSecret
-    ) -> Result<AppSecret> {
+    fn update_epoch_secret(&mut self, update_secret: &UpdateSecret) -> Result<AppSecret> {
         // let epoch_secret = hkdf::extract(&self.init_secret, update_secret.as_bytes());
         self.init_secret = hkdf::derive_secret(&update_secret.into(), b"init", self)?;
         let app_secret = hkdf::derive_secret(&update_secret.into(), b"app", self)?;

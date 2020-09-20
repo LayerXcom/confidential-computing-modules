@@ -5,20 +5,20 @@
 //! -> app_secret
 //! -> app_keychain
 
-use std::vec::Vec;
-use std::fmt;
 use super::{
-    SHA256_OUTPUT_LEN, hkdf,
     dh::{DhPrivateKey, DhPubKey},
+    hkdf,
     hmac::HmacKey,
-    CryptoRng,
+    CryptoRng, SHA256_OUTPUT_LEN,
 };
 use crate::handshake::AccessKey;
-use frame_common::crypto::{sgx_rand_assign, ExportPathSecret, SEALED_DATA_SIZE, EXPORT_ID_SIZE};
-use anyhow::{Result, anyhow};
-use codec::{Encode, Decode, Input};
+use anyhow::{anyhow, Result};
+use codec::{Decode, Encode, Input};
+use frame_common::crypto::{sgx_rand_assign, ExportPathSecret, EXPORT_ID_SIZE, SEALED_DATA_SIZE};
 use sgx_tseal::SgxSealedData;
 use sgx_types::sgx_sealed_data_t;
+use std::fmt;
+use std::vec::Vec;
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);
@@ -125,7 +125,6 @@ impl From<&[u8]> for NodeSecret {
     }
 }
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct PathSecret(HmacKey);
 
@@ -164,7 +163,12 @@ impl PathSecret {
         let node_secret = NodeSecret::from(node_secret_buf);
         let parent_path_secret = PathSecret::from(path_secret_buf);
 
-        Ok((node_public_key, node_private_key, node_secret, parent_path_secret))
+        Ok((
+            node_public_key,
+            node_private_key,
+            node_secret,
+            parent_path_secret,
+        ))
     }
 
     pub fn new_from_random_sgx() -> PathSecret {
@@ -250,7 +254,9 @@ impl<'a> SealedPathSecret<'a> {
     }
 
     pub fn unseal(&self) -> Result<UnsealedPathSecret> {
-        let unsealed_data = self.0.unseal_data()
+        let unsealed_data = self
+            .0
+            .unseal_data()
             .map_err(|e| anyhow!("error: {:?}", e))?;
 
         Ok(*unsealed_data.get_decrypt_txt())
@@ -261,7 +267,10 @@ impl Encode for SealedPathSecret<'_> {
     fn encode(&self) -> Vec<u8> {
         let mut res = vec![0u8; SEALED_DATA_SIZE];
         unsafe {
-            self.0.to_raw_sealed_data_t(res.as_mut_ptr() as *mut sgx_sealed_data_t, SEALED_DATA_SIZE as u32);
+            self.0.to_raw_sealed_data_t(
+                res.as_mut_ptr() as *mut sgx_sealed_data_t,
+                SEALED_DATA_SIZE as u32,
+            );
         }
 
         res
@@ -273,7 +282,10 @@ impl Decode for SealedPathSecret<'_> {
         let mut buf = [0u8; SEALED_DATA_SIZE];
         value.read(&mut buf)?;
         let sealed_data = unsafe {
-            SgxSealedData::<UnsealedPathSecret>::from_raw_sealed_data_t(buf.as_mut_ptr() as *mut sgx_sealed_data_t,  SEALED_DATA_SIZE as u32)
+            SgxSealedData::<UnsealedPathSecret>::from_raw_sealed_data_t(
+                buf.as_mut_ptr() as *mut sgx_sealed_data_t,
+                SEALED_DATA_SIZE as u32,
+            )
         }
         .expect("Failed decoding to SgxSealedData");
 
@@ -283,27 +295,27 @@ impl Decode for SealedPathSecret<'_> {
 
 impl fmt::Debug for SealedPathSecret<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("SealedPathSecret")
-         .finish()
+        f.debug_struct("SealedPathSecret").finish()
     }
 }
 
 #[cfg(debug_assertions)]
 pub(crate) mod tests {
     use super::*;
-    use test_utils::*;
     use std::string::String;
+    use test_utils::*;
 
     pub(crate) fn run_tests() -> bool {
-        run_tests!(
-            test_seal_unseal_path_secret,
-        )
+        run_tests!(test_seal_unseal_path_secret,)
     }
 
     fn test_seal_unseal_path_secret() {
         let path_secret = PathSecret::new_from_random_sgx();
-        let encoded_sealed_path_secret = UnsealedPathSecret::from(path_secret.clone()).encoded_seal().unwrap();
-        let sealed_path_secret = SealedPathSecret::decode(&mut &encoded_sealed_path_secret[..]).unwrap();
+        let encoded_sealed_path_secret = UnsealedPathSecret::from(path_secret.clone())
+            .encoded_seal()
+            .unwrap();
+        let sealed_path_secret =
+            SealedPathSecret::decode(&mut &encoded_sealed_path_secret[..]).unwrap();
         let unsealed_path_secret = sealed_path_secret.unseal().unwrap();
         assert_eq!(path_secret, unsealed_path_secret.into());
     }

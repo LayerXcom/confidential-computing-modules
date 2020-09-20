@@ -1,6 +1,6 @@
+use anyhow::anyhow;
 use std::io;
 use thiserror::Error;
-use anyhow::anyhow;
 
 pub type Result<T> = std::result::Result<T, EnclaveError>;
 

@@ -1,21 +1,18 @@
 //! Implementation of file disk operations to store keyfiles.
 
-use std::{
-    path::{PathBuf, Path},
-    fs,
-    io::{Write, BufReader},
-    collections::BTreeMap,
-};
-use rand::{
-    Rng,
-    distributions::Alphanumeric,
+use crate::{
+    constants::*,
+    error::{Result, WalletError},
+    keyfile::{IndexFile, KeyFile},
+    DirOperations,
 };
 use chrono::Utc;
-use crate::{
-    error::{Result, WalletError},
-    keyfile::{KeyFile, IndexFile},
-    constants::*,
-    DirOperations,
+use rand::{distributions::Alphanumeric, Rng};
+use std::{
+    collections::BTreeMap,
+    fs,
+    io::{BufReader, Write},
+    path::{Path, PathBuf},
 };
 
 /// Root directory of wallet
@@ -85,7 +82,7 @@ impl WalletDirectory {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct KeystoreDirectory(pub PathBuf);
 
-impl DirOperations for KeystoreDirectory{
+impl DirOperations for KeystoreDirectory {
     fn insert<R: Rng>(&self, keyfile: &mut KeyFile, rng: &mut R) -> Result<()> {
         let filename = get_unique_filename(&self.0, rng)?;
         let keyfile_path = self.0.join(filename.as_str());
@@ -93,11 +90,11 @@ impl DirOperations for KeystoreDirectory{
     }
 
     fn load_all(&self) -> Result<Vec<KeyFile>> {
-        Ok(self.get_all_keyfiles()?
+        Ok(self
+            .get_all_keyfiles()?
             .into_iter()
             .map(|(_, keyfile)| keyfile)
-            .collect()
-        )
+            .collect())
     }
 
     fn load(&self, keyfile_name: &str) -> Result<KeyFile> {
@@ -105,13 +102,14 @@ impl DirOperations for KeystoreDirectory{
     }
 
     fn remove(&self, keyfile: &mut KeyFile) -> Result<()> {
-        let removed_file = self.get_all_keyfiles()?
+        let removed_file = self
+            .get_all_keyfiles()?
             .into_iter()
             .find(|(_, file)| file.base64_address == keyfile.base64_address);
 
         match removed_file {
             None => Err(WalletError::InvalidKeyfile),
-            Some((path, _)) => fs::remove_file(path).map_err(From::from)
+            Some((path, _)) => fs::remove_file(path).map_err(From::from),
         }
     }
 }
@@ -126,9 +124,7 @@ impl KeystoreDirectory {
 
     fn from_path<P: AsRef<Path>>(path: P) -> Option<Self> {
         if path.as_ref().to_path_buf().exists() {
-            Some(
-                KeystoreDirectory(path.as_ref().to_path_buf())
-            )
+            Some(KeystoreDirectory(path.as_ref().to_path_buf()))
         } else {
             None
         }
@@ -147,17 +143,15 @@ impl KeystoreDirectory {
         Ok(fs::read_dir(&self.0)?
             .flat_map(|entry| {
                 let path = entry?.path();
-                fs::File::open(path.clone())
-                    .map(|file| {
-                        let reader = BufReader::new(file);
-                        let keyfile = serde_json::from_reader(reader)
-                            .expect("Should deserialize from json file.");
+                fs::File::open(path.clone()).map(|file| {
+                    let reader = BufReader::new(file);
+                    let keyfile = serde_json::from_reader(reader)
+                        .expect("Should deserialize from json file.");
 
-                        (path, keyfile)
-                    })
+                    (path, keyfile)
+                })
             })
-            .collect()
-        )
+            .collect())
     }
 }
 
@@ -233,11 +227,7 @@ pub fn replace_file(path: &Path) -> Result<fs::File> {
 }
 
 /// Get a unique filename by appending random suffix.
-pub fn get_unique_filename<R: Rng>(
-    directory_path: &Path,
-    rng: &mut R
-) -> Result<String>
-{
+pub fn get_unique_filename<R: Rng>(directory_path: &Path, rng: &mut R) -> Result<String> {
     let mut filename = Utc::now().format("%Y-%m-%dT%H-%M-%S").to_string();
     let mut path = directory_path.join(filename.as_str());
 

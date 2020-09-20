@@ -5,11 +5,11 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
+pub mod context;
 mod crypto;
 mod error;
-pub mod kvs;
-pub mod context;
 mod group_key;
-pub mod notify;
 pub mod instructions;
+pub mod kvs;
+pub mod notify;
 pub mod workflow;

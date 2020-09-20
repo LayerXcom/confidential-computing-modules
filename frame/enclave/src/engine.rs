@@ -1,9 +1,6 @@
-use codec::{Encode, Decode};
-use frame_common::{
-    EcallInput, EcallOutput,
-    state_types::StateType,
-};
-use frame_runtime::{RuntimeExecutor, ContextOps};
+use codec::{Decode, Encode};
+use frame_common::{state_types::StateType, EcallInput, EcallOutput};
+use frame_runtime::{ContextOps, RuntimeExecutor};
 
 pub trait EnclaveEngine {
     type EI: EcallInput + Decode;
@@ -19,6 +16,6 @@ pub trait EnclaveEngine {
         max_mem_size: usize,
     ) -> anyhow::Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S=StateType>,
-        C: ContextOps<S=StateType> + Clone;
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone;
 }

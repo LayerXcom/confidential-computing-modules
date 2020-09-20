@@ -1,12 +1,12 @@
-use std::fs;
-use std::path::{PathBuf, Path};
-use std::io::{Write, BufReader};
-use std::str;
-use frame_common::crypto::ExportPathSecret;
-use crate::PJ_ROOT_DIR;
 use crate::error::Result;
+use crate::PJ_ROOT_DIR;
+use frame_common::crypto::ExportPathSecret;
+use std::fs;
+use std::io::{BufReader, Write};
+use std::path::{Path, PathBuf};
+use std::str;
 
-const PATH_SECRETS_DIR: &str = "pathsecrets";
+const PATH_SECRETS_DIR: &str = ".anonify/pathsecrets";
 
 #[derive(Debug, Clone)]
 pub struct StorePathSecrets {

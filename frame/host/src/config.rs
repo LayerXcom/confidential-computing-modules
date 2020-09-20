@@ -2,7 +2,6 @@ pub const ENCLAVE_DIR: &'static str = ".anonify";
 pub const ENCLAVE_TOKEN: &'static str = "enclave.token";
 pub const ENCLAVE_FILE: &'static str = "enclave.signed.so";
 
-
 #[derive(Debug, Clone)]
 pub struct Config {
     tee_kind: TEEKind,
@@ -11,7 +10,10 @@ pub struct Config {
 
 impl Config {
     pub fn new(tee_kind: TEEKind, output_kind: OutputKind) -> Self {
-        Config { tee_kind, output_kind }
+        Config {
+            tee_kind,
+            output_kind,
+        }
     }
 }
 

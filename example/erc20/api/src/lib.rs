@@ -1,12 +1,14 @@
-use std::fmt;
-use serde::{Deserialize, Serialize};
-use serde_big_array::big_array;
-use rand::Rng;
-use ed25519_dalek::{Keypair, Signature, PublicKey, SignatureError, SIGNATURE_LENGTH, PUBLIC_KEY_LENGTH};
+use ed25519_dalek::{
+    Keypair, PublicKey, Signature, SignatureError, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH,
+};
 use frame_common::{
-    crypto::{Ed25519ChallengeResponse, AccountId},
+    crypto::{AccountId, Ed25519ChallengeResponse},
     traits::State,
 };
+use rand::Rng;
+use serde::{Deserialize, Serialize};
+use serde_big_array::big_array;
+use std::fmt;
 use web3::types::TransactionReceipt;
 
 // ----------------------
@@ -52,11 +54,7 @@ pub mod init_state {
         }
 
         impl Request {
-            pub fn new<R: Rng>(
-                keypair: &Keypair,
-                total_supply: u64,
-                rng: &mut R
-            ) -> Self {
+            pub fn new<R: Rng>(keypair: &Keypair, total_supply: u64, rng: &mut R) -> Self {
                 let challenge: [u8; 32] = rng.gen();
                 let sig = keypair.sign(&challenge[..]);
                 assert!(keypair.verify(&challenge, &sig).is_ok());
@@ -82,7 +80,10 @@ pub mod init_state {
                 write!(
                     f,
                     "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, total_supply: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.total_supply
+                    &self.sig[..],
+                    self.pubkey,
+                    self.challenge,
+                    self.total_supply
                 )
             }
         }
@@ -342,11 +343,7 @@ pub mod burn {
         }
 
         impl Request {
-            pub fn new<R: Rng>(
-                keypair: &Keypair,
-                amount: u64,
-                rng: &mut R,
-            ) -> Self {
+            pub fn new<R: Rng>(keypair: &Keypair, amount: u64, rng: &mut R) -> Self {
                 let challenge: [u8; 32] = rng.gen();
                 let sig = keypair.sign(&challenge[..]);
                 assert!(keypair.verify(&challenge, &sig).is_ok());
@@ -372,7 +369,10 @@ pub mod burn {
                 write!(
                     f,
                     "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, amount: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.amount
+                    &self.sig[..],
+                    self.pubkey,
+                    self.challenge,
+                    self.amount
                 )
             }
         }
@@ -406,11 +406,7 @@ pub mod allowance {
         }
 
         impl Request {
-            pub fn new<R: Rng>(
-                keypair: &Keypair,
-                spender: AccountId,
-                rng: &mut R
-            ) -> Self {
+            pub fn new<R: Rng>(keypair: &Keypair, spender: AccountId, rng: &mut R) -> Self {
                 let challenge: [u8; 32] = rng.gen();
                 let sig = keypair.sign(&challenge[..]);
                 assert!(keypair.verify(&challenge, &sig).is_ok());
@@ -436,7 +432,10 @@ pub mod allowance {
                 write!(
                     f,
                     "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, spender: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.spender
+                    &self.sig[..],
+                    self.pubkey,
+                    self.challenge,
+                    self.spender
                 )
             }
         }
@@ -460,10 +459,7 @@ pub mod state {
         }
 
         impl Request {
-            pub fn new<R: Rng>(
-                keypair: &Keypair,
-                rng: &mut R
-            ) -> Self {
+            pub fn new<R: Rng>(keypair: &Keypair, rng: &mut R) -> Self {
                 let challenge: [u8; 32] = rng.gen();
                 let sig = keypair.sign(&challenge[..]);
                 assert!(keypair.verify(&challenge, &sig).is_ok());
@@ -488,7 +484,9 @@ pub mod state {
                 write!(
                     f,
                     "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge
+                    &self.sig[..],
+                    self.pubkey,
+                    self.challenge
                 )
             }
         }
@@ -529,10 +527,7 @@ pub mod register_notification {
         }
 
         impl Request {
-            pub fn new<R: Rng>(
-                keypair: &Keypair,
-                rng: &mut R
-            ) -> Self {
+            pub fn new<R: Rng>(keypair: &Keypair, rng: &mut R) -> Self {
                 let challenge: [u8; 32] = rng.gen();
                 let sig = keypair.sign(&challenge[..]);
                 assert!(keypair.verify(&challenge, &sig).is_ok());

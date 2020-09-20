@@ -38,7 +38,7 @@ impl Term {
         &mut self,
         prompt: &str,
         confirmation: &str,
-        mismatch_err: &str
+        mismatch_err: &str,
     ) -> io::Result<Vec<u8>> {
         dialoguer::PasswordInput::new()
             .with_prompt(prompt)
@@ -47,23 +47,15 @@ impl Term {
             .map(|e| e.into_bytes())
     }
 
-    pub fn password(
-        &mut self,
-        prompt: &str,
-    ) -> io::Result<Vec<u8>> {
+    pub fn password(&mut self, prompt: &str) -> io::Result<Vec<u8>> {
         dialoguer::PasswordInput::new()
             .with_prompt(prompt)
             .interact()
             .map(|e| e.into_bytes())
     }
 
-    pub fn account_name(
-        &mut self,
-        prompt: &str,
-    ) -> io::Result<String> {
-        dialoguer::Input::new()
-            .with_prompt(prompt)
-            .interact()
+    pub fn account_name(&mut self, prompt: &str) -> io::Result<String> {
+        dialoguer::Input::new().with_prompt(prompt).interact()
     }
 
     pub fn simply(&mut self, msg: &str) -> io::Result<()> {
@@ -100,7 +92,8 @@ impl Term {
                 &mut self.term,
                 "  |-> {}",
                 self.style.warning.apply_to(formated)
-            ).unwrap();
+            )
+            .unwrap();
         }
 
         ::std::process::exit(1)

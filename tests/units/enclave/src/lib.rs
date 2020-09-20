@@ -4,14 +4,12 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
-use test_utils::*;
 use std::prelude::v1::*;
+use test_utils::*;
 
 #[no_mangle]
 pub fn ecall_run_tests() {
-    let ret = check_all_passed!(
-        frame_treekem::tests::run_tests(),
-    );
+    let ret = check_all_passed!(frame_treekem::tests::run_tests(),);
 
     assert!(ret);
 }

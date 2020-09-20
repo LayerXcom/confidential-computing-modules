@@ -1,15 +1,15 @@
-use std::{
-    prelude::v1::*,
-    collections::HashMap,
-    sync::{SgxRwLock, Arc},
-};
+use crate::error::Result;
 use ed25519_dalek::{PublicKey, Signature};
 use frame_common::{
-    kvs::*,
     crypto::AccountId,
-    state_types::{MemId, UpdatedState, StateType},
+    kvs::*,
+    state_types::{MemId, StateType, UpdatedState},
 };
-use crate::error::Result;
+use std::{
+    collections::HashMap,
+    prelude::v1::*,
+    sync::{Arc, SgxRwLock},
+};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub struct DBKey((AccountId, MemId));
@@ -67,21 +67,12 @@ impl EnclaveDBTx {
     }
 
     /// Put instruction is added to a transaction only if the verification of provided signature returns true.
-    pub fn put(
-        &mut self,
-        account_id: &AccountId,
-        msg: &[u8],
-    ) {
+    pub fn put(&mut self, account_id: &AccountId, msg: &[u8]) {
         self.0.put(account_id.as_bytes(), msg);
     }
 
     /// Delete instruction is added to a transaction only if the verification of provided signature returns true.
-    pub fn delete(
-        &mut self,
-        msg: &[u8],
-        sig: &Signature,
-        pubkey: &PublicKey,
-    ) -> Result<()> {
+    pub fn delete(&mut self, msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Result<()> {
         let key = AccountId::from_sig(&msg, &sig, &pubkey)?;
         self.0.delete(key.as_bytes());
 

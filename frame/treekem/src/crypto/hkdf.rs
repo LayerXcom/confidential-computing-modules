@@ -1,7 +1,7 @@
 use super::{
-    hmac::HmacKey,
+    ecies::{AES_256_GCM_KEY_SIZE, AES_256_GCM_NONCE_SIZE},
     hash::hash_encodable,
-    ecies::{AES_256_GCM_NONCE_SIZE, AES_256_GCM_KEY_SIZE},
+    hmac::HmacKey,
     SHA256_OUTPUT_LEN,
 };
 use anyhow::Result;

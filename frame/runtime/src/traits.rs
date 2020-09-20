@@ -1,19 +1,17 @@
 use crate::local_anyhow::Result;
 use crate::localstd::{
     fmt::Debug,
-    vec::Vec,
-    sync::{SgxRwLockReadGuard, SgxRwLockWriteGuard},
     string::String,
+    sync::{SgxRwLockReadGuard, SgxRwLockWriteGuard},
+    vec::Vec,
 };
+use codec::{Decode, Encode};
 use frame_common::{
     crypto::{AccountId, Ciphertext, ExportPathSecret},
+    state_types::{MemId, UpdatedState},
     traits::*,
-    state_types::{UpdatedState, MemId},
 };
-use codec::{Encode, Decode};
-use frame_treekem::{
-    handshake::{PathSecretSource, HandshakeParams}
-};
+use frame_treekem::handshake::{HandshakeParams, PathSecretSource};
 
 /// Execute state transition functions from runtime
 pub trait RuntimeExecutor<G: ContextOps>: Sized {
@@ -21,7 +19,8 @@ pub trait RuntimeExecutor<G: ContextOps>: Sized {
     type S: State;
 
     fn new(db: G) -> Self;
-    fn execute(self, kind: Self::C, my_account_id: AccountId) -> Result<Vec<UpdatedState<Self::S>>>;
+    fn execute(self, kind: Self::C, my_account_id: AccountId)
+        -> Result<Vec<UpdatedState<Self::S>>>;
 }
 
 /// Execute state transition functions from call kind
@@ -30,7 +29,11 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     type S: State;
 
     fn new(id: u32, state: &mut [u8]) -> Result<Self>;
-    fn execute(self, runtime: Self::R, my_account_id: AccountId) -> Result<Vec<UpdatedState<Self::S>>>;
+    fn execute(
+        self,
+        runtime: Self::R,
+        my_account_id: AccountId,
+    ) -> Result<Vec<UpdatedState<Self::S>>>;
 }
 
 impl<T: StateOps + GroupKeyGetter + NotificationOps + Signer + QuoteGetter> ContextOps for T {}
@@ -50,7 +53,7 @@ pub trait StateOps {
     /// Returns a updated state of registered account_id in notification.
     fn update_state(
         &self,
-        state_iter: impl Iterator<Item=UpdatedState<Self::S>> + Clone
+        state_iter: impl Iterator<Item = UpdatedState<Self::S>> + Clone,
     ) -> Option<UpdatedState<Self::S>>;
 }
 
@@ -73,18 +76,11 @@ pub trait Signer {
 }
 
 pub trait GroupKeyOps: Sized {
-    fn new(
-        my_roster_idx: usize,
-        max_roster_idx: usize,
-        source: PathSecretSource,
-    ) -> Result<Self>;
+    fn new(my_roster_idx: usize, max_roster_idx: usize, source: PathSecretSource) -> Result<Self>;
 
     fn create_handshake(&self) -> Result<(HandshakeParams, ExportPathSecret)>;
 
-    fn process_handshake(
-        &mut self,
-        handshake: &HandshakeParams,
-    ) -> Result<()>;
+    fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()>;
 
     fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext>;
 

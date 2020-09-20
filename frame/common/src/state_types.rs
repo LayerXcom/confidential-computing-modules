@@ -1,8 +1,8 @@
-use crate::traits::State;
-use crate::localstd::vec::Vec;
-use crate::local_anyhow::{Result, anyhow};
 use crate::crypto::AccountId;
-use codec::{Encode, Decode};
+use crate::local_anyhow::{anyhow, Result};
+use crate::localstd::vec::Vec;
+use crate::traits::State;
+use codec::{Decode, Encode};
 
 pub trait RawState: Encode + Decode + Clone + Default {}
 
@@ -65,8 +65,7 @@ impl<S: State> UpdatedState<S> {
     }
 
     pub fn from_state_type(update: UpdatedState<StateType>) -> Result<Self> {
-        let state = S::decode(&mut &update.state.as_bytes()[..])
-            .map_err(|e| anyhow!("{:?}", e))?;
+        let state = S::decode(&mut &update.state.as_bytes()[..]).map_err(|e| anyhow!("{:?}", e))?;
 
         Ok(UpdatedState {
             account_id: update.account_id,

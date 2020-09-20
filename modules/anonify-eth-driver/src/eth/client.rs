@@ -1,14 +1,4 @@
-use std::{
-    path::Path,
-    sync::Arc,
-};
-use sgx_types::sgx_enclave_id_t;
-use anonify_io_types::*;
-use frame_common::{
-    traits::*,
-    state_types::UpdatedState,
-};
-use web3::types::{Address, TransactionReceipt};
+use super::primitives::{Web3Contract, Web3Http};
 use crate::{
     error::Result,
     eventdb::{BlockNumDB, InnerEnclaveLog},
@@ -16,7 +6,11 @@ use crate::{
     utils::*,
     workflow::*,
 };
-use super::primitives::{Web3Http, Web3Contract};
+use anonify_io_types::*;
+use frame_common::{state_types::UpdatedState, traits::*};
+use sgx_types::sgx_enclave_id_t;
+use std::{path::Path, sync::Arc};
+use web3::types::{Address, TransactionReceipt};
 
 /// Components needed to deploy a contract
 #[derive(Debug)]
@@ -48,7 +42,9 @@ impl Deployer for EthDeployer {
         abi_path: P,
         bin_path: P,
     ) -> Result<String> {
-        let contract_addr = self.web3_conn.deploy(host_output, confirmations, abi_path, bin_path)?;
+        let contract_addr =
+            self.web3_conn
+                .deploy(host_output, confirmations, abi_path, bin_path)?;
         self.address = Some(contract_addr);
 
         Ok(hex::encode(contract_addr.as_bytes()))
@@ -56,11 +52,15 @@ impl Deployer for EthDeployer {
 
     // TODO: generalize, remove abi.
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind> {
-        let addr = self.address.expect("The contract hasn't be deployed yet.").to_string();
+        let addr = self
+            .address
+            .expect("The contract hasn't be deployed yet.")
+            .to_string();
         let contract_info = ContractInfo::new(abi_path, &addr);
-        Ok(ContractKind::Web3Contract(
-            Web3Contract::new(self.web3_conn, contract_info)?
-        ))
+        Ok(ContractKind::Web3Contract(Web3Contract::new(
+            self.web3_conn,
+            contract_info,
+        )?))
     }
 
     fn get_enclave_id(&self) -> sgx_enclave_id_t {
@@ -88,20 +88,18 @@ impl Sender for EthSender {
         let web3_http = Web3Http::new(node_url)?;
         let contract = Web3Contract::new(web3_http, contract_info)?;
 
-        Ok(EthSender { enclave_id, contract })
+        Ok(EthSender {
+            enclave_id,
+            contract,
+        })
     }
 
-    fn from_contract(
-        enclave_id: sgx_enclave_id_t,
-        contract: ContractKind,
-    ) -> Self {
+    fn from_contract(enclave_id: sgx_enclave_id_t, contract: ContractKind) -> Self {
         match contract {
-            ContractKind::Web3Contract(contract) => {
-                EthSender {
-                    enclave_id,
-                    contract,
-                }
-            }
+            ContractKind::Web3Contract(contract) => EthSender {
+                enclave_id,
+                contract,
+            },
         }
     }
 
@@ -162,7 +160,8 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
         &self,
         eid: sgx_enclave_id_t,
     ) -> Result<Option<Vec<UpdatedState<S>>>> {
-        let enclave_updated_state = self.contract
+        let enclave_updated_state = self
+            .contract
             .get_event(self.event_db.clone(), self.contract.address())?
             .into_enclave_log()?
             .insert_enclave(eid)?

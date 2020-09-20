@@ -1,8 +1,8 @@
-use codec::{Encode, Decode};
-use sgx_types::{sgx_enclave_id_t, sgx_status_t};
-use frame_types::EnclaveStatus;
+use crate::error::{FrameHostError, Result};
+use codec::{Decode, Encode};
 use frame_common::{EcallInput, EcallOutput};
-use crate::error::{Result, FrameHostError};
+use frame_types::EnclaveStatus;
+use sgx_types::{sgx_enclave_id_t, sgx_status_t};
 
 extern "C" {
     fn ecall_entry_point(
@@ -66,14 +66,26 @@ impl EnclaveConnector {
         };
 
         if status != sgx_status_t::SGX_SUCCESS {
-            return Err(FrameHostError::SgxStatus { status, function: "ecall_entry_point", cmd }.into());
+            return Err(FrameHostError::SgxStatus {
+                status,
+                function: "ecall_entry_point",
+                cmd,
+            }
+            .into());
         }
         if ret.is_err() {
-            return Err(FrameHostError::EnclaveError { status: ret, function: "ecall_entry_point", cmd }.into());
+            return Err(FrameHostError::EnclaveError {
+                status: ret,
+                function: "ecall_entry_point",
+                cmd,
+            }
+            .into());
         }
         assert!(output_len < output_max);
 
-        unsafe { output_buf.set_len(output_len); }
+        unsafe {
+            output_buf.set_len(output_len);
+        }
 
         Ok(output_buf)
     }

@@ -1,15 +1,15 @@
-use std::vec::Vec;
 use crate::crypto::{
     dh::{DhPrivateKey, DhPubKey},
-    secrets::{PathSecret, NodeSecret},
     ecies::EciesCiphertext,
+    secrets::{NodeSecret, PathSecret},
 };
 use crate::{
-    tree_math,
     handshake::{DirectPathMsg, DirectPathNodeMsg},
+    tree_math,
 };
-use anyhow::{Result, anyhow, ensure};
+use anyhow::{anyhow, ensure, Result};
 use codec::Encode;
+use std::vec::Vec;
 
 #[derive(Clone, Debug, Encode)]
 pub struct RatchetTree {
@@ -56,22 +56,29 @@ impl RatchetTree {
             let (parent_public_key, _, _, grandparent_path_secret) =
                 parent_path_secret.clone().derive_node_values()?;
 
-                let mut encrypted_path_secrets = vec![];
-                let copath_node_idx = tree_math::node_sibling(path_node_idx, num_leaves);
-                for res_node in self.resolution(copath_node_idx).iter().map(|&i| &self.nodes[i]) {
-                    let others_pub_key = res_node
-                        .public_key()
-                        .ok_or(anyhow!("The resoluted node doesn't contain public key"))?;
+            let mut encrypted_path_secrets = vec![];
+            let copath_node_idx = tree_math::node_sibling(path_node_idx, num_leaves);
+            for res_node in self
+                .resolution(copath_node_idx)
+                .iter()
+                .map(|&i| &self.nodes[i])
+            {
+                let others_pub_key = res_node
+                    .public_key()
+                    .ok_or(anyhow!("The resoluted node doesn't contain public key"))?;
 
-                    let ciphertext = EciesCiphertext::encrypt(
-                        &others_pub_key,
-                        parent_path_secret.as_bytes().to_vec(), // TODO:
-                    )?;
-                    encrypted_path_secrets.push(ciphertext);
-                }
+                let ciphertext = EciesCiphertext::encrypt(
+                    &others_pub_key,
+                    parent_path_secret.as_bytes().to_vec(), // TODO:
+                )?;
+                encrypted_path_secrets.push(ciphertext);
+            }
 
-                node_msgs.push(DirectPathNodeMsg::new(parent_public_key.clone(), encrypted_path_secrets));
-                parent_path_secret = grandparent_path_secret;
+            node_msgs.push(DirectPathNodeMsg::new(
+                parent_public_key.clone(),
+                encrypted_path_secrets,
+            ));
+            parent_path_secret = grandparent_path_secret;
         }
 
         Ok(DirectPathMsg::new(node_msgs))
@@ -89,19 +96,22 @@ impl RatchetTree {
             "Leaf indices are out of range"
         );
         ensure!(
-            !tree_math::is_ancestor(others_leaf_idx, my_leaf_idx, num_leaves) &&
-                !tree_math::is_ancestor(my_leaf_idx, others_leaf_idx, num_leaves),
+            !tree_math::is_ancestor(others_leaf_idx, my_leaf_idx, num_leaves)
+                && !tree_math::is_ancestor(my_leaf_idx, others_leaf_idx, num_leaves),
             "Cannot decrypt messages from ancestors or descendants"
         );
 
         // An index of the intermediate node in the common direct path.
-        let common_ancestor_idx = tree_math::common_ancestor(others_leaf_idx, my_leaf_idx, num_leaves);
+        let common_ancestor_idx =
+            tree_math::common_ancestor(others_leaf_idx, my_leaf_idx, num_leaves);
         // A node message for me is a common ancestor.
         let node_msg = {
             let (pos_msg, _) = tree_math::node_extended_direct_path(others_leaf_idx, num_leaves)
                 .enumerate()
                 .find(|&(_, dp_idx)| dp_idx == common_ancestor_idx)
-                .ok_or(anyhow!("Common ancestor cannot be found in the direct path."))?;
+                .ok_or(anyhow!(
+                    "Common ancestor cannot be found in the direct path."
+                ))?;
             direct_path_msg
                 .node_msgs
                 .get(pos_msg)
@@ -121,12 +131,16 @@ impl RatchetTree {
         // Find the resolution of copath_common_ancestor_idx
         let resolution = self.resolution(copath_common_ancestor_idx);
         for (pos, idx) in resolution.into_iter().enumerate() {
-            let res_node = self.get(idx).ok_or(anyhow!("resolution index is out of range"))?;
-            if res_node.private_key().is_some() &&
-                tree_math::is_ancestor(idx, my_leaf_idx, num_leaves)
+            let res_node = self
+                .get(idx)
+                .ok_or(anyhow!("resolution index is out of range"))?;
+            if res_node.private_key().is_some()
+                && tree_math::is_ancestor(idx, my_leaf_idx, num_leaves)
             {
                 let decryption_key = res_node.private_key().unwrap();
-                let plaintext = node_msg.node_secrets.get(pos)
+                let plaintext = node_msg
+                    .node_secrets
+                    .get(pos)
                     .ok_or(anyhow!("Invalid direct path message"))?
                     .clone()
                     .decrypt(&decryption_key)?;
@@ -143,11 +157,11 @@ impl RatchetTree {
         match self.nodes.is_empty() {
             true => {
                 self.nodes.push(node);
-            },
+            }
             false => {
                 self.nodes.push(RatchetTreeNode::Blank);
                 self.nodes.push(node);
-            },
+            }
         }
     }
 
@@ -170,10 +184,9 @@ impl RatchetTree {
         let mut current_node_idx = leaf_idx;
 
         let root_node_secret = loop {
-            let current_node = self.get_mut(current_node_idx)
-                .expect("Invalid node index.");
-            let (node_pubkey, node_privkey, node_secret, parent_path_secret)
-                = path_secret.derive_node_values()?;
+            let current_node = self.get_mut(current_node_idx).expect("Invalid node index.");
+            let (node_pubkey, node_privkey, node_secret, parent_path_secret) =
+                path_secret.derive_node_values()?;
 
             current_node.update_pub_key(node_pubkey);
             current_node.update_priv_key(node_privkey);
@@ -194,8 +207,9 @@ impl RatchetTree {
     }
 
     pub fn set_single_public_key(&mut self, tree_idx: usize, pubkey: DhPubKey) -> Result<()> {
-        let node = self.get_mut(tree_idx)
-            .ok_or(anyhow!("Invalid tree index. Cannot set a public key to ratchet tree by add operation"))?;
+        let node = self.get_mut(tree_idx).ok_or(anyhow!(
+            "Invalid tree index. Cannot set a public key to ratchet tree by add operation"
+        ))?;
         node.update_pub_key(pubkey);
 
         Ok(())
@@ -209,7 +223,7 @@ impl RatchetTree {
         mut public_keys: I,
     ) -> Result<()>
     where
-        I: Iterator<Item = &'a DhPubKey>
+        I: Iterator<Item = &'a DhPubKey>,
     {
         let num_leaves = tree_math::num_leaves_in_tree(self.size());
         // direct path including a root
@@ -223,7 +237,8 @@ impl RatchetTree {
             if path_node_idx == stop_idx {
                 break;
             } else {
-                let node = self.get_mut(path_node_idx)
+                let node = self
+                    .get_mut(path_node_idx)
                     .ok_or(anyhow!("Direct path node is out of range"))?;
                 node.update_pub_key(pubkey.clone());
             }
@@ -321,18 +336,16 @@ impl RatchetTreeNode {
                 };
             }
             RatchetTreeNode::Filled {
-                ref mut public_key,
-                ..
+                ref mut public_key, ..
             } => *public_key = new_pub_key,
         }
     }
 
-     pub fn private_key(&self) -> Option<&DhPrivateKey> {
+    pub fn private_key(&self) -> Option<&DhPrivateKey> {
         match self {
             RatchetTreeNode::Blank => None,
             RatchetTreeNode::Filled {
-                ref private_key,
-                ..
+                ref private_key, ..
             } => private_key.as_ref(),
         }
     }
@@ -340,10 +353,7 @@ impl RatchetTreeNode {
     pub fn public_key(&self) -> Option<&DhPubKey> {
         match self {
             RatchetTreeNode::Blank => None,
-            RatchetTreeNode::Filled {
-                ref public_key,
-                ..
-            } => Some(public_key),
+            RatchetTreeNode::Filled { ref public_key, .. } => Some(public_key),
         }
     }
 }

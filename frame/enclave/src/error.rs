@@ -1,6 +1,6 @@
+use frame_types::UntrustedStatus;
 use std::io;
 use thiserror::Error;
-use frame_types::UntrustedStatus;
 
 pub type Result<T> = std::result::Result<T, FrameEnclaveError>;
 

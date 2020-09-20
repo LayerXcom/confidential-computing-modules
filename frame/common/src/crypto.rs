@@ -1,45 +1,68 @@
-use crate::localstd::{
-    io::{self, Read, Write},
-    vec::Vec,
-    string::String,
-    convert::TryFrom,
-};
-use crate::serde::{Serialize, Deserialize};
 use crate::local_anyhow::{anyhow, Error};
-use crate::traits::{IntoVec, Hash256, AccessPolicy};
-use ed25519_dalek::{Keypair, SecretKey, PublicKey, Signature, SECRET_KEY_LENGTH, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH};
-use codec::{Encode, Decode, Input, self};
+use crate::localstd::{
+    convert::TryFrom,
+    io::{self, Read, Write},
+    string::String,
+    vec::Vec,
+};
+use crate::serde::{Deserialize, Serialize};
+use crate::traits::{AccessPolicy, Hash256, IntoVec};
+use codec::{self, Decode, Encode, Input};
+use ed25519_dalek::{
+    Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
+    SIGNATURE_LENGTH,
+};
 #[cfg(feature = "std")]
 use rand::Rng;
 #[cfg(feature = "std")]
-use rand_core::{RngCore, CryptoRng};
+use rand_core::{CryptoRng, RngCore};
 #[cfg(feature = "std")]
 use rand_os::OsRng;
 
 const ACCOUNT_ID_SIZE: usize = 20;
-pub const COMMON_SECRET: [u8; SECRET_KEY_LENGTH] = [182, 93, 72, 157, 114, 225, 213, 95, 237, 176, 179, 23, 11, 100, 177, 16, 129, 8, 41, 4, 158, 209, 227, 21, 89, 47, 118, 0, 232, 162, 217, 203];
-pub const COMMON_CHALLENGE: [u8; CHALLENGE_SIZE] = [39, 79, 228, 49, 240, 219, 135, 53, 169, 47, 65, 111, 236, 125, 2, 195, 214, 154, 18, 77, 254, 135, 35, 77, 36, 45, 164, 254, 64, 8, 169, 238];
+pub const COMMON_SECRET: [u8; SECRET_KEY_LENGTH] = [
+    182, 93, 72, 157, 114, 225, 213, 95, 237, 176, 179, 23, 11, 100, 177, 16, 129, 8, 41, 4, 158,
+    209, 227, 21, 89, 47, 118, 0, 232, 162, 217, 203,
+];
+pub const COMMON_CHALLENGE: [u8; CHALLENGE_SIZE] = [
+    39, 79, 228, 49, 240, 219, 135, 53, 169, 47, 65, 111, 236, 125, 2, 195, 214, 154, 18, 77, 254,
+    135, 35, 77, 36, 45, 164, 254, 64, 8, 169, 238,
+];
 
 lazy_static! {
     pub static ref COMMON_ACCESS_POLICY: Ed25519ChallengeResponse = {
         let secret = SecretKey::from_bytes(&COMMON_SECRET).unwrap();
         let pubkey = PublicKey::from(&secret);
-        let keypair = Keypair { secret, public: pubkey };
+        let keypair = Keypair {
+            secret,
+            public: pubkey,
+        };
 
         let sig = keypair.sign(&COMMON_CHALLENGE);
 
         assert!(keypair.verify(&COMMON_CHALLENGE, &sig).is_ok());
         Ed25519ChallengeResponse::new(sig, keypair.public, COMMON_CHALLENGE)
     };
-
-    pub static ref OWNER_ACCOUNT_ID: AccountId = {
-        COMMON_ACCESS_POLICY.account_id()
-    };
+    pub static ref OWNER_ACCOUNT_ID: AccountId = { COMMON_ACCESS_POLICY.account_id() };
 }
 
 /// User account_id represents last 20 bytes of digest of user's public key.
 /// A signature verification must return true to generate a user account_id.
-#[derive(Encode, Decode, Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Encode,
+    Decode,
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+)]
 #[serde(crate = "crate::serde")]
 pub struct AccountId([u8; ACCOUNT_ID_SIZE]);
 
@@ -94,8 +117,7 @@ impl TryFrom<Vec<u8>> for AccountId {
 impl AccountId {
     /// Get a user account_id only if the verification of signature returns true.
     pub fn from_sig(msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Result<Self, Error> {
-        pubkey.verify(msg, &sig)
-            .map_err(|e| anyhow!("{}", e))?;
+        pubkey.verify(msg, &sig).map_err(|e| anyhow!("{}", e))?;
 
         Ok(Self::from_pubkey(&pubkey))
     }
@@ -162,8 +184,7 @@ impl AccountId {
 #[cfg(feature = "sgx")]
 pub fn sgx_rand_assign(rand: &mut [u8]) -> Result<(), Error> {
     use sgx_trts::trts::rsgx_read_rand;
-    rsgx_read_rand(rand)
-        .map_err(|e| anyhow!("error rsgx_read_rand: {:?}", e))?;
+    rsgx_read_rand(rand).map_err(|e| anyhow!("error rsgx_read_rand: {:?}", e))?;
     Ok(())
 }
 
@@ -251,7 +272,7 @@ impl Decode for Ed25519ChallengeResponse {
         let pubkey = PublicKey::from_bytes(&pubkey_buf)
             .expect("Failed to decode pubkey of Ed25519ChallengeResponse");
 
-        Ok(Ed25519ChallengeResponse{
+        Ok(Ed25519ChallengeResponse {
             sig,
             pubkey,
             challenge: chal_buf,
@@ -281,11 +302,13 @@ impl Ed25519ChallengeResponse {
     pub fn new_from_rng() -> Result<Self, Error> {
         let mut seed = [0u8; SECRET_KEY_LENGTH];
         sgx_rand_assign(&mut seed)?;
-        let secret = SecretKey::from_bytes(&seed)
-            .expect("invalid secret key length");
+        let secret = SecretKey::from_bytes(&seed).expect("invalid secret key length");
 
         let pubkey = PublicKey::from(&secret);
-        let keypair = Keypair { secret, public: pubkey };
+        let keypair = Keypair {
+            secret,
+            public: pubkey,
+        };
 
         let mut challenge = [0u8; CHALLENGE_SIZE];
         sgx_rand_assign(&mut challenge)?;
@@ -296,11 +319,7 @@ impl Ed25519ChallengeResponse {
         Ok(Self::new(sig, keypair.public, challenge))
     }
 
-    pub fn new(
-        sig: Signature,
-        pubkey: PublicKey,
-        challenge: [u8; 32],
-    ) -> Self {
+    pub fn new(sig: Signature, pubkey: PublicKey, challenge: [u8; 32]) -> Self {
         assert!(pubkey.verify(&challenge, &sig).is_ok());
 
         Ed25519ChallengeResponse {
@@ -311,7 +330,8 @@ impl Ed25519ChallengeResponse {
     }
 
     pub fn verify_sig(&self) -> Result<(), Error> {
-        self.pubkey.verify(&self.challenge, &self.sig)
+        self.pubkey
+            .verify(&self.challenge, &self.sig)
             .map_err(|e| anyhow!("{:?}", e))?;
 
         Ok(())
@@ -357,7 +377,6 @@ impl<T: IntoVec> IntoVec for &[T] {
     }
 }
 
-
 /// Application message broadcasted to other members.
 #[derive(Clone, Debug, Encode, Decode)]
 pub struct Ciphertext {
@@ -369,7 +388,12 @@ pub struct Ciphertext {
 
 impl Ciphertext {
     pub fn new(generation: u32, epoch: u32, roster_idx: u32, encrypted_state: Vec<u8>) -> Self {
-        Ciphertext { generation, epoch, roster_idx, encrypted_state }
+        Ciphertext {
+            generation,
+            epoch,
+            roster_idx,
+            encrypted_state,
+        }
     }
 
     pub fn from_bytes(bytes: &mut [u8], len: usize) -> Self {
@@ -420,7 +444,11 @@ pub struct ExportPathSecret {
 impl ExportPathSecret {
     pub fn new(encoded_sealed: Vec<u8>, epoch: u32, id: [u8; EXPORT_ID_SIZE]) -> Self {
         assert_eq!(id.len(), 32);
-        ExportPathSecret { encoded_sealed, epoch, id }
+        ExportPathSecret {
+            encoded_sealed,
+            epoch,
+            id,
+        }
     }
 
     pub fn epoch(&self) -> u32 {

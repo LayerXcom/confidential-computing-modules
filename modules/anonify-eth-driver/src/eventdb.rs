@@ -1,18 +1,18 @@
-use std::sync::Arc;
+use crate::error::Result;
+use crate::workflow::*;
 use anonify_io_types::*;
+use byteorder::{ByteOrder, LittleEndian};
 use frame_common::{
-    kvs::{KVS, MemoryDB, DBTx},
     crypto::Ciphertext,
-    traits::State,
+    kvs::{DBTx, MemoryDB, KVS},
     state_types::UpdatedState,
+    traits::State,
 };
 use frame_host::engine::HostEngine;
-use sgx_types::sgx_enclave_id_t;
-use web3::types::Address;
-use byteorder::{LittleEndian, ByteOrder};
 use log::debug;
-use crate::workflow::*;
-use crate::error::Result;
+use sgx_types::sgx_enclave_id_t;
+use std::sync::Arc;
+use web3::types::Address;
 
 pub trait BlockNumDB {
     fn new() -> Self;
@@ -67,8 +67,9 @@ pub struct InnerEnclaveLog {
 }
 
 impl InnerEnclaveLog {
-    pub fn into_input_iter(self) -> impl Iterator<Item=host_input::InsertCiphertext> {
-        self.ciphertexts.into_iter()
+    pub fn into_input_iter(self) -> impl Iterator<Item = host_input::InsertCiphertext> {
+        self.ciphertexts
+            .into_iter()
             .map(|c| host_input::InsertCiphertext::new(c))
     }
 
@@ -98,12 +99,9 @@ impl InnerEnclaveLog {
     ) -> Result<Option<Vec<UpdatedState<S>>>> {
         let mut acc = vec![];
 
-        for update in self.into_input_iter()
-            .map(move |inp|
-                InsertCiphertextWorkflow::exec(inp, eid)
-                    .map(|e| e.ecall_output.unwrap()) // ecall_output must be set.
-            )
-        {
+        for update in self.into_input_iter().map(
+            move |inp| InsertCiphertextWorkflow::exec(inp, eid).map(|e| e.ecall_output.unwrap()), // ecall_output must be set.
+        ) {
             if let Some(upd_type) = update?.updated_state {
                 let upd_trait = UpdatedState::<S>::from_state_type(upd_type)?;
                 acc.push(upd_trait);
@@ -117,10 +115,7 @@ impl InnerEnclaveLog {
         }
     }
 
-    fn insert_handshake(
-        eid: sgx_enclave_id_t,
-        handshake: Vec<u8>,
-    ) -> Result<()> {
+    fn insert_handshake(eid: sgx_enclave_id_t, handshake: Vec<u8>) -> Result<()> {
         let input = host_input::InsertHandshake::new(handshake);
         InsertHandshakeWorkflow::exec(input, eid)?;
 
@@ -152,12 +147,14 @@ impl<DB: BlockNumDB> EnclaveLog<DB> {
                     updated_states: updated_states,
                     db: self.db,
                 });
-            },
-            None => return Ok(EnclaveUpdatedState {
-                block_num: None,
-                updated_states: None,
-                db: self.db,
-            }),
+            }
+            None => {
+                return Ok(EnclaveUpdatedState {
+                    block_num: None,
+                    updated_states: None,
+                    db: self.db,
+                })
+            }
         }
     }
 }
@@ -178,8 +175,8 @@ impl<DB: BlockNumDB, S: State> EnclaveUpdatedState<DB, S> {
                 let mut dbtx = EventDBTx::new();
                 dbtx.put(key, *block_num);
                 self.db.set_next_block_num(dbtx);
-            },
-            None => { },
+            }
+            None => {}
         }
 
         self

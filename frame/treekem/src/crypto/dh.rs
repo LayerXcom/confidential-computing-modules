@@ -1,12 +1,12 @@
-use std::vec::Vec;
-use secp256k1::{PublicKey, SecretKey, util::{SECRET_KEY_SIZE, COMPRESSED_PUBLIC_KEY_SIZE}};
-use frame_common::crypto::sgx_rand_assign;
+use super::{hkdf, hmac::HmacKey};
 use anyhow::{anyhow, Result};
-use codec::{Encode, Decode, Input, Error};
-use super::{
-    hkdf,
-    hmac::HmacKey,
+use codec::{Decode, Encode, Error, Input};
+use frame_common::crypto::sgx_rand_assign;
+use secp256k1::{
+    util::{COMPRESSED_PUBLIC_KEY_SIZE, SECRET_KEY_SIZE},
+    PublicKey, SecretKey,
 };
+use std::vec::Vec;
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct DhPrivateKey(SecretKey);
@@ -31,8 +31,7 @@ impl Decode for DhPrivateKey {
 
 impl DhPrivateKey {
     pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
-        let secret_key = SecretKey::parse_slice(bytes)
-            .map_err(|e| anyhow!("error: {:?}", e))?;
+        let secret_key = SecretKey::parse_slice(bytes).map_err(|e| anyhow!("error: {:?}", e))?;
 
         Ok(DhPrivateKey(secret_key))
     }
@@ -92,13 +91,10 @@ pub fn decapsulate(privkey: &DhPrivateKey, ephemeral_pubkey: &DhPubKey) -> Resul
     gen_out_buf(&ephemeral_pubkey.0, &shared_point)
 }
 
-
-fn diffie_hellman(
-    privkey: &DhPrivateKey,
-    pubkey: &DhPubKey,
-) -> Result<DhPubKey> {
+fn diffie_hellman(privkey: &DhPrivateKey, pubkey: &DhPubKey) -> Result<DhPubKey> {
     let mut shared_point = pubkey.clone();
-    shared_point.0
+    shared_point
+        .0
         .tweak_mul_assign(&privkey.0)
         .map_err(|e| anyhow!("error: {:?}", e))?;
 
@@ -111,6 +107,11 @@ fn gen_out_buf(pubkey: &PublicKey, shared_point: &DhPubKey) -> Result<[u8; 32]> 
     master.extend(shared_point.0.serialize_compressed().iter());
 
     let mut out_buf = [0u8; 32];
-    hkdf::expand(&HmacKey::from(master), b"dh", &mut out_buf, hkdf::Aes256GcmKey)?;
+    hkdf::expand(
+        &HmacKey::from(master),
+        b"dh",
+        &mut out_buf,
+        hkdf::Aes256GcmKey,
+    )?;
     Ok(out_buf)
 }

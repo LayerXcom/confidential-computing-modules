@@ -1,6 +1,6 @@
-use thiserror::Error;
 use frame_types::EnclaveStatus;
 use sgx_types::sgx_status_t;
+use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, FrameHostError>;
 

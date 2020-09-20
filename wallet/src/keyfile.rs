@@ -1,15 +1,15 @@
 //! Keyfile operations such as signing.
-use std::collections::HashMap;
-use ed25519_dalek::{Keypair, SecretKey, PublicKey, SECRET_KEY_LENGTH};
-use smallvec::SmallVec;
+use crate::{
+    error::{Result, WalletError},
+    SerdeBytes,
+};
+use ed25519_dalek::{Keypair, PublicKey, SecretKey, SECRET_KEY_LENGTH};
 use parity_crypto as crypto;
 use parity_crypto::Keccak256;
-use serde::{Serialize, Deserialize};
 use rand::Rng;
-use crate::{
-    SerdeBytes,
-    error::{Result, WalletError},
-};
+use serde::{Deserialize, Serialize};
+use smallvec::SmallVec;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -94,8 +94,7 @@ impl KeyCiphertext {
         password: &[u8],
         iters: u32,
         rng: &mut R,
-    ) -> Result<Self>
-    {
+    ) -> Result<Self> {
         assert!(iters != 0);
         let salt: [u8; 32] = rng.gen();
         let iv: [u8; 16] = rng.gen();
@@ -118,11 +117,12 @@ impl KeyCiphertext {
     }
 
     pub fn decrypt(&self, password: &[u8]) -> Result<Keypair> {
-        let (derived_left, derived_right) = crypto::derive_key_iterations(password, &self.salt.0[..], self.iters);
+        let (derived_left, derived_right) =
+            crypto::derive_key_iterations(password, &self.salt.0[..], self.iters);
         let mac = crypto::derive_mac(&derived_right, &self.ciphertext.0).keccak256();
 
         if !crypto::is_equal(&mac, &self.mac.0) {
-            return Err(WalletError::InvalidPassword)
+            return Err(WalletError::InvalidPassword);
         }
 
         let mut plain: SmallVec<[u8; 32]> = SmallVec::from_vec(vec![0; self.ciphertext.0.len()]);
@@ -156,9 +156,11 @@ impl IndexFile {
         new_index: u32,
         new_keyfile_name: &str,
         new_account_name: &str,
-    ) -> Self
-    {
-        self.map_account_keyfile.extend(Some((new_account_name.to_string(), (new_keyfile_name.to_string(), new_index))));
+    ) -> Self {
+        self.map_account_keyfile.extend(Some((
+            new_account_name.to_string(),
+            (new_keyfile_name.to_string(), new_index),
+        )));
 
         IndexFile {
             default_index: new_index,
@@ -170,7 +172,10 @@ impl IndexFile {
 
     pub fn next_index(mut self, keyfile_name: &str, account_name: &str) -> Self {
         let next_index = self.max_index + 1;
-        self.map_account_keyfile.extend(Some((account_name.to_string(), (keyfile_name.to_string(), next_index))));
+        self.map_account_keyfile.extend(Some((
+            account_name.to_string(),
+            (keyfile_name.to_string(), next_index),
+        )));
 
         IndexFile {
             default_index: next_index,

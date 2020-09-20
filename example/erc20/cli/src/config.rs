@@ -1,6 +1,6 @@
-use dirs;
-use clap::{Arg, ArgMatches};
 use super::term;
+use clap::{Arg, ArgMatches};
+use dirs;
 use std::path::PathBuf;
 
 const APPLICATION_DIRECTORY_NAME: &'static str = "anonify";
@@ -100,8 +100,5 @@ pub(crate) fn config_terminal(matches: &ArgMatches) -> term::Config {
             .init();
     }
 
-    term::Config {
-        color,
-        quiet,
-    }
+    term::Config { color, quiet }
 }

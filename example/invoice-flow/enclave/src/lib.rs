@@ -8,10 +8,9 @@ extern crate lazy_static;
 
 mod ecalls;
 
-use anonify_enclave::context::EnclaveContext;
 use anonify_enclave::config::TEST_SPID;
+use anonify_enclave::context::EnclaveContext;
 
 lazy_static! {
-    pub static ref ENCLAVE_CONTEXT: EnclaveContext
-        = EnclaveContext::new(TEST_SPID).unwrap();
+    pub static ref ENCLAVE_CONTEXT: EnclaveContext = EnclaveContext::new(TEST_SPID).unwrap();
 }

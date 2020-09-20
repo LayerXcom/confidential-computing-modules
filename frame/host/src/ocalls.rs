@@ -1,15 +1,14 @@
-use sgx_types::*;
-use std::{
-    net::{TcpStream, SocketAddr},
-    os::unix::io::IntoRawFd,
-    slice,
-    ptr,
-};
+use crate::StorePathSecrets;
 use anyhow::Result;
-use log::debug;
 use codec::Encode;
 use frame_types::UntrustedStatus;
-use crate::StorePathSecrets;
+use log::debug;
+use sgx_types::*;
+use std::{
+    net::{SocketAddr, TcpStream},
+    os::unix::io::IntoRawFd,
+    ptr, slice,
+};
 
 const DEV_HOSTNAME: &str = "api.trustedservices.intel.com";
 const HTTPS_PORT: u16 = 443;
@@ -52,8 +51,7 @@ pub extern "C" fn ocall_sgx_init_quote(
 }
 
 #[no_mangle]
-pub extern "C"
-fn ocall_get_quote(
+pub extern "C" fn ocall_get_quote(
     p_sigrl: *const u8,
     sigrl_len: u32,
     p_report: *const sgx_report_t,
@@ -67,9 +65,7 @@ fn ocall_get_quote(
 ) -> UntrustedStatus {
     let mut real_quote_len: u32 = 0;
 
-    let ret = unsafe {
-        sgx_calc_quote_size(p_sigrl, sigrl_len, &mut real_quote_len as *mut u32)
-    };
+    let ret = unsafe { sgx_calc_quote_size(p_sigrl, sigrl_len, &mut real_quote_len as *mut u32) };
 
     if ret != sgx_status_t::SGX_SUCCESS {
         println!("sgx_calc_quote_size returned {}", ret);
@@ -77,7 +73,9 @@ fn ocall_get_quote(
     }
 
     println!("quote size = {}", real_quote_len);
-    unsafe { *p_quote_len = real_quote_len; }
+    unsafe {
+        *p_quote_len = real_quote_len;
+    }
 
     let ret = unsafe {
         sgx_get_quote(
@@ -118,7 +116,9 @@ pub extern "C" fn ocall_get_ias_socket(ret_fd: *mut c_int) -> UntrustedStatus {
         }
     };
 
-    unsafe { *ret_fd = sock.into_raw_fd(); }
+    unsafe {
+        *ret_fd = sock.into_raw_fd();
+    }
 
     UntrustedStatus::success()
 }
@@ -137,15 +137,12 @@ fn lookup_ipv4(host: &str, port: u16) -> Result<SocketAddr> {
 }
 
 #[no_mangle]
-pub extern "C"
-fn ocall_get_update_info(
+pub extern "C" fn ocall_get_update_info(
     platform_blob: *const sgx_platform_info_t,
     enclave_trusted: i32,
     update_info: *mut sgx_update_info_bit_t,
 ) -> UntrustedStatus {
-    let ret = unsafe {
-        sgx_report_attestation_status(platform_blob, enclave_trusted, update_info)
-    };
+    let ret = unsafe { sgx_report_attestation_status(platform_blob, enclave_trusted, update_info) };
 
     if ret != sgx_status_t::SGX_SUCCESS {
         println!("sgx_report_attestation_status returned {}", ret);

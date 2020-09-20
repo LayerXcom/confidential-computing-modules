@@ -46,7 +46,9 @@ impl fmt::Display for WalletError {
         match *self {
             WalletError::InvalidPassword => write!(f, "Invalid password"),
             WalletError::InvalidKeyfile => write!(f, "Invalid keyfile"),
-            WalletError::OverRetries => write!(f, "Exceeded maximum retries when deduplicating filename."),
+            WalletError::OverRetries => {
+                write!(f, "Exceeded maximum retries when deduplicating filename.")
+            }
             WalletError::InvalidPath => write!(f, "Invalid path"),
             WalletError::IoError(ref err) => write!(f, "I/O error: {}", err),
             WalletError::CryptoError(ref err) => write!(f, "crypto error: {}", err),

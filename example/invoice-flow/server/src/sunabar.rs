@@ -1,10 +1,11 @@
-use reqwest::{Client, header};
 use anyhow::Result;
 use frame_common::state_types::UpdatedState;
 use frame_runtime::primitives::Bytes;
+use reqwest::{header, Client};
 use serde_json::Value;
 
-const ENDPOINT_TRANSFER_REQUEST: &str = "https://api.sunabar.gmo-aozora.com/personal/v1/transfer/request";
+const ENDPOINT_TRANSFER_REQUEST: &str =
+    "https://api.sunabar.gmo-aozora.com/personal/v1/transfer/request";
 // 5 -> 2
 const TRANSFER_DATA: &str = r#"{
   "accountId": "301010000338",
@@ -42,8 +43,14 @@ pub struct SunabarClient {
 impl SunabarClient {
     pub fn new() -> Self {
         let mut headers = header::HeaderMap::new();
-        headers.insert("Accept", header::HeaderValue::from_static("application/json;charset=UTF-8"));
-        headers.insert("x-access-token", header::HeaderValue::from_static(&SUNABAR_SECRET));
+        headers.insert(
+            "Accept",
+            header::HeaderValue::from_static("application/json;charset=UTF-8"),
+        );
+        headers.insert(
+            "x-access-token",
+            header::HeaderValue::from_static(&SUNABAR_SECRET),
+        );
 
         let client = Client::builder()
             .default_headers(headers)
@@ -51,10 +58,7 @@ impl SunabarClient {
             .expect("SunabarClient builder failed");
         let body: Value = serde_json::from_str(TRANSFER_DATA).unwrap();
 
-        SunabarClient {
-            client,
-            body,
-        }
+        SunabarClient { client, body }
     }
 
     pub fn set_shared_invoice(mut self, invoice: UpdatedState<Bytes>) -> Self {
@@ -63,9 +67,14 @@ impl SunabarClient {
         let amount = trim_by_point(amount);
 
         *self.body.get_mut("totalAmount").unwrap() = Value::from(amount);
-        *self.body.get_mut("transfers").unwrap()
-            .get_mut(0).unwrap()
-            .get_mut("transferAmount").unwrap() = Value::from(amount);
+        *self
+            .body
+            .get_mut("transfers")
+            .unwrap()
+            .get_mut(0)
+            .unwrap()
+            .get_mut("transferAmount")
+            .unwrap() = Value::from(amount);
 
         self
     }
@@ -81,8 +90,5 @@ impl SunabarClient {
 }
 
 fn trim_by_point(v: &Value) -> &str {
-    v.as_str().unwrap()
-        .split('.')
-        .into_iter()
-        .next().unwrap()
+    v.as_str().unwrap().split('.').into_iter().next().unwrap()
 }

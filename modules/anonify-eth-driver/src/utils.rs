@@ -1,22 +1,10 @@
-use std::{
-    path::Path,
-    io::BufReader,
-    fs::File,
-    str::FromStr,
-    marker::PhantomData,
-};
-use web3::types::Address;
-use ethabi::Contract as ContractABI;
+use crate::{error::Result, eth::primitives::Web3Contract};
 use anonify_io_types::*;
-use frame_common::{
-    traits::*,
-    state_types::StateType,
-};
 use anyhow::anyhow;
-use crate::{
-    error::Result,
-    eth::primitives::Web3Contract,
-};
+use ethabi::Contract as ContractABI;
+use frame_common::{state_types::StateType, traits::*};
+use std::{fs::File, io::BufReader, marker::PhantomData, path::Path, str::FromStr};
+use web3::types::Address;
 
 /// Needed information to handle smart contracts.
 #[derive(Debug, Clone, Copy)]
@@ -27,10 +15,7 @@ pub struct ContractInfo<'a, P: AsRef<Path>> {
 
 impl<'a, P: AsRef<Path>> ContractInfo<'a, P> {
     pub fn new(abi_path: P, addr: &'a str) -> Self {
-        ContractInfo {
-            abi_path,
-            addr,
-        }
+        ContractInfo { abi_path, addr }
     }
 
     pub fn contract_abi(&self) -> Result<ContractABI> {
@@ -53,7 +38,7 @@ impl<'a, P: AsRef<Path>> ContractInfo<'a, P> {
 pub struct StateInfo<'a, ST: State, C: CallNameConverter> {
     state: ST,
     call_name: &'a str,
-    phantom: PhantomData<C>
+    phantom: PhantomData<C>,
 }
 
 impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
@@ -83,5 +68,5 @@ impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
 
 /// A type of contract
 pub enum ContractKind {
-    Web3Contract(Web3Contract)
+    Web3Contract(Web3Contract),
 }

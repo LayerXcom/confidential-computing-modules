@@ -1,8 +1,8 @@
+use frame_common::crypto::AccountId;
 use std::{
     collections::HashSet,
-    sync::{SgxRwLock, Arc},
+    sync::{Arc, SgxRwLock},
 };
-use frame_common::crypto::AccountId;
 
 #[derive(Debug, Clone)]
 pub struct Notifier {
