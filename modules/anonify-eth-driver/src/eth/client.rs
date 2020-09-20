@@ -1,11 +1,5 @@
 use super::primitives::{Web3Contract, Web3Http};
-use crate::{
-    error::Result,
-    eventdb::{BlockNumDB},
-    traits::*,
-    utils::*,
-    workflow::*,
-};
+use crate::{error::Result, eventdb::BlockNumDB, traits::*, utils::*, workflow::*};
 
 use frame_common::{state_types::UpdatedState, traits::*};
 use sgx_types::sgx_enclave_id_t;

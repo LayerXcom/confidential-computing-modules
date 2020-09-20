@@ -27,7 +27,7 @@ impl EnclaveIdentityKey {
             sgx_rand_assign(&mut ret)?;
 
             if let Ok(key) = SecretKey::parse(&ret) {
-                break key
+                break key;
             }
         };
 

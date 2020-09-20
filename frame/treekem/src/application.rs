@@ -109,12 +109,12 @@ impl AppKeyChain {
 
     /// Ratchets a specific roster's AppMemberSecret forward.
     pub fn ratchet(&mut self, roster_idx: usize) -> Result<()> {
-        let (member_secret, gen) =
-            self.member_secrets_and_gens
-                .get_mut(roster_idx)
-                .ok_or_else(|| anyhow!(
-                    "ratchet: Roster index is out of range of application key chain"
-                ))?;
+        let (member_secret, gen) = self
+            .member_secrets_and_gens
+            .get_mut(roster_idx)
+            .ok_or_else(|| {
+                anyhow!("ratchet: Roster index is out of range of application key chain")
+            })?;
         let current_secret = member_secret.clone();
 
         let roster_idx = u32::try_from(roster_idx)?;
@@ -134,9 +134,12 @@ impl AppKeyChain {
 
     /// Compute UnboundKey, Nonce, and member's generation.
     fn key_nonce_gen(&self, roster_idx: usize) -> Result<(UnboundKey, OneNonceSequence, u32)> {
-        let (member_secret, gen) = self.member_secrets_and_gens.get(roster_idx).ok_or_else(|| anyhow!(
-            "key_nonce_gen: Roster index is out of range of application key chain"
-        ))?;
+        let (member_secret, gen) =
+            self.member_secrets_and_gens
+                .get(roster_idx)
+                .ok_or_else(|| {
+                    anyhow!("key_nonce_gen: Roster index is out of range of application key chain")
+                })?;
 
         let prk = HmacKey::from(member_secret);
         let mut key_buf = [0u8; AES_256_GCM_KEY_SIZE];

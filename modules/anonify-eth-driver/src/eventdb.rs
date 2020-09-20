@@ -148,13 +148,11 @@ impl<DB: BlockNumDB> EnclaveLog<DB> {
                     db: self.db,
                 })
             }
-            None => {
-                Ok(EnclaveUpdatedState {
-                    block_num: None,
-                    updated_states: None,
-                    db: self.db,
-                })
-            }
+            None => Ok(EnclaveUpdatedState {
+                block_num: None,
+                updated_states: None,
+                db: self.db,
+            }),
         }
     }
 }

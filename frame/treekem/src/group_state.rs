@@ -162,9 +162,13 @@ impl GroupState {
                 *current = next.clone();
                 Ok(next)
             }
-            PathSecretSource::LocalTestKV(db) => db.get(roster_idx, epoch).cloned().ok_or_else(|| anyhow!(
+            PathSecretSource::LocalTestKV(db) => {
+                db.get(roster_idx, epoch).cloned().ok_or_else(|| {
+                    anyhow!(
                 "Not found Path Secret from local PathSecretKVS with provided roster_idx and epoch"
-            )),
+            )
+                })
+            }
             PathSecretSource::Remote(_url) => unimplemented!(),
         }
     }

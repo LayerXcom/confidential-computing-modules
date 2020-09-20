@@ -5,7 +5,6 @@ use handlers::*;
 use sgx_types::sgx_enclave_id_t;
 use std::{env, io, sync::Arc};
 
-
 mod handlers;
 
 #[derive(Debug)]

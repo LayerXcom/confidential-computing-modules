@@ -109,9 +109,7 @@ impl RatchetTree {
             let (pos_msg, _) = tree_math::node_extended_direct_path(others_leaf_idx, num_leaves)
                 .enumerate()
                 .find(|&(_, dp_idx)| dp_idx == common_ancestor_idx)
-                .ok_or_else(|| anyhow!(
-                    "Common ancestor cannot be found in the direct path."
-                ))?;
+                .ok_or_else(|| anyhow!("Common ancestor cannot be found in the direct path."))?;
             direct_path_msg
                 .node_msgs
                 .get(pos_msg)
@@ -205,9 +203,9 @@ impl RatchetTree {
     }
 
     pub fn set_single_public_key(&mut self, tree_idx: usize, pubkey: DhPubKey) -> Result<()> {
-        let node = self.get_mut(tree_idx).ok_or_else(|| anyhow!(
-            "Invalid tree index. Cannot set a public key to ratchet tree by add operation"
-        ))?;
+        let node = self.get_mut(tree_idx).ok_or_else(|| {
+            anyhow!("Invalid tree index. Cannot set a public key to ratchet tree by add operation")
+        })?;
         node.update_pub_key(pubkey);
 
         Ok(())
