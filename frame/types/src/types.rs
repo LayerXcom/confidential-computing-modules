@@ -77,6 +77,7 @@ impl UntrustedStatus {
 pub struct EnclaveState(pub *const u8);
 
 impl EnclaveState {
+    #[allow(clippy::cast_ptr_alignment)]
     pub fn as_bytes(&self) -> Box<[u8]> {
         let raw_state = self.0 as *mut Box<[u8]>;
         let box_state = unsafe { Box::from_raw(raw_state) };
