@@ -13,15 +13,6 @@ pub fn init_path_secret_kvs(kvs: &mut PathSecretKVS, until_roster_idx: usize, un
     }
 }
 
-pub fn change_group_state_idx(group_state: &GroupState, new_idx: u32) -> GroupState {
-    assert!(new_idx as usize <= group_state.roster_len().unwrap());
-
-    let mut new_group_state = group_state.clone();
-    new_group_state.my_roster_idx = new_idx;
-
-    new_group_state
-}
-
 pub fn do_handshake_three_party(
     my_group: &mut GroupState,
     others_group1: &mut GroupState,

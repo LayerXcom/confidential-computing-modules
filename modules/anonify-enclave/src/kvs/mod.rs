@@ -78,8 +78,4 @@ impl EnclaveDBTx {
 
         Ok(())
     }
-
-    pub(crate) fn into_inner(self) -> DBTx {
-        self.0
-    }
 }

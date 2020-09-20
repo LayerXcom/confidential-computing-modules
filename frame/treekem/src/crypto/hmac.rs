@@ -15,16 +15,13 @@ impl HmacKey {
         &mut self.0[..]
     }
 
-    pub fn into_vec(self) -> Vec<u8> {
-        self.0
-    }
-
     pub fn new_from_random<R: CryptoRng>(csprng: &mut R) -> HmacKey {
         let mut buf = [0u8; SHA256_OUTPUT_LEN];
         csprng.fill_bytes(&mut buf);
         HmacKey(buf.to_vec())
     }
 
+    #[allow(dead_code)]
     pub fn sign(&self, msg: &[u8]) -> Vec<u8> {
         let signing_key = Key::new(HMAC_SHA256, &self.0);
         let mut ctx = Context::with_key(&signing_key);

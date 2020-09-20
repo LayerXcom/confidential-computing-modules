@@ -18,6 +18,7 @@ struct HkdfLabel<'a> {
 }
 
 /// An implementation of HKDF-extract.
+#[allow(dead_code)]
 pub fn extract(salt: &HmacKey, secret: &[u8]) -> HmacKey {
     let prk = salt.sign(secret);
     HmacKey::from(prk)

@@ -43,7 +43,7 @@ lazy_static! {
         assert!(keypair.verify(&COMMON_CHALLENGE, &sig).is_ok());
         Ed25519ChallengeResponse::new(sig, keypair.public, COMMON_CHALLENGE)
     };
-    pub static ref OWNER_ACCOUNT_ID: AccountId = { COMMON_ACCESS_POLICY.account_id() };
+    pub static ref OWNER_ACCOUNT_ID: AccountId = COMMON_ACCESS_POLICY.account_id();
 }
 
 /// User account_id represents last 20 bytes of digest of user's public key.

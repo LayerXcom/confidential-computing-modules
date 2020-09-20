@@ -4,7 +4,7 @@ use crate::PJ_ROOT_DIR;
 use sgx_types::*;
 use sgx_urts::SgxEnclave;
 use std::{
-    env, fs,
+    fs,
     io::{BufReader, BufWriter, Read, Write},
     path::{Path, PathBuf},
 };

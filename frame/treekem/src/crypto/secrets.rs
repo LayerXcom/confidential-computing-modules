@@ -92,6 +92,7 @@ impl UpdateSecret {
         &self.0
     }
 
+    #[allow(dead_code)]
     pub fn zero(len: usize) -> Self {
         UpdateSecret(vec![0u8; len])
     }

@@ -1,7 +1,7 @@
 use crate::ecalls::EnclaveConnector;
 use codec::{Decode, Encode};
 use frame_common::{EcallInput, EcallOutput};
-use serde::de::DeserializeOwned;
+
 use sgx_types::sgx_enclave_id_t;
 
 pub trait HostEngine {
@@ -31,7 +31,7 @@ pub trait HostInput: Sized {
 pub trait HostOutput: Sized {
     type EcallOutput: EcallOutput;
 
-    fn set_ecall_output(self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+    fn set_ecall_output(self, _output: Self::EcallOutput) -> anyhow::Result<Self> {
         Ok(self)
     }
 
