@@ -13,7 +13,7 @@ use web3::{
     contract::{Contract, Options},
     futures::Future,
     transports::{EventLoopHandle, Http},
-    types::{Address, BlockNumber, Filter, FilterBuilder, Log, TransactionReceipt, H256, U256},
+    types::{Address, BlockNumber, Filter, FilterBuilder, Log, TransactionReceipt, H256},
     Web3,
 };
 

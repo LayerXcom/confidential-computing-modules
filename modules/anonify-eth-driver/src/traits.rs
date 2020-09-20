@@ -2,11 +2,11 @@
 
 use crate::{
     error::Result,
-    eventdb::{BlockNumDB, InnerEnclaveLog},
+    eventdb::{BlockNumDB},
     utils::*,
     workflow::*,
 };
-use anonify_io_types::*;
+
 use frame_common::{state_types::UpdatedState, traits::*};
 use sgx_types::sgx_enclave_id_t;
 use std::{path::Path, sync::Arc};

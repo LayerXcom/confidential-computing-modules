@@ -4,7 +4,7 @@ use frame_host::{EnclaveDir, StorePathSecrets};
 use handlers::*;
 use sgx_types::sgx_enclave_id_t;
 use std::{env, io, sync::Arc};
-use web3::types::Address;
+
 
 mod handlers;
 

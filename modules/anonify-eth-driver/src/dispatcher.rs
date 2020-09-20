@@ -8,7 +8,7 @@ use crate::{
 };
 use frame_common::{
     crypto::ExportPathSecret,
-    state_types::{StateType, UpdatedState},
+    state_types::{UpdatedState},
     traits::*,
 };
 use frame_host::engine::HostEngine;
@@ -208,7 +208,7 @@ where
         let inner = self.inner.read();
         let input = host_input::RegisterNotification::new(access_policy);
         let eid = inner.deployer.get_enclave_id();
-        let host_output = RegisterNotificationWorkflow::exec(input, eid)?;
+        let _host_output = RegisterNotificationWorkflow::exec(input, eid)?;
 
         Ok(())
     }
