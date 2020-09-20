@@ -162,7 +162,7 @@ impl GroupState {
                 *current = next.clone();
                 Ok(next)
             }
-            PathSecretSource::LocalTestKV(db) => db.get(roster_idx, epoch).cloned().ok_or(anyhow!(
+            PathSecretSource::LocalTestKV(db) => db.get(roster_idx, epoch).cloned().ok_or_else(|| anyhow!(
                 "Not found Path Secret from local PathSecretKVS with provided roster_idx and epoch"
             )),
             PathSecretSource::Remote(_url) => unimplemented!(),
@@ -225,7 +225,7 @@ impl GroupState {
         let new_epoch = self
             .epoch
             .checked_add(1)
-            .ok_or(anyhow!("Cannot increment epoch past its maximum"))?;
+            .ok_or_else(|| anyhow!("Cannot increment epoch past its maximum"))?;
         self.epoch = new_epoch;
 
         Ok(())
@@ -244,14 +244,14 @@ impl GroupState {
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
         self.tree
             .get(my_tree_idx)
-            .ok_or(anyhow!("Not found my node"))
+            .ok_or_else(|| anyhow!("Not found my node"))
     }
 
     pub(crate) fn roster_len(&self) -> Result<usize> {
         let tree_size = self.tree.size();
         tree_size
             .checked_div(2)
-            .ok_or(anyhow!("Invalid tree size."))
+            .ok_or_else(|| anyhow!("Invalid tree size."))
     }
 
     pub fn epoch(&self) -> u32 {

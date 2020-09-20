@@ -40,7 +40,7 @@ impl StateType {
 
 impl From<AccountId> for StateType {
     fn from(account_id: AccountId) -> Self {
-        Self(account_id.encode_s().into())
+        Self(account_id.encode_s())
     }
 }
 
@@ -80,7 +80,7 @@ impl<S: State> UpdatedState<S> {
 pub struct MemId(u32);
 
 impl MemId {
-    pub fn as_raw(&self) -> u32 {
+    pub fn as_raw(self) -> u32 {
         self.0
     }
 

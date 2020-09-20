@@ -104,7 +104,7 @@ impl EnclaveContext {
 
         let source = match env::var("AUDITOR_ENDPOINT") {
             Err(_) => PathSecretSource::Local,
-            Ok(test) if test == "test".to_string() => {
+            Ok(test) if test == "test" => {
                 const UNTIL_ROSTER_IDX: usize = 10;
                 const UNTIL_EPOCH: usize = 30;
                 let mut kvs = PathSecretKVS::new();

@@ -94,7 +94,7 @@ impl OneNonceSequence {
 
 impl NonceSequence for OneNonceSequence {
     fn advance(&mut self) -> std::result::Result<Nonce, ring::error::Unspecified> {
-        self.0.take().ok_or(ring::error::Unspecified).into()
+        self.0.take().ok_or(ring::error::Unspecified)
     }
 }
 

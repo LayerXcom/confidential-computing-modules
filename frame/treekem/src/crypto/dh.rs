@@ -41,9 +41,8 @@ impl DhPrivateKey {
             let mut ret = [0u8; SECRET_KEY_SIZE];
             sgx_rand_assign(&mut ret)?;
 
-            match SecretKey::parse(&ret) {
-                Ok(key) => break key,
-                Err(_) => (),
+            if let Ok(key) = SecretKey::parse(&ret) {
+                break key
             }
         };
 

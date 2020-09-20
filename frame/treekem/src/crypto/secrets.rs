@@ -25,7 +25,7 @@ pub struct GroupEpochSecret(Vec<u8>);
 
 impl From<Vec<u8>> for GroupEpochSecret {
     fn from(vec: Vec<u8>) -> Self {
-        GroupEpochSecret(vec.into())
+        GroupEpochSecret(vec)
     }
 }
 
@@ -116,7 +116,7 @@ pub struct NodeSecret(Vec<u8>);
 
 impl From<Vec<u8>> for NodeSecret {
     fn from(vec: Vec<u8>) -> Self {
-        NodeSecret(vec.into())
+        NodeSecret(vec)
     }
 }
 
@@ -235,7 +235,7 @@ impl From<PathSecret> for UnsealedPathSecret {
     fn from(ps: PathSecret) -> Self {
         assert_eq!(ps.len(), SHA256_OUTPUT_LEN);
         let mut res = [0u8; SHA256_OUTPUT_LEN];
-        &res.copy_from_slice(ps.as_bytes());
+        res.copy_from_slice(ps.as_bytes());
         UnsealedPathSecret(res)
     }
 }
@@ -265,6 +265,7 @@ impl<'a> SealedPathSecret<'a> {
 }
 
 impl Encode for SealedPathSecret<'_> {
+    #[allow(clippy::cast_ptr_alignment)]
     fn encode(&self) -> Vec<u8> {
         let mut res = vec![0u8; SEALED_DATA_SIZE];
         unsafe {
@@ -279,6 +280,7 @@ impl Encode for SealedPathSecret<'_> {
 }
 
 impl Decode for SealedPathSecret<'_> {
+    #[allow(clippy::cast_ptr_alignment)]
     fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
         let mut buf = [0u8; SEALED_DATA_SIZE];
         value.read(&mut buf)?;

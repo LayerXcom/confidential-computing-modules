@@ -41,7 +41,7 @@ impl<AP: AccessPolicy> EnclaveEngine for Instruction<AP> {
         let instruction_output = create_instruction_output::<R, C>(
             ecall_input.call_id,
             state,
-            account_id.clone(),
+            account_id,
             enclave_context,
             max_mem_size,
         )?;

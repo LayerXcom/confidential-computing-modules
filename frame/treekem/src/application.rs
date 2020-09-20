@@ -112,7 +112,7 @@ impl AppKeyChain {
         let (member_secret, gen) =
             self.member_secrets_and_gens
                 .get_mut(roster_idx)
-                .ok_or(anyhow!(
+                .ok_or_else(|| anyhow!(
                     "ratchet: Roster index is out of range of application key chain"
                 ))?;
         let current_secret = member_secret.clone();
@@ -127,14 +127,14 @@ impl AppKeyChain {
 
         *gen = gen
             .checked_add(1)
-            .ok_or(anyhow!("generation is over u32::MAX"))?;
+            .ok_or_else(|| anyhow!("generation is over u32::MAX"))?;
 
         Ok(())
     }
 
     /// Compute UnboundKey, Nonce, and member's generation.
     fn key_nonce_gen(&self, roster_idx: usize) -> Result<(UnboundKey, OneNonceSequence, u32)> {
-        let (member_secret, gen) = self.member_secrets_and_gens.get(roster_idx).ok_or(anyhow!(
+        let (member_secret, gen) = self.member_secrets_and_gens.get(roster_idx).ok_or_else(|| anyhow!(
             "key_nonce_gen: Roster index is out of range of application key chain"
         ))?;
 

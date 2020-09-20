@@ -115,12 +115,12 @@ impl RAResponse {
         let headers = resp.headers();
         let sig = headers
             .get("X-IASReport-Signature")
-            .ok_or(anyhow!("Not found X-IASReport-Signature header"))?;
+            .ok_or_else(|| anyhow!("Not found X-IASReport-Signature header"))?;
         let report_sig = ReportSig::base64_decode(sig.as_bytes())?;
 
         let cert = headers
             .get("X-IASReport-Signing-Certificate")
-            .ok_or(anyhow!("Not found X-IASReport-Signing-Certificate"))?
+            .ok_or_else(|| anyhow!("Not found X-IASReport-Signing-Certificate"))?
             .replace("%0A", "");
         let cert = percent_decode(cert)?;
 
@@ -267,7 +267,7 @@ impl ReportSig {
 
 fn percent_decode(orig: String) -> Result<Vec<u8>> {
     let v: Vec<&str> = orig.split('%').collect();
-    ensure!(v.len() != 0, "Certificate is blank");
+    ensure!(!v.is_empty(), "Certificate is blank");
     let mut ret = String::new();
     ret.push_str(v[0]);
     if v.len() > 1 {

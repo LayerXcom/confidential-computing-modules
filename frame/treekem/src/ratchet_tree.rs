@@ -65,7 +65,7 @@ impl RatchetTree {
             {
                 let others_pub_key = res_node
                     .public_key()
-                    .ok_or(anyhow!("The resoluted node doesn't contain public key"))?;
+                    .ok_or_else(|| anyhow!("The resoluted node doesn't contain public key"))?;
 
                 let ciphertext = EciesCiphertext::encrypt(
                     &others_pub_key,
@@ -109,22 +109,23 @@ impl RatchetTree {
             let (pos_msg, _) = tree_math::node_extended_direct_path(others_leaf_idx, num_leaves)
                 .enumerate()
                 .find(|&(_, dp_idx)| dp_idx == common_ancestor_idx)
-                .ok_or(anyhow!(
+                .ok_or_else(|| anyhow!(
                     "Common ancestor cannot be found in the direct path."
                 ))?;
             direct_path_msg
                 .node_msgs
                 .get(pos_msg)
-                .ok_or(anyhow!("Invalid direct path message"))?
+                .ok_or_else(|| anyhow!("Invalid direct path message"))?
         };
 
         // Receiver's copath of the common ancestor node
         let copath_common_ancestor_idx = {
             let left = tree_math::node_left_child(common_ancestor_idx);
             let right = tree_math::node_right_child(common_ancestor_idx, num_leaves);
-            match tree_math::is_ancestor(left, my_leaf_idx, num_leaves) {
-                true => left,
-                false => right,
+            if tree_math::is_ancestor(left, my_leaf_idx, num_leaves) {
+                left
+            } else {
+                right
             }
         };
 
@@ -133,7 +134,7 @@ impl RatchetTree {
         for (pos, idx) in resolution.into_iter().enumerate() {
             let res_node = self
                 .get(idx)
-                .ok_or(anyhow!("resolution index is out of range"))?;
+                .ok_or_else(|| anyhow!("resolution index is out of range"))?;
             if res_node.private_key().is_some()
                 && tree_math::is_ancestor(idx, my_leaf_idx, num_leaves)
             {
@@ -141,7 +142,7 @@ impl RatchetTree {
                 let plaintext = node_msg
                     .node_secrets
                     .get(pos)
-                    .ok_or(anyhow!("Invalid direct path message"))?
+                    .ok_or_else(|| anyhow!("Invalid direct path message"))?
                     .clone()
                     .decrypt(&decryption_key)?;
                 let path_secret = PathSecret::from(plaintext);
@@ -154,14 +155,11 @@ impl RatchetTree {
     }
 
     pub fn add_leaf_node(&mut self, node: RatchetTreeNode) {
-        match self.nodes.is_empty() {
-            true => {
-                self.nodes.push(node);
-            }
-            false => {
-                self.nodes.push(RatchetTreeNode::Blank);
-                self.nodes.push(node);
-            }
+        if self.nodes.is_empty() {
+            self.nodes.push(node);
+        } else {
+            self.nodes.push(RatchetTreeNode::Blank);
+            self.nodes.push(node);
         }
     }
 
@@ -207,7 +205,7 @@ impl RatchetTree {
     }
 
     pub fn set_single_public_key(&mut self, tree_idx: usize, pubkey: DhPubKey) -> Result<()> {
-        let node = self.get_mut(tree_idx).ok_or(anyhow!(
+        let node = self.get_mut(tree_idx).ok_or_else(|| anyhow!(
             "Invalid tree index. Cannot set a public key to ratchet tree by add operation"
         ))?;
         node.update_pub_key(pubkey);
@@ -239,7 +237,7 @@ impl RatchetTree {
             } else {
                 let node = self
                     .get_mut(path_node_idx)
-                    .ok_or(anyhow!("Direct path node is out of range"))?;
+                    .ok_or_else(|| anyhow!("Direct path node is out of range"))?;
                 node.update_pub_key(pubkey.clone());
             }
         }
@@ -253,7 +251,7 @@ impl RatchetTree {
         roster_idx
             .checked_mul(2)
             .map(|i| i as usize)
-            .ok_or(anyhow!("Invalid roster or tree index."))
+            .ok_or_else(|| anyhow!("Invalid roster or tree index."))
     }
 
     pub fn size(&self) -> usize {

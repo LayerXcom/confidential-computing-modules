@@ -32,7 +32,7 @@ impl<R: RuntimeExecutor<CTX, S = StateType>, CTX: ContextOps> Instructions<R, CT
         fn append_padding(buf: &mut Vec<u8>, max_mem_size: usize) {
             let padding_size = max_mem_size - buf.len();
             let mut padding = vec![0u8; padding_size];
-            buf.extend_from_slice(&mut padding);
+            buf.extend_from_slice(&padding);
         }
 
         let mut buf = self.encode();
@@ -59,7 +59,7 @@ impl<R: RuntimeExecutor<CTX, S = StateType>, CTX: ContextOps> Instructions<R, CT
     fn decrypt<GK: GroupKeyOps>(ciphertext: &Ciphertext, key: &mut GK) -> Result<Option<Self>> {
         match key.decrypt(ciphertext)? {
             Some(plaintext) => Instructions::decode(&mut &plaintext[..])
-                .map(|p| Some(p))
+                .map(Some)
                 .map_err(Into::into),
             None => Ok(None),
         }
