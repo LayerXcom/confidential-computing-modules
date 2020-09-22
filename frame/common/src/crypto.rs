@@ -431,7 +431,7 @@ impl IntoVec for Ciphertext {
 // Calculated by `SgxSealedData<PathSecret>::calc_raw_sealed_data_size(add_mac_txt_size: u32, encrypt_txt_size: u32) -> u32`
 pub const SEALED_DATA_SIZE: usize = 592;
 pub const EXPORT_ID_SIZE: usize = 32;
-pub const EXPORT_PATH_SECRET_SIZE: usize = SEALED_DATA_SIZE + 4 + EXPORT_ID_SIZE;
+pub const EXPORT_PATH_SECRET_SIZE: usize = SEALED_DATA_SIZE + 4 + EXPORT_ID_SIZE + 2; // added 2 bytes by encoding
 
 #[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
 #[serde(crate = "crate::serde")]

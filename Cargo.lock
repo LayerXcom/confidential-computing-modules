@@ -1114,6 +1114,7 @@ dependencies = [
 name = "enclave"
 version = "0.1.0"
 dependencies = [
+ "frame-runtime 0.1.0",
  "frame-treekem 0.1.0",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
  "test-utils 0.1.0",
@@ -1469,6 +1470,7 @@ dependencies = [
  "libsecp256k1 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+ "test-utils 0.1.0",
 ]
 
 [[package]]
