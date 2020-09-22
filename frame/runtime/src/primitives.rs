@@ -209,29 +209,22 @@ impl TryFrom<Vec<u8>> for Approved {
     }
 }
 
-#[cfg(debug_assertions)]
-pub(crate) mod tests {
+#[cfg(test)]
+mod tests {
     use super::*;
-    use test_utils::*;
-    use crate::localstd::string::String;
 
-    pub(crate) fn run_tests() -> bool {
-        run_tests!(
-            test_from_encode,
-            test_from_state,
-            test_size,
-        )
-    }
-
+    #[test]
     fn test_from_encode() {
         let mut v = U64(10).encode_s();
         assert_eq!(U64(10), U64::decode_s(&mut v).unwrap());
     }
 
+    #[test]
     fn test_from_state() {
         assert_eq!(U64(100), U64::from_state(&U64(100)).unwrap());
     }
 
+    #[test]
     fn test_size() {
         assert_eq!(U16(0).size(), 2);
         assert_eq!(U32(0).size(), 4);

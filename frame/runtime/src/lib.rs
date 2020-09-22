@@ -20,16 +20,3 @@ pub mod traits;
 
 #[cfg(feature = "sgx")]
 pub use crate::traits::*;
-
-#[cfg(debug_assertions)]
-pub mod tests {
-    use super::*;
-    use crate::localstd::vec::Vec;
-    use test_utils::*;
-
-    pub fn run_tests() -> bool {
-        check_all_passed!(
-            primitives::tests::run_tests(),
-        )
-    }
-}

@@ -11,7 +11,6 @@ use test_utils::*;
 pub fn ecall_run_tests() {
     let ret = check_all_passed!(
         frame_treekem::tests::run_tests(),
-        frame_runtime::teests::run_tests(),
     );
 
     assert!(ret);
