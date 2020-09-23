@@ -19,14 +19,23 @@ use std::{
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
 };
 
+pub const MRENCLAVE_VERSION: usize = 0;
+
 /// spid: Service provider ID for the ISV.
 #[derive(Clone)]
 pub struct EnclaveContext {
+    version: usize,
     spid: sgx_spid_t,
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB,
     notifier: Notifier,
     pub group_key: Arc<SgxRwLock<GroupKey>>,
+}
+
+impl ContextOps for EnclaveContext {
+    fn mrenclave_ver(&self) -> usize {
+        self.version
+    }
 }
 
 impl StateOps for EnclaveContext {
@@ -136,6 +145,7 @@ impl EnclaveContext {
             db,
             notifier,
             group_key,
+            version: MRENCLAVE_VERSION,
         })
     }
 

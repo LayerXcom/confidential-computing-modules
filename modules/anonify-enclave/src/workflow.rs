@@ -165,6 +165,7 @@ impl EnclaveEngine for CallJoinGroup {
         let sub_key = env::var("SUB_KEY")?;
         let (report, report_sig) =
             RAService::remote_attestation(ias_url.as_str(), sub_key.as_str(), &quote)?;
+        let mrenclave_ver = enclave_context.mrenclave_ver();
         let group_key = &*enclave_context.read_group_key();
         let (handshake, export_path_secret) = group_key.create_handshake()?;
 
@@ -172,6 +173,7 @@ impl EnclaveEngine for CallJoinGroup {
             report.into_vec(),
             report_sig.into_vec(),
             handshake.encode(),
+            mrenclave_ver,
             export_path_secret,
         ))
     }

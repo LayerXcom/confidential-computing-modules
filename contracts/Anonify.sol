@@ -15,10 +15,11 @@ contract Anonify is ReportHandle {
     constructor(
         bytes memory _report,
         bytes memory _reportSig,
-        bytes memory _handshake
+        bytes memory _handshake,
+        uint256 mrenclaveVer
     ) ReportHandle(_report, _reportSig) public {
         _owner = msg.sender;
-        _mrenclaveVer += 1;
+        _mrenclaveVer = mrenclaveVer;
         handshake(_handshake);
      }
 

@@ -78,7 +78,7 @@ impl Web3Http {
             .map_err(|e| anyhow!("{:?}", e))?
             .confirmations(confirmations)
             .options(Options::with(|opt| opt.gas = Some(gas.into())))
-            .execute(bin.as_str(), (report, report_sig, handshake), output.signer)
+            .execute(bin.as_str(), (report, report_sig, handshake, ecall_output.mrenclave_ver()), output.signer)
             .map_err(|e| anyhow!("{:?}", e))?
             .wait()
             .map_err(|e| anyhow!("{:?}", e))?;
