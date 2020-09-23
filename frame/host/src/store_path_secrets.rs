@@ -16,6 +16,7 @@ pub struct StorePathSecrets {
 impl StorePathSecrets {
     pub fn new() -> Self {
         let local_dir_path = (*PJ_ROOT_DIR).to_path_buf().join(PATH_SECRETS_DIR);
+        fs::create_dir_all(&local_dir_path).expect("Failed to create PATH_SECRETS_DIR");
         StorePathSecrets { local_dir_path }
     }
 

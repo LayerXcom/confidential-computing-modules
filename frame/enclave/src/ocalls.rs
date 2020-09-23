@@ -65,9 +65,9 @@ fn inner_import_path_secret(id: [u8; EXPORT_ID_SIZE]) -> Result<ExportPathSecret
     let status = unsafe {
         ocall_import_path_secret(
             &mut rt as *mut UntrustedStatus,
-            buf.as_mut_ptr() as *mut u8,
+            buf.as_mut_ptr(),
             EXPORT_PATH_SECRET_SIZE,
-            id.as_ptr() as *const u8,
+            id.as_ptr(),
             EXPORT_ID_SIZE,
         )
     };
@@ -84,7 +84,7 @@ fn inner_import_path_secret(id: [u8; EXPORT_ID_SIZE]) -> Result<ExportPathSecret
 
     let exported_path_secret =
         ExportPathSecret::decode(&mut &buf[..]).map_err(FrameEnclaveError::CodecError)?;
-    if id == exported_path_secret.id() {
+    if id != exported_path_secret.id() {
         return Err(anyhow!("Invalid path_secret's id").into());
     }
 

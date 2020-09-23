@@ -9,7 +9,9 @@ use test_utils::*;
 
 #[no_mangle]
 pub fn ecall_run_tests() {
-    let ret = check_all_passed!(frame_treekem::tests::run_tests(),);
+    let ret = check_all_passed!(
+        frame_treekem::tests::run_tests(),
+    );
 
     assert!(ret);
 }

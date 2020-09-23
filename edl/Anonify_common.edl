@@ -26,7 +26,7 @@ enclave {
 
     untrusted {
         UntrustedStatus ocall_import_path_secret(
-            [in, size=ps_len] uint8_t* path_secret,
+            [out, size=ps_len] uint8_t* path_secret,
             size_t ps_len,
             [in, size=id_len] const uint8_t* id,
             size_t id_len

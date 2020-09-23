@@ -138,7 +138,7 @@ impl AppKeyChain {
             self.member_secrets_and_gens
                 .get(roster_idx)
                 .ok_or_else(|| {
-                    anyhow!("key_nonce_gen: Roster index is out of range of application key chain")
+                    anyhow!("key_nonce_gen: Roster index is out of range of application key chain. roster_idx: {:?}, key chain length: {:?}", roster_idx, self.member_secrets_and_gens.len())
                 })?;
 
         let prk = HmacKey::from(member_secret);
