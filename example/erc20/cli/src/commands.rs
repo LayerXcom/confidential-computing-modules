@@ -34,6 +34,19 @@ pub(crate) fn join_group(anonify_url: String, contract_addr: String) -> Result<(
     Ok(())
 }
 
+pub(crate) fn update_mrenclave(anonify_url: String, contract_addr: String) -> Result<()> {
+    let req = erc20_api::update_mrenclave::post::Request { contract_addr };
+    let res = Client::new()
+        .post(&format!("{}/api/v1/update_mrenclave", &anonify_url))
+        .json(&req)
+        .send()?
+        .text()?;
+
+    println!("Transaction Receipt: {:?}", res);
+
+    Ok(())
+}
+
 pub(crate) fn init_state<R: Rng>(
     term: &mut Term,
     root_dir: PathBuf,

@@ -78,6 +78,14 @@ fn subcommand_anonify<R: Rng>(
 
             commands::join_group(anonify_url, contract_addr).expect("Failed to join_group command");
         }
+        ("update_mrenclave", Some(matches)) => {
+            let contract_addr = match matches.value_of("contract-addr") {
+                Some(addr) => addr.to_string(),
+                None => default_contract_addr,
+            };
+
+            commands::update_mrenclave(anonify_url, contract_addr).expect("Failed to update_mrenclave command");
+        }
         ("init_state", Some(matches)) => {
             let keyfile_index: usize = matches
                 .value_of("keyfile-index")
@@ -278,6 +286,11 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         .subcommand(
             SubCommand::with_name("join_group")
                 .about("join group a contract from anonify services.")
+                .arg(Arg::with_name("contract-addr").short("c").takes_value(true)),
+        )
+        .subcommand(
+            SubCommand::with_name("update_mrenclave")
+                .about("update mrenclave a contract from anonify services.")
                 .arg(Arg::with_name("contract-addr").short("c").takes_value(true)),
         )
         .subcommand(

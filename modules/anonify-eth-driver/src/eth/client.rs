@@ -107,7 +107,8 @@ impl Sender for EthSender {
         confirmations: usize,
         method: &str,
     ) -> Result<TransactionReceipt> {
-        self.contract.send_report_handshake(host_output, confirmations, method)
+        self.contract
+            .send_report_handshake(host_output, confirmations, method)
     }
 
     fn send_instruction(
