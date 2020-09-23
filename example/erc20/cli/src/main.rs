@@ -84,7 +84,8 @@ fn subcommand_anonify<R: Rng>(
                 None => default_contract_addr,
             };
 
-            commands::update_mrenclave(anonify_url, contract_addr).expect("Failed to update_mrenclave command");
+            commands::update_mrenclave(anonify_url, contract_addr)
+                .expect("Failed to update_mrenclave command");
         }
         ("init_state", Some(matches)) => {
             let keyfile_index: usize = matches

@@ -364,7 +364,7 @@ pub(crate) fn show_list(term: &mut Term, root_dir: PathBuf) -> Result<()> {
 
     // let default_index = get_default_index(&wallet_dir)? as usize;
 
-    for (i, keyfile) in keyfiles.iter().enumerate() {
+    for (_i, keyfile) in keyfiles.iter().enumerate() {
         let (name, address) = (&*keyfile.account_name, &*keyfile.base64_address);
         // if i == default_index {
         // term.success(&format!("* {}: {}\n", name, address))?;
