@@ -1,5 +1,5 @@
 use parity_crypto as crypto;
-use std::{error::Error, fmt, io};
+use std::{fmt, io};
 
 /// Alias of wallet operation result.
 pub type Result<T> = std::result::Result<T, WalletError>;
@@ -54,21 +54,6 @@ impl fmt::Display for WalletError {
             WalletError::CryptoError(ref err) => write!(f, "crypto error: {}", err),
             WalletError::SerdeError(ref err) => write!(f, "serde error: {}", err),
             WalletError::Ed25519Error(ref err) => write!(f, "Ed25519 error: {}", err),
-        }
-    }
-}
-
-impl Error for WalletError {
-    fn description(&self) -> &str {
-        match *self {
-            WalletError::InvalidPassword => "Invalid password",
-            WalletError::InvalidKeyfile => "Invalid keyfile",
-            WalletError::OverRetries => "Exceeded maximum retries when deduplicating filename.",
-            WalletError::InvalidPath => "Invalid path",
-            WalletError::IoError(ref err) => err.description(),
-            WalletError::CryptoError(ref err) => err.description(),
-            WalletError::SerdeError(ref err) => err.description(),
-            WalletError::Ed25519Error(ref err) => "Ed25519 error:",
         }
     }
 }

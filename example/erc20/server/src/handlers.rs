@@ -72,6 +72,33 @@ where
     Ok(HttpResponse::Ok().json(erc20_api::join_group::post::Response(receipt)))
 }
 
+pub fn handle_update_mrenclave<D, S, W, DB>(
+    server: web::Data<Arc<Server<D, S, W, DB>>>,
+    req: web::Json<erc20_api::update_mrenclave::post::Request>,
+) -> Result<HttpResponse, Error>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher<WatcherDB = DB>,
+    DB: BlockNumDB,
+{
+    let sender_address = server
+        .dispatcher
+        .get_account(server.account_index, &server.password)?;
+    let (receipt, export_path_secret) = server.dispatcher.update_mrenclave(
+        sender_address,
+        DEFAULT_GAS,
+        &req.contract_addr,
+        &server.abi_path,
+        server.confirmations,
+    )?;
+    server
+        .store_path_secrets
+        .save_to_local_filesystem(&export_path_secret)?;
+
+    Ok(HttpResponse::Ok().json(erc20_api::update_mrenclave::post::Response(receipt)))
+}
+
 pub fn handle_init_state<D, S, W, DB>(
     server: web::Data<Arc<Server<D, S, W, DB>>>,
     req: web::Json<erc20_api::init_state::post::Request>,

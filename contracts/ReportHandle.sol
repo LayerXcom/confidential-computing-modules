@@ -14,8 +14,10 @@ contract ReportHandle {
     bytes32 public mrEnclave;
     // Address-formatted verifying keys, each of them is included in `reportdata`
     mapping(address => address) public verifyingKeyMapping;
+    address[] public verifyingKeyArray; // for deleting mapping
     // Public keys for encrypting clients messages to TEEs, which is included `reportdata`
     mapping(bytes => bytes) public encryptingKeyMapping;
+    bytes[] public encryptingKeyArray; // for deleting mapping
 
     // This is the modulus and the exponent of intel's certificate, you can extract it using:
     // `openssl x509 -noout -modulus -in AttestationReportSigningCert.pem` and `openssl x509 -in AttestationReportSigningCert.pem -text`.
@@ -24,22 +26,43 @@ contract ReportHandle {
     uint constant internal WORD_SIZE = 32;
 
     // Set new mrenclave value and enclave address
-    constructor(bytes memory _report, bytes memory _reportSig) public {
+    constructor(bytes memory _report, bytes memory _reportSig) internal {
         (bytes32 inpMrEnclave, address inpVerifyingKey, bytes memory inpEncryptingKey) = extractFromReport(_report, _reportSig);
         require(mrEnclave == 0, "mrenclave included in the report is not correct.");
 
+        setKeys(inpVerifyingKey, inpEncryptingKey);
         mrEnclave = inpMrEnclave;
-        verifyingKeyMapping[inpVerifyingKey] = inpVerifyingKey;
-        encryptingKeyMapping[inpEncryptingKey] = inpEncryptingKey;
     }
 
     // Check mrenclave value and report signature and then set new enclave address.
-    function handleReport(bytes memory _report, bytes memory _reportSig) public {
+    function handleReport(bytes memory _report, bytes memory _reportSig) internal {
         (bytes32 inpMrEnclave, address inpVerifyingKey, bytes memory inpEncryptingKey) = extractFromReport(_report, _reportSig);
         require(mrEnclave == inpMrEnclave, "mrenclave included in the report is not correct.");
 
+        setKeys(inpVerifyingKey, inpEncryptingKey);
+    }
+
+    function updateMrenclaveInner(bytes memory _report, bytes memory _reportSig) internal {
+        (bytes32 inpMrEnclave, address inpVerifyingKey, bytes memory inpEncryptingKey) = extractFromReport(_report, _reportSig);
+        require(mrEnclave != inpMrEnclave, "mrenclave must be different one");
+
+        // delete all keys
+        for (uint i = 0; i < verifyingKeyArray.length; i++) {
+            delete verifyingKeyMapping[verifyingKeyArray[i]];
+            delete encryptingKeyMapping[encryptingKeyArray[i]];
+        }
+        delete verifyingKeyArray;
+        delete encryptingKeyArray;
+
+        setKeys(inpVerifyingKey, inpEncryptingKey);
+        mrEnclave = inpMrEnclave;
+    }
+
+    function setKeys(address inpVerifyingKey, bytes memory inpEncryptingKey) private {
         verifyingKeyMapping[inpVerifyingKey] = inpVerifyingKey;
         encryptingKeyMapping[inpEncryptingKey] = inpEncryptingKey;
+        verifyingKeyArray.push(inpVerifyingKey);
+        encryptingKeyArray.push(inpEncryptingKey);
     }
 
     // Get the registered encrypting key

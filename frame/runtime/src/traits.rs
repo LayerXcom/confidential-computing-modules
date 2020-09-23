@@ -36,9 +36,9 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     ) -> Result<Vec<UpdatedState<Self::S>>>;
 }
 
-impl<T: StateOps + GroupKeyGetter + NotificationOps + Signer + QuoteGetter> ContextOps for T {}
-
-pub trait ContextOps: StateOps + GroupKeyGetter + NotificationOps + Signer + QuoteGetter {}
+pub trait ContextOps: StateOps + GroupKeyGetter + NotificationOps + Signer + QuoteGetter {
+    fn mrenclave_ver(&self) -> usize;
+}
 
 /// A getter of state stored in enclave memory.
 pub trait StateOps {

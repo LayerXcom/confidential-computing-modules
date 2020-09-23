@@ -58,6 +58,7 @@ impl Term {
         dialoguer::Input::new().with_prompt(prompt).interact()
     }
 
+    #[allow(dead_code)]
     pub fn simply(&mut self, msg: &str) -> io::Result<()> {
         write!(self, "{}", msg)
     }
@@ -77,6 +78,7 @@ impl Term {
         write!(&mut self.term, "{}", self.style.error.apply_to(msg))
     }
 
+    #[allow(dead_code)]
     pub fn fail_with<E>(&mut self, e: E) -> !
     where
         E: Error,

@@ -101,12 +101,14 @@ impl Sender for EthSender {
         self.contract.get_account(index, password)
     }
 
-    fn join_group(
+    fn send_report_handshake(
         &self,
         host_output: host_output::JoinGroup,
         confirmations: usize,
+        method: &str,
     ) -> Result<TransactionReceipt> {
-        self.contract.join_group(host_output, confirmations)
+        self.contract
+            .send_report_handshake(host_output, confirmations, method)
     }
 
     fn send_instruction(

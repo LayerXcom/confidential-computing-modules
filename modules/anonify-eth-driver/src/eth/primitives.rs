@@ -78,7 +78,11 @@ impl Web3Http {
             .map_err(|e| anyhow!("{:?}", e))?
             .confirmations(confirmations)
             .options(Options::with(|opt| opt.gas = Some(gas.into())))
-            .execute(bin.as_str(), (report, report_sig, handshake), output.signer)
+            .execute(
+                bin.as_str(),
+                (report, report_sig, handshake, ecall_output.mrenclave_ver()),
+                output.signer,
+            )
             .map_err(|e| anyhow!("{:?}", e))?
             .wait()
             .map_err(|e| anyhow!("{:?}", e))?;
@@ -115,10 +119,11 @@ impl Web3Contract {
         })
     }
 
-    pub fn join_group(
+    pub fn send_report_handshake(
         &self,
         output: host_output::JoinGroup,
         confirmations: usize,
+        method: &str,
     ) -> Result<TransactionReceipt> {
         let ecall_output = output.ecall_output.unwrap();
         let report = ecall_output.report().to_vec();
@@ -127,8 +132,8 @@ impl Web3Contract {
         let gas = output.gas;
 
         let call = self.contract.call_with_confirmations(
-            "joinGroup",
-            (report, report_sig, handshake),
+            method,
+            (report, report_sig, handshake, ecall_output.mrenclave_ver()),
             output.signer,
             Options::with(|opt| opt.gas = Some(gas.into())),
             confirmations,

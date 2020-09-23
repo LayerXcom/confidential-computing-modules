@@ -49,10 +49,11 @@ pub trait Sender: Sized {
     ) -> Result<TransactionReceipt>;
 
     /// Attestation with deployed contract.
-    fn join_group(
+    fn send_report_handshake(
         &self,
         host_output: host_output::JoinGroup,
         confirmations: usize,
+        method: &str,
     ) -> Result<TransactionReceipt>;
 
     fn handshake(
