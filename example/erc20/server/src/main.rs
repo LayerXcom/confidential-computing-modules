@@ -97,6 +97,15 @@ fn main() -> io::Result<()> {
                 >),
             )
             .route(
+                "/api/v1/update_mrenclave",
+                web::post().to(handle_update_mrenclave::<
+                    EthDeployer,
+                    EthSender,
+                    EventWatcher<EventDB>,
+                    EventDB,
+                >),
+            )
+            .route(
                 "/api/v1/init_state",
                 web::post().to(handle_init_state::<
                     EthDeployer,

@@ -26,7 +26,7 @@ contract ReportHandle {
     uint constant internal WORD_SIZE = 32;
 
     // Set new mrenclave value and enclave address
-    constructor(bytes memory _report, bytes memory _reportSig) public {
+    constructor(bytes memory _report, bytes memory _reportSig) internal {
         (bytes32 inpMrEnclave, address inpVerifyingKey, bytes memory inpEncryptingKey) = extractFromReport(_report, _reportSig);
         require(mrEnclave == 0, "mrenclave included in the report is not correct.");
 
@@ -35,14 +35,14 @@ contract ReportHandle {
     }
 
     // Check mrenclave value and report signature and then set new enclave address.
-    function handleReport(bytes memory _report, bytes memory _reportSig) public {
+    function handleReport(bytes memory _report, bytes memory _reportSig) internal {
         (bytes32 inpMrEnclave, address inpVerifyingKey, bytes memory inpEncryptingKey) = extractFromReport(_report, _reportSig);
         require(mrEnclave == inpMrEnclave, "mrenclave included in the report is not correct.");
 
         setKeys(inpVerifyingKey, inpEncryptingKey);
     }
 
-    function updateMrEnclaveInner(bytes memory _report, bytes memory _reportSig) internal {
+    function updateMrenclaveInner(bytes memory _report, bytes memory _reportSig) internal {
         (bytes32 inpMrEnclave, address inpVerifyingKey, bytes memory inpEncryptingKey) = extractFromReport(_report, _reportSig);
         require(mrEnclave != inpMrEnclave, "mrenclave must be different one");
 

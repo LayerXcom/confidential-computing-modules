@@ -103,6 +103,43 @@ where
         abi_path: P,
         confirmations: usize,
     ) -> Result<(TransactionReceipt, ExportPathSecret)> {
+        self.send_report_handshake(
+            signer,
+            gas,
+            contract_addr,
+            abi_path,
+            confirmations,
+            "joinGroup",
+        )
+    }
+
+    pub fn update_mrenclave<P: AsRef<Path> + Copy>(
+        &self,
+        signer: Address,
+        gas: u64,
+        contract_addr: &str,
+        abi_path: P,
+        confirmations: usize,
+    ) -> Result<(TransactionReceipt, ExportPathSecret)> {
+        self.send_report_handshake(
+            signer,
+            gas,
+            contract_addr,
+            abi_path,
+            confirmations,
+            "updateMrenclave",
+        )
+    }
+
+    fn send_report_handshake<P: AsRef<Path> + Copy>(
+        &self,
+        signer: Address,
+        gas: u64,
+        contract_addr: &str,
+        abi_path: P,
+        confirmations: usize,
+        method: &str,
+    ) -> Result<(TransactionReceipt, ExportPathSecret)> {
         self.set_contract_addr(contract_addr, abi_path)?;
 
         let inner = self.inner.read();
@@ -114,7 +151,7 @@ where
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .join_group(host_output.clone(), confirmations)?;
+            .send_report_handshake(host_output.clone(), confirmations, method)?;
 
         let export_path_secret = host_output
             .ecall_output
