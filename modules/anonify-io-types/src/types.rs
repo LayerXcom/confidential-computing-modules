@@ -1,7 +1,7 @@
 use crate::localstd::vec::Vec;
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
-    crypto::{Ciphertext, ExportPathSecret, Sha256},
+    crypto::{Ciphertext, ExportPathSecret},
     state_types::{MemId, StateType, UpdatedState},
     traits::AccessPolicy,
     EcallInput, EcallOutput,
@@ -126,7 +126,6 @@ pub mod output {
     #[derive(Debug, Clone)]
     pub struct Instruction {
         enclave_sig: secp256k1::Signature,
-        msg: Sha256,
         ciphertext: Ciphertext,
     }
 
@@ -136,7 +135,6 @@ pub mod output {
         fn encode(&self) -> Vec<u8> {
             let mut acc = vec![];
             acc.extend_from_slice(&self.encode_enclave_sig());
-            acc.extend_from_slice(self.msg_as_bytes());
             acc.extend_from_slice(&self.encode_ciphertext());
 
             acc
@@ -146,9 +144,7 @@ pub mod output {
     impl Decode for Instruction {
         fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
             let mut enclave_sig_buf = [0u8; 64];
-            let mut msg_buf = [0u8; 32];
             value.read(&mut enclave_sig_buf)?;
-            value.read(&mut msg_buf)?;
 
             let ciphertext_len = value
                 .remaining_len()?
@@ -157,22 +153,19 @@ pub mod output {
             value.read(&mut ciphertext_buf)?;
 
             let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
-            let msg = Sha256::new(msg_buf);
             let ciphertext = Ciphertext::decode(&mut &ciphertext_buf[..])?;
 
             Ok(Instruction {
                 enclave_sig,
-                msg,
                 ciphertext,
             })
         }
     }
 
     impl Instruction {
-        pub fn new(ciphertext: Ciphertext, enclave_sig: secp256k1::Signature, msg: Sha256) -> Self {
+        pub fn new(ciphertext: Ciphertext, enclave_sig: secp256k1::Signature) -> Self {
             Instruction {
                 enclave_sig,
-                msg,
                 ciphertext,
             }
         }
@@ -187,14 +180,6 @@ pub mod output {
 
         pub fn encode_enclave_sig(&self) -> [u8; 64] {
             self.enclave_sig.serialize()
-        }
-
-        pub fn msg_as_bytes(&self) -> &[u8] {
-            &self.msg.as_bytes()
-        }
-
-        pub fn msg_as_array(&self) -> [u8; 32] {
-            self.msg.as_array()
         }
     }
 

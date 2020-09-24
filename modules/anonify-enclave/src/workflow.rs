@@ -3,7 +3,7 @@ use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
 use frame_common::{
-    crypto::{AccountId, Sha256},
+    crypto::AccountId,
     state_types::StateType,
     traits::*,
 };
@@ -197,6 +197,7 @@ impl EnclaveEngine for CallHandshake {
     {
         let group_key = &*enclave_context.read_group_key();
         let (handshake, export_path_secret) = group_key.create_handshake()?;
+        // let enclave_sig = enclave_context.sign(msg.as_bytes())?;
 
         Ok(output::ReturnHandshake::new(
             handshake.encode(),
@@ -248,8 +249,8 @@ where
     let group_key = &*enclave_ctx.read_group_key();
     let ciphertext =
         Instructions::<R, C>::new(call_id, params, account_id)?.encrypt(group_key, max_mem_size)?;
-    let msg = Sha256::hash(&ciphertext.encode());
-    let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;
+    let msg = &ciphertext.encode().keccak256();
+    let enclave_sig = enclave_ctx.sign(&msg[..])?;
 
-    Ok(output::Instruction::new(ciphertext, enclave_sig, msg))
+    Ok(output::Instruction::new(ciphertext, enclave_sig))
 }
