@@ -59,7 +59,7 @@ contract Anonify is ReportHandle {
         bytes memory _newCiphertext,
         bytes memory _enclaveSig
     ) public {
-        address verifyingKey = Secp256k1.recover(keccak256(_newCiphertext), _enclaveSig);
+        address verifyingKey = Secp256k1.recover(sha256(_newCiphertext), _enclaveSig);
         require(verifyingKeyMapping[verifyingKey] == verifyingKey, "Invalid enclave signature.");
 
         emit StoreCiphertext(_newCiphertext);

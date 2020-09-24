@@ -3,7 +3,7 @@ use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
 use frame_common::{
-    crypto::AccountId,
+    crypto::{AccountId, Sha256},
     state_types::StateType,
     traits::*,
 };
@@ -249,8 +249,8 @@ where
     let group_key = &*enclave_ctx.read_group_key();
     let ciphertext =
         Instructions::<R, C>::new(call_id, params, account_id)?.encrypt(group_key, max_mem_size)?;
-    let msg = &ciphertext.encode().keccak256();
-    let enclave_sig = enclave_ctx.sign(&msg[..])?;
+    let msg = Sha256::hash(&ciphertext.encode());
+    let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;
 
     Ok(output::Instruction::new(ciphertext, enclave_sig))
 }
