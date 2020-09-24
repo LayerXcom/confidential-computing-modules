@@ -175,11 +175,12 @@ impl Web3Contract {
     ) -> Result<TransactionReceipt> {
         let ecall_output = output.ecall_output.unwrap();
         let handshake = ecall_output.handshake().to_vec();
+        let enclave_sig = &ecall_output.encode_enclave_sig();
         let gas = output.gas;
 
         let call = self.contract.call_with_confirmations(
             "handshake",
-            handshake,
+            (handshake, enclave_sig.to_vec()),
             output.signer,
             Options::with(|opt| opt.gas = Some(gas.into())),
             confirmations,

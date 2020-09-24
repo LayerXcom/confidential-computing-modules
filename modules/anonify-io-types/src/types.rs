@@ -287,19 +287,51 @@ pub mod output {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Debug, Clone)]
     pub struct ReturnHandshake {
-        handshake: Vec<u8>,
         export_path_secret: ExportPathSecret,
+        enclave_sig: secp256k1::Signature,
+        handshake: Vec<u8>,
     }
 
     impl EcallOutput for ReturnHandshake {}
 
+    impl Encode for ReturnHandshake {
+        fn encode(&self) -> Vec<u8> {
+            let mut acc = vec![];
+            acc.extend_from_slice(&self.export_path_secret_as_ref().encode());
+            acc.extend_from_slice(&self.encode_enclave_sig());
+            acc.extend_from_slice(&self.handshake());
+
+            acc
+        }
+    }
+
+    impl Decode for ReturnHandshake {
+        fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
+            let export_path_secret = ExportPathSecret::decode(value)?;
+
+            let mut enclave_sig_buf = [0u8; 64];
+            value.read(&mut enclave_sig_buf)?;
+            let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
+
+            let mut handshake = vec![];
+            value.read(&mut handshake)?;
+
+            Ok(ReturnHandshake {
+                export_path_secret,
+                enclave_sig,
+                handshake,
+            })
+        }
+    }
+
     impl ReturnHandshake {
-        pub fn new(handshake: Vec<u8>, export_path_secret: ExportPathSecret) -> Self {
+        pub fn new(handshake: Vec<u8>, export_path_secret: ExportPathSecret, enclave_sig: secp256k1::Signature) -> Self {
             ReturnHandshake {
                 handshake,
                 export_path_secret,
+                enclave_sig,
             }
         }
 
@@ -313,6 +345,10 @@ pub mod output {
 
         pub fn export_path_secret(self) -> ExportPathSecret {
             self.export_path_secret
+        }
+
+        pub fn encode_enclave_sig(&self) -> [u8; 64] {
+            self.enclave_sig.serialize()
         }
     }
 }
