@@ -18,6 +18,7 @@ use web3::{
 };
 
 const UNLOCK_DURATION: u16 = 60;
+const EVENT_LIMIT: usize = 100;
 
 /// Basic web3 connection components via HTTP.
 #[derive(Debug)]
@@ -213,6 +214,7 @@ impl Web3Contract {
                 })
                 .from_block(BlockNumber::Number(latest_fetched_num.into()))
                 .to_block(BlockNumber::Latest)
+                .limit(EVENT_LIMIT)
                 .build();
 
             let logs = self.web3_conn.get_logs(filter)?;
