@@ -68,7 +68,7 @@ contract Anonify is ReportHandle {
     function handshake(
         bytes memory _handshake,
         bytes memory _enclaveSig
-    ) private {
+    ) public {
         address verifyingKey = Secp256k1.recover(sha256(_handshake), _enclaveSig);
         require(verifyingKeyMapping[verifyingKey] == verifyingKey, "Invalid enclave signature.");
 
