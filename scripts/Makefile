@@ -140,5 +140,5 @@ $(RustEnclave_Name): $(Rust_Enclave_Name) $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
 
 $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 	mkdir -p $(ANONIFY_BIN_DIR)
-	@$(SGX_ENCLAVE_SIGNER) sign -key $(CONFIG_DIR)/Enclave_private.pem -enclave $(RustEnclave_Name) -out $@ -config $(CONFIG_DIR)/Enclave.config.xml
+	@$(SGX_ENCLAVE_SIGNER) sign -key $(CONFIG_DIR)/Test_Enclave_private.pem -enclave $(RustEnclave_Name) -out $@ -config $(CONFIG_DIR)/Enclave.config.xml
 	@echo "SIGN =>  $@"
