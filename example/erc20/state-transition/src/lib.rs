@@ -2,8 +2,6 @@
 #[cfg(feature = "sgx")]
 #[macro_use]
 extern crate sgx_tstd as localstd;
-#[cfg(feature = "std")]
-use std as localstd;
 
 use frame_runtime::prelude::*;
 

@@ -197,10 +197,14 @@ impl EnclaveEngine for CallHandshake {
     {
         let group_key = &*enclave_context.read_group_key();
         let (handshake, export_path_secret) = group_key.create_handshake()?;
+        let encoded_handshake = handshake.encode();
+        let msg = Sha256::hash(&encoded_handshake);
+        let enclave_sig = enclave_context.sign(msg.as_bytes())?;
 
         Ok(output::ReturnHandshake::new(
-            handshake.encode(),
+            encoded_handshake,
             export_path_secret,
+            enclave_sig,
         ))
     }
 }
@@ -251,5 +255,5 @@ where
     let msg = Sha256::hash(&ciphertext.encode());
     let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;
 
-    Ok(output::Instruction::new(ciphertext, enclave_sig, msg))
+    Ok(output::Instruction::new(ciphertext, enclave_sig))
 }

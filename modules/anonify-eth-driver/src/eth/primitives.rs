@@ -13,11 +13,12 @@ use web3::{
     contract::{Contract, Options},
     futures::Future,
     transports::{EventLoopHandle, Http},
-    types::{Address, BlockNumber, Filter, FilterBuilder, Log, TransactionReceipt, H256},
+    types::{Address, BlockNumber, Filter, FilterBuilder, Log, TransactionReceipt},
     Web3,
 };
 
 const UNLOCK_DURATION: u16 = 60;
+const EVENT_LIMIT: usize = 100;
 
 /// Basic web3 connection components via HTTP.
 #[derive(Debug)]
@@ -152,12 +153,11 @@ impl Web3Contract {
         let ecall_output = output.ecall_output.unwrap();
         let ciphertext = ecall_output.encode_ciphertext();
         let enclave_sig = &ecall_output.encode_enclave_sig();
-        let msg = ecall_output.msg_as_bytes();
         let gas = output.gas;
 
         let call = self.contract.call_with_confirmations(
             "storeInstruction",
-            (ciphertext, enclave_sig.to_vec(), H256::from_slice(&msg)),
+            (ciphertext, enclave_sig.to_vec()),
             output.signer,
             Options::with(|opt| opt.gas = Some(gas.into())),
             confirmations,
@@ -175,11 +175,12 @@ impl Web3Contract {
     ) -> Result<TransactionReceipt> {
         let ecall_output = output.ecall_output.unwrap();
         let handshake = ecall_output.handshake().to_vec();
+        let enclave_sig = &ecall_output.encode_enclave_sig();
         let gas = output.gas;
 
         let call = self.contract.call_with_confirmations(
             "handshake",
-            handshake,
+            (handshake, enclave_sig.to_vec()),
             output.signer,
             Options::with(|opt| opt.gas = Some(gas.into())),
             confirmations,
@@ -213,6 +214,7 @@ impl Web3Contract {
                 })
                 .from_block(BlockNumber::Number(latest_fetched_num.into()))
                 .to_block(BlockNumber::Latest)
+                .limit(EVENT_LIMIT)
                 .build();
 
             let logs = self.web3_conn.get_logs(filter)?;
