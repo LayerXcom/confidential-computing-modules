@@ -315,7 +315,10 @@ pub mod output {
             value.read(&mut enclave_sig_buf)?;
             let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
 
-            let mut handshake = vec![];
+            let handshake_len = value
+                .remaining_len()?
+                .expect("Handshake length must not be zero");
+            let mut handshake = vec![0u8; handshake_len];
             value.read(&mut handshake)?;
 
             Ok(ReturnHandshake {
@@ -327,7 +330,11 @@ pub mod output {
     }
 
     impl ReturnHandshake {
-        pub fn new(handshake: Vec<u8>, export_path_secret: ExportPathSecret, enclave_sig: secp256k1::Signature) -> Self {
+        pub fn new(
+            handshake: Vec<u8>,
+            export_path_secret: ExportPathSecret,
+            enclave_sig: secp256k1::Signature,
+        ) -> Self {
             ReturnHandshake {
                 handshake,
                 export_path_secret,
