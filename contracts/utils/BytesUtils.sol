@@ -24,12 +24,12 @@ library BytesUtils {
         return tempBytes32;
     }
 
-    function toUint256(bytes memory _bytes, uint256 _start) internal pure returns (uint256) {
-        require(_bytes.length >= (_start + 32), "Read out of bounds");
-        uint256 tempUint;
+    function toUint32(bytes memory _bytes, uint256 _start) internal pure returns (uint32) {
+        require(_bytes.length >= (_start + 4), "Read out of bounds");
+        uint32 tempUint;
 
         assembly {
-            tempUint := mload(add(add(_bytes, 0x20), _start))
+            tempUint := mload(add(add(_bytes, 0x4), _start))
         }
 
         return tempUint;
