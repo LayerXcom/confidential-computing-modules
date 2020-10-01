@@ -160,6 +160,7 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
             .contract
             .get_event(self.event_db.clone(), self.contract.address())?
             .into_enclave_log()?
+            .verify_order()?
             .insert_enclave(eid)?
             .set_to_db(self.contract.address());
 

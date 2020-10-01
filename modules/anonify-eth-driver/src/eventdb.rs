@@ -131,6 +131,10 @@ pub struct EnclaveLog<DB: BlockNumDB> {
 }
 
 impl<DB: BlockNumDB> EnclaveLog<DB> {
+    pub fn verify_order(self) -> Result<Self> {
+        unimplemented!();
+    }
+
     /// Store logs into enclave in-memory.
     /// This returns a latest block number specified by fetched logs.
     pub fn insert_enclave<S: State>(
