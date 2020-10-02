@@ -8,7 +8,8 @@ use anyhow::anyhow;
 use ethabi::{decode, Event, EventParam, Hash, ParamType, Topic, TopicFilter};
 use frame_common::crypto::Ciphertext;
 use log::debug;
-use std::{fs, path::Path};
+use std::{fs, path::Path, sync::Arc};
+use parking_lot::RwLock;
 use web3::{
     contract::{Contract, Options},
     futures::Future,
@@ -193,12 +194,12 @@ impl Web3Contract {
 
     pub fn get_event(
         &self,
-        cache: EventCache,
+        cache: Arc<RwLock<EventCache>>,
         key: Address,
     ) -> Result<Web3Logs> {
         let events = EthEvent::create_event();
         // Read latest block number from in-memory event cache.
-        let latest_fetched_num = cache.get_latest_block_num(key)
+        let latest_fetched_num = cache.read().get_latest_block_num(key)
             .ok_or_else(|| anyhow!("Latest fetched block number is not found in event cache"))?;
         let mut logs_acc = vec![];
 
@@ -242,7 +243,7 @@ impl Web3Contract {
 #[derive(Debug)]
 pub struct Web3Logs {
     logs: Vec<Log>,
-    cache: EventCache,
+    cache: Arc<RwLock<EventCache>>,
     events: EthEvent,
 }
 

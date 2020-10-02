@@ -3,8 +3,9 @@ use crate::{error::Result, eventdb::EventCache, traits::*, utils::*, workflow::*
 
 use frame_common::{state_types::UpdatedState, traits::*};
 use sgx_types::sgx_enclave_id_t;
-use std::path::Path;
+use std::{path::Path, sync::Arc};
 use web3::types::{Address, TransactionReceipt};
+use parking_lot::RwLock;
 
 /// Components needed to deploy a contract
 #[derive(Debug)]
@@ -135,7 +136,7 @@ impl Sender for EthSender {
 /// Components needed to watch events
 pub struct EventWatcher {
     contract: Web3Contract,
-    cache: EventCache,
+    cache: Arc<RwLock<EventCache>>,
 }
 
 impl Watcher for EventWatcher {
@@ -147,7 +148,10 @@ impl Watcher for EventWatcher {
         let web3_http = Web3Http::new(node_url)?;
         let contract = Web3Contract::new(web3_http, contract_info)?;
 
-        Ok(EventWatcher { contract, cache })
+        Ok(EventWatcher {
+            contract,
+            cache: Arc::new(RwLock::new(cache)),
+        })
     }
 
     fn block_on_event<S: State>(

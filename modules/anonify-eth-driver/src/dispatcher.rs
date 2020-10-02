@@ -14,6 +14,7 @@ use std::{
     convert::{TryFrom, TryInto},
     fmt::Debug,
     path::Path,
+    sync::Arc,
 };
 use web3::types::{Address, TransactionReceipt};
 
@@ -35,7 +36,7 @@ impl<D, S, W> Dispatcher<D, S, W>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher
+    W: Watcher,
 {
     pub fn new(enclave_id: sgx_enclave_id_t, node_url: &str, cache: EventCache) -> Result<Self> {
         let deployer = D::new(enclave_id, node_url)?;

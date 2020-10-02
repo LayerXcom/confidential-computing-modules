@@ -6,10 +6,11 @@ use frame_common::{
     state_types::UpdatedState,
     traits::State,
 };
+use parking_lot::RwLock;
 use frame_host::engine::HostEngine;
 use log::debug;
 use sgx_types::sgx_enclave_id_t;
-use std::collections::{HashMap, HashSet};
+use std::{collections::{HashMap, HashSet}, sync::Arc};
 use web3::types::Address as ContractAddr;
 
 type BlockNum = u64;
@@ -18,6 +19,7 @@ type Epoch = u32;
 type Generation = u32;
 
 // TODO: overhead clone
+// TODO: inner for Arc<RwLock<()>>
 #[derive(Debug, Default, Clone)]
 pub struct EventCache {
     block_num_counter: HashMap<ContractAddr, BlockNum>,
@@ -127,7 +129,7 @@ impl InnerEnclaveLog {
 #[derive(Debug)]
 pub struct EnclaveLog {
     pub inner: Option<InnerEnclaveLog>,
-    pub cache: EventCache,
+    pub cache: Arc<RwLock<EventCache>>,
 }
 
 impl EnclaveLog {
@@ -167,16 +169,17 @@ impl EnclaveLog {
 pub struct EnclaveUpdatedState<S: State> {
     block_num: Option<u64>,
     updated_states: Option<Vec<UpdatedState<S>>>,
-    cache: EventCache,
+    cache: Arc<RwLock<EventCache>>,
 }
 
 impl<S: State> EnclaveUpdatedState<S> {
     /// Only if EnclaveUpdatedState has new block number to log,
     /// it's set next block number to event cache.
-    pub fn save_cache(mut self, contract_addr: ContractAddr) -> Self {
+    pub fn save_cache(self, contract_addr: ContractAddr) -> Self {
         match &self.block_num {
             Some(block_num) => {
-                self.cache.insert_next_block_num(contract_addr, *block_num);
+                let mut w = self.cache.write();
+                w.insert_next_block_num(contract_addr, *block_num);
             }
             None => {}
         }
