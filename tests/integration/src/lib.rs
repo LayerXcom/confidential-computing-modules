@@ -1,4 +1,4 @@
-use anonify_eth_driver::{dispatcher::*, eth::*, BlockNumDB, EventDB};
+use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
 use erc20_state_transition::{
     approve, burn, construct, mint, transfer, transfer_from, CallName, MemName, CIPHERTEXT_SIZE,
 };
@@ -9,7 +9,7 @@ use frame_common::{
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
 use sgx_types::*;
-use std::{collections::BTreeMap, env, sync::Arc};
+use std::{collections::BTreeMap, env};
 
 const ETH_URL: &'static str = "http://172.28.0.2:8545";
 const ABI_PATH: &str = "../../contract-build/Anonify.abi";
@@ -26,9 +26,9 @@ fn test_integration_eth_construct() {
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let event_db = Arc::new(EventDB::new());
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(
-        eid, ETH_URL, event_db,
+    let cache = EventCache::default();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
+        eid, ETH_URL, cache,
     )
     .unwrap();
 
@@ -94,9 +94,9 @@ fn test_auto_notification() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let event_db = Arc::new(EventDB::new());
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(
-        eid, ETH_URL, event_db,
+    let cache = EventCache::default();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
+        eid, ETH_URL, cache,
     )
     .unwrap();
 
@@ -185,9 +185,9 @@ fn test_integration_eth_transfer() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let event_db = Arc::new(EventDB::new());
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(
-        eid, ETH_URL, event_db,
+    let cache = EventCache::default();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
+        eid, ETH_URL, cache,
     )
     .unwrap();
 
@@ -281,9 +281,9 @@ fn test_key_rotation() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let event_db = Arc::new(EventDB::new());
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(
-        eid, ETH_URL, event_db,
+    let cache = EventCache::default();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
+        eid, ETH_URL, cache,
     )
     .unwrap();
 
@@ -352,9 +352,9 @@ fn test_integration_eth_approve() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let event_db = Arc::new(EventDB::new());
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(
-        eid, ETH_URL, event_db,
+    let cache = EventCache::default();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
+        eid, ETH_URL, cache,
     )
     .unwrap();
 
@@ -447,9 +447,9 @@ fn test_integration_eth_transfer_from() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let event_db = Arc::new(EventDB::new());
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(
-        eid, ETH_URL, event_db,
+    let cache = EventCache::default();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
+        eid, ETH_URL, cache,
     )
     .unwrap();
 
@@ -618,9 +618,9 @@ fn test_integration_eth_mint() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let event_db = Arc::new(EventDB::new());
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(
-        eid, ETH_URL, event_db,
+    let cache = EventCache::default();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
+        eid, ETH_URL, cache,
     )
     .unwrap();
 
@@ -702,9 +702,9 @@ fn test_integration_eth_burn() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let event_db = Arc::new(EventDB::new());
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher<EventDB>, EventDB>::new(
-        eid, ETH_URL, event_db,
+    let cache = EventCache::default();
+    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
+        eid, ETH_URL, cache,
     )
     .unwrap();
 
