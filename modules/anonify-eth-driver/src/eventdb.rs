@@ -67,6 +67,11 @@ pub struct InnerEnclaveLog {
 }
 
 impl InnerEnclaveLog {
+    #[must_use]
+    pub fn verify_order(self) -> Result<Self> {
+        unimplemented!();
+    }
+
     pub fn into_input_iter(self) -> impl Iterator<Item = host_input::InsertCiphertext> {
         self.ciphertexts
             .into_iter()
@@ -131,6 +136,8 @@ pub struct EnclaveLog<DB: BlockNumDB> {
 }
 
 impl<DB: BlockNumDB> EnclaveLog<DB> {
+
+    #[must_use]
     pub fn verify_order(self) -> Result<Self> {
         unimplemented!();
     }
