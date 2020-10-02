@@ -12,6 +12,7 @@ use log::debug;
 use sgx_types::sgx_enclave_id_t;
 use std::{collections::{HashMap, HashSet}, sync::Arc};
 use web3::types::Address as ContractAddr;
+use anyhow::anyhow;
 
 type BlockNum = u64;
 type RosterIdx = u32;
@@ -20,7 +21,8 @@ type Generation = u32;
 
 // TODO: overhead clone
 // TODO: inner for Arc<RwLock<()>>
-#[derive(Debug, Default, Clone)]
+// Do not implement `Clone` trait due to cache duplication.
+#[derive(Debug, Default)]
 pub struct EventCache {
     block_num_counter: HashMap<ContractAddr, BlockNum>,
     treekem_counter: HashMap<RosterIdx, (Epoch, Generation)>,
@@ -36,7 +38,7 @@ impl EventCache {
         self.block_num_counter.get(&contract_addr).map(|e| *e)
     }
 
-    pub fn is_next_msg(&self, msg: Ciphertext) -> bool {
+    pub fn is_next_msg(&self, msg: Ciphertext) -> Result<bool> {
         unimplemented!();
     }
 
