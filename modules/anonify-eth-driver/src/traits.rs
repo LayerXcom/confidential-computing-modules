@@ -4,7 +4,8 @@ use crate::{error::Result, eventdb::EventCache, utils::*, workflow::*};
 
 use frame_common::{state_types::UpdatedState, traits::*};
 use sgx_types::sgx_enclave_id_t;
-use std::path::Path;
+use std::{path::Path, sync::Arc};
+use parking_lot::RwLock;
 use web3::types::{Address, TransactionReceipt};
 
 /// A trait for deploying contracts
@@ -70,7 +71,7 @@ pub trait Watcher: Sized {
     fn new<P: AsRef<Path>>(
         node_url: &str,
         contract_info: ContractInfo<'_, P>,
-        cache: EventCache,
+        cache: Arc<RwLock<EventCache>>,
     ) -> Result<Self>;
 
     /// Blocking event fetch from blockchain nodes.

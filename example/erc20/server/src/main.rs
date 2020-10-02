@@ -4,6 +4,7 @@ use frame_host::{EnclaveDir, StorePathSecrets};
 use handlers::*;
 use sgx_types::sgx_enclave_id_t;
 use std::{env, io, sync::Arc};
+use parking_lot::RwLock;
 
 mod handlers;
 
@@ -41,8 +42,8 @@ where
             .expect("Failed to parse ACCOUNT_INDEX to usize");
 
         let store_path_secrets = StorePathSecrets::new();
-        let event_db = EventCache::default();
-        let dispatcher = Dispatcher::<D, S, W>::new(eid, &eth_url, event_db).unwrap();
+        let cache = Arc::new(RwLock::new(EventCache::default()));
+        let dispatcher = Dispatcher::<D, S, W>::new(eid, &eth_url, cache).unwrap();
 
         Server {
             eid,

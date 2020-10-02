@@ -11,3 +11,4 @@ frame-runtime = { path = "../../frame/runtime" }
 frame-host = { path = "../../frame/host" }
 anonify-eth-driver = { path = "../../modules/anonify-eth-driver" }
 erc20-state-transition = { path = "../../example/erc20/state-transition" }
+parking_lot = "0.10"

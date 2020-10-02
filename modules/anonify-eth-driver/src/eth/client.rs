@@ -143,14 +143,14 @@ impl Watcher for EventWatcher {
     fn new<P: AsRef<Path>>(
         node_url: &str,
         contract_info: ContractInfo<'_, P>,
-        cache: EventCache,
+        cache: Arc<RwLock<EventCache>>,
     ) -> Result<Self> {
         let web3_http = Web3Http::new(node_url)?;
         let contract = Web3Contract::new(web3_http, contract_info)?;
 
         Ok(EventWatcher {
             contract,
-            cache: Arc::new(RwLock::new(cache)),
+            cache,
         })
     }
 

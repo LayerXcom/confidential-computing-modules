@@ -1220,6 +1220,7 @@ dependencies = [
  "frame-runtime 0.1.0",
  "hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parking_lot 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.56 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "web3 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1906,6 +1907,7 @@ dependencies = [
  "frame-common 0.1.0",
  "frame-host 0.1.0",
  "frame-runtime 0.1.0",
+ "parking_lot 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
