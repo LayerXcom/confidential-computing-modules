@@ -199,8 +199,7 @@ impl Web3Contract {
     ) -> Result<Web3Logs> {
         let events = EthEvent::create_event();
         // Read latest block number from in-memory event cache.
-        let latest_fetched_num = cache.read().get_latest_block_num(key)
-            .ok_or_else(|| anyhow!("Latest fetched block number is not found in event cache"))?;
+        let latest_fetched_num = cache.read().get_latest_block_num(key).unwrap_or_default();
         let mut logs_acc = vec![];
 
         for event in &events.0 {

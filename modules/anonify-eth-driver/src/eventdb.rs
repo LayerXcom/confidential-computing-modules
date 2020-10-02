@@ -39,6 +39,10 @@ impl EventCache {
     }
 
     pub fn is_next_msg(&self, msg: Ciphertext) -> Result<bool> {
+        let roster_idx = msg.roster_idx();
+        let (current_epoch, current_gen) = self.treekem_counter.get(&roster_idx)
+            .ok_or_else(|| anyhow!(""))?;
+
         unimplemented!();
     }
 
