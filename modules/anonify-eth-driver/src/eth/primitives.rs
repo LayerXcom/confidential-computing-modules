@@ -8,7 +8,7 @@ use anyhow::anyhow;
 use ethabi::{decode, Event, EventParam, Hash, ParamType, Topic, TopicFilter};
 use frame_common::crypto::Ciphertext;
 use log::debug;
-use std::{fs, path::Path, sync::Arc};
+use std::{fs, path::Path};
 use web3::{
     contract::{Contract, Options},
     futures::Future,

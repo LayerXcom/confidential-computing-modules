@@ -1,8 +1,5 @@
-use crate::error::Result;
-use ed25519_dalek::{PublicKey, Signature};
 use frame_common::{
     crypto::AccountId,
-    kvs::*,
     state_types::{MemId, StateType, UpdatedState},
 };
 use std::{
@@ -53,29 +50,5 @@ impl EnclaveDB {
         let mut tmp = self.0.write().unwrap();
         let key = DBKey::new(account_id, mem_id);
         tmp.remove(&key);
-    }
-}
-
-/// Batches a sequence of put/delete operations for efficiency.
-/// These operations are protected from signature verifications.
-#[derive(Default, Clone, PartialEq)]
-pub struct EnclaveDBTx(DBTx);
-
-impl EnclaveDBTx {
-    pub fn new() -> Self {
-        EnclaveDBTx(DBTx::new())
-    }
-
-    /// Put instruction is added to a transaction only if the verification of provided signature returns true.
-    pub fn put(&mut self, account_id: &AccountId, msg: &[u8]) {
-        self.0.put(account_id.as_bytes(), msg);
-    }
-
-    /// Delete instruction is added to a transaction only if the verification of provided signature returns true.
-    pub fn delete(&mut self, msg: &[u8], sig: &Signature, pubkey: &PublicKey) -> Result<()> {
-        let key = AccountId::from_sig(&msg, &sig, &pubkey)?;
-        self.0.delete(key.as_bytes());
-
-        Ok(())
     }
 }

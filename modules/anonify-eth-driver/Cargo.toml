@@ -19,5 +19,4 @@ codec = { package = "parity-scale-codec", version = "1.1" }
 web3 = "0.11"
 ethabi = "12.0.0"
 hex = "0.4"
-byteorder = "1"
 log = "0.4"

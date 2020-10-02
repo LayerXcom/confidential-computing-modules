@@ -13,7 +13,6 @@ frame-common = { path = "../../frame/common", default-features = false, features
 anonify-io-types = { path = "../anonify-io-types", default-features = false, features = ["sgx"] }
 remote-attestation = { path = "../../frame/remote-attestation" }
 
-ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
 libsecp256k1 = { version = "0.2", default-features = false }
 hex = { version = "0.4", default-features = false }
 codec = { package = "parity-scale-codec", version = "1.1", default-features = false }

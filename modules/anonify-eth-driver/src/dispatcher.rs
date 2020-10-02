@@ -14,7 +14,6 @@ use std::{
     convert::{TryFrom, TryInto},
     fmt::Debug,
     path::Path,
-    sync::Arc,
 };
 use web3::types::{Address, TransactionReceipt};
 
