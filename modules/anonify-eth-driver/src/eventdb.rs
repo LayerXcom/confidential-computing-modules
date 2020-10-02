@@ -11,7 +11,6 @@ use frame_common::{
 use frame_host::engine::HostEngine;
 use log::debug;
 use sgx_types::sgx_enclave_id_t;
-use std::sync::Arc;
 use std::collections::{HashMap, HashSet};
 use web3::types::Address as ContractAddr;
 
