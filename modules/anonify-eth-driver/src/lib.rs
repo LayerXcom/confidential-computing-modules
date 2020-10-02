@@ -9,4 +9,4 @@ mod utils;
 mod workflow;
 
 pub use dispatcher::Dispatcher;
-pub use eventdb::{BlockNumDB, EventDB};
+pub use eventdb::EventCache;

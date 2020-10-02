@@ -1,7 +1,7 @@
 use crate::workflow::*;
 use crate::{
     error::{HostError, Result},
-    eventdb::BlockNumDB,
+    eventdb::EventCache,
     traits::*,
     utils::*,
     workflow::host_input,
@@ -20,30 +20,29 @@ use web3::types::{Address, TransactionReceipt};
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
-pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB = DB>, DB: BlockNumDB> {
-    inner: RwLock<InnerDispatcher<D, S, W, DB>>,
+pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher> {
+    inner: RwLock<InnerDispatcher<D, S, W>>,
 }
 
 #[derive(Debug)]
-struct InnerDispatcher<D: Deployer, S: Sender, W: Watcher<WatcherDB = DB>, DB: BlockNumDB> {
+struct InnerDispatcher<D: Deployer, S: Sender, W: Watcher> {
     deployer: D,
     sender: Option<S>,
     watcher: Option<W>,
-    event_db: Arc<DB>,
+    cache: EventCache,
 }
 
-impl<D, S, W, DB> Dispatcher<D, S, W, DB>
+impl<D, S, W> Dispatcher<D, S, W>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher
 {
-    pub fn new(enclave_id: sgx_enclave_id_t, node_url: &str, event_db: Arc<DB>) -> Result<Self> {
+    pub fn new(enclave_id: sgx_enclave_id_t, node_url: &str, cache: EventCache) -> Result<Self> {
         let deployer = D::new(enclave_id, node_url)?;
         let inner = RwLock::new(InnerDispatcher {
             deployer,
-            event_db,
+            cache,
             sender: None,
             watcher: None,
         });
@@ -62,7 +61,7 @@ where
 
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         let sender = S::new(enclave_id, node_url, contract_info)?;
-        let watcher = W::new(node_url, contract_info, inner.event_db.clone())?;
+        let watcher = W::new(node_url, contract_info, inner.cache.clone())?;
 
         inner.sender = Some(sender);
         inner.watcher = Some(watcher);

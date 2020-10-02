@@ -1,6 +1,6 @@
 use crate::{
     error::{HostError, Result},
-    eventdb::{BlockNumDB, EnclaveLog, InnerEnclaveLog},
+    eventdb::{EventCache, EnclaveLog, InnerEnclaveLog},
     utils::ContractInfo,
     workflow::*,
 };
@@ -191,14 +191,15 @@ impl Web3Contract {
         Ok(res)
     }
 
-    pub fn get_event<D: BlockNumDB>(
+    pub fn get_event(
         &self,
-        block_num_db: Arc<D>,
+        cache: EventCache,
         key: Address,
-    ) -> Result<Web3Logs<D>> {
+    ) -> Result<Web3Logs> {
         let events = EthEvent::create_event();
-        // Read latest block number from in-memory event db.
-        let latest_fetched_num = block_num_db.get_latest_block_num(key);
+        // Read latest block number from in-memory event cache.
+        let latest_fetched_num = cache.get_latest_block_num(key)
+            .ok_or_else(|| anyhow!("Latest fetched block number is not found in event cache"))?;
         let mut logs_acc = vec![];
 
         for event in &events.0 {
@@ -223,7 +224,7 @@ impl Web3Contract {
 
         Ok(Web3Logs {
             logs: logs_acc,
-            db: block_num_db,
+            cache,
             events,
         })
     }
@@ -239,14 +240,14 @@ impl Web3Contract {
 
 /// Event fetched logs from smart contracts.
 #[derive(Debug)]
-pub struct Web3Logs<D: BlockNumDB> {
+pub struct Web3Logs {
     logs: Vec<Log>,
-    db: Arc<D>,
+    cache: EventCache,
     events: EthEvent,
 }
 
-impl<D: BlockNumDB> Web3Logs<D> {
-    pub fn into_enclave_log(self) -> Result<EnclaveLog<D>> {
+impl Web3Logs {
+    pub fn into_enclave_log(self) -> Result<EnclaveLog> {
         let mut ciphertexts: Vec<Ciphertext> = vec![];
         let mut handshakes: Vec<Vec<u8>> = vec![];
 
@@ -255,7 +256,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
         if self.logs.is_empty() {
             return Ok(EnclaveLog {
                 inner: None,
-                db: self.db,
+                cache: self.cache,
             });
         }
 
@@ -305,7 +306,7 @@ impl<D: BlockNumDB> Web3Logs<D> {
                 ciphertexts,
                 handshakes,
             }),
-            db: self.db,
+            cache: self.cache,
         })
     }
 

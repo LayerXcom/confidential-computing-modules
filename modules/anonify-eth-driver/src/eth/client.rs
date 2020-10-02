@@ -1,9 +1,9 @@
 use super::primitives::{Web3Contract, Web3Http};
-use crate::{error::Result, eventdb::BlockNumDB, traits::*, utils::*, workflow::*};
+use crate::{error::Result, eventdb::EventCache, traits::*, utils::*, workflow::*};
 
 use frame_common::{state_types::UpdatedState, traits::*};
 use sgx_types::sgx_enclave_id_t;
-use std::{path::Path, sync::Arc};
+use std::path::Path;
 use web3::types::{Address, TransactionReceipt};
 
 /// Components needed to deploy a contract
@@ -133,23 +133,21 @@ impl Sender for EthSender {
 }
 
 /// Components needed to watch events
-pub struct EventWatcher<DB: BlockNumDB> {
+pub struct EventWatcher {
     contract: Web3Contract,
-    event_db: Arc<DB>,
+    cache: EventCache,
 }
 
-impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
-    type WatcherDB = DB;
-
+impl Watcher for EventWatcher {
     fn new<P: AsRef<Path>>(
         node_url: &str,
         contract_info: ContractInfo<'_, P>,
-        event_db: Arc<DB>,
+        cache: EventCache,
     ) -> Result<Self> {
         let web3_http = Web3Http::new(node_url)?;
         let contract = Web3Contract::new(web3_http, contract_info)?;
 
-        Ok(EventWatcher { contract, event_db })
+        Ok(EventWatcher { contract, cache })
     }
 
     fn block_on_event<S: State>(
@@ -158,11 +156,11 @@ impl<DB: BlockNumDB> Watcher for EventWatcher<DB> {
     ) -> Result<Option<Vec<UpdatedState<S>>>> {
         let enclave_updated_state = self
             .contract
-            .get_event(self.event_db.clone(), self.contract.address())?
+            .get_event(self.cache.clone(), self.contract.address())?
             .into_enclave_log()?
             .verify_order()?
             .insert_enclave(eid)?
-            .set_to_db(self.contract.address());
+            .save_cache(self.contract.address());
 
         Ok(enclave_updated_state.updated_states())
     }
