@@ -36,7 +36,6 @@ impl Watcher for EventWatcher {
             .contract
             .get_event(self.cache.clone(), self.contract.address())?
             .into_enclave_log()?
-            // .verify_order()?
             .insert_enclave(eid)?
             .save_cache(self.contract.address());
 
@@ -117,6 +116,13 @@ impl Web3Logs {
             }
         }
 
+        // TODO: Decode handshake and then reordered and dedup as well.
+        // Reordered by the priority in all fetched ciphertexts
+        ciphertexts.sort();
+
+        // Removes consecutive repeated message
+        ciphertexts.dedup();
+
         Ok(EnclaveLog {
             inner: Some(InnerEnclaveLog {
                 contract_addr: contract_addr.to_fixed_bytes(),
@@ -192,7 +198,7 @@ pub struct EnclaveLog {
 
 impl EnclaveLog {
     #[must_use]
-    pub fn verify_order(self) -> Result<Self> {
+    pub fn verify_counter(self) -> Result<Self> {
         unimplemented!();
     }
 
@@ -224,16 +230,11 @@ impl EnclaveLog {
 pub struct InnerEnclaveLog {
     contract_addr: [u8; 20],
     latest_blc_num: u64,
-    ciphertexts: Vec<Ciphertext>, // Concatenated all fetched ciphertexts
+    ciphertexts: Vec<Ciphertext>,
     handshakes: Vec<Vec<u8>>,
 }
 
 impl InnerEnclaveLog {
-    #[must_use]
-    pub fn verify_order(self) -> Result<Self> {
-        unimplemented!();
-    }
-
     pub fn invoke_ecall<S: State>(
         self,
         eid: sgx_enclave_id_t,
