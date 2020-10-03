@@ -18,7 +18,6 @@ use sgx_anyhow as local_anyhow;
 extern crate lazy_static;
 
 pub mod crypto;
-pub mod kvs;
 pub mod state_types;
 pub mod traits;
 

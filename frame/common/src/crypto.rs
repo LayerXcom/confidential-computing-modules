@@ -4,6 +4,7 @@ use crate::localstd::{
     io::{self, Read, Write},
     string::String,
     vec::Vec,
+    cmp::Ordering,
 };
 use crate::serde::{Deserialize, Serialize};
 use crate::traits::{AccessPolicy, Hash256, IntoVec};
@@ -378,12 +379,42 @@ impl<T: IntoVec> IntoVec for &[T] {
 }
 
 /// Application message broadcasted to other members.
-#[derive(Clone, Debug, Encode, Decode)]
+#[derive(Clone, Debug, Encode, Decode, Eq, Ord, Hash)]
 pub struct Ciphertext {
     generation: u32,
     epoch: u32,
     roster_idx: u32,
     encrypted_state: Vec<u8>,
+}
+
+impl PartialEq for Ciphertext {
+    fn eq(&self, other: &Ciphertext) -> bool {
+        self.roster_idx() == other.roster_idx() &&
+        self.generation() == other.generation() &&
+        self.epoch() == other.epoch()
+    }
+}
+
+/// Ordering by priority of roster_idx, epoch, generation
+impl PartialOrd for Ciphertext {
+    fn partial_cmp(&self, other: &Ciphertext) -> Option<Ordering> {
+        let roster_idx_ord = self.roster_idx().partial_cmp(&other.roster_idx())?;
+        if roster_idx_ord != Ordering::Equal {
+            return Some(roster_idx_ord)
+        }
+
+        let epoch_ord = self.epoch().partial_cmp(&other.epoch())?;
+        if epoch_ord != Ordering::Equal {
+            return Some(epoch_ord)
+        }
+
+        let gen_ord = self.generation().partial_cmp(&other.generation())?;
+        if gen_ord != Ordering::Equal {
+            return Some(gen_ord)
+        }
+
+        Some(Ordering::Equal)
+    }
 }
 
 impl Ciphertext {

@@ -9,9 +9,6 @@ pub enum EnclaveError {
     #[error("I/O error: {0}")]
     IoError(#[from] io::Error),
 
-    #[error("Ed25519 error: {0}")]
-    Ed25519Error(ed25519_dalek::SignatureError),
-
     #[error("Hex error: {0}")]
     HexError(hex::FromHexError),
 
@@ -29,12 +26,6 @@ pub enum EnclaveError {
 
     #[error("Frame Enclave error: {0}")]
     FrameEnclaveError(#[from] frame_enclave::Error),
-}
-
-impl From<ed25519_dalek::SignatureError> for EnclaveError {
-    fn from(err: ed25519_dalek::SignatureError) -> Self {
-        anyhow!("Ed25519 error: {:?}", err).into()
-    }
 }
 
 impl From<sgx_types::sgx_status_t> for EnclaveError {

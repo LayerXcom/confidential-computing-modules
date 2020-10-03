@@ -1,8 +1,9 @@
 #![allow(dead_code)]
 
-use crate::{error::Result, eventdb::BlockNumDB, utils::*, workflow::*};
+use crate::{cache::EventCache, error::Result, utils::*, workflow::*};
 
 use frame_common::{state_types::UpdatedState, traits::*};
+use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{path::Path, sync::Arc};
 use web3::types::{Address, TransactionReceipt};
@@ -67,12 +68,10 @@ pub trait Sender: Sized {
 
 /// A trait of fetching event from blockchian nodes
 pub trait Watcher: Sized {
-    type WatcherDB: BlockNumDB;
-
     fn new<P: AsRef<Path>>(
         node_url: &str,
         contract_info: ContractInfo<'_, P>,
-        event_db: Arc<Self::WatcherDB>,
+        cache: Arc<RwLock<EventCache>>,
     ) -> Result<Self>;
 
     /// Blocking event fetch from blockchain nodes.

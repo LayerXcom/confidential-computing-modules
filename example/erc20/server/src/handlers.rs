@@ -1,6 +1,6 @@
 use crate::Server;
 use actix_web::{web, HttpResponse};
-use anonify_eth_driver::{dispatcher::get_state, traits::*, BlockNumDB};
+use anonify_eth_driver::{dispatcher::get_state, traits::*};
 use erc20_state_transition::{
     approve, burn, construct, mint, transfer, transfer_from, CallName, MemName,
 };
@@ -11,14 +11,13 @@ use std::{env, sync::Arc, thread, time};
 
 const DEFAULT_GAS: u64 = 5_000_000;
 
-pub fn handle_deploy<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_deploy<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     debug!("Starting deploy a contract...");
 
@@ -45,15 +44,14 @@ where
     Ok(HttpResponse::Ok().json(erc20_api::deploy::post::Response(contract_addr)))
 }
 
-pub fn handle_join_group<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_join_group<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::join_group::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     let sender_address = server
         .dispatcher
@@ -72,15 +70,14 @@ where
     Ok(HttpResponse::Ok().json(erc20_api::join_group::post::Response(receipt)))
 }
 
-pub fn handle_update_mrenclave<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_update_mrenclave<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::update_mrenclave::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     let sender_address = server
         .dispatcher
@@ -99,15 +96,14 @@ where
     Ok(HttpResponse::Ok().json(erc20_api::update_mrenclave::post::Response(receipt)))
 }
 
-pub fn handle_init_state<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_init_state<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::init_state::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     let sender_address = server
         .dispatcher
@@ -128,15 +124,14 @@ where
     Ok(HttpResponse::Ok().json(erc20_api::init_state::post::Response(receipt)))
 }
 
-pub fn handle_transfer<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_transfer<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::transfer::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     let sender_address = server
         .dispatcher
@@ -158,15 +153,14 @@ where
     Ok(HttpResponse::Ok().json(erc20_api::transfer::post::Response(receipt)))
 }
 
-pub fn handle_approve<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_approve<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::approve::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     let sender_address = server
         .dispatcher
@@ -188,15 +182,14 @@ where
     Ok(HttpResponse::Ok().json(erc20_api::approve::post::Response(receipt)))
 }
 
-pub fn handle_mint<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_mint<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::mint::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     let sender_address = server
         .dispatcher
@@ -218,15 +211,14 @@ where
     Ok(HttpResponse::Ok().json(erc20_api::mint::post::Response(receipt)))
 }
 
-pub fn handle_burn<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_burn<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::burn::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     let sender_address = server
         .dispatcher
@@ -247,15 +239,14 @@ where
     Ok(HttpResponse::Ok().json(erc20_api::burn::post::Response(receipt)))
 }
 
-pub fn handle_transfer_from<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_transfer_from<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::transfer_from::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     let sender_address = server
         .dispatcher
@@ -282,14 +273,13 @@ where
     Ok(HttpResponse::Ok().json(erc20_api::transfer_from::post::Response(receipt)))
 }
 
-pub fn handle_key_rotation<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_key_rotation<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     let sender_address = server
         .dispatcher
@@ -306,15 +296,14 @@ where
 }
 
 /// Fetch events from blockchain nodes manually, and then get the balance of the address approved by the owner from enclave.
-pub fn handle_allowance<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_allowance<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::allowance::get::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     server.dispatcher.block_on_event::<U64>()?;
 
@@ -329,15 +318,14 @@ where
 }
 
 /// Fetch events from blockchain nodes manually, and then get balance of the address from enclave.
-pub fn handle_balance_of<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_balance_of<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::state::get::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     server.dispatcher.block_on_event::<U64>()?;
 
@@ -347,14 +335,13 @@ where
     Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state.as_raw())))
 }
 
-pub fn handle_start_sync_bc<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_start_sync_bc<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer + Send + Sync + 'static,
     S: Sender + Send + Sync + 'static,
-    W: Watcher<WatcherDB = DB> + Send + Sync + 'static,
-    DB: BlockNumDB + Send + Sync + 'static,
+    W: Watcher + Send + Sync + 'static,
 {
     let sync_time: u64 = env::var("SYNC_BC_TIME")
         .unwrap_or_else(|_| "3".to_string())
@@ -369,15 +356,14 @@ where
     Ok(HttpResponse::Ok().finish())
 }
 
-pub fn handle_set_contract_addr<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_set_contract_addr<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::contract_addr::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     debug!("Starting set a contract address...");
 
@@ -389,15 +375,14 @@ where
     Ok(HttpResponse::Ok().finish())
 }
 
-pub fn handle_register_notification<D, S, W, DB>(
-    server: web::Data<Arc<Server<D, S, W, DB>>>,
+pub fn handle_register_notification<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::register_notification::post::Request>,
 ) -> Result<HttpResponse, Error>
 where
     D: Deployer,
     S: Sender,
-    W: Watcher<WatcherDB = DB>,
-    DB: BlockNumDB,
+    W: Watcher,
 {
     let access_right = req.into_access_right()?;
     server.dispatcher.register_notification(access_right)?;
