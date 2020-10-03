@@ -8,9 +8,9 @@ use frame_common::{
 };
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
+use parking_lot::RwLock;
 use sgx_types::*;
 use std::{collections::BTreeMap, env, sync::Arc};
-use parking_lot::RwLock;
 
 const ETH_URL: &'static str = "http://172.28.0.2:8545";
 const ABI_PATH: &str = "../../contract-build/Anonify.abi";
@@ -28,10 +28,8 @@ fn test_integration_eth_construct() {
 
     let gas = 5_000_000;
     let cache = Arc::new(RwLock::new(EventCache::default()));
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
-        eid, ETH_URL, cache,
-    )
-    .unwrap();
+    let dispatcher =
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
@@ -96,10 +94,8 @@ fn test_auto_notification() {
 
     let gas = 5_000_000;
     let cache = Arc::new(RwLock::new(EventCache::default()));
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
-        eid, ETH_URL, cache,
-    )
-    .unwrap();
+    let dispatcher =
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
@@ -187,10 +183,8 @@ fn test_integration_eth_transfer() {
 
     let gas = 5_000_000;
     let cache = Arc::new(RwLock::new(EventCache::default()));
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
-        eid, ETH_URL, cache,
-    )
-    .unwrap();
+    let dispatcher =
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
@@ -283,10 +277,8 @@ fn test_key_rotation() {
 
     let gas = 5_000_000;
     let cache = Arc::new(RwLock::new(EventCache::default()));
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
-        eid, ETH_URL, cache,
-    )
-    .unwrap();
+    let dispatcher =
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
@@ -354,10 +346,8 @@ fn test_integration_eth_approve() {
 
     let gas = 5_000_000;
     let cache = Arc::new(RwLock::new(EventCache::default()));
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
-        eid, ETH_URL, cache,
-    )
-    .unwrap();
+    let dispatcher =
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
@@ -449,10 +439,8 @@ fn test_integration_eth_transfer_from() {
 
     let gas = 5_000_000;
     let cache = Arc::new(RwLock::new(EventCache::default()));
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
-        eid, ETH_URL, cache,
-    )
-    .unwrap();
+    let dispatcher =
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
@@ -620,10 +608,8 @@ fn test_integration_eth_mint() {
 
     let gas = 5_000_000;
     let cache = Arc::new(RwLock::new(EventCache::default()));
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
-        eid, ETH_URL, cache,
-    )
-    .unwrap();
+    let dispatcher =
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
@@ -704,10 +690,8 @@ fn test_integration_eth_burn() {
 
     let gas = 5_000_000;
     let cache = Arc::new(RwLock::new(EventCache::default()));
-    let dispatcher = Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(
-        eid, ETH_URL, cache,
-    )
-    .unwrap();
+    let dispatcher =
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();

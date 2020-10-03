@@ -8,7 +8,7 @@ use log::debug;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{path::Path, sync::Arc};
-use web3::types::{Address, Log, TransactionReceipt};
+use web3::types::{Address, Log};
 
 /// Components needed to watch events
 pub struct EventWatcher {
@@ -183,25 +183,55 @@ impl EthEvent {
     }
 }
 
+/// A wrapper type of enclave logs.
+#[derive(Debug)]
+pub struct EnclaveLog {
+    pub inner: Option<InnerEnclaveLog>,
+    pub cache: Arc<RwLock<EventCache>>,
+}
+
+impl EnclaveLog {
+    #[must_use]
+    pub fn verify_order(self) -> Result<Self> {
+        unimplemented!();
+    }
+
+    /// Store logs into enclave in-memory.
+    /// This returns a latest block number specified by fetched logs.
+    pub fn insert_enclave<S: State>(self, eid: sgx_enclave_id_t) -> Result<EnclaveUpdatedState<S>> {
+        match self.inner {
+            Some(log) => {
+                let next_blc_num = log.latest_blc_num + 1;
+                let updated_states = log.invoke_ecall(eid)?;
+
+                Ok(EnclaveUpdatedState {
+                    block_num: Some(next_blc_num),
+                    updated_states,
+                    cache: self.cache,
+                })
+            }
+            None => Ok(EnclaveUpdatedState {
+                block_num: None,
+                updated_states: None,
+                cache: self.cache,
+            }),
+        }
+    }
+}
+
 /// A log which is sent to enclave. Each log containes ciphertexts data of a given contract address and a given block number.
 #[derive(Debug, Clone)]
 pub struct InnerEnclaveLog {
-    pub contract_addr: [u8; 20],
-    pub latest_blc_num: u64,
-    pub ciphertexts: Vec<Ciphertext>, // Concatenated all fetched ciphertexts
-    pub handshakes: Vec<Vec<u8>>,
+    contract_addr: [u8; 20],
+    latest_blc_num: u64,
+    ciphertexts: Vec<Ciphertext>, // Concatenated all fetched ciphertexts
+    handshakes: Vec<Vec<u8>>,
 }
 
 impl InnerEnclaveLog {
     #[must_use]
     pub fn verify_order(self) -> Result<Self> {
         unimplemented!();
-    }
-
-    pub fn into_input_iter(self) -> impl Iterator<Item = host_input::InsertCiphertext> {
-        self.ciphertexts
-            .into_iter()
-            .map(host_input::InsertCiphertext::new)
     }
 
     pub fn invoke_ecall<S: State>(
@@ -246,47 +276,17 @@ impl InnerEnclaveLog {
         }
     }
 
+     pub fn into_input_iter(self) -> impl Iterator<Item = host_input::InsertCiphertext> {
+        self.ciphertexts
+            .into_iter()
+            .map(host_input::InsertCiphertext::new)
+    }
+
     fn insert_handshake(eid: sgx_enclave_id_t, handshake: Vec<u8>) -> Result<()> {
         let input = host_input::InsertHandshake::new(handshake);
         InsertHandshakeWorkflow::exec(input, eid)?;
 
         Ok(())
-    }
-}
-
-/// A wrapper type of enclave logs.
-#[derive(Debug)]
-pub struct EnclaveLog {
-    pub inner: Option<InnerEnclaveLog>,
-    pub cache: Arc<RwLock<EventCache>>,
-}
-
-impl EnclaveLog {
-    #[must_use]
-    pub fn verify_order(self) -> Result<Self> {
-        unimplemented!();
-    }
-
-    /// Store logs into enclave in-memory.
-    /// This returns a latest block number specified by fetched logs.
-    pub fn insert_enclave<S: State>(self, eid: sgx_enclave_id_t) -> Result<EnclaveUpdatedState<S>> {
-        match self.inner {
-            Some(log) => {
-                let next_blc_num = log.latest_blc_num + 1;
-                let updated_states = log.invoke_ecall(eid)?;
-
-                Ok(EnclaveUpdatedState {
-                    block_num: Some(next_blc_num),
-                    updated_states,
-                    cache: self.cache,
-                })
-            }
-            None => Ok(EnclaveUpdatedState {
-                block_num: None,
-                updated_states: None,
-                cache: self.cache,
-            }),
-        }
     }
 }
 
