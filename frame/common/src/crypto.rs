@@ -379,7 +379,7 @@ impl<T: IntoVec> IntoVec for &[T] {
 }
 
 /// Application message broadcasted to other members.
-#[derive(Clone, Debug, Encode, Decode, Eq, Ord)]
+#[derive(Clone, Debug, Encode, Decode, Eq, Ord, Hash)]
 pub struct Ciphertext {
     generation: u32,
     epoch: u32,

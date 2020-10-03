@@ -192,8 +192,8 @@ impl EthEvent {
 /// A wrapper type of enclave logs.
 #[derive(Debug)]
 pub struct EnclaveLog {
-    pub inner: Option<InnerEnclaveLog>,
-    pub cache: Arc<RwLock<EventCache>>,
+    inner: Option<InnerEnclaveLog>,
+    cache: Arc<RwLock<EventCache>>,
 }
 
 impl EnclaveLog {

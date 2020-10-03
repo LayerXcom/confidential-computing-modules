@@ -30,28 +30,33 @@ impl EventCache {
         self.block_num_counter.get(&contract_addr).map(|e| *e)
     }
 
-    // TODO: Handling reorder over epoch is not solved yet.
     pub fn is_next_msg(&self, msg: Ciphertext) -> bool {
-        // let roster_idx = msg.roster_idx();
-        // let (current_epoch, current_gen) = self.treekem_counter.get(&roster_idx).unwrap_or_default();
+        let roster_idx = msg.roster_idx();
+        let (current_epoch, current_gen) = *self
+            .treekem_counter
+            .get(&roster_idx)
+            .unwrap_or_else(|| &(0, 0));
 
-        // if msg.epoch() == current_epoch {
-        //     msg.generation() == current_gen + 1 || msg.generation() == 0
-        // } else {
-        //     msg.generation() == 0
-        // }
-        unimplemented!();
+        if msg.epoch() == current_epoch {
+            msg.generation() == current_gen + 1 || msg.generation() == 0
+        } else {
+            // TODO: Handling reorder over epoch
+            true
+        }
     }
 
-    pub fn update_treekem_counter(&self, msg: Ciphertext) {
-        // self.treekem_counter.insert(msg.roster_idx(), (msg.epoch(), msg.generation()));
+    pub fn update_treekem_counter(&mut self, msg: Ciphertext) {
+        self.treekem_counter
+            .insert(msg.roster_idx(), (msg.epoch(), msg.generation()));
     }
 
-    pub fn insert_ciphertext_pool(&self, ciphertext: Ciphertext) {
-        // self.ciphertext_pool.insert(ciphertext);
+    pub fn insert_ciphertext_pool(&mut self, ciphertext: Ciphertext) {
+        self.ciphertext_pool.insert(ciphertext);
     }
 
-    pub fn find_ciphertext_pool(&self, ciphertext: Ciphertext) {
-        unimplemented!();
+    pub fn find_ciphertext(&self, id: (Epoch, Generation)) -> Option<&Ciphertext> {
+        self.ciphertext_pool
+            .iter()
+            .find(|e| e.epoch() == id.0 && e.generation() == id.1)
     }
 }
