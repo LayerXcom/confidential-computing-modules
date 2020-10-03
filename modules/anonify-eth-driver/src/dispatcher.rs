@@ -1,7 +1,7 @@
 use crate::workflow::*;
 use crate::{
     error::{HostError, Result},
-    eventdb::EventCache,
+    cache::EventCache,
     traits::*,
     utils::*,
     workflow::host_input,

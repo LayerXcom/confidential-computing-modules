@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::{error::Result, eventdb::EventCache, utils::*, workflow::*};
+use crate::{error::Result, cache::EventCache, utils::*, workflow::*};
 
 use frame_common::{state_types::UpdatedState, traits::*};
 use sgx_types::sgx_enclave_id_t;

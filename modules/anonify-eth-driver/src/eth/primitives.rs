@@ -1,11 +1,12 @@
 use crate::{
     error::{HostError, Result},
-    eventdb::{EventCache, EnclaveLog, InnerEnclaveLog},
+    cache::EventCache,
     utils::ContractInfo,
     workflow::*,
 };
+use super::event_watcher::{EthEvent, Web3Logs};
 use anyhow::anyhow;
-use ethabi::{decode, Event, EventParam, Hash, ParamType, Topic, TopicFilter};
+use ethabi::{decode, Event, EventParam, Hash, Topic, TopicFilter};
 use frame_common::crypto::Ciphertext;
 use log::debug;
 use std::{fs, path::Path, sync::Arc};
@@ -20,82 +21,6 @@ use web3::{
 
 const UNLOCK_DURATION: u16 = 60;
 const EVENT_LIMIT: usize = 100;
-
-/// Basic web3 connection components via HTTP.
-#[derive(Debug)]
-pub struct Web3Http {
-    web3: Web3<Http>,
-    eloop: EventLoopHandle,
-    eth_url: String,
-}
-
-impl Web3Http {
-    pub fn new(eth_url: &str) -> Result<Self> {
-        let (eloop, transport) = Http::new(eth_url)?;
-        let web3 = Web3::new(transport);
-
-        Ok(Web3Http {
-            web3,
-            eloop,
-            eth_url: eth_url.to_string(),
-        })
-    }
-
-    pub fn get_account(&self, index: usize, password: &str) -> Result<Address> {
-        let account = self.web3.eth().accounts().wait()?[index];
-        if !self
-            .web3
-            .personal()
-            .unlock_account(account, password, Some(UNLOCK_DURATION))
-            .wait()?
-        {
-            return Err(HostError::UnlockError);
-        }
-
-        Ok(account)
-    }
-
-    pub fn get_logs(&self, filter: Filter) -> Result<Vec<Log>> {
-        let logs = self.web3.eth().logs(filter).wait()?;
-        Ok(logs)
-    }
-
-    pub fn deploy<P: AsRef<Path>>(
-        &self,
-        output: host_output::JoinGroup,
-        confirmations: usize,
-        abi_path: P,
-        bin_path: P,
-    ) -> Result<Address> {
-        let abi = fs::read(abi_path)?;
-        let bin = fs::read_to_string(bin_path)?;
-
-        let ecall_output = output.ecall_output.unwrap();
-        let report = ecall_output.report().to_vec();
-        let report_sig = ecall_output.report_sig().to_vec();
-        let handshake = ecall_output.handshake().to_vec();
-        let gas = output.gas;
-
-        let contract = Contract::deploy(self.web3.eth(), abi.as_slice())
-            .map_err(|e| anyhow!("{:?}", e))?
-            .confirmations(confirmations)
-            .options(Options::with(|opt| opt.gas = Some(gas.into())))
-            .execute(
-                bin.as_str(),
-                (report, report_sig, handshake, ecall_output.mrenclave_ver()),
-                output.signer,
-            )
-            .map_err(|e| anyhow!("{:?}", e))?
-            .wait()
-            .map_err(|e| anyhow!("{:?}", e))?;
-
-        Ok(contract.address())
-    }
-
-    pub fn get_eth_url(&self) -> &str {
-        &self.eth_url
-    }
-}
 
 /// Web3 connection components of a contract.
 #[derive(Debug)]
@@ -222,11 +147,7 @@ impl Web3Contract {
             logs_acc.extend_from_slice(&logs);
         }
 
-        Ok(Web3Logs {
-            logs: logs_acc,
-            cache,
-            events,
-        })
+        Ok(Web3Logs::new(logs_acc, cache, events))
     }
 
     pub fn get_account(&self, index: usize, password: &str) -> Result<Address> {
@@ -238,129 +159,78 @@ impl Web3Contract {
     }
 }
 
-/// Event fetched logs from smart contracts.
+/// Basic web3 connection components via HTTP.
 #[derive(Debug)]
-pub struct Web3Logs {
-    logs: Vec<Log>,
-    cache: Arc<RwLock<EventCache>>,
-    events: EthEvent,
+pub struct Web3Http {
+    web3: Web3<Http>,
+    eloop: EventLoopHandle,
+    eth_url: String,
 }
 
-impl Web3Logs {
-    pub fn into_enclave_log(self) -> Result<EnclaveLog> {
-        let mut ciphertexts: Vec<Ciphertext> = vec![];
-        let mut handshakes: Vec<Vec<u8>> = vec![];
+impl Web3Http {
+    pub fn new(eth_url: &str) -> Result<Self> {
+        let (eloop, transport) = Http::new(eth_url)?;
+        let web3 = Web3::new(transport);
 
-        // If log data is not fetched currently, return empty EnclaveLog.
-        // This is occurred when it fetched data of dupulicated block number.
-        if self.logs.is_empty() {
-            return Ok(EnclaveLog {
-                inner: None,
-                cache: self.cache,
-            });
-        }
-
-        let contract_addr = self.logs[0].address;
-        let mut latest_blc_num = 0;
-        let ciphertext_size = Self::decode_data(&self.logs[0]).len();
-
-        for (i, log) in self.logs.iter().enumerate() {
-            debug!("log: {:?}, \nindex: {:?}", log, i);
-            if contract_addr != log.address {
-                return Err(
-                    anyhow!("Each log should have same contract address.: index: {}", i).into(),
-                );
-            }
-
-            let mut data = Self::decode_data(&log);
-
-            // Processing conditions by ciphertext or handshake event
-            if log.topics[0] == self.events.ciphertext_signature() {
-                if ciphertext_size != data.len() && !data.is_empty() {
-                    return Err(
-                        anyhow!("Each log should have same size of data.: index: {}", i).into(),
-                    );
-                }
-                let res = Ciphertext::from_bytes(&mut data[..], ciphertext_size);
-
-                ciphertexts.push(res);
-            } else if log.topics[0] == self.events.handshake_signature() {
-                handshakes.push(data);
-            } else {
-                return Err(anyhow!("Invalid topics").into());
-            }
-
-            // Update latest block number
-            if let Some(blc_num) = log.block_number {
-                let blc_num = blc_num.as_u64();
-                if latest_blc_num < blc_num {
-                    latest_blc_num = blc_num
-                }
-            }
-        }
-
-        Ok(EnclaveLog {
-            inner: Some(InnerEnclaveLog {
-                contract_addr: contract_addr.to_fixed_bytes(),
-                latest_blc_num,
-                ciphertexts,
-                handshakes,
-            }),
-            cache: self.cache,
+        Ok(Web3Http {
+            web3,
+            eloop,
+            eth_url: eth_url.to_string(),
         })
     }
 
-    fn decode_data(log: &Log) -> Vec<u8> {
-        let tokens = decode(&[ParamType::Bytes], &log.data.0).expect("Failed to decode token.");
-        let mut res = vec![];
-
-        for token in tokens {
-            res.extend_from_slice(
-                &token
-                    .to_bytes()
-                    .expect("Failed to convert token into bytes."),
-            );
+    pub fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+        let account = self.web3.eth().accounts().wait()?[index];
+        if !self
+            .web3
+            .personal()
+            .unlock_account(account, password, Some(UNLOCK_DURATION))
+            .wait()?
+        {
+            return Err(HostError::UnlockError);
         }
 
-        res
-    }
-}
-
-/// A type of events from ethererum network.
-#[derive(Debug)]
-pub struct EthEvent(Vec<Event>);
-
-impl EthEvent {
-    pub fn create_event() -> Self {
-        let events = vec![
-            Event {
-                name: "StoreCiphertext".to_owned(),
-                inputs: vec![EventParam {
-                    name: "ciphertext".to_owned(),
-                    kind: ParamType::Bytes,
-                    indexed: false,
-                }],
-                anonymous: false,
-            },
-            Event {
-                name: "StoreHandshake".to_owned(),
-                inputs: vec![EventParam {
-                    name: "handshake".to_owned(),
-                    kind: ParamType::Bytes,
-                    indexed: false,
-                }],
-                anonymous: false,
-            },
-        ];
-
-        EthEvent(events)
+        Ok(account)
     }
 
-    pub fn ciphertext_signature(&self) -> Hash {
-        self.0[0].signature()
+    pub fn get_logs(&self, filter: Filter) -> Result<Vec<Log>> {
+        let logs = self.web3.eth().logs(filter).wait()?;
+        Ok(logs)
     }
 
-    pub fn handshake_signature(&self) -> Hash {
-        self.0[1].signature()
+    pub fn deploy<P: AsRef<Path>>(
+        &self,
+        output: host_output::JoinGroup,
+        confirmations: usize,
+        abi_path: P,
+        bin_path: P,
+    ) -> Result<Address> {
+        let abi = fs::read(abi_path)?;
+        let bin = fs::read_to_string(bin_path)?;
+
+        let ecall_output = output.ecall_output.unwrap();
+        let report = ecall_output.report().to_vec();
+        let report_sig = ecall_output.report_sig().to_vec();
+        let handshake = ecall_output.handshake().to_vec();
+        let gas = output.gas;
+
+        let contract = Contract::deploy(self.web3.eth(), abi.as_slice())
+            .map_err(|e| anyhow!("{:?}", e))?
+            .confirmations(confirmations)
+            .options(Options::with(|opt| opt.gas = Some(gas.into())))
+            .execute(
+                bin.as_str(),
+                (report, report_sig, handshake, ecall_output.mrenclave_ver()),
+                output.signer,
+            )
+            .map_err(|e| anyhow!("{:?}", e))?
+            .wait()
+            .map_err(|e| anyhow!("{:?}", e))?;
+
+        Ok(contract.address())
+    }
+
+    pub fn get_eth_url(&self) -> &str {
+        &self.eth_url
     }
 }

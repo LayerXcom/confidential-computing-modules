@@ -386,6 +386,24 @@ pub struct Ciphertext {
     encrypted_state: Vec<u8>,
 }
 
+impl PartialEq for Ciphertext {
+    fn eq(&self, other: &Ciphertext) -> bool {
+        if self.roster_idx() == other.roster_idx() {
+            self.generation() == other.generation() && self.epoch() == other.epoch()
+        } else {
+            false
+        }
+    }
+}
+
+// impl PartialOrd for Ciphertext {
+//     fn partial_cmp(&self, other: &Ciphertext) -> Option<Ordering> {
+//         if self.roster_idx() == other.roster_idx() {
+
+//         }
+//     }
+// }
+
 impl Ciphertext {
     pub fn new(generation: u32, epoch: u32, roster_idx: u32, encrypted_state: Vec<u8>) -> Self {
         Ciphertext {
