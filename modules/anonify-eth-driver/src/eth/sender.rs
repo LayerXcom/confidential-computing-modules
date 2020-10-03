@@ -1,11 +1,8 @@
 use super::primitives::{Web3Contract, Web3Http};
-use crate::{error::Result, cache::EventCache, traits::*, utils::*, workflow::*};
-
-use frame_common::{state_types::UpdatedState, traits::*};
+use crate::{error::Result, traits::*, utils::*, workflow::*};
 use sgx_types::sgx_enclave_id_t;
-use std::{path::Path, sync::Arc};
+use std::path::Path;
 use web3::types::{Address, TransactionReceipt};
-use parking_lot::RwLock;
 
 /// Components needed to send a transaction
 #[derive(Debug)]

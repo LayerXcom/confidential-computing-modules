@@ -1,16 +1,14 @@
+use super::event_watcher::{EthEvent, Web3Logs};
 use crate::{
-    error::{HostError, Result},
     cache::EventCache,
+    error::{HostError, Result},
     utils::ContractInfo,
     workflow::*,
 };
-use super::event_watcher::{EthEvent, Web3Logs};
 use anyhow::anyhow;
-use ethabi::{decode, Event, EventParam, Hash, Topic, TopicFilter};
-use frame_common::crypto::Ciphertext;
-use log::debug;
-use std::{fs, path::Path, sync::Arc};
+use ethabi::{Topic, TopicFilter};
 use parking_lot::RwLock;
+use std::{fs, path::Path, sync::Arc};
 use web3::{
     contract::{Contract, Options},
     futures::Future,
@@ -117,11 +115,7 @@ impl Web3Contract {
         Ok(res)
     }
 
-    pub fn get_event(
-        &self,
-        cache: Arc<RwLock<EventCache>>,
-        key: Address,
-    ) -> Result<Web3Logs> {
+    pub fn get_event(&self, cache: Arc<RwLock<EventCache>>, key: Address) -> Result<Web3Logs> {
         let events = EthEvent::create_event();
         // Read latest block number from in-memory event cache.
         let latest_fetched_num = cache.read().get_latest_block_num(key).unwrap_or_default();

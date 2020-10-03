@@ -1,11 +1,8 @@
 use super::primitives::{Web3Contract, Web3Http};
-use crate::{error::Result, cache::EventCache, traits::*, utils::*, workflow::*};
-
-use frame_common::{state_types::UpdatedState, traits::*};
+use crate::{error::Result, traits::*, utils::*, workflow::*};
 use sgx_types::sgx_enclave_id_t;
-use std::{path::Path, sync::Arc};
-use web3::types::{Address, TransactionReceipt};
-use parking_lot::RwLock;
+use std::path::Path;
+use web3::types::Address;
 
 /// Components needed to deploy a contract
 #[derive(Debug)]
@@ -66,4 +63,3 @@ impl Deployer for EthDeployer {
         &self.web3_conn.get_eth_url()
     }
 }
-

@@ -1,17 +1,6 @@
-use crate::error::Result;
-use crate::workflow::*;
-
-use frame_common::{
-    crypto::Ciphertext,
-    state_types::UpdatedState,
-    traits::State,
-};
-use parking_lot::RwLock;
-use log::debug;
-use sgx_types::sgx_enclave_id_t;
-use std::{collections::{HashMap, HashSet}, sync::Arc};
+use frame_common::crypto::Ciphertext;
+use std::collections::{HashMap, HashSet};
 use web3::types::Address as ContractAddr;
-use anyhow::anyhow;
 
 type BlockNum = u64;
 type RosterIdx = u32;
@@ -29,7 +18,11 @@ pub struct EventCache {
 }
 
 impl EventCache {
-    pub fn insert_next_block_num(&mut self, contract_addr: ContractAddr, block_num: BlockNum) -> Option<BlockNum> {
+    pub fn insert_next_block_num(
+        &mut self,
+        contract_addr: ContractAddr,
+        block_num: BlockNum,
+    ) -> Option<BlockNum> {
         self.block_num_counter.insert(contract_addr, block_num)
     }
 
@@ -62,5 +55,3 @@ impl EventCache {
         unimplemented!();
     }
 }
-
-

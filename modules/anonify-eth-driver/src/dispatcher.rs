@@ -1,7 +1,7 @@
 use crate::workflow::*;
 use crate::{
-    error::{HostError, Result},
     cache::EventCache,
+    error::{HostError, Result},
     traits::*,
     utils::*,
     workflow::host_input,
@@ -38,7 +38,11 @@ where
     S: Sender,
     W: Watcher,
 {
-    pub fn new(enclave_id: sgx_enclave_id_t, node_url: &str, cache: Arc<RwLock<EventCache>>) -> Result<Self> {
+    pub fn new(
+        enclave_id: sgx_enclave_id_t,
+        node_url: &str,
+        cache: Arc<RwLock<EventCache>>,
+    ) -> Result<Self> {
         let deployer = D::new(enclave_id, node_url)?;
         let inner = RwLock::new(InnerDispatcher {
             deployer,

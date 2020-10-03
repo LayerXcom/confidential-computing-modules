@@ -1,14 +1,14 @@
 use super::primitives::{Web3Contract, Web3Http};
-use crate::{error::Result, cache::EventCache, traits::*, utils::*, workflow::*};
-use frame_common::{state_types::UpdatedState, traits::*, crypto::Ciphertext};
+use crate::{cache::EventCache, error::Result, traits::*, utils::*, workflow::*};
+use anyhow::anyhow;
+use ethabi::{decode, Event, EventParam, Hash, ParamType};
+use frame_common::{crypto::Ciphertext, state_types::UpdatedState, traits::*};
+use frame_host::engine::HostEngine;
+use log::debug;
+use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{path::Path, sync::Arc};
-use web3::types::{Address, TransactionReceipt, Log};
-use parking_lot::RwLock;
-use anyhow::anyhow;
-use log::debug;
-use ethabi::{ParamType, decode, Event, EventParam, Hash, Topic, TopicFilter};
-use frame_host::engine::HostEngine;
+use web3::types::{Address, Log, TransactionReceipt};
 
 /// Components needed to watch events
 pub struct EventWatcher {
@@ -25,10 +25,7 @@ impl Watcher for EventWatcher {
         let web3_http = Web3Http::new(node_url)?;
         let contract = Web3Contract::new(web3_http, contract_info)?;
 
-        Ok(EventWatcher {
-            contract,
-            cache,
-        })
+        Ok(EventWatcher { contract, cache })
     }
 
     fn block_on_event<S: State>(
@@ -39,7 +36,7 @@ impl Watcher for EventWatcher {
             .contract
             .get_event(self.cache.clone(), self.contract.address())?
             .into_enclave_log()?
-            .verify_order()?
+            // .verify_order()?
             .insert_enclave(eid)?
             .save_cache(self.contract.address());
 
@@ -61,7 +58,11 @@ pub struct Web3Logs {
 
 impl Web3Logs {
     pub fn new(logs: Vec<Log>, cache: Arc<RwLock<EventCache>>, events: EthEvent) -> Self {
-        Web3Logs { logs, cache, events }
+        Web3Logs {
+            logs,
+            cache,
+            events,
+        }
     }
 
     pub fn into_enclave_log(self) -> Result<EnclaveLog> {
@@ -261,7 +262,6 @@ pub struct EnclaveLog {
 }
 
 impl EnclaveLog {
-
     #[must_use]
     pub fn verify_order(self) -> Result<Self> {
         unimplemented!();
@@ -269,10 +269,7 @@ impl EnclaveLog {
 
     /// Store logs into enclave in-memory.
     /// This returns a latest block number specified by fetched logs.
-    pub fn insert_enclave<S: State>(
-        self,
-        eid: sgx_enclave_id_t,
-    ) -> Result<EnclaveUpdatedState<S>> {
+    pub fn insert_enclave<S: State>(self, eid: sgx_enclave_id_t) -> Result<EnclaveUpdatedState<S>> {
         match self.inner {
             Some(log) => {
                 let next_blc_num = log.latest_blc_num + 1;
