@@ -10,3 +10,4 @@ mod workflow;
 
 pub use cache::EventCache;
 pub use dispatcher::Dispatcher;
+pub use error::HostError;
