@@ -11,7 +11,7 @@ use std::{env, sync::Arc, thread, time};
 
 const DEFAULT_GAS: u64 = 5_000_000;
 
-pub fn handle_deploy<D, S, W>(
+pub async fn handle_deploy<D, S, W>(
     server: web::Data<Arc<Server<D, S, W>>>,
 ) -> Result<HttpResponse, Error>
 where

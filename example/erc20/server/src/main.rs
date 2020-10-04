@@ -59,7 +59,8 @@ where
     }
 }
 
-fn main() -> io::Result<()> {
+#[actix_web::main]
+async fn main() -> io::Result<()> {
     env_logger::init();
     let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
     let num_workers: usize = env::var("NUM_WORKERS")
@@ -142,4 +143,5 @@ fn main() -> io::Result<()> {
     .bind(anonify_url)?
     .workers(num_workers)
     .run()
+    .await
 }

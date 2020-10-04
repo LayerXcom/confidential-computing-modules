@@ -9,6 +9,7 @@ use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{path::Path, sync::Arc};
 use web3::types::{Address, Log};
+use async_trait::async_trait;
 
 /// Components needed to watch events
 pub struct EventWatcher {
@@ -16,6 +17,7 @@ pub struct EventWatcher {
     cache: Arc<RwLock<EventCache>>,
 }
 
+#[async_trait]
 impl Watcher for EventWatcher {
     fn new<P: AsRef<Path>>(
         node_url: &str,
@@ -28,13 +30,14 @@ impl Watcher for EventWatcher {
         Ok(EventWatcher { contract, cache })
     }
 
-    fn block_on_event<S: State>(
+    async fn block_on_event<S: State>(
         &self,
         eid: sgx_enclave_id_t,
     ) -> Result<Option<Vec<UpdatedState<S>>>> {
         let enclave_updated_state = self
             .contract
-            .get_event(self.cache.clone(), self.contract.address())?
+            .get_event(self.cache.clone(), self.contract.address())
+            .await?
             .into_enclave_log()?
             .insert_enclave(eid)?
             .save_cache(self.contract.address());

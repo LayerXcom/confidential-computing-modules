@@ -1,8 +1,9 @@
 use super::primitives::{Web3Contract, Web3Http};
 use crate::{error::Result, traits::*, utils::*, workflow::*};
 use sgx_types::sgx_enclave_id_t;
-use std::path::Path;
+use std::{path::Path, marker::Send};
 use web3::types::Address;
+use async_trait::async_trait;
 
 /// Components needed to deploy a contract
 #[derive(Debug)]
@@ -12,6 +13,7 @@ pub struct EthDeployer {
     address: Option<Address>, // contract address
 }
 
+#[async_trait]
 impl Deployer for EthDeployer {
     fn new(enclave_id: sgx_enclave_id_t, node_url: &str) -> Result<Self> {
         let web3_conn = Web3Http::new(node_url)?;
@@ -23,20 +25,20 @@ impl Deployer for EthDeployer {
         })
     }
 
-    fn get_account(&self, index: usize, password: &str) -> Result<Address> {
-        self.web3_conn.get_account(index, password)
+    async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+        self.web3_conn.get_account(index, password).await
     }
 
-    fn deploy<P: AsRef<Path>>(
+    async fn deploy<P: AsRef<Path> + Send>(
         &mut self,
         host_output: host_output::JoinGroup,
-        confirmations: usize,
         abi_path: P,
         bin_path: P,
     ) -> Result<String> {
         let contract_addr =
             self.web3_conn
-                .deploy(host_output, confirmations, abi_path, bin_path)?;
+                .deploy(host_output, abi_path, bin_path)
+                .await?;
         self.address = Some(contract_addr);
 
         Ok(hex::encode(contract_addr.as_bytes()))

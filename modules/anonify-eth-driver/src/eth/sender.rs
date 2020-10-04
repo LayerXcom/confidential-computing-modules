@@ -2,7 +2,8 @@ use super::primitives::{Web3Contract, Web3Http};
 use crate::{error::Result, traits::*, utils::*, workflow::*};
 use sgx_types::sgx_enclave_id_t;
 use std::path::Path;
-use web3::types::{Address, TransactionReceipt};
+use web3::types::{Address, TransactionReceipt, H256};
+use async_trait::async_trait;
 
 /// Components needed to send a transaction
 #[derive(Debug)]
@@ -11,6 +12,7 @@ pub struct EthSender {
     contract: Web3Contract,
 }
 
+#[async_trait]
 impl Sender for EthSender {
     fn new<P: AsRef<Path>>(
         enclave_id: sgx_enclave_id_t,
@@ -35,34 +37,32 @@ impl Sender for EthSender {
         }
     }
 
-    fn get_account(&self, index: usize, password: &str) -> Result<Address> {
-        self.contract.get_account(index, password)
+    async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+        self.contract.get_account(index, password).await
     }
 
-    fn send_report_handshake(
+    async fn send_report_handshake(
         &self,
         host_output: host_output::JoinGroup,
-        confirmations: usize,
         method: &str,
-    ) -> Result<TransactionReceipt> {
+    ) -> Result<H256> {
         self.contract
-            .send_report_handshake(host_output, confirmations, method)
+            .send_report_handshake(host_output, method)
+            .await
     }
 
-    fn send_instruction(
+    async fn send_instruction(
         &self,
         host_output: host_output::Instruction,
-        confirmations: usize,
-    ) -> Result<TransactionReceipt> {
-        self.contract.send_instruction(host_output, confirmations)
+    ) -> Result<H256> {
+        self.contract.send_instruction(host_output).await
     }
 
-    fn handshake(
+    async fn handshake(
         &self,
         host_output: host_output::Handshake,
-        confirmations: usize,
-    ) -> Result<TransactionReceipt> {
-        self.contract.handshake(host_output, confirmations)
+    ) -> Result<H256> {
+        self.contract.handshake(host_output).await
     }
 
     fn get_contract(self) -> ContractKind {

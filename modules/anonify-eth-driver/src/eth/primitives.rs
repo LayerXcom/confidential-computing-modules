@@ -12,8 +12,8 @@ use std::{fs, path::Path, sync::Arc};
 use web3::{
     contract::{Contract, Options},
     futures::Future,
-    transports::{EventLoopHandle, Http},
-    types::{Address, BlockNumber, Filter, FilterBuilder, Log, TransactionReceipt},
+    transports::Http,
+    types::{Address, BlockNumber, Filter, FilterBuilder, Log, TransactionReceipt, H256},
     Web3,
 };
 
@@ -44,78 +44,66 @@ impl Web3Contract {
         })
     }
 
-    pub fn send_report_handshake(
+    pub async fn send_report_handshake(
         &self,
         output: host_output::JoinGroup,
-        confirmations: usize,
         method: &str,
-    ) -> Result<TransactionReceipt> {
+    ) -> Result<H256> {
         let ecall_output = output.ecall_output.unwrap();
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
         let handshake = ecall_output.handshake().to_vec();
         let gas = output.gas;
 
-        let call = self.contract.call_with_confirmations(
+        self.contract.call(
             method,
             (report, report_sig, handshake, ecall_output.mrenclave_ver()),
             output.signer,
             Options::with(|opt| opt.gas = Some(gas.into())),
-            confirmations,
-        );
-
-        // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253
-        let res = call.wait().unwrap(); //TODO: error handling
-        Ok(res)
+        )
+        .await
+        .map_err(Into::into)
     }
 
-    pub fn send_instruction(
+    pub async fn send_instruction(
         &self,
         output: host_output::Instruction,
-        confirmations: usize,
-    ) -> Result<TransactionReceipt> {
+    ) -> Result<H256> {
         let ecall_output = output.ecall_output.unwrap();
         let ciphertext = ecall_output.encode_ciphertext();
         let enclave_sig = &ecall_output.encode_enclave_sig();
         let gas = output.gas;
 
-        let call = self.contract.call_with_confirmations(
+        self.contract.call(
             "storeInstruction",
             (ciphertext, enclave_sig.to_vec()),
             output.signer,
             Options::with(|opt| opt.gas = Some(gas.into())),
-            confirmations,
-        );
-
-        // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253
-        let res = call.wait().unwrap(); //TODO: error handling
-        Ok(res)
+        )
+        .await
+        .map_err(Into::into)
     }
 
-    pub fn handshake(
+    pub async fn handshake(
         &self,
         output: host_output::Handshake,
-        confirmations: usize,
-    ) -> Result<TransactionReceipt> {
+    ) -> Result<H256> {
         let ecall_output = output.ecall_output.unwrap();
         let handshake = ecall_output.handshake().to_vec();
         let enclave_sig = &ecall_output.encode_enclave_sig();
         let gas = output.gas;
 
-        let call = self.contract.call_with_confirmations(
+        self.contract.call(
             "handshake",
             (handshake, enclave_sig.to_vec()),
             output.signer,
             Options::with(|opt| opt.gas = Some(gas.into())),
-            confirmations,
-        );
-
-        // https://github.com/tomusdrw/rust-web3/blob/c69bf938a0d3cfb5b64fca5974829408460e6685/src/confirm.rs#L253
-        let res = call.wait().unwrap(); //TODO: error handling
-        Ok(res)
+        )
+        .await
+        .map_err(Into::into)
     }
 
-    pub fn get_event(&self, cache: Arc<RwLock<EventCache>>, key: Address) -> Result<Web3Logs> {
+    pub async fn get_event(&self, cache: Arc<RwLock<EventCache>>, key: Address) -> Result<Web3Logs> {
         let events = EthEvent::create_event();
         // Read latest block number from in-memory event cache.
         let latest_fetched_num = cache.read().get_latest_block_num(key).unwrap_or_default();
@@ -137,15 +125,15 @@ impl Web3Contract {
                 .limit(EVENT_LIMIT)
                 .build();
 
-            let logs = self.web3_conn.get_logs(filter)?;
+            let logs = self.web3_conn.get_logs(filter).await?;
             logs_acc.extend_from_slice(&logs);
         }
 
         Ok(Web3Logs::new(logs_acc, cache, events))
     }
 
-    pub fn get_account(&self, index: usize, password: &str) -> Result<Address> {
-        self.web3_conn.get_account(index, password)
+    pub async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+        self.web3_conn.get_account(index, password).await
     }
 
     pub fn address(&self) -> Address {
@@ -157,29 +145,27 @@ impl Web3Contract {
 #[derive(Debug)]
 pub struct Web3Http {
     web3: Web3<Http>,
-    eloop: EventLoopHandle,
     eth_url: String,
 }
 
 impl Web3Http {
     pub fn new(eth_url: &str) -> Result<Self> {
-        let (eloop, transport) = Http::new(eth_url)?;
+        let transport = Http::new(eth_url)?;
         let web3 = Web3::new(transport);
 
         Ok(Web3Http {
             web3,
-            eloop,
             eth_url: eth_url.to_string(),
         })
     }
 
-    pub fn get_account(&self, index: usize, password: &str) -> Result<Address> {
-        let account = self.web3.eth().accounts().wait()?[index];
+    pub async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+        let account = self.web3.eth().accounts().await?[index];
         if !self
             .web3
             .personal()
             .unlock_account(account, password, Some(UNLOCK_DURATION))
-            .wait()?
+            .await?
         {
             return Err(HostError::UnlockError);
         }
@@ -187,15 +173,13 @@ impl Web3Http {
         Ok(account)
     }
 
-    pub fn get_logs(&self, filter: Filter) -> Result<Vec<Log>> {
-        let logs = self.web3.eth().logs(filter).wait()?;
-        Ok(logs)
+    pub async fn get_logs(&self, filter: Filter) -> Result<Vec<Log>> {
+        self.web3.eth().logs(filter).await.map_err(Into::into)
     }
 
-    pub fn deploy<P: AsRef<Path>>(
+    pub async fn deploy<P: AsRef<Path>>(
         &self,
         output: host_output::JoinGroup,
-        confirmations: usize,
         abi_path: P,
         bin_path: P,
     ) -> Result<Address> {
@@ -210,7 +194,6 @@ impl Web3Http {
 
         let contract = Contract::deploy(self.web3.eth(), abi.as_slice())
             .map_err(|e| anyhow!("{:?}", e))?
-            .confirmations(confirmations)
             .options(Options::with(|opt| opt.gas = Some(gas.into())))
             .execute(
                 bin.as_str(),
@@ -218,7 +201,7 @@ impl Web3Http {
                 output.signer,
             )
             .map_err(|e| anyhow!("{:?}", e))?
-            .wait()
+            .await
             .map_err(|e| anyhow!("{:?}", e))?;
 
         Ok(contract.address())

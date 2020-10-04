@@ -5,20 +5,21 @@ use crate::{cache::EventCache, error::Result, utils::*, workflow::*};
 use frame_common::{state_types::UpdatedState, traits::*};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{path::Path, sync::Arc};
-use web3::types::{Address, TransactionReceipt};
+use std::{path::Path, sync::Arc, marker::Send};
+use web3::types::{Address, H256};
+use async_trait::async_trait;
 
 /// A trait for deploying contracts
+#[async_trait]
 pub trait Deployer: Sized {
     fn new(enclave_id: sgx_enclave_id_t, node_url: &str) -> Result<Self>;
 
-    fn get_account(&self, index: usize, password: &str) -> Result<Address>;
+    async fn get_account(&self, index: usize, password: &str) -> Result<Address>;
 
     /// Deploying contract with attestation.
-    fn deploy<P: AsRef<Path>>(
+    async fn deploy<P: AsRef<Path> + Send>(
         &mut self,
         host_output: host_output::JoinGroup,
-        confirmations: usize,
         abi_path: P,
         bin_path: P,
     ) -> Result<String>;
@@ -31,6 +32,7 @@ pub trait Deployer: Sized {
 }
 
 /// A trait for sending transactions to blockchain nodes
+#[async_trait]
 pub trait Sender: Sized {
     fn new<P: AsRef<Path>>(
         enclave_id: sgx_enclave_id_t,
@@ -40,33 +42,31 @@ pub trait Sender: Sized {
 
     fn from_contract(enclave_id: sgx_enclave_id_t, contract: ContractKind) -> Self;
 
-    fn get_account(&self, index: usize, password: &str) -> Result<Address>;
+    async fn get_account(&self, index: usize, password: &str) -> Result<Address>;
 
     /// Send an encrypted instruction of state transition to blockchain nodes.
-    fn send_instruction(
+    async fn send_instruction(
         &self,
         host_output: host_output::Instruction,
-        confirmations: usize,
-    ) -> Result<TransactionReceipt>;
+    ) -> Result<H256>;
 
     /// Attestation with deployed contract.
-    fn send_report_handshake(
+    async fn send_report_handshake(
         &self,
         host_output: host_output::JoinGroup,
-        confirmations: usize,
         method: &str,
-    ) -> Result<TransactionReceipt>;
+    ) -> Result<H256>;
 
-    fn handshake(
+    async fn handshake(
         &self,
         host_output: host_output::Handshake,
-        confirmations: usize,
-    ) -> Result<TransactionReceipt>;
+    ) -> Result<H256>;
 
     fn get_contract(self) -> ContractKind;
 }
 
 /// A trait of fetching event from blockchian nodes
+#[async_trait]
 pub trait Watcher: Sized {
     fn new<P: AsRef<Path>>(
         node_url: &str,
@@ -75,7 +75,7 @@ pub trait Watcher: Sized {
     ) -> Result<Self>;
 
     /// Blocking event fetch from blockchain nodes.
-    fn block_on_event<S: State>(
+    async fn block_on_event<S: State>(
         &self,
         eid: sgx_enclave_id_t,
     ) -> Result<Option<Vec<UpdatedState<S>>>>;
