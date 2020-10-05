@@ -80,6 +80,7 @@ where
         gas: u64,
         abi_path: P,
         bin_path: P,
+        confirmations: usize,
     ) -> Result<(String, ExportPathSecret)> {
         let mut inner = self.inner.write();
         let eid = inner.deployer.get_enclave_id();
@@ -89,7 +90,7 @@ where
         let contract_addr =
             inner
                 .deployer
-                .deploy(host_output.clone(), abi_path, bin_path)
+                .deploy(host_output.clone(), abi_path, bin_path, confirmations)
                 .await?;
         let export_path_secret = host_output
             .ecall_output

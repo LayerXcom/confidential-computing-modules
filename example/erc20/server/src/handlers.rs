@@ -32,6 +32,7 @@ where
             DEFAULT_GAS,
             &server.abi_path,
             &server.bin_path,
+            server.confirmations,
         )
         .await
         .map_err(|e| ServerError::from(e))?;

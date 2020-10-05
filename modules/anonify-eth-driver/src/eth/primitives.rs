@@ -181,6 +181,7 @@ impl Web3Http {
         output: host_output::JoinGroup,
         abi_path: P,
         bin_path: P,
+        confirmations: usize,
     ) -> Result<Address> {
         let abi = fs::read(abi_path)?;
         let bin = fs::read_to_string(bin_path)?;
@@ -194,7 +195,7 @@ impl Web3Http {
         let contract = Contract::deploy(self.web3.eth(), abi.as_slice())
             .map_err(|e| anyhow!("{:?}", e))?
             .options(Options::with(|opt| opt.gas = Some(gas.into())))
-            .confirmations(0)
+            .confirmations(confirmations)
             .execute(
                 bin.as_str(),
                 (report, report_sig, handshake, ecall_output.mrenclave_ver()),
