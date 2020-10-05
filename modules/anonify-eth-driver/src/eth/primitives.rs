@@ -194,6 +194,7 @@ impl Web3Http {
         let contract = Contract::deploy(self.web3.eth(), abi.as_slice())
             .map_err(|e| anyhow!("{:?}", e))?
             .options(Options::with(|opt| opt.gas = Some(gas.into())))
+            .confirmations(0)
             .execute(
                 bin.as_str(),
                 (report, report_sig, handshake, ecall_output.mrenclave_ver()),
