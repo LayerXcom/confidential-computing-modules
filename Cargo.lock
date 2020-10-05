@@ -2386,6 +2386,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "integration-tests"
 version = "0.1.0"
 dependencies = [
+ "actix-rt 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "anonify-eth-driver 0.1.0",
  "erc20-state-transition 0.1.0",
  "frame-common 0.1.0",

@@ -15,7 +15,6 @@ pub struct Server<D: Deployer, S: Sender, W: Watcher> {
     pub eth_url: String,
     pub abi_path: String,
     pub bin_path: String,
-    pub confirmations: usize,
     pub account_index: usize,
     pub password: String,
     pub store_path_secrets: StorePathSecrets,
@@ -37,10 +36,6 @@ where
             .parse()
             .expect("Failed to parse ACCOUNT_INDEX to usize");
         let password = env::var("PASSWORD").expect("PASSWORD is not set");
-        let confirmations: usize = env::var("CONFIRMATIONS")
-            .expect("CONFIRMATIONS is not set")
-            .parse()
-            .expect("Failed to parse ACCOUNT_INDEX to usize");
 
         let store_path_secrets = StorePathSecrets::new();
         let cache = Arc::new(RwLock::new(EventCache::default()));
@@ -51,7 +46,6 @@ where
             eth_url,
             abi_path,
             bin_path,
-            confirmations,
             account_index,
             password,
             store_path_secrets,
