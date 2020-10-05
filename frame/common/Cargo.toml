@@ -12,13 +12,11 @@ sgx-anyhow = { rev = "sgx_1.1.2", package = "anyhow", git = "https://github.com/
 serde-std = { package = "serde", version = "1", default-features = false, optional = true }
 serde-sgx = { package = "serde", git = "https://github.com/mesalock-linux/serde-sgx.git", rev = "sgx_1.1.2", default-features = false, optional = true }
 tiny-keccak = "1.4"
-ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
+ed25519-dalek = { version = "1", default-features = false, features = ["u64_backend"] }
 codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
 sha2 = { version = "0.8", default-features = false }
 web3 = { git = "https://github.com/tomusdrw/rust-web3", rev = "d7393708e257f7ef4ad354917889a8001cf2927c", optional = true }
-rand = { version = "0.6", optional = true }
-rand_core = { version = "0.3", optional = true }
-rand_os = { version = "0.1", optional = true }
+rand = { version = "0.7", optional = true }
 base64 = { version = "0.11", optional = true }
 lazy_static = { version = "1.4", features = ["spin_no_std"] }
 sgx-elastic-array = { package = "elastic-array", tag = "sgx_1.1.2", git = "https://github.com/mesalock-linux/elastic-array-sgx.git", optional = true }
@@ -33,8 +31,6 @@ std = [
     "base64",
     "web3",
     "rand",
-    "rand_core",
-    "rand_os",
     "elastic-array",
 ]
 sgx = [

@@ -1,24 +1,20 @@
 use crate::local_anyhow::{anyhow, Error};
 use crate::localstd::{
+    cmp::Ordering,
     convert::TryFrom,
     io::{self, Read, Write},
     string::String,
     vec::Vec,
-    cmp::Ordering,
 };
 use crate::serde::{Deserialize, Serialize};
 use crate::traits::{AccessPolicy, Hash256, IntoVec};
 use codec::{self, Decode, Encode, Input};
 use ed25519_dalek::{
     Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
-    SIGNATURE_LENGTH,
+    SIGNATURE_LENGTH, Verifier, Signer,
 };
 #[cfg(feature = "std")]
-use rand::Rng;
-#[cfg(feature = "std")]
-use rand_core::{CryptoRng, RngCore};
-#[cfg(feature = "std")]
-use rand_os::OsRng;
+use rand::{rngs::OsRng, CryptoRng, Rng, RngCore};
 
 const ACCOUNT_ID_SIZE: usize = 20;
 pub const COMMON_SECRET: [u8; SECRET_KEY_LENGTH] = [
@@ -268,8 +264,7 @@ impl Decode for Ed25519ChallengeResponse {
         value.read(&mut pubkey_buf)?;
         value.read(&mut chal_buf)?;
 
-        let sig = Signature::from_bytes(&sig_buf)
-            .expect("Failed to decode sig of Ed25519ChallengeResponse");
+        let sig = Signature::new(sig_buf);
         let pubkey = PublicKey::from_bytes(&pubkey_buf)
             .expect("Failed to decode pubkey of Ed25519ChallengeResponse");
 
@@ -295,7 +290,7 @@ impl Ed25519ChallengeResponse {
 
     #[cfg(feature = "std")]
     pub fn new_from_rng() -> Result<Self, Error> {
-        let mut csprng: OsRng = OsRng::new()?;
+        let mut csprng = OsRng{};
         Ok(Self::inner_new_from_rng(&mut csprng))
     }
 
@@ -389,9 +384,9 @@ pub struct Ciphertext {
 
 impl PartialEq for Ciphertext {
     fn eq(&self, other: &Ciphertext) -> bool {
-        self.roster_idx() == other.roster_idx() &&
-        self.generation() == other.generation() &&
-        self.epoch() == other.epoch()
+        self.roster_idx() == other.roster_idx()
+            && self.generation() == other.generation()
+            && self.epoch() == other.epoch()
     }
 }
 
@@ -400,17 +395,17 @@ impl PartialOrd for Ciphertext {
     fn partial_cmp(&self, other: &Ciphertext) -> Option<Ordering> {
         let roster_idx_ord = self.roster_idx().partial_cmp(&other.roster_idx())?;
         if roster_idx_ord != Ordering::Equal {
-            return Some(roster_idx_ord)
+            return Some(roster_idx_ord);
         }
 
         let epoch_ord = self.epoch().partial_cmp(&other.epoch())?;
         if epoch_ord != Ordering::Equal {
-            return Some(epoch_ord)
+            return Some(epoch_ord);
         }
 
         let gen_ord = self.generation().partial_cmp(&other.generation())?;
         if gen_ord != Ordering::Equal {
-            return Some(gen_ord)
+            return Some(gen_ord);
         }
 
         Some(Ordering::Equal)

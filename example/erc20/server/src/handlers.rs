@@ -7,7 +7,7 @@ use erc20_state_transition::{
 };
 use frame_runtime::primitives::{Approved, U64};
 use log::debug;
-use std::{env, sync::Arc, thread, time};
+use std::{env, sync::Arc, time};
 
 const DEFAULT_GAS: u64 = 5_000_000;
 

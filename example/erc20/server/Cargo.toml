@@ -17,7 +17,7 @@ actix-rt = "1.1"
 failure = "0.1"
 log = "0.4"
 env_logger = "0.7"
-ed25519-dalek = "1.0.0-pre.2"
+ed25519-dalek = "1"
 hex = "0.4"
 anyhow = "1.0"
 web3 = { git = "https://github.com/tomusdrw/rust-web3", rev = "d7393708e257f7ef4ad354917889a8001cf2927c" }

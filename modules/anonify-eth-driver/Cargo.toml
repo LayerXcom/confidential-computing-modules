@@ -13,7 +13,7 @@ anonify-io-types = { path = "../anonify-io-types" }
 sgx_types = "1.1.1"
 thiserror = "1.0"
 anyhow = "1.0"
-ed25519-dalek = "1.0.0-pre.2"
+ed25519-dalek = "1"
 parking_lot = "0.10"
 codec = { package = "parity-scale-codec", version = "1.1" }
 web3 = { git = "https://github.com/tomusdrw/rust-web3", rev = "d7393708e257f7ef4ad354917889a8001cf2927c" }

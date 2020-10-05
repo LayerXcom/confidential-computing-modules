@@ -2,7 +2,7 @@ use super::primitives::{Web3Contract, Web3Http};
 use crate::{error::Result, traits::*, utils::*, workflow::*};
 use sgx_types::sgx_enclave_id_t;
 use std::path::Path;
-use web3::types::{Address, TransactionReceipt, H256};
+use web3::types::{Address, H256};
 use async_trait::async_trait;
 
 /// Components needed to send a transaction

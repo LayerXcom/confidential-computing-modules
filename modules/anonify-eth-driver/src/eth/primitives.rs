@@ -11,9 +11,8 @@ use parking_lot::RwLock;
 use std::{fs, path::Path, sync::Arc};
 use web3::{
     contract::{Contract, Options},
-    futures::Future,
     transports::Http,
-    types::{Address, BlockNumber, Filter, FilterBuilder, Log, TransactionReceipt, H256},
+    types::{Address, BlockNumber, Filter, FilterBuilder, Log, H256},
     Web3,
 };
 

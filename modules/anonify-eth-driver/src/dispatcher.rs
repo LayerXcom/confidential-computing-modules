@@ -17,7 +17,7 @@ use std::{
     sync::Arc,
     marker::Send,
 };
-use web3::types::{Address, TransactionReceipt, H256};
+use web3::types::{Address, H256};
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
