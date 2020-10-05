@@ -10,8 +10,8 @@ use crate::serde::{Deserialize, Serialize};
 use crate::traits::{AccessPolicy, Hash256, IntoVec};
 use codec::{self, Decode, Encode, Input};
 use ed25519_dalek::{
-    Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
-    SIGNATURE_LENGTH, Verifier, Signer,
+    Keypair, PublicKey, SecretKey, Signature, Signer, Verifier, PUBLIC_KEY_LENGTH,
+    SECRET_KEY_LENGTH, SIGNATURE_LENGTH,
 };
 #[cfg(feature = "std")]
 use rand::{rngs::OsRng, CryptoRng, Rng, RngCore};
@@ -290,7 +290,7 @@ impl Ed25519ChallengeResponse {
 
     #[cfg(feature = "std")]
     pub fn new_from_rng() -> Result<Self, Error> {
-        let mut csprng = OsRng{};
+        let mut csprng = OsRng {};
         Ok(Self::inner_new_from_rng(&mut csprng))
     }
 
