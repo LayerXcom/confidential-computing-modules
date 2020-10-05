@@ -10,11 +10,15 @@ use crate::serde::{Deserialize, Serialize};
 use crate::traits::{AccessPolicy, Hash256, IntoVec};
 use codec::{self, Decode, Encode, Input};
 use ed25519_dalek::{
-    Keypair, PublicKey, SecretKey, Signature, Signer, Verifier, PUBLIC_KEY_LENGTH,
+    Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH,
     SECRET_KEY_LENGTH, SIGNATURE_LENGTH,
 };
 #[cfg(feature = "std")]
-use rand::{rngs::OsRng, CryptoRng, Rng, RngCore};
+use rand::Rng;
+#[cfg(feature = "std")]
+use rand_core::{CryptoRng, RngCore};
+#[cfg(feature = "std")]
+use rand_os::OsRng;
 
 const ACCOUNT_ID_SIZE: usize = 20;
 pub const COMMON_SECRET: [u8; SECRET_KEY_LENGTH] = [
@@ -264,7 +268,7 @@ impl Decode for Ed25519ChallengeResponse {
         value.read(&mut pubkey_buf)?;
         value.read(&mut chal_buf)?;
 
-        let sig = Signature::new(sig_buf);
+        let sig = Signature::from_bytes(&sig_buf).unwrap();
         let pubkey = PublicKey::from_bytes(&pubkey_buf)
             .expect("Failed to decode pubkey of Ed25519ChallengeResponse");
 
@@ -290,7 +294,7 @@ impl Ed25519ChallengeResponse {
 
     #[cfg(feature = "std")]
     pub fn new_from_rng() -> Result<Self, Error> {
-        let mut csprng = OsRng {};
+        let mut csprng: OsRng = OsRng::new()?;
         Ok(Self::inner_new_from_rng(&mut csprng))
     }
 

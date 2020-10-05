@@ -1,5 +1,5 @@
 use ed25519_dalek::{
-    Keypair, PublicKey, Signature, SignatureError, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH, Signer,
+    Keypair, PublicKey, Signature, SignatureError, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH,
 };
 use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse},
@@ -82,7 +82,7 @@ pub mod init_state {
             }
 
             pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
-                let sig = Signature::new(self.sig);
+                let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
                 Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
@@ -143,7 +143,7 @@ pub mod transfer {
             }
 
             pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
-                let sig = Signature::new(self.sig);
+                let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
                 Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
@@ -201,7 +201,7 @@ pub mod approve {
             }
 
             pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
-                let sig = Signature::new(self.sig);
+                let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
                 Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
@@ -262,7 +262,7 @@ pub mod transfer_from {
             }
 
             pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
-                let sig = Signature::new(self.sig);
+                let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
                 Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
@@ -320,7 +320,7 @@ pub mod mint {
             }
 
             pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
-                let sig = Signature::new(self.sig);
+                let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
                 Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
@@ -371,7 +371,7 @@ pub mod burn {
             }
 
             pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
-                let sig = Signature::new(self.sig);
+                let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
                 Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
@@ -434,7 +434,7 @@ pub mod allowance {
             }
 
             pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
-                let sig = Signature::new(self.sig);
+                let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
                 Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
@@ -486,7 +486,7 @@ pub mod state {
             }
 
             pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
-                let sig = Signature::new(self.sig);
+                let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
                 Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))
@@ -554,7 +554,7 @@ pub mod register_notification {
             }
 
             pub fn into_access_right(&self) -> Result<Ed25519ChallengeResponse, SignatureError> {
-                let sig = Signature::new(self.sig);
+                let sig = Signature::from_bytes(&self.sig)?;
                 let pubkey = PublicKey::from_bytes(&self.pubkey)?;
 
                 Ok(Ed25519ChallengeResponse::new(sig, pubkey, self.challenge))

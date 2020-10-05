@@ -9,7 +9,7 @@ pub enum ServerError {
     #[error("{0}")]
     FrameError(#[from] frame_host::Error),
     #[error("{0}")]
-    Ed25519Error(#[from] ed25519_dalek::SignatureError),
+    AnyhowError(#[from] anyhow::Error),
 }
 
 impl actix_web::error::ResponseError for ServerError {}

@@ -1,7 +1,8 @@
-use crate::Server;
 use crate::error::{Result, ServerError};
+use crate::Server;
 use actix_web::{web, HttpResponse};
 use anonify_eth_driver::{dispatcher::get_state, traits::*};
+use anyhow::anyhow;
 use erc20_state_transition::{
     approve, burn, construct, mint, transfer, transfer_from, CallName, MemName,
 };
@@ -11,9 +12,7 @@ use std::{env, sync::Arc, time};
 
 const DEFAULT_GAS: u64 = 5_000_000;
 
-pub async fn handle_deploy<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
-) -> Result<HttpResponse>
+pub async fn handle_deploy<D, S, W>(server: web::Data<Arc<Server<D, S, W>>>) -> Result<HttpResponse>
 where
     D: Deployer,
     S: Sender,
@@ -24,7 +23,8 @@ where
     let sender_address = server
         .dispatcher
         .get_account(server.account_index, &server.password)
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
     let (contract_addr, export_path_secret) = server
         .dispatcher
         .deploy(
@@ -33,16 +33,19 @@ where
             &server.abi_path,
             &server.bin_path,
         )
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
 
     debug!("Contract address: {:?}", &contract_addr);
     debug!("export_path_secret: {:?}", export_path_secret);
     server
         .store_path_secrets
-        .save_to_local_filesystem(&export_path_secret).map_err(|e| ServerError::from(e))?;
+        .save_to_local_filesystem(&export_path_secret)
+        .map_err(|e| ServerError::from(e))?;
     server
         .dispatcher
-        .set_contract_addr(&contract_addr, &server.abi_path).map_err(|e| ServerError::from(e))?;
+        .set_contract_addr(&contract_addr, &server.abi_path)
+        .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::deploy::post::Response(contract_addr)))
 }
@@ -59,7 +62,8 @@ where
     let sender_address = server
         .dispatcher
         .get_account(server.account_index, &server.password)
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
     let (tx_hash, export_path_secret) = server
         .dispatcher
         .join_group(
@@ -68,10 +72,12 @@ where
             &req.contract_addr,
             &server.abi_path,
         )
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
     server
         .store_path_secrets
-        .save_to_local_filesystem(&export_path_secret).map_err(|e| ServerError::from(e))?;
+        .save_to_local_filesystem(&export_path_secret)
+        .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::join_group::post::Response(tx_hash)))
 }
@@ -88,7 +94,8 @@ where
     let sender_address = server
         .dispatcher
         .get_account(server.account_index, &server.password)
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
     let (tx_hash, export_path_secret) = server
         .dispatcher
         .update_mrenclave(
@@ -97,10 +104,12 @@ where
             &req.contract_addr,
             &server.abi_path,
         )
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
     server
         .store_path_secrets
-        .save_to_local_filesystem(&export_path_secret).map_err(|e| ServerError::from(e))?;
+        .save_to_local_filesystem(&export_path_secret)
+        .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::update_mrenclave::post::Response(tx_hash)))
 }
@@ -117,8 +126,11 @@ where
     let sender_address = server
         .dispatcher
         .get_account(server.account_index, &server.password)
-        .await.map_err(|e| ServerError::from(e))?;
-    let access_right = req.into_access_right().map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
+    let access_right = req
+        .into_access_right()
+        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     let total_supply = U64::from_raw(req.total_supply);
     let init_state = construct { total_supply };
 
@@ -131,7 +143,8 @@ where
             sender_address,
             DEFAULT_GAS,
         )
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::init_state::post::Response(tx_hash)))
 }
@@ -148,8 +161,11 @@ where
     let sender_address = server
         .dispatcher
         .get_account(server.account_index, &server.password)
-        .await.map_err(|e| ServerError::from(e))?;
-    let access_right = req.into_access_right().map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
+    let access_right = req
+        .into_access_right()
+        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     let amount = U64::from_raw(req.amount);
     let recipient = req.target;
     let transfer_state = transfer { amount, recipient };
@@ -163,7 +179,8 @@ where
             sender_address,
             DEFAULT_GAS,
         )
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::transfer::post::Response(tx_hash)))
 }
@@ -180,8 +197,11 @@ where
     let sender_address = server
         .dispatcher
         .get_account(server.account_index, &server.password)
-        .await.map_err(|e| ServerError::from(e))?;
-    let access_right = req.into_access_right().map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
+    let access_right = req
+        .into_access_right()
+        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     let amount = U64::from_raw(req.amount);
     let spender = req.target;
     let approve_state = approve { amount, spender };
@@ -195,7 +215,8 @@ where
             sender_address,
             DEFAULT_GAS,
         )
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::approve::post::Response(tx_hash)))
 }
@@ -212,8 +233,11 @@ where
     let sender_address = server
         .dispatcher
         .get_account(server.account_index, &server.password)
-        .await.map_err(|e| ServerError::from(e))?;
-    let access_right = req.into_access_right().map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
+    let access_right = req
+        .into_access_right()
+        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     let amount = U64::from_raw(req.amount);
     let recipient = req.target;
     let minting_state = mint { amount, recipient };
@@ -227,7 +251,8 @@ where
             sender_address,
             DEFAULT_GAS,
         )
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::mint::post::Response(tx_hash)))
 }
@@ -244,8 +269,11 @@ where
     let sender_address = server
         .dispatcher
         .get_account(server.account_index, &server.password)
-        .await.map_err(|e| ServerError::from(e))?;
-    let access_right = req.into_access_right().map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
+    let access_right = req
+        .into_access_right()
+        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     let amount = U64::from_raw(req.amount);
     let burn_state = burn { amount };
 
@@ -258,7 +286,8 @@ where
             sender_address,
             DEFAULT_GAS,
         )
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::burn::post::Response(tx_hash)))
 }
@@ -275,8 +304,11 @@ where
     let sender_address = server
         .dispatcher
         .get_account(server.account_index, &server.password)
-        .await.map_err(|e| ServerError::from(e))?;
-    let access_right = req.into_access_right().map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
+    let access_right = req
+        .into_access_right()
+        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     let amount = U64::from_raw(req.amount);
     let owner = req.owner;
     let recipient = req.target;
@@ -295,7 +327,8 @@ where
             sender_address,
             DEFAULT_GAS,
         )
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::transfer_from::post::Response(tx_hash)))
 }
@@ -311,14 +344,17 @@ where
     let sender_address = server
         .dispatcher
         .get_account(server.account_index, &server.password)
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
     let (tx_hash, export_path_secret) = server
         .dispatcher
         .handshake(sender_address, DEFAULT_GAS)
-        .await.map_err(|e| ServerError::from(e))?;
+        .await
+        .map_err(|e| ServerError::from(e))?;
     server
         .store_path_secrets
-        .save_to_local_filesystem(&export_path_secret).map_err(|e| ServerError::from(e))?;
+        .save_to_local_filesystem(&export_path_secret)
+        .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::key_rotation::post::Response(tx_hash)))
 }
@@ -333,10 +369,17 @@ where
     S: Sender,
     W: Watcher,
 {
-    server.dispatcher.block_on_event::<U64>().await.map_err(|e| ServerError::from(e))?;
+    server
+        .dispatcher
+        .block_on_event::<U64>()
+        .await
+        .map_err(|e| ServerError::from(e))?;
 
-    let access_right = req.into_access_right().map_err(|e| ServerError::from(e))?;
-    let owner_approved = get_state::<Approved, MemName, _>(access_right, server.eid, "Approved").map_err(|e| ServerError::from(e))?;
+    let access_right = req
+        .into_access_right()
+        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
+    let owner_approved = get_state::<Approved, MemName, _>(access_right, server.eid, "Approved")
+        .map_err(|e| ServerError::from(e))?;
     let approved_amount = owner_approved.allowance(&req.spender).unwrap();
     // TODO: stop using unwrap when switching from failure to anyhow.
 
@@ -355,10 +398,17 @@ where
     S: Sender,
     W: Watcher,
 {
-    server.dispatcher.block_on_event::<U64>().await.map_err(|e| ServerError::from(e))?;
+    server
+        .dispatcher
+        .block_on_event::<U64>()
+        .await
+        .map_err(|e| ServerError::from(e))?;
 
-    let access_right = req.into_access_right().map_err(|e| ServerError::from(e))?;
-    let state = get_state::<U64, MemName, _>(access_right, server.eid, "Balance").map_err(|e| ServerError::from(e))?;
+    let access_right = req
+        .into_access_right()
+        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
+    let state = get_state::<U64, MemName, _>(access_right, server.eid, "Balance")
+        .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state.as_raw())))
 }
@@ -402,7 +452,8 @@ where
     debug!("Contract address: {:?}", &req.contract_addr);
     server
         .dispatcher
-        .set_contract_addr(&req.contract_addr, &server.abi_path).map_err(|e| ServerError::from(e))?;
+        .set_contract_addr(&req.contract_addr, &server.abi_path)
+        .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().finish())
 }
@@ -416,8 +467,13 @@ where
     S: Sender,
     W: Watcher,
 {
-    let access_right = req.into_access_right().map_err(|e| ServerError::from(e))?;
-    server.dispatcher.register_notification(access_right).map_err(|e| ServerError::from(e))?;
+    let access_right = req
+        .into_access_right()
+        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
+    server
+        .dispatcher
+        .register_notification(access_right)
+        .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().finish())
 }
