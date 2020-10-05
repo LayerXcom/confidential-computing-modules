@@ -39,6 +39,7 @@ async fn test_integration_eth_construct() {
             gas,
             ABI_PATH,
             BIN_PATH,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
@@ -105,6 +106,7 @@ async fn test_auto_notification() {
             gas,
             ABI_PATH,
             BIN_PATH,
+            CONFIRMATIONS,
         ).await
         .unwrap();
     dispatcher
@@ -193,6 +195,7 @@ async fn test_integration_eth_transfer() {
             gas,
             ABI_PATH,
             BIN_PATH,
+            CONFIRMATIONS,
         ).await
         .unwrap();
     dispatcher
@@ -286,6 +289,7 @@ async fn test_key_rotation() {
             gas,
             ABI_PATH,
             BIN_PATH,
+            CONFIRMATIONS,
         ).await
         .unwrap();
     dispatcher
@@ -355,6 +359,7 @@ async fn test_integration_eth_approve() {
             gas,
             ABI_PATH,
             BIN_PATH,
+            CONFIRMATIONS,
         ).await
         .unwrap();
     dispatcher
@@ -447,6 +452,7 @@ async fn test_integration_eth_transfer_from() {
             gas,
             ABI_PATH,
             BIN_PATH,
+            CONFIRMATIONS,
         ).await
         .unwrap();
     dispatcher
@@ -615,6 +621,7 @@ async fn test_integration_eth_mint() {
             gas,
             ABI_PATH,
             BIN_PATH,
+            CONFIRMATIONS,
         ).await
         .unwrap();
     dispatcher
@@ -696,6 +703,7 @@ async fn test_integration_eth_burn() {
             gas,
             ABI_PATH,
             BIN_PATH,
+            CONFIRMATIONS,
         ).await
         .unwrap();
     dispatcher

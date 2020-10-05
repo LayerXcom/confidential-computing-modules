@@ -22,6 +22,7 @@ pub trait Deployer: Sized {
         host_output: host_output::JoinGroup,
         abi_path: P,
         bin_path: P,
+        confirmations: usize,
     ) -> Result<String>;
 
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;

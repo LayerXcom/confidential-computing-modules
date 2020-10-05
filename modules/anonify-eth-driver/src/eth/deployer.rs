@@ -34,10 +34,11 @@ impl Deployer for EthDeployer {
         host_output: host_output::JoinGroup,
         abi_path: P,
         bin_path: P,
+        confirmations: usize,
     ) -> Result<String> {
         let contract_addr =
             self.web3_conn
-                .deploy(host_output, abi_path, bin_path)
+                .deploy(host_output, abi_path, bin_path, confirmations)
                 .await?;
         self.address = Some(contract_addr);
 
