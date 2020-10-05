@@ -13,6 +13,7 @@ frame-runtime = { path = "../../../frame/runtime" }
 frame-common = { path = "../../../frame/common" }
 sgx_types = "1.1.1"
 actix-web = "3"
+actix-rt = "1.1"
 failure = "0.1"
 log = "0.4"
 env_logger = "0.7"

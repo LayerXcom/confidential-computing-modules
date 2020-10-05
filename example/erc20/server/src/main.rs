@@ -6,8 +6,8 @@ use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{env, io, sync::Arc};
 
-mod handlers;
 mod error;
+mod handlers;
 
 #[derive(Debug)]
 pub struct Server<D: Deployer, S: Sender, W: Watcher> {

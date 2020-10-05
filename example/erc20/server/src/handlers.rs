@@ -375,16 +375,20 @@ where
         .unwrap_or_else(|_| "3".to_string())
         .parse()
         .expect("Failed to parse SYNC_BC_TIME to u64");
-    let _ = thread::spawn(move || loop {
-        server.dispatcher.block_on_event::<U64>().await.unwrap();
-        debug!("event fetched...");
-        thread::sleep(time::Duration::from_secs(sync_time));
+
+    // it spawns a new OS thread, and hosts an event loop.
+    actix_rt::Arbiter::new().exec_fn(move || {
+        actix_rt::spawn(async move {
+            server.dispatcher.block_on_event::<U64>().await.unwrap();
+            debug!("event fetched...");
+            actix_rt::time::delay_for(time::Duration::from_secs(sync_time));
+        });
     });
 
     Ok(HttpResponse::Ok().finish())
 }
 
-pub fn handle_set_contract_addr<D, S, W>(
+pub async fn handle_set_contract_addr<D, S, W>(
     server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::contract_addr::post::Request>,
 ) -> Result<HttpResponse>
@@ -403,7 +407,7 @@ where
     Ok(HttpResponse::Ok().finish())
 }
 
-pub fn handle_register_notification<D, S, W>(
+pub async fn handle_register_notification<D, S, W>(
     server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::register_notification::post::Request>,
 ) -> Result<HttpResponse>
