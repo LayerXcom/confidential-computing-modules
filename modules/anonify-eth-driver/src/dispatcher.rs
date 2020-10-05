@@ -15,8 +15,9 @@ use std::{
     fmt::Debug,
     path::Path,
     sync::Arc,
+    marker::Send,
 };
-use web3::types::{Address, TransactionReceipt};
+use web3::types::{Address, H256};
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
@@ -73,11 +74,10 @@ where
         Ok(())
     }
 
-    pub fn deploy<P: AsRef<Path>>(
+    pub async fn deploy<P: AsRef<Path> + Send>(
         &self,
         deploy_user: Address,
         gas: u64,
-        confirmations: usize,
         abi_path: P,
         bin_path: P,
     ) -> Result<(String, ExportPathSecret)> {
@@ -89,7 +89,8 @@ where
         let contract_addr =
             inner
                 .deployer
-                .deploy(host_output.clone(), confirmations, abi_path, bin_path)?;
+                .deploy(host_output.clone(), abi_path, bin_path)
+                .await?;
         let export_path_secret = host_output
             .ecall_output
             .expect("must have ecall_output")
@@ -98,51 +99,48 @@ where
         Ok((contract_addr, export_path_secret))
     }
 
-    pub fn join_group<P: AsRef<Path> + Copy>(
+    pub async fn join_group<P: AsRef<Path> + Copy>(
         &self,
         signer: Address,
         gas: u64,
         contract_addr: &str,
         abi_path: P,
-        confirmations: usize,
-    ) -> Result<(TransactionReceipt, ExportPathSecret)> {
+    ) -> Result<(H256, ExportPathSecret)> {
         self.send_report_handshake(
             signer,
             gas,
             contract_addr,
             abi_path,
-            confirmations,
             "joinGroup",
         )
+        .await
     }
 
-    pub fn update_mrenclave<P: AsRef<Path> + Copy>(
+    pub async fn update_mrenclave<P: AsRef<Path> + Copy>(
         &self,
         signer: Address,
         gas: u64,
         contract_addr: &str,
         abi_path: P,
-        confirmations: usize,
-    ) -> Result<(TransactionReceipt, ExportPathSecret)> {
+    ) -> Result<(H256, ExportPathSecret)> {
         self.send_report_handshake(
             signer,
             gas,
             contract_addr,
             abi_path,
-            confirmations,
             "updateMrenclave",
         )
+        .await
     }
 
-    fn send_report_handshake<P: AsRef<Path> + Copy>(
+    async fn send_report_handshake<P: AsRef<Path> + Copy>(
         &self,
         signer: Address,
         gas: u64,
         contract_addr: &str,
         abi_path: P,
-        confirmations: usize,
         method: &str,
-    ) -> Result<(TransactionReceipt, ExportPathSecret)> {
+    ) -> Result<(H256, ExportPathSecret)> {
         self.set_contract_addr(contract_addr, abi_path)?;
 
         let inner = self.inner.read();
@@ -150,29 +148,29 @@ where
         let input = host_input::JoinGroup::new(signer, gas);
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
-        let receipt = inner
+        let tx_hash = inner
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .send_report_handshake(host_output.clone(), confirmations, method)?;
+            .send_report_handshake(host_output.clone(), method)
+            .await?;
 
         let export_path_secret = host_output
             .ecall_output
             .expect("must have ecall_output")
             .export_path_secret();
 
-        Ok((receipt, export_path_secret))
+        Ok((tx_hash, export_path_secret))
     }
 
-    pub fn send_instruction<ST, C, AP>(
+    pub async fn send_instruction<ST, C, AP>(
         &self,
         access_policy: AP,
         state: ST,
         call_name: &str,
         signer: Address,
         gas: u64,
-        confirmations: usize,
-    ) -> Result<TransactionReceipt>
+    ) -> Result<H256>
     where
         ST: State,
         C: CallNameConverter,
@@ -190,36 +188,36 @@ where
         let host_output = InstructionWorkflow::exec(input, eid)?;
 
         match &inner.sender {
-            Some(s) => s.send_instruction(host_output, confirmations),
+            Some(s) => s.send_instruction(host_output).await,
             None => Err(HostError::AddressNotSet),
         }
     }
 
-    pub fn handshake(
+    pub async fn handshake(
         &self,
         signer: Address,
         gas: u64,
-        confirmations: usize,
-    ) -> Result<(TransactionReceipt, ExportPathSecret)> {
+    ) -> Result<(H256, ExportPathSecret)> {
         let inner = self.inner.read();
         let input = host_input::Handshake::new(signer, gas);
         let eid = inner.deployer.get_enclave_id();
         let host_output = HandshakeWorkflow::exec(input, eid)?;
 
-        let receipt = inner
+        let tx_hash = inner
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .handshake(host_output.clone(), confirmations)?;
+            .handshake(host_output.clone())
+            .await?;
         let export_path_secret = host_output
             .ecall_output
             .expect("must have ecall_output")
             .export_path_secret();
 
-        Ok((receipt, export_path_secret))
+        Ok((tx_hash, export_path_secret))
     }
 
-    pub fn block_on_event<St>(&self) -> Result<Option<Vec<UpdatedState<St>>>>
+    pub async fn block_on_event<St>(&self) -> Result<Option<Vec<UpdatedState<St>>>>
     where
         St: State,
     {
@@ -231,10 +229,11 @@ where
             .as_ref()
             .ok_or(HostError::EventWatcherNotSet)?
             .block_on_event(eid)
+            .await
     }
 
-    pub fn get_account(&self, index: usize, password: &str) -> Result<Address> {
-        self.inner.read().deployer.get_account(index, password)
+    pub async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+        self.inner.read().deployer.get_account(index, password).await
     }
 
     pub fn register_notification<AP>(&self, access_policy: AP) -> Result<()>

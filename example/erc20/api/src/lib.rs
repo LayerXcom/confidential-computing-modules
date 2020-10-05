@@ -9,7 +9,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_big_array::big_array;
 use std::fmt;
-use web3::types::TransactionReceipt;
+use web3::types::H256;
 
 // ----------------------
 //  GET and POST types
@@ -35,7 +35,7 @@ pub mod join_group {
         }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub TransactionReceipt);
+        pub struct Response(pub H256);
     }
 }
 
@@ -49,7 +49,7 @@ pub mod update_mrenclave {
         }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub TransactionReceipt);
+        pub struct Response(pub H256);
     }
 }
 
@@ -103,7 +103,7 @@ pub mod init_state {
         }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub TransactionReceipt);
+        pub struct Response(pub H256);
     }
 }
 
@@ -161,7 +161,7 @@ pub mod transfer {
         }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub TransactionReceipt);
+        pub struct Response(pub H256);
     }
 }
 
@@ -219,7 +219,7 @@ pub mod approve {
         }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub TransactionReceipt);
+        pub struct Response(pub H256);
     }
 }
 
@@ -280,7 +280,7 @@ pub mod transfer_from {
         }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub TransactionReceipt);
+        pub struct Response(pub H256);
     }
 }
 
@@ -338,7 +338,7 @@ pub mod mint {
         }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub TransactionReceipt);
+        pub struct Response(pub H256);
     }
 }
 
@@ -392,7 +392,7 @@ pub mod burn {
         }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub TransactionReceipt);
+        pub struct Response(pub H256);
     }
 }
 
@@ -401,7 +401,7 @@ pub mod key_rotation {
         use super::super::*;
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub TransactionReceipt);
+        pub struct Response(pub H256);
     }
 }
 

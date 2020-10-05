@@ -19,8 +19,8 @@ const CONFIRMATIONS: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
 
-#[test]
-fn test_integration_eth_construct() {
+#[actix_rt::test]
+async fn test_integration_eth_construct() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
@@ -32,15 +32,15 @@ fn test_integration_eth_construct() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
     let (contract_addr, export_path_secret) = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
             ABI_PATH,
             BIN_PATH,
         )
+        .await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -50,7 +50,7 @@ fn test_integration_eth_construct() {
     println!("export_path_secret: {:?}", export_path_secret);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -62,14 +62,14 @@ fn test_integration_eth_construct() {
             "construct",
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Get state from enclave
     let owner_account_id =
@@ -83,8 +83,8 @@ fn test_integration_eth_construct() {
     assert_eq!(actual_total_supply, total_supply);
 }
 
-#[test]
-fn test_auto_notification() {
+#[actix_rt::test]
+async fn test_auto_notification() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
@@ -98,15 +98,14 @@ fn test_auto_notification() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
             ABI_PATH,
             BIN_PATH,
-        )
+        ).await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -115,7 +114,7 @@ fn test_auto_notification() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -127,14 +126,14 @@ fn test_auto_notification() {
             "construct",
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    let updated_state = dispatcher.block_on_event::<U64>().unwrap().unwrap();
+    let updated_state = dispatcher.block_on_event::<U64>().await.unwrap().unwrap();
 
     assert_eq!(updated_state.len(), 1);
     assert_eq!(
@@ -155,13 +154,13 @@ fn test_auto_notification() {
             "transfer",
             deployer_addr,
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    let updated_state = dispatcher.block_on_event::<U64>().unwrap().unwrap();
+    let updated_state = dispatcher.block_on_event::<U64>().await.unwrap().unwrap();
 
     assert_eq!(updated_state.len(), 1);
     assert_eq!(
@@ -172,8 +171,8 @@ fn test_auto_notification() {
     assert_eq!(updated_state[0].state, U64::from_raw(70));
 }
 
-#[test]
-fn test_integration_eth_transfer() {
+#[actix_rt::test]
+async fn test_integration_eth_transfer() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
@@ -187,15 +186,14 @@ fn test_integration_eth_transfer() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
             ABI_PATH,
             BIN_PATH,
-        )
+        ).await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -204,7 +202,7 @@ fn test_integration_eth_transfer() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -216,14 +214,14 @@ fn test_integration_eth_transfer() {
             "construct",
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Get state from enclave
     let my_state = get_state::<U64, MemName, _>(my_access_policy.clone(), eid, "Balance").unwrap();
@@ -246,13 +244,13 @@ fn test_integration_eth_transfer() {
             "transfer",
             deployer_addr,
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Check the updated states
     let my_updated_state = get_state::<U64, MemName, _>(my_access_policy, eid, "Balance").unwrap();
@@ -266,8 +264,8 @@ fn test_integration_eth_transfer() {
     assert_eq!(third_updated_state, U64::zero());
 }
 
-#[test]
-fn test_key_rotation() {
+#[actix_rt::test]
+async fn test_key_rotation() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
@@ -281,15 +279,14 @@ fn test_key_rotation() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
             ABI_PATH,
             BIN_PATH,
-        )
+        ).await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -298,16 +295,17 @@ fn test_key_rotation() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Send handshake
     let (receipt, _) = dispatcher
-        .handshake(deployer_addr.clone(), gas, CONFIRMATIONS)
+        .handshake(deployer_addr.clone(), gas)
+        .await
         .unwrap();
     println!("handshake receipt: {:?}", receipt);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // init state
     let total_supply = U64::from_raw(100);
@@ -319,13 +317,13 @@ fn test_key_rotation() {
             "construct",
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Get state from enclave
     let my_state = get_state::<U64, MemName, _>(my_access_policy, eid, "Balance").unwrap();
@@ -336,8 +334,8 @@ fn test_key_rotation() {
     assert_eq!(third_state, U64::zero());
 }
 
-#[test]
-fn test_integration_eth_approve() {
+#[actix_rt::test]
+async fn test_integration_eth_approve() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
@@ -350,15 +348,14 @@ fn test_integration_eth_approve() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
             ABI_PATH,
             BIN_PATH,
-        )
+        ).await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -367,7 +364,7 @@ fn test_integration_eth_approve() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -379,14 +376,14 @@ fn test_integration_eth_approve() {
             "construct",
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Get state from enclave
     let my_state =
@@ -407,13 +404,13 @@ fn test_integration_eth_approve() {
             "approve",
             deployer_addr,
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Check the updated states
     let my_state = get_state::<Approved, MemName, _>(my_access_policy, eid, "Approved").unwrap();
@@ -428,8 +425,8 @@ fn test_integration_eth_approve() {
     assert_eq!(other_state, Approved::default());
 }
 
-#[test]
-fn test_integration_eth_transfer_from() {
+#[actix_rt::test]
+async fn test_integration_eth_transfer_from() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
@@ -443,15 +440,14 @@ fn test_integration_eth_transfer_from() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
             ABI_PATH,
             BIN_PATH,
-        )
+        ).await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -460,7 +456,7 @@ fn test_integration_eth_transfer_from() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -472,14 +468,14 @@ fn test_integration_eth_transfer_from() {
             "construct",
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Get initial state from enclave
     let my_state_balance =
@@ -513,13 +509,13 @@ fn test_integration_eth_transfer_from() {
             "approve",
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Check the updated states
     let my_state_balance =
@@ -563,13 +559,13 @@ fn test_integration_eth_transfer_from() {
             "transfer_from",
             deployer_addr,
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Check the final states
     let my_state_balance =
@@ -598,8 +594,8 @@ fn test_integration_eth_transfer_from() {
     assert_eq!(third_state_approved, Approved::default());
 }
 
-#[test]
-fn test_integration_eth_mint() {
+#[actix_rt::test]
+async fn test_integration_eth_mint() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
@@ -612,15 +608,14 @@ fn test_integration_eth_mint() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
             ABI_PATH,
             BIN_PATH,
-        )
+        ).await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -629,7 +624,7 @@ fn test_integration_eth_mint() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -641,14 +636,14 @@ fn test_integration_eth_mint() {
             "construct",
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // transit state
     let amount = U64::from_raw(50);
@@ -661,14 +656,14 @@ fn test_integration_eth_mint() {
             "mint",
             deployer_addr,
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
 
     println!("minted state receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Check the final states
     let actual_total_supply =
@@ -680,8 +675,8 @@ fn test_integration_eth_mint() {
     assert_eq!(other_balance, amount);
 }
 
-#[test]
-fn test_integration_eth_burn() {
+#[actix_rt::test]
+async fn test_integration_eth_burn() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
@@ -694,15 +689,14 @@ fn test_integration_eth_burn() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).unwrap();
+    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
             ABI_PATH,
             BIN_PATH,
-        )
+        ).await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -711,7 +705,7 @@ fn test_integration_eth_burn() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -723,14 +717,14 @@ fn test_integration_eth_burn() {
             "construct",
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Send a transaction to contract
     let amount = U64::from_raw(30);
@@ -743,13 +737,13 @@ fn test_integration_eth_burn() {
             "transfer",
             deployer_addr.clone(),
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Send a transaction to contract
     let amount = U64::from_raw(20);
@@ -761,13 +755,13 @@ fn test_integration_eth_burn() {
             "burn",
             deployer_addr,
             gas,
-            CONFIRMATIONS,
         )
+        .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().unwrap();
+    dispatcher.block_on_event::<U64>().await.unwrap();
 
     // Check the final states
     let actual_total_supply =
