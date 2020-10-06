@@ -26,6 +26,7 @@ impl RatchetTree {
     }
 
     /// Set my leaf node derived from path secret to the provided tree index.
+    #[allow(dead_code)]
     pub fn init_path_secret_idx(path_secret: PathSecret, my_tree_idx: usize) -> Result<Self> {
         let (_, privkey, _, _) = path_secret.derive_node_values()?;
         let my_leaf = RatchetTreeNode::from_private_key(privkey);
@@ -202,6 +203,7 @@ impl RatchetTree {
         Ok(root_node_secret)
     }
 
+    #[allow(dead_code)]
     pub fn set_single_public_key(&mut self, tree_idx: usize, pubkey: DhPubKey) -> Result<()> {
         let node = self.get_mut(tree_idx).ok_or_else(|| {
             anyhow!("Invalid tree index. Cannot set a public key to ratchet tree by add operation")
@@ -307,6 +309,7 @@ pub enum RatchetTreeNode {
 }
 
 impl RatchetTreeNode {
+    #[allow(dead_code)]
     pub fn from_private_key(private_key: DhPrivateKey) -> Self {
         let public_key = DhPubKey::from_private_key(&private_key);
         RatchetTreeNode::Filled {

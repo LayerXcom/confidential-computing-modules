@@ -3,7 +3,7 @@ use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
 use frame_common::{
-    crypto::{AccountId, Sha256},
+    crypto::Sha256,
     state_types::StateType,
     traits::*,
 };
@@ -36,16 +36,23 @@ impl<AP: AccessPolicy> EnclaveEngine for Instruction<AP> {
         C: ContextOps<S = StateType> + Clone,
     {
         let account_id = ecall_input.access_policy().into_account_id();
-        let state = ecall_input.state.as_mut_bytes();
 
-        let instruction_output = create_instruction_output::<R, C>(
+        let group_key = &mut *enclave_context.write_group_key();
+        let ciphertext = Instructions::<R, C>::new(
             ecall_input.call_id,
-            state,
+            ecall_input.state.as_mut_bytes(),
             account_id,
-            enclave_context,
-            max_mem_size,
-        )?;
+        )?
+        .encrypt(group_key, max_mem_size)?;
+
+        let msg = Sha256::hash(&ciphertext.encode());
+        let enclave_sig = enclave_context.sign(msg.as_bytes())?;
+        let roster_idx = ciphertext.roster_idx() as usize;
+        let instruction_output = output::Instruction::new(ciphertext, enclave_sig);
+
         enclave_context.set_notification(account_id);
+        // ratchet sender's app keychain per tx.
+        group_key.sender_ratchet(roster_idx)?;
 
         Ok(instruction_output)
     }
@@ -83,7 +90,7 @@ impl EnclaveEngine for InsertCiphertext {
 
         let roster_idx = ecall_input.ciphertext().roster_idx() as usize;
         // ratchet app keychain per a log.
-        group_key.ratchet(roster_idx)?;
+        group_key.receiver_ratchet(roster_idx)?;
 
         Ok(output)
     }
@@ -236,24 +243,4 @@ impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
 
         Ok(output::Empty::default())
     }
-}
-
-fn create_instruction_output<R, C>(
-    call_id: u32,
-    params: &mut [u8],
-    account_id: AccountId,
-    enclave_ctx: &C,
-    max_mem_size: usize,
-) -> Result<output::Instruction>
-where
-    R: RuntimeExecutor<C, S = StateType>,
-    C: ContextOps,
-{
-    let group_key = &*enclave_ctx.read_group_key();
-    let ciphertext =
-        Instructions::<R, C>::new(call_id, params, account_id)?.encrypt(group_key, max_mem_size)?;
-    let msg = Sha256::hash(&ciphertext.encode());
-    let enclave_sig = enclave_ctx.sign(msg.as_bytes())?;
-
-    Ok(output::Instruction::new(ciphertext, enclave_sig))
 }

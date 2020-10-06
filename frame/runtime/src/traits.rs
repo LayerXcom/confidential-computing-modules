@@ -11,7 +11,7 @@ use frame_common::{
     state_types::{MemId, UpdatedState},
     traits::*,
 };
-use frame_treekem::handshake::{HandshakeParams, PathSecretSource};
+use frame_treekem::handshake::HandshakeParams;
 
 /// Execute state transition functions from runtime
 pub trait RuntimeExecutor<G: ContextOps>: Sized {
@@ -76,18 +76,17 @@ pub trait Signer {
 }
 
 pub trait GroupKeyOps: Sized {
-    fn new(my_roster_idx: usize, max_roster_idx: usize, source: PathSecretSource) -> Result<Self>;
-
     fn create_handshake(&self) -> Result<(HandshakeParams, ExportPathSecret)>;
 
     fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()>;
 
     fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext>;
 
-    fn decrypt(&mut self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>>;
+    fn decrypt(&self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>>;
 
-    /// Ratchet keychain per a transaction
-    fn ratchet(&mut self, roster_idx: usize) -> Result<()>;
+    fn sender_ratchet(&mut self, roster_idx: usize) -> Result<()>;
+
+    fn receiver_ratchet(&mut self, roster_idx: usize) -> Result<()>;
 }
 
 pub trait QuoteGetter: Sized {
