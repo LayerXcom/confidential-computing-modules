@@ -18,6 +18,7 @@ pub struct Server<D: Deployer, S: Sender, W: Watcher> {
     pub confirmations: usize,
     pub account_index: usize,
     pub password: String,
+    pub sync_time: u64,
     pub store_path_secrets: StorePathSecrets,
     pub dispatcher: Dispatcher<D, S, W>,
 }
@@ -41,6 +42,10 @@ where
             .expect("CONFIRMATIONS is not set")
             .parse()
             .expect("Failed to parse ACCOUNT_INDEX to usize");
+        let sync_time: u64 = env::var("SYNC_BC_TIME")
+            .unwrap_or_else(|_| "1000".to_string())
+            .parse()
+            .expect("Failed to parse SYNC_BC_TIME to u64");
 
         let store_path_secrets = StorePathSecrets::new();
         let cache = Arc::new(RwLock::new(EventCache::default()));
@@ -53,6 +58,7 @@ where
             bin_path,
             confirmations,
             account_index,
+            sync_time,
             password,
             store_path_secrets,
             dispatcher,

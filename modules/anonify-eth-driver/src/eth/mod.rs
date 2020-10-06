@@ -1,6 +1,6 @@
 pub mod deployer;
 pub mod event_watcher;
-pub mod primitives;
+pub mod connection;
 pub mod sender;
 
 pub use self::deployer::EthDeployer;

@@ -1,4 +1,4 @@
-use super::primitives::{Web3Contract, Web3Http};
+use super::connection::{Web3Contract, Web3Http};
 use crate::{cache::EventCache, error::Result, traits::*, utils::*, workflow::*};
 use anyhow::anyhow;
 use ethabi::{decode, Event, EventParam, Hash, ParamType};

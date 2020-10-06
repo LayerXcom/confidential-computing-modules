@@ -46,7 +46,7 @@ impl AppKeyChain {
 
     /// Decrypt messag with current member's application secret.
     pub fn decrypt_msg(
-        &mut self,
+        &self,
         app_msg: &Ciphertext,
         group_state: &GroupState,
     ) -> Result<Option<Vec<u8>>> {

@@ -8,7 +8,7 @@ use erc20_state_transition::{
 };
 use frame_runtime::primitives::{Approved, U64};
 use log::debug;
-use std::{env, sync::Arc, time};
+use std::{sync::Arc, time};
 
 const DEFAULT_GAS: u64 = 5_000_000;
 
@@ -422,17 +422,12 @@ where
     S: Sender + Send + Sync + 'static,
     W: Watcher + Send + Sync + 'static,
 {
-    let sync_time: u64 = env::var("SYNC_BC_TIME")
-        .unwrap_or_else(|_| "3".to_string())
-        .parse()
-        .expect("Failed to parse SYNC_BC_TIME to u64");
-
     // it spawns a new OS thread, and hosts an event loop.
     actix_rt::Arbiter::new().exec_fn(move || {
         actix_rt::spawn(async move {
             server.dispatcher.block_on_event::<U64>().await.unwrap();
             debug!("event fetched...");
-            actix_rt::time::delay_for(time::Duration::from_secs(sync_time));
+            actix_rt::time::delay_for(time::Duration::from_millis(server.sync_time)).await;
         });
     });
 
