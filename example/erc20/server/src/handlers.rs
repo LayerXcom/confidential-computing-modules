@@ -423,7 +423,7 @@ where
     W: Watcher + Send + Sync + 'static,
 {
     let sync_time: u64 = env::var("SYNC_BC_TIME")
-        .unwrap_or_else(|_| "3".to_string())
+        .unwrap_or_else(|_| "1000".to_string())
         .parse()
         .expect("Failed to parse SYNC_BC_TIME to u64");
 
@@ -432,7 +432,7 @@ where
         actix_rt::spawn(async move {
             server.dispatcher.block_on_event::<U64>().await.unwrap();
             debug!("event fetched...");
-            actix_rt::time::delay_for(time::Duration::from_secs(sync_time));
+            actix_rt::time::delay_for(time::Duration::from_millis(sync_time)).await;
         });
     });
 

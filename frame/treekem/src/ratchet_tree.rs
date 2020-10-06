@@ -13,7 +13,7 @@ use std::vec::Vec;
 
 #[derive(Clone, Debug, Encode)]
 pub struct RatchetTree {
-    pub nodes: Vec<RatchetTreeNode>,
+    nodes: Vec<RatchetTreeNode>,
 }
 
 impl RatchetTree {
@@ -254,6 +254,10 @@ impl RatchetTree {
 
     pub fn size(&self) -> usize {
         self.nodes.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.size() == 0
     }
 
     pub fn get(&self, idx: usize) -> Option<&RatchetTreeNode> {

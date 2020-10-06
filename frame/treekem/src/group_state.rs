@@ -14,9 +14,9 @@ pub struct GroupState {
     /// Only if a member has a leaf node contained DhPrivKey, this indicates the roster index.
     /// Otherwise, this field is None.
     #[codec(skip)]
-    pub my_roster_idx: u32,
+    my_roster_idx: u32,
     /// RatchetTree contains blank nodes or filled nodes which consist of DhPubkey and DhPrivKey.
-    pub tree: RatchetTree,
+    tree: RatchetTree,
     /// The initial secret used to derive app_secret.
     /// It works as a salt of HKDF.
     #[codec(skip)]
@@ -78,7 +78,7 @@ impl Handshake for GroupState {
         // If sender_tree_size equals to the current tree size, the handshake contains an add operation.
         if sender_tree_idx == self.tree.size() {
             // This is just special operation for the very first epoch.
-            if self.tree.nodes.is_empty() {
+            if self.tree.is_empty() {
                 self.tree.add_leaf_node(RatchetTreeNode::Blank);
             }
             for _ in 0..=(max_tree_size - self.tree.size()) / 2 {

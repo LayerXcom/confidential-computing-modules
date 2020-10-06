@@ -1,4 +1,4 @@
-use super::primitives::{Web3Contract, Web3Http};
+use super::connection::{Web3Contract, Web3Http};
 use crate::{error::Result, traits::*, utils::*, workflow::*};
 use sgx_types::sgx_enclave_id_t;
 use std::{path::Path, marker::Send};
