@@ -85,7 +85,7 @@ impl Web3Logs {
         let ciphertext_size = Self::decode_data(&self.logs[0]).len();
 
         for (i, log) in self.logs.iter().enumerate() {
-            debug!("log: {:?}, \nindex: {:?}", log, i);
+            debug!("Inserting enclave log: {:?}, \nindex: {:?}", log, i);
             if contract_addr != log.address {
                 return Err(
                     anyhow!("Each log should have same contract address.: index: {}", i).into(),

@@ -1,6 +1,7 @@
 use frame_common::crypto::Ciphertext;
 use std::collections::{HashMap, HashSet};
 use web3::types::Address as ContractAddr;
+use log::info;
 
 type BlockNum = u64;
 type RosterIdx = u32;
@@ -23,11 +24,14 @@ impl EventCache {
         contract_addr: ContractAddr,
         block_num: BlockNum,
     ) -> Option<BlockNum> {
+        info!("Insert: Cached block number: {}", block_num);
         self.block_num_counter.insert(contract_addr, block_num)
     }
 
     pub fn get_latest_block_num(&self, contract_addr: ContractAddr) -> Option<BlockNum> {
-        self.block_num_counter.get(&contract_addr).map(|e| *e)
+        let block_num = self.block_num_counter.get(&contract_addr).map(|e| *e);
+        info!("Get: Cached block number: {:?}", block_num);
+        block_num
     }
 
     pub fn is_next_msg(&self, msg: Ciphertext) -> bool {
