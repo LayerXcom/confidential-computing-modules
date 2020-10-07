@@ -781,7 +781,7 @@ async fn test_integration_eth_burn() {
     assert_eq!(other_balance, U64::from_raw(10)); // 30 - 20(burn)
 }
 
-fn set_env_vars() {
+pub fn set_env_vars() {
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
     env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");

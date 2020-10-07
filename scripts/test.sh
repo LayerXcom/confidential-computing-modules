@@ -24,8 +24,11 @@ echo "Integration testing..."
 cd ../tests/integration
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 
+cd ../../example/erc20/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
+
 echo "Unit testing..."
-cd ../../scripts
+cd ../../../scripts
 make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave
 cd ../tests/units/host
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
