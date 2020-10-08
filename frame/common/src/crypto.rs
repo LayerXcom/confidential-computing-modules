@@ -10,8 +10,8 @@ use crate::serde::{Deserialize, Serialize};
 use crate::traits::{AccessPolicy, Hash256, IntoVec};
 use codec::{self, Decode, Encode, Input};
 use ed25519_dalek::{
-    Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH,
-    SECRET_KEY_LENGTH, SIGNATURE_LENGTH,
+    Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
+    SIGNATURE_LENGTH,
 };
 #[cfg(feature = "std")]
 use rand::Rng;

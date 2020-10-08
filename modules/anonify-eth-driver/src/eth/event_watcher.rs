@@ -1,6 +1,7 @@
 use super::connection::{Web3Contract, Web3Http};
 use crate::{cache::EventCache, error::Result, traits::*, utils::*, workflow::*};
 use anyhow::anyhow;
+use async_trait::async_trait;
 use ethabi::{decode, Event, EventParam, Hash, ParamType};
 use frame_common::{crypto::Ciphertext, state_types::UpdatedState, traits::*};
 use frame_host::engine::HostEngine;
@@ -9,7 +10,6 @@ use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{path::Path, sync::Arc};
 use web3::types::{Address, Log};
-use async_trait::async_trait;
 
 /// Components needed to watch events
 pub struct EventWatcher {
@@ -280,7 +280,7 @@ impl InnerEnclaveLog {
         }
     }
 
-     pub fn into_input_iter(self) -> impl Iterator<Item = host_input::InsertCiphertext> {
+    pub fn into_input_iter(self) -> impl Iterator<Item = host_input::InsertCiphertext> {
         self.ciphertexts
             .into_iter()
             .map(host_input::InsertCiphertext::new)

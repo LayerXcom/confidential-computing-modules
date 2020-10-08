@@ -13,9 +13,9 @@ use sgx_types::sgx_enclave_id_t;
 use std::{
     convert::{TryFrom, TryInto},
     fmt::Debug,
+    marker::Send,
     path::Path,
     sync::Arc,
-    marker::Send,
 };
 use web3::types::{Address, H256};
 
@@ -87,11 +87,10 @@ where
         let input = host_input::JoinGroup::new(deploy_user, gas);
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
-        let contract_addr =
-            inner
-                .deployer
-                .deploy(host_output.clone(), abi_path, bin_path, confirmations)
-                .await?;
+        let contract_addr = inner
+            .deployer
+            .deploy(host_output.clone(), abi_path, bin_path, confirmations)
+            .await?;
         let export_path_secret = host_output
             .ecall_output
             .expect("must have ecall_output")
@@ -107,14 +106,8 @@ where
         contract_addr: &str,
         abi_path: P,
     ) -> Result<(H256, ExportPathSecret)> {
-        self.send_report_handshake(
-            signer,
-            gas,
-            contract_addr,
-            abi_path,
-            "joinGroup",
-        )
-        .await
+        self.send_report_handshake(signer, gas, contract_addr, abi_path, "joinGroup")
+            .await
     }
 
     pub async fn update_mrenclave<P: AsRef<Path> + Copy>(
@@ -124,14 +117,8 @@ where
         contract_addr: &str,
         abi_path: P,
     ) -> Result<(H256, ExportPathSecret)> {
-        self.send_report_handshake(
-            signer,
-            gas,
-            contract_addr,
-            abi_path,
-            "updateMrenclave",
-        )
-        .await
+        self.send_report_handshake(signer, gas, contract_addr, abi_path, "updateMrenclave")
+            .await
     }
 
     async fn send_report_handshake<P: AsRef<Path> + Copy>(
@@ -194,11 +181,7 @@ where
         }
     }
 
-    pub async fn handshake(
-        &self,
-        signer: Address,
-        gas: u64,
-    ) -> Result<(H256, ExportPathSecret)> {
+    pub async fn handshake(&self, signer: Address, gas: u64) -> Result<(H256, ExportPathSecret)> {
         let inner = self.inner.read();
         let input = host_input::Handshake::new(signer, gas);
         let eid = inner.deployer.get_enclave_id();
@@ -234,7 +217,11 @@ where
     }
 
     pub async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
-        self.inner.read().deployer.get_account(index, password).await
+        self.inner
+            .read()
+            .deployer
+            .get_account(index, password)
+            .await
     }
 
     pub fn register_notification<AP>(&self, access_policy: AP) -> Result<()>
