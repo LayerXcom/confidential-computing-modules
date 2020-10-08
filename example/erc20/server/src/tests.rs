@@ -91,7 +91,7 @@ async fn test_join_group() {
 
     let req = test::TestRequest::post()
         .uri("/api/v1/init_state")
-        .set_json(&INIT_STATE_REQ)
+        .set_json(&MINT_100_REQ)
         .to_request();
     let tx_hash = test::call_service(&mut app, req).await;
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
@@ -106,7 +106,7 @@ async fn test_join_group() {
 
     let req = test::TestRequest::post()
         .uri("/api/v1/transfer")
-        .set_json(&TRANSFER_REQ)
+        .set_json(&TRANSFER_10_REQ)
         .to_request();
     let tx_hash = test::call_service(&mut app, req).await;
     println!("transfer_tx_hash: {:?}", tx_hash);
@@ -141,7 +141,7 @@ fn other_turn() {
 }
 
 // to me
-const INIT_STATE_REQ: erc20_api::init_state::post::Request = erc20_api::init_state::post::Request {
+const MINT_100_REQ: erc20_api::init_state::post::Request = erc20_api::init_state::post::Request {
     sig: [
         236, 103, 17, 252, 166, 199, 9, 46, 200, 107, 188, 0, 37, 111, 83, 105, 175, 81, 231, 14,
         81, 100, 221, 89, 102, 172, 30, 96, 15, 128, 117, 146, 181, 221, 149, 206, 163, 208, 113,
@@ -160,7 +160,7 @@ const INIT_STATE_REQ: erc20_api::init_state::post::Request = erc20_api::init_sta
 };
 
 // from me to other
-const TRANSFER_REQ: erc20_api::transfer::post::Request = erc20_api::transfer::post::Request {
+const TRANSFER_10_REQ: erc20_api::transfer::post::Request = erc20_api::transfer::post::Request {
     sig: [
         227, 77, 52, 167, 149, 64, 24, 23, 103, 227, 13, 120, 90, 186, 1, 62, 110, 60, 186, 247,
         143, 247, 19, 71, 85, 191, 224, 5, 38, 219, 96, 44, 196, 154, 181, 50, 99, 58, 20, 125,
