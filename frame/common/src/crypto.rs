@@ -65,7 +65,7 @@ lazy_static! {
     Deserialize,
 )]
 #[serde(crate = "crate::serde")]
-pub struct AccountId([u8; ACCOUNT_ID_SIZE]);
+pub struct AccountId(pub [u8; ACCOUNT_ID_SIZE]);
 
 #[cfg(feature = "std")]
 impl From<AccountId> for web3::types::Address {
