@@ -27,7 +27,9 @@ async fn test_deploy_post() {
 
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
-    println!("response: {:?}", resp);
+    assert!(resp.status().is_success());
+    let contract_addr: erc20_api::deploy::post::Response = test::read_body_json(resp).await;
+    println!("contract address: {:?}", contract_addr);
 }
 
 #[actix_rt::test]
@@ -73,43 +75,48 @@ async fn test_join_group() {
     .await;
 
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
-    let contract_addr: erc20_api::deploy::post::Response =
-        test::read_response_json(&mut app, req).await;
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success());
+    let contract_addr: erc20_api::deploy::post::Response = test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_addr.0);
+
     let req = test::TestRequest::post()
         .uri("/api/v1/start_sync_bc")
         .to_request();
-    let _ = test::call_service(&mut app, req).await;
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success());
 
     other_turn();
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
         .set_json(&contract_addr.0)
         .to_request();
-    let tx_hash = test::call_service(&mut app, req).await;
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success());
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::post()
         .uri("/api/v1/init_state")
         .set_json(&MINT_100_REQ)
         .to_request();
-    let tx_hash = test::call_service(&mut app, req).await;
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success());
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/balance_of")
         .set_json(&BALANCE_OF_REQ)
         .to_request();
-    let balance: erc20_api::state::get::Response<U64> =
-        test::read_response_json(&mut app, req).await;
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success());
+    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(req).await;
     assert_eq!(balance.0.as_raw(), 100);
 
     let req = test::TestRequest::post()
         .uri("/api/v1/transfer")
         .set_json(&TRANSFER_10_REQ)
         .to_request();
-    let tx_hash = test::call_service(&mut app, req).await;
-    println!("transfer_tx_hash: {:?}", tx_hash);
+    let _ = test::call_service(&mut app, req).await;
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
@@ -131,12 +138,12 @@ fn set_server_env_vars() {
 }
 
 fn my_turn() {
-    env::set_var("CONFIRMATIONS", "0");
+    env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("ACCOUNT_INDEX", "0");
 }
 
 fn other_turn() {
-    env::set_var("CONFIRMATIONS", "1");
+    env::set_var("MY_ROSTER_IDX", "1");
     env::set_var("ACCOUNT_INDEX", "1");
 }
 
