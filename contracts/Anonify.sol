@@ -54,8 +54,8 @@ contract Anonify is ReportHandle {
         require(_senderToRosterIdx[msg.sender] == 0, "The msg.sender can join only once");
 
         handleReport(_report, _reportSig);
-        _senderToRosterIdx[msg.sender] = rosterIdx;
-        _rosterIdxCounter = rosterIdx;
+        _senderToRosterIdx[msg.sender] = _rosterIdx;
+        _rosterIdxCounter = _rosterIdx;
         handshake_wo_sig(_handshake);
     }
 
@@ -88,11 +88,11 @@ contract Anonify is ReportHandle {
 
     function handshake(
         bytes memory _handshake,
-        bytes memory _enclaveSig
+        bytes memory _enclaveSig,
+        uint32 _rosterIdx
     ) public {
-        // uint32 rosterIdx = BytesUtils.toUint32(_handshake, 4);
-        // require(_senderToRosterIdx[msg.sender] == rosterIdx, "The roster index must be same as the registered one");
-        address verifyingKey = Secp256k1.recover(sha256(_handshake), _enclaveSig);
+        require(_senderToRosterIdx[msg.sender] == _rosterIdx, "The roster index must be same as the registered one");
+        address verifyingKey = Secp256k1.recover(sha256(abi.encodePacked(_handshake, _rosterIdx)), _enclaveSig);
         require(verifyingKeyMapping[verifyingKey] == verifyingKey, "Invalid enclave signature.");
 
         emit StoreHandshake(_handshake);

@@ -91,7 +91,7 @@ impl Web3Contract {
         self.contract
             .call(
                 "handshake",
-                (handshake, enclave_sig.to_vec()),
+                (handshake, enclave_sig.to_vec(), ecall_output.roster_idx()),
                 output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
             )

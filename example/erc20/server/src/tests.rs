@@ -52,22 +52,6 @@ async fn test_join_group() {
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/init_state",
-                web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/transfer",
-                web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/balance_of",
-                web::get().to(handle_balance_of::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/start_sync_bc",
                 web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
             ),
@@ -110,6 +94,7 @@ async fn test_join_group() {
     )
     .await;
 
+    // Party 1
 
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app1, req).await;
@@ -122,6 +107,8 @@ async fn test_join_group() {
         .to_request();
     let resp = test::call_service(&mut app1, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    // Party 2
 
     other_turn();
 

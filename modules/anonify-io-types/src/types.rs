@@ -299,6 +299,7 @@ pub mod output {
     pub struct ReturnHandshake {
         export_path_secret: ExportPathSecret,
         enclave_sig: secp256k1::Signature,
+        roster_idx: u32,
         handshake: Vec<u8>,
     }
 
@@ -309,6 +310,7 @@ pub mod output {
             let mut acc = vec![];
             acc.extend_from_slice(&self.export_path_secret_as_ref().encode());
             acc.extend_from_slice(&self.encode_enclave_sig());
+            acc.extend_from_slice(&self.roster_idx().encode());
             acc.extend_from_slice(&self.handshake());
 
             acc
@@ -323,6 +325,8 @@ pub mod output {
             value.read(&mut enclave_sig_buf)?;
             let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
 
+            let roster_idx = u32::decode(value)?;
+
             let handshake_len = value
                 .remaining_len()?
                 .expect("Handshake length must not be zero");
@@ -332,6 +336,7 @@ pub mod output {
             Ok(ReturnHandshake {
                 export_path_secret,
                 enclave_sig,
+                roster_idx,
                 handshake,
             })
         }
@@ -342,11 +347,13 @@ pub mod output {
             handshake: Vec<u8>,
             export_path_secret: ExportPathSecret,
             enclave_sig: secp256k1::Signature,
+            roster_idx: u32,
         ) -> Self {
             ReturnHandshake {
                 handshake,
                 export_path_secret,
                 enclave_sig,
+                roster_idx,
             }
         }
 
@@ -364,6 +371,10 @@ pub mod output {
 
         pub fn encode_enclave_sig(&self) -> [u8; 64] {
             self.enclave_sig.serialize()
+        }
+
+        pub fn roster_idx(&self) -> u32 {
+            self.roster_idx
         }
     }
 }

@@ -19,6 +19,7 @@ use rand::Rng;
 use rand_core::{CryptoRng, RngCore};
 #[cfg(feature = "std")]
 use rand_os::OsRng;
+use sha2::Digest;
 
 const ACCOUNT_ID_SIZE: usize = 20;
 pub const COMMON_SECRET: [u8; SECRET_KEY_LENGTH] = [
@@ -195,7 +196,6 @@ pub struct Sha256([u8; 32]);
 
 impl Hash256 for Sha256 {
     fn hash(inp: &[u8]) -> Self {
-        use sha2::Digest;
         let mut hasher = sha2::Sha256::new();
         hasher.input(inp);
 
@@ -212,6 +212,16 @@ impl Hash256 for Sha256 {
 impl Sha256 {
     pub fn new(hash: [u8; 32]) -> Self {
         Sha256(hash)
+    }
+
+    pub fn hash_with_u32(inp: &[u8], num: u32) -> Self {
+        let mut hasher = sha2::Sha256::new();
+        hasher.input(inp);
+        hasher.input(num.to_be_bytes());
+
+        let mut res = Sha256::default();
+        res.copy_from_slice(&hasher.result());
+        res
     }
 
     pub fn as_array(&self) -> [u8; 32] {
