@@ -91,6 +91,10 @@ async fn test_join_group() {
                 "/api/v1/set_contract_addr",
                 web::get().to(handle_set_contract_addr::<EthDeployer, EthSender, EventWatcher>),
             )
+            .route(
+                "/api/v1/key_rotation",
+                web::post().to(handle_key_rotation::<EthDeployer, EthSender, EventWatcher>),
+            ),
     )
     .await;
 
@@ -143,7 +147,6 @@ async fn test_join_group() {
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/balance_of")
@@ -155,11 +158,18 @@ async fn test_join_group() {
     assert_eq!(balance.0.as_raw(), 100);
 
     let req = test::TestRequest::post()
+        .uri("/api/v1/key_rotation")
+        .to_request();
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
+
+    let req = test::TestRequest::post()
         .uri("/api/v1/transfer")
         .set_json(&TRANSFER_10_REQ)
         .to_request();
-    let _ = test::call_service(&mut app2, req).await;
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/balance_of")
