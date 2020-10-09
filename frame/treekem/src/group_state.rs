@@ -67,7 +67,7 @@ impl Handshake for GroupState {
     {
         ensure!(
             handshake.prior_epoch == self.epoch,
-            "Handshake's prior epoch isn't the current epoch."
+            "Handshake's prior epoch ({:?}) isn't the current epoch ({:?}).", handshake.prior_epoch, self.epoch
         );
         let sender_tree_idx = RatchetTree::roster_idx_to_tree_idx(handshake.roster_idx)?;
         ensure!(sender_tree_idx <= self.tree.size(), "Invalid tree index");

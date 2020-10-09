@@ -27,7 +27,7 @@ async fn test_deploy_post() {
 
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success());
+    assert!(resp.status().is_success(), "response: {:?}", resp);
     let contract_addr: erc20_api::deploy::post::Response = test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_addr);
 }
@@ -38,15 +38,15 @@ async fn test_join_group() {
     set_server_env_vars();
 
     // Enclave must be initialized in main function.
-    let enclave = EnclaveDir::new()
+    let enclave1 = EnclaveDir::new()
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
-    let eid = enclave.geteid();
-    let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
+    let eid1 = enclave1.geteid();
+    let server1 = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid1));
 
-    let mut app = test::init_service(
+    let mut app1 = test::init_service(
         App::new()
-            .data(server.clone())
+            .data(server1.clone())
             .route(
                 "/api/v1/deploy",
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
@@ -74,57 +74,113 @@ async fn test_join_group() {
     )
     .await;
 
+    let enclave2 = EnclaveDir::new()
+        .init_enclave(true)
+        .expect("Failed to initialize enclave.");
+    let eid2 = enclave.geteid();
+    let server2 = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid2));
+
+    let mut app2 = test::init_service(
+        App::new()
+            .data(server2.clone())
+            .route(
+                "/api/v1/join_group",
+                web::post().to(handle_join_group::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/init_state",
+                web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/transfer",
+                web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/balance_of",
+                web::get().to(handle_balance_of::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/start_sync_bc",
+                web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/set_contract_addr",
+                web::get().to(handle_set_contract_addr::<EthDeployer, EthSender, EventWatcher>),
+            )
+    )
+    .await;
+
+
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success());
+    let resp = test::call_service(&mut app1, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
     let contract_addr: erc20_api::deploy::post::Response = test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_addr.0);
 
-    let req = test::TestRequest::post()
+    let req = test::TestRequest::get()
         .uri("/api/v1/start_sync_bc")
         .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success());
+    let resp = test::call_service(&mut app1, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
 
     other_turn();
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/set_contract_addr")
+        .set_json(&erc20_api::contract_addr::post::Request {
+            contract_addr: contract_addr.0.clone(),
+        })
+        .to_request();
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/start_sync_bc")
+        .to_request();
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
-        .set_json(&contract_addr.0)
+        .set_json(&erc20_api::join_group::post::Request {
+            contract_addr: contract_addr.0,
+        })
         .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success());
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::post()
         .uri("/api/v1/init_state")
         .set_json(&MINT_100_REQ)
         .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success());
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/balance_of")
         .set_json(&BALANCE_OF_REQ)
         .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success());
-    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(req).await;
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 100);
 
     let req = test::TestRequest::post()
         .uri("/api/v1/transfer")
         .set_json(&TRANSFER_10_REQ)
         .to_request();
-    let _ = test::call_service(&mut app, req).await;
+    let _ = test::call_service(&mut app2, req).await;
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/balance_of")
         .set_json(&BALANCE_OF_REQ)
         .to_request();
-    let balance: erc20_api::state::get::Response<U64> =
-        test::read_response_json(&mut app, req).await;
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 90);
 }
 
@@ -138,11 +194,15 @@ fn set_server_env_vars() {
 }
 
 fn my_turn() {
+    env::remove_var("MY_ROSTER_IDX");
+    env::remove_var("ACCOUNT_INDEX");
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("ACCOUNT_INDEX", "0");
 }
 
 fn other_turn() {
+    env::remove_var("MY_ROSTER_IDX");
+    env::remove_var("ACCOUNT_INDEX");
     env::set_var("MY_ROSTER_IDX", "1");
     env::set_var("ACCOUNT_INDEX", "1");
 }
