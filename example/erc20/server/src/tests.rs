@@ -77,7 +77,7 @@ async fn test_join_group() {
     let enclave2 = EnclaveDir::new()
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
-    let eid2 = enclave.geteid();
+    let eid2 = enclave2.geteid();
     let server2 = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid2));
 
     let mut app2 = test::init_service(

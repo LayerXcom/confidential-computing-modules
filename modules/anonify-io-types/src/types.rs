@@ -240,6 +240,7 @@ pub mod output {
         report_sig: Vec<u8>,
         handshake: Vec<u8>,
         mrenclave_ver: u32,
+        roster_idx: u32,
         export_path_secret: ExportPathSecret,
     }
 
@@ -251,6 +252,7 @@ pub mod output {
             report_sig: Vec<u8>,
             handshake: Vec<u8>,
             mrenclave_ver: usize,
+            roster_idx: u32,
             export_path_secret: ExportPathSecret,
         ) -> Self {
             ReturnJoinGroup {
@@ -258,6 +260,7 @@ pub mod output {
                 report_sig,
                 handshake,
                 mrenclave_ver: mrenclave_ver as u32,
+                roster_idx,
                 export_path_secret,
             }
         }
@@ -285,6 +288,11 @@ pub mod output {
         pub fn export_path_secret(self) -> ExportPathSecret {
             self.export_path_secret
         }
+
+        pub fn roster_idx(&self) -> u32 {
+            self.roster_idx
+        }
+
     }
 
     #[derive(Debug, Clone)]

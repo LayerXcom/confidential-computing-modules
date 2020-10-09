@@ -177,6 +177,7 @@ impl EnclaveEngine for CallJoinGroup {
             report_sig.into_vec(),
             handshake.encode(),
             mrenclave_ver,
+            handshake.roster_idx(),
             export_path_secret,
         ))
     }

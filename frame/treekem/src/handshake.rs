@@ -37,14 +37,34 @@ pub trait Handshake: Sized {
 pub struct HandshakeParams {
     /// This is equal to the epoch of the current groupstate
     /// at the time of receicing and applying the handshake.
-    pub prior_epoch: u32,
-    pub roster_idx: u32,
-    pub path: DirectPathMsg,
+    prior_epoch: u32,
+    roster_idx: u32,
+    path: DirectPathMsg,
 }
 
 impl HandshakeParams {
+    pub fn new(prior_epoch: u32, roster_idx: u32, path: DirectPathMsg) -> Self {
+        HandshakeParams {
+            prior_epoch,
+            roster_idx,
+            path,
+        }
+    }
+
     pub fn hash(&self) -> Digest {
         hash_encodable(&self)
+    }
+
+    pub fn prior_epoch(&self) -> u32 {
+        self.prior_epoch
+    }
+
+    pub fn roster_idx(&self) -> u32 {
+        self.roster_idx
+    }
+
+    pub fn path(&self) -> &DirectPathMsg {
+        &self.path
     }
 }
 

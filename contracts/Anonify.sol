@@ -46,11 +46,11 @@ contract Anonify is ReportHandle {
         bytes memory _report,
         bytes memory _reportSig,
         bytes memory _handshake,
-        uint32 _version
+        uint32 _version,
+        uint32 _rosterIdx
     ) public {
         require(_mrenclaveVer == _version, "Must be same version");
-        uint32 rosterIdx = BytesUtils.toUint32(_handshake, 4);
-        require(rosterIdx == _rosterIdxCounter + 1, "Joining the group must be ordered accordingly by roster index");
+        require(_rosterIdx == _rosterIdxCounter + 1, "Joining the group must be ordered accordingly by roster index");
         require(_senderToRosterIdx[msg.sender] == 0, "The msg.sender can join only once");
 
         handleReport(_report, _reportSig);
@@ -63,9 +63,12 @@ contract Anonify is ReportHandle {
         bytes memory _report,
         bytes memory _reportSig,
         bytes memory _handshake,
-        uint32 _newVersion
+        uint32 _newVersion,
+        uint32 _rosterIdx
     ) public onlyOwner {
         require(_mrenclaveVer != _newVersion, "Must be new version");
+        require(_rosterIdx == 0, "Only owner can update mrenclave");
+
         updateMrenclaveInner(_report, _reportSig);
         handshake_wo_sig(_handshake);
         _mrenclaveVer = _newVersion;
@@ -87,8 +90,8 @@ contract Anonify is ReportHandle {
         bytes memory _handshake,
         bytes memory _enclaveSig
     ) public {
-        uint32 rosterIdx = BytesUtils.toUint32(_handshake, 4);
-        require(_senderToRosterIdx[msg.sender] == rosterIdx, "The roster index must be same as the registered one");
+        // uint32 rosterIdx = BytesUtils.toUint32(_handshake, 4);
+        // require(_senderToRosterIdx[msg.sender] == rosterIdx, "The roster index must be same as the registered one");
         address verifyingKey = Secp256k1.recover(sha256(_handshake), _enclaveSig);
         require(verifyingKeyMapping[verifyingKey] == verifyingKey, "Invalid enclave signature.");
 
