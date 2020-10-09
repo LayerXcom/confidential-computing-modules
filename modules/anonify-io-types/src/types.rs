@@ -292,7 +292,6 @@ pub mod output {
         pub fn roster_idx(&self) -> u32 {
             self.roster_idx
         }
-
     }
 
     #[derive(Debug, Clone)]

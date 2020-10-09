@@ -57,7 +57,13 @@ impl Web3Contract {
         self.contract
             .call(
                 method,
-                (report, report_sig, handshake, ecall_output.mrenclave_ver(), ecall_output.roster_idx()),
+                (
+                    report,
+                    report_sig,
+                    handshake,
+                    ecall_output.mrenclave_ver(),
+                    ecall_output.roster_idx(),
+                ),
                 output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
             )

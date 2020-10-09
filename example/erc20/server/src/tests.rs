@@ -33,7 +33,7 @@ async fn test_deploy_post() {
 }
 
 #[actix_rt::test]
-async fn test_join_group() {
+async fn test_join_group_then_handshake() {
     set_env_vars();
     set_server_env_vars();
 
