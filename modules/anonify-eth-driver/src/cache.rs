@@ -1,7 +1,7 @@
 use frame_common::crypto::Ciphertext;
+use log::info;
 use std::collections::{HashMap, HashSet};
 use web3::types::Address as ContractAddr;
-use log::info;
 
 type BlockNum = u64;
 type RosterIdx = u32;

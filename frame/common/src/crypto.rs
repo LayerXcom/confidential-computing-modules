@@ -10,8 +10,8 @@ use crate::serde::{Deserialize, Serialize};
 use crate::traits::{AccessPolicy, Hash256, IntoVec};
 use codec::{self, Decode, Encode, Input};
 use ed25519_dalek::{
-    Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH,
-    SECRET_KEY_LENGTH, SIGNATURE_LENGTH,
+    Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
+    SIGNATURE_LENGTH,
 };
 #[cfg(feature = "std")]
 use rand::Rng;
@@ -19,6 +19,7 @@ use rand::Rng;
 use rand_core::{CryptoRng, RngCore};
 #[cfg(feature = "std")]
 use rand_os::OsRng;
+use sha2::Digest;
 
 const ACCOUNT_ID_SIZE: usize = 20;
 pub const COMMON_SECRET: [u8; SECRET_KEY_LENGTH] = [
@@ -65,7 +66,7 @@ lazy_static! {
     Deserialize,
 )]
 #[serde(crate = "crate::serde")]
-pub struct AccountId([u8; ACCOUNT_ID_SIZE]);
+pub struct AccountId(pub [u8; ACCOUNT_ID_SIZE]);
 
 #[cfg(feature = "std")]
 impl From<AccountId> for web3::types::Address {
@@ -195,7 +196,6 @@ pub struct Sha256([u8; 32]);
 
 impl Hash256 for Sha256 {
     fn hash(inp: &[u8]) -> Self {
-        use sha2::Digest;
         let mut hasher = sha2::Sha256::new();
         hasher.input(inp);
 
@@ -212,6 +212,16 @@ impl Hash256 for Sha256 {
 impl Sha256 {
     pub fn new(hash: [u8; 32]) -> Self {
         Sha256(hash)
+    }
+
+    pub fn hash_with_u32(inp: &[u8], num: u32) -> Self {
+        let mut hasher = sha2::Sha256::new();
+        hasher.input(inp);
+        hasher.input(num.to_be_bytes());
+
+        let mut res = Sha256::default();
+        res.copy_from_slice(&hasher.result());
+        res
     }
 
     pub fn as_array(&self) -> [u8; 32] {

@@ -8,6 +8,8 @@ use std::{env, io, sync::Arc};
 
 mod error;
 mod handlers;
+#[cfg(test)]
+mod tests;
 
 #[derive(Debug)]
 pub struct Server<D: Deployer, S: Sender, W: Watcher> {

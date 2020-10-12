@@ -1,9 +1,9 @@
 use super::connection::{Web3Contract, Web3Http};
 use crate::{error::Result, traits::*, utils::*, workflow::*};
+use async_trait::async_trait;
 use sgx_types::sgx_enclave_id_t;
 use std::path::Path;
 use web3::types::{Address, H256};
-use async_trait::async_trait;
 
 /// Components needed to send a transaction
 #[derive(Debug)]
@@ -51,17 +51,11 @@ impl Sender for EthSender {
             .await
     }
 
-    async fn send_instruction(
-        &self,
-        host_output: host_output::Instruction,
-    ) -> Result<H256> {
+    async fn send_instruction(&self, host_output: host_output::Instruction) -> Result<H256> {
         self.contract.send_instruction(host_output).await
     }
 
-    async fn handshake(
-        &self,
-        host_output: host_output::Handshake,
-    ) -> Result<H256> {
+    async fn handshake(&self, host_output: host_output::Handshake) -> Result<H256> {
         self.contract.handshake(host_output).await
     }
 

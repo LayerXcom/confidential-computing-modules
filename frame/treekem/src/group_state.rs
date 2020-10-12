@@ -44,11 +44,7 @@ impl Handshake for GroupState {
             .tree
             .encrypt_direct_path_secret(my_tree_idx, path_secret.clone())?;
 
-        let handshake = HandshakeParams {
-            prior_epoch: self.epoch,
-            roster_idx: my_roster_idx,
-            path: direct_path_msg,
-        };
+        let handshake = HandshakeParams::new(self.epoch, my_roster_idx, direct_path_msg);
         let export_path_secret =
             path_secret.try_into_exporting(self.epoch, handshake.hash().as_ref())?;
 
@@ -66,10 +62,12 @@ impl Handshake for GroupState {
         F: FnOnce(&[u8]) -> Result<ExportPathSecret>,
     {
         ensure!(
-            handshake.prior_epoch == self.epoch,
-            "Handshake's prior epoch isn't the current epoch."
+            handshake.prior_epoch() == self.epoch,
+            "Handshake's prior epoch ({:?}) isn't the current epoch ({:?}).",
+            handshake.prior_epoch(),
+            self.epoch
         );
-        let sender_tree_idx = RatchetTree::roster_idx_to_tree_idx(handshake.roster_idx)?;
+        let sender_tree_idx = RatchetTree::roster_idx_to_tree_idx(handshake.roster_idx())?;
         ensure!(sender_tree_idx <= self.tree.size(), "Invalid tree index");
 
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(self.my_roster_idx)?;
@@ -117,7 +115,7 @@ impl Handshake for GroupState {
 
         let (update_secret, common_ancestor) =
             self.apply_handshake(handshake, sender_tree_idx, my_path_secret)?;
-        let direct_path_pub_keys = handshake.path.node_msgs.iter().map(|m| &m.public_key);
+        let direct_path_pub_keys = handshake.path().node_msgs.iter().map(|m| &m.public_key);
         self.tree.set_public_keys(
             sender_tree_idx,
             common_ancestor,
@@ -201,7 +199,7 @@ impl GroupState {
                 }
                 _ => {
                     let (path_secret, common_ancestor) = self.tree.decrypt_direct_path_msg(
-                        &handshake.path,
+                        &handshake.path(),
                         sender_tree_idx,
                         my_tree_idx,
                     )?;

@@ -13,16 +13,22 @@ anyhow-std = { version = "1.0", package = "anyhow", optional = true }
 anyhow-sgx = { rev = "sgx_1.1.2", package = "anyhow", git = "https://github.com/mesalock-linux/anyhow-sgx.git", optional = true }
 codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
 libsecp256k1 = { version = "0.2", default-features = false }
+serde-std = { package = "serde", version = "1", default-features = false, optional = true }
+serde-sgx = { package = "serde", git = "https://github.com/mesalock-linux/serde-sgx.git", rev = "sgx_1.1.2", default-features = false, optional = true }
 
 [features]
 default = ["std"]
 std = [
     "frame-common/std",
     "anyhow-std",
+    "serde-std/std",
+    "serde-std/derive",
 ]
 sgx = [
     "frame-common/sgx",
     "sgx_tstd",
     "anyhow-sgx",
     "frame-treekem",
+    "serde-sgx",
+    "serde-sgx/derive",
 ]

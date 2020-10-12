@@ -54,55 +54,62 @@ impl Web3Contract {
         let handshake = ecall_output.handshake().to_vec();
         let gas = output.gas;
 
-        self.contract.call(
-            method,
-            (report, report_sig, handshake, ecall_output.mrenclave_ver()),
-            output.signer,
-            Options::with(|opt| opt.gas = Some(gas.into())),
-        )
-        .await
-        .map_err(Into::into)
+        self.contract
+            .call(
+                method,
+                (
+                    report,
+                    report_sig,
+                    handshake,
+                    ecall_output.mrenclave_ver(),
+                    ecall_output.roster_idx(),
+                ),
+                output.signer,
+                Options::with(|opt| opt.gas = Some(gas.into())),
+            )
+            .await
+            .map_err(Into::into)
     }
 
-    pub async fn send_instruction(
-        &self,
-        output: host_output::Instruction,
-    ) -> Result<H256> {
+    pub async fn send_instruction(&self, output: host_output::Instruction) -> Result<H256> {
         let ecall_output = output.ecall_output.unwrap();
         let ciphertext = ecall_output.encode_ciphertext();
         let enclave_sig = &ecall_output.encode_enclave_sig();
         let gas = output.gas;
 
-        self.contract.call(
-            "storeInstruction",
-            (ciphertext, enclave_sig.to_vec()),
-            output.signer,
-            Options::with(|opt| opt.gas = Some(gas.into())),
-        )
-        .await
-        .map_err(Into::into)
+        self.contract
+            .call(
+                "storeInstruction",
+                (ciphertext, enclave_sig.to_vec()),
+                output.signer,
+                Options::with(|opt| opt.gas = Some(gas.into())),
+            )
+            .await
+            .map_err(Into::into)
     }
 
-    pub async fn handshake(
-        &self,
-        output: host_output::Handshake,
-    ) -> Result<H256> {
+    pub async fn handshake(&self, output: host_output::Handshake) -> Result<H256> {
         let ecall_output = output.ecall_output.unwrap();
         let handshake = ecall_output.handshake().to_vec();
         let enclave_sig = &ecall_output.encode_enclave_sig();
         let gas = output.gas;
 
-        self.contract.call(
-            "handshake",
-            (handshake, enclave_sig.to_vec()),
-            output.signer,
-            Options::with(|opt| opt.gas = Some(gas.into())),
-        )
-        .await
-        .map_err(Into::into)
+        self.contract
+            .call(
+                "handshake",
+                (handshake, enclave_sig.to_vec(), ecall_output.roster_idx()),
+                output.signer,
+                Options::with(|opt| opt.gas = Some(gas.into())),
+            )
+            .await
+            .map_err(Into::into)
     }
 
-    pub async fn get_event(&self, cache: Arc<RwLock<EventCache>>, key: Address) -> Result<Web3Logs> {
+    pub async fn get_event(
+        &self,
+        cache: Arc<RwLock<EventCache>>,
+        key: Address,
+    ) -> Result<Web3Logs> {
         let events = EthEvent::create_event();
         // Read latest block number from in-memory event cache.
         let latest_fetched_num = cache.read().get_latest_block_num(key).unwrap_or_default();

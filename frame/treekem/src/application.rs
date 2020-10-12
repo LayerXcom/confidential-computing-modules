@@ -59,14 +59,16 @@ impl AppKeyChain {
             _ => {
                 ensure!(
                     app_msg.epoch() == self.epoch,
-                    "application messages's epoch differs from the app key chain's"
+                    "application messages's epoch ({:?}) differs from the app key chain's ({:?})",
+                    app_msg.epoch(),
+                    self.epoch
                 );
 
                 let (ub_key, nonce_seq, generation) =
                     self.key_nonce_gen(app_msg.roster_idx() as usize)?;
                 ensure!(
                     app_msg.generation() == generation,
-                    "application messages's generation differs from the AppMemberSecret's"
+                    "application messages's generation ({:?}) differs from the AppMemberSecret's ({:?})", app_msg.generation(), generation
                 );
 
                 let mut ciphertext = app_msg.encrypted_state_ref().to_vec();

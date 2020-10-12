@@ -1,9 +1,9 @@
 use super::connection::{Web3Contract, Web3Http};
 use crate::{error::Result, traits::*, utils::*, workflow::*};
-use sgx_types::sgx_enclave_id_t;
-use std::{path::Path, marker::Send};
-use web3::types::Address;
 use async_trait::async_trait;
+use sgx_types::sgx_enclave_id_t;
+use std::{marker::Send, path::Path};
+use web3::types::Address;
 
 /// Components needed to deploy a contract
 #[derive(Debug)]
@@ -36,10 +36,10 @@ impl Deployer for EthDeployer {
         bin_path: P,
         confirmations: usize,
     ) -> Result<String> {
-        let contract_addr =
-            self.web3_conn
-                .deploy(host_output, abi_path, bin_path, confirmations)
-                .await?;
+        let contract_addr = self
+            .web3_conn
+            .deploy(host_output, abi_path, bin_path, confirmations)
+            .await?;
         self.address = Some(contract_addr);
 
         Ok(hex::encode(contract_addr.as_bytes()))

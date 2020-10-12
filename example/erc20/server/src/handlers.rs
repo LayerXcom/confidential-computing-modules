@@ -425,9 +425,11 @@ where
     // it spawns a new OS thread, and hosts an event loop.
     actix_rt::Arbiter::new().exec_fn(move || {
         actix_rt::spawn(async move {
-            server.dispatcher.block_on_event::<U64>().await.unwrap();
-            debug!("event fetched...");
-            actix_rt::time::delay_for(time::Duration::from_millis(server.sync_time)).await;
+            loop {
+                server.dispatcher.block_on_event::<U64>().await.unwrap();
+                debug!("event fetched...");
+                actix_rt::time::delay_for(time::Duration::from_millis(server.sync_time)).await;
+            }
         });
     });
 

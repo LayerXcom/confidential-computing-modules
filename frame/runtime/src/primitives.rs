@@ -6,14 +6,28 @@ use crate::localstd::{
     ops::{Add, Div, Mul, Sub},
     vec::Vec,
 };
+use crate::serde::{Deserialize, Serialize};
 use codec::{Decode, Encode};
 use frame_common::{crypto::AccountId, state_types::StateType, traits::State};
 
 macro_rules! impl_uint {
     ($name:ident, $raw:ident) => {
         #[derive(
-            Encode, Decode, Clone, Copy, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash,
+            Encode,
+            Decode,
+            Clone,
+            Copy,
+            Debug,
+            Default,
+            PartialEq,
+            PartialOrd,
+            Eq,
+            Ord,
+            Hash,
+            Serialize,
+            Deserialize,
         )]
+        #[serde(crate = "crate::serde")]
         pub struct $name($raw);
 
         impl TryFrom<Vec<u8>> for $name {

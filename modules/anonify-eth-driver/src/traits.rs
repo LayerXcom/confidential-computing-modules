@@ -2,12 +2,12 @@
 
 use crate::{cache::EventCache, error::Result, utils::*, workflow::*};
 
+use async_trait::async_trait;
 use frame_common::{state_types::UpdatedState, traits::*};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{path::Path, sync::Arc, marker::Send};
+use std::{marker::Send, path::Path, sync::Arc};
 use web3::types::{Address, H256};
-use async_trait::async_trait;
 
 /// A trait for deploying contracts
 #[async_trait]
@@ -46,10 +46,7 @@ pub trait Sender: Sized {
     async fn get_account(&self, index: usize, password: &str) -> Result<Address>;
 
     /// Send an encrypted instruction of state transition to blockchain nodes.
-    async fn send_instruction(
-        &self,
-        host_output: host_output::Instruction,
-    ) -> Result<H256>;
+    async fn send_instruction(&self, host_output: host_output::Instruction) -> Result<H256>;
 
     /// Attestation with deployed contract.
     async fn send_report_handshake(
@@ -58,10 +55,7 @@ pub trait Sender: Sized {
         method: &str,
     ) -> Result<H256>;
 
-    async fn handshake(
-        &self,
-        host_output: host_output::Handshake,
-    ) -> Result<H256>;
+    async fn handshake(&self, host_output: host_output::Handshake) -> Result<H256>;
 
     fn get_contract(self) -> ContractKind;
 }

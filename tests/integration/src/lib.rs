@@ -32,7 +32,10 @@ async fn test_integration_eth_construct() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
+    let deployer_addr = dispatcher
+        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .await
+        .unwrap();
     let (contract_addr, export_path_secret) = dispatcher
         .deploy(
             deployer_addr.clone(),
@@ -99,7 +102,10 @@ async fn test_auto_notification() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
+    let deployer_addr = dispatcher
+        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .await
+        .unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
@@ -107,7 +113,8 @@ async fn test_auto_notification() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
-        ).await
+        )
+        .await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -188,7 +195,10 @@ async fn test_integration_eth_transfer() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
+    let deployer_addr = dispatcher
+        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .await
+        .unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
@@ -196,7 +206,8 @@ async fn test_integration_eth_transfer() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
-        ).await
+        )
+        .await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -282,7 +293,10 @@ async fn test_key_rotation() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
+    let deployer_addr = dispatcher
+        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .await
+        .unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
@@ -290,7 +304,8 @@ async fn test_key_rotation() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
-        ).await
+        )
+        .await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -352,7 +367,10 @@ async fn test_integration_eth_approve() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
+    let deployer_addr = dispatcher
+        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .await
+        .unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
@@ -360,7 +378,8 @@ async fn test_integration_eth_approve() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
-        ).await
+        )
+        .await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -445,7 +464,10 @@ async fn test_integration_eth_transfer_from() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
+    let deployer_addr = dispatcher
+        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .await
+        .unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
@@ -453,7 +475,8 @@ async fn test_integration_eth_transfer_from() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
-        ).await
+        )
+        .await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -614,7 +637,10 @@ async fn test_integration_eth_mint() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
+    let deployer_addr = dispatcher
+        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .await
+        .unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
@@ -622,7 +648,8 @@ async fn test_integration_eth_mint() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
-        ).await
+        )
+        .await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -696,7 +723,10 @@ async fn test_integration_eth_burn() {
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher.get_account(ACCOUNT_INDEX, PASSWORD).await.unwrap();
+    let deployer_addr = dispatcher
+        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .await
+        .unwrap();
     let (contract_addr, _) = dispatcher
         .deploy(
             deployer_addr.clone(),
@@ -704,7 +734,8 @@ async fn test_integration_eth_burn() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
-        ).await
+        )
+        .await
         .unwrap();
     dispatcher
         .set_contract_addr(&contract_addr, ABI_PATH)
@@ -781,7 +812,7 @@ async fn test_integration_eth_burn() {
     assert_eq!(other_balance, U64::from_raw(10)); // 30 - 20(burn)
 }
 
-fn set_env_vars() {
+pub fn set_env_vars() {
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
     env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");

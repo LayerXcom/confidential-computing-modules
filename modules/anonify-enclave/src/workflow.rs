@@ -2,11 +2,7 @@ use crate::instructions::Instructions;
 use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
-use frame_common::{
-    crypto::Sha256,
-    state_types::StateType,
-    traits::*,
-};
+use frame_common::{crypto::Sha256, state_types::StateType, traits::*};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::handshake::HandshakeParams;
@@ -181,6 +177,7 @@ impl EnclaveEngine for CallJoinGroup {
             report_sig.into_vec(),
             handshake.encode(),
             mrenclave_ver,
+            handshake.roster_idx(),
             export_path_secret,
         ))
     }
@@ -204,14 +201,16 @@ impl EnclaveEngine for CallHandshake {
     {
         let group_key = &*enclave_context.read_group_key();
         let (handshake, export_path_secret) = group_key.create_handshake()?;
+        let roster_idx = handshake.roster_idx();
         let encoded_handshake = handshake.encode();
-        let msg = Sha256::hash(&encoded_handshake);
+        let msg = Sha256::hash_with_u32(&encoded_handshake, roster_idx);
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
 
         Ok(output::ReturnHandshake::new(
             encoded_handshake,
             export_path_secret,
             enclave_sig,
+            roster_idx,
         ))
     }
 }
