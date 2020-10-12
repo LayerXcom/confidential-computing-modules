@@ -99,15 +99,11 @@ where
         Ok((contract_addr, export_path_secret))
     }
 
-    pub async fn join_group<P: AsRef<Path> + Copy>(
-        &self,
-        signer: Address,
-        gas: u64,
-    ) -> Result<(H256, ExportPathSecret)> {
+    pub async fn join_group(&self, signer: Address, gas: u64) -> Result<(H256, ExportPathSecret)> {
         self.send_report_handshake(signer, gas, "joinGroup").await
     }
 
-    pub async fn update_mrenclave<P: AsRef<Path> + Copy>(
+    pub async fn update_mrenclave(
         &self,
         signer: Address,
         gas: u64,
