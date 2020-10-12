@@ -5,7 +5,7 @@
 
 Anonify is a blockchain-agnostic execution environment with privacy and auditability based on TEE (Trusted Execution Environment). Anonify enables flexible execution of business logic while protecting a shared state that is not desired to be revealed to the others. Anonify also provides auditability, i.e., only an auditor can read a specific part of the state. The current implementation of Anonify only supports Ethereum-based blockchains such as [Quorum](https://github.com/jpmorganchase/quorum) as the backend.
 
-Please refer to [Anonify Book(EN)](https://layerxcom.github.io/anonify-book-en/) / [Anonify Book(JP)](https://layerxcom.github.io/anonify-book/) for more information.
+Please refer to [White Paper (JP)](https://layerx.co.jp/wp-content/uploads/2020/06/anonify.pdf), [Anonify Book(EN)](https://layerxcom.github.io/anonify-book-en/) / [Anonify Book(JP)](https://layerxcom.github.io/anonify-book/) for more information.
 
 *Note: This is a prototype implementation and has not been tested for production.*
 
@@ -17,13 +17,13 @@ $ solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.so
 
 ## Running anonify nodes
 
-### docker-compose (Currently unavailable)
-By using docker-compose, three nodes will be up by default. [The ERC20-like application](example/erc20/state-transition/src/lib.rs) is implemented as the initial state transition functions. (Assumed your hardware supports Intel SGX.)
+### docker
+[The ERC20-like application](example/erc20/state-transition/src/lib.rs) is implemented as the initial state transition functions. (Assumed your hardware supports Intel SGX.)
 
-You can build latest docker images:
+You can build a latest docker image and then run the container:
 ```
-$ docker build -t osuketh/anonify-server:latest -f docker/server.Dockerfile ./
-$ docker-compose -f docker/docker-compose-anonify.yml up -d
+$ docker build -t anonify-server:latest -f docker/server.Dockerfile ./
+$ docker run -v /var/run/aesmd:/var/run/aesmd --device /dev/sgx/enclave --name anonify -d --rm -it anonify-server:latest
 ```
 
 ### shell scripts
