@@ -29,11 +29,6 @@ pub mod join_group {
     pub mod post {
         use super::super::*;
 
-        #[derive(Clone, Deserialize, Serialize, Debug)]
-        pub struct Request {
-            pub contract_addr: String,
-        }
-
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
         pub struct Response(pub H256);
     }
@@ -42,11 +37,6 @@ pub mod join_group {
 pub mod update_mrenclave {
     pub mod post {
         use super::super::*;
-
-        #[derive(Clone, Deserialize, Serialize, Debug)]
-        pub struct Request {
-            pub contract_addr: String,
-        }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
         pub struct Response(pub H256);

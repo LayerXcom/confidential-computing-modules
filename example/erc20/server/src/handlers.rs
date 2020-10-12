@@ -53,7 +53,6 @@ where
 
 pub async fn handle_join_group<D, S, W>(
     server: web::Data<Arc<Server<D, S, W>>>,
-    req: web::Json<erc20_api::join_group::post::Request>,
 ) -> Result<HttpResponse>
 where
     D: Deployer,
@@ -67,12 +66,7 @@ where
         .map_err(|e| ServerError::from(e))?;
     let (tx_hash, export_path_secret) = server
         .dispatcher
-        .join_group(
-            sender_address,
-            DEFAULT_GAS,
-            &req.contract_addr,
-            &server.abi_path,
-        )
+        .join_group(sender_address, DEFAULT_GAS)
         .await
         .map_err(|e| ServerError::from(e))?;
     server
@@ -85,7 +79,6 @@ where
 
 pub async fn handle_update_mrenclave<D, S, W>(
     server: web::Data<Arc<Server<D, S, W>>>,
-    req: web::Json<erc20_api::update_mrenclave::post::Request>,
 ) -> Result<HttpResponse>
 where
     D: Deployer,
@@ -99,12 +92,7 @@ where
         .map_err(|e| ServerError::from(e))?;
     let (tx_hash, export_path_secret) = server
         .dispatcher
-        .update_mrenclave(
-            sender_address,
-            DEFAULT_GAS,
-            &req.contract_addr,
-            &server.abi_path,
-        )
+        .update_mrenclave(sender_address, DEFAULT_GAS)
         .await
         .map_err(|e| ServerError::from(e))?;
     server

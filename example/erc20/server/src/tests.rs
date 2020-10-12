@@ -133,9 +133,6 @@ async fn test_join_group_then_handshake() {
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
-        .set_json(&erc20_api::join_group::post::Request {
-            contract_addr: contract_addr.0,
-        })
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);

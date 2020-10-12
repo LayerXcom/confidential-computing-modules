@@ -103,34 +103,25 @@ where
         &self,
         signer: Address,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
     ) -> Result<(H256, ExportPathSecret)> {
-        self.send_report_handshake(signer, gas, contract_addr, abi_path, "joinGroup")
-            .await
+        self.send_report_handshake(signer, gas, "joinGroup").await
     }
 
     pub async fn update_mrenclave<P: AsRef<Path> + Copy>(
         &self,
         signer: Address,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
     ) -> Result<(H256, ExportPathSecret)> {
-        self.send_report_handshake(signer, gas, contract_addr, abi_path, "updateMrenclave")
+        self.send_report_handshake(signer, gas, "updateMrenclave")
             .await
     }
 
-    async fn send_report_handshake<P: AsRef<Path> + Copy>(
+    async fn send_report_handshake(
         &self,
         signer: Address,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
         method: &str,
     ) -> Result<(H256, ExportPathSecret)> {
-        self.set_contract_addr(contract_addr, abi_path)?;
-
         let inner = self.inner.read();
         let eid = inner.deployer.get_enclave_id();
         let input = host_input::JoinGroup::new(signer, gas);

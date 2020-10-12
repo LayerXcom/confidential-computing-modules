@@ -39,8 +39,9 @@ impl Watcher for EventWatcher {
             .get_event(self.cache.clone(), self.contract.address())
             .await?
             .into_enclave_log()?
+            // verification must be executed only before calling `insert_enclave`
             .insert_enclave(eid)?
-            .save_cache(self.contract.address());
+            .save_cache(self.contract.address()); // cache must be saved only after calling `insert_enclave`.
 
         Ok(enclave_updated_state.updated_states())
     }
