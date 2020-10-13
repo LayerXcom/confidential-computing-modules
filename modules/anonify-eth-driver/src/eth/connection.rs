@@ -119,8 +119,8 @@ impl Web3Contract {
         let filter = FilterBuilder::default()
             .address(vec![self.address])
             .topic_filter(TopicFilter {
-                topic0: Topic::This(ciphertext_sig),
-                topic1: Topic::This(handshake_sig),
+                topic0: Topic::OneOf(vec![ciphertext_sig, handshake_sig]),
+                topic1: Topic::Any,
                 topic2: Topic::Any,
                 topic3: Topic::Any,
             })
