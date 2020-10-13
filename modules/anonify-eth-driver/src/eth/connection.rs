@@ -111,31 +111,27 @@ impl Web3Contract {
         key: Address,
     ) -> Result<Web3Logs> {
         let events = EthEvent::create_event();
+        let ciphertext_sig = events.ciphertext_signature();
+        let handshake_sig = events.handshake_signature();
         // Read latest block number from in-memory event cache.
         let latest_fetched_num = cache.read().get_latest_block_num(key).unwrap_or_default();
-        let mut logs_acc = vec![];
 
-        for event in &events.0 {
-            let sig = event.signature();
+        let filter = FilterBuilder::default()
+            .address(vec![self.address])
+            .topic_filter(TopicFilter {
+                topic0: Topic::This(ciphertext_sig),
+                topic1: Topic::This(handshake_sig),
+                topic2: Topic::Any,
+                topic3: Topic::Any,
+            })
+            .from_block(BlockNumber::Number(latest_fetched_num.into()))
+            .to_block(BlockNumber::Latest)
+            .limit(EVENT_LIMIT)
+            .build();
 
-            let filter = FilterBuilder::default()
-                .address(vec![self.address])
-                .topic_filter(TopicFilter {
-                    topic0: Topic::This(sig),
-                    topic1: Topic::Any,
-                    topic2: Topic::Any,
-                    topic3: Topic::Any,
-                })
-                .from_block(BlockNumber::Number(latest_fetched_num.into()))
-                .to_block(BlockNumber::Latest)
-                .limit(EVENT_LIMIT)
-                .build();
+        let logs = self.web3_conn.get_logs(filter).await?;
 
-            let logs = self.web3_conn.get_logs(filter).await?;
-            logs_acc.extend_from_slice(&logs);
-        }
-
-        Ok(Web3Logs::new(logs_acc, cache, events))
+        Ok(Web3Logs::new(logs, cache, events))
     }
 
     pub async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
