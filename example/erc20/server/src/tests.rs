@@ -36,6 +36,7 @@ async fn test_deploy_post() {
 async fn test_node_recovery() {
     set_env_vars();
     set_server_env_vars();
+    env::remove_var("AUDITOR_ENDPOINT");
 
     let enclave = EnclaveDir::new()
         .init_enclave(true)
