@@ -1,7 +1,11 @@
 use crate::utils::StateInfo;
 use anonify_io_types::*;
 use config::constants::*;
-use frame_common::{crypto::Ciphertext, state_types::MemId, traits::*};
+use frame_common::{
+    crypto::{Ciphertext, ExportHandshake},
+    state_types::MemId,
+    traits::*,
+};
 use frame_host::engine::*;
 use std::marker::PhantomData;
 use web3::types::Address;
@@ -251,11 +255,11 @@ pub mod host_input {
     }
 
     pub struct InsertHandshake {
-        handshake: Vec<u8>,
+        handshake: ExportHandshake,
     }
 
     impl InsertHandshake {
-        pub fn new(handshake: Vec<u8>) -> Self {
+        pub fn new(handshake: ExportHandshake) -> Self {
             InsertHandshake { handshake }
         }
     }

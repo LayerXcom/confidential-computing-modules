@@ -90,7 +90,7 @@ impl Web3Contract {
 
     pub async fn handshake(&self, output: host_output::Handshake) -> Result<H256> {
         let ecall_output = output.ecall_output.unwrap();
-        let handshake = ecall_output.handshake().to_vec();
+        let handshake = ecall_output.encode_handshake();
         let enclave_sig = &ecall_output.encode_enclave_sig();
         let gas = output.gas;
 

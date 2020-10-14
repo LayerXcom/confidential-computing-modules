@@ -32,7 +32,6 @@ async fn test_deploy_post() {
     println!("contract address: {:?}", contract_addr);
 }
 
-#[ignore]
 #[actix_rt::test]
 async fn test_node_recovery() {
     set_env_vars();

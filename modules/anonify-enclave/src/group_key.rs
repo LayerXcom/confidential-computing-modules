@@ -1,5 +1,5 @@
 use anyhow::Result;
-use frame_common::crypto::{Ciphertext, ExportPathSecret};
+use frame_common::crypto::{Ciphertext, ExportHandshake, ExportPathSecret};
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{HandshakeParams, PathSecretSource},
@@ -37,8 +37,9 @@ impl GroupKey {
 }
 
 impl GroupKeyOps for GroupKey {
-    fn create_handshake(&self) -> Result<(HandshakeParams, ExportPathSecret)> {
-        self.group_state.create_handshake(&self.source)
+    fn create_handshake(&self) -> Result<(ExportHandshake, ExportPathSecret)> {
+        let (handshake, exp_ps) = self.group_state.create_handshake(&self.source)?;
+        Ok((handshake.into_export(), exp_ps))
     }
 
     fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()> {

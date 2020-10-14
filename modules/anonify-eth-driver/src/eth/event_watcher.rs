@@ -4,12 +4,16 @@ use anyhow::anyhow;
 use async_trait::async_trait;
 use codec::Decode;
 use ethabi::{decode, Event, EventParam, Hash, ParamType};
-use frame_common::{crypto::Ciphertext, state_types::UpdatedState, traits::*};
+use frame_common::{
+    crypto::{Ciphertext, ExportHandshake},
+    state_types::UpdatedState,
+    traits::*,
+};
 use frame_host::engine::HostEngine;
 use log::debug;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{path::Path, sync::Arc};
+use std::{cmp::Ordering, path::Path, sync::Arc};
 use web3::types::{Address, Log};
 
 /// Components needed to watch events
@@ -70,8 +74,7 @@ impl Web3Logs {
     }
 
     pub fn into_enclave_log(self) -> Result<EnclaveLog> {
-        let mut ciphertexts: Vec<Ciphertext> = vec![];
-        let mut handshakes: Vec<Vec<u8>> = vec![];
+        let mut payloads: Vec<PayloadType> = vec![];
 
         // If log data is not fetched currently, return empty EnclaveLog.
         // This is occurred when it fetched data of dupulicated block number.
@@ -98,9 +101,22 @@ impl Web3Logs {
             // Processing conditions by ciphertext or handshake event
             if log.topics[0] == self.events.ciphertext_signature() {
                 let res = Ciphertext::decode(&mut &data[..])?;
-                ciphertexts.push(res);
+                let payload = PayloadType::new(
+                    res.roster_idx(),
+                    res.epoch(),
+                    res.generation(),
+                    Payload::Ciphertext(res),
+                );
+                payloads.push(payload);
             } else if log.topics[0] == self.events.handshake_signature() {
-                handshakes.push(data);
+                let res = ExportHandshake::decode(&mut &data[..])?;
+                let payload = PayloadType::new(
+                    res.roster_idx(),
+                    res.prior_epoch(),
+                    u32::MAX, // handshake is the last of the generation
+                    Payload::Handshake(res),
+                );
+                payloads.push(payload);
             } else {
                 return Err(anyhow!("Invalid topics").into());
             }
@@ -114,19 +130,17 @@ impl Web3Logs {
             }
         }
 
-        // TODO: Decode handshake and then reordered and dedup as well.
-        // Reordered by the priority in all fetched ciphertexts
-        ciphertexts.sort();
+        // Reordered by the priority in all fetched payloads
+        payloads.sort();
 
         // Removes consecutive repeated message
-        ciphertexts.dedup();
+        payloads.dedup();
 
         Ok(EnclaveLog {
             inner: Some(InnerEnclaveLog {
                 contract_addr: contract_addr.to_fixed_bytes(),
                 latest_blc_num,
-                ciphertexts,
-                handshakes,
+                payloads,
             }),
             cache: self.cache,
         })
@@ -145,45 +159,6 @@ impl Web3Logs {
         }
 
         res
-    }
-}
-
-/// A type of events from ethererum network.
-#[derive(Debug)]
-pub struct EthEvent(Vec<Event>);
-
-impl EthEvent {
-    pub fn create_event() -> Self {
-        let events = vec![
-            Event {
-                name: "StoreCiphertext".to_owned(),
-                inputs: vec![EventParam {
-                    name: "ciphertext".to_owned(),
-                    kind: ParamType::Bytes,
-                    indexed: false,
-                }],
-                anonymous: false,
-            },
-            Event {
-                name: "StoreHandshake".to_owned(),
-                inputs: vec![EventParam {
-                    name: "handshake".to_owned(),
-                    kind: ParamType::Bytes,
-                    indexed: false,
-                }],
-                anonymous: false,
-            },
-        ];
-
-        EthEvent(events)
-    }
-
-    pub fn ciphertext_signature(&self) -> Hash {
-        self.0[0].signature()
-    }
-
-    pub fn handshake_signature(&self) -> Hash {
-        self.0[1].signature()
     }
 }
 
@@ -228,8 +203,7 @@ impl EnclaveLog {
 pub struct InnerEnclaveLog {
     contract_addr: [u8; 20],
     latest_blc_num: u64,
-    ciphertexts: Vec<Ciphertext>,
-    handshakes: Vec<Vec<u8>>,
+    payloads: Vec<PayloadType>,
 }
 
 impl InnerEnclaveLog {
@@ -237,51 +211,38 @@ impl InnerEnclaveLog {
         self,
         eid: sgx_enclave_id_t,
     ) -> Result<Option<Vec<UpdatedState<S>>>> {
-        if !self.ciphertexts.is_empty() && self.handshakes.is_empty() {
-            self.insert_ciphertexts(eid)
-        } else if self.ciphertexts.is_empty() && !self.handshakes.is_empty() {
-            // The size of handshake cannot be calculated in this host directory,
-            // so the ecall_insert_handshake function is repeatedly called over the number of fetched handshakes.
-            for handshake in self.handshakes {
-                Self::insert_handshake(eid, handshake)?;
-            }
-
-            Ok(None)
-        } else {
+        if self.payloads.is_empty() {
             debug!("No logs to insert into the enclave.");
             Ok(None)
-        }
-    }
+        } else {
+            let mut acc = vec![];
 
-    fn insert_ciphertexts<S: State>(
-        self,
-        eid: sgx_enclave_id_t,
-    ) -> Result<Option<Vec<UpdatedState<S>>>> {
-        let mut acc = vec![];
+            for e in self.payloads {
+                match e.payload {
+                    Payload::Ciphertext(ciphertext) => {
+                        let inp = host_input::InsertCiphertext::new(ciphertext);
+                        let update = InsertCiphertextWorkflow::exec(inp, eid)
+                            .map(|e| e.ecall_output.unwrap())?;
+                        if let Some(upd_type) = update.updated_state {
+                            let upd_trait = UpdatedState::<S>::from_state_type(upd_type)?;
+                            acc.push(upd_trait);
+                        }
+                    }
+                    Payload::Handshake(handshake) => {
+                        Self::insert_handshake(eid, handshake)?;
+                    }
+                }
+            }
 
-        for update in self.into_input_iter().map(
-            move |inp| InsertCiphertextWorkflow::exec(inp, eid).map(|e| e.ecall_output.unwrap()), // ecall_output must be set.
-        ) {
-            if let Some(upd_type) = update?.updated_state {
-                let upd_trait = UpdatedState::<S>::from_state_type(upd_type)?;
-                acc.push(upd_trait);
+            if acc.is_empty() {
+                Ok(None)
+            } else {
+                Ok(Some(acc))
             }
         }
-
-        if acc.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(acc))
-        }
     }
 
-    pub fn into_input_iter(self) -> impl Iterator<Item = host_input::InsertCiphertext> {
-        self.ciphertexts
-            .into_iter()
-            .map(host_input::InsertCiphertext::new)
-    }
-
-    fn insert_handshake(eid: sgx_enclave_id_t, handshake: Vec<u8>) -> Result<()> {
+    fn insert_handshake(eid: sgx_enclave_id_t, handshake: ExportHandshake) -> Result<()> {
         let input = host_input::InsertHandshake::new(handshake);
         InsertHandshakeWorkflow::exec(input, eid)?;
 
@@ -313,5 +274,107 @@ impl<S: State> EnclaveUpdatedState<S> {
 
     pub fn updated_states(self) -> Option<Vec<UpdatedState<S>>> {
         self.updated_states
+    }
+}
+
+#[derive(Debug, Clone)]
+struct PayloadType {
+    roster_idx: u32,
+    epoch: u32,
+    generation: u32,
+    payload: Payload,
+}
+
+impl PayloadType {
+    fn new(roster_idx: u32, epoch: u32, generation: u32, payload: Payload) -> Self {
+        PayloadType {
+            roster_idx,
+            epoch,
+            generation,
+            payload,
+        }
+    }
+}
+
+impl PartialEq for PayloadType {
+    fn eq(&self, other: &PayloadType) -> bool {
+        self.roster_idx == other.roster_idx
+            && self.epoch == other.epoch
+            && self.generation == other.generation
+    }
+}
+
+impl Eq for PayloadType {}
+
+impl PartialOrd for PayloadType {
+    fn partial_cmp(&self, other: &PayloadType) -> Option<Ordering> {
+        let roster_idx_ord = self.roster_idx.partial_cmp(&other.roster_idx)?;
+        if roster_idx_ord != Ordering::Equal {
+            return Some(roster_idx_ord);
+        }
+
+        let epoch_ord = self.epoch.partial_cmp(&other.epoch)?;
+        if epoch_ord != Ordering::Equal {
+            return Some(epoch_ord);
+        }
+
+        let gen_ord = self.generation.partial_cmp(&other.generation)?;
+        if gen_ord != Ordering::Equal {
+            return Some(gen_ord);
+        }
+
+        Some(Ordering::Equal)
+    }
+}
+
+impl Ord for PayloadType {
+    fn cmp(&self, other: &PayloadType) -> Ordering {
+        self.partial_cmp(&other)
+            .expect("PayloadType must be ordered")
+    }
+}
+
+#[derive(Debug, Clone)]
+enum Payload {
+    Ciphertext(Ciphertext),
+    Handshake(ExportHandshake),
+}
+
+/// A type of events from ethererum network.
+#[derive(Debug)]
+pub struct EthEvent(Vec<Event>);
+
+impl EthEvent {
+    pub fn create_event() -> Self {
+        let events = vec![
+            Event {
+                name: "StoreCiphertext".to_owned(),
+                inputs: vec![EventParam {
+                    name: "ciphertext".to_owned(),
+                    kind: ParamType::Bytes,
+                    indexed: false,
+                }],
+                anonymous: false,
+            },
+            Event {
+                name: "StoreHandshake".to_owned(),
+                inputs: vec![EventParam {
+                    name: "handshake".to_owned(),
+                    kind: ParamType::Bytes,
+                    indexed: false,
+                }],
+                anonymous: false,
+            },
+        ];
+
+        EthEvent(events)
+    }
+
+    pub fn ciphertext_signature(&self) -> Hash {
+        self.0[0].signature()
+    }
+
+    pub fn handshake_signature(&self) -> Hash {
+        self.0[1].signature()
     }
 }

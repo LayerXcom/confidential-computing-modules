@@ -2,9 +2,9 @@ use crate::application::AppKeyChain;
 use crate::crypto::{
     dh::DhPubKey, ecies::EciesCiphertext, hash::hash_encodable, secrets::PathSecret, CryptoRng,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
-use frame_common::crypto::ExportPathSecret;
+use frame_common::crypto::{ExportHandshake, ExportPathSecret};
 use ring::digest::Digest;
 use std::collections::HashMap;
 use std::string::String;
@@ -53,6 +53,14 @@ impl HandshakeParams {
 
     pub fn hash(&self) -> Digest {
         hash_encodable(&self)
+    }
+
+    pub fn into_export(self) -> ExportHandshake {
+        ExportHandshake::new(self.prior_epoch, self.roster_idx, self.encode())
+    }
+
+    pub fn from_export(export: ExportHandshake) -> Result<Self> {
+        HandshakeParams::decode(&mut &export.handshake()[..]).map_err(|e| anyhow!("{:?}", e))
     }
 
     pub fn prior_epoch(&self) -> u32 {
