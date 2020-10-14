@@ -7,7 +7,7 @@ use crate::localstd::{
 };
 use codec::{Decode, Encode};
 use frame_common::{
-    crypto::{AccountId, Ciphertext, ExportPathSecret},
+    crypto::{AccountId, Ciphertext, ExportHandshake, ExportPathSecret},
     state_types::{MemId, UpdatedState},
     traits::*,
 };
@@ -76,7 +76,7 @@ pub trait Signer {
 }
 
 pub trait GroupKeyOps: Sized {
-    fn create_handshake(&self) -> Result<(HandshakeParams, ExportPathSecret)>;
+    fn create_handshake(&self) -> Result<(ExportHandshake, ExportPathSecret)>;
 
     fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()>;
 

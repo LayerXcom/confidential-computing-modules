@@ -1,7 +1,7 @@
 use crate::localstd::vec::Vec;
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
-    crypto::{Ciphertext, ExportPathSecret},
+    crypto::{Ciphertext, ExportHandshake, ExportPathSecret},
     state_types::{MemId, StateType, UpdatedState},
     traits::AccessPolicy,
     EcallInput, EcallOutput,
@@ -62,18 +62,18 @@ pub mod input {
 
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct InsertHandshake {
-        handshake: Vec<u8>,
+        handshake: ExportHandshake,
     }
 
     impl EcallInput for InsertHandshake {}
 
     impl InsertHandshake {
-        pub fn new(handshake: Vec<u8>) -> Self {
+        pub fn new(handshake: ExportHandshake) -> Self {
             InsertHandshake { handshake }
         }
 
-        pub fn handshake(&self) -> &[u8] {
-            &self.handshake[..]
+        pub fn handshake(&self) -> &ExportHandshake {
+            &self.handshake
         }
     }
 
@@ -299,7 +299,7 @@ pub mod output {
         export_path_secret: ExportPathSecret,
         enclave_sig: secp256k1::Signature,
         roster_idx: u32,
-        handshake: Vec<u8>,
+        handshake: ExportHandshake,
     }
 
     impl EcallOutput for ReturnHandshake {}
@@ -310,7 +310,7 @@ pub mod output {
             acc.extend_from_slice(&self.export_path_secret_as_ref().encode());
             acc.extend_from_slice(&self.encode_enclave_sig());
             acc.extend_from_slice(&self.roster_idx().encode());
-            acc.extend_from_slice(&self.handshake());
+            acc.extend_from_slice(&self.encode_handshake());
 
             acc
         }
@@ -325,12 +325,7 @@ pub mod output {
             let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
 
             let roster_idx = u32::decode(value)?;
-
-            let handshake_len = value
-                .remaining_len()?
-                .expect("Handshake length must not be zero");
-            let mut handshake = vec![0u8; handshake_len];
-            value.read(&mut handshake)?;
+            let handshake = ExportHandshake::decode(value)?;
 
             Ok(ReturnHandshake {
                 export_path_secret,
@@ -343,7 +338,7 @@ pub mod output {
 
     impl ReturnHandshake {
         pub fn new(
-            handshake: Vec<u8>,
+            handshake: ExportHandshake,
             export_path_secret: ExportPathSecret,
             enclave_sig: secp256k1::Signature,
             roster_idx: u32,
@@ -356,8 +351,12 @@ pub mod output {
             }
         }
 
-        pub fn handshake(&self) -> &[u8] {
-            &self.handshake[..]
+        pub fn handshake(&self) -> &ExportHandshake {
+            &self.handshake
+        }
+
+        pub fn encode_handshake(&self) -> Vec<u8> {
+            self.handshake.encode()
         }
 
         pub fn export_path_secret_as_ref(&self) -> &ExportPathSecret {
