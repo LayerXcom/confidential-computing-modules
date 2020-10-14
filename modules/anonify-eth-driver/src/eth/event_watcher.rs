@@ -113,7 +113,7 @@ impl Web3Logs {
                 let payload = PayloadType::new(
                     res.roster_idx(),
                     res.prior_epoch(),
-                    u32::MAX,
+                    u32::MAX, // handshake is the last of the generation
                     Payload::Handshake(res),
                 );
                 payloads.push(payload);
@@ -198,69 +198,6 @@ impl EnclaveLog {
     }
 }
 
-#[derive(Debug, Clone)]
-struct PayloadType {
-    roster_idx: u32,
-    epoch: u32,
-    generation: u32,
-    payload: Payload,
-}
-
-impl PayloadType {
-    fn new(roster_idx: u32, epoch: u32, generation: u32, payload: Payload) -> Self {
-        PayloadType {
-            roster_idx,
-            epoch,
-            generation,
-            payload,
-        }
-    }
-}
-
-impl PartialEq for PayloadType {
-    fn eq(&self, other: &PayloadType) -> bool {
-        self.roster_idx == other.roster_idx
-            && self.epoch == other.epoch
-            && self.generation == other.generation
-    }
-}
-
-impl Eq for PayloadType {}
-
-impl PartialOrd for PayloadType {
-    fn partial_cmp(&self, other: &PayloadType) -> Option<Ordering> {
-        let roster_idx_ord = self.roster_idx.partial_cmp(&other.roster_idx)?;
-        if roster_idx_ord != Ordering::Equal {
-            return Some(roster_idx_ord);
-        }
-
-        let epoch_ord = self.epoch.partial_cmp(&other.epoch)?;
-        if epoch_ord != Ordering::Equal {
-            return Some(epoch_ord);
-        }
-
-        let gen_ord = self.generation.partial_cmp(&other.generation)?;
-        if gen_ord != Ordering::Equal {
-            return Some(gen_ord);
-        }
-
-        Some(Ordering::Equal)
-    }
-}
-
-impl Ord for PayloadType {
-    fn cmp(&self, other: &PayloadType) -> Ordering {
-        self.partial_cmp(&other)
-            .expect("PayloadType must be ordered")
-    }
-}
-
-#[derive(Debug, Clone)]
-enum Payload {
-    Ciphertext(Ciphertext),
-    Handshake(ExportHandshake),
-}
-
 /// A log which is sent to enclave. Each log containes ciphertexts data of a given contract address and a given block number.
 #[derive(Debug, Clone)]
 pub struct InnerEnclaveLog {
@@ -338,6 +275,69 @@ impl<S: State> EnclaveUpdatedState<S> {
     pub fn updated_states(self) -> Option<Vec<UpdatedState<S>>> {
         self.updated_states
     }
+}
+
+#[derive(Debug, Clone)]
+struct PayloadType {
+    roster_idx: u32,
+    epoch: u32,
+    generation: u32,
+    payload: Payload,
+}
+
+impl PayloadType {
+    fn new(roster_idx: u32, epoch: u32, generation: u32, payload: Payload) -> Self {
+        PayloadType {
+            roster_idx,
+            epoch,
+            generation,
+            payload,
+        }
+    }
+}
+
+impl PartialEq for PayloadType {
+    fn eq(&self, other: &PayloadType) -> bool {
+        self.roster_idx == other.roster_idx
+            && self.epoch == other.epoch
+            && self.generation == other.generation
+    }
+}
+
+impl Eq for PayloadType {}
+
+impl PartialOrd for PayloadType {
+    fn partial_cmp(&self, other: &PayloadType) -> Option<Ordering> {
+        let roster_idx_ord = self.roster_idx.partial_cmp(&other.roster_idx)?;
+        if roster_idx_ord != Ordering::Equal {
+            return Some(roster_idx_ord);
+        }
+
+        let epoch_ord = self.epoch.partial_cmp(&other.epoch)?;
+        if epoch_ord != Ordering::Equal {
+            return Some(epoch_ord);
+        }
+
+        let gen_ord = self.generation.partial_cmp(&other.generation)?;
+        if gen_ord != Ordering::Equal {
+            return Some(gen_ord);
+        }
+
+        Some(Ordering::Equal)
+    }
+}
+
+impl Ord for PayloadType {
+    fn cmp(&self, other: &PayloadType) -> Ordering {
+        self.partial_cmp(&other)
+            .expect("PayloadType must be ordered")
+    }
+}
+
+#[derive(Debug, Clone)]
+enum Payload {
+    Ciphertext(Ciphertext),
+    Handshake(ExportHandshake),
 }
 
 /// A type of events from ethererum network.
