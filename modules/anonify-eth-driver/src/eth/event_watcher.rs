@@ -2,6 +2,7 @@ use super::connection::{Web3Contract, Web3Http};
 use crate::{cache::EventCache, error::Result, traits::*, utils::*, workflow::*};
 use anyhow::anyhow;
 use async_trait::async_trait;
+use codec::Decode;
 use ethabi::{decode, Event, EventParam, Hash, ParamType};
 use frame_common::{crypto::Ciphertext, state_types::UpdatedState, traits::*};
 use frame_host::engine::HostEngine;
@@ -83,7 +84,6 @@ impl Web3Logs {
 
         let contract_addr = self.logs[0].address;
         let mut latest_blc_num = 0;
-        let ciphertext_size = Self::decode_data(&self.logs[0]).len();
 
         for (i, log) in self.logs.iter().enumerate() {
             debug!("Inserting enclave log: {:?}, \nindex: {:?}", log, i);
@@ -93,17 +93,11 @@ impl Web3Logs {
                 );
             }
 
-            let mut data = Self::decode_data(&log);
+            let data = Self::decode_data(&log);
 
             // Processing conditions by ciphertext or handshake event
             if log.topics[0] == self.events.ciphertext_signature() {
-                if ciphertext_size != data.len() && !data.is_empty() {
-                    return Err(
-                        anyhow!("Each log should have same size of data.: index: {}", i).into(),
-                    );
-                }
-                let res = Ciphertext::from_bytes(&mut data[..], ciphertext_size);
-
+                let res = Ciphertext::decode(&mut &data[..])?;
                 ciphertexts.push(res);
             } else if log.topics[0] == self.events.handshake_signature() {
                 handshakes.push(data);
