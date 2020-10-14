@@ -32,6 +32,7 @@ async fn test_deploy_post() {
     println!("contract address: {:?}", contract_addr);
 }
 
+#[ignore]
 #[actix_rt::test]
 async fn test_node_recovery() {
     set_env_vars();
@@ -140,7 +141,7 @@ async fn test_node_recovery() {
 
     // Assume the TEE node is down, and then recovered.
 
-    other_turn();
+    my_turn();
 
     let req = test::TestRequest::get()
         .uri("/api/v1/set_contract_addr")
