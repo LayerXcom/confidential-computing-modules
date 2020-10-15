@@ -5,6 +5,7 @@ use std::fs;
 use std::io::{BufReader, Write};
 use std::path::PathBuf;
 use std::str;
+use log::debug;
 
 const PATH_SECRETS_DIR: &str = ".anonify/pathsecrets";
 
@@ -23,6 +24,7 @@ impl StorePathSecrets {
     pub fn save_to_local_filesystem(&self, eps: &ExportPathSecret) -> Result<()> {
         let file_name = hex::encode(&eps.id_as_ref());
         let file_path = self.local_dir_path.join(file_name);
+        debug!("Saving a selad path secret to the path: {:?}", file_path);
         let mut file = fs::File::create(file_path)?;
         serde_json::to_writer(&mut file, &eps)?;
         file.flush()?;
@@ -34,6 +36,7 @@ impl StorePathSecrets {
     pub fn load_from_local_filesystem(&self, id: &[u8]) -> Result<ExportPathSecret> {
         let file_name = hex::encode(&id);
         let file_path = self.local_dir_path.join(file_name);
+        debug!("Loading a selad path secret from the path: {:?}", file_path);
         let file = fs::File::open(file_path)?;
         let reader = BufReader::new(file);
         let eps = serde_json::from_reader(reader)?;
