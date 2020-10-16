@@ -81,8 +81,8 @@ impl GroupKeyOps for GroupKey {
     fn sync_ratchet(&mut self, roster_idx: usize) -> Result<()> {
         match self
             .receiver_keychain
-            .generation()?
-            .checked_sub(self.sender_keychain.generation()?)
+            .generation(roster_idx)?
+            .checked_sub(self.sender_keychain.generation(roster_idx)?)
         {
             // syncing the sender and receiver app keychains
             Some(1) => self.sender_ratchet(roster_idx),
@@ -91,7 +91,7 @@ impl GroupKeyOps for GroupKey {
                 "receiver generation must not be bigger than sender's one"
             )),
             // It's okay if the sender generation is bigger
-            None => OK(()),
+            None => Ok(()),
         }
     }
 }
