@@ -9,6 +9,7 @@ use frame_common::{
     traits::{EcallInput, EcallOutput},
 };
 use frame_enclave::{register_ecall, EnclaveEngine};
+use log::error;
 use std::{ptr, vec::Vec};
 
 register_ecall!(
