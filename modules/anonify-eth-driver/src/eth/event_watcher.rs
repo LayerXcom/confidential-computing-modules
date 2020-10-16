@@ -220,6 +220,13 @@ impl InnerEnclaveLog {
             for e in self.payloads {
                 match e.payload {
                     Payload::Ciphertext(ciphertext) => {
+                        debug!(
+                            "Fetch a ciphertext: roster_idx: {}, epoch: {}, generation: {}",
+                            ciphertext.roster_idx(),
+                            ciphertext.epoch(),
+                            ciphertext.generation()
+                        );
+
                         let inp = host_input::InsertCiphertext::new(ciphertext);
                         let update = InsertCiphertextWorkflow::exec(inp, eid)
                             .map(|e| e.ecall_output.unwrap())?;
@@ -229,6 +236,12 @@ impl InnerEnclaveLog {
                         }
                     }
                     Payload::Handshake(handshake) => {
+                        debug!(
+                            "Fetch a handshake: roster_idx: {}, epoch: {}",
+                            handshake.roster_idx(),
+                            handshake.prior_epoch(),
+                        );
+
                         Self::insert_handshake(eid, handshake)?;
                     }
                 }
