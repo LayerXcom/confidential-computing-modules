@@ -160,6 +160,22 @@ async fn test_node_recovery() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 90);
+
+    let req = test::TestRequest::post()
+        .uri("/api/v1/transfer")
+        .set_json(&TRANSFER_10_REQ)
+        .to_request();
+    let resp = test::call_service(&mut recovered_app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/balance_of")
+        .set_json(&BALANCE_OF_REQ)
+        .to_request();
+    let resp = test::call_service(&mut recovered_app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
+    assert_eq!(balance.0.as_raw(), 80);
 }
 
 #[actix_rt::test]

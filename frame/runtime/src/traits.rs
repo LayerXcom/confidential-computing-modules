@@ -84,9 +84,14 @@ pub trait GroupKeyOps: Sized {
 
     fn decrypt(&self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>>;
 
+    /// Ratchet sender's keychain per a transaction
     fn sender_ratchet(&mut self, roster_idx: usize) -> Result<()>;
 
+    /// Ratchet receiver's keychain per a transaction
     fn receiver_ratchet(&mut self, roster_idx: usize) -> Result<()>;
+
+    /// Syncing the sender and receiver app keychains
+    fn sync_ratchet(&mut self, roster_idx: usize) -> Result<()>;
 }
 
 pub trait QuoteGetter: Sized {

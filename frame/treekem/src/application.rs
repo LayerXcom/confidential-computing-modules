@@ -134,6 +134,16 @@ impl AppKeyChain {
         Ok(())
     }
 
+    pub fn generation(&self, roster_idx: usize) -> Result<u32> {
+        let (_, gen) =
+            self.member_secrets_and_gens
+                .get(roster_idx)
+                .ok_or_else(|| {
+                    anyhow!("key_nonce_gen: Roster index is out of range of application key chain. roster_idx: {:?}, key chain length: {:?}", roster_idx, self.member_secrets_and_gens.len())
+                })?;
+        Ok(*gen)
+    }
+
     /// Compute UnboundKey, Nonce, and member's generation.
     fn key_nonce_gen(&self, roster_idx: usize) -> Result<(UnboundKey, OneNonceSequence, u32)> {
         let (member_secret, gen) =

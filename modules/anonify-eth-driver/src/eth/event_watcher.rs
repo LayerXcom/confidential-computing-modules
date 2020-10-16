@@ -298,7 +298,7 @@ impl<S: State> EnclaveUpdatedState<S> {
         }
 
         // Even if an error occurs in Enclave, it is unlikely that retry process will succeed,
-        // so delay the error process to skip the event.
+        // so delay the error process here to skip the event.
         match self.error {
             Some(e) => Err(e),
             None => Ok(self),

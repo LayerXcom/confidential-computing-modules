@@ -79,7 +79,7 @@ impl EnclaveEngine for InsertCiphertext {
         let mut output = output::ReturnUpdatedState::default();
         let roster_idx = ecall_input.ciphertext().roster_idx() as usize;
 
-        // No error occurs after here, so updating the state transition and ratcheting the app keychain are atomic.
+        // TODO: No error occurs after here, so updating the state transition and ratcheting the app keychain are atomic.
         if let Some(updated_state_iter) = iter_op {
             if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
                 output.update(updated_state);
@@ -87,6 +87,7 @@ impl EnclaveEngine for InsertCiphertext {
         }
         // ratchet app keychain per a log.
         group_key.receiver_ratchet(roster_idx)?;
+        group_key.sync_ratchet(roster_idx)?;
 
         Ok(output)
     }
