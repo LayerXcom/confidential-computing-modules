@@ -4,7 +4,7 @@
   <ISVSVN>0</ISVSVN>
   <StackMaxSize>0x40000</StackMaxSize>
   <HeapMaxSize>0x100000</HeapMaxSize>
-  <TCSNum>1</TCSNum>
+  <TCSNum>3</TCSNum>
   <TCSPolicy>1</TCSPolicy>
   <DisableDebug>0</DisableDebug>
   <MiscSelect>0</MiscSelect>
