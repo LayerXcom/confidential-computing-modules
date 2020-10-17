@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate lazy_static;
 use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
 use erc20_state_transition::{
     approve, burn, construct, mint, transfer, transfer_from, CallName, MemName, CIPHERTEXT_SIZE,
@@ -18,6 +20,10 @@ const BIN_PATH: &str = "../../contract-build/Anonify.bin";
 const CONFIRMATIONS: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
+
+lazy_static! {
+    pub static ref ENV_LOGGER_INIT: () = env_logger::init();
+}
 
 #[actix_rt::test]
 async fn test_integration_eth_construct() {
@@ -813,6 +819,8 @@ async fn test_integration_eth_burn() {
 }
 
 pub fn set_env_vars() {
+    *ENV_LOGGER_INIT;
+    env::set_var("RUST_LOG", "DEBUG");
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
     env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");
