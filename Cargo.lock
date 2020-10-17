@@ -2404,6 +2404,7 @@ version = "0.1.0"
 dependencies = [
  "actix-rt 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "anonify-eth-driver 0.1.0",
+ "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "erc20-state-transition 0.1.0",
  "frame-common 0.1.0",
  "frame-host 0.1.0",
