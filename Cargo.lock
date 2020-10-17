@@ -2409,6 +2409,7 @@ dependencies = [
  "frame-common 0.1.0",
  "frame-host 0.1.0",
  "frame-runtime 0.1.0",
+ "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "parking_lot 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

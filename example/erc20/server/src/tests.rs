@@ -91,6 +91,10 @@ async fn test_node_recovery() {
             .route(
                 "/api/v1/set_contract_addr",
                 web::get().to(handle_set_contract_addr::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/transfer",
+                web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;

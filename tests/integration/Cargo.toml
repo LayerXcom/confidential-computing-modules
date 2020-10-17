@@ -14,3 +14,4 @@ erc20-state-transition = { path = "../../example/erc20/state-transition" }
 parking_lot = "0.10"
 actix-rt = "1.1"
 env_logger = "0.7"
+lazy_static = "1.4"
