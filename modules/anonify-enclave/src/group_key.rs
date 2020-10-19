@@ -85,9 +85,9 @@ impl GroupKeyOps for GroupKey {
             .checked_sub(self.sender_keychain.generation(roster_idx)?)
         {
             // syncing the sender and receiver app keychains
-            Some(1) => self.sender_ratchet(roster_idx),
+            Some(0) => self.sender_ratchet(roster_idx),
             // It's okay if the sender generation is bigger
-            None | Some(0) => Ok(()),
+            None => Ok(()),
             // It's an error case if the receiver generation is equal or bigger
             Some(_) => Err(anyhow!(
                 "receiver generation must not be bigger than sender's one"

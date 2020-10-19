@@ -71,6 +71,20 @@ impl EnclaveEngine for InsertCiphertext {
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();
+
+        // Since the sender's keychain has already ratcheted,
+        // even if an error occurs in the state transition, the receiver's keychain also ratchet.
+        // `receiver_ratchet` fails if
+        //   1. Roster index is out of range of the keychain
+        //   2. error occurs in HKDF
+        //   3. the generation is over u32::MAX
+        // In addition to these, `sync_ratchet` fails even if the receiver generation is larger than that of the sender
+        // So if you run `sync_ratchet` first,
+        // it will either succeed or both fail for the mutable `app_keychain`, so it will be atomic.
+        group_key.sync_ratchet(roster_idx)?;
+        group_key.receiver_ratchet(roster_idx)?;
+
+        // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
         let iter_op = Instructions::<R, C>::state_transition(
             enclave_context.clone(),
             ecall_input.ciphertext(),
@@ -79,15 +93,11 @@ impl EnclaveEngine for InsertCiphertext {
         let mut output = output::ReturnUpdatedState::default();
         let roster_idx = ecall_input.ciphertext().roster_idx() as usize;
 
-        // TODO: No error occurs after here, so updating the state transition and ratcheting the app keychain are atomic.
         if let Some(updated_state_iter) = iter_op {
             if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
                 output.update(updated_state);
             }
         }
-        // ratchet app keychain per a log.
-        group_key.receiver_ratchet(roster_idx)?;
-        group_key.sync_ratchet(roster_idx)?;
 
         Ok(output)
     }
