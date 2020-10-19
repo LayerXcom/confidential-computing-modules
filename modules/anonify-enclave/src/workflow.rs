@@ -71,6 +71,7 @@ impl EnclaveEngine for InsertCiphertext {
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();
+        let roster_idx = ecall_input.ciphertext().roster_idx() as usize;
 
         // Since the sender's keychain has already ratcheted,
         // even if an error occurs in the state transition, the receiver's keychain also ratchet.
@@ -91,7 +92,6 @@ impl EnclaveEngine for InsertCiphertext {
             group_key,
         )?;
         let mut output = output::ReturnUpdatedState::default();
-        let roster_idx = ecall_input.ciphertext().roster_idx() as usize;
 
         if let Some(updated_state_iter) = iter_op {
             if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
