@@ -4,8 +4,8 @@ use codec::{Decode, Encode};
 use frame_common::{
     crypto::{AccountId, Ciphertext, Sha256},
     state_types::{StateType, UpdatedState},
-    AccessPolicy,
     traits::Hash256,
+    AccessPolicy,
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
