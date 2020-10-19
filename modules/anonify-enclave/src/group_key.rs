@@ -87,7 +87,8 @@ impl GroupKeyOps for GroupKey {
         {
             // syncing the sender and receiver app keychains
             Some(0) => self.sender_ratchet(roster_idx),
-            // It's okay if the sender generation is bigger than receiver's.
+            // It's okay if the sender generation is only one bigger than receiver's.
+            Some(1) => Ok(()),
             // If an error occurs after ratcheting the sender's keychain,
             // the generation of the received message will be discontinuous,
             // so ratchet the receiver's keychain by the difference in order to be consistent.
@@ -96,10 +97,8 @@ impl GroupKeyOps for GroupKey {
                     "the generation of the received message will be discontinuous, so ratchet the receiver's keychain by {:?} times",
                     diff - 1
                 );
-                if diff - 1 > 0 {
-                    for _ in 0..diff {
-                        self.receiver_ratchet(roster_idx)?;
-                    }
+                for _ in 0..(diff - 1) {
+                    self.receiver_ratchet(roster_idx)?;
                 }
 
                 Ok(())
