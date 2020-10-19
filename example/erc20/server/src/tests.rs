@@ -33,6 +33,103 @@ async fn test_deploy_post() {
 }
 
 #[actix_rt::test]
+async fn test_skip_invalid_event() {
+    set_env_vars();
+    set_server_env_vars();
+
+    let enclave = EnclaveDir::new()
+        .init_enclave(true)
+        .expect("Failed to initialize enclave.");
+    let eid = enclave.geteid();
+    let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
+    let mut app = test::init_service(
+        App::new()
+            .data(server.clone())
+            .route(
+                "/api/v1/deploy",
+                web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/start_sync_bc",
+                web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/init_state",
+                web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/transfer",
+                web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/balance_of",
+                web::get().to(handle_balance_of::<EthDeployer, EthSender, EventWatcher>),
+            ),
+    )
+    .await;
+
+    let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let contract_addr: erc20_api::deploy::post::Response = test::read_body_json(resp).await;
+    println!("contract address: {:?}", contract_addr.0);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/start_sync_bc")
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::post()
+        .uri("/api/v1/init_state")
+        .set_json(&MINT_100_REQ)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/balance_of")
+        .set_json(&BALANCE_OF_REQ)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
+    assert_eq!(balance.0.as_raw(), 100);
+
+    let req = test::TestRequest::post()
+        .uri("/api/v1/transfer")
+        .set_json(&TRANSFER_110_REQ)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/balance_of")
+        .set_json(&BALANCE_OF_REQ)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
+    assert_eq!(balance.0.as_raw(), 100);
+
+    let req = test::TestRequest::post()
+        .uri("/api/v1/transfer")
+        .set_json(&TRANSFER_10_REQ)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/balance_of")
+        .set_json(&BALANCE_OF_REQ)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
+    assert_eq!(balance.0.as_raw(), 90);
+}
+
+#[actix_rt::test]
 async fn test_node_recovery() {
     set_env_vars();
     set_server_env_vars();
@@ -393,6 +490,28 @@ const TRANSFER_10_REQ: erc20_api::transfer::post::Request = erc20_api::transfer:
         236, 126, 92, 200, 50, 125, 9, 112, 74, 58, 35, 60, 181, 105, 198, 107, 62, 111, 168, 118,
     ]),
     amount: 10,
+};
+
+// from me to other
+const TRANSFER_110_REQ: erc20_api::transfer::post::Request = erc20_api::transfer::post::Request {
+    sig: [
+        227, 77, 52, 167, 149, 64, 24, 23, 103, 227, 13, 120, 90, 186, 1, 62, 110, 60, 186, 247,
+        143, 247, 19, 71, 85, 191, 224, 5, 38, 219, 96, 44, 196, 154, 181, 50, 99, 58, 20, 125,
+        244, 172, 212, 166, 234, 203, 208, 77, 9, 232, 77, 248, 152, 81, 106, 49, 120, 34, 212, 89,
+        92, 100, 221, 14,
+    ],
+    pubkey: [
+        164, 189, 195, 42, 48, 163, 27, 74, 84, 147, 25, 254, 16, 14, 206, 134, 153, 148, 33, 189,
+        55, 149, 7, 15, 11, 101, 106, 28, 48, 130, 133, 143,
+    ],
+    challenge: [
+        157, 61, 16, 189, 40, 124, 88, 101, 19, 36, 155, 229, 245, 123, 189, 124, 222, 114, 215,
+        186, 25, 30, 135, 114, 237, 169, 138, 122, 81, 61, 43, 183,
+    ],
+    target: AccountId([
+        236, 126, 92, 200, 50, 125, 9, 112, 74, 58, 35, 60, 181, 105, 198, 107, 62, 111, 168, 118,
+    ]),
+    amount: 110,
 };
 
 // me
