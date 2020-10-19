@@ -5,6 +5,7 @@ use frame_treekem::{
     handshake::{HandshakeParams, PathSecretSource},
     AppKeyChain, GroupState, Handshake,
 };
+use log::warn;
 use std::vec::Vec;
 
 #[derive(Clone, Debug)]
@@ -80,18 +81,34 @@ impl GroupKeyOps for GroupKey {
     /// Syncing the sender and receiver app keychains
     fn sync_ratchet(&mut self, roster_idx: usize) -> Result<()> {
         match self
-            .receiver_keychain
+            .sender_keychain
             .generation(roster_idx)?
-            .checked_sub(self.sender_keychain.generation(roster_idx)?)
+            .checked_sub(self.receiver_keychain.generation(roster_idx)?)
         {
             // syncing the sender and receiver app keychains
             Some(0) => self.sender_ratchet(roster_idx),
-            // It's okay if the sender generation is bigger
-            None => Ok(()),
-            // It's an error case if the receiver generation is equal or bigger
-            Some(_) => Err(anyhow!(
+            // It's okay if the sender generation is bigger than receiver's.
+            // If an error occurs after ratcheting the sender's keychain,
+            // the generation of the received message will be discontinuous,
+            // so ratchet the receiver's keychain by the difference in order to be consistent.
+            Some(diff) => {
+                warn!(
+                    "the generation of the received message will be discontinuous, so ratchet the receiver's keychain by {:?} times",
+                    diff - 1
+                );
+                for _ in 0..diff {
+                    self.receiver_ratchet(roster_idx)?;
+                }
+                Ok(())
+            }
+            // It's an error case if the receiver generation is bigger than sender's
+            None => Err(anyhow!(
                 "receiver generation must not be bigger than sender's one"
             )),
         }
+    }
+
+    fn my_roster_idx(&self) -> u32 {
+        self.group_state.my_roster_idx()
     }
 }

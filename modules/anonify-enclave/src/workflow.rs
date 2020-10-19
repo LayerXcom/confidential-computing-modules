@@ -31,9 +31,12 @@ impl<AP: AccessPolicy> EnclaveEngine for Instruction<AP> {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let account_id = ecall_input.access_policy().into_account_id();
-
         let group_key = &mut *enclave_context.write_group_key();
+        let roster_idx = group_key.my_roster_idx() as usize;
+        // ratchet sender's app keychain per tx.
+        group_key.sender_ratchet(roster_idx)?;
+
+        let account_id = ecall_input.access_policy().into_account_id();
         let ciphertext = Instructions::<R, C>::new(
             ecall_input.call_id,
             ecall_input.state.as_mut_bytes(),
@@ -43,12 +46,9 @@ impl<AP: AccessPolicy> EnclaveEngine for Instruction<AP> {
 
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
-        let roster_idx = ciphertext.roster_idx() as usize;
         let instruction_output = output::Instruction::new(ciphertext, enclave_sig);
 
         enclave_context.set_notification(account_id);
-        // ratchet sender's app keychain per tx.
-        group_key.sender_ratchet(roster_idx)?;
 
         Ok(instruction_output)
     }

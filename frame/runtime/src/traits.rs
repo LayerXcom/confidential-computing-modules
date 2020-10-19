@@ -92,6 +92,8 @@ pub trait GroupKeyOps: Sized {
 
     /// Syncing the sender and receiver app keychains
     fn sync_ratchet(&mut self, roster_idx: usize) -> Result<()>;
+
+    fn my_roster_idx(&self) -> u32;
 }
 
 pub trait QuoteGetter: Sized {

@@ -29,7 +29,7 @@ pub struct EnclaveContext {
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB,
     notifier: Notifier,
-    pub group_key: Arc<SgxRwLock<GroupKey>>,
+    group_key: Arc<SgxRwLock<GroupKey>>,
 }
 
 impl ContextOps for EnclaveContext {
