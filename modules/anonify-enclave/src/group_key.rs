@@ -96,9 +96,12 @@ impl GroupKeyOps for GroupKey {
                     "the generation of the received message will be discontinuous, so ratchet the receiver's keychain by {:?} times",
                     diff - 1
                 );
-                for _ in 0..diff {
-                    self.receiver_ratchet(roster_idx)?;
+                if diff - 1 > 0 {
+                    for _ in 0..diff {
+                        self.receiver_ratchet(roster_idx)?;
+                    }
                 }
+
                 Ok(())
             }
             // It's an error case if the receiver generation is bigger than sender's
