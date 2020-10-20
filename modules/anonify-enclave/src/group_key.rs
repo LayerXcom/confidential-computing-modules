@@ -5,7 +5,7 @@ use frame_treekem::{
     handshake::{HandshakeParams, PathSecretSource},
     AppKeyChain, GroupState, Handshake,
 };
-use log::warn;
+use log::{debug, warn};
 use std::vec::Vec;
 
 #[derive(Clone, Debug)]
@@ -80,13 +80,19 @@ impl GroupKeyOps for GroupKey {
 
     /// Syncing the sender and receiver app keychains
     fn sync_ratchet(&mut self, roster_idx: usize) -> Result<()> {
-        match self
-            .sender_keychain
-            .generation(roster_idx)?
-            .checked_sub(self.receiver_keychain.generation(roster_idx)?)
-        {
+        let sender_gen = self.sender_keychain.generation(roster_idx)?;
+        let receiver_gen = self.receiver_keychain.generation(roster_idx)?;
+
+        match sender_gen.checked_sub(receiver_gen) {
             // syncing the sender and receiver app keychains
-            Some(0) => self.sender_ratchet(roster_idx),
+            // Used in the recovery phase
+            Some(0) => {
+                debug!(
+                    "syncing the sender and receiver app keychains in the recovery phase. The current generation is {:?}",
+                    sender_gen
+                );
+                self.sender_ratchet(roster_idx)
+            },
             // It's okay if the sender generation is only one bigger than receiver's.
             Some(1) => Ok(()),
             // If an error occurs after ratcheting the sender's keychain,
@@ -104,8 +110,9 @@ impl GroupKeyOps for GroupKey {
                 Ok(())
             }
             // It's an error case if the receiver generation is bigger than sender's
+            // Here is the case when you sent a transaction with an old sender keychain during recovery
             None => Err(anyhow!(
-                "receiver generation must not be bigger than sender's one"
+                "receiver generation must not be bigger than sender's one. Your TEE instance may not be synced to the latest state yet."
             )),
         }
     }
