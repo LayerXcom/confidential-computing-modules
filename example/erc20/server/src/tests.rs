@@ -99,7 +99,7 @@ async fn test_multiple_messages() {
     for _ in 0..=5 {
         let req = test::TestRequest::post()
             .uri("/api/v1/transfer")
-            .set_json(&TRANSFER_110_REQ)
+            .set_json(&TRANSFER_10_REQ)
             .to_request();
         let resp = test::call_service(&mut app, req).await;
         assert!(resp.status().is_success(), "response: {:?}", resp);
