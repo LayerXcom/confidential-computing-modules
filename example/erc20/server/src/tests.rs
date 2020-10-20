@@ -96,7 +96,7 @@ async fn test_multiple_messages() {
     assert_eq!(balance.0.as_raw(), 100);
 
     // Sending five messages before receiving any messages
-    for _ in 0..=5 {
+    for _ in 0..5 {
         let req = test::TestRequest::post()
             .uri("/api/v1/transfer")
             .set_json(&TRANSFER_10_REQ)

@@ -5,7 +5,7 @@ use frame_treekem::{
     handshake::{HandshakeParams, PathSecretSource},
     AppKeyChain, GroupState, Handshake,
 };
-use log::{debug, warn};
+use log::{debug, info};
 use std::vec::Vec;
 
 #[derive(Clone, Debug)]
@@ -80,16 +80,17 @@ impl GroupKeyOps for GroupKey {
 
     /// Syncing the sender and receiver app keychains
     fn sync_ratchet(&mut self, roster_idx: usize, msg_gen: u32) -> Result<()> {
-        let sender_gen = self.sender_keychain.generation(roster_idx)?;
         let receiver_gen = self.receiver_keychain.generation(roster_idx)?;
 
+        // Even if the generation of the message is tampered with,
+        // there is no problem with the legitimacy of the state.
         match msg_gen.checked_sub(receiver_gen) {
             // syncing the sender and receiver app keychains
             // Used in the recovery phase
             Some(0) => {
                 debug!(
                     "syncing the sender and receiver app keychains in the recovery phase. The current generation is {:?}",
-                    sender_gen
+                    receiver_gen
                 );
                 self.sender_ratchet(roster_idx)
             },
@@ -99,7 +100,7 @@ impl GroupKeyOps for GroupKey {
             // the generation of the received message will be discontinuous,
             // so ratchet the receiver's keychain by the difference in order to be consistent.
             Some(diff) => {
-                warn!(
+                info!(
                     "the generation of the received message will be discontinuous, so ratchet the receiver's keychain by {:?} times",
                     diff - 1
                 );
