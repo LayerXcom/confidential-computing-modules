@@ -16,18 +16,15 @@ register_ecall!(
     MAX_MEM_SIZE,
     Runtime<EnclaveContext>,
     EnclaveContext,
-    (
-        ENCRYPT_INSTRUCTION_CMD,
-        Instruction<Ed25519ChallengeResponse>
-    ),
+    (ENCRYPT_INSTRUCTION_CMD, MsgSender<Ed25519ChallengeResponse>),
     // Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
-    (INSERT_CIPHERTEXT_CMD, InsertCiphertext),
+    (INSERT_CIPHERTEXT_CMD, MsgReceiver),
     // Insert handshake received from blockchain nodes into enclave.
-    (INSERT_HANDSHAKE_CMD, InsertHandshake),
+    (INSERT_HANDSHAKE_CMD, HandshakeReceiver),
     // Get current state of the user represented the given public key from enclave memory database.
     (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
-    (CALL_JOIN_GROUP_CMD, CallJoinGroup),
-    (CALL_HANDSHAKE_CMD, CallHandshake),
+    (CALL_JOIN_GROUP_CMD, JoinGroupSender),
+    (CALL_HANDSHAKE_CMD, HandshakeSender),
     (
         REGISTER_NOTIFICATION_CMD,
         RegisterNotification<Ed25519ChallengeResponse>
