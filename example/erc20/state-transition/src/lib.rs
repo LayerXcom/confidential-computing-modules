@@ -39,7 +39,7 @@ impl_runtime! {
         let sender_balance = self.get_map::<U64>(sender, "Balance")?;
         let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
 
-        ensure!(sender_balance > amount, "transfer amount exceeds balance.");
+        ensure!(sender_balance > amount, "transfer amount ({:?}) exceeds balance ({:?}).", amount, sender_balance);
 
         let sender_update = update!(sender, "Balance", sender_balance - amount);
         let recipient_update = update!(recipient, "Balance", recipient_balance + amount);
