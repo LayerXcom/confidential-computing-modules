@@ -1,11 +1,5 @@
 use super::connection::{Web3Contract, Web3Http};
-use crate::{
-    cache::EventCache,
-    error::{HostError, Result},
-    traits::*,
-    utils::*,
-    workflow::*,
-};
+use crate::{cache::EventCache, error::Result, traits::*, utils::*, workflow::*};
 use anyhow::anyhow;
 use async_trait::async_trait;
 use codec::Decode;
@@ -16,7 +10,7 @@ use frame_common::{
     traits::*,
 };
 use frame_host::engine::HostEngine;
-use log::debug;
+use log::{debug, error};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{cmp::Ordering, path::Path, sync::Arc};
@@ -51,8 +45,8 @@ impl Watcher for EventWatcher {
             .await?
             .into_enclave_log()?
             // verification must be executed only before calling `insert_enclave`
-            .insert_enclave(eid)
-            .save_cache(self.contract.address())?; // cache must be saved only after calling `insert_enclave`.
+            .insert_enclave(eid)?
+            .save_cache(self.contract.address()); // cache must be saved only after calling `insert_enclave`.
 
         Ok(enclave_updated_state.updated_states())
     }
@@ -183,31 +177,23 @@ impl EnclaveLog {
 
     /// Store logs into enclave in-memory.
     /// This returns a latest block number specified by fetched logs.
-    pub fn insert_enclave<S: State>(self, eid: sgx_enclave_id_t) -> EnclaveUpdatedState<S> {
+    pub fn insert_enclave<S: State>(self, eid: sgx_enclave_id_t) -> Result<EnclaveUpdatedState<S>> {
         match self.inner {
             Some(log) => {
                 let next_blc_num = log.latest_blc_num + 1;
-                match log.invoke_ecall(eid) {
-                    Ok(updated_states) => EnclaveUpdatedState {
-                        block_num: Some(next_blc_num),
-                        updated_states,
-                        cache: self.cache,
-                        error: None,
-                    },
-                    Err(e) => EnclaveUpdatedState {
-                        block_num: Some(next_blc_num),
-                        updated_states: None,
-                        cache: self.cache,
-                        error: Some(e),
-                    },
-                }
+                let updated_states = log.invoke_ecall(eid)?;
+
+                Ok(EnclaveUpdatedState {
+                    block_num: Some(next_blc_num),
+                    updated_states,
+                    cache: self.cache,
+                })
             }
-            None => EnclaveUpdatedState {
+            None => Ok(EnclaveUpdatedState {
                 block_num: None,
                 updated_states: None,
                 cache: self.cache,
-                error: None,
-            },
+            }),
         }
     }
 }
@@ -242,12 +228,25 @@ impl InnerEnclaveLog {
                         );
 
                         let inp = host_input::InsertCiphertext::new(ciphertext);
-                        let update = InsertCiphertextWorkflow::exec(inp, eid)
-                            .map(|e| e.ecall_output.unwrap())?;
-                        if let Some(upd_type) = update.updated_state {
-                            let upd_trait = UpdatedState::<S>::from_state_type(upd_type)?;
-                            acc.push(upd_trait);
-                        }
+                        match InsertCiphertextWorkflow::exec(inp, eid)
+                            .map(|e| e.ecall_output.unwrap())
+                        {
+                            Ok(update) => {
+                                if let Some(upd_type) = update.updated_state {
+                                    let upd_trait = UpdatedState::<S>::from_state_type(upd_type)?;
+                                    acc.push(upd_trait);
+                                }
+                            }
+                            // Even if an error occurs in Enclave, it is unlikely that retry process will succeed,
+                            // so skip the event.
+                            Err(e) => {
+                                error!(
+                                    "Error in enclave (InsertCiphertextWorkflow::exec): {:?}",
+                                    e
+                                );
+                                continue;
+                            }
+                        };
                     }
                     Payload::Handshake(handshake) => {
                         debug!(
@@ -256,7 +255,10 @@ impl InnerEnclaveLog {
                             handshake.prior_epoch(),
                         );
 
-                        Self::insert_handshake(eid, handshake)?;
+                        if let Err(e) = Self::insert_handshake(eid, handshake) {
+                            error!("Error in enclave (InsertHandshakeWorkflow::exec): {:?}", e);
+                            continue;
+                        }
                     }
                 }
             }
@@ -282,13 +284,12 @@ pub struct EnclaveUpdatedState<S: State> {
     block_num: Option<u64>,
     updated_states: Option<Vec<UpdatedState<S>>>,
     cache: Arc<RwLock<EventCache>>,
-    error: Option<HostError>,
 }
 
 impl<S: State> EnclaveUpdatedState<S> {
     /// Only if EnclaveUpdatedState has new block number to log,
     /// it's set next block number to event cache.
-    pub fn save_cache(self, contract_addr: Address) -> Result<Self> {
+    pub fn save_cache(self, contract_addr: Address) -> Self {
         match &self.block_num {
             Some(block_num) => {
                 let mut w = self.cache.write();
@@ -297,12 +298,7 @@ impl<S: State> EnclaveUpdatedState<S> {
             None => {}
         }
 
-        // Even if an error occurs in Enclave, it is unlikely that retry process will succeed,
-        // so delay the error process here to skip the event.
-        match self.error {
-            Some(e) => Err(e),
-            None => Ok(self),
-        }
+        self
     }
 
     pub fn updated_states(self) -> Option<Vec<UpdatedState<S>>> {

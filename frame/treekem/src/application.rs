@@ -10,7 +10,7 @@ use crate::ratchet_tree::RatchetTreeNode;
 use anyhow::{anyhow, ensure, Result};
 use codec::Encode;
 use frame_common::crypto::Ciphertext;
-use log::info;
+use log::warn;
 use ring::aead::{Aad, BoundKey, Nonce, OpeningKey, SealingKey, UnboundKey, AES_256_GCM};
 use std::convert::TryFrom;
 use std::prelude::v1::*;
@@ -53,13 +53,13 @@ impl AppKeyChain {
         match group_state.my_node()? {
             // If current my node contains a DhKeypair, cannot decrypt message because you haven't join the group.
             RatchetTreeNode::Blank => {
-                info!("The received message is ignored because your enclave hasn't join the group yet");
+                warn!("The received message is ignored because your enclave hasn't join the group yet");
                 Ok(None)
             }
             _ => {
                 ensure!(
                     app_msg.epoch() == self.epoch,
-                    "application messages's epoch ({:?}) differs from the app key chain's ({:?})",
+                    "The received messages's epoch ({:?}) differs from the current key_chain's ({:?})",
                     app_msg.epoch(),
                     self.epoch
                 );
@@ -68,7 +68,7 @@ impl AppKeyChain {
                     self.key_nonce_gen(app_msg.roster_idx() as usize)?;
                 ensure!(
                     app_msg.generation() == generation,
-                    "application messages's generation ({:?}) differs from the AppMemberSecret's ({:?})", app_msg.generation(), generation
+                    "The received messages's generation ({:?}) differs from the current AppMemberSecret's ({:?})", app_msg.generation(), generation
                 );
 
                 let mut ciphertext = app_msg.encrypted_state_ref().to_vec();

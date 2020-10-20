@@ -9,7 +9,14 @@ pub mod context;
 mod crypto;
 mod error;
 mod group_key;
-pub mod instructions;
-pub mod kvs;
-pub mod notify;
-pub mod workflow;
+mod handshake;
+mod instructions;
+mod kvs;
+mod notify;
+
+pub mod workflow {
+    pub use crate::context::GetState;
+    pub use crate::handshake::{CallHandshake, CallJoinGroup, InsertHandshake};
+    pub use crate::instructions::{InsertCiphertext, Instruction};
+    pub use crate::notify::RegisterNotification;
+}

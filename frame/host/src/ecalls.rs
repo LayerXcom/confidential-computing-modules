@@ -68,7 +68,7 @@ impl EnclaveConnector {
         if status != sgx_status_t::SGX_SUCCESS {
             return Err(FrameHostError::SgxStatus {
                 status,
-                function: "ecall_entry_point",
+                function: "ecall_entry_point(SgxStatus)",
                 cmd,
             });
         }

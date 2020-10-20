@@ -1,9 +1,13 @@
 use crate::error::Result;
+use anonify_io_types::*;
 use codec::{Decode, Encode};
 use frame_common::{
-    crypto::{AccountId, Ciphertext},
+    crypto::{AccountId, Ciphertext, Sha256},
     state_types::{StateType, UpdatedState},
+    traits::Hash256,
+    AccessPolicy,
 };
+use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use std::{marker::PhantomData, vec::Vec};
 
@@ -69,5 +73,99 @@ impl<R: RuntimeExecutor<CTX, S = StateType>, CTX: ContextOps> Instructions<R, CT
         let res = R::new(ctx).execute(self.call_kind, self.my_account_id)?;
 
         Ok(res)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Instruction<AP: AccessPolicy> {
+    phantom: PhantomData<AP>,
+}
+
+impl<AP: AccessPolicy> EnclaveEngine for Instruction<AP> {
+    type EI = input::Instruction<AP>;
+    type EO = output::Instruction;
+
+    fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
+        ecall_input.access_policy().verify()
+    }
+
+    fn handle<R, C>(
+        mut ecall_input: Self::EI,
+        enclave_context: &C,
+        max_mem_size: usize,
+    ) -> anyhow::Result<Self::EO>
+    where
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
+    {
+        let group_key = &mut *enclave_context.write_group_key();
+        let roster_idx = group_key.my_roster_idx() as usize;
+        // ratchet sender's app keychain per tx.
+        group_key.sender_ratchet(roster_idx)?;
+
+        let account_id = ecall_input.access_policy().into_account_id();
+        let ciphertext = Instructions::<R, C>::new(
+            ecall_input.call_id,
+            ecall_input.state.as_mut_bytes(),
+            account_id,
+        )?
+        .encrypt(group_key, max_mem_size)?;
+
+        let msg = Sha256::hash(&ciphertext.encode());
+        let enclave_sig = enclave_context.sign(msg.as_bytes())?;
+        let instruction_output = output::Instruction::new(ciphertext, enclave_sig);
+
+        enclave_context.set_notification(account_id);
+
+        Ok(instruction_output)
+    }
+}
+
+#[derive(Encode, Decode, Debug, Clone)]
+pub struct InsertCiphertext;
+
+impl EnclaveEngine for InsertCiphertext {
+    type EI = input::InsertCiphertext;
+    type EO = output::ReturnUpdatedState;
+
+    fn handle<R, C>(
+        ecall_input: Self::EI,
+        enclave_context: &C,
+        _max_mem_size: usize,
+    ) -> anyhow::Result<Self::EO>
+    where
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
+    {
+        let group_key = &mut *enclave_context.write_group_key();
+        let roster_idx = ecall_input.ciphertext().roster_idx() as usize;
+
+        // Since the sender's keychain has already ratcheted,
+        // even if an error occurs in the state transition, the receiver's keychain also ratchet.
+        // `receiver_ratchet` fails if
+        //   1. Roster index is out of range of the keychain
+        //   2. error occurs in HKDF
+        //   3. the generation is over u32::MAX
+        // In addition to these, `sync_ratchet` fails even if the receiver generation is larger than that of the sender
+        // So if you run `sync_ratchet` first,
+        // it will either succeed or both fail for the mutable `app_keychain`, so it will be atomic.
+        group_key.sync_ratchet(roster_idx)?;
+        group_key.receiver_ratchet(roster_idx)?;
+
+        // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
+        let iter_op = Instructions::<R, C>::state_transition(
+            enclave_context.clone(),
+            ecall_input.ciphertext(),
+            group_key,
+        )?;
+        let mut output = output::ReturnUpdatedState::default();
+
+        if let Some(updated_state_iter) = iter_op {
+            if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
+                output.update(updated_state);
+            }
+        }
+
+        Ok(output)
     }
 }

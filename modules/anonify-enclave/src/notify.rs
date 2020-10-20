@@ -1,4 +1,9 @@
+use anonify_io_types::*;
 use frame_common::crypto::AccountId;
+use frame_common::{state_types::StateType, AccessPolicy};
+use frame_enclave::EnclaveEngine;
+use frame_runtime::traits::*;
+use std::marker::PhantomData;
 use std::{
     collections::HashSet,
     sync::{Arc, SgxRwLock},
@@ -24,5 +29,34 @@ impl Notifier {
 
     pub fn contains(&self, account_id: &AccountId) -> bool {
         self.account_ids.read().unwrap().contains(&account_id)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RegisterNotification<AP: AccessPolicy> {
+    phantom: PhantomData<AP>,
+}
+
+impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
+    type EI = input::RegisterNotification<AP>;
+    type EO = output::Empty;
+
+    fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
+        ecall_input.access_policy().verify()
+    }
+
+    fn handle<R, C>(
+        ecall_input: Self::EI,
+        enclave_context: &C,
+        _max_mem_size: usize,
+    ) -> anyhow::Result<Self::EO>
+    where
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
+    {
+        let account_id = ecall_input.access_policy().into_account_id();
+        enclave_context.set_notification(account_id);
+
+        Ok(output::Empty::default())
     }
 }

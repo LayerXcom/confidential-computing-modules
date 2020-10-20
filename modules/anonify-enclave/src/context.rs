@@ -2,11 +2,16 @@ use crate::{
     crypto::EnclaveIdentityKey, error::Result, group_key::GroupKey, kvs::EnclaveDB,
     notify::Notifier,
 };
+use anonify_io_types::*;
 use frame_common::{
     crypto::AccountId,
     state_types::{MemId, StateType, UpdatedState},
+    AccessPolicy,
 };
-use frame_enclave::ocalls::{get_quote, sgx_init_quote};
+use frame_enclave::{
+    ocalls::{get_quote, sgx_init_quote},
+    EnclaveEngine,
+};
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
@@ -16,6 +21,7 @@ use sgx_types::*;
 use std::prelude::v1::*;
 use std::{
     env,
+    marker::PhantomData,
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
 };
 
@@ -29,7 +35,7 @@ pub struct EnclaveContext {
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB,
     notifier: Notifier,
-    pub group_key: Arc<SgxRwLock<GroupKey>>,
+    group_key: Arc<SgxRwLock<GroupKey>>,
 }
 
 impl ContextOps for EnclaveContext {
@@ -171,5 +177,34 @@ impl EnclaveContext {
 
         // Use base64-encoded QUOTE structure to communicate via defined API.
         Ok(base64::encode(&quote))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct GetState<AP: AccessPolicy> {
+    phantom: PhantomData<AP>,
+}
+
+impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
+    type EI = input::GetState<AP>;
+    type EO = output::ReturnState;
+
+    fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
+        ecall_input.access_policy().verify()
+    }
+
+    fn handle<R, C>(
+        ecall_input: Self::EI,
+        enclave_context: &C,
+        _max_mem_size: usize,
+    ) -> anyhow::Result<Self::EO>
+    where
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
+    {
+        let account_id = ecall_input.access_policy().into_account_id();
+        let user_state = enclave_context.get_state(account_id, ecall_input.mem_id());
+
+        Ok(output::ReturnState::new(user_state))
     }
 }
