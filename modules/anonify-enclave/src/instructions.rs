@@ -76,6 +76,7 @@ impl EnclaveEngine for MsgReceiver {
     {
         let group_key = &mut *enclave_context.write_group_key();
         let roster_idx = ecall_input.ciphertext().roster_idx() as usize;
+        let msg_gen = ecall_input.ciphertext().generation();
 
         // Since the sender's keychain has already ratcheted,
         // even if an error occurs in the state transition, the receiver's keychain also ratchet.
@@ -86,7 +87,7 @@ impl EnclaveEngine for MsgReceiver {
         // In addition to these, `sync_ratchet` fails even if the receiver generation is larger than that of the sender
         // So if you run `sync_ratchet` first,
         // it will either succeed or both fail for the mutable `app_keychain`, so it will be atomic.
-        group_key.sync_ratchet(roster_idx)?;
+        group_key.sync_ratchet(roster_idx, msg_gen)?;
         group_key.receiver_ratchet(roster_idx)?;
 
         // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.

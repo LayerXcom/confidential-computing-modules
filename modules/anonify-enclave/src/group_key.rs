@@ -79,11 +79,11 @@ impl GroupKeyOps for GroupKey {
     }
 
     /// Syncing the sender and receiver app keychains
-    fn sync_ratchet(&mut self, roster_idx: usize) -> Result<()> {
+    fn sync_ratchet(&mut self, roster_idx: usize, msg_gen: u32) -> Result<()> {
         let sender_gen = self.sender_keychain.generation(roster_idx)?;
         let receiver_gen = self.receiver_keychain.generation(roster_idx)?;
 
-        match sender_gen.checked_sub(receiver_gen) {
+        match msg_gen.checked_sub(receiver_gen) {
             // syncing the sender and receiver app keychains
             // Used in the recovery phase
             Some(0) => {
