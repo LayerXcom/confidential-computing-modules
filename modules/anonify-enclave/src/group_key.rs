@@ -5,7 +5,7 @@ use frame_treekem::{
     handshake::{HandshakeParams, PathSecretSource},
     AppKeyChain, GroupState, Handshake,
 };
-use log::{debug, warn};
+use log::{debug, info};
 use std::vec::Vec;
 
 #[derive(Clone, Debug)]
@@ -79,7 +79,7 @@ impl GroupKeyOps for GroupKey {
     }
 
     /// Syncing the sender and receiver app keychains
-    fn sync_ratchet(&mut self, roster_idx: usize) -> Result<()> {
+    fn sync_ratchet(&mut self, roster_idx: usize, msg_gen: u32) -> Result<()> {
         let sender_gen = self.sender_keychain.generation(roster_idx)?;
         let receiver_gen = self.receiver_keychain.generation(roster_idx)?;
 
@@ -87,32 +87,50 @@ impl GroupKeyOps for GroupKey {
             // syncing the sender and receiver app keychains
             // Used in the recovery phase
             Some(0) => {
-                debug!(
-                    "syncing the sender and receiver app keychains in the recovery phase. The current generation is {:?}",
-                    sender_gen
+                println!(
+                    "[debug] syncing the sender and receiver app keychains in the recovery phase. The current generation is {:?}",
+                    receiver_gen
                 );
                 self.sender_ratchet(roster_idx)
             },
             // It's okay if the sender generation is only one bigger than receiver's.
             Some(1) => Ok(()),
-            // If an error occurs after ratcheting the sender's keychain,
-            // the generation of the received message will be discontinuous,
-            // so ratchet the receiver's keychain by the difference in order to be consistent.
-            Some(diff) => {
-                warn!(
-                    "the generation of the received message will be discontinuous, so ratchet the receiver's keychain by {:?} times",
-                    diff - 1
-                );
-                for _ in 0..(diff - 1) {
-                    self.receiver_ratchet(roster_idx)?;
+            // The case there are multiple messages before the events are synced
+            Some(_) => {
+                // Even if the generation of the message is tampered with,
+                // there is no problem with the legitimacy of the state.
+                match msg_gen.checked_sub(receiver_gen) {
+                    Some(1) => Ok(()),
+                    // If an error occurs after ratcheting the sender's keychain,
+                    // the generation of the received message will be discontinuous against that of the receiver keychain,
+                    // so ratchet the receiver's keychain by the difference in order to be consistent.
+                    Some(diff) => {
+                        println!(
+                            "[warn] the generation of the received message will be discontinuous, so ratchet the receiver's keychain by {:?} times",
+                            diff - 1
+                        );
+                        for _ in 0..(diff - 1) {
+                            self.receiver_ratchet(roster_idx)?;
+                        }
+                        Ok(())
+                    },
+                    None => {
+                        Err(anyhow!(
+                            "The generation of the receiver keychain ({:?}) must not be bigger than the that of the received message ({:?}).
+                            Your TEE instance may not be synced to the latest state yet.",
+                            receiver_gen,
+                            msg_gen
+                        ))
+                    }
                 }
-
-                Ok(())
             }
             // It's an error case if the receiver generation is bigger than sender's
             // Here is the case when you sent a transaction with an old sender keychain during recovery
             None => Err(anyhow!(
-                "receiver generation must not be bigger than sender's one. Your TEE instance may not be synced to the latest state yet."
+                "The generation of the receiver keychain ({:?}) must not be bigger than the that of the sender keychain ({:?}).
+                Your TEE instance may not be synced to the latest state yet.",
+                receiver_gen,
+                sender_gen
             )),
         }
     }

@@ -8,36 +8,11 @@ use frame_treekem::handshake::HandshakeParams;
 use remote_attestation::RAService;
 use std::env;
 
+/// A add handshake Sender
 #[derive(Debug, Clone)]
-pub struct InsertHandshake;
+pub struct JoinGroupSender;
 
-impl EnclaveEngine for InsertHandshake {
-    type EI = input::InsertHandshake;
-    type EO = output::Empty;
-
-    fn handle<R, C>(
-        ecall_input: Self::EI,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> Result<Self::EO>
-    where
-        R: RuntimeExecutor<C, S = StateType>,
-        C: ContextOps<S = StateType> + Clone,
-    {
-        let group_key = &mut *enclave_context.write_group_key();
-        let handshake = HandshakeParams::decode(&mut &ecall_input.handshake().handshake()[..])
-            .map_err(|_| anyhow!("HandshakeParams::decode Error"))?;
-
-        group_key.process_handshake(&handshake)?;
-
-        Ok(output::Empty::default())
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct CallJoinGroup;
-
-impl EnclaveEngine for CallJoinGroup {
+impl EnclaveEngine for JoinGroupSender {
     type EI = input::CallJoinGroup;
     type EO = output::ReturnJoinGroup;
 
@@ -70,10 +45,11 @@ impl EnclaveEngine for CallJoinGroup {
     }
 }
 
+/// A update handshake sender
 #[derive(Debug, Clone)]
-pub struct CallHandshake;
+pub struct HandshakeSender;
 
-impl EnclaveEngine for CallHandshake {
+impl EnclaveEngine for HandshakeSender {
     type EI = input::CallHandshake;
     type EO = output::ReturnHandshake;
 
@@ -98,5 +74,32 @@ impl EnclaveEngine for CallHandshake {
             enclave_sig,
             roster_idx,
         ))
+    }
+}
+
+/// A handshake receiver
+#[derive(Debug, Clone)]
+pub struct HandshakeReceiver;
+
+impl EnclaveEngine for HandshakeReceiver {
+    type EI = input::InsertHandshake;
+    type EO = output::Empty;
+
+    fn handle<R, C>(
+        ecall_input: Self::EI,
+        enclave_context: &C,
+        _max_mem_size: usize,
+    ) -> Result<Self::EO>
+    where
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
+    {
+        let group_key = &mut *enclave_context.write_group_key();
+        let handshake = HandshakeParams::decode(&mut &ecall_input.handshake().handshake()[..])
+            .map_err(|_| anyhow!("HandshakeParams::decode Error"))?;
+
+        group_key.process_handshake(&handshake)?;
+
+        Ok(output::Empty::default())
     }
 }

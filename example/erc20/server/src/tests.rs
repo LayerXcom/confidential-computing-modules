@@ -33,6 +33,89 @@ async fn test_deploy_post() {
 }
 
 #[actix_rt::test]
+async fn test_multiple_messages() {
+    set_env_vars();
+    set_server_env_vars();
+
+    let enclave = EnclaveDir::new()
+        .init_enclave(true)
+        .expect("Failed to initialize enclave.");
+    let eid = enclave.geteid();
+    let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
+    let mut app = test::init_service(
+        App::new()
+            .data(server.clone())
+            .route(
+                "/api/v1/deploy",
+                web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/init_state",
+                web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/transfer",
+                web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/balance_of",
+                web::get().to(handle_balance_of::<EthDeployer, EthSender, EventWatcher>),
+            ),
+    )
+    .await;
+
+    let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let contract_addr: erc20_api::deploy::post::Response = test::read_body_json(resp).await;
+    println!("contract address: {:?}", contract_addr.0);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/balance_of")
+        .set_json(&BALANCE_OF_REQ)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
+    assert_eq!(balance.0.as_raw(), 0);
+
+    let req = test::TestRequest::post()
+        .uri("/api/v1/init_state")
+        .set_json(&MINT_100_REQ)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/balance_of")
+        .set_json(&BALANCE_OF_REQ)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
+    assert_eq!(balance.0.as_raw(), 100);
+
+    // Sending five messages before receiving any messages
+    for _ in 0..5 {
+        let req = test::TestRequest::post()
+            .uri("/api/v1/transfer")
+            .set_json(&TRANSFER_10_REQ)
+            .to_request();
+        let resp = test::call_service(&mut app, req).await;
+        assert!(resp.status().is_success(), "response: {:?}", resp);
+    }
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/balance_of")
+        .set_json(&BALANCE_OF_REQ)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
+    assert_eq!(balance.0.as_raw(), 50);
+}
+
+#[actix_rt::test]
 async fn test_skip_invalid_event() {
     set_env_vars();
     set_server_env_vars();
