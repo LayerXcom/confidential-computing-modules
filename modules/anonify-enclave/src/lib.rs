@@ -16,7 +16,7 @@ mod notify;
 
 pub mod workflow {
     pub use crate::context::GetState;
-    pub use crate::handshake::{HandshakeSender, JoinGroupSender, HandshakeReceiver};
-    pub use crate::instructions::{MsgSender, MsgReceiver};
+    pub use crate::handshake::{HandshakeReceiver, HandshakeSender, JoinGroupSender};
+    pub use crate::instructions::{MsgReceiver, MsgSender};
     pub use crate::notify::RegisterNotification;
 }
