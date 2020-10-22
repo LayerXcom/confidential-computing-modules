@@ -201,7 +201,7 @@ where
         Ok((tx_hash, export_path_secret))
     }
 
-    pub async fn block_on_event<St>(&self) -> Result<Option<Vec<UpdatedState<St>>>>
+    pub async fn fetch_events<St>(&self) -> Result<Option<Vec<UpdatedState<St>>>>
     where
         St: State,
     {
@@ -212,7 +212,7 @@ where
             .watcher
             .as_ref()
             .ok_or(HostError::EventWatcherNotSet)?
-            .block_on_event(eid)
+            .fetch_events(eid)
             .await
     }
 

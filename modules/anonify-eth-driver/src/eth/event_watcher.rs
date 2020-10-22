@@ -35,7 +35,7 @@ impl Watcher for EventWatcher {
         Ok(EventWatcher { contract, cache })
     }
 
-    async fn block_on_event<S: State>(
+    async fn fetch_events<S: State>(
         &self,
         eid: sgx_enclave_id_t,
     ) -> Result<Option<Vec<UpdatedState<S>>>> {
