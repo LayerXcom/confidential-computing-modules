@@ -1,5 +1,11 @@
 use super::connection::{Web3Contract, Web3Http};
-use crate::{cache::EventCache, error::Result, traits::*, utils::*, workflow::*};
+use crate::{
+    cache::EventCache,
+    error::{HostError, Result},
+    traits::*,
+    utils::*,
+    workflow::*,
+};
 use anyhow::anyhow;
 use async_trait::async_trait;
 use codec::Decode;
@@ -96,7 +102,7 @@ impl Web3Logs {
                 );
             }
 
-            let data = decode_data(&log);
+            let data = decode_data(&log)?;
 
             // Processing conditions by ciphertext or handshake event
             if log.topics[0] == self.events.ciphertext_signature() {
@@ -215,13 +221,11 @@ impl InnerEnclaveLog {
                         );
 
                         let inp = host_input::InsertCiphertext::new(ciphertext.clone());
-                        match InsertCiphertextWorkflow::exec(inp, eid).and_then(|e| {
-                            e.ecall_output.ok_or_else(|| {
-                                anyhow!(
-                                    "ecall_output is not set after InsertCiphertextWorkflow::exec"
-                                )
-                            })
-                        }) {
+                        match InsertCiphertextWorkflow::exec(inp, eid)
+                            .map_err(Into::into)
+                            .and_then(|e| {
+                                e.ecall_output.ok_or_else(|| HostError::EcallOutputNotSet)
+                            }) {
                             Ok(update) => {
                                 if let Some(upd_type) = update.updated_state {
                                     let upd_trait = UpdatedState::<S>::from_state_type(upd_type)?;
@@ -237,16 +241,21 @@ impl InnerEnclaveLog {
                                 );
 
                                 // Logging a skipped event
-                                match (&self.logs).into_iter().find(|log| {
-                                    let data = decode_data(&log);
-                                    match Ciphertext::decode(&mut &data[..]) {
-                                        Ok(res) => res == ciphertext,
+                                match (&self.logs)
+                                    .into_iter()
+                                    .find(|log| match decode_data(&log) {
+                                        Ok(data) => match Ciphertext::decode(&mut &data[..]) {
+                                            Ok(res) => res == ciphertext,
+                                            Err(error) => {
+                                                error!("Ciphertext::decode error: {:?}", error);
+                                                false
+                                            }
+                                        },
                                         Err(error) => {
-                                            error!("Ciphertext::decode error: {:?}", error);
+                                            error!("decode_data error: {:?}", error);
                                             false
                                         }
-                                    }
-                                }) {
+                                    }) {
                                     Some(skipped_log) => {
                                         warn!("Skipped event is {:?}", skipped_log)
                                     }
@@ -419,17 +428,17 @@ impl EthEvent {
     }
 }
 
-fn decode_data(log: &Log) -> Vec<u8> {
-    let tokens = decode(&[ParamType::Bytes], &log.data.0).expect("Failed to decode token.");
+fn decode_data(log: &Log) -> Result<Vec<u8>> {
+    let tokens = decode(&[ParamType::Bytes], &log.data.0)?;
     let mut res = vec![];
 
     for token in tokens {
         res.extend_from_slice(
             &token
                 .to_bytes()
-                .expect("Failed to convert token into bytes."),
+                .ok_or_else(|| anyhow!("Failed token.to_bytes() when decoding data"))?,
         );
     }
 
-    res
+    Ok(res)
 }
