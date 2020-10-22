@@ -215,9 +215,13 @@ impl InnerEnclaveLog {
                         );
 
                         let inp = host_input::InsertCiphertext::new(ciphertext.clone());
-                        match InsertCiphertextWorkflow::exec(inp, eid)
-                            .map(|e| e.ecall_output.unwrap())
-                        {
+                        match InsertCiphertextWorkflow::exec(inp, eid).and_then(|e| {
+                            e.ecall_output.ok_or_else(|| {
+                                anyhow!(
+                                    "ecall_output is not set after InsertCiphertextWorkflow::exec"
+                                )
+                            })
+                        }) {
                             Ok(update) => {
                                 if let Some(upd_type) = update.updated_state {
                                     let upd_trait = UpdatedState::<S>::from_state_type(upd_type)?;
