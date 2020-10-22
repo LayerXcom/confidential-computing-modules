@@ -10,7 +10,7 @@ use frame_common::{
     traits::*,
 };
 use frame_host::engine::HostEngine;
-use log::{debug, error};
+use log::{debug, error, warn};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{cmp::Ordering, path::Path, sync::Arc};
@@ -96,7 +96,7 @@ impl Web3Logs {
                 );
             }
 
-            let data = Self::decode_data(&log);
+            let data = decode_data(&log);
 
             // Processing conditions by ciphertext or handshake event
             if log.topics[0] == self.events.ciphertext_signature() {
@@ -141,24 +141,10 @@ impl Web3Logs {
                 contract_addr: contract_addr.to_fixed_bytes(),
                 latest_blc_num,
                 payloads,
+                logs: self.logs,
             }),
             cache: self.cache,
         })
-    }
-
-    fn decode_data(log: &Log) -> Vec<u8> {
-        let tokens = decode(&[ParamType::Bytes], &log.data.0).expect("Failed to decode token.");
-        let mut res = vec![];
-
-        for token in tokens {
-            res.extend_from_slice(
-                &token
-                    .to_bytes()
-                    .expect("Failed to convert token into bytes."),
-            );
-        }
-
-        res
     }
 }
 
@@ -204,6 +190,7 @@ pub struct InnerEnclaveLog {
     contract_addr: [u8; 20],
     latest_blc_num: u64,
     payloads: Vec<PayloadType>,
+    logs: Vec<Log>,
 }
 
 impl InnerEnclaveLog {
@@ -227,7 +214,7 @@ impl InnerEnclaveLog {
                             ciphertext.generation()
                         );
 
-                        let inp = host_input::InsertCiphertext::new(ciphertext);
+                        let inp = host_input::InsertCiphertext::new(ciphertext.clone());
                         match InsertCiphertextWorkflow::exec(inp, eid)
                             .map(|e| e.ecall_output.unwrap())
                         {
@@ -239,11 +226,31 @@ impl InnerEnclaveLog {
                             }
                             // Even if an error occurs in Enclave, it is unlikely that retry process will succeed,
                             // so skip the event.
-                            Err(e) => {
+                            Err(err) => {
                                 error!(
                                     "Error in enclave (InsertCiphertextWorkflow::exec): {:?}",
-                                    e
+                                    err
                                 );
+
+                                // Logging a skipped event
+                                match (&self.logs).into_iter().find(|log| {
+                                    let data = decode_data(&log);
+                                    match Ciphertext::decode(&mut &data[..]) {
+                                        Ok(res) => res == ciphertext,
+                                        Err(error) => {
+                                            error!("Ciphertext::decode error: {:?}", error);
+                                            false
+                                        }
+                                    }
+                                }) {
+                                    Some(skipped_log) => {
+                                        warn!("Skipped event is {:?}", skipped_log)
+                                    }
+                                    None => {
+                                        error!("Not found the skipped event. The corresponding ciphertext is {:?}", ciphertext);
+                                    }
+                                }
+
                                 continue;
                             }
                         };
@@ -406,4 +413,19 @@ impl EthEvent {
     pub fn handshake_signature(&self) -> Hash {
         self.0[1].signature()
     }
+}
+
+fn decode_data(log: &Log) -> Vec<u8> {
+    let tokens = decode(&[ParamType::Bytes], &log.data.0).expect("Failed to decode token.");
+    let mut res = vec![];
+
+    for token in tokens {
+        res.extend_from_slice(
+            &token
+                .to_bytes()
+                .expect("Failed to convert token into bytes."),
+        );
+    }
+
+    res
 }
