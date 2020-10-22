@@ -1,4 +1,4 @@
-use frame_common::crypto::Ciphertext;
+use crate::eth::event_watcher::PayloadType;
 use log::info;
 use std::collections::{HashMap, HashSet};
 use web3::types::Address as ContractAddr;
@@ -15,7 +15,7 @@ type Generation = u32;
 pub struct EventCache {
     block_num_counter: HashMap<ContractAddr, BlockNum>,
     treekem_counter: HashMap<RosterIdx, (Epoch, Generation)>,
-    ciphertext_pool: HashSet<Ciphertext>,
+    payload_pool: HashSet<PayloadType>,
 }
 
 impl EventCache {
@@ -34,7 +34,7 @@ impl EventCache {
         block_num
     }
 
-    pub fn is_next_msg(&self, msg: Ciphertext) -> bool {
+    pub fn is_next_msg(&self, msg: &PayloadType) -> bool {
         let roster_idx = msg.roster_idx();
         let (current_epoch, current_gen) = *self
             .treekem_counter
@@ -42,25 +42,34 @@ impl EventCache {
             .unwrap_or_else(|| &(0, 0));
 
         if msg.epoch() == current_epoch {
-            msg.generation() == current_gen + 1 || msg.generation() == 0
+            msg.generation() == current_gen + 1
+                || msg.generation() == 0
+                || msg.generation() == u32::MAX // handshake
         } else {
             // TODO: Handling reorder over epoch
             true
         }
     }
 
-    pub fn update_treekem_counter(&mut self, msg: Ciphertext) {
+    pub fn find_payload(&self, prior_payload: &PayloadType) -> Option<&PayloadType> {
+        if prior_payload.generation() == u32::MAX {
+            self.payload_pool
+                .iter()
+                .find(|e| e.epoch() == prior_payload.epoch() + 1 && e.generation() == 0)
+        } else {
+            self.payload_pool.iter().find(|e| {
+                e.epoch() == prior_payload.epoch()
+                    && e.generation() == prior_payload.generation() + 1
+            })
+        }
+    }
+
+    pub fn insert_payload_pool(&mut self, payload: PayloadType) {
+        self.payload_pool.insert(payload);
+    }
+
+    pub fn update_treekem_counter(&mut self, msg: &PayloadType) {
         self.treekem_counter
             .insert(msg.roster_idx(), (msg.epoch(), msg.generation()));
-    }
-
-    pub fn insert_ciphertext_pool(&mut self, ciphertext: Ciphertext) {
-        self.ciphertext_pool.insert(ciphertext);
-    }
-
-    pub fn find_ciphertext(&self, id: (Epoch, Generation)) -> Option<&Ciphertext> {
-        self.ciphertext_pool
-            .iter()
-            .find(|e| e.epoch() == id.0 && e.generation() == id.1)
     }
 }

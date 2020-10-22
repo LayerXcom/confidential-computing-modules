@@ -7,7 +7,7 @@ use erc20_state_transition::{
     approve, burn, construct, mint, transfer, transfer_from, CallName, MemName,
 };
 use frame_runtime::primitives::{Approved, U64};
-use log::debug;
+use log::{debug, error, info};
 use std::{sync::Arc, time};
 
 const DEFAULT_GAS: u64 = 5_000_000;
@@ -426,8 +426,10 @@ where
     actix_rt::Arbiter::new().exec_fn(move || {
         actix_rt::spawn(async move {
             loop {
-                server.dispatcher.fetch_events::<U64>().await.unwrap();
-                debug!("event fetched...");
+                match server.dispatcher.fetch_events::<U64>().await {
+                    Ok(updated_states) => info!("State updated: {:?}", updated_states),
+                    Err(err) => error!("event fetched error: {:?}", err),
+                };
                 actix_rt::time::delay_for(time::Duration::from_millis(server.sync_time)).await;
             }
         });

@@ -138,9 +138,23 @@ impl Web3Logs {
 
         // Reordered by the priority in all fetched payloads
         payloads.sort();
-
         // Removes consecutive repeated message
         payloads.dedup();
+        // Order guarantee
+        let immutable_payloads = payloads.clone();
+        for (i, payload) in immutable_payloads.iter().enumerate() {
+            if self.cache.read().is_next_msg(&payload) {
+                self.cache.write().update_treekem_counter(&payload);
+            } else {
+                match self.cache.read().find_payload(&payload) {
+                    Some(payload) => payloads.insert(i, payload.clone()),
+                    None => {
+                        error!("");
+                        self.cache.write().insert_payload_pool(payload.clone());
+                    }
+                }
+            }
+        }
 
         Ok(EnclaveLog {
             inner: Some(InnerEnclaveLog {
@@ -326,8 +340,8 @@ impl<S: State> EnclaveUpdatedState<S> {
     }
 }
 
-#[derive(Debug, Clone)]
-struct PayloadType {
+#[derive(Debug, Clone, Hash)]
+pub struct PayloadType {
     roster_idx: u32,
     epoch: u32,
     generation: u32,
@@ -342,6 +356,18 @@ impl PayloadType {
             generation,
             payload,
         }
+    }
+
+    pub fn roster_idx(&self) -> u32 {
+        self.roster_idx
+    }
+
+    pub fn epoch(&self) -> u32 {
+        self.epoch
+    }
+
+    pub fn generation(&self) -> u32 {
+        self.generation
     }
 }
 
@@ -383,7 +409,7 @@ impl Ord for PayloadType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 enum Payload {
     Ciphertext(Ciphertext),
     Handshake(ExportHandshake),
