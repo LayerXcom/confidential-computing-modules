@@ -104,18 +104,23 @@ impl EventCache {
     fn find_payload(&mut self, prior_payload: &PayloadType) -> Vec<PayloadType> {
         let roster_idx = prior_payload.roster_idx();
         let traial_num = self.trials_counter.entry(roster_idx).or_default();
+        // increment the number of trials
         *traial_num += 1;
         let mut acc: Vec<PayloadType> = vec![];
 
         if self.trials_counter.get(&roster_idx).unwrap_or_else(|| &0) > &MAX_TRIALS_NUM {
             let traial_num = self.trials_counter.entry(roster_idx).or_default();
-            // reset the number of trial
+            // reset the number of trials
             *traial_num = 0;
             // TODO
             unimplemented!();
         } else {
             match self.payload_pool.get_mut(&roster_idx) {
                 Some(payloads_from_pool) => {
+                    let traial_num = self.trials_counter.entry(roster_idx).or_default();
+                    // reset the number of trials
+                    *traial_num = 0;
+
                     payloads_from_pool.sort();
                     for curr_payload in &*payloads_from_pool {
                         if prior_payload.is_next(&curr_payload) {
