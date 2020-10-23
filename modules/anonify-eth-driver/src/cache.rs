@@ -12,23 +12,8 @@ type Generation = u32;
 const MAX_TRIALS_NUM: u32 = 10;
 
 // TODO: overhead clone
-// TODO: inner for Arc<RwLock<()>>
-/// In regard to order gurantee:
-/// There are two cases where the generation of received messages is not continuous.
-/// 1. In regard to the previous message, the sender's keychain ratcheted,
-///    but some error occurred in the subsequent processing and it did not reach the receiver,
-///    and its generation was skipped.
-/// 2. The order of the received messages is changed.
-///    Due to the order guarantee between network connections and the transaction order,
-///    the order is changed and recorded in the message queue (blockchain).
-/// In the case of 1, consistency is guaranteed between TEE node clusters,
-/// so there is no problem with processing as usual.
-/// In case of 2, it is necessary to process the message of
-/// the next generation received later without skipping first.
-/// Therefore, cache the message received earlier for a specific number of attempts shared by the cluster,
-/// and wait for the message of the next generation to come.
-/// If the next message does not come after waiting for the number of attempts, that message is skipped.
-/// (This skip process is performed by guaranteeing consistency in all TEEs in the cluster)
+// TODO: inner Arc<RwLock<()>>
+/// Cache data from events for arrival guarantee and order guarantee.
 ///
 /// Do not implement `Clone` trait due to cache duplication.
 #[derive(Debug, Default)]
@@ -36,7 +21,7 @@ pub struct EventCache {
     block_num_counter: HashMap<ContractAddr, BlockNum>,
     treekem_counter: HashMap<RosterIdx, (Epoch, Generation)>,
     trials_counter: HashMap<RosterIdx, u32>,
-    payload_pool: HashMap<RosterIdx, Vec<PayloadType>>,
+    payloads_pool: HashMap<RosterIdx, Vec<PayloadType>>,
 }
 
 impl EventCache {
@@ -55,6 +40,22 @@ impl EventCache {
         block_num
     }
 
+    /// In regard to order gurantee:
+    /// There are two cases where the generation of received messages is not continuous.
+    /// 1. In regard to the previous message, the sender's keychain ratcheted,
+    ///    but some error occurred in the subsequent processing and it did not reach the receiver,
+    ///    and its generation was skipped.
+    /// 2. The order of the received messages is changed.
+    ///    Due to the order guarantee between network connections and the transaction order,
+    ///    the order is changed and recorded in the message queue (blockchain).
+    /// In the case of 1, consistency is guaranteed between TEE node clusters,
+    /// so there is no problem with processing as usual.
+    /// In case of 2, it is necessary to process the message of
+    /// the next generation received later without skipping first.
+    /// Therefore, cache the message received earlier for a specific number of attempts shared by the cluster,
+    /// and wait for the message of the next generation to come.
+    /// If the next message does not come after waiting for the number of attempts, that message is skipped.
+    /// (This skip process is performed by guaranteeing consistency in all TEEs in the cluster)
     pub fn ensure_order_guarantee(
         &mut self,
         mut payloads: Vec<PayloadType>,
@@ -64,14 +65,14 @@ impl EventCache {
             if self.is_next_msg(&curr_payload) {
                 self.update_treekem_counter(&curr_payload);
             } else {
-                let payloads_from_pool = self.find_payload(&curr_payload);
+                let payloads_from_pool = self.find_next_payloads(&curr_payload);
 
                 if payloads_from_pool.is_empty() {
                     warn!(
                         "Not found the next payload even in the cache, so cache the current payloads: {:?}",
                         curr_payload
                     );
-                    self.insert_payload_pool(curr_payload.clone());
+                    self.insert_payloads_pool(curr_payload.clone());
                 } else {
                     payloads.reserve(payloads_from_pool.len());
                     let mut v = payloads.split_off(index);
@@ -82,6 +83,16 @@ impl EventCache {
         }
 
         payloads
+    }
+
+    /// Increment the number of trials for each roster index
+    pub fn increment_trials_counter(&mut self, payloads: &[PayloadType]) {
+        let mut roster_idx_list: Vec<RosterIdx> = payloads.iter().map(|p| p.roster_idx()).collect();
+        roster_idx_list.dedup();
+        for roster_idx in roster_idx_list {
+            let traial_num = self.trials_counter.entry(roster_idx).or_default();
+            *traial_num += 1;
+        }
     }
 
     fn is_next_msg(&self, msg: &PayloadType) -> bool {
@@ -101,34 +112,34 @@ impl EventCache {
         }
     }
 
-    /// Increment the number of trials for each roster index
-    pub fn increment_trial_counter(&mut self, payloads: &[PayloadType]) {
-        let mut roster_idx_list: Vec<RosterIdx> = payloads.iter().map(|p| p.roster_idx()).collect();
-        roster_idx_list.dedup();
-        for roster_idx in roster_idx_list {
-            let traial_num = self.trials_counter.entry(roster_idx).or_default();
-            *traial_num += 1;
-        }
-    }
-
-    fn find_payload(&mut self, prior_payload: &PayloadType) -> Vec<PayloadType> {
+    /// Finds next payloads.
+    /// If the maximum number of trials is over,
+    /// skip the event and get a continuous vector from the smallest payload in the `payloads_pool`,
+    /// otherwise get continuous payloads from the `payloads_pool`.
+    fn find_next_payloads(&mut self, prior_payload: &PayloadType) -> Vec<PayloadType> {
         let roster_idx = prior_payload.roster_idx();
         let mut acc: Vec<PayloadType> = vec![];
 
-        if self.trials_counter.get(&roster_idx).unwrap_or_else(|| &0) > &MAX_TRIALS_NUM {
-            let traial_num = self.trials_counter.entry(roster_idx).or_default();
-            // reset the number of trials
-            *traial_num = 0;
-            // TODO
-            unimplemented!();
-        } else {
-            match self.payload_pool.get_mut(&roster_idx) {
-                Some(payloads_from_pool) => {
-                    let traial_num = self.trials_counter.entry(roster_idx).or_default();
-                    // reset the number of trials
-                    *traial_num = 0;
+        match self.payloads_pool.get_mut(&roster_idx) {
+            Some(payloads_from_pool) => {
+                let traial_num = self.trials_counter.entry(roster_idx).or_default();
+                // reset the number of trials
+                *traial_num = 0;
+                payloads_from_pool.sort();
 
-                    payloads_from_pool.sort();
+                if self.trials_counter.get(&roster_idx).unwrap_or_else(|| &0) > &MAX_TRIALS_NUM {
+                    for curr_payload in &payloads_from_pool[1..] {
+                        if payloads_from_pool[0].is_next(&curr_payload) {
+                            acc.push(curr_payload.clone());
+                        } else {
+                            break;
+                        }
+                    }
+                    warn!(
+                        "The maximum number of trials is over, so skipped the next event of {:?}",
+                        prior_payload
+                    );
+                } else {
                     for curr_payload in &*payloads_from_pool {
                         if prior_payload.is_next(&curr_payload) {
                             acc.push(curr_payload.clone());
@@ -137,14 +148,15 @@ impl EventCache {
                         }
                     }
                 }
-                None => return acc,
-            };
-        }
+            }
+            None => return acc,
+        };
+
         acc
     }
 
-    fn insert_payload_pool(&mut self, payload: PayloadType) {
-        let payloads = self.payload_pool.entry(payload.roster_idx()).or_default();
+    fn insert_payloads_pool(&mut self, payload: PayloadType) {
+        let payloads = self.payloads_pool.entry(payload.roster_idx()).or_default();
         payloads.push(payload);
     }
 

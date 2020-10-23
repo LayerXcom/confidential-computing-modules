@@ -144,7 +144,7 @@ impl Web3Logs {
         let immutable_payloads = payloads.clone();
         let payloads = {
             let mut mut_cache = self.cache.write();
-            mut_cache.increment_trial_counter(&immutable_payloads);
+            mut_cache.increment_trials_counter(&immutable_payloads);
             mut_cache.ensure_order_guarantee(payloads, immutable_payloads)
         };
 
@@ -263,7 +263,7 @@ impl InnerEnclaveLog {
                                         }
                                     }) {
                                     Some(skipped_log) => {
-                                        warn!("Skipped event is {:?}", skipped_log)
+                                        warn!("A event is skipped because of occurring error in enclave: {:?}", skipped_log)
                                     }
                                     None => {
                                         error!("Not found the skipped event. The corresponding ciphertext is {:?}", ciphertext);
