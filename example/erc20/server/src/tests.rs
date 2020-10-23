@@ -7,7 +7,7 @@ use std::time;
 
 const SYNC_TIME: u64 = 1500;
 
-#[actix_rt::test]
+#[tokio::test]
 async fn test_deploy_post() {
     set_env_vars();
     set_server_env_vars();
@@ -32,7 +32,7 @@ async fn test_deploy_post() {
     println!("contract address: {:?}", contract_addr);
 }
 
-#[actix_rt::test]
+#[tokio::test]
 async fn test_multiple_messages() {
     set_env_vars();
     set_server_env_vars();
@@ -115,7 +115,7 @@ async fn test_multiple_messages() {
     assert_eq!(balance.0.as_raw(), 50);
 }
 
-#[actix_rt::test]
+#[tokio::test]
 async fn test_skip_invalid_event() {
     set_env_vars();
     set_server_env_vars();
@@ -212,7 +212,7 @@ async fn test_skip_invalid_event() {
     assert_eq!(balance.0.as_raw(), 90);
 }
 
-#[actix_rt::test]
+#[tokio::test]
 async fn test_node_recovery() {
     set_env_vars();
     set_server_env_vars();
@@ -362,7 +362,7 @@ async fn test_node_recovery() {
     assert_eq!(balance.0.as_raw(), 80);
 }
 
-#[actix_rt::test]
+#[tokio::test]
 async fn test_join_group_then_handshake() {
     set_env_vars();
     set_server_env_vars();
