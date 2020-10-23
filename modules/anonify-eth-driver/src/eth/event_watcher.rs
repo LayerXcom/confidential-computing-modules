@@ -146,7 +146,7 @@ impl Web3Logs {
             if self.cache.read().is_next_msg(&payload) {
                 self.cache.write().update_treekem_counter(&payload);
             } else {
-                match self.cache.read().find_payload(&payload) {
+                match self.cache.write().find_payload(&payload) {
                     Some(payload) => payloads.insert(i, payload.clone()),
                     None => {
                         error!("");
