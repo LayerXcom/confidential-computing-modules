@@ -1,6 +1,6 @@
 use crate::eth::event_watcher::PayloadType;
-use log::info;
-use std::collections::{HashMap, HashSet};
+use log::{info, warn};
+use std::collections::HashMap;
 use web3::types::Address as ContractAddr;
 
 type BlockNum = u64;
@@ -9,6 +9,11 @@ type Epoch = u32;
 type Generation = u32;
 
 // TODO: Prevent malicious TEE fraudulently setting the number of trials to break consistency.
+const MAX_TRIALS_NUM: u32 = 10;
+
+// TODO: overhead clone
+// TODO: inner for Arc<RwLock<()>>
+/// In regard to order gurantee:
 /// There are two cases where the generation of received messages is not continuous.
 /// 1. In regard to the previous message, the sender's keychain ratcheted,
 ///    but some error occurred in the subsequent processing and it did not reach the receiver,
@@ -24,17 +29,14 @@ type Generation = u32;
 /// and wait for the message of the next generation to come.
 /// If the next message does not come after waiting for the number of attempts, that message is skipped.
 /// (This skip process is performed by guaranteeing consistency in all TEEs in the cluster)
-const MAX_TRIALS_NUM: u32 = 10;
-
-// TODO: overhead clone
-// TODO: inner for Arc<RwLock<()>>
-// Do not implement `Clone` trait due to cache duplication.
+///
+/// Do not implement `Clone` trait due to cache duplication.
 #[derive(Debug, Default)]
 pub struct EventCache {
     block_num_counter: HashMap<ContractAddr, BlockNum>,
     treekem_counter: HashMap<RosterIdx, (Epoch, Generation)>,
     trials_counter: HashMap<RosterIdx, u32>,
-    payload_pool: HashSet<PayloadType>,
+    payload_pool: HashMap<RosterIdx, Vec<PayloadType>>,
 }
 
 impl EventCache {
@@ -53,7 +55,36 @@ impl EventCache {
         block_num
     }
 
-    pub fn is_next_msg(&self, msg: &PayloadType) -> bool {
+    pub fn ensure_order_guarantee(
+        &mut self,
+        mut payloads: Vec<PayloadType>,
+        immutable_payloads: Vec<PayloadType>,
+    ) -> Vec<PayloadType> {
+        for (index, curr_payload) in immutable_payloads.iter().enumerate() {
+            if self.is_next_msg(&curr_payload) {
+                self.update_treekem_counter(&curr_payload);
+            } else {
+                let payloads_from_pool = self.find_payload(&curr_payload);
+
+                if payloads_from_pool.is_empty() {
+                    warn!(
+                        "Not found the next payload even in the cache, so cache the current payloads: {:?}",
+                        curr_payload
+                    );
+                    self.insert_payload_pool(curr_payload.clone());
+                } else {
+                    payloads.reserve(payloads_from_pool.len());
+                    let mut v = payloads.split_off(index);
+                    payloads.extend_from_slice(&payloads_from_pool);
+                    payloads.append(&mut v);
+                }
+            }
+        }
+
+        payloads
+    }
+
+    fn is_next_msg(&self, msg: &PayloadType) -> bool {
         let roster_idx = msg.roster_idx();
         let (current_epoch, current_gen) = *self
             .treekem_counter
@@ -70,40 +101,42 @@ impl EventCache {
         }
     }
 
-    // TODO: Return continuous multiple payloads
-    pub fn find_payload(&mut self, prior_payload: &PayloadType) -> Option<&PayloadType> {
-        let traials = self
-            .trials_counter
-            .entry(prior_payload.roster_idx())
-            .or_default();
-        *traials += 1;
+    fn find_payload(&mut self, prior_payload: &PayloadType) -> Vec<PayloadType> {
+        let roster_idx = prior_payload.roster_idx();
+        let traial_num = self.trials_counter.entry(roster_idx).or_default();
+        *traial_num += 1;
+        let mut acc: Vec<PayloadType> = vec![];
 
-        if self
-            .trials_counter
-            .get(&prior_payload.roster_idx())
-            .unwrap_or_else(|| &0)
-            > &MAX_TRIALS_NUM
-        {
+        if self.trials_counter.get(&roster_idx).unwrap_or_else(|| &0) > &MAX_TRIALS_NUM {
+            let traial_num = self.trials_counter.entry(roster_idx).or_default();
+            // reset the number of trial
+            *traial_num = 0;
+            // TODO
             unimplemented!();
         } else {
-            if prior_payload.generation() == u32::MAX {
-                self.payload_pool
-                    .iter()
-                    .find(|e| e.epoch() == prior_payload.epoch() + 1 && e.generation() == 0)
-            } else {
-                self.payload_pool.iter().find(|e| {
-                    e.epoch() == prior_payload.epoch()
-                        && e.generation() == prior_payload.generation() + 1
-                })
-            }
+            match self.payload_pool.get_mut(&roster_idx) {
+                Some(payloads_from_pool) => {
+                    payloads_from_pool.sort();
+                    for curr_payload in &*payloads_from_pool {
+                        if prior_payload.is_next(&curr_payload) {
+                            acc.push(curr_payload.clone());
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                None => return acc,
+            };
         }
+        acc
     }
 
-    pub fn insert_payload_pool(&mut self, payload: PayloadType) {
-        self.payload_pool.insert(payload);
+    fn insert_payload_pool(&mut self, payload: PayloadType) {
+        let payloads = self.payload_pool.entry(payload.roster_idx()).or_default();
+        payloads.push(payload);
     }
 
-    pub fn update_treekem_counter(&mut self, msg: &PayloadType) {
+    fn update_treekem_counter(&mut self, msg: &PayloadType) {
         self.treekem_counter
             .insert(msg.roster_idx(), (msg.epoch(), msg.generation()));
     }

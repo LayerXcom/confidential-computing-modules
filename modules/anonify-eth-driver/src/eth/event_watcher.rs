@@ -142,19 +142,10 @@ impl Web3Logs {
         payloads.dedup();
         // Order guarantee
         let immutable_payloads = payloads.clone();
-        for (i, payload) in immutable_payloads.iter().enumerate() {
-            if self.cache.read().is_next_msg(&payload) {
-                self.cache.write().update_treekem_counter(&payload);
-            } else {
-                match self.cache.write().find_payload(&payload) {
-                    Some(payload) => payloads.insert(i, payload.clone()),
-                    None => {
-                        error!("");
-                        self.cache.write().insert_payload_pool(payload.clone());
-                    }
-                }
-            }
-        }
+        let payloads = self
+            .cache
+            .write()
+            .ensure_order_guarantee(payloads, immutable_payloads);
 
         Ok(EnclaveLog {
             inner: Some(InnerEnclaveLog {
@@ -358,6 +349,13 @@ impl PayloadType {
         }
     }
 
+    pub fn is_next(&self, other: &Self) -> bool {
+        self.roster_idx == other.roster_idx
+            && ((self.epoch == other.epoch && self.generation + 1 == other.generation) ||
+            (self.epoch == other.epoch && other.generation == u32::MAX) || // TODO: order gurantee with handshake
+            (self.epoch + 1 == other.epoch && self.generation == u32::MAX && other.generation == 0))
+    }
+
     pub fn roster_idx(&self) -> u32 {
         self.roster_idx
     }
@@ -381,6 +379,9 @@ impl PartialEq for PayloadType {
 
 impl Eq for PayloadType {}
 
+/// Ordering PayloadType> like:
+/// epoch      | 0              1            2 ..
+/// generation | 0 1 2 3 .. MAX 0 1 2 .. MAX 0 ..
 impl PartialOrd for PayloadType {
     fn partial_cmp(&self, other: &PayloadType) -> Option<Ordering> {
         let roster_idx_ord = self.roster_idx.partial_cmp(&other.roster_idx)?;

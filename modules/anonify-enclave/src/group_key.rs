@@ -85,7 +85,9 @@ impl GroupKeyOps for GroupKey {
 
         match sender_gen.checked_sub(receiver_gen) {
             // syncing the sender and receiver app keychains
-            // Used in the recovery phase
+            // Used for:
+            // - receiving messages from other TEE nodes
+            // - the recovery phase
             Some(0) => {
                 println!(
                     "[debug] syncing the sender and receiver app keychains in the recovery phase. The current generation is {:?}",
