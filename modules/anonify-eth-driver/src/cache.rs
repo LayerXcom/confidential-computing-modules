@@ -101,11 +101,18 @@ impl EventCache {
         }
     }
 
+    /// Increment the number of trials for each roster index
+    pub fn increment_trial_counter(&mut self, payloads: &[PayloadType]) {
+        let mut roster_idx_list: Vec<RosterIdx> = payloads.iter().map(|p| p.roster_idx()).collect();
+        roster_idx_list.dedup();
+        for roster_idx in roster_idx_list {
+            let traial_num = self.trials_counter.entry(roster_idx).or_default();
+            *traial_num += 1;
+        }
+    }
+
     fn find_payload(&mut self, prior_payload: &PayloadType) -> Vec<PayloadType> {
         let roster_idx = prior_payload.roster_idx();
-        let traial_num = self.trials_counter.entry(roster_idx).or_default();
-        // increment the number of trials
-        *traial_num += 1;
         let mut acc: Vec<PayloadType> = vec![];
 
         if self.trials_counter.get(&roster_idx).unwrap_or_else(|| &0) > &MAX_TRIALS_NUM {

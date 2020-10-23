@@ -142,10 +142,11 @@ impl Web3Logs {
         payloads.dedup();
         // Order guarantee
         let immutable_payloads = payloads.clone();
-        let payloads = self
-            .cache
-            .write()
-            .ensure_order_guarantee(payloads, immutable_payloads);
+        let payloads = {
+            let mut mut_cache = self.cache.write();
+            mut_cache.increment_trial_counter(&immutable_payloads);
+            mut_cache.ensure_order_guarantee(payloads, immutable_payloads)
+        };
 
         Ok(EnclaveLog {
             inner: Some(InnerEnclaveLog {
