@@ -4,7 +4,6 @@ use frame_common::crypto::AccountId;
 use frame_runtime::primitives::U64;
 use integration_tests::set_env_vars;
 use std::time;
-use tokio::signal;
 
 const SYNC_TIME: u64 = 1500;
 
@@ -31,8 +30,6 @@ async fn test_deploy_post() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let contract_addr: erc20_api::deploy::post::Response = test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_addr);
-
-    signal::ctrl_c().await.unwrap();
 }
 
 #[actix_rt::test]
@@ -116,8 +113,6 @@ async fn test_multiple_messages() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 50);
-
-    signal::ctrl_c().await.unwrap();
 }
 
 #[actix_rt::test]
@@ -215,8 +210,6 @@ async fn test_skip_invalid_event() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 90);
-
-    signal::ctrl_c().await.unwrap();
 }
 
 #[actix_rt::test]
@@ -367,8 +360,6 @@ async fn test_node_recovery() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 80);
-
-    signal::ctrl_c().await.unwrap();
 }
 
 #[actix_rt::test]
@@ -518,8 +509,6 @@ async fn test_join_group_then_handshake() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 90);
-
-    signal::ctrl_c().await.unwrap();
 }
 
 fn set_server_env_vars() {
