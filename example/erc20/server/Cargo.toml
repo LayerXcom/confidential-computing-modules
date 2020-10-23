@@ -26,3 +26,4 @@ thiserror = "1.0"
 
 [dev-dependencies]
 integration-tests = { path = "../../../tests/integration" }
+tokio = { version = "0.3", features = ["signal"] }
