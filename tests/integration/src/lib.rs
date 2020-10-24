@@ -60,7 +60,7 @@ async fn test_integration_eth_construct() {
     println!("export_path_secret: {:?}", export_path_secret);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -79,7 +79,7 @@ async fn test_integration_eth_construct() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Get state from enclave
     let owner_account_id =
@@ -129,7 +129,7 @@ async fn test_auto_notification() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -148,7 +148,7 @@ async fn test_auto_notification() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    let updated_state = dispatcher.block_on_event::<U64>().await.unwrap().unwrap();
+    let updated_state = dispatcher.fetch_events::<U64>().await.unwrap().unwrap();
 
     assert_eq!(updated_state.len(), 1);
     assert_eq!(
@@ -175,7 +175,7 @@ async fn test_auto_notification() {
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    let updated_state = dispatcher.block_on_event::<U64>().await.unwrap().unwrap();
+    let updated_state = dispatcher.fetch_events::<U64>().await.unwrap().unwrap();
 
     assert_eq!(updated_state.len(), 1);
     assert_eq!(
@@ -222,7 +222,7 @@ async fn test_integration_eth_transfer() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -241,7 +241,7 @@ async fn test_integration_eth_transfer() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Get state from enclave
     let my_state = get_state::<U64, MemName, _>(my_access_policy.clone(), eid, "Balance").unwrap();
@@ -270,7 +270,7 @@ async fn test_integration_eth_transfer() {
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Check the updated states
     let my_updated_state = get_state::<U64, MemName, _>(my_access_policy, eid, "Balance").unwrap();
@@ -320,7 +320,7 @@ async fn test_key_rotation() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Send handshake
     let (receipt, _) = dispatcher
@@ -330,7 +330,7 @@ async fn test_key_rotation() {
     println!("handshake receipt: {:?}", receipt);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // init state
     let total_supply = U64::from_raw(100);
@@ -348,7 +348,7 @@ async fn test_key_rotation() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Get state from enclave
     let my_state = get_state::<U64, MemName, _>(my_access_policy, eid, "Balance").unwrap();
@@ -394,7 +394,7 @@ async fn test_integration_eth_approve() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -413,7 +413,7 @@ async fn test_integration_eth_approve() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Get state from enclave
     let my_state =
@@ -440,7 +440,7 @@ async fn test_integration_eth_approve() {
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Check the updated states
     let my_state = get_state::<Approved, MemName, _>(my_access_policy, eid, "Approved").unwrap();
@@ -491,7 +491,7 @@ async fn test_integration_eth_transfer_from() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -510,7 +510,7 @@ async fn test_integration_eth_transfer_from() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Get initial state from enclave
     let my_state_balance =
@@ -550,7 +550,7 @@ async fn test_integration_eth_transfer_from() {
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Check the updated states
     let my_state_balance =
@@ -600,7 +600,7 @@ async fn test_integration_eth_transfer_from() {
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Check the final states
     let my_state_balance =
@@ -664,7 +664,7 @@ async fn test_integration_eth_mint() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -683,7 +683,7 @@ async fn test_integration_eth_mint() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // transit state
     let amount = U64::from_raw(50);
@@ -703,7 +703,7 @@ async fn test_integration_eth_mint() {
     println!("minted state receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Check the final states
     let actual_total_supply =
@@ -750,7 +750,7 @@ async fn test_integration_eth_burn() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -769,7 +769,7 @@ async fn test_integration_eth_burn() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Send a transaction to contract
     let amount = U64::from_raw(30);
@@ -788,7 +788,7 @@ async fn test_integration_eth_burn() {
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Send a transaction to contract
     let amount = U64::from_raw(20);
@@ -806,7 +806,7 @@ async fn test_integration_eth_burn() {
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.block_on_event::<U64>().await.unwrap();
+    dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Check the final states
     let actual_total_supply =

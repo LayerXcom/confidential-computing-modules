@@ -70,7 +70,7 @@ pub trait Watcher: Sized {
     ) -> Result<Self>;
 
     /// Blocking event fetch from blockchain nodes.
-    async fn block_on_event<S: State>(
+    async fn fetch_events<S: State>(
         &self,
         eid: sgx_enclave_id_t,
     ) -> Result<Option<Vec<UpdatedState<S>>>>;

@@ -509,7 +509,7 @@ impl ExportPathSecret {
 }
 
 /// Handshake parameter for exporting outside enclave
-#[derive(Clone, Debug, Encode, Decode)]
+#[derive(Clone, Debug, Encode, Decode, Hash)]
 pub struct ExportHandshake {
     prior_epoch: u32,
     roster_idx: u32,

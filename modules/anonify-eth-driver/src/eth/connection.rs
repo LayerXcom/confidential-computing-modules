@@ -48,7 +48,9 @@ impl Web3Contract {
         output: host_output::JoinGroup,
         method: &str,
     ) -> Result<H256> {
-        let ecall_output = output.ecall_output.unwrap();
+        let ecall_output = output
+            .ecall_output
+            .ok_or_else(|| HostError::EcallOutputNotSet)?;
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
         let handshake = ecall_output.handshake().to_vec();
@@ -72,7 +74,9 @@ impl Web3Contract {
     }
 
     pub async fn send_instruction(&self, output: host_output::Instruction) -> Result<H256> {
-        let ecall_output = output.ecall_output.unwrap();
+        let ecall_output = output
+            .ecall_output
+            .ok_or_else(|| HostError::EcallOutputNotSet)?;
         let ciphertext = ecall_output.encode_ciphertext();
         let enclave_sig = &ecall_output.encode_enclave_sig();
         let gas = output.gas;
@@ -89,7 +93,9 @@ impl Web3Contract {
     }
 
     pub async fn handshake(&self, output: host_output::Handshake) -> Result<H256> {
-        let ecall_output = output.ecall_output.unwrap();
+        let ecall_output = output
+            .ecall_output
+            .ok_or_else(|| HostError::EcallOutputNotSet)?;
         let handshake = ecall_output.encode_handshake();
         let enclave_sig = &ecall_output.encode_enclave_sig();
         let gas = output.gas;
@@ -189,7 +195,9 @@ impl Web3Http {
         let abi = fs::read(abi_path)?;
         let bin = fs::read_to_string(bin_path)?;
 
-        let ecall_output = output.ecall_output.unwrap();
+        let ecall_output = output
+            .ecall_output
+            .ok_or_else(|| HostError::EcallOutputNotSet)?;
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
         let handshake = ecall_output.handshake().to_vec();
