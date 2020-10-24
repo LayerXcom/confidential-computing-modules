@@ -41,6 +41,11 @@ impl Watcher for EventWatcher {
         Ok(EventWatcher { contract, cache })
     }
 
+    /// Fetch events of the specified topics on the blockchain.
+    /// This method is supposed to be called for polling.
+    /// If an error occurs in the process of updating the status due to the fetched events,
+    /// that events will be skipped. (No retry process)
+    /// If an error occurs on all TEE nodes due to an invalid event etc., skip processing is okay.
     async fn fetch_events<S: State>(
         &self,
         eid: sgx_enclave_id_t,
@@ -49,10 +54,9 @@ impl Watcher for EventWatcher {
             .contract
             .get_event(self.cache.clone(), self.contract.address())
             .await?
-            .into_enclave_log()?
-            // verification must be executed only before calling `insert_enclave`
-            .insert_enclave(eid)?
-            .save_cache(self.contract.address()); // cache must be saved only after calling `insert_enclave`.
+            .into_enclave_log()
+            .insert_enclave(eid)
+            .save_cache(self.contract.address());
 
         Ok(enclave_updated_state.updated_states())
     }
@@ -79,16 +83,16 @@ impl Web3Logs {
         }
     }
 
-    pub fn into_enclave_log(self) -> Result<EnclaveLog> {
+    fn into_enclave_log(self) -> EnclaveLog {
         let mut payloads: Vec<PayloadType> = vec![];
 
-        // If log data is not fetched currently, return empty EnclaveLog.
+        // If log data is not fetched, return empty EnclaveLog.
         // This is occurred when it fetched data of dupulicated block number.
         if self.logs.is_empty() {
-            return Ok(EnclaveLog {
+            return EnclaveLog {
                 inner: None,
                 cache: self.cache,
-            });
+            };
         }
 
         let contract_addr = self.logs[0].address;
@@ -97,16 +101,27 @@ impl Web3Logs {
         for (i, log) in self.logs.iter().enumerate() {
             debug!("Inserting enclave log: {:?}, \nindex: {:?}", log, i);
             if contract_addr != log.address {
-                return Err(
-                    anyhow!("Each log should have same contract address.: index: {}", i).into(),
-                );
+                error!("Each log should have same contract address.: index: {}", i);
+                continue;
             }
 
-            let data = decode_data(&log)?;
+            let data = match decode_data(&log) {
+                Ok(d) => d,
+                Err(e) => {
+                    error!("{}", e);
+                    continue;
+                }
+            };
 
             // Processing conditions by ciphertext or handshake event
             if log.topics[0] == self.events.ciphertext_signature() {
-                let res = Ciphertext::decode(&mut &data[..])?;
+                let res = match Ciphertext::decode(&mut &data[..]) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        error!("{}", e);
+                        continue;
+                    }
+                };
                 let payload = PayloadType::new(
                     res.roster_idx(),
                     res.epoch(),
@@ -115,7 +130,13 @@ impl Web3Logs {
                 );
                 payloads.push(payload);
             } else if log.topics[0] == self.events.handshake_signature() {
-                let res = ExportHandshake::decode(&mut &data[..])?;
+                let res = match ExportHandshake::decode(&mut &data[..]) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        error!("{}", e);
+                        continue;
+                    }
+                };
                 let payload = PayloadType::new(
                     res.roster_idx(),
                     res.prior_epoch(),
@@ -124,7 +145,8 @@ impl Web3Logs {
                 );
                 payloads.push(payload);
             } else {
-                return Err(anyhow!("Invalid topics").into());
+                error!("Invalid topics: {:?}", log.topics[0]);
+                continue;
             }
 
             // Update latest block number
@@ -148,7 +170,7 @@ impl Web3Logs {
             mut_cache.ensure_order_guarantee(payloads, immutable_payloads)
         };
 
-        Ok(EnclaveLog {
+        EnclaveLog {
             inner: Some(InnerEnclaveLog {
                 contract_addr: contract_addr.to_fixed_bytes(),
                 latest_blc_num,
@@ -156,49 +178,49 @@ impl Web3Logs {
                 logs: self.logs,
             }),
             cache: self.cache,
-        })
+        }
     }
 }
 
 /// A wrapper type of enclave logs.
 #[derive(Debug)]
-pub struct EnclaveLog {
+struct EnclaveLog {
     inner: Option<InnerEnclaveLog>,
     cache: Arc<RwLock<EventCache>>,
 }
 
 impl EnclaveLog {
     #[must_use]
-    pub fn verify_counter(self) -> Result<Self> {
+    fn verify_counter(self) -> Result<Self> {
         unimplemented!();
     }
 
     /// Store logs into enclave in-memory.
     /// This returns a latest block number specified by fetched logs.
-    pub fn insert_enclave<S: State>(self, eid: sgx_enclave_id_t) -> Result<EnclaveUpdatedState<S>> {
+    fn insert_enclave<S: State>(self, eid: sgx_enclave_id_t) -> EnclaveUpdatedState<S> {
         match self.inner {
             Some(log) => {
                 let next_blc_num = log.latest_blc_num + 1;
-                let updated_states = log.invoke_ecall(eid)?;
+                let updated_states = log.invoke_ecall(eid);
 
-                Ok(EnclaveUpdatedState {
+                EnclaveUpdatedState {
                     block_num: Some(next_blc_num),
                     updated_states,
                     cache: self.cache,
-                })
+                }
             }
-            None => Ok(EnclaveUpdatedState {
+            None => EnclaveUpdatedState {
                 block_num: None,
                 updated_states: None,
                 cache: self.cache,
-            }),
+            },
         }
     }
 }
 
 /// A log which is sent to enclave. Each log containes ciphertexts data of a given contract address and a given block number.
 #[derive(Debug, Clone)]
-pub struct InnerEnclaveLog {
+struct InnerEnclaveLog {
     contract_addr: [u8; 20],
     latest_blc_num: u64,
     payloads: Vec<PayloadType>,
@@ -206,13 +228,10 @@ pub struct InnerEnclaveLog {
 }
 
 impl InnerEnclaveLog {
-    pub fn invoke_ecall<S: State>(
-        self,
-        eid: sgx_enclave_id_t,
-    ) -> Result<Option<Vec<UpdatedState<S>>>> {
+    fn invoke_ecall<S: State>(self, eid: sgx_enclave_id_t) -> Option<Vec<UpdatedState<S>>> {
         if self.payloads.is_empty() {
             debug!("No logs to insert into the enclave.");
-            Ok(None)
+            None
         } else {
             let mut acc = vec![];
 
@@ -234,8 +253,13 @@ impl InnerEnclaveLog {
                             }) {
                             Ok(update) => {
                                 if let Some(upd_type) = update.updated_state {
-                                    let upd_trait = UpdatedState::<S>::from_state_type(upd_type)?;
-                                    acc.push(upd_trait);
+                                    match UpdatedState::<S>::from_state_type(upd_type) {
+                                        Ok(upd_trait) => acc.push(upd_trait),
+                                        Err(err) => {
+                                            error!("{:?}", err);
+                                            continue;
+                                        }
+                                    }
                                 }
                             }
                             // Even if an error occurs in Enclave, it is unlikely that retry process will succeed,
@@ -263,10 +287,16 @@ impl InnerEnclaveLog {
                                         }
                                     }) {
                                     Some(skipped_log) => {
-                                        warn!("A event is skipped because of occurring error in enclave: {:?}", skipped_log)
+                                        warn!(
+                                            "A event is skipped because of occurring error in enclave: {:?}",
+                                            skipped_log
+                                        )
                                     }
                                     None => {
-                                        error!("Not found the skipped event. The corresponding ciphertext is {:?}", ciphertext);
+                                        error!(
+                                            "Not found the skipped event. The corresponding ciphertext is {:?}",
+                                            ciphertext
+                                        );
                                     }
                                 }
 
@@ -290,9 +320,9 @@ impl InnerEnclaveLog {
             }
 
             if acc.is_empty() {
-                Ok(None)
+                None
             } else {
-                Ok(Some(acc))
+                Some(acc)
             }
         }
     }

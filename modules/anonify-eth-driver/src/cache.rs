@@ -14,6 +14,7 @@ const MAX_TRIALS_NUM: u32 = 10;
 // TODO: overhead clone
 // TODO: inner Arc<RwLock<()>>
 /// Cache data from events for arrival guarantee and order guarantee.
+/// Here is based on Fallback-Queueing pattern
 ///
 /// Do not implement `Clone` trait due to cache duplication.
 #[derive(Debug, Default)]
@@ -128,9 +129,11 @@ impl EventCache {
                 payloads_from_pool.sort();
 
                 if self.trials_counter.get(&roster_idx).unwrap_or_else(|| &0) > &MAX_TRIALS_NUM {
+                    let mut tmp = &payloads_from_pool[0];
                     for curr_payload in &payloads_from_pool[1..] {
-                        if payloads_from_pool[0].is_next(&curr_payload) {
+                        if tmp.is_next(&curr_payload) {
                             acc.push(curr_payload.clone());
+                            tmp = curr_payload;
                         } else {
                             break;
                         }
@@ -140,9 +143,11 @@ impl EventCache {
                         prior_payload
                     );
                 } else {
+                    let mut tmp = prior_payload;
                     for curr_payload in &*payloads_from_pool {
-                        if prior_payload.is_next(&curr_payload) {
+                        if tmp.is_next(&curr_payload) {
                             acc.push(curr_payload.clone());
+                            tmp = curr_payload;
                         } else {
                             break;
                         }
