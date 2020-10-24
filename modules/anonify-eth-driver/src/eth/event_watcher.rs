@@ -189,12 +189,7 @@ struct EnclaveLog {
     cache: Arc<RwLock<EventCache>>,
 }
 
-impl EnclaveLog {
-    #[must_use]
-    fn verify_counter(self) -> Result<Self> {
-        unimplemented!();
-    }
-
+impl EnclaveLog {    
     /// Store logs into enclave in-memory.
     /// This returns a latest block number specified by fetched logs.
     fn insert_enclave<S: State>(self, eid: sgx_enclave_id_t) -> EnclaveUpdatedState<S> {
