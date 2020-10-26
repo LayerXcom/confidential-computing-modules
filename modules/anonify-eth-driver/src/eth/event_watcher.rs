@@ -17,15 +17,14 @@ use frame_common::{
 };
 use frame_host::engine::HostEngine;
 use log::{debug, error, warn};
-use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{cmp::Ordering, path::Path, sync::Arc};
+use std::{cmp::Ordering, path::Path};
 use web3::types::{Address, Log};
 
 /// Components needed to watch events
 pub struct EventWatcher {
     contract: Web3Contract,
-    cache: Arc<RwLock<EventCache>>,
+    cache: EventCache,
 }
 
 #[async_trait]
@@ -33,7 +32,7 @@ impl Watcher for EventWatcher {
     fn new<P: AsRef<Path>>(
         node_url: &str,
         contract_info: ContractInfo<'_, P>,
-        cache: Arc<RwLock<EventCache>>,
+        cache: EventCache,
     ) -> Result<Self> {
         let web3_http = Web3Http::new(node_url)?;
         let contract = Web3Contract::new(web3_http, contract_info)?;
@@ -70,12 +69,12 @@ impl Watcher for EventWatcher {
 #[derive(Debug)]
 pub struct Web3Logs {
     logs: Vec<Log>,
-    cache: Arc<RwLock<EventCache>>,
+    cache: EventCache,
     events: EthEvent,
 }
 
 impl Web3Logs {
-    pub fn new(logs: Vec<Log>, cache: Arc<RwLock<EventCache>>, events: EthEvent) -> Self {
+    pub fn new(logs: Vec<Log>, cache: EventCache, events: EthEvent) -> Self {
         Web3Logs {
             logs,
             cache,
@@ -165,7 +164,7 @@ impl Web3Logs {
         // Order guarantee
         let immutable_payloads = payloads.clone();
         let payloads = {
-            let mut mut_cache = self.cache.write();
+            let mut mut_cache = self.cache.inner().write();
             mut_cache.increment_trials_counter(&immutable_payloads);
             mut_cache.ensure_order_guarantee(payloads, immutable_payloads)
         };
@@ -186,10 +185,10 @@ impl Web3Logs {
 #[derive(Debug)]
 struct EnclaveLog {
     inner: Option<InnerEnclaveLog>,
-    cache: Arc<RwLock<EventCache>>,
+    cache: EventCache,
 }
 
-impl EnclaveLog {    
+impl EnclaveLog {
     /// Store logs into enclave in-memory.
     /// This returns a latest block number specified by fetched logs.
     fn insert_enclave<S: State>(self, eid: sgx_enclave_id_t) -> EnclaveUpdatedState<S> {
@@ -334,7 +333,7 @@ impl InnerEnclaveLog {
 pub struct EnclaveUpdatedState<S: State> {
     block_num: Option<u64>,
     updated_states: Option<Vec<UpdatedState<S>>>,
-    cache: Arc<RwLock<EventCache>>,
+    cache: EventCache,
 }
 
 impl<S: State> EnclaveUpdatedState<S> {
@@ -343,7 +342,7 @@ impl<S: State> EnclaveUpdatedState<S> {
     pub fn save_cache(self, contract_addr: Address) -> Self {
         match &self.block_num {
             Some(block_num) => {
-                let mut w = self.cache.write();
+                let mut w = self.cache.inner().write();
                 w.insert_next_block_num(contract_addr, *block_num);
             }
             None => {}

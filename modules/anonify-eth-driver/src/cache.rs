@@ -1,6 +1,8 @@
 use crate::eth::event_watcher::PayloadType;
 use log::{info, warn};
+use parking_lot::RwLock;
 use std::collections::HashMap;
+use std::sync::Arc;
 use web3::types::Address as ContractAddr;
 
 type BlockNum = u64;
@@ -11,21 +13,29 @@ type Generation = u32;
 // TODO: Prevent malicious TEE fraudulently setting the number of trials to break consistency.
 const MAX_TRIALS_NUM: u32 = 10;
 
-// TODO: overhead clone
-// TODO: inner Arc<RwLock<()>>
 /// Cache data from events for arrival guarantee and order guarantee.
 /// Here is based on Fallback-Queueing pattern
-///
+#[derive(Debug, Default, Clone)]
+pub struct EventCache {
+    inner: Arc<RwLock<InnerEventCache>>,
+}
+
+impl EventCache {
+    pub fn inner(&self) -> &Arc<RwLock<InnerEventCache>> {
+        &self.inner
+    }
+}
+
 /// Do not implement `Clone` trait due to cache duplication.
 #[derive(Debug, Default)]
-pub struct EventCache {
+pub struct InnerEventCache {
     block_num_counter: HashMap<ContractAddr, BlockNum>,
     treekem_counter: HashMap<RosterIdx, (Epoch, Generation)>,
     trials_counter: HashMap<RosterIdx, u32>,
     payloads_pool: HashMap<RosterIdx, Vec<PayloadType>>,
 }
 
-impl EventCache {
+impl InnerEventCache {
     pub fn insert_next_block_num(
         &mut self,
         contract_addr: ContractAddr,
