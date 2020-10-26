@@ -38,8 +38,8 @@ RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --n
 echo "Unit testing..."
 cd ../../../scripts
 make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave
-cd ../tests/units/host
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
+cd ..
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test -p unit-tests-host -p anonify-eth-driver -- --nocapture
 
 cd ../../../
 cargo test -p frame-runtime

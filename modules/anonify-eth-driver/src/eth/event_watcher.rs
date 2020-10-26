@@ -365,7 +365,7 @@ pub struct PayloadType {
 }
 
 impl PayloadType {
-    fn new(roster_idx: u32, epoch: u32, generation: u32, payload: Payload) -> Self {
+    pub(crate) fn new(roster_idx: u32, epoch: u32, generation: u32, payload: Payload) -> Self {
         PayloadType {
             roster_idx,
             epoch,
@@ -436,9 +436,15 @@ impl Ord for PayloadType {
 }
 
 #[derive(Debug, Clone, Hash)]
-enum Payload {
+pub(crate) enum Payload {
     Ciphertext(Ciphertext),
     Handshake(ExportHandshake),
+}
+
+impl Default for Payload {
+    fn default() -> Self {
+        Payload::Ciphertext(Default::default())
+    }
 }
 
 /// A type of events from ethererum network.

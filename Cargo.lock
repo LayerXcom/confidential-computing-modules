@@ -1460,15 +1460,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "enclave"
-version = "0.1.0"
-dependencies = [
- "frame-treekem 0.1.0",
- "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
- "test-utils 0.1.0",
-]
-
-[[package]]
 name = "encode_unicode"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2151,16 +2142,6 @@ dependencies = [
  "digest 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "generic-array 0.8.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "hmac 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "host"
-version = "0.1.0"
-dependencies = [
- "cc 1.0.60 (registry+https://github.com/rust-lang/crates.io-index)",
- "dirs 2.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "frame-host 0.1.0",
- "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -4825,6 +4806,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "unicode-xid"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "unit-tests-enclave"
+version = "0.1.0"
+dependencies = [
+ "frame-treekem 0.1.0",
+ "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
+ "test-utils 0.1.0",
+]
+
+[[package]]
+name = "unit-tests-host"
+version = "0.1.0"
+dependencies = [
+ "cc 1.0.60 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dirs 2.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-host 0.1.0",
+ "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "untrusted"

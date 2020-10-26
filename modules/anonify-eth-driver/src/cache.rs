@@ -14,7 +14,7 @@ type Generation = u32;
 const MAX_TRIALS_NUM: u32 = 10;
 
 /// Cache data from events for arrival guarantee and order guarantee.
-/// Here is based on Fallback-Queueing pattern
+/// Unordered events are cached.
 #[derive(Debug, Default, Clone)]
 pub struct EventCache {
     inner: Arc<RwLock<InnerEventCache>>,
@@ -84,6 +84,13 @@ impl InnerEventCache {
                         curr_payload
                     );
                     self.insert_payloads_pool(curr_payload.clone());
+                    // Duplicated items are already removed.
+                    payloads.remove(
+                        payloads
+                            .iter()
+                            .position(|p| p == curr_payload)
+                            .expect("payloads must have curr_payload"),
+                    );
                 } else {
                     payloads.reserve(payloads_from_pool.len());
                     let mut v = payloads.split_off(index);
@@ -178,5 +185,48 @@ impl InnerEventCache {
     fn update_treekem_counter(&mut self, msg: &PayloadType) {
         self.treekem_counter
             .insert(msg.roster_idx(), (msg.epoch(), msg.generation()));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_fix_reorder_using_cache() {
+        let dummy_payloads1 = vec![
+            PayloadType::new(0, 0, 1, Default::default()),
+            PayloadType::new(0, 0, 2, Default::default()),
+            PayloadType::new(0, 0, 4, Default::default()),
+            PayloadType::new(0, 0, 5, Default::default()),
+        ];
+
+        let dummy_payloads2 = vec![
+            PayloadType::new(0, 0, 3, Default::default()),
+            PayloadType::new(0, 0, 6, Default::default()),
+            PayloadType::new(0, 0, 7, Default::default()),
+        ];
+
+        let mut cache = InnerEventCache::default();
+        let res1 = cache.ensure_order_guarantee(dummy_payloads1.clone(), dummy_payloads1);
+        assert_eq!(
+            res1,
+            vec![
+                PayloadType::new(0, 0, 1, Default::default()),
+                PayloadType::new(0, 0, 2, Default::default()),
+            ]
+        );
+
+        let res2 = cache.ensure_order_guarantee(dummy_payloads2.clone(), dummy_payloads2);
+        assert_eq!(
+            res2,
+            vec![
+                PayloadType::new(0, 0, 3, Default::default()),
+                PayloadType::new(0, 0, 4, Default::default()),
+                PayloadType::new(0, 0, 5, Default::default()),
+                PayloadType::new(0, 0, 6, Default::default()),
+                PayloadType::new(0, 0, 7, Default::default()),
+            ]
+        );
     }
 }
