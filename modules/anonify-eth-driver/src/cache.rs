@@ -85,18 +85,11 @@ impl InnerEventCache {
                         "Not found the next payload even in the cache, so cache the current payloads: {:?}",
                         curr_payload
                     );
-                    self.insert_payloads_pool(curr_payload.clone());
-                    // Duplicated items are already removed.
-                    payloads.remove(
-                        payloads
-                            .iter()
-                            .position(|p| p == curr_payload)
-                            .expect("payloads must have curr_payload"),
-                    );
+                    self.insert_payloads_pool(curr_payload.clone(), &mut payloads);
                 // The case compensatable payloads are found, so insert those to payloads buffer.
                 } else {
                     if !payloads_from_pool[payloads_from_pool.len() - 1].is_next(&curr_payload) {
-                        self.insert_payloads_pool(curr_payload.clone());
+                        self.insert_payloads_pool(curr_payload.clone(), &mut payloads);
                     }
                     self.update_treekem_counter(&curr_payload);
 
@@ -199,10 +192,18 @@ impl InnerEventCache {
         acc
     }
 
-    fn insert_payloads_pool(&mut self, payload: PayloadType) {
-        let payloads = self.payloads_pool.entry(payload.roster_idx()).or_default();
-        payloads.push(payload);
-        payloads.sort();
+    fn insert_payloads_pool(&mut self, payload: PayloadType, payloads: &mut Vec<PayloadType>) {
+        let payloads_from_pool = self.payloads_pool.entry(payload.roster_idx()).or_default();
+        payloads_from_pool.push(payload.clone());
+        payloads_from_pool.sort();
+
+        // Duplicated items are already removed.
+        payloads.remove(
+            payloads
+                .iter()
+                .position(|p| p == &payload)
+                .expect("payloads must have payload"),
+        );
     }
 
     fn update_treekem_counter(&mut self, msg: &PayloadType) {
