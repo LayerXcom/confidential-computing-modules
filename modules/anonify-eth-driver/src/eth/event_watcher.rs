@@ -374,6 +374,7 @@ impl PayloadType {
         }
     }
 
+    /// other is the next of self
     pub fn is_next(&self, other: &Self) -> bool {
         self.roster_idx == other.roster_idx
             && ((self.epoch == other.epoch && self.generation + 1 == other.generation) ||

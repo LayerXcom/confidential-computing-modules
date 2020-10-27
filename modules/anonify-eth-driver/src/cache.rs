@@ -1,7 +1,7 @@
 use crate::eth::event_watcher::PayloadType;
 use log::{info, warn};
 use parking_lot::RwLock;
-use std::collections::HashMap;
+use std::collections::hash_map::{Entry, HashMap};
 use std::sync::Arc;
 use web3::types::Address as ContractAddr;
 
@@ -73,11 +73,13 @@ impl InnerEventCache {
         immutable_payloads: Vec<PayloadType>,
     ) -> Vec<PayloadType> {
         for (index, curr_payload) in immutable_payloads.iter().enumerate() {
+            // The case current payload is the correct order
             if self.is_next_msg(&curr_payload) {
                 self.update_treekem_counter(&curr_payload);
             } else {
                 let payloads_from_pool = self.find_next_payloads(&curr_payload);
 
+                // The case compensatable payloads are not found, so cache those.
                 if payloads_from_pool.is_empty() {
                     warn!(
                         "Not found the next payload even in the cache, so cache the current payloads: {:?}",
@@ -91,7 +93,13 @@ impl InnerEventCache {
                             .position(|p| p == curr_payload)
                             .expect("payloads must have curr_payload"),
                     );
+                // The case compensatable payloads are found, so insert those to payloads buffer.
                 } else {
+                    if !payloads_from_pool[payloads_from_pool.len() - 1].is_next(&curr_payload) {
+                        self.insert_payloads_pool(curr_payload.clone());
+                    }
+                    self.update_treekem_counter(&curr_payload);
+
                     payloads.reserve(payloads_from_pool.len());
                     let mut v = payloads.split_off(index);
                     payloads.extend_from_slice(&payloads_from_pool);
@@ -130,6 +138,28 @@ impl InnerEventCache {
         }
     }
 
+    // TODO: not zero
+    // the length of payloads_from_pool is over 1
+    fn set_continuous_payloads(
+        mut acc: Vec<PayloadType>,
+        payloads_from_pool: &mut Vec<PayloadType>,
+    ) -> Vec<PayloadType> {
+        let mut tmp = &payloads_from_pool[0];
+        acc.push(tmp.clone());
+        for curr_payload in &payloads_from_pool[1..] {
+            if tmp.is_next(&curr_payload) {
+                acc.push(curr_payload.clone());
+                tmp = curr_payload;
+            } else {
+                break;
+            }
+        }
+        for _ in 0..acc.len() {
+            payloads_from_pool.remove(0);
+        }
+        acc
+    }
+
     /// Finds next payloads.
     /// If the maximum number of trials is over,
     /// skip the event and get a continuous vector from the smallest payload in the `payloads_pool`,
@@ -138,41 +168,33 @@ impl InnerEventCache {
         let roster_idx = prior_payload.roster_idx();
         let mut acc: Vec<PayloadType> = vec![];
 
-        match self.payloads_pool.get_mut(&roster_idx) {
-            Some(payloads_from_pool) => {
+        let is_next_msg = match self.payloads_pool.get(&roster_idx) {
+            Some(payloads) if !payloads.is_empty() => self.is_next_msg(&payloads[0]),
+            _ => false,
+        };
+
+        match self.payloads_pool.entry(roster_idx) {
+            Entry::Occupied(mut entry) => {
                 let traial_num = self.trials_counter.entry(roster_idx).or_default();
                 // reset the number of trials
                 *traial_num = 0;
-                payloads_from_pool.sort();
 
                 if self.trials_counter.get(&roster_idx).unwrap_or_else(|| &0) > &MAX_TRIALS_NUM {
-                    let mut tmp = &payloads_from_pool[0];
-                    for curr_payload in &payloads_from_pool[1..] {
-                        if tmp.is_next(&curr_payload) {
-                            acc.push(curr_payload.clone());
-                            tmp = curr_payload;
-                        } else {
-                            break;
-                        }
-                    }
+                    acc = Self::set_continuous_payloads(acc, entry.get_mut());
                     warn!(
                         "The maximum number of trials is over, so skipped the next event of {:?}",
                         prior_payload
                     );
                 } else {
-                    let mut tmp = prior_payload;
-                    for curr_payload in &*payloads_from_pool {
-                        if tmp.is_next(&curr_payload) {
-                            acc.push(curr_payload.clone());
-                            tmp = curr_payload;
-                        } else {
-                            break;
-                        }
+                    if is_next_msg {
+                        acc = Self::set_continuous_payloads(acc, entry.get_mut());
+                    } else {
+                        return acc;
                     }
                 }
             }
-            None => return acc,
-        };
+            Entry::Vacant(_) => return acc,
+        }
 
         acc
     }
@@ -180,6 +202,7 @@ impl InnerEventCache {
     fn insert_payloads_pool(&mut self, payload: PayloadType) {
         let payloads = self.payloads_pool.entry(payload.roster_idx()).or_default();
         payloads.push(payload);
+        payloads.sort();
     }
 
     fn update_treekem_counter(&mut self, msg: &PayloadType) {
