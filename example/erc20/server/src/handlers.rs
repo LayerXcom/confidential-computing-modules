@@ -137,7 +137,7 @@ where
 
     let tx_hash = server
         .dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             access_right,
             init_state,
             "construct",
@@ -173,7 +173,7 @@ where
 
     let tx_hash = server
         .dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             access_right,
             transfer_state,
             "transfer",
@@ -209,7 +209,7 @@ where
 
     let tx_hash = server
         .dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             access_right,
             approve_state,
             "approve",
@@ -245,7 +245,7 @@ where
 
     let tx_hash = server
         .dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             access_right,
             minting_state,
             "mint",
@@ -280,7 +280,7 @@ where
 
     let tx_hash = server
         .dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             access_right,
             burn_state,
             "burn",
@@ -321,7 +321,7 @@ where
 
     let tx_hash = server
         .dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             access_right,
             transferred_from_state,
             "transfer_from",

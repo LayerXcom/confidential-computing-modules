@@ -146,7 +146,7 @@ where
         Ok((tx_hash, export_path_secret))
     }
 
-    pub async fn send_instruction<ST, C, AP>(
+    pub async fn send_command<ST, C, AP>(
         &self,
         access_policy: AP,
         state: ST,
@@ -160,7 +160,7 @@ where
         AP: AccessPolicy,
     {
         let inner = self.inner.read();
-        let input = host_input::Instruction::<ST, C, AP>::new(
+        let input = host_input::Command::<ST, C, AP>::new(
             state,
             call_name.to_string(),
             access_policy,
@@ -168,10 +168,10 @@ where
             gas,
         );
         let eid = inner.deployer.get_enclave_id();
-        let host_output = InstructionWorkflow::exec(input, eid)?;
+        let host_output = CommandWorkflow::exec(input, eid)?;
 
         match &inner.sender {
-            Some(s) => s.send_instruction(host_output).await,
+            Some(s) => s.send_command(host_output).await,
             None => Err(HostError::AddressNotSet),
         }
     }

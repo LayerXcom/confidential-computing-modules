@@ -16,7 +16,7 @@ register_ecall!(
     MAX_MEM_SIZE,
     Runtime<EnclaveContext>,
     EnclaveContext,
-    (ENCRYPT_INSTRUCTION_CMD, MsgSender<Ed25519ChallengeResponse>),
+    (ENCRYPT_COMMAND_CMD, MsgSender<Ed25519ChallengeResponse>),
     // Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
     (INSERT_CIPHERTEXT_CMD, MsgReceiver),
     // Insert handshake received from blockchain nodes into enclave.

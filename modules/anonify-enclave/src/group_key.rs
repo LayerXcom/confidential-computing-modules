@@ -5,7 +5,6 @@ use frame_treekem::{
     handshake::{HandshakeParams, PathSecretSource},
     AppKeyChain, GroupState, Handshake,
 };
-use log::{debug, info};
 use std::vec::Vec;
 
 #[derive(Clone, Debug)]

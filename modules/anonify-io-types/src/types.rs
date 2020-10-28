@@ -11,17 +11,17 @@ pub mod input {
     use super::*;
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct Instruction<AP: AccessPolicy> {
+    pub struct Command<AP: AccessPolicy> {
         pub access_policy: AP,
         pub state: StateType,
         pub call_id: u32,
     }
 
-    impl<AP: AccessPolicy> EcallInput for Instruction<AP> {}
+    impl<AP: AccessPolicy> EcallInput for Command<AP> {}
 
-    impl<AP: AccessPolicy> Instruction<AP> {
+    impl<AP: AccessPolicy> Command<AP> {
         pub fn new(access_policy: AP, state: StateType, call_id: u32) -> Self {
-            Instruction {
+            Command {
                 access_policy,
                 state,
                 call_id,
@@ -124,14 +124,14 @@ pub mod output {
     use super::*;
 
     #[derive(Debug, Clone)]
-    pub struct Instruction {
+    pub struct Command {
         enclave_sig: secp256k1::Signature,
         ciphertext: Ciphertext,
     }
 
-    impl EcallOutput for Instruction {}
+    impl EcallOutput for Command {}
 
-    impl Encode for Instruction {
+    impl Encode for Command {
         fn encode(&self) -> Vec<u8> {
             let mut acc = vec![];
             acc.extend_from_slice(&self.encode_enclave_sig());
@@ -141,7 +141,7 @@ pub mod output {
         }
     }
 
-    impl Decode for Instruction {
+    impl Decode for Command {
         fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
             let mut enclave_sig_buf = [0u8; 64];
             value.read(&mut enclave_sig_buf)?;
@@ -155,16 +155,16 @@ pub mod output {
             let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
             let ciphertext = Ciphertext::decode(&mut &ciphertext_buf[..])?;
 
-            Ok(Instruction {
+            Ok(Command {
                 enclave_sig,
                 ciphertext,
             })
         }
     }
 
-    impl Instruction {
+    impl Command {
         pub fn new(ciphertext: Ciphertext, enclave_sig: secp256k1::Signature) -> Self {
-            Instruction {
+            Command {
                 enclave_sig,
                 ciphertext,
             }

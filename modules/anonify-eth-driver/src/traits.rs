@@ -44,8 +44,8 @@ pub trait Sender: Sized {
 
     async fn get_account(&self, index: usize, password: &str) -> Result<Address>;
 
-    /// Send an encrypted instruction of state transition to blockchain nodes.
-    async fn send_instruction(&self, host_output: host_output::Instruction) -> Result<H256>;
+    /// Send an encrypted command of state transition to blockchain nodes.
+    async fn send_command(&self, host_output: host_output::Command) -> Result<H256>;
 
     /// Attestation with deployed contract.
     async fn send_report_handshake(

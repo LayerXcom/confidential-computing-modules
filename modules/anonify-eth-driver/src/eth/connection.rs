@@ -72,7 +72,7 @@ impl Web3Contract {
             .map_err(Into::into)
     }
 
-    pub async fn send_instruction(&self, output: host_output::Instruction) -> Result<H256> {
+    pub async fn send_command(&self, output: host_output::Command) -> Result<H256> {
         let ecall_output = output
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
@@ -82,7 +82,7 @@ impl Web3Contract {
 
         self.contract
             .call(
-                "storeInstruction",
+                "storeCommand",
                 (ciphertext, enclave_sig.to_vec()),
                 output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),

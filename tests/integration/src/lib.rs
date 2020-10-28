@@ -65,7 +65,7 @@ async fn test_integration_eth_construct() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -134,7 +134,7 @@ async fn test_auto_notification() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -162,7 +162,7 @@ async fn test_auto_notification() {
     let recipient = other_access_policy.into_account_id();
     let transfer_state = transfer { amount, recipient };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             transfer_state,
             "transfer",
@@ -227,7 +227,7 @@ async fn test_integration_eth_transfer() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -257,7 +257,7 @@ async fn test_integration_eth_transfer() {
     let recipient = other_access_policy.into_account_id();
     let transfer_state = transfer { amount, recipient };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             transfer_state,
             "transfer",
@@ -335,7 +335,7 @@ async fn test_key_rotation() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -399,7 +399,7 @@ async fn test_integration_eth_approve() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -427,7 +427,7 @@ async fn test_integration_eth_approve() {
     let spender = other_access_policy.into_account_id();
     let approve_state = approve { amount, spender };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             approve_state,
             "approve",
@@ -496,7 +496,7 @@ async fn test_integration_eth_transfer_from() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -537,7 +537,7 @@ async fn test_integration_eth_transfer_from() {
     let spender = other_access_policy.into_account_id();
     let approve_state = approve { amount, spender };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             approve_state,
             "approve",
@@ -587,7 +587,7 @@ async fn test_integration_eth_transfer_from() {
         amount,
     };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             other_access_policy.clone(),
             transferred_from_state,
             "transfer_from",
@@ -669,7 +669,7 @@ async fn test_integration_eth_mint() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -689,7 +689,7 @@ async fn test_integration_eth_mint() {
     let recipient = other_access_policy.into_account_id();
     let minting_state = mint { amount, recipient };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             minting_state,
             "mint",
@@ -755,7 +755,7 @@ async fn test_integration_eth_burn() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -775,7 +775,7 @@ async fn test_integration_eth_burn() {
     let recipient = other_access_policy.into_account_id();
     let transfer_state = transfer { amount, recipient };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             transfer_state,
             "transfer",
@@ -793,7 +793,7 @@ async fn test_integration_eth_burn() {
     let amount = U64::from_raw(20);
     let burn_state = burn { amount };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             other_access_policy.clone(),
             burn_state,
             "burn",
