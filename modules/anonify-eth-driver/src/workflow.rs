@@ -279,6 +279,7 @@ pub mod host_input {
 pub mod host_output {
     use super::*;
 
+    #[derive(Debug)]
     pub struct Instruction {
         pub signer: Address,
         pub gas: u64,

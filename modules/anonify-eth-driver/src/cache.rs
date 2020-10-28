@@ -77,6 +77,8 @@ impl InnerEventCache {
             if self.is_next_msg(&curr_payload) {
                 self.update_treekem_counter(&curr_payload);
             } else {
+                warn!("Received a discontinuous message: {:?}", curr_payload);
+
                 let payloads_from_pool = self.find_next_payloads(&curr_payload);
 
                 // The case compensatable payloads are not found, so cache those.

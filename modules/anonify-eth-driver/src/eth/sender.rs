@@ -1,6 +1,7 @@
 use super::connection::{Web3Contract, Web3Http};
 use crate::{error::Result, traits::*, utils::*, workflow::*};
 use async_trait::async_trait;
+use log::debug;
 use sgx_types::sgx_enclave_id_t;
 use std::path::Path;
 use web3::types::{Address, H256};
@@ -46,12 +47,14 @@ impl Sender for EthSender {
         host_output: host_output::JoinGroup,
         method: &str,
     ) -> Result<H256> {
+        debug!("Sending a handshake to blockchain: {:?}", host_output);
         self.contract
             .send_report_handshake(host_output, method)
             .await
     }
 
     async fn send_instruction(&self, host_output: host_output::Instruction) -> Result<H256> {
+        debug!("Sending a command to blockchain: {:?}", host_output);
         self.contract.send_instruction(host_output).await
     }
 
