@@ -11,7 +11,7 @@ type Epoch = u32;
 type Generation = u32;
 
 // TODO: Prevent malicious TEE fraudulently setting the number of trials to break consistency.
-pub const MAX_TRIALS_NUM: u32 = 10;
+pub const MAX_TRIALS_NUM: u32 = 50;
 
 /// Cache data from events for arrival guarantee and order guarantee.
 /// Unordered events are cached.
@@ -117,6 +117,21 @@ impl InnerEventCache {
         payloads
     }
 
+    /// Increment the number of trials for each roster index
+    pub fn increment_multi_trials_counter(&mut self, payloads: &[PayloadType]) {
+        let mut roster_idx_list: Vec<RosterIdx> = payloads.iter().map(|p| p.roster_idx()).collect();
+        roster_idx_list.dedup();
+        for roster_idx in roster_idx_list {
+            let traial_num = self.trials_counter.entry(roster_idx).or_default();
+            *traial_num += 1;
+        }
+    }
+
+    fn increment_trials_counter(&mut self, payload: &PayloadType) {
+        let traial_num = self.trials_counter.entry(payload.roster_idx()).or_default();
+        *traial_num += 1;
+    }
+
     fn insert_chunks_at_index(
         mut payloads: Vec<PayloadType>,
         payloads_from_pool: &[PayloadType],
@@ -128,21 +143,6 @@ impl InnerEventCache {
         payloads.append(&mut v);
 
         payloads
-    }
-
-    fn increment_trials_counter(&mut self, payload: &PayloadType) {
-        let traial_num = self.trials_counter.entry(payload.roster_idx()).or_default();
-        *traial_num += 1;
-    }
-
-    /// Increment the number of trials for each roster index
-    pub fn increment_multi_trials_counter(&mut self, payloads: &[PayloadType]) {
-        let mut roster_idx_list: Vec<RosterIdx> = payloads.iter().map(|p| p.roster_idx()).collect();
-        roster_idx_list.dedup();
-        for roster_idx in roster_idx_list {
-            let traial_num = self.trials_counter.entry(roster_idx).or_default();
-            *traial_num += 1;
-        }
     }
 
     /// Whether the payload the next according to the treekem counter
