@@ -116,6 +116,7 @@ impl InnerEventCache {
         }
     }
 
+    /// Whether the payload the next according to the treekem counter
     fn is_next_msg(&self, msg: &PayloadType) -> bool {
         let roster_idx = msg.roster_idx();
         let (current_epoch, current_gen) = *self
@@ -133,25 +134,27 @@ impl InnerEventCache {
         }
     }
 
-    // TODO: not zero
-    // the length of payloads_from_pool is over 1
+    /// Set the continuous payloads from cache pool into payloads buffer
     fn set_continuous_payloads(
         mut acc: Vec<PayloadType>,
         payloads_from_pool: &mut Vec<PayloadType>,
     ) -> Vec<PayloadType> {
-        let mut tmp = &payloads_from_pool[0];
-        acc.push(tmp.clone());
-        for curr_payload in &payloads_from_pool[1..] {
-            if tmp.is_next(&curr_payload) {
-                acc.push(curr_payload.clone());
-                tmp = curr_payload;
-            } else {
-                break;
+        if !acc.is_empty() {
+            let mut tmp = &payloads_from_pool[0];
+            acc.push(tmp.clone());
+            for curr_payload in &payloads_from_pool[1..] {
+                if tmp.is_next(&curr_payload) {
+                    acc.push(curr_payload.clone());
+                    tmp = curr_payload;
+                } else {
+                    break;
+                }
+            }
+            for _ in 0..acc.len() {
+                payloads_from_pool.remove(0);
             }
         }
-        for _ in 0..acc.len() {
-            payloads_from_pool.remove(0);
-        }
+
         acc
     }
 
