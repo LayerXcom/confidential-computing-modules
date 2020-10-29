@@ -15,7 +15,6 @@ use std::{
     fmt::Debug,
     marker::Send,
     path::Path,
-    sync::Arc,
 };
 use web3::types::{Address, H256};
 
@@ -30,7 +29,7 @@ struct InnerDispatcher<D: Deployer, S: Sender, W: Watcher> {
     deployer: D,
     sender: Option<S>,
     watcher: Option<W>,
-    cache: Arc<RwLock<EventCache>>,
+    cache: EventCache,
 }
 
 impl<D, S, W> Dispatcher<D, S, W>
@@ -39,11 +38,7 @@ where
     S: Sender,
     W: Watcher,
 {
-    pub fn new(
-        enclave_id: sgx_enclave_id_t,
-        node_url: &str,
-        cache: Arc<RwLock<EventCache>>,
-    ) -> Result<Self> {
+    pub fn new(enclave_id: sgx_enclave_id_t, node_url: &str, cache: EventCache) -> Result<Self> {
         let deployer = D::new(enclave_id, node_url)?;
         let inner = RwLock::new(InnerDispatcher {
             deployer,
@@ -151,7 +146,7 @@ where
         Ok((tx_hash, export_path_secret))
     }
 
-    pub async fn send_instruction<ST, C, AP>(
+    pub async fn send_command<ST, C, AP>(
         &self,
         access_policy: AP,
         state: ST,
@@ -165,7 +160,7 @@ where
         AP: AccessPolicy,
     {
         let inner = self.inner.read();
-        let input = host_input::Instruction::<ST, C, AP>::new(
+        let input = host_input::Command::<ST, C, AP>::new(
             state,
             call_name.to_string(),
             access_policy,
@@ -173,10 +168,10 @@ where
             gas,
         );
         let eid = inner.deployer.get_enclave_id();
-        let host_output = InstructionWorkflow::exec(input, eid)?;
+        let host_output = CommandWorkflow::exec(input, eid)?;
 
         match &inner.sender {
-            Some(s) => s.send_instruction(host_output).await,
+            Some(s) => s.send_command(host_output).await,
             None => Err(HostError::AddressNotSet),
         }
     }

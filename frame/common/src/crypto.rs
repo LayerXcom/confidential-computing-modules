@@ -388,7 +388,7 @@ impl<T: IntoVec> IntoVec for &[T] {
 }
 
 /// Application message broadcasted to other members.
-#[derive(Clone, Debug, Encode, Decode, Eq, Ord, Hash)]
+#[derive(Clone, Debug, Encode, Decode, Eq, Ord, Hash, Default)]
 pub struct Ciphertext {
     generation: u32,
     epoch: u32,
@@ -509,7 +509,7 @@ impl ExportPathSecret {
 }
 
 /// Handshake parameter for exporting outside enclave
-#[derive(Clone, Debug, Encode, Decode, Hash)]
+#[derive(Clone, Debug, Encode, Decode, Hash, Default)]
 pub struct ExportHandshake {
     prior_epoch: u32,
     roster_idx: u32,

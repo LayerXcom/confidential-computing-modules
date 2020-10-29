@@ -1,5 +1,5 @@
 [package]
-name = "enclave"
+name = "unit-tests-enclave"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"

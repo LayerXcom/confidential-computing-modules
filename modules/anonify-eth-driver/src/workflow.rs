@@ -12,21 +12,21 @@ use web3::types::Address;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
 
-pub struct InstructionWorkflow<S: State, C: CallNameConverter, AP: AccessPolicy> {
+pub struct CommandWorkflow<S: State, C: CallNameConverter, AP: AccessPolicy> {
     s: PhantomData<S>,
     c: PhantomData<C>,
     ap: PhantomData<AP>,
 }
 
 impl<S: State, C: CallNameConverter, AP: AccessPolicy> HostEngine
-    for InstructionWorkflow<S, C, AP>
+    for CommandWorkflow<S, C, AP>
 {
-    type HI = host_input::Instruction<S, C, AP>;
-    type EI = input::Instruction<AP>;
-    type EO = output::Instruction;
-    type HO = host_output::Instruction;
+    type HI = host_input::Command<S, C, AP>;
+    type EI = input::Command<AP>;
+    type EO = output::Command;
+    type HO = host_output::Command;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = ENCRYPT_INSTRUCTION_CMD;
+    const CMD: u32 = ENCRYPT_COMMAND_CMD;
 }
 
 pub struct JoinGroupWorkflow;
@@ -102,7 +102,7 @@ impl HostEngine for InsertHandshakeWorkflow {
 pub mod host_input {
     use super::*;
 
-    pub struct Instruction<S: State, C: CallNameConverter, AP: AccessPolicy> {
+    pub struct Command<S: State, C: CallNameConverter, AP: AccessPolicy> {
         state: S,
         call_name: String,
         access_policy: AP,
@@ -111,7 +111,7 @@ pub mod host_input {
         phantom: PhantomData<C>,
     }
 
-    impl<S: State, C: CallNameConverter, AP: AccessPolicy> Instruction<S, C, AP> {
+    impl<S: State, C: CallNameConverter, AP: AccessPolicy> Command<S, C, AP> {
         pub fn new(
             state: S,
             call_name: String,
@@ -119,7 +119,7 @@ pub mod host_input {
             signer: Address,
             gas: u64,
         ) -> Self {
-            Instruction {
+            Command {
                 state,
                 call_name,
                 access_policy,
@@ -130,14 +130,14 @@ pub mod host_input {
         }
     }
 
-    impl<S: State, C: CallNameConverter, AP: AccessPolicy> HostInput for Instruction<S, C, AP> {
-        type EcallInput = input::Instruction<AP>;
-        type HostOutput = host_output::Instruction;
+    impl<S: State, C: CallNameConverter, AP: AccessPolicy> HostInput for Command<S, C, AP> {
+        type EcallInput = input::Command<AP>;
+        type HostOutput = host_output::Command;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             let state_info = StateInfo::<_, C>::new(self.state, &self.call_name);
             let ecall_input = state_info.crate_input(self.access_policy);
-            let host_output = host_output::Instruction::new(self.signer, self.gas);
+            let host_output = host_output::Command::new(self.signer, self.gas);
 
             Ok((ecall_input, host_output))
         }
@@ -279,14 +279,15 @@ pub mod host_input {
 pub mod host_output {
     use super::*;
 
-    pub struct Instruction {
+    #[derive(Debug)]
+    pub struct Command {
         pub signer: Address,
         pub gas: u64,
-        pub ecall_output: Option<output::Instruction>,
+        pub ecall_output: Option<output::Command>,
     }
 
-    impl HostOutput for Instruction {
-        type EcallOutput = output::Instruction;
+    impl HostOutput for Command {
+        type EcallOutput = output::Command;
 
         fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
             self.ecall_output = Some(output);
@@ -295,9 +296,9 @@ pub mod host_output {
         }
     }
 
-    impl Instruction {
+    impl Command {
         pub fn new(signer: Address, gas: u64) -> Self {
-            Instruction {
+            Command {
                 signer,
                 gas,
                 ecall_output: None,

@@ -7,8 +7,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use ethabi::{Topic, TopicFilter};
-use parking_lot::RwLock;
-use std::{fs, path::Path, sync::Arc};
+use std::{fs, path::Path};
 use web3::{
     contract::{Contract, Options},
     transports::Http,
@@ -73,7 +72,7 @@ impl Web3Contract {
             .map_err(Into::into)
     }
 
-    pub async fn send_instruction(&self, output: host_output::Instruction) -> Result<H256> {
+    pub async fn send_command(&self, output: host_output::Command) -> Result<H256> {
         let ecall_output = output
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
@@ -83,7 +82,7 @@ impl Web3Contract {
 
         self.contract
             .call(
-                "storeInstruction",
+                "storeCommand",
                 (ciphertext, enclave_sig.to_vec()),
                 output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
@@ -111,16 +110,16 @@ impl Web3Contract {
             .map_err(Into::into)
     }
 
-    pub async fn get_event(
-        &self,
-        cache: Arc<RwLock<EventCache>>,
-        key: Address,
-    ) -> Result<Web3Logs> {
+    pub async fn get_event(&self, cache: EventCache, key: Address) -> Result<Web3Logs> {
         let events = EthEvent::create_event();
         let ciphertext_sig = events.ciphertext_signature();
         let handshake_sig = events.handshake_signature();
         // Read latest block number from in-memory event cache.
-        let latest_fetched_num = cache.read().get_latest_block_num(key).unwrap_or_default();
+        let latest_fetched_num = cache
+            .inner()
+            .read()
+            .get_latest_block_num(key)
+            .unwrap_or_default();
 
         let filter = FilterBuilder::default()
             .address(vec![self.address])

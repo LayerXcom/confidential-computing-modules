@@ -8,7 +8,7 @@ pub const IAS_URL: &str = "https://api.trustedservices.intel.com/sgx/dev/attesta
 pub const TEST_SUB_KEY: &str = "77e2533de0624df28dc3be3a5b9e50d9";
 
 // commands
-pub const ENCRYPT_INSTRUCTION_CMD: u32 = 1;
+pub const ENCRYPT_COMMAND_CMD: u32 = 1;
 pub const INSERT_CIPHERTEXT_CMD: u32 = 2;
 pub const INSERT_HANDSHAKE_CMD: u32 = 3;
 pub const GET_STATE_CMD: u32 = 4;

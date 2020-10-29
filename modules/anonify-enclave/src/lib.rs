@@ -10,13 +10,13 @@ mod crypto;
 mod error;
 mod group_key;
 mod handshake;
-mod instructions;
+mod commands;
 mod kvs;
 mod notify;
 
 pub mod workflow {
     pub use crate::context::GetState;
     pub use crate::handshake::{HandshakeReceiver, HandshakeSender, JoinGroupSender};
-    pub use crate::instructions::{MsgReceiver, MsgSender};
+    pub use crate::commands::{MsgReceiver, MsgSender};
     pub use crate::notify::RegisterNotification;
 }

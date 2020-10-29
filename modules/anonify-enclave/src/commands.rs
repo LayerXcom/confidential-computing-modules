@@ -11,15 +11,15 @@ use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use std::{marker::PhantomData, vec::Vec};
 
-/// A message sender that encrypts instructions
+/// A message sender that encrypts commands
 #[derive(Debug, Clone)]
 pub struct MsgSender<AP: AccessPolicy> {
     phantom: PhantomData<AP>,
 }
 
 impl<AP: AccessPolicy> EnclaveEngine for MsgSender<AP> {
-    type EI = input::Instruction<AP>;
-    type EO = output::Instruction;
+    type EI = input::Command<AP>;
+    type EO = output::Command;
 
     fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
         ecall_input.access_policy().verify()
@@ -40,7 +40,7 @@ impl<AP: AccessPolicy> EnclaveEngine for MsgSender<AP> {
         group_key.sender_ratchet(roster_idx)?;
 
         let account_id = ecall_input.access_policy().into_account_id();
-        let ciphertext = Instructions::<R, C>::new(
+        let ciphertext = Commands::<R, C>::new(
             ecall_input.call_id,
             ecall_input.state.as_mut_bytes(),
             account_id,
@@ -49,15 +49,15 @@ impl<AP: AccessPolicy> EnclaveEngine for MsgSender<AP> {
 
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
-        let instruction_output = output::Instruction::new(ciphertext, enclave_sig);
+        let command_output = output::Command::new(ciphertext, enclave_sig);
 
         enclave_context.set_notification(account_id);
 
-        Ok(instruction_output)
+        Ok(command_output)
     }
 }
 
-/// A message receiver that decrypt instructions and make state transition
+/// A message receiver that decrypt commands and make state transition
 #[derive(Encode, Decode, Debug, Clone)]
 pub struct MsgReceiver;
 
@@ -91,7 +91,7 @@ impl EnclaveEngine for MsgReceiver {
         group_key.receiver_ratchet(roster_idx)?;
 
         // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
-        let iter_op = Instructions::<R, C>::state_transition(
+        let iter_op = Commands::<R, C>::state_transition(
             enclave_context.clone(),
             ecall_input.ciphertext(),
             group_key,
@@ -108,19 +108,19 @@ impl EnclaveEngine for MsgReceiver {
     }
 }
 
-/// Instruction data which make state update
+/// Command data which make state update
 #[derive(Debug, Clone, Encode, Decode)]
-pub struct Instructions<R: RuntimeExecutor<CTX>, CTX: ContextOps> {
+pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps> {
     my_account_id: AccountId,
     call_kind: R::C,
     phantom: PhantomData<CTX>,
 }
 
-impl<R: RuntimeExecutor<CTX, S = StateType>, CTX: ContextOps> Instructions<R, CTX> {
+impl<R: RuntimeExecutor<CTX, S = StateType>, CTX: ContextOps> Commands<R, CTX> {
     pub fn new(call_id: u32, params: &mut [u8], my_account_id: AccountId) -> Result<Self> {
         let call_kind = R::C::new(call_id, params)?;
 
-        Ok(Instructions {
+        Ok(Commands {
             my_account_id,
             call_kind,
             phantom: PhantomData,
@@ -149,8 +149,8 @@ impl<R: RuntimeExecutor<CTX, S = StateType>, CTX: ContextOps> Instructions<R, CT
         ciphertext: &Ciphertext,
         group_key: &mut GK,
     ) -> Result<Option<impl Iterator<Item = UpdatedState<StateType>> + Clone>> {
-        if let Some(instructions) = Instructions::<R, CTX>::decrypt(ciphertext, group_key)? {
-            let state_iter = instructions.stf_call(ctx)?.into_iter();
+        if let Some(commands) = Commands::<R, CTX>::decrypt(ciphertext, group_key)? {
+            let state_iter = commands.stf_call(ctx)?.into_iter();
 
             return Ok(Some(state_iter));
         }
@@ -160,7 +160,7 @@ impl<R: RuntimeExecutor<CTX, S = StateType>, CTX: ContextOps> Instructions<R, CT
 
     fn decrypt<GK: GroupKeyOps>(ciphertext: &Ciphertext, key: &mut GK) -> Result<Option<Self>> {
         match key.decrypt(ciphertext)? {
-            Some(plaintext) => Instructions::decode(&mut &plaintext[..])
+            Some(plaintext) => Commands::decode(&mut &plaintext[..])
                 .map(Some)
                 .map_err(Into::into),
             None => Ok(None),

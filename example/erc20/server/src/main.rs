@@ -2,7 +2,6 @@ use actix_web::{web, App, HttpServer};
 use anonify_eth_driver::{eth::*, traits::*, Dispatcher, EventCache};
 use frame_host::{EnclaveDir, StorePathSecrets};
 use handlers::*;
-use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{env, io, sync::Arc};
 
@@ -50,7 +49,7 @@ where
             .expect("Failed to parse SYNC_BC_TIME to u64");
 
         let store_path_secrets = StorePathSecrets::new();
-        let cache = Arc::new(RwLock::new(EventCache::default()));
+        let cache = EventCache::default();
         let dispatcher = Dispatcher::<D, S, W>::new(eid, &eth_url, cache).unwrap();
 
         Server {

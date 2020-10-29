@@ -54,11 +54,11 @@ impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
         C::as_id(self.call_name)
     }
 
-    pub fn crate_input<AP: AccessPolicy>(self, access_policy: AP) -> input::Instruction<AP> {
+    pub fn crate_input<AP: AccessPolicy>(self, access_policy: AP) -> input::Command<AP> {
         let call_id = self.call_name_to_id();
         let state = StateType::new(self.state.encode_s());
 
-        input::Instruction::new(access_policy, state, call_id)
+        input::Command::new(access_policy, state, call_id)
     }
 }
 

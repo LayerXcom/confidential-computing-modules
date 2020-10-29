@@ -10,9 +10,8 @@ use frame_common::{
 };
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
-use parking_lot::RwLock;
 use sgx_types::*;
-use std::{collections::BTreeMap, env, sync::Arc};
+use std::{collections::BTreeMap, env};
 
 const ETH_URL: &'static str = "http://172.28.0.2:8545";
 const ABI_PATH: &str = "../../contract-build/Anonify.abi";
@@ -33,7 +32,7 @@ async fn test_integration_eth_construct() {
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let cache = Arc::new(RwLock::new(EventCache::default()));
+    let cache = EventCache::default();
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
@@ -66,7 +65,7 @@ async fn test_integration_eth_construct() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -103,7 +102,7 @@ async fn test_auto_notification() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let cache = Arc::new(RwLock::new(EventCache::default()));
+    let cache = EventCache::default();
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
@@ -135,7 +134,7 @@ async fn test_auto_notification() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -163,7 +162,7 @@ async fn test_auto_notification() {
     let recipient = other_access_policy.into_account_id();
     let transfer_state = transfer { amount, recipient };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             transfer_state,
             "transfer",
@@ -196,7 +195,7 @@ async fn test_integration_eth_transfer() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let cache = Arc::new(RwLock::new(EventCache::default()));
+    let cache = EventCache::default();
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
@@ -228,7 +227,7 @@ async fn test_integration_eth_transfer() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -258,7 +257,7 @@ async fn test_integration_eth_transfer() {
     let recipient = other_access_policy.into_account_id();
     let transfer_state = transfer { amount, recipient };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             transfer_state,
             "transfer",
@@ -294,7 +293,7 @@ async fn test_key_rotation() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let cache = Arc::new(RwLock::new(EventCache::default()));
+    let cache = EventCache::default();
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
@@ -336,7 +335,7 @@ async fn test_key_rotation() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -368,7 +367,7 @@ async fn test_integration_eth_approve() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let cache = Arc::new(RwLock::new(EventCache::default()));
+    let cache = EventCache::default();
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
@@ -400,7 +399,7 @@ async fn test_integration_eth_approve() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -428,7 +427,7 @@ async fn test_integration_eth_approve() {
     let spender = other_access_policy.into_account_id();
     let approve_state = approve { amount, spender };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             approve_state,
             "approve",
@@ -465,7 +464,7 @@ async fn test_integration_eth_transfer_from() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let cache = Arc::new(RwLock::new(EventCache::default()));
+    let cache = EventCache::default();
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
@@ -497,7 +496,7 @@ async fn test_integration_eth_transfer_from() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -538,7 +537,7 @@ async fn test_integration_eth_transfer_from() {
     let spender = other_access_policy.into_account_id();
     let approve_state = approve { amount, spender };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             approve_state,
             "approve",
@@ -588,7 +587,7 @@ async fn test_integration_eth_transfer_from() {
         amount,
     };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             other_access_policy.clone(),
             transferred_from_state,
             "transfer_from",
@@ -638,7 +637,7 @@ async fn test_integration_eth_mint() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let cache = Arc::new(RwLock::new(EventCache::default()));
+    let cache = EventCache::default();
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
@@ -670,7 +669,7 @@ async fn test_integration_eth_mint() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -690,7 +689,7 @@ async fn test_integration_eth_mint() {
     let recipient = other_access_policy.into_account_id();
     let minting_state = mint { amount, recipient };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             minting_state,
             "mint",
@@ -724,7 +723,7 @@ async fn test_integration_eth_burn() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let cache = Arc::new(RwLock::new(EventCache::default()));
+    let cache = EventCache::default();
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
@@ -756,7 +755,7 @@ async fn test_integration_eth_burn() {
     let total_supply = U64::from_raw(100);
     let init_state = construct { total_supply };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             init_state,
             "construct",
@@ -776,7 +775,7 @@ async fn test_integration_eth_burn() {
     let recipient = other_access_policy.into_account_id();
     let transfer_state = transfer { amount, recipient };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             my_access_policy.clone(),
             transfer_state,
             "transfer",
@@ -794,7 +793,7 @@ async fn test_integration_eth_burn() {
     let amount = U64::from_raw(20);
     let burn_state = burn { amount };
     let receipt = dispatcher
-        .send_instruction::<_, CallName, _>(
+        .send_command::<_, CallName, _>(
             other_access_policy.clone(),
             burn_state,
             "burn",
