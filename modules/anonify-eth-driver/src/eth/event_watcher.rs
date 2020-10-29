@@ -1,6 +1,6 @@
 use super::connection::{Web3Contract, Web3Http};
 use crate::{
-    cache::EventCache,
+    cache::{EventCache, MAX_TRIALS_NUM},
     error::{HostError, Result},
     traits::*,
     utils::*,
@@ -165,8 +165,7 @@ impl Web3Logs {
         let immutable_payloads = payloads.clone();
         let payloads = {
             let mut mut_cache = self.cache.inner().write();
-            mut_cache.increment_trials_counter(&immutable_payloads);
-            mut_cache.ensure_order_guarantee(payloads, immutable_payloads)
+            mut_cache.ensure_order_guarantee(payloads, immutable_payloads, MAX_TRIALS_NUM)
         };
 
         EnclaveLog {

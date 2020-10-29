@@ -11,7 +11,7 @@ type Epoch = u32;
 type Generation = u32;
 
 // TODO: Prevent malicious TEE fraudulently setting the number of trials to break consistency.
-const MAX_TRIALS_NUM: u32 = 10;
+pub const MAX_TRIALS_NUM: u32 = 10;
 
 /// Cache data from events for arrival guarantee and order guarantee.
 /// Unordered events are cached.
@@ -71,15 +71,30 @@ impl InnerEventCache {
         &mut self,
         mut payloads: Vec<PayloadType>,
         immutable_payloads: Vec<PayloadType>,
+        max_trials_num: u32,
     ) -> Vec<PayloadType> {
         for (index, curr_payload) in immutable_payloads.iter().enumerate() {
+            self.increment_trials_counter(&curr_payload);
+
             // The case current payload is the correct order
             if self.is_next_msg(&curr_payload) {
                 self.update_treekem_counter(&curr_payload);
             } else {
                 warn!("Received a discontinuous message: {:?}", curr_payload);
 
-                let payloads_from_pool = self.find_next_payloads(&curr_payload);
+                let payloads_from_pool = self.find_next_payloads(&curr_payload, max_trials_num);
+
+                // if reset the number of trials, skip the event
+                if self
+                    .trials_counter
+                    .get(&curr_payload.roster_idx())
+                    .unwrap_or_else(|| &0)
+                    == &0
+                {
+                    self.update_treekem_counter(&curr_payload);
+                    payloads = Self::insert_chunks_at_index(payloads, &payloads_from_pool, index);
+                    return payloads;
+                }
 
                 // The case compensatable payloads are not found, so cache those.
                 if payloads_from_pool.is_empty() {
@@ -94,11 +109,7 @@ impl InnerEventCache {
                         self.insert_payloads_pool(curr_payload.clone(), &mut payloads);
                     }
                     self.update_treekem_counter(&curr_payload);
-
-                    payloads.reserve(payloads_from_pool.len());
-                    let mut v = payloads.split_off(index);
-                    payloads.extend_from_slice(&payloads_from_pool);
-                    payloads.append(&mut v);
+                    payloads = Self::insert_chunks_at_index(payloads, &payloads_from_pool, index);
                 }
             }
         }
@@ -106,8 +117,26 @@ impl InnerEventCache {
         payloads
     }
 
+    fn insert_chunks_at_index(
+        mut payloads: Vec<PayloadType>,
+        payloads_from_pool: &[PayloadType],
+        index: usize,
+    ) -> Vec<PayloadType> {
+        payloads.reserve(payloads_from_pool.len());
+        let mut v = payloads.split_off(index);
+        payloads.extend_from_slice(&payloads_from_pool);
+        payloads.append(&mut v);
+
+        payloads
+    }
+
+    fn increment_trials_counter(&mut self, payload: &PayloadType) {
+        let traial_num = self.trials_counter.entry(payload.roster_idx()).or_default();
+        *traial_num += 1;
+    }
+
     /// Increment the number of trials for each roster index
-    pub fn increment_trials_counter(&mut self, payloads: &[PayloadType]) {
+    pub fn increment_multi_trials_counter(&mut self, payloads: &[PayloadType]) {
         let mut roster_idx_list: Vec<RosterIdx> = payloads.iter().map(|p| p.roster_idx()).collect();
         roster_idx_list.dedup();
         for roster_idx in roster_idx_list {
@@ -139,7 +168,7 @@ impl InnerEventCache {
         mut acc: Vec<PayloadType>,
         payloads_from_pool: &mut Vec<PayloadType>,
     ) -> Vec<PayloadType> {
-        if !acc.is_empty() {
+        if !payloads_from_pool.is_empty() {
             let mut tmp = &payloads_from_pool[0];
             acc.push(tmp.clone());
             for curr_payload in &payloads_from_pool[1..] {
@@ -162,7 +191,11 @@ impl InnerEventCache {
     /// If the maximum number of trials is over,
     /// skip the event and get a continuous vector from the smallest payload in the `payloads_pool`,
     /// otherwise get continuous payloads from the `payloads_pool`.
-    fn find_next_payloads(&mut self, prior_payload: &PayloadType) -> Vec<PayloadType> {
+    fn find_next_payloads(
+        &mut self,
+        prior_payload: &PayloadType,
+        max_trials_num: u32,
+    ) -> Vec<PayloadType> {
         let roster_idx = prior_payload.roster_idx();
         let mut acc: Vec<PayloadType> = vec![];
 
@@ -173,19 +206,17 @@ impl InnerEventCache {
 
         match self.payloads_pool.entry(roster_idx) {
             Entry::Occupied(mut entry) => {
-                let traial_num = self.trials_counter.entry(roster_idx).or_default();
-                // reset the number of trials
-                *traial_num = 0;
-
-                if self.trials_counter.get(&roster_idx).unwrap_or_else(|| &0) > &MAX_TRIALS_NUM {
+                if self.trials_counter.get(&roster_idx).unwrap_or_else(|| &0) > &max_trials_num {
                     acc = Self::set_continuous_payloads(acc, entry.get_mut());
                     warn!(
                         "The maximum number of trials is over, so skipped the next event of {:?}",
                         prior_payload
                     );
+                    self.reset_trials_counter(roster_idx);
                 } else {
                     if is_next_msg {
                         acc = Self::set_continuous_payloads(acc, entry.get_mut());
+                        self.reset_trials_counter(roster_idx);
                     } else {
                         return acc;
                     }
@@ -195,6 +226,12 @@ impl InnerEventCache {
         }
 
         acc
+    }
+
+    // reset the number of trials
+    fn reset_trials_counter(&mut self, roster_idx: RosterIdx) {
+        let trials_num = self.trials_counter.entry(roster_idx).or_default();
+        *trials_num = 0;
     }
 
     fn insert_payloads_pool(&mut self, payload: PayloadType, payloads: &mut Vec<PayloadType>) {
@@ -222,6 +259,46 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_correct_order_diff_roster_idx() {
+        let dummy_payloads1 = vec![
+            PayloadType::new(0, 0, 1, Default::default()),
+            PayloadType::new(0, 0, 2, Default::default()),
+            PayloadType::new(1, 0, 1, Default::default()),
+            PayloadType::new(1, 0, 2, Default::default()),
+            PayloadType::new(1, 0, 3, Default::default()),
+        ];
+
+        let dummy_payloads2 = vec![
+            PayloadType::new(1, 0, 4, Default::default()),
+            PayloadType::new(2, 0, 1, Default::default()),
+        ];
+
+        let mut cache = InnerEventCache::default();
+        let res1 =
+            cache.ensure_order_guarantee(dummy_payloads1.clone(), dummy_payloads1, MAX_TRIALS_NUM);
+        assert_eq!(
+            res1,
+            vec![
+                PayloadType::new(0, 0, 1, Default::default()),
+                PayloadType::new(0, 0, 2, Default::default()),
+                PayloadType::new(1, 0, 1, Default::default()),
+                PayloadType::new(1, 0, 2, Default::default()),
+                PayloadType::new(1, 0, 3, Default::default()),
+            ]
+        );
+
+        let res2 =
+            cache.ensure_order_guarantee(dummy_payloads2.clone(), dummy_payloads2, MAX_TRIALS_NUM);
+        assert_eq!(
+            res2,
+            vec![
+                PayloadType::new(1, 0, 4, Default::default()),
+                PayloadType::new(2, 0, 1, Default::default()),
+            ]
+        );
+    }
+
+    #[test]
     fn test_fix_reorder_using_cache() {
         let dummy_payloads1 = vec![
             PayloadType::new(0, 0, 1, Default::default()),
@@ -237,7 +314,8 @@ mod tests {
         ];
 
         let mut cache = InnerEventCache::default();
-        let res1 = cache.ensure_order_guarantee(dummy_payloads1.clone(), dummy_payloads1);
+        let res1 =
+            cache.ensure_order_guarantee(dummy_payloads1.clone(), dummy_payloads1, MAX_TRIALS_NUM);
         assert_eq!(
             res1,
             vec![
@@ -246,13 +324,92 @@ mod tests {
             ]
         );
 
-        let res2 = cache.ensure_order_guarantee(dummy_payloads2.clone(), dummy_payloads2);
+        let res2 =
+            cache.ensure_order_guarantee(dummy_payloads2.clone(), dummy_payloads2, MAX_TRIALS_NUM);
         assert_eq!(
             res2,
             vec![
                 PayloadType::new(0, 0, 3, Default::default()),
                 PayloadType::new(0, 0, 4, Default::default()),
                 PayloadType::new(0, 0, 5, Default::default()),
+                PayloadType::new(0, 0, 6, Default::default()),
+                PayloadType::new(0, 0, 7, Default::default()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_fix_order_handshake() {
+        let dummy_payloads1 = vec![
+            PayloadType::new(0, 0, 1, Default::default()),
+            PayloadType::new(0, 0, 2, Default::default()),
+            PayloadType::new(0, 1, 1, Default::default()),
+            PayloadType::new(0, 0, u32::MAX, Default::default()),
+        ];
+
+        let dummy_payloads2 = vec![
+            PayloadType::new(0, 1, 2, Default::default()),
+            PayloadType::new(0, 1, 3, Default::default()),
+            PayloadType::new(0, 1, 4, Default::default()),
+        ];
+
+        let mut cache = InnerEventCache::default();
+        let res1 =
+            cache.ensure_order_guarantee(dummy_payloads1.clone(), dummy_payloads1, MAX_TRIALS_NUM);
+        assert_eq!(
+            res1,
+            vec![
+                PayloadType::new(0, 0, 1, Default::default()),
+                PayloadType::new(0, 0, 2, Default::default()),
+                PayloadType::new(0, 1, 1, Default::default()),
+                PayloadType::new(0, 0, u32::MAX, Default::default()),
+            ]
+        );
+
+        let res2 =
+            cache.ensure_order_guarantee(dummy_payloads2.clone(), dummy_payloads2, MAX_TRIALS_NUM);
+        assert_eq!(
+            res2,
+            vec![
+                PayloadType::new(0, 1, 2, Default::default()),
+                PayloadType::new(0, 1, 3, Default::default()),
+                PayloadType::new(0, 1, 4, Default::default()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_over_max_trials_num() {
+        let dummy_payloads1 = vec![
+            PayloadType::new(0, 0, 1, Default::default()),
+            PayloadType::new(0, 0, 2, Default::default()),
+            PayloadType::new(0, 0, 4, Default::default()),
+            PayloadType::new(0, 0, 5, Default::default()),
+        ];
+
+        let dummy_payloads2 = vec![
+            PayloadType::new(0, 0, 3, Default::default()),
+            PayloadType::new(0, 0, 6, Default::default()),
+            PayloadType::new(0, 0, 7, Default::default()),
+        ];
+
+        let mut cache = InnerEventCache::default();
+        let res1 = cache.ensure_order_guarantee(dummy_payloads1.clone(), dummy_payloads1, 0);
+        assert_eq!(
+            res1,
+            vec![
+                PayloadType::new(0, 0, 1, Default::default()),
+                PayloadType::new(0, 0, 2, Default::default()),
+                PayloadType::new(0, 0, 5, Default::default()),
+                PayloadType::new(0, 0, 4, Default::default()),
+            ]
+        );
+
+        let res2 = cache.ensure_order_guarantee(dummy_payloads2.clone(), dummy_payloads2, 0);
+        assert_eq!(
+            res2,
+            vec![
+                PayloadType::new(0, 0, 3, Default::default()),
                 PayloadType::new(0, 0, 6, Default::default()),
                 PayloadType::new(0, 0, 7, Default::default()),
             ]
