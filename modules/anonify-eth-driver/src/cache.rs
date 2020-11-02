@@ -222,7 +222,10 @@ impl InnerEventCache {
                     }
                 }
             }
-            Entry::Vacant(_) => return acc,
+            Entry::Vacant(_) => {
+                self.reset_trials_counter(roster_idx);
+                return acc;
+            },
         }
 
         acc
@@ -400,8 +403,8 @@ mod tests {
             vec![
                 PayloadType::new(0, 0, 1, Default::default()),
                 PayloadType::new(0, 0, 2, Default::default()),
-                PayloadType::new(0, 0, 5, Default::default()),
                 PayloadType::new(0, 0, 4, Default::default()),
+                PayloadType::new(0, 0, 5, Default::default()),
             ]
         );
 
