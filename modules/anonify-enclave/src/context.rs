@@ -89,12 +89,16 @@ impl NotificationOps for EnclaveContext {
     }
 }
 
-impl Signer for EnclaveContext {
+impl IdentityKeyOps for EnclaveContext {
     /// Generate a signature using enclave's identity key.
     /// This signature is used to verify enclave's program dependencies and
     /// should be verified in the public available place such as smart contract on blockchain.
     fn sign(&self, msg: &[u8]) -> anyhow::Result<secp256k1::Signature> {
         self.identity_key.sign(msg).map_err(Into::into)
+    }
+
+    fn decrypt(&self, ciphertext: Vec<u8>) -> anyhow::Result<Vec<u8>> {
+        self.identity_key.decrypt(ciphertext).map_err(Into::into)
     }
 }
 

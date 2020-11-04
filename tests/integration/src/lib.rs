@@ -24,6 +24,8 @@ lazy_static! {
     pub static ref ENV_LOGGER_INIT: () = env_logger::init();
 }
 
+fn get_encrypting_key(contract_addr: &str) {}
+
 #[actix_rt::test]
 async fn test_integration_eth_construct() {
     set_env_vars();

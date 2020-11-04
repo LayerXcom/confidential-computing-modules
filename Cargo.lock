@@ -2369,8 +2369,10 @@ dependencies = [
  "frame-common 0.1.0",
  "frame-host 0.1.0",
  "frame-runtime 0.1.0",
+ "frame-treekem 0.1.0",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "web3 0.13.0 (git+https://github.com/tomusdrw/rust-web3?rev=d7393708e257f7ef4ad354917889a8001cf2927c)",
 ]
 
 [[package]]

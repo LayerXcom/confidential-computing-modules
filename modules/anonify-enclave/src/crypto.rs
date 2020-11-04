@@ -45,7 +45,7 @@ impl EnclaveIdentityKey {
         Ok(sig.0)
     }
 
-    pub fn decrypt(self, ciphertext: Vec<u8>) -> Result<Vec<u8>> {
+    pub fn decrypt(&self, ciphertext: Vec<u8>) -> Result<Vec<u8>> {
         EciesCiphertext::new(self.encrypting_key(), ciphertext)
             .decrypt(&self.decrypting_privkey)
             .map_err(Into::into)

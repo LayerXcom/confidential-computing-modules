@@ -36,7 +36,7 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     ) -> Result<Vec<UpdatedState<Self::S>>>;
 }
 
-pub trait ContextOps: StateOps + GroupKeyGetter + NotificationOps + Signer + QuoteGetter {
+pub trait ContextOps: StateOps + GroupKeyGetter + NotificationOps + IdentityKeyOps + QuoteGetter {
     fn mrenclave_ver(&self) -> usize;
 }
 
@@ -71,8 +71,10 @@ pub trait NotificationOps {
     fn is_notified(&self, account_id: &AccountId) -> bool;
 }
 
-pub trait Signer {
+pub trait IdentityKeyOps {
     fn sign(&self, msg: &[u8]) -> Result<secp256k1::Signature>;
+
+    fn decrypt(&self, ciphertext: Vec<u8>) -> Result<Vec<u8>>;
 }
 
 pub trait GroupKeyOps: Sized {
