@@ -3,7 +3,7 @@ use super::{
     hkdf,
     hmac::HmacKey,
 };
-use crate::local_anyhow::Result;
+use crate::local_anyhow::{anyhow, Result};
 use crate::local_ring::aead::{
     Aad, BoundKey, Nonce, NonceSequence, OpeningKey, SealingKey, UnboundKey, AES_256_GCM,
 };
@@ -31,7 +31,9 @@ impl EciesCiphertext {
         let aes_key = encapsulate(&my_ephemeral_secret, &others_pub_key)?;
         let (ub_key, nonce_seq) = derive_ecies_key_nonce(&aes_key)?;
         let mut sealing_key = SealingKey::new(ub_key, nonce_seq);
-        sealing_key.seal_in_place_append_tag(Aad::empty(), &mut plaintext)?;
+        sealing_key
+            .seal_in_place_append_tag(Aad::empty(), &mut plaintext)
+            .map_err(|e| anyhow!("{:?}", e))?;
 
         let ciphertext = plaintext;
 
@@ -47,7 +49,9 @@ impl EciesCiphertext {
         let mut opening_key = OpeningKey::new(ub_key, nonce_seq);
 
         let mut ciphertext = self.ciphertext;
-        let plaintext = opening_key.open_in_place(Aad::empty(), &mut ciphertext)?;
+        let plaintext = opening_key
+            .open_in_place(Aad::empty(), &mut ciphertext)
+            .map_err(|e| anyhow!("{:?}", e))?;
 
         Ok(plaintext.to_vec())
     }
@@ -79,7 +83,7 @@ fn derive_ecies_key_nonce(shared_secret_bytes: &[u8]) -> Result<(UnboundKey, One
     hkdf::expand(&prk, &key_label, &mut key_buf[..], hkdf::Aes256GcmKey)?;
     hkdf::expand(&prk, &nonce_label, &mut nonce_buf[..], hkdf::Aes256GcmNonce)?;
 
-    let ub_key = UnboundKey::new(&AES_256_GCM, &key_buf)?;
+    let ub_key = UnboundKey::new(&AES_256_GCM, &key_buf).map_err(|e| anyhow!("{:?}", e))?;
     let nonce = Nonce::assume_unique_for_key(nonce_buf);
     let nonce_seq = OneNonceSequence::new(nonce);
 
@@ -107,6 +111,7 @@ impl NonceSequence for OneNonceSequence {
     }
 }
 
+#[cfg(feature = "sgx")]
 #[cfg(debug_assertions)]
 pub(crate) mod tests {
     use super::*;

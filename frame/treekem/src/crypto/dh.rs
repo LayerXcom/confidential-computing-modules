@@ -6,7 +6,7 @@ use crate::local_secp256k1::{
 };
 use crate::localstd::vec::Vec;
 use codec::{Decode, Encode, Error, Input};
-use frame_common::crypto::sgx_rand_assign;
+use frame_common::crypto::rand_assign;
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct DhPrivateKey(SecretKey);
@@ -39,7 +39,7 @@ impl DhPrivateKey {
     pub fn from_random() -> Result<Self> {
         let secret = loop {
             let mut ret = [0u8; SECRET_KEY_SIZE];
-            sgx_rand_assign(&mut ret)?;
+            rand_assign(&mut ret)?;
 
             if let Ok(key) = SecretKey::parse(&ret) {
                 break key;

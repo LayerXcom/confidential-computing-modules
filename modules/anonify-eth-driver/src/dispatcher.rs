@@ -219,6 +219,10 @@ where
             .await
     }
 
+    pub async fn get_encrypting_key(&self) {
+        // self.inner.read().sender.get_encrypting_key()
+    }
+
     pub fn register_notification<AP>(&self, access_policy: AP) -> Result<()>
     where
         AP: AccessPolicy,

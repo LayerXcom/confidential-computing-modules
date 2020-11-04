@@ -1,6 +1,7 @@
 use super::connection::{Web3Contract, Web3Http};
 use crate::{error::Result, traits::*, utils::*, workflow::*};
 use async_trait::async_trait;
+use frame_treekem::DhPubKey;
 use log::debug;
 use sgx_types::sgx_enclave_id_t;
 use std::path::Path;
@@ -64,5 +65,9 @@ impl Sender for EthSender {
 
     fn get_contract(self) -> ContractKind {
         ContractKind::Web3Contract(self.contract)
+    }
+
+    async fn get_encrypting_key(&self, encrypting_key: DhPubKey) -> Result<Vec<u8>> {
+        self.contract.get_encrypting_key(encrypting_key).await
     }
 }

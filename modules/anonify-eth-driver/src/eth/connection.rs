@@ -7,6 +7,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use ethabi::{Topic, TopicFilter};
+use frame_treekem::DhPubKey;
 use std::{fs, path::Path};
 use web3::{
     contract::{Contract, Options},
@@ -14,6 +15,7 @@ use web3::{
     types::{Address, BlockNumber, Filter, FilterBuilder, Log, H256},
     Web3,
 };
+use codec::Encode;
 
 const UNLOCK_DURATION: u16 = 60;
 const EVENT_LIMIT: usize = 100;
@@ -141,6 +143,19 @@ impl Web3Contract {
 
     pub async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
         self.web3_conn.get_account(index, password).await
+    }
+
+    pub async fn get_encrypting_key(&self, encrypting_key: DhPubKey) -> Result<Vec<u8>> {
+        unimplemented!();
+        // self.contract
+        //     .query(
+        //         "getEncryptingKey",
+        //         (encrypting_key.encode()),
+        //         None,
+        //         Options::default(),
+        //         None,
+        //     )
+        //     .await
     }
 
     pub fn address(&self) -> Address {

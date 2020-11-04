@@ -7,6 +7,7 @@ use frame_common::{state_types::UpdatedState, traits::*};
 use sgx_types::sgx_enclave_id_t;
 use std::{marker::Send, path::Path};
 use web3::types::{Address, H256};
+use frame_treekem::DhPubKey;
 
 /// A trait for deploying contracts
 #[async_trait]
@@ -57,6 +58,8 @@ pub trait Sender: Sized {
     async fn handshake(&self, host_output: host_output::Handshake) -> Result<H256>;
 
     fn get_contract(self) -> ContractKind;
+
+    async fn get_encrypting_key(&self, encrypting_key: DhPubKey) -> Result<Vec<u8>>;
 }
 
 /// A trait of fetching event from blockchian nodes

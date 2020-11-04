@@ -4,7 +4,7 @@ use super::{
     hmac::HmacKey,
     SHA256_OUTPUT_LEN,
 };
-use crate::local_anyhow::Result;
+use crate::local_anyhow::{anyhow, Result};
 use crate::local_ring::{self, hkdf::KeyType};
 use crate::localstd;
 use codec::Encode;
@@ -58,9 +58,10 @@ pub fn expand<E: Encode, L: KeyType>(
     let encoded_info = info.encode();
 
     local_ring::hkdf::Prk::new_less_safe(local_ring::hkdf::HKDF_SHA256, &salt.as_bytes())
-        .expand(&[&encoded_info], key_type)?
+        .expand(&[&encoded_info], key_type)
+        .map_err(|e| anyhow!("{:?}", e))?
         .fill(out_buf)
-        .map_err(Into::into)
+        .map_err(|e| anyhow!("{:?}", e))
 }
 
 /// Derive-Secret(Secret, Label, Context) =

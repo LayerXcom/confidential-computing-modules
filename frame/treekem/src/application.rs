@@ -173,6 +173,7 @@ pub(crate) mod tests {
     use super::*;
     use crate::handshake::{PathSecretKVS, PathSecretSource};
     use crate::test_funcs;
+    #[cfg(feature = "sgx")]
     use test_utils::*;
 
     pub(crate) fn run_tests() -> bool {

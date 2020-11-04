@@ -2,7 +2,7 @@
 
 use crate::error::Result;
 use codec::Encode;
-use frame_common::{crypto::sgx_rand_assign, traits::Keccak256};
+use frame_common::{crypto::rand_assign, traits::Keccak256};
 use frame_treekem::{DhPrivateKey, DhPubKey, EciesCiphertext};
 use secp256k1::{self, util::SECRET_KEY_SIZE, Message, PublicKey, SecretKey, Signature};
 use sgx_types::sgx_report_data_t;
@@ -24,7 +24,7 @@ impl EnclaveIdentityKey {
     pub fn new() -> Result<Self> {
         let signing_privkey = loop {
             let mut ret = [0u8; SECRET_KEY_SIZE];
-            sgx_rand_assign(&mut ret)?;
+            rand_assign(&mut ret)?;
 
             if let Ok(key) = SecretKey::parse(&ret) {
                 break key;
