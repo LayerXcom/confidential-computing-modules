@@ -8,7 +8,7 @@ edition = "2018"
 frame-types = { path = "../../frame/types" }
 frame-enclave = { path = "../../frame/enclave" }
 frame-runtime = { path = "../../frame/runtime", default-features = false, features = ["sgx"] }
-frame-treekem = { path = "../../frame/treekem" }
+frame-treekem = { path = "../../frame/treekem", default-features = false, features = ["sgx"] }
 frame-common = { path = "../../frame/common", default-features = false, features = ["sgx"] }
 anonify-io-types = { path = "../anonify-io-types", default-features = false, features = ["sgx"] }
 remote-attestation = { path = "../../frame/remote-attestation" }

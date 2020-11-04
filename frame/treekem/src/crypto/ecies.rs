@@ -3,12 +3,12 @@ use super::{
     hkdf,
     hmac::HmacKey,
 };
-use anyhow::Result;
-use codec::{Decode, Encode};
-use ring::aead::{
+use crate::local_anyhow::Result;
+use crate::local_ring::aead::{
     Aad, BoundKey, Nonce, NonceSequence, OpeningKey, SealingKey, UnboundKey, AES_256_GCM,
 };
-use std::prelude::v1::*;
+use crate::localstd::vec::Vec;
+use codec::{Decode, Encode};
 
 #[derive(Debug, Clone, Encode, Decode)]
 pub struct EciesCiphertext {
@@ -17,6 +17,13 @@ pub struct EciesCiphertext {
 }
 
 impl EciesCiphertext {
+    pub fn new(ephemeral_public_key: DhPubKey, ciphertext: Vec<u8>) -> Self {
+        EciesCiphertext {
+            ephemeral_public_key,
+            ciphertext,
+        }
+    }
+
     pub fn encrypt(others_pub_key: &DhPubKey, mut plaintext: Vec<u8>) -> Result<Self> {
         let my_ephemeral_secret = DhPrivateKey::from_random()?;
         let my_ephemeral_pub_key = DhPubKey::from_private_key(&my_ephemeral_secret);
@@ -93,14 +100,17 @@ impl OneNonceSequence {
 }
 
 impl NonceSequence for OneNonceSequence {
-    fn advance(&mut self) -> std::result::Result<Nonce, ring::error::Unspecified> {
-        self.0.take().ok_or(ring::error::Unspecified)
+    fn advance(
+        &mut self,
+    ) -> crate::localstd::result::Result<Nonce, crate::local_ring::error::Unspecified> {
+        self.0.take().ok_or(crate::local_ring::error::Unspecified)
     }
 }
 
 #[cfg(debug_assertions)]
 pub(crate) mod tests {
     use super::*;
+    use crate::localstd::string::String;
     use test_utils::*;
 
     pub(crate) fn run_tests() -> bool {

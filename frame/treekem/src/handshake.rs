@@ -2,14 +2,16 @@ use crate::application::AppKeyChain;
 use crate::crypto::{
     dh::DhPubKey, ecies::EciesCiphertext, hash::hash_encodable, secrets::PathSecret, CryptoRng,
 };
-use anyhow::{anyhow, Result};
+use crate::local_anyhow::{anyhow, Result};
+use crate::local_ring::digest::Digest;
+use crate::localstd::{
+    collections::HashMap,
+    string::String,
+    sync::{Arc, SgxRwLock},
+    vec::Vec,
+};
 use codec::{Decode, Encode};
 use frame_common::crypto::{ExportHandshake, ExportPathSecret};
-use ring::digest::Digest;
-use std::collections::HashMap;
-use std::string::String;
-use std::sync::{Arc, SgxRwLock};
-use std::vec::Vec;
 
 /// A handshake operates sharing a group key to each member.
 pub trait Handshake: Sized {

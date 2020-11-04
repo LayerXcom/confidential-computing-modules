@@ -4,9 +4,10 @@ use super::{
     hmac::HmacKey,
     SHA256_OUTPUT_LEN,
 };
-use anyhow::Result;
+use crate::local_anyhow::Result;
+use crate::local_ring::{self, hkdf::KeyType};
+use crate::localstd;
 use codec::Encode;
-use ring::hkdf::KeyType;
 
 const ANONIFY_PREFIX: &[u8] = b"anonify";
 
@@ -31,7 +32,7 @@ pub fn expand_label(
     out_buf: &mut [u8],
 ) -> Result<()> {
     assert!(label_info.len() <= 255 - ANONIFY_PREFIX.len());
-    assert!(out_buf.len() <= std::u16::MAX as usize);
+    assert!(out_buf.len() <= localstd::u16::MAX as usize);
 
     let mut full_label_info = [0u8; 255];
     full_label_info[0..ANONIFY_PREFIX.len()].copy_from_slice(ANONIFY_PREFIX);
@@ -45,7 +46,7 @@ pub fn expand_label(
         context,
     };
 
-    expand(secret, &label, out_buf, ring::hkdf::HKDF_SHA256)
+    expand(secret, &label, out_buf, local_ring::hkdf::HKDF_SHA256)
 }
 
 pub fn expand<E: Encode, L: KeyType>(
@@ -56,7 +57,7 @@ pub fn expand<E: Encode, L: KeyType>(
 ) -> Result<()> {
     let encoded_info = info.encode();
 
-    ring::hkdf::Prk::new_less_safe(ring::hkdf::HKDF_SHA256, &salt.as_bytes())
+    local_ring::hkdf::Prk::new_less_safe(local_ring::hkdf::HKDF_SHA256, &salt.as_bytes())
         .expand(&[&encoded_info], key_type)?
         .fill(out_buf)
         .map_err(Into::into)

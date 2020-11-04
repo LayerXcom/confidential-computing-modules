@@ -3,13 +3,13 @@ use crate::crypto::{
     ecies::EciesCiphertext,
     secrets::{NodeSecret, PathSecret},
 };
+use crate::local_anyhow::{anyhow, ensure, Result};
+use crate::localstd::vec::Vec;
 use crate::{
     handshake::{DirectPathMsg, DirectPathNodeMsg},
     tree_math,
 };
-use anyhow::{anyhow, ensure, Result};
 use codec::Encode;
-use std::vec::Vec;
 
 #[derive(Clone, Debug, Encode)]
 pub struct RatchetTree {

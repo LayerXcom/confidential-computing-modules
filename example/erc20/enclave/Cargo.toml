@@ -12,7 +12,7 @@ crate-type = ["staticlib"]
 config = { path = "../../../config", default-features = false, features = ["sgx"]}
 frame-enclave = { path = "../../../frame/enclave" }
 frame-types = { path = "../../../frame/types" }
-frame-treekem = { path = "../../../frame/treekem" }
+frame-treekem = { path = "../../../frame/treekem", default-features = false, features = ["sgx"] }
 frame-common = { path = "../../../frame/common", default-features = false, features = ["sgx"] }
 anonify-enclave = { path = "../../../modules/anonify-enclave" }
 erc20-state-transition = { path = "../state-transition", default-features = false, features = ["sgx"] }

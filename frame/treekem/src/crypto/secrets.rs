@@ -12,13 +12,14 @@ use super::{
     CryptoRng, SHA256_OUTPUT_LEN,
 };
 use crate::handshake::AccessKey;
-use anyhow::{anyhow, Result};
+use crate::local_anyhow::{anyhow, Result};
+use crate::localstd::{fmt, vec::Vec};
 use codec::{Decode, Encode, Input};
 use frame_common::crypto::{sgx_rand_assign, ExportPathSecret, EXPORT_ID_SIZE, SEALED_DATA_SIZE};
+#[cfg(feature = "sgx")]
 use sgx_tseal::SgxSealedData;
+#[cfg(feature = "sgx")]
 use sgx_types::sgx_sealed_data_t;
-use std::fmt;
-use std::vec::Vec;
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);
@@ -220,6 +221,7 @@ impl PathSecret {
 pub struct UnsealedPathSecret([u8; SHA256_OUTPUT_LEN]);
 
 impl UnsealedPathSecret {
+    #[cfg(feature = "sgx")]
     pub fn encoded_seal(self) -> Result<Vec<u8>> {
         let additional = [0u8; 0];
         let sealed_data = SgxSealedData::<Self>::seal_data(&additional, &self)
@@ -246,9 +248,11 @@ impl From<UnsealedPathSecret> for PathSecret {
     }
 }
 
+#[cfg(feature = "sgx")]
 #[derive(Default, Clone)]
 pub struct SealedPathSecret<'a>(SgxSealedData<'a, UnsealedPathSecret>);
 
+#[cfg(feature = "sgx")]
 impl<'a> SealedPathSecret<'a> {
     pub fn new(sealed_data: SgxSealedData<'a, UnsealedPathSecret>) -> Self {
         SealedPathSecret(sealed_data)
@@ -264,6 +268,7 @@ impl<'a> SealedPathSecret<'a> {
     }
 }
 
+#[cfg(feature = "sgx")]
 impl Encode for SealedPathSecret<'_> {
     #[allow(clippy::cast_ptr_alignment)]
     fn encode(&self) -> Vec<u8> {
@@ -279,6 +284,7 @@ impl Encode for SealedPathSecret<'_> {
     }
 }
 
+#[cfg(feature = "sgx")]
 impl Decode for SealedPathSecret<'_> {
     #[allow(clippy::cast_ptr_alignment)]
     fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
@@ -296,6 +302,7 @@ impl Decode for SealedPathSecret<'_> {
     }
 }
 
+#[cfg(feature = "sgx")]
 impl fmt::Debug for SealedPathSecret<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("SealedPathSecret").finish()
@@ -305,7 +312,7 @@ impl fmt::Debug for SealedPathSecret<'_> {
 #[cfg(debug_assertions)]
 pub(crate) mod tests {
     use super::*;
-    use std::string::String;
+    use crate::localstd::string::String;
     use test_utils::*;
 
     pub(crate) fn run_tests() -> bool {

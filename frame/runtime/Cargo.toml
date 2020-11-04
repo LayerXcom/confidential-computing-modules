@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 frame-common = { path = "../common", default-features = false }
 frame-types = { path = "../types" }
-frame-treekem = { path = "../treekem", optional = true }
+frame-treekem = { path = "../treekem", default-features = false, optional = true }
 sgx_tstd = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 anyhow-std = { version = "1.0", package = "anyhow", optional = true }
 anyhow-sgx = { rev = "sgx_1.1.2", package = "anyhow", git = "https://github.com/mesalock-linux/anyhow-sgx.git", optional = true }
@@ -28,7 +28,7 @@ sgx = [
     "frame-common/sgx",
     "sgx_tstd",
     "anyhow-sgx",
-    "frame-treekem",
+    "frame-treekem/sgx",
     "serde-sgx",
     "serde-sgx/derive",
 ]

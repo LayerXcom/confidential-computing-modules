@@ -1,12 +1,12 @@
 use super::{hkdf, hmac::HmacKey};
-use anyhow::{anyhow, Result};
-use codec::{Decode, Encode, Error, Input};
-use frame_common::crypto::sgx_rand_assign;
-use secp256k1::{
+use crate::local_anyhow::{anyhow, Result};
+use crate::local_secp256k1::{
     util::{COMPRESSED_PUBLIC_KEY_SIZE, SECRET_KEY_SIZE},
     PublicKey, SecretKey,
 };
-use std::vec::Vec;
+use crate::localstd::vec::Vec;
+use codec::{Decode, Encode, Error, Input};
+use frame_common::crypto::sgx_rand_assign;
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct DhPrivateKey(SecretKey);
