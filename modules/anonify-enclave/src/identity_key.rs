@@ -1,8 +1,11 @@
 //! This module contains enclave specific cryptographic logics.
 
 use crate::error::Result;
+use anonify_io_types::*;
 use codec::Encode;
-use frame_common::{crypto::rand_assign, traits::Keccak256};
+use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
+use frame_enclave::EnclaveEngine;
+use frame_runtime::traits::*;
 use frame_treekem::{DhPrivateKey, DhPubKey, EciesCiphertext};
 use secp256k1::{self, util::SECRET_KEY_SIZE, Message, PublicKey, SecretKey, Signature};
 use sgx_types::sgx_report_data_t;
@@ -12,6 +15,28 @@ const HASHED_PUBKEY_SIZE: usize = 20;
 const ENCRYPTING_KEY_SIZE: usize = 33;
 const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCRYPTING_KEY_SIZE;
 const REPORT_DATA_SIZE: usize = 64;
+
+#[derive(Debug, Clone)]
+pub struct EncryptingKeyGetter {}
+
+impl EnclaveEngine for EncryptingKeyGetter {
+    type EI = input::GetEncryptingKey;
+    type EO = output::ReturnEncryptingKey;
+
+    fn handle<R, C>(
+        ecall_input: Self::EI,
+        enclave_context: &C,
+        _max_mem_size: usize,
+    ) -> anyhow::Result<Self::EO>
+    where
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
+    {
+        let encrypting_key = enclave_context.encrypting_key();
+
+        Ok(output::ReturnEncryptingKey::new(encrypting_key))
+    }
+}
 
 /// Enclave Identity Key
 #[derive(Debug, Clone, Default, PartialEq)]

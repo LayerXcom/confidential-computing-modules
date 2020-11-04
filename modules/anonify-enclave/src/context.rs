@@ -1,5 +1,5 @@
 use crate::{
-    crypto::EnclaveIdentityKey, error::Result, group_key::GroupKey, kvs::EnclaveDB,
+    error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
 use anonify_io_types::*;
@@ -15,7 +15,7 @@ use frame_enclave::{
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
-    init_path_secret_kvs,
+    init_path_secret_kvs, DhPubKey,
 };
 use sgx_types::*;
 use std::prelude::v1::*;
@@ -99,6 +99,10 @@ impl IdentityKeyOps for EnclaveContext {
 
     fn decrypt(&self, ciphertext: Vec<u8>) -> anyhow::Result<Vec<u8>> {
         self.identity_key.decrypt(ciphertext).map_err(Into::into)
+    }
+
+    fn encrypting_key(&self) -> DhPubKey {
+        self.identity_key.encrypting_key()
     }
 }
 

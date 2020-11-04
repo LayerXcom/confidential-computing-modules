@@ -11,7 +11,7 @@ use frame_common::{
     state_types::{MemId, UpdatedState},
     traits::*,
 };
-use frame_treekem::handshake::HandshakeParams;
+use frame_treekem::{handshake::HandshakeParams, DhPubKey};
 
 /// Execute state transition functions from runtime
 pub trait RuntimeExecutor<G: ContextOps>: Sized {
@@ -75,6 +75,8 @@ pub trait IdentityKeyOps {
     fn sign(&self, msg: &[u8]) -> Result<secp256k1::Signature>;
 
     fn decrypt(&self, ciphertext: Vec<u8>) -> Result<Vec<u8>>;
+
+    fn encrypting_key(&self) -> DhPubKey;
 }
 
 pub trait GroupKeyOps: Sized {

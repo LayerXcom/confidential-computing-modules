@@ -6,6 +6,7 @@ use frame_common::{
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
+use frame_treekem::DhPubKey;
 
 pub mod input {
     use super::*;
@@ -32,6 +33,11 @@ pub mod input {
             &self.access_policy
         }
     }
+
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct GetEncryptingKey;
+
+    impl EcallInput for GetEncryptingKey {}
 
     #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct CallHandshake;
@@ -205,6 +211,19 @@ pub mod output {
 
         pub fn update(&mut self, updated_state: UpdatedState<StateType>) {
             self.updated_state = Some(updated_state)
+        }
+    }
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct ReturnEncryptingKey {
+        encrypting_key: DhPubKey,
+    }
+
+    impl EcallOutput for ReturnEncryptingKey {}
+
+    impl ReturnEncryptingKey {
+        pub fn new(encrypting_key: DhPubKey) -> Self {
+            ReturnEncryptingKey { encrypting_key }
         }
     }
 

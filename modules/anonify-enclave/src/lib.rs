@@ -6,7 +6,7 @@
 extern crate sgx_tstd as std;
 
 pub mod context;
-mod crypto;
+mod identity_key;
 mod error;
 mod group_key;
 mod handshake;
