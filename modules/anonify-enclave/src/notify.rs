@@ -60,3 +60,19 @@ impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
         Ok(output::Empty::default())
     }
 }
+
+#[cfg(debug_assertions)]
+pub(crate) mod tests {
+    // use super::*;
+    use test_utils::*;
+    use std::{
+        vec::Vec,
+        string::String,
+    };
+
+    pub(crate) fn run_tests() -> bool { run_tests!(it_works,) }
+
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
+    }
+}

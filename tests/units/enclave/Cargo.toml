@@ -10,5 +10,6 @@ crate-type = ["staticlib"]
 
 [dependencies]
 frame-treekem = { path = "../../../frame/treekem" }
+anonify-enclave = { path = "../../../modules/anonify-enclave" }
 sgx_tstd = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git"}
 test-utils = { path = "../../utils" }

@@ -20,3 +20,16 @@ pub mod workflow {
     pub use crate::commands::{MsgReceiver, MsgSender};
     pub use crate::notify::RegisterNotification;
 }
+
+#[cfg(debug_assertions)]
+pub mod tests {
+    use super::*;
+    use std::prelude::v1::*;
+    use test_utils::*;
+
+    pub fn run_tests() -> bool {
+        check_all_passed!(
+            notify::tests::run_tests(),
+        )
+    }
+}

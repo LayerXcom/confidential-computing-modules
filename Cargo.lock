@@ -569,6 +569,7 @@ dependencies = [
  "sgx_tse 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "test-utils 0.1.0",
  "thiserror 1.0.9 (git+https://github.com/mesalock-linux/thiserror-sgx.git)",
 ]
 
@@ -4810,6 +4811,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "unit-tests-enclave"
 version = "0.1.0"
 dependencies = [
+ "anonify-enclave 0.1.0",
  "frame-treekem 0.1.0",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
  "test-utils 0.1.0",
