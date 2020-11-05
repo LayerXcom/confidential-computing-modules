@@ -4,10 +4,10 @@ extern crate clap;
 use crate::config::*;
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use frame_common::crypto::AccountId;
+use frame_treekem::DhPubKey;
 use rand::{rngs::OsRng, Rng};
 use std::{env, path::PathBuf};
 use term::Term;
-use frame_treekem::DhPubKey;
 
 mod commands;
 mod config;
@@ -35,12 +35,20 @@ fn main() {
     let rng = &mut OsRng;
 
     let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
-    let encrypting_key = commands::get_encrypting_key().expect("Failed getting encrypting key");
+    let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set");
+    let encrypting_key =
+        commands::get_encrypting_key(anonify_url.clone()).expect("Failed getting encrypting key");
 
     match matches.subcommand() {
-        (ANONIFY_COMMAND, Some(matches)) => {
-            subcommand_anonify(term, root_dir, contract_addr, &encrypting_key, matches, rng)
-        }
+        (ANONIFY_COMMAND, Some(matches)) => subcommand_anonify(
+            term,
+            root_dir,
+            contract_addr,
+            &encrypting_key,
+            anonify_url,
+            matches,
+            rng,
+        ),
         (WALLET_COMMAND, Some(matches)) => subcommand_wallet(term, root_dir, matches, rng),
         _ => {
             term.error(matches.usage()).unwrap();
@@ -64,11 +72,10 @@ fn subcommand_anonify<R: Rng>(
     root_dir: PathBuf,
     default_contract_addr: String,
     encrypting_key: &DhPubKey,
+    anonify_url: String,
     matches: &ArgMatches,
     rng: &mut R,
 ) {
-    let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set");
-
     match matches.subcommand() {
         ("deploy", Some(_)) => {
             commands::deploy(anonify_url).expect("Failed to deploy command");
@@ -134,6 +141,7 @@ fn subcommand_anonify<R: Rng>(
                 keyfile_index,
                 target_addr,
                 amount,
+                encrypting_key,
                 rng,
             )
             .expect("Failed to transfer command");
@@ -159,6 +167,7 @@ fn subcommand_anonify<R: Rng>(
                 keyfile_index,
                 target_addr,
                 amount,
+                encrypting_key,
                 rng,
             )
             .expect("Failed to approve command");
@@ -187,6 +196,7 @@ fn subcommand_anonify<R: Rng>(
                 owner_addr,
                 target_addr,
                 amount,
+                encrypting_key,
                 rng,
             )
             .expect("Failed to transfer_from command");
@@ -212,6 +222,7 @@ fn subcommand_anonify<R: Rng>(
                 keyfile_index,
                 target_addr,
                 amount,
+                encrypting_key,
                 rng,
             )
             .expect("Failed to mint command");
@@ -228,8 +239,16 @@ fn subcommand_anonify<R: Rng>(
                 .parse()
                 .expect("Failed to parse amount");
 
-            commands::burn(&mut term, root_dir, anonify_url, keyfile_index, amount, rng)
-                .expect("Failed to burn command");
+            commands::burn(
+                &mut term,
+                root_dir,
+                anonify_url,
+                keyfile_index,
+                amount,
+                encrypting_key,
+                rng,
+            )
+            .expect("Failed to burn command");
         }
         ("key_rotation", Some(_)) => {
             commands::key_rotation(anonify_url).expect("Failed to key_rotation command");

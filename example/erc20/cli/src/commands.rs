@@ -4,13 +4,13 @@ use crate::{
     term::Term,
 };
 use anonify_wallet::{DirOperations, KeyFile, KeystoreDirectory, WalletDirectory};
+use anyhow::anyhow;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
-use codec::Decode;
+use codec::{Decode, Encode};
 use ed25519_dalek::Keypair;
-use erc20_state_transition::{
-    approve, burn, construct, mint, transfer, transfer_from, CallName, MemName,
-};
+use erc20_state_transition::{approve, burn, construct, mint, transfer, transfer_from};
 use frame_common::crypto::AccountId;
+use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use rand::Rng;
 use reqwest::Client;
@@ -52,11 +52,11 @@ pub(crate) fn update_mrenclave(anonify_url: String, contract_addr: String) -> Re
     Ok(())
 }
 
-pub(crate) fn get_encrypting_key() -> Result<DhPubKey> {
+pub(crate) fn get_encrypting_key(anonify_url: String) -> Result<DhPubKey> {
     Client::new()
         .get(&format!("{}/api/v1/encrypting_key", &anonify_url))
         .send()?
-        .text()
+        .json()
         .map_err(Into::into)
 }
 
@@ -71,8 +71,11 @@ pub(crate) fn init_state<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let init_state = construct { total_supply };
-    let encrypted_total_supply = EciesCiphertext::encrypt(&encrypting_key, init_state.encode())?;
+    let init_state = construct {
+        total_supply: U64::from_raw(total_supply),
+    };
+    let encrypted_total_supply = EciesCiphertext::encrypt(&encrypting_key, init_state.encode())
+        .map_err(|e| anyhow!("{:?}", e))?;
 
     let req = erc20_api::init_state::post::Request::new(&keypair, encrypted_total_supply, rng);
     let res = Client::new()
@@ -91,15 +94,19 @@ pub(crate) fn transfer<R: Rng>(
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
-    target: AccountId,
+    recipient: AccountId,
     amount: u64,
     encrypting_key: &DhPubKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let transfer_cmd = transfer { amount, target };
-    let encrypted_transfer_cmd = EciesCiphertext::encrypt(&encrypting_key, transfer_cmd.encode())?;
+    let transfer_cmd = transfer {
+        amount: U64::from_raw(amount),
+        recipient,
+    };
+    let encrypted_transfer_cmd = EciesCiphertext::encrypt(&encrypting_key, transfer_cmd.encode())
+        .map_err(|e| anyhow!("{:?}", e))?;
 
     let req = erc20_api::transfer::post::Request::new(&keypair, encrypted_transfer_cmd, rng);
     let res = Client::new()
@@ -117,15 +124,19 @@ pub(crate) fn approve<R: Rng>(
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
-    target: AccountId,
+    spender: AccountId,
     amount: u64,
     encrypting_key: &DhPubKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let approve_cmd = approve { amount, target };
-    let encrypted_approve_cmd = EciesCiphertext::encrypt(&encrypting_key, approve_cmd.encode())?;
+    let approve_cmd = approve {
+        amount: U64::from_raw(amount),
+        spender,
+    };
+    let encrypted_approve_cmd = EciesCiphertext::encrypt(&encrypting_key, approve_cmd.encode())
+        .map_err(|e| anyhow!("{:?}", e))?;
 
     let req = erc20_api::approve::post::Request::new(&keypair, encrypted_approve_cmd, rng);
     let res = Client::new()
@@ -144,16 +155,21 @@ pub(crate) fn transfer_from<R: Rng>(
     anonify_url: String,
     index: usize,
     owner: AccountId,
-    target: AccountId,
+    recipient: AccountId,
     amount: u64,
     encrypting_key: &DhPubKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let transfer_from_cmd = transfer_from { amount, target };
+    let transfer_from_cmd = transfer_from {
+        amount: U64::from_raw(amount),
+        owner,
+        recipient,
+    };
     let encrypted_transfer_from_cmd =
-        EciesCiphertext::encrypt(&encrypting_key, transfer_from_cmd.encode())?;
+        EciesCiphertext::encrypt(&encrypting_key, transfer_from_cmd.encode())
+            .map_err(|e| anyhow!("{:?}", e))?;
 
     let req =
         erc20_api::transfer_from::post::Request::new(&keypair, encrypted_transfer_from_cmd, rng);
@@ -172,15 +188,19 @@ pub(crate) fn mint<R: Rng>(
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
-    target: AccountId,
+    recipient: AccountId,
     amount: u64,
     encrypting_key: &DhPubKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let mint_cmd = mint { amount, target };
-    let encrypted_mint_cmd = EciesCiphertext::encrypt(&encrypting_key, mint_cmd.encode())?;
+    let mint_cmd = mint {
+        amount: U64::from_raw(amount),
+        recipient,
+    };
+    let encrypted_mint_cmd = EciesCiphertext::encrypt(&encrypting_key, mint_cmd.encode())
+        .map_err(|e| anyhow!("{:?}", e))?;
 
     let req = erc20_api::mint::post::Request::new(&keypair, encrypted_mint_cmd, rng);
     let res = Client::new()
@@ -204,8 +224,11 @@ pub(crate) fn burn<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let burn_cmd = burn { amount, target };
-    let encrypted_burn_cmd = EciesCiphertext::encrypt(&encrypting_key, burn_cmd.encode())?;
+    let burn_cmd = burn {
+        amount: U64::from_raw(amount),
+    };
+    let encrypted_burn_cmd = EciesCiphertext::encrypt(&encrypting_key, burn_cmd.encode())
+        .map_err(|e| anyhow!("{:?}", e))?;
 
     let req = erc20_api::burn::post::Request::new(&keypair, encrypted_burn_cmd, rng);
     let res = Client::new()
