@@ -7,14 +7,14 @@ use anonify_wallet::{DirOperations, KeyFile, KeystoreDirectory, WalletDirectory}
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use codec::Decode;
 use ed25519_dalek::Keypair;
+use erc20_state_transition::{
+    approve, burn, construct, mint, transfer, transfer_from, CallName, MemName,
+};
 use frame_common::crypto::AccountId;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use rand::Rng;
 use reqwest::Client;
 use std::path::PathBuf;
-use erc20_state_transition::{
-    approve, burn, construct, mint, transfer, transfer_from, CallName, MemName,
-};
 
 pub(crate) fn deploy(anonify_url: String) -> Result<()> {
     let res = Client::new()
@@ -93,12 +93,15 @@ pub(crate) fn transfer<R: Rng>(
     index: usize,
     target: AccountId,
     amount: u64,
+    encrypting_key: &DhPubKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+    let transfer_cmd = transfer { amount, target };
+    let encrypted_transfer_cmd = EciesCiphertext::encrypt(&encrypting_key, transfer_cmd.encode())?;
 
-    let req = erc20_api::transfer::post::Request::new(&keypair, amount, target, rng);
+    let req = erc20_api::transfer::post::Request::new(&keypair, encrypted_transfer_cmd, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/transfer", &anonify_url))
         .json(&req)
@@ -116,12 +119,15 @@ pub(crate) fn approve<R: Rng>(
     index: usize,
     target: AccountId,
     amount: u64,
+    encrypting_key: &DhPubKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+    let approve_cmd = approve { amount, target };
+    let encrypted_approve_cmd = EciesCiphertext::encrypt(&encrypting_key, approve_cmd.encode())?;
 
-    let req = erc20_api::approve::post::Request::new(&keypair, amount, target, rng);
+    let req = erc20_api::approve::post::Request::new(&keypair, encrypted_approve_cmd, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/approve", &anonify_url))
         .json(&req)
@@ -140,12 +146,17 @@ pub(crate) fn transfer_from<R: Rng>(
     owner: AccountId,
     target: AccountId,
     amount: u64,
+    encrypting_key: &DhPubKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+    let transfer_from_cmd = transfer_from { amount, target };
+    let encrypted_transfer_from_cmd =
+        EciesCiphertext::encrypt(&encrypting_key, transfer_from_cmd.encode())?;
 
-    let req = erc20_api::transfer_from::post::Request::new(&keypair, amount, owner, target, rng);
+    let req =
+        erc20_api::transfer_from::post::Request::new(&keypair, encrypted_transfer_from_cmd, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/transfer_from", &anonify_url))
         .json(&req)
@@ -163,12 +174,15 @@ pub(crate) fn mint<R: Rng>(
     index: usize,
     target: AccountId,
     amount: u64,
+    encrypting_key: &DhPubKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+    let mint_cmd = mint { amount, target };
+    let encrypted_mint_cmd = EciesCiphertext::encrypt(&encrypting_key, mint_cmd.encode())?;
 
-    let req = erc20_api::mint::post::Request::new(&keypair, amount, target, rng);
+    let req = erc20_api::mint::post::Request::new(&keypair, encrypted_mint_cmd, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/mint", &anonify_url))
         .json(&req)
@@ -185,12 +199,15 @@ pub(crate) fn burn<R: Rng>(
     anonify_url: String,
     index: usize,
     amount: u64,
+    encrypting_key: &DhPubKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+    let burn_cmd = burn { amount, target };
+    let encrypted_burn_cmd = EciesCiphertext::encrypt(&encrypting_key, burn_cmd.encode())?;
 
-    let req = erc20_api::burn::post::Request::new(&keypair, amount, rng);
+    let req = erc20_api::burn::post::Request::new(&keypair, encrypted_burn_cmd, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/burn", &anonify_url))
         .json(&req)

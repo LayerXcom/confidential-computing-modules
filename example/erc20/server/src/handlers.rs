@@ -3,10 +3,7 @@ use crate::Server;
 use actix_web::{web, HttpResponse};
 use anonify_eth_driver::{dispatcher::get_state, traits::*};
 use anyhow::anyhow;
-use codec::Encode;
-use erc20_state_transition::{
-    approve, burn, construct, mint, transfer, transfer_from, CallName, MemName,
-};
+use erc20_state_transition::{CallName, MemName};
 use frame_runtime::primitives::{Approved, U64};
 use log::{debug, error, info};
 use std::{sync::Arc, time};
@@ -133,12 +130,13 @@ where
     let access_right = req
         .into_access_right()
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
+    let encrypted_total_supply = req.encrypted_total_supply.clone();
 
     let tx_hash = server
         .dispatcher
         .send_command::<CallName, _>(
             access_right,
-            req.encrypted_total_supply,
+            encrypted_total_supply,
             "construct",
             sender_address,
             DEFAULT_GAS,
@@ -166,15 +164,13 @@ where
     let access_right = req
         .into_access_right()
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let amount = U64::from_raw(req.amount);
-    let recipient = req.target;
-    let transfer_state = transfer { amount, recipient };
+    let encrypted_transfer_cmd = req.encrypted_transfer_cmd.clone();
 
     let tx_hash = server
         .dispatcher
         .send_command::<CallName, _>(
             access_right,
-            transfer_state,
+            encrypted_transfer_cmd,
             "transfer",
             sender_address,
             DEFAULT_GAS,
@@ -202,15 +198,13 @@ where
     let access_right = req
         .into_access_right()
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let amount = U64::from_raw(req.amount);
-    let spender = req.target;
-    let approve_state = approve { amount, spender };
+    let encrypted_approve_cmd = req.encrypted_approve_cmd.clone();
 
     let tx_hash = server
         .dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             access_right,
-            approve_state,
+            encrypted_approve_cmd,
             "approve",
             sender_address,
             DEFAULT_GAS,
@@ -238,15 +232,13 @@ where
     let access_right = req
         .into_access_right()
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let amount = U64::from_raw(req.amount);
-    let recipient = req.target;
-    let minting_state = mint { amount, recipient };
+    let encrypted_mint_cmd = req.encrypted_mint_cmd.clone();
 
     let tx_hash = server
         .dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             access_right,
-            minting_state,
+            encrypted_mint_cmd,
             "mint",
             sender_address,
             DEFAULT_GAS,
@@ -274,14 +266,13 @@ where
     let access_right = req
         .into_access_right()
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let amount = U64::from_raw(req.amount);
-    let burn_state = burn { amount };
+    let encrypted_burn_cmd = req.encrypted_burn_cmd.clone();
 
     let tx_hash = server
         .dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             access_right,
-            burn_state,
+            encrypted_burn_cmd,
             "burn",
             sender_address,
             DEFAULT_GAS,
@@ -309,20 +300,13 @@ where
     let access_right = req
         .into_access_right()
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let amount = U64::from_raw(req.amount);
-    let owner = req.owner;
-    let recipient = req.target;
-    let transferred_from_state = transfer_from {
-        owner,
-        recipient,
-        amount,
-    };
+    let encrypted_transfer_from_cmd = req.encrypted_transfer_from_cmd.clone();
 
     let tx_hash = server
         .dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             access_right,
-            transferred_from_state,
+            encrypted_transfer_from_cmd,
             "transfer_from",
             sender_address,
             DEFAULT_GAS,
@@ -426,7 +410,7 @@ where
         .get_encrypting_key()
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(erc20_api::encrypting_key::get::Response(pub_key.encode())))
+    Ok(HttpResponse::Ok().json(erc20_api::encrypting_key::get::Response(pub_key)))
 }
 
 pub async fn handle_start_sync_bc<D, S, W>(
