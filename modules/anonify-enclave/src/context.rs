@@ -15,7 +15,7 @@ use frame_enclave::{
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
-    init_path_secret_kvs, DhPubKey,
+    init_path_secret_kvs, DhPubKey, EciesCiphertext,
 };
 use sgx_types::*;
 use std::prelude::v1::*;
@@ -97,7 +97,7 @@ impl IdentityKeyOps for EnclaveContext {
         self.identity_key.sign(msg).map_err(Into::into)
     }
 
-    fn decrypt(&self, ciphertext: Vec<u8>) -> anyhow::Result<Vec<u8>> {
+    fn decrypt(&self, ciphertext: EciesCiphertext) -> anyhow::Result<Vec<u8>> {
         self.identity_key.decrypt(ciphertext).map_err(Into::into)
     }
 

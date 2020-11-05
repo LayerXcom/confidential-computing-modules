@@ -6,7 +6,7 @@ use frame_common::{
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
-use frame_treekem::DhPubKey;
+use frame_treekem::{DhPubKey, EciesCiphertext};
 
 pub mod input {
     use super::*;
@@ -14,17 +14,17 @@ pub mod input {
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct Command<AP: AccessPolicy> {
         pub access_policy: AP,
-        pub state: StateType,
+        pub encrypted_command: EciesCiphertext,
         pub call_id: u32,
     }
 
     impl<AP: AccessPolicy> EcallInput for Command<AP> {}
 
     impl<AP: AccessPolicy> Command<AP> {
-        pub fn new(access_policy: AP, state: StateType, call_id: u32) -> Self {
+        pub fn new(access_policy: AP, encrypted_command: EciesCiphertext, call_id: u32) -> Self {
             Command {
                 access_policy,
-                state,
+                encrypted_command,
                 call_id,
             }
         }

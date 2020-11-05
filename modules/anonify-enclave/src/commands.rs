@@ -40,9 +40,9 @@ impl<AP: AccessPolicy> EnclaveEngine for MsgSender<AP> {
         group_key.sender_ratchet(roster_idx)?;
 
         let account_id = ecall_input.access_policy().into_account_id();
-        let mut params = enclave_context.decrypt(ecall_input.state.into_vec())?;
+        let mut command = enclave_context.decrypt(ecall_input.encrypted_command)?;
 
-        let ciphertext = Commands::<R, C>::new(ecall_input.call_id, &mut params, account_id)?
+        let ciphertext = Commands::<R, C>::new(ecall_input.call_id, &mut command, account_id)?
             .encrypt(group_key, max_mem_size)?;
 
         let msg = Sha256::hash(&ciphertext.encode());

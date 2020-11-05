@@ -17,13 +17,6 @@ pub struct EciesCiphertext {
 }
 
 impl EciesCiphertext {
-    pub fn new(ephemeral_public_key: DhPubKey, ciphertext: Vec<u8>) -> Self {
-        EciesCiphertext {
-            ephemeral_public_key,
-            ciphertext,
-        }
-    }
-
     pub fn encrypt(others_pub_key: &DhPubKey, mut plaintext: Vec<u8>) -> Result<Self> {
         let my_ephemeral_secret = DhPrivateKey::from_random()?;
         let my_ephemeral_pub_key = DhPubKey::from_private_key(&my_ephemeral_secret);
