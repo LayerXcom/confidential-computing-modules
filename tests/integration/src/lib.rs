@@ -1,19 +1,28 @@
 #[macro_use]
 extern crate lazy_static;
 use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
+use codec::{Decode, Encode};
 use erc20_state_transition::{
     approve, burn, construct, mint, transfer, transfer_from, CallName, MemName, CIPHERTEXT_SIZE,
 };
+use ethabi::Contract as ContractABI;
 use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
     traits::*,
 };
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
+use frame_treekem::DhPubKey;
 use sgx_types::*;
-use std::{collections::BTreeMap, env};
+use std::{collections::BTreeMap, env, fs::File, io::BufReader, str::FromStr};
+use web3::{
+    contract::{Contract, Options},
+    transports::Http,
+    types::Address,
+    Web3,
+};
 
-const ETH_URL: &'static str = "http://172.28.0.2:8545";
+const ETH_URL: &str = "http://172.28.0.2:8545";
 const ABI_PATH: &str = "../../contract-build/Anonify.abi";
 const BIN_PATH: &str = "../../contract-build/Anonify.bin";
 const CONFIRMATIONS: usize = 0;
@@ -24,7 +33,36 @@ lazy_static! {
     pub static ref ENV_LOGGER_INIT: () = env_logger::init();
 }
 
-fn get_encrypting_key(contract_addr: &str) {}
+async fn get_encrypting_key(
+    contract_addr: &str,
+    dispatcher: Dispatcher<EthDeployer, EthSender, EventWatcher>,
+) -> DhPubKey {
+    let encrypting_key = dispatcher.get_encrypting_key().unwrap();
+    let transport = Http::new(ETH_URL).unwrap();
+    let web3 = Web3::new(transport);
+    let web3_conn = web3.eth();
+
+    let address = Address::from_str(contract_addr).unwrap();
+    let f = File::open(ABI_PATH).unwrap();
+    let abi = ContractABI::load(BufReader::new(f)).unwrap();
+
+    let query_encrypting_key: Vec<u8> = Contract::new(web3_conn, address, abi)
+        .query(
+            "getEncryptingKey",
+            encrypting_key.encode(),
+            None,
+            Options::default(),
+            None,
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(
+        encrypting_key,
+        DhPubKey::decode(&mut &query_encrypting_key[..]).unwrap()
+    );
+    encrypting_key
+}
 
 #[actix_rt::test]
 async fn test_integration_eth_construct() {

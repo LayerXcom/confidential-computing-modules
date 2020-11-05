@@ -45,7 +45,6 @@ impl Deployer for EthDeployer {
         Ok(hex::encode(contract_addr.as_bytes()))
     }
 
-    // TODO: generalize, remove abi.
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind> {
         let addr = self
             .address

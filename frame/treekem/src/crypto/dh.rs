@@ -50,7 +50,7 @@ impl DhPrivateKey {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DhPubKey(PublicKey);
 
 impl Encode for DhPubKey {

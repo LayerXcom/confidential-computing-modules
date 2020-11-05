@@ -220,7 +220,7 @@ where
             .await
     }
 
-    pub async fn get_encrypting_key(&self) -> Result<DhPubKey> {
+    pub fn get_encrypting_key(&self) -> Result<DhPubKey> {
         let input = host_input::GetEncryptingKey::default();
         let eid = self.inner.read().deployer.get_enclave_id();
         let encrypting_key = GetEncryptingKeyWorkflow::exec(input, eid)?;
