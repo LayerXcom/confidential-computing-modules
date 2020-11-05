@@ -511,32 +511,6 @@ async fn test_join_group_then_handshake() {
     assert_eq!(balance.0.as_raw(), 90);
 }
 
-#[actix_rt::test]
-async fn test_invalid_access_policy() {
-    set_env_vars();
-    set_server_env_vars();
-
-    // Enclave must be initialized in main function.
-    let enclave = EnclaveDir::new()
-        .init_enclave(true)
-        .expect("Failed to initialize enclave.");
-    let eid = enclave.geteid();
-    let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
-
-    let mut app = test::init_service(App::new().data(server.clone()).route(
-        "/api/v1/register_notification",
-        web::post().to(handle_register_notification::<EthDeployer, EthSender, EventWatcher>),
-    ))
-        .await;
-
-    let req = test::TestRequest::post()
-        .uri("/api/v1/register_notification")
-        .set_json(&REGISTER_NOTIFICATION_INVALID_REQ)
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_server_error(), "response: {:?}", resp);
-}
-
 fn set_server_env_vars() {
     env::set_var("ETH_URL", "http://172.28.0.2:8545");
     env::set_var("ABI_PATH", "../../../contract-build/Anonify.abi");
@@ -638,23 +612,5 @@ const BALANCE_OF_REQ: erc20_api::state::get::Request = erc20_api::state::get::Re
     challenge: [
         119, 177, 182, 220, 100, 44, 96, 179, 173, 47, 220, 49, 105, 204, 132, 230, 211, 24, 166,
         219, 82, 76, 27, 205, 211, 232, 142, 98, 66, 130, 150, 202,
-    ],
-};
-
-// invalid challenge
-const REGISTER_NOTIFICATION_INVALID_REQ: erc20_api::register_notification::post::Request = erc20_api::register_notification::post::Request {
-    sig: [
-        21, 54, 136, 84, 150, 59, 196, 71, 164, 136, 222, 128, 100, 84, 208, 219, 84, 7, 61, 11,
-        230, 220, 25, 138, 67, 247, 95, 97, 30, 76, 120, 160, 73, 48, 110, 43, 94, 79, 192, 195,
-        82, 199, 73, 80, 48, 148, 233, 143, 87, 237, 159, 97, 252, 226, 68, 160, 137, 127, 195,
-        116, 128, 181, 47, 2,
-    ],
-    pubkey: [
-        164, 189, 195, 42, 48, 163, 27, 74, 84, 147, 25, 254, 16, 14, 206, 134, 153, 148, 33, 189,
-        55, 149, 7, 15, 11, 101, 106, 28, 48, 130, 133, 143,
-    ],
-    challenge: [
-        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     ],
 };
