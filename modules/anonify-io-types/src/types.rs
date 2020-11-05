@@ -225,6 +225,10 @@ pub mod output {
         pub fn new(encrypting_key: DhPubKey) -> Self {
             ReturnEncryptingKey { encrypting_key }
         }
+
+        pub fn encrypting_key(self) -> DhPubKey {
+            self.encrypting_key
+        }
     }
 
     #[derive(Encode, Decode, Debug, Clone, Default)]

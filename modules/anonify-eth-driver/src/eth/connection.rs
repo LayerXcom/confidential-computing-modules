@@ -145,19 +145,6 @@ impl Web3Contract {
         self.web3_conn.get_account(index, password).await
     }
 
-    pub async fn get_encrypting_key(&self, encrypting_key: DhPubKey) -> Result<Vec<u8>> {
-        unimplemented!();
-        // self.contract
-        //     .query(
-        //         "getEncryptingKey",
-        //         (encrypting_key.encode()),
-        //         None,
-        //         Options::default(),
-        //         None,
-        //     )
-        //     .await
-    }
-
     pub fn address(&self) -> Address {
         self.address
     }

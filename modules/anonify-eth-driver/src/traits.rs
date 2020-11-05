@@ -58,8 +58,6 @@ pub trait Sender: Sized {
     async fn handshake(&self, host_output: host_output::Handshake) -> Result<H256>;
 
     fn get_contract(self) -> ContractKind;
-
-    async fn get_encrypting_key(&self, encrypting_key: DhPubKey) -> Result<Vec<u8>>;
 }
 
 /// A trait of fetching event from blockchian nodes

@@ -66,8 +66,4 @@ impl Sender for EthSender {
     fn get_contract(self) -> ContractKind {
         ContractKind::Web3Contract(self.contract)
     }
-
-    async fn get_encrypting_key(&self, encrypting_key: DhPubKey) -> Result<Vec<u8>> {
-        self.contract.get_encrypting_key(encrypting_key).await
-    }
 }

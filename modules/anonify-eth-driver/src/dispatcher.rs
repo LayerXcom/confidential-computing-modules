@@ -8,6 +8,7 @@ use crate::{
 };
 use frame_common::{crypto::ExportPathSecret, state_types::UpdatedState, traits::*};
 use frame_host::engine::HostEngine;
+use frame_treekem::DhPubKey;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{
@@ -219,8 +220,15 @@ where
             .await
     }
 
-    pub async fn get_encrypting_key(&self) {
-        // self.inner.read().sender.get_encrypting_key()
+    pub async fn get_encrypting_key(&self) -> Result<DhPubKey> {
+        let input = host_input::GetEncryptingKey::default();
+        let eid = self.inner.read().deployer.get_enclave_id();
+        let encrypting_key = GetEncryptingKeyWorkflow::exec(input, eid)?;
+
+        Ok(encrypting_key
+            .ecall_output
+            .expect("must have ecall_output")
+            .encrypting_key())
     }
 
     pub fn register_notification<AP>(&self, access_policy: AP) -> Result<()>
