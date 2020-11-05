@@ -2,8 +2,8 @@ use crate::application::AppKeyChain;
 use crate::group_state::GroupState;
 use crate::handshake::{Handshake, PathSecretKVS, PathSecretSource};
 use crate::local_anyhow::anyhow;
-use crate::local_rand_core::SeedableRng;
 use crate::local_rand;
+use crate::local_rand_core::SeedableRng;
 
 pub fn init_path_secret_kvs(kvs: &mut PathSecretKVS, until_roster_idx: usize, until_epoch: usize) {
     let mut csprng = local_rand::rngs::StdRng::seed_from_u64(1);

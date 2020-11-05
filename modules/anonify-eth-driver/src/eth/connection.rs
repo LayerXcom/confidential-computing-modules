@@ -7,7 +7,6 @@ use crate::{
 };
 use anyhow::anyhow;
 use ethabi::{Topic, TopicFilter};
-use frame_treekem::DhPubKey;
 use std::{fs, path::Path};
 use web3::{
     contract::{Contract, Options},
@@ -15,7 +14,6 @@ use web3::{
     types::{Address, BlockNumber, Filter, FilterBuilder, Log, H256},
     Web3,
 };
-use codec::Encode;
 
 const UNLOCK_DURATION: u16 = 60;
 const EVENT_LIMIT: usize = 100;

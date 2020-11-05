@@ -1,4 +1,6 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
+#![allow(dead_code)]
+#![allow(unused_imports)]
 
 #[cfg(feature = "sgx")]
 #[macro_use]

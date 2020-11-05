@@ -36,7 +36,9 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     ) -> Result<Vec<UpdatedState<Self::S>>>;
 }
 
-pub trait ContextOps: StateOps + GroupKeyGetter + NotificationOps + IdentityKeyOps + QuoteGetter {
+pub trait ContextOps:
+    StateOps + GroupKeyGetter + NotificationOps + IdentityKeyOps + QuoteGetter
+{
     fn mrenclave_ver(&self) -> usize;
 }
 

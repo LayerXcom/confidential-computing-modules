@@ -42,12 +42,8 @@ impl<AP: AccessPolicy> EnclaveEngine for MsgSender<AP> {
         let account_id = ecall_input.access_policy().into_account_id();
         let mut params = enclave_context.decrypt(ecall_input.state.into_vec())?;
 
-        let ciphertext = Commands::<R, C>::new(
-            ecall_input.call_id,
-            &mut params,
-            account_id,
-        )?
-        .encrypt(group_key, max_mem_size)?;
+        let ciphertext = Commands::<R, C>::new(ecall_input.call_id, &mut params, account_id)?
+            .encrypt(group_key, max_mem_size)?;
 
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
