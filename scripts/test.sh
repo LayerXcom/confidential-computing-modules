@@ -34,6 +34,8 @@ sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture
 sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture
+sleep 1
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_invalid_access_policy -- --nocapture
 
 echo "Unit testing..."
 cd ../../../scripts
