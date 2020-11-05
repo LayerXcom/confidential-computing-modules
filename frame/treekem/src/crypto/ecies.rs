@@ -9,7 +9,17 @@ use crate::local_ring::aead::{
 };
 use crate::localstd::vec::Vec;
 use codec::{Decode, Encode};
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "std")]
+#[derive(Debug, Clone, Encode, Decode, Default, Serialize, Deserialize)]
+pub struct EciesCiphertext {
+    ephemeral_public_key: DhPubKey,
+    ciphertext: Vec<u8>,
+}
+
+#[cfg(feature = "sgx")]
 #[derive(Debug, Clone, Encode, Decode)]
 pub struct EciesCiphertext {
     ephemeral_public_key: DhPubKey,

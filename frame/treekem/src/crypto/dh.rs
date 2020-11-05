@@ -1,12 +1,14 @@
 use super::{hkdf, hmac::HmacKey};
 use crate::local_anyhow::{anyhow, Result};
-use crate::local_secp256k1::{
-    util::{COMPRESSED_PUBLIC_KEY_SIZE, SECRET_KEY_SIZE},
-    PublicKey, SecretKey,
-};
+use crate::local_secp256k1::{PublicKey, SecretKey};
 use crate::localstd::vec::Vec;
 use codec::{Decode, Encode, Error, Input};
 use frame_common::crypto::rand_assign;
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
+
+const SECRET_KEY_SIZE: usize = 32;
+const COMPRESSED_PUBLIC_KEY_SIZE: usize = 33;
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct DhPrivateKey(SecretKey);
@@ -50,8 +52,20 @@ impl DhPrivateKey {
     }
 }
 
+#[cfg(feature = "std")]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DhPubKey(PublicKey);
+
+#[cfg(feature = "sgx")]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DhPubKey(PublicKey);
+
+impl Default for DhPubKey {
+    fn default() -> Self {
+        let secret_key = SecretKey::default();
+        DhPubKey(PublicKey::from_secret_key(&secret_key))
+    }
+}
 
 impl Encode for DhPubKey {
     fn using_encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {

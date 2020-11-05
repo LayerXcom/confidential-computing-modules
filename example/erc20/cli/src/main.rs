@@ -7,6 +7,7 @@ use frame_common::crypto::AccountId;
 use rand::{rngs::OsRng, Rng};
 use std::{env, path::PathBuf};
 use term::Term;
+use frame_treekem::DhPubKey;
 
 mod commands;
 mod config;
@@ -34,10 +35,11 @@ fn main() {
     let rng = &mut OsRng;
 
     let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
+    let encrypting_key = commands::get_encrypting_key().expect("Failed getting encrypting key");
 
     match matches.subcommand() {
         (ANONIFY_COMMAND, Some(matches)) => {
-            subcommand_anonify(term, root_dir, contract_addr, matches, rng)
+            subcommand_anonify(term, root_dir, contract_addr, &encrypting_key, matches, rng)
         }
         (WALLET_COMMAND, Some(matches)) => subcommand_wallet(term, root_dir, matches, rng),
         _ => {
@@ -61,6 +63,7 @@ fn subcommand_anonify<R: Rng>(
     mut term: Term,
     root_dir: PathBuf,
     default_contract_addr: String,
+    encrypting_key: &DhPubKey,
     matches: &ArgMatches,
     rng: &mut R,
 ) {
@@ -105,6 +108,7 @@ fn subcommand_anonify<R: Rng>(
                 anonify_url,
                 keyfile_index,
                 total_supply,
+                encrypting_key,
                 rng,
             )
             .expect("Failed to init_state command");

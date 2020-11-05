@@ -5,11 +5,16 @@ use crate::{
 };
 use anonify_wallet::{DirOperations, KeyFile, KeystoreDirectory, WalletDirectory};
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
+use codec::Decode;
 use ed25519_dalek::Keypair;
 use frame_common::crypto::AccountId;
+use frame_treekem::{DhPubKey, EciesCiphertext};
 use rand::Rng;
 use reqwest::Client;
 use std::path::PathBuf;
+use erc20_state_transition::{
+    approve, burn, construct, mint, transfer, transfer_from, CallName, MemName,
+};
 
 pub(crate) fn deploy(anonify_url: String) -> Result<()> {
     let res = Client::new()
@@ -47,18 +52,29 @@ pub(crate) fn update_mrenclave(anonify_url: String, contract_addr: String) -> Re
     Ok(())
 }
 
+pub(crate) fn get_encrypting_key() -> Result<DhPubKey> {
+    Client::new()
+        .get(&format!("{}/api/v1/encrypting_key", &anonify_url))
+        .send()?
+        .text()
+        .map_err(Into::into)
+}
+
 pub(crate) fn init_state<R: Rng>(
     term: &mut Term,
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
     total_supply: u64,
+    encrypting_key: &DhPubKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+    let init_state = construct { total_supply };
+    let encrypted_total_supply = EciesCiphertext::encrypt(&encrypting_key, init_state.encode())?;
 
-    let req = erc20_api::init_state::post::Request::new(&keypair, total_supply, rng);
+    let req = erc20_api::init_state::post::Request::new(&keypair, encrypted_total_supply, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/init_state", &anonify_url))
         .json(&req)

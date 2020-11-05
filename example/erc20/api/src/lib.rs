@@ -5,6 +5,7 @@ use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse},
     traits::State,
 };
+use frame_treekem::{DhPubKey, EciesCiphertext};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_big_array::big_array;
@@ -64,11 +65,11 @@ pub mod init_state {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub total_supply: u64,
+            pub encrypted_total_supply: EciesCiphertext,
         }
 
         impl Request {
-            pub fn new<R: Rng>(keypair: &Keypair, total_supply: u64, rng: &mut R) -> Self {
+            pub fn new<R: Rng>(keypair: &Keypair, encrypted_total_supply: EciesCiphertext, rng: &mut R) -> Self {
                 let challenge: [u8; 32] = rng.gen();
                 let sig = keypair.sign(&challenge[..]);
                 assert!(keypair.verify(&challenge, &sig).is_ok());
@@ -77,7 +78,7 @@ pub mod init_state {
                     sig: sig.to_bytes(),
                     pubkey: keypair.public.to_bytes(),
                     challenge,
-                    total_supply,
+                    encrypted_total_supply,
                 }
             }
 
@@ -93,17 +94,26 @@ pub mod init_state {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, total_supply: {:?} }}",
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, encrypted_total_supply: {:?} }}",
                     &self.sig[..],
                     self.pubkey,
                     self.challenge,
-                    self.total_supply
+                    self.encrypted_total_supply
                 )
             }
         }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
         pub struct Response(pub H256);
+    }
+}
+
+pub mod encrypting_key {
+    pub mod get {
+        use super::super::*;
+
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Response(pub DhPubKey);
     }
 }
 

@@ -3,6 +3,7 @@ use crate::Server;
 use actix_web::{web, HttpResponse};
 use anonify_eth_driver::{dispatcher::get_state, traits::*};
 use anyhow::anyhow;
+use codec::Encode;
 use erc20_state_transition::{
     approve, burn, construct, mint, transfer, transfer_from, CallName, MemName,
 };
@@ -132,14 +133,12 @@ where
     let access_right = req
         .into_access_right()
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let total_supply = U64::from_raw(req.total_supply);
-    let init_state = construct { total_supply };
 
     let tx_hash = server
         .dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             access_right,
-            init_state,
+            req.encrypted_total_supply,
             "construct",
             sender_address,
             DEFAULT_GAS,
@@ -173,7 +172,7 @@ where
 
     let tx_hash = server
         .dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             access_right,
             transfer_state,
             "transfer",
@@ -412,6 +411,22 @@ where
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state.as_raw())))
+}
+
+pub async fn handle_encrypting_key<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
+) -> Result<HttpResponse>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher,
+{
+    let pub_key = server
+        .dispatcher
+        .get_encrypting_key()
+        .map_err(|e| ServerError::from(e))?;
+
+    Ok(HttpResponse::Ok().json(erc20_api::encrypting_key::get::Response(pub_key.encode())))
 }
 
 pub async fn handle_start_sync_bc<D, S, W>(
