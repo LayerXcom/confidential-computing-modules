@@ -102,10 +102,10 @@ async fn test_multiple_messages() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
-    let enc_Key =
+    let enc_key =
         verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
 
-    let init_100_req = init_100_req(&enc_Key);
+    let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/init_state")
         .set_json(&init_100_req)
@@ -122,7 +122,7 @@ async fn test_multiple_messages() {
     let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 100);
 
-    let transfer_10_req = transfer_10_req(&enc_Key);
+    let transfer_10_req = transfer_10_req(&enc_key);
     // Sending five messages before receiving any messages
     for _ in 0..5 {
         let req = test::TestRequest::post()
@@ -204,9 +204,10 @@ async fn test_skip_invalid_event() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
-    verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+    let enc_key =
+        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
 
-    let init_100_req = init_100_req(&enc_Key);
+    let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/init_state")
         .set_json(&init_100_req)
@@ -223,7 +224,7 @@ async fn test_skip_invalid_event() {
     let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 100);
 
-    let transfer_110_req = transfer_110_req(&enc_Key);
+    let transfer_110_req = transfer_110_req(&enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/transfer")
         .set_json(&transfer_110_req)
@@ -240,7 +241,7 @@ async fn test_skip_invalid_event() {
     let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 100);
 
-    let transfer_10_req = transfer_10_req(&enc_Key);
+    let transfer_10_req = transfer_10_req(&enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/transfer")
         .set_json(&transfer_10_req)
@@ -328,6 +329,10 @@ async fn test_node_recovery() {
             .route(
                 "/api/v1/transfer",
                 web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/encrypting_key",
+                web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -350,11 +355,13 @@ async fn test_node_recovery() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
-    verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+    let enc_key =
+        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
 
+    let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/init_state")
-        .set_json(&MINT_100_REQ)
+        .set_json(&init_100_req)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -368,9 +375,10 @@ async fn test_node_recovery() {
     let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 100);
 
+    let transfer_10_req_ = transfer_10_req(&enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/transfer")
-        .set_json(&TRANSFER_10_REQ)
+        .set_json(&transfer_10_req_)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -406,9 +414,19 @@ async fn test_node_recovery() {
     let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 90);
 
+    let req = test::TestRequest::get()
+        .uri("/api/v1/encrypting_key")
+        .to_request();
+    let resp = test::call_service(&mut recovered_app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
+    let enc_key =
+        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+
+    let transfer_10_req = transfer_10_req(&enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/transfer")
-        .set_json(&TRANSFER_10_REQ)
+        .set_json(&transfer_10_req)
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -488,6 +506,10 @@ async fn test_join_group_then_handshake() {
             .route(
                 "/api/v1/key_rotation",
                 web::post().to(handle_key_rotation::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/encrypting_key",
+                web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -525,6 +547,15 @@ async fn test_join_group_then_handshake() {
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
+    let req = test::TestRequest::get()
+        .uri("/api/v1/encrypting_key")
+        .to_request();
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
+    let enc_key =
+        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
         .set_json(&erc20_api::join_group::post::Request {
@@ -535,9 +566,10 @@ async fn test_join_group_then_handshake() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
+    let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/init_state")
-        .set_json(&MINT_100_REQ)
+        .set_json(&init_100_req)
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -558,9 +590,10 @@ async fn test_join_group_then_handshake() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
+    let transfer_10_req = transfer_10_req(&enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/transfer")
-        .set_json(&TRANSFER_10_REQ)
+        .set_json(&transfer_10_req)
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
