@@ -81,6 +81,7 @@ contract Anonify is ReportHandle {
         bytes memory _enclaveSig
     ) public {
         address verifyingKey = Secp256k1.recover(sha256(_newCiphertext), _enclaveSig);
+        require(verifyingKey != address(0), "");
         require(verifyingKeyMapping[verifyingKey] == verifyingKey, "Invalid enclave signature.");
 
         emit StoreCiphertext(_newCiphertext);
@@ -93,6 +94,7 @@ contract Anonify is ReportHandle {
     ) public {
         require(_senderToRosterIdx[msg.sender] == _rosterIdx, "The roster index must be same as the registered one");
         address verifyingKey = Secp256k1.recover(sha256(abi.encodePacked(_handshake, _rosterIdx)), _enclaveSig);
+        require(verifyingKey != address(0), "");
         require(verifyingKeyMapping[verifyingKey] == verifyingKey, "Invalid enclave signature.");
 
         emit StoreHandshake(_handshake);
