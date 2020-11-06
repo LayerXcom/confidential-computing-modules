@@ -184,9 +184,16 @@ impl AccountId {
 
 /// Generating a random number inside the enclave.
 #[cfg(feature = "sgx")]
-pub fn sgx_rand_assign(rand: &mut [u8]) -> Result<(), Error> {
+pub fn rand_assign(rand: &mut [u8]) -> Result<(), Error> {
     use sgx_trts::trts::rsgx_read_rand;
     rsgx_read_rand(rand).map_err(|e| anyhow!("error rsgx_read_rand: {:?}", e))?;
+    Ok(())
+}
+
+#[cfg(feature = "std")]
+pub fn rand_assign(rand: &mut [u8]) -> Result<(), Error> {
+    let mut csprng: OsRng = OsRng::new()?;
+    csprng.fill_bytes(rand);
     Ok(())
 }
 
@@ -311,7 +318,7 @@ impl Ed25519ChallengeResponse {
     #[cfg(feature = "sgx")]
     pub fn new_from_rng() -> Result<Self, Error> {
         let mut seed = [0u8; SECRET_KEY_LENGTH];
-        sgx_rand_assign(&mut seed)?;
+        rand_assign(&mut seed)?;
         let secret = SecretKey::from_bytes(&seed).expect("invalid secret key length");
 
         let pubkey = PublicKey::from(&secret);
@@ -321,7 +328,7 @@ impl Ed25519ChallengeResponse {
         };
 
         let mut challenge = [0u8; CHALLENGE_SIZE];
-        sgx_rand_assign(&mut challenge)?;
+        rand_assign(&mut challenge)?;
         let sig = keypair.sign(&challenge);
 
         assert!(keypair.verify(&challenge, &sig).is_ok());

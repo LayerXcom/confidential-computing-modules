@@ -1,7 +1,7 @@
 use super::{CryptoRng, SHA256_OUTPUT_LEN};
+use crate::local_ring::hmac::{Context, Key, HMAC_SHA256};
+use crate::localstd::vec::Vec;
 use codec::Encode;
-use ring::hmac::{Context, Key, HMAC_SHA256};
-use std::vec::Vec;
 
 #[derive(Debug, Clone, Encode, Default, PartialEq)]
 pub struct HmacKey(Vec<u8>);

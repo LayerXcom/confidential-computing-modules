@@ -29,4 +29,5 @@ register_ecall!(
         REGISTER_NOTIFICATION_CMD,
         RegisterNotification<Ed25519ChallengeResponse>
     ),
+    (GET_ENCRYPTING_KEY_CMD, EncryptingKeyGetter),
 );

@@ -6,6 +6,7 @@ use frame_common::{
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
+use frame_treekem::{DhPubKey, EciesCiphertext};
 
 pub mod input {
     use super::*;
@@ -13,17 +14,17 @@ pub mod input {
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct Command<AP: AccessPolicy> {
         pub access_policy: AP,
-        pub state: StateType,
+        pub encrypted_command: EciesCiphertext,
         pub call_id: u32,
     }
 
     impl<AP: AccessPolicy> EcallInput for Command<AP> {}
 
     impl<AP: AccessPolicy> Command<AP> {
-        pub fn new(access_policy: AP, state: StateType, call_id: u32) -> Self {
+        pub fn new(access_policy: AP, encrypted_command: EciesCiphertext, call_id: u32) -> Self {
             Command {
                 access_policy,
-                state,
+                encrypted_command,
                 call_id,
             }
         }
@@ -32,6 +33,11 @@ pub mod input {
             &self.access_policy
         }
     }
+
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct GetEncryptingKey;
+
+    impl EcallInput for GetEncryptingKey {}
 
     #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct CallHandshake;
@@ -205,6 +211,23 @@ pub mod output {
 
         pub fn update(&mut self, updated_state: UpdatedState<StateType>) {
             self.updated_state = Some(updated_state)
+        }
+    }
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct ReturnEncryptingKey {
+        encrypting_key: DhPubKey,
+    }
+
+    impl EcallOutput for ReturnEncryptingKey {}
+
+    impl ReturnEncryptingKey {
+        pub fn new(encrypting_key: DhPubKey) -> Self {
+            ReturnEncryptingKey { encrypting_key }
+        }
+
+        pub fn encrypting_key(self) -> DhPubKey {
+            self.encrypting_key
         }
     }
 

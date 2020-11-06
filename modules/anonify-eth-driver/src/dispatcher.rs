@@ -8,6 +8,7 @@ use crate::{
 };
 use frame_common::{crypto::ExportPathSecret, state_types::UpdatedState, traits::*};
 use frame_host::engine::HostEngine;
+use frame_treekem::{DhPubKey, EciesCiphertext};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{
@@ -146,22 +147,21 @@ where
         Ok((tx_hash, export_path_secret))
     }
 
-    pub async fn send_command<ST, C, AP>(
+    pub async fn send_command<C, AP>(
         &self,
         access_policy: AP,
-        state: ST,
+        encrypted_command: EciesCiphertext,
         call_name: &str,
         signer: Address,
         gas: u64,
     ) -> Result<H256>
     where
-        ST: State,
         C: CallNameConverter,
         AP: AccessPolicy,
     {
         let inner = self.inner.read();
-        let input = host_input::Command::<ST, C, AP>::new(
-            state,
+        let input = host_input::Command::<C, AP>::new(
+            encrypted_command,
             call_name.to_string(),
             access_policy,
             signer,
@@ -217,6 +217,17 @@ where
             .deployer
             .get_account(index, password)
             .await
+    }
+
+    pub fn get_encrypting_key(&self) -> Result<DhPubKey> {
+        let input = host_input::GetEncryptingKey::default();
+        let eid = self.inner.read().deployer.get_enclave_id();
+        let encrypting_key = GetEncryptingKeyWorkflow::exec(input, eid)?;
+
+        Ok(encrypting_key
+            .ecall_output
+            .expect("must have ecall_output")
+            .encrypting_key())
     }
 
     pub fn register_notification<AP>(&self, access_policy: AP) -> Result<()>

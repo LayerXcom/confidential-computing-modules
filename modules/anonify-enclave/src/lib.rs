@@ -5,20 +5,21 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
+mod commands;
 pub mod context;
-mod crypto;
 mod error;
 mod group_key;
 mod handshake;
-mod commands;
+mod identity_key;
 mod kvs;
 mod notify;
 
 pub mod workflow {
+    pub use crate::commands::{MsgReceiver, MsgSender};
     pub use crate::context::GetState;
     pub use crate::handshake::{HandshakeReceiver, HandshakeSender, JoinGroupSender};
-    pub use crate::commands::{MsgReceiver, MsgSender};
     pub use crate::notify::RegisterNotification;
+    pub use crate::identity_key::EncryptingKeyGetter;
 }
 
 #[cfg(debug_assertions)]

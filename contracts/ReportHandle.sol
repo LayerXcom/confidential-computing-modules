@@ -66,7 +66,7 @@ contract ReportHandle {
     }
 
     // Get the registered encrypting key
-    function encryptingKey(bytes memory inpEncryptingKey) public view returns (bytes memory) {
+    function getEncryptingKey(bytes memory inpEncryptingKey) public view returns (bytes memory) {
         require(encryptingKeyMapping[inpEncryptingKey].length != 0, "The encrypting key has not been registered.");
         return encryptingKeyMapping[inpEncryptingKey];
     }

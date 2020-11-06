@@ -147,6 +147,10 @@ async fn main() -> io::Result<()> {
                 web::post()
                     .to(handle_register_notification::<EthDeployer, EthSender, EventWatcher>),
             )
+            .route(
+                "/api/v1/encrypting_key",
+                web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
+            )
     })
     .bind(anonify_url)?
     .workers(num_workers)

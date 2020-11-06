@@ -1,11 +1,12 @@
 use crate::application::AppKeyChain;
 use crate::group_state::GroupState;
 use crate::handshake::{Handshake, PathSecretKVS, PathSecretSource};
-use anyhow::anyhow;
-use rand_core::SeedableRng;
+use crate::local_anyhow::anyhow;
+use crate::local_rand;
+use crate::local_rand_core::SeedableRng;
 
 pub fn init_path_secret_kvs(kvs: &mut PathSecretKVS, until_roster_idx: usize, until_epoch: usize) {
-    let mut csprng = rand::rngs::StdRng::seed_from_u64(1);
+    let mut csprng = local_rand::rngs::StdRng::seed_from_u64(1);
     for r_i in 0..until_roster_idx {
         for e_i in 0..until_epoch {
             kvs.insert_random_path_secret(r_i as u32, e_i as u32, &mut csprng);

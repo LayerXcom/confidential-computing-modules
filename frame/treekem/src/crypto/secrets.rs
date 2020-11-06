@@ -11,14 +11,17 @@ use super::{
     hmac::HmacKey,
     CryptoRng, SHA256_OUTPUT_LEN,
 };
+#[cfg(feature = "sgx")]
 use crate::handshake::AccessKey;
-use anyhow::{anyhow, Result};
+use crate::local_anyhow::{anyhow, Result};
+use crate::localstd::{fmt, vec::Vec};
 use codec::{Decode, Encode, Input};
-use frame_common::crypto::{sgx_rand_assign, ExportPathSecret, EXPORT_ID_SIZE, SEALED_DATA_SIZE};
+use frame_common::crypto::rand_assign;
+use frame_common::crypto::{ExportPathSecret, EXPORT_ID_SIZE, SEALED_DATA_SIZE};
+#[cfg(feature = "sgx")]
 use sgx_tseal::SgxSealedData;
+#[cfg(feature = "sgx")]
 use sgx_types::sgx_sealed_data_t;
-use std::fmt;
-use std::vec::Vec;
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);
@@ -174,7 +177,7 @@ impl PathSecret {
 
     pub fn new_from_random_sgx() -> PathSecret {
         let mut buf = vec![0u8; SHA256_OUTPUT_LEN];
-        sgx_rand_assign(&mut buf[..]).unwrap();
+        rand_assign(&mut buf[..]).unwrap();
         PathSecret::from(buf)
     }
 
@@ -183,6 +186,7 @@ impl PathSecret {
         PathSecret(key)
     }
 
+    #[cfg(feature = "sgx")]
     pub fn derive_next(self, access_key: AccessKey) -> Result<PathSecret> {
         let prk = HmacKey::from(self);
         let mut path_secret_buf = vec![0u8; SHA256_OUTPUT_LEN];
@@ -199,6 +203,7 @@ impl PathSecret {
         self.as_bytes().len()
     }
 
+    #[cfg(feature = "sgx")]
     pub fn try_into_exporting(self, epoch: u32, id: &[u8]) -> Result<ExportPathSecret> {
         let encoded_sealed = UnsealedPathSecret::from(self).encoded_seal()?;
         let mut id_arr = [0u8; EXPORT_ID_SIZE];
@@ -207,6 +212,7 @@ impl PathSecret {
         Ok(ExportPathSecret::new(encoded_sealed, epoch, id_arr))
     }
 
+    #[cfg(feature = "sgx")]
     pub fn try_from_importing(imp_path_secret: ExportPathSecret) -> Result<Self> {
         let sealed_path_secret = SealedPathSecret::decode(&mut imp_path_secret.encoded_sealed())
             .map_err(|e| anyhow!("error: {:?}", e))?
@@ -220,6 +226,7 @@ impl PathSecret {
 pub struct UnsealedPathSecret([u8; SHA256_OUTPUT_LEN]);
 
 impl UnsealedPathSecret {
+    #[cfg(feature = "sgx")]
     pub fn encoded_seal(self) -> Result<Vec<u8>> {
         let additional = [0u8; 0];
         let sealed_data = SgxSealedData::<Self>::seal_data(&additional, &self)
@@ -229,8 +236,10 @@ impl UnsealedPathSecret {
     }
 }
 
+#[cfg(feature = "sgx")]
 unsafe impl sgx_types::marker::ContiguousMemory for UnsealedPathSecret {}
 
+#[cfg(feature = "sgx")]
 impl From<PathSecret> for UnsealedPathSecret {
     fn from(ps: PathSecret) -> Self {
         assert_eq!(ps.len(), SHA256_OUTPUT_LEN);
@@ -246,9 +255,11 @@ impl From<UnsealedPathSecret> for PathSecret {
     }
 }
 
+#[cfg(feature = "sgx")]
 #[derive(Default, Clone)]
 pub struct SealedPathSecret<'a>(SgxSealedData<'a, UnsealedPathSecret>);
 
+#[cfg(feature = "sgx")]
 impl<'a> SealedPathSecret<'a> {
     pub fn new(sealed_data: SgxSealedData<'a, UnsealedPathSecret>) -> Self {
         SealedPathSecret(sealed_data)
@@ -264,6 +275,7 @@ impl<'a> SealedPathSecret<'a> {
     }
 }
 
+#[cfg(feature = "sgx")]
 impl Encode for SealedPathSecret<'_> {
     #[allow(clippy::cast_ptr_alignment)]
     fn encode(&self) -> Vec<u8> {
@@ -279,6 +291,7 @@ impl Encode for SealedPathSecret<'_> {
     }
 }
 
+#[cfg(feature = "sgx")]
 impl Decode for SealedPathSecret<'_> {
     #[allow(clippy::cast_ptr_alignment)]
     fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
@@ -296,16 +309,18 @@ impl Decode for SealedPathSecret<'_> {
     }
 }
 
+#[cfg(feature = "sgx")]
 impl fmt::Debug for SealedPathSecret<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("SealedPathSecret").finish()
     }
 }
 
+#[cfg(feature = "sgx")]
 #[cfg(debug_assertions)]
 pub(crate) mod tests {
     use super::*;
-    use std::string::String;
+    use crate::localstd::string::String;
     use test_utils::*;
 
     pub(crate) fn run_tests() -> bool {

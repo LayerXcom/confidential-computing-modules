@@ -586,6 +586,7 @@ dependencies = [
  "ethabi 12.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "frame-common 0.1.0",
  "frame-host 0.1.0",
+ "frame-treekem 0.1.0",
  "frame-types 0.1.0",
  "hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -601,6 +602,7 @@ name = "anonify-io-types"
 version = "0.1.0"
 dependencies = [
  "frame-common 0.1.0",
+ "frame-treekem 0.1.0",
  "libsecp256k1 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec 1.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
@@ -610,6 +612,7 @@ dependencies = [
 name = "anonify-wallet"
 version = "0.1.0"
 dependencies = [
+ "anyhow 1.0.32 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "frame-common 0.1.0",
@@ -619,6 +622,7 @@ dependencies = [
  "serde_bytes 0.11.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.58 (registry+https://github.com/rust-lang/crates.io-index)",
  "smallvec 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror 1.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1020,6 +1024,11 @@ version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "cfg-if"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "chrono"
 version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1300,6 +1309,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crypto-mac"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "generic-array 0.14.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "subtle 2.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "ctor"
 version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1444,23 +1462,6 @@ version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "elastic-array"
-version = "0.10.3"
-source = "git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.2#fd839675fe94dd5c18ceb80b99279ff18ba07e69"
-dependencies = [
- "heapsize 0.4.2 (git+https://github.com/mesalock-linux/heapsize-sgx)",
- "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
-]
-
-[[package]]
-name = "elastic-array"
-version = "0.10.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "heapsize 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "encode_unicode"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1512,6 +1513,7 @@ version = "0.1.0"
 dependencies = [
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "frame-common 0.1.0",
+ "frame-treekem 0.1.0",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.116 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde-big-array 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1523,6 +1525,7 @@ name = "erc20-cli"
 version = "0.1.0"
 dependencies = [
  "anonify-wallet 0.1.0",
+ "anyhow 1.0.32 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "console 0.7.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "dialoguer 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1530,11 +1533,18 @@ dependencies = [
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "erc20-api 0.1.0",
+ "erc20-state-transition 0.1.0",
+ "ethabi 12.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "frame-common 0.1.0",
+ "frame-runtime 0.1.0",
+ "frame-treekem 0.1.0",
  "log 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parity-scale-codec 1.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.9.24 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror 1.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
  "tiny-bip39 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "web3 0.13.0 (git+https://github.com/tomusdrw/rust-web3?rev=d7393708e257f7ef4ad354917889a8001cf2927c)",
 ]
 
 [[package]]
@@ -1568,13 +1578,16 @@ dependencies = [
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "erc20-api 0.1.0",
  "erc20-state-transition 0.1.0",
+ "ethabi 12.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "frame-common 0.1.0",
  "frame-host 0.1.0",
  "frame-runtime 0.1.0",
+ "frame-treekem 0.1.0",
  "hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "integration-tests 0.1.0",
  "log 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parity-scale-codec 1.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.58 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 1.0.20 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1710,8 +1723,6 @@ dependencies = [
  "anyhow 1.0.32 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "elastic-array 0.10.3 (git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.2)",
- "elastic-array 0.10.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-scale-codec 1.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1781,13 +1792,20 @@ name = "frame-treekem"
 version = "0.1.0"
 dependencies = [
  "anyhow 1.0.28 (git+https://github.com/mesalock-linux/anyhow-sgx.git?rev=sgx_1.1.2)",
+ "anyhow 1.0.32 (registry+https://github.com/rust-lang/crates.io-index)",
  "frame-common 0.1.0",
  "libsecp256k1 0.3.5 (git+https://github.com/mesalock-linux/libsecp256k1-rs-sgx?rev=sgx_1.1.2)",
+ "libsecp256k1 0.4.0 (git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955)",
+ "log 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.2)",
  "parity-scale-codec 1.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.3 (git+https://github.com/mesalock-linux/rand-sgx?rev=v0.7.3_sgx1.1.2)",
+ "rand_core 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_core 0.5.1 (git+https://github.com/mesalock-linux/rand-sgx?rev=v0.7.3_sgx1.1.2)",
  "ring 0.16.11 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)",
+ "ring 0.16.15 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.116 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tseal 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2062,22 +2080,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "heapsize"
-version = "0.4.2"
-source = "git+https://github.com/mesalock-linux/heapsize-sgx#01a11f9c0a8c0dc766353ac0a7a764bfacb52db6"
-dependencies = [
- "sgx_tstd 1.1.2 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)",
-]
-
-[[package]]
-name = "heapsize"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "winapi 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "heck"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2127,6 +2129,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "hmac"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "crypto-mac 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "digest 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "hmac-drbg"
 version = "0.1.2"
 source = "git+https://github.com/mesalock-linux/hmac-drbg-rs-sgx#acd647daddc741bf4fd4e546d13fa78dbd7c9687"
@@ -2143,6 +2154,16 @@ dependencies = [
  "digest 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "generic-array 0.8.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "hmac 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "hmac-drbg"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "digest 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "generic-array 0.14.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hmac 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2387,11 +2408,15 @@ dependencies = [
  "anonify-eth-driver 0.1.0",
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "erc20-state-transition 0.1.0",
+ "ethabi 12.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "frame-common 0.1.0",
  "frame-host 0.1.0",
  "frame-runtime 0.1.0",
+ "frame-treekem 0.1.0",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "parity-scale-codec 1.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_types 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "web3 0.13.0 (git+https://github.com/tomusdrw/rust-web3?rev=d7393708e257f7ef4ad354917889a8001cf2927c)",
 ]
 
 [[package]]
@@ -2508,6 +2533,14 @@ version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "js-sys"
+version = "0.3.45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "wasm-bindgen 0.2.68 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "jsonrpc-core"
 version = "15.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2573,6 +2606,50 @@ dependencies = [
  "sha2 0.8.0 (git+https://github.com/mesalock-linux/rustcrypto-hashes-sgx)",
  "subtle 2.2.2 (git+https://github.com/mesalock-linux/subtle-sgx)",
  "typenum 1.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "libsecp256k1"
+version = "0.4.0"
+source = "git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955#12e3829d6cd2d6459c2c920d7cf222f3a930b955"
+dependencies = [
+ "arrayref 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "base64 0.12.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "digest 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hmac-drbg 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libsecp256k1-core 0.1.0 (git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955)",
+ "libsecp256k1-gen-ecmult 0.1.0 (git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955)",
+ "libsecp256k1-gen-genmult 0.1.0 (git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955)",
+ "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.116 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sha2 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "typenum 1.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "libsecp256k1-core"
+version = "0.1.0"
+source = "git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955#12e3829d6cd2d6459c2c920d7cf222f3a930b955"
+dependencies = [
+ "crunchy 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "digest 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "subtle 2.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "libsecp256k1-gen-ecmult"
+version = "0.1.0"
+source = "git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955#12e3829d6cd2d6459c2c920d7cf222f3a930b955"
+dependencies = [
+ "libsecp256k1-core 0.1.0 (git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955)",
+]
+
+[[package]]
+name = "libsecp256k1-gen-genmult"
+version = "0.1.0"
+source = "git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955#12e3829d6cd2d6459c2c920d7cf222f3a930b955"
+dependencies = [
+ "libsecp256k1-core 0.1.0 (git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955)",
 ]
 
 [[package]]
@@ -3491,6 +3568,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "ring"
+version = "0.16.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "cc 1.0.60 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.79 (registry+https://github.com/rust-lang/crates.io-index)",
+ "once_cell 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "spin 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "untrusted 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "web-sys 0.3.45 (registry+https://github.com/rust-lang/crates.io-index)",
+ "winapi 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "ripemd160"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3957,6 +4048,18 @@ dependencies = [
  "digest 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "fake-simd 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "opaque-debug 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "sha2"
+version = "0.9.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "block-buffer 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cfg-if 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cpuid-bool 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "digest 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "opaque-debug 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -4955,6 +5058,15 @@ version = "0.2.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "web-sys"
+version = "0.3.45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "js-sys 0.3.45 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wasm-bindgen 0.2.68 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "web3"
 version = "0.13.0"
 source = "git+https://github.com/tomusdrw/rust-web3?rev=d7393708e257f7ef4ad354917889a8001cf2927c#d7393708e257f7ef4ad354917889a8001cf2927c"
@@ -5169,6 +5281,7 @@ dependencies = [
 "checksum cbindgen 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)" = "2db2df1ebc842c41fd2c4ae5b5a577faf63bd5151b953db752fc686812bee318"
 "checksum cc 1.0.60 (registry+https://github.com/rust-lang/crates.io-index)" = "ef611cc68ff783f18535d77ddd080185275713d852c4f5cbb6122c462a7a825c"
 "checksum cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)" = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
+"checksum cfg-if 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 "checksum chrono 0.4.19 (registry+https://github.com/rust-lang/crates.io-index)" = "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73"
 "checksum clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b957d88f4b6a63b9d70d5f454ac8011819c6efa7727858f458ab71c756ce2d3e"
 "checksum clear_on_drop 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "c9cc5db465b294c3fa986d5bbb0f3017cd850bff6dd6c52f9ccff8b4d21b7b08"
@@ -5197,6 +5310,7 @@ dependencies = [
 "checksum crypto-mac 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "779015233ac67d65098614aec748ac1c756ab6677fa2e14cf8b37c08dfed1198"
 "checksum crypto-mac 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4434400df11d95d556bac068ddfedd482915eb18fe8bea89bc80b6e4b1c179e5"
 "checksum crypto-mac 0.8.0 (git+https://github.com/mesalock-linux/rustcrypto-traits-sgx)" = "<none>"
+"checksum crypto-mac 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b584a330336237c1eecd3e94266efb216c56ed91225d634cb2991c5f3fd1aeab"
 "checksum ctor 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)" = "7fbaabec2c953050352311293be5c6aba8e141ba19d6811862b232d6fd020484"
 "checksum ctr 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "022cd691704491df67d25d006fe8eca083098253c4d43516c2206479c58c6736"
 "checksum curve25519-dalek 1.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "405681bfe2b7b25ad8660dfd90b6e8be9e470e224ff49e36b587d43f29a22601"
@@ -5213,8 +5327,6 @@ dependencies = [
 "checksum dtoa 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "134951f4028bdadb9b84baf4232681efbf277da25144b9b0ad65df75946c422b"
 "checksum ed25519-dalek 1.0.0-pre.2 (registry+https://github.com/rust-lang/crates.io-index)" = "845aaacc16f01178f33349e7c992ecd0cee095aa5e577f0f4dee35971bd36455"
 "checksum either 1.6.1 (registry+https://github.com/rust-lang/crates.io-index)" = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
-"checksum elastic-array 0.10.3 (git+https://github.com/mesalock-linux/elastic-array-sgx.git?tag=sgx_1.1.2)" = "<none>"
-"checksum elastic-array 0.10.3 (registry+https://github.com/rust-lang/crates.io-index)" = "580f3768bd6465780d063f5b8213a2ebd506e139b345e4a81eb301ceae3d61e1"
 "checksum encode_unicode 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "a357d28ed41a50f9c765dbfe56cbc04a64e53e5fc58ba79fbc34c10ef3df831f"
 "checksum encoding_rs 0.8.24 (registry+https://github.com/rust-lang/crates.io-index)" = "a51b8cf747471cb9499b6d59e59b0444f4c90eba8968c4e44874e92b5b64ace2"
 "checksum enum-as-inner 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3d58266c97445680766be408285e798d3401c6d4c378ec5552e78737e681e37d"
@@ -5261,16 +5373,16 @@ dependencies = [
 "checksum hashbrown 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)" = "8e6073d0ca812575946eb5f35ff68dbe519907b25c42530389ff946dc84c6ead"
 "checksum hashbrown 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
 "checksum hashbrown_tstd 0.7.1 (git+https://github.com/apache/teaclave-sgx-sdk.git?rev=v1.1.2)" = "<none>"
-"checksum heapsize 0.4.2 (git+https://github.com/mesalock-linux/heapsize-sgx)" = "<none>"
-"checksum heapsize 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "1679e6ea370dee694f91f1dc469bf94cf8f52051d147aec3e1f9497c6fc22461"
 "checksum heck 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "20564e78d53d2bb135c343b3f47714a56af2061f1c928fdb541dc7b9fdd94205"
 "checksum hermit-abi 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)" = "4c30f6d0bc6b00693347368a67d41b58f2fb851215ff1da49e90fe2c5c667151"
 "checksum hex 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "644f9158b2f133fd50f5fb3242878846d9eb792e445c893805ff0e3824006e35"
 "checksum hmac 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7a13f4163aa0c5ca1be584aace0e2212b2e41be5478218d4f657f5f778b2ae2a"
 "checksum hmac 0.7.1 (git+https://github.com/mesalock-linux/rustcrypto-MACs-sgx)" = "<none>"
 "checksum hmac 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)" = "5dcb5e64cda4c23119ab41ba960d1e170a774c8e4b9d9e6a9bc18aabf5e59695"
+"checksum hmac 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "126888268dcc288495a26bf004b38c5fdbb31682f992c84ceb046a1f0fe38840"
 "checksum hmac-drbg 0.1.2 (git+https://github.com/mesalock-linux/hmac-drbg-rs-sgx)" = "<none>"
 "checksum hmac-drbg 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "4fe727d41d2eec0a6574d887914347e5ff96a3b87177817e2a9820c5c87fecc2"
+"checksum hmac-drbg 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "17ea0a1394df5b6574da6e0c1ade9e78868c9fb0a4e5ef4428e32da4676b85b1"
 "checksum hostname 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3c731c3e10504cc8ed35cfe2f1db4c9274c3d35fa486e3b31df46f068ef3e867"
 "checksum http 0.1.21 (registry+https://github.com/rust-lang/crates.io-index)" = "d6ccf5ede3a895d8856620237b2f02972c1bbc78d2965ad7fe8838d4a0ed41f0"
 "checksum http 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "28d569972648b2c512421b5f2a405ad6ac9666547189d0c5477a3f200f3e02f9"
@@ -5298,6 +5410,7 @@ dependencies = [
 "checksum ipconfig 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f7e2f18aece9709094573a9f24f483c4f65caa4298e2f7ae1b71cc65d853fad7"
 "checksum itoa 0.4.5 (git+https://github.com/mesalock-linux/itoa-sgx.git)" = "<none>"
 "checksum itoa 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "dc6f3ad7b9d11a0c00842ff8de1b60ee58661048eb8049ed33c73594f359d7e6"
+"checksum js-sys 0.3.45 (registry+https://github.com/rust-lang/crates.io-index)" = "ca059e81d9486668f12d455a4ea6daa600bd408134cd17e3d3fb5a32d1f016f8"
 "checksum jsonrpc-core 15.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0745a6379e3edc893c84ec203589790774e4247420033e71a76d3ab4687991fa"
 "checksum kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"
 "checksum language-tags 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "a91d884b6667cd606bb5a69aa0c99ba811a115fc68915e7056ec08a46e93199a"
@@ -5305,6 +5418,10 @@ dependencies = [
 "checksum libc 0.2.79 (registry+https://github.com/rust-lang/crates.io-index)" = "2448f6066e80e3bfc792e9c98bf705b4b0fc6e8ef5b43e5889aff0eaa9c58743"
 "checksum libsecp256k1 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "688e8d65e495567c2c35ea0001b26b9debf0b4ea11f8cccc954233b75fc3428a"
 "checksum libsecp256k1 0.3.5 (git+https://github.com/mesalock-linux/libsecp256k1-rs-sgx?rev=sgx_1.1.2)" = "<none>"
+"checksum libsecp256k1 0.4.0 (git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955)" = "<none>"
+"checksum libsecp256k1-core 0.1.0 (git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955)" = "<none>"
+"checksum libsecp256k1-gen-ecmult 0.1.0 (git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955)" = "<none>"
+"checksum libsecp256k1-gen-genmult 0.1.0 (git+https://github.com/paritytech/libsecp256k1.git?rev=12e3829d6cd2d6459c2c920d7cf222f3a930b955)" = "<none>"
 "checksum linked-hash-map 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)" = "8dd5a6d5999d9907cda8ed67bbd137d3af8085216c2ac62de5be860bd41f304a"
 "checksum lock_api 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "62ebf1391f6acad60e5c8b43706dde4582df75c06698ab44511d15016bc2442c"
 "checksum lock_api 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "c4da24a77a3d8a6d4862d95f72e6fdb9c09a643ecdb402d754004a557f2bec75"
@@ -5404,6 +5521,7 @@ dependencies = [
 "checksum reqwest 0.9.24 (registry+https://github.com/rust-lang/crates.io-index)" = "f88643aea3c1343c804950d7bf983bd2067f5ab59db6d613a08e05572f2714ab"
 "checksum resolv-conf 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)" = "11834e137f3b14e309437a8276714eed3a80d1ef894869e510f2c0c0b98b9f4a"
 "checksum ring 0.16.11 (git+https://github.com/mesalock-linux/ring-sgx?tag=v0.16.5)" = "<none>"
+"checksum ring 0.16.15 (registry+https://github.com/rust-lang/crates.io-index)" = "952cd6b98c85bbc30efa1ba5783b8abf12fec8b3287ffa52605b9432313e34e4"
 "checksum ripemd160 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ad5112e0dbbb87577bfbc56c42450235e3012ce336e29c5befd7807bd626da4a"
 "checksum rlp 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "1190dcc8c3a512f1eef5d09bb8c84c7f39e1054e174d1795482e18f5272f2e73"
 "checksum rust-argon2 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)" = "9dab61250775933275e84053ac235621dfb739556d5c54a2f2e9313b7cf43a19"
@@ -5458,6 +5576,7 @@ dependencies = [
 "checksum sha2 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7d963c78ce367df26d7ea8b8cc655c651b42e8a1e584e869c1e17dae3ccb116a"
 "checksum sha2 0.8.0 (git+https://github.com/mesalock-linux/rustcrypto-hashes-sgx)" = "<none>"
 "checksum sha2 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)" = "a256f46ea78a0c0d9ff00077504903ac881a1dafdc20da66545699e7776b3e69"
+"checksum sha2 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6e7aab86fe2149bad8c507606bdb3f4ef5e7b2380eb92350f56122cca72a42a8"
 "checksum signal-hook-registry 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a3e12110bc539e657a646068aaf5eb5b63af9d0c1f7b29c97113fad80e15f035"
 "checksum slab 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
 "checksum smallvec 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)" = "f7b0758c52e15a8b5e3691eae6cc559f08eee9406e548a4477ba4e67770a82b6"
@@ -5558,6 +5677,7 @@ dependencies = [
 "checksum wasm-bindgen-macro 0.2.68 (registry+https://github.com/rust-lang/crates.io-index)" = "6b13312a745c08c469f0b292dd2fcd6411dba5f7160f593da6ef69b64e407038"
 "checksum wasm-bindgen-macro-support 0.2.68 (registry+https://github.com/rust-lang/crates.io-index)" = "f249f06ef7ee334cc3b8ff031bfc11ec99d00f34d86da7498396dc1e3b1498fe"
 "checksum wasm-bindgen-shared 0.2.68 (registry+https://github.com/rust-lang/crates.io-index)" = "1d649a3145108d7d3fbcde896a468d1bd636791823c9921135218ad89be08307"
+"checksum web-sys 0.3.45 (registry+https://github.com/rust-lang/crates.io-index)" = "4bf6ef87ad7ae8008e15a355ce696bed26012b7caa21605188cfd8214ab51e2d"
 "checksum web3 0.13.0 (git+https://github.com/tomusdrw/rust-web3?rev=d7393708e257f7ef4ad354917889a8001cf2927c)" = "<none>"
 "checksum webpki 0.21.2 (git+https://github.com/mesalock-linux/webpki?branch=mesalock_sgx)" = "<none>"
 "checksum webpki-roots 0.19.0 (git+https://github.com/mesalock-linux/webpki-roots?branch=mesalock_sgx)" = "<none>"
