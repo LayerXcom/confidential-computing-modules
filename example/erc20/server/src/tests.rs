@@ -414,31 +414,33 @@ async fn test_node_recovery() {
     let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 90);
 
-    let req = test::TestRequest::get()
-        .uri("/api/v1/encrypting_key")
-        .to_request();
-    let resp = test::call_service(&mut recovered_app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
-    let enc_key =
-        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+    // TODO: Call registering report #281
 
-    let transfer_10_req = transfer_10_req(&enc_key);
-    let req = test::TestRequest::post()
-        .uri("/api/v1/transfer")
-        .set_json(&transfer_10_req)
-        .to_request();
-    let resp = test::call_service(&mut recovered_app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
+    // let req = test::TestRequest::get()
+    //     .uri("/api/v1/encrypting_key")
+    //     .to_request();
+    // let resp = test::call_service(&mut recovered_app, req).await;
+    // assert!(resp.status().is_success(), "response: {:?}", resp);
+    // let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
+    // let enc_key =
+    //     verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
 
-    let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
-        .set_json(&BALANCE_OF_REQ)
-        .to_request();
-    let resp = test::call_service(&mut recovered_app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
-    assert_eq!(balance.0.as_raw(), 80);
+    // let transfer_10_req = transfer_10_req(&enc_key);
+    // let req = test::TestRequest::post()
+    //     .uri("/api/v1/transfer")
+    //     .set_json(&transfer_10_req)
+    //     .to_request();
+    // let resp = test::call_service(&mut recovered_app, req).await;
+    // assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    // let req = test::TestRequest::get()
+    //     .uri("/api/v1/balance_of")
+    //     .set_json(&BALANCE_OF_REQ)
+    //     .to_request();
+    // let resp = test::call_service(&mut recovered_app, req).await;
+    // assert!(resp.status().is_success(), "response: {:?}", resp);
+    // let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
+    // assert_eq!(balance.0.as_raw(), 80);
 }
 
 #[actix_rt::test]
@@ -547,6 +549,16 @@ async fn test_join_group_then_handshake() {
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
+    let req = test::TestRequest::post()
+        .uri("/api/v1/join_group")
+        .set_json(&erc20_api::join_group::post::Request {
+            contract_addr: contract_addr.0.clone(),
+        })
+        .to_request();
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
+
     let req = test::TestRequest::get()
         .uri("/api/v1/encrypting_key")
         .to_request();
@@ -555,16 +567,6 @@ async fn test_join_group_then_handshake() {
     let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
     let enc_key =
         verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
-
-    let req = test::TestRequest::post()
-        .uri("/api/v1/join_group")
-        .set_json(&erc20_api::join_group::post::Request {
-            contract_addr: contract_addr.0,
-        })
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
