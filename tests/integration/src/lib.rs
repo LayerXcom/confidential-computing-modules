@@ -33,7 +33,7 @@ lazy_static! {
     pub static ref ENV_LOGGER_INIT: () = env_logger::init();
 }
 
-async fn get_encrypting_key(
+pub async fn get_encrypting_key(
     contract_addr: &str,
     dispatcher: &Dispatcher<EthDeployer, EthSender, EventWatcher>,
 ) -> DhPubKey {

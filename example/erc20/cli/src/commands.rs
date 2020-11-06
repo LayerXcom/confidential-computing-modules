@@ -6,7 +6,7 @@ use crate::{
 use anonify_wallet::{DirOperations, KeyFile, KeystoreDirectory, WalletDirectory};
 use anyhow::anyhow;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
-use codec::{Decode, Encode};
+use codec::Encode;
 use ed25519_dalek::Keypair;
 use erc20_state_transition::{approve, burn, construct, mint, transfer, transfer_from};
 use frame_common::crypto::AccountId;
