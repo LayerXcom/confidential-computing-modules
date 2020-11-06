@@ -19,4 +19,5 @@ pub mod workflow {
     pub use crate::context::GetState;
     pub use crate::handshake::{HandshakeReceiver, HandshakeSender, JoinGroupSender};
     pub use crate::notify::RegisterNotification;
+    pub use crate::identity_key::EncryptingKeyGetter;
 }
