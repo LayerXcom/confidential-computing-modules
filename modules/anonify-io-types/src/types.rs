@@ -141,6 +141,7 @@ pub mod output {
         fn encode(&self) -> Vec<u8> {
             let mut acc = vec![];
             acc.extend_from_slice(&self.encode_enclave_sig());
+            acc.push(self.export_recovery_id());
             acc.extend_from_slice(&self.encode_ciphertext());
 
             acc
@@ -152,17 +153,16 @@ pub mod output {
             let mut enclave_sig_buf = [0u8; 64];
             value.read(&mut enclave_sig_buf)?;
 
+            let recovery_id_buf = value.read_byte()?;
+
             let ciphertext_len = value
                 .remaining_len()?
                 .expect("Ciphertext length should not be zero");
             let mut ciphertext_buf = vec![0u8; ciphertext_len];
             value.read(&mut ciphertext_buf)?;
 
-            let recovery_id_buf = value.read_byte()?;
-
             let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
             let ciphertext = Ciphertext::decode(&mut &ciphertext_buf[..])?;
-
             let recovery_id = secp256k1::RecoveryId::parse(recovery_id_buf)
                 .expect("recovery_id should be parsed");
 
@@ -195,12 +195,12 @@ pub mod output {
             self.ciphertext.encode()
         }
 
-        pub fn encode_enclave_sig(&self) -> [u8; 65] {
-            let mut ret = [0u8; 65];
-            let sig = self.enclave_sig.serialize();
-            ret[..64].copy_from_slice(&sig);
-            ret[64] = self.recovery_id.serialize() + RECOVERY_ID_OFFSET;
-            ret
+        pub fn export_recovery_id(&self) -> u8 {
+            self.recovery_id.serialize() + RECOVERY_ID_OFFSET
+        }
+
+        pub fn encode_enclave_sig(&self) -> [u8; 64] {
+            self.enclave_sig.serialize()
         }
     }
 
@@ -331,6 +331,7 @@ pub mod output {
             let mut acc = vec![];
             acc.extend_from_slice(&self.export_path_secret_as_ref().encode());
             acc.extend_from_slice(&self.encode_enclave_sig());
+            acc.push(self.export_recovery_id());
             acc.extend_from_slice(&self.roster_idx().encode());
             acc.extend_from_slice(&self.encode_handshake());
 
@@ -396,12 +397,12 @@ pub mod output {
             self.export_path_secret
         }
 
-        pub fn encode_enclave_sig(&self) -> [u8; 65] {
-            let mut ret = [0u8; 65];
-            let sig = self.enclave_sig.serialize();
-            ret[..64].copy_from_slice(&sig);
-            ret[64] = self.recovery_id.serialize() + RECOVERY_ID_OFFSET;
-            ret
+        pub fn export_recovery_id(&self) -> u8 {
+            self.recovery_id.serialize() + RECOVERY_ID_OFFSET
+        }
+
+        pub fn encode_enclave_sig(&self) -> [u8; 64] {
+            self.enclave_sig.serialize()
         }
 
         pub fn roster_idx(&self) -> u32 {

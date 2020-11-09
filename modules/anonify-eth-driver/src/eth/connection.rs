@@ -78,12 +78,13 @@ impl Web3Contract {
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
         let ciphertext = ecall_output.encode_ciphertext();
         let enclave_sig = &ecall_output.encode_enclave_sig();
+        let recovery_id = ecall_output.export_recovery_id();
         let gas = output.gas;
 
         self.contract
             .call(
                 "storeCommand",
-                (ciphertext, enclave_sig.to_vec()),
+                (ciphertext, enclave_sig.to_vec().push(recovery_id)),
                 output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
             )
@@ -97,12 +98,17 @@ impl Web3Contract {
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
         let handshake = ecall_output.encode_handshake();
         let enclave_sig = &ecall_output.encode_enclave_sig();
+        let recovery_id = ecall_output.export_recovery_id();
         let gas = output.gas;
 
         self.contract
             .call(
                 "handshake",
-                (handshake, enclave_sig.to_vec(), ecall_output.roster_idx()),
+                (
+                    handshake,
+                    enclave_sig.to_vec().push(recovery_id),
+                    ecall_output.roster_idx(),
+                ),
                 output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
             )
