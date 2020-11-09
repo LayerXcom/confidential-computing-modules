@@ -4,7 +4,7 @@ use crate::error::Result;
 use codec::Encode;
 use frame_common::{crypto::sgx_rand_assign, traits::Keccak256};
 use frame_treekem::{DhPrivateKey, DhPubKey};
-use secp256k1::{self, util::SECRET_KEY_SIZE, Message, PublicKey, SecretKey, Signature};
+use secp256k1::{self, util::SECRET_KEY_SIZE, Message, PublicKey, SecretKey, Signature, RecoveryId};
 use sgx_types::sgx_report_data_t;
 use std::prelude::v1::Vec;
 
@@ -39,10 +39,10 @@ impl EnclaveIdentityKey {
         })
     }
 
-    pub fn sign(&self, msg: &[u8]) -> Result<Signature> {
+    pub fn sign(&self, msg: &[u8]) -> Result<(Signature, RecoveryId)> {
         let msg = Message::parse_slice(msg)?;
         let sig = secp256k1::sign(&msg, &self.signing_privkey)?;
-        Ok(sig.0)
+        Ok(sig)
     }
 
     pub fn verifying_key(&self) -> PublicKey {

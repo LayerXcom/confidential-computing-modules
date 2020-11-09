@@ -66,12 +66,15 @@ impl EnclaveEngine for HandshakeSender {
         let (export_handshake, export_path_secret) = group_key.create_handshake()?;
         let roster_idx = export_handshake.roster_idx();
         let msg = Sha256::hash_with_u32(&export_handshake.encode(), roster_idx);
-        let enclave_sig = enclave_context.sign(msg.as_bytes())?;
+        let sig = enclave_context.sign(msg.as_bytes())?;
+        let enclave_sig = sig.0;
+        let recovery_id = sig.1;
 
         Ok(output::ReturnHandshake::new(
             export_handshake,
             export_path_secret,
             enclave_sig,
+            recovery_id,
             roster_idx,
         ))
     }

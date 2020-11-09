@@ -7,6 +7,11 @@ use frame_common::{
     EcallInput, EcallOutput,
 };
 
+// libsecp256k1 library generates RecoveryId as 0/1.
+// However Secp256k1 used in solidity use 27/28 as a value to make the signature unique.
+// RECOVERY_ID_OFFSET is used to adjust the difference between libsecp256k1 and Secp256k1.
+const RECOVERY_ID_OFFSET: u8 = 27;
+
 pub mod input {
     use super::*;
 
@@ -127,6 +132,7 @@ pub mod output {
     pub struct Command {
         enclave_sig: secp256k1::Signature,
         ciphertext: Ciphertext,
+        recovery_id: secp256k1::RecoveryId,
     }
 
     impl EcallOutput for Command {}
@@ -152,21 +158,32 @@ pub mod output {
             let mut ciphertext_buf = vec![0u8; ciphertext_len];
             value.read(&mut ciphertext_buf)?;
 
+            let mut recovery_id_buf = value.read_byte()?;
+
             let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
             let ciphertext = Ciphertext::decode(&mut &ciphertext_buf[..])?;
+
+            let recovery_id = secp256k1::RecoveryId::parse(recovery_id_buf)
+                .expect("recovery_id should be parsed");
 
             Ok(Command {
                 enclave_sig,
                 ciphertext,
+                recovery_id,
             })
         }
     }
 
     impl Command {
-        pub fn new(ciphertext: Ciphertext, enclave_sig: secp256k1::Signature) -> Self {
+        pub fn new(
+            ciphertext: Ciphertext,
+            enclave_sig: secp256k1::Signature,
+            recovery_id: secp256k1::RecoveryId,
+        ) -> Self {
             Command {
                 enclave_sig,
                 ciphertext,
+                recovery_id,
             }
         }
 
@@ -178,8 +195,12 @@ pub mod output {
             self.ciphertext.encode()
         }
 
-        pub fn encode_enclave_sig(&self) -> [u8; 64] {
-            self.enclave_sig.serialize()
+        pub fn encode_enclave_sig(&self) -> [u8; 65] {
+            let mut ret = [0u8; 65];
+            let sig = self.enclave_sig.serialize();
+            ret[..64].copy_from_slice(&sig);
+            ret[64] = self.recovery_id.serialize() + RECOVERY_ID_OFFSET;
+            ret
         }
     }
 
@@ -298,6 +319,7 @@ pub mod output {
     pub struct ReturnHandshake {
         export_path_secret: ExportPathSecret,
         enclave_sig: secp256k1::Signature,
+        recovery_id: secp256k1::RecoveryId,
         roster_idx: u32,
         handshake: ExportHandshake,
     }
@@ -324,12 +346,17 @@ pub mod output {
             value.read(&mut enclave_sig_buf)?;
             let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
 
+            let mut recovery_id_buf = value.read_byte()?;
+            let recovery_id = secp256k1::RecoveryId::parse(recovery_id_buf)
+                .expect("recovery_id should be parsed");
+
             let roster_idx = u32::decode(value)?;
             let handshake = ExportHandshake::decode(value)?;
 
             Ok(ReturnHandshake {
                 export_path_secret,
                 enclave_sig,
+                recovery_id,
                 roster_idx,
                 handshake,
             })
@@ -341,12 +368,14 @@ pub mod output {
             handshake: ExportHandshake,
             export_path_secret: ExportPathSecret,
             enclave_sig: secp256k1::Signature,
+            recovery_id: secp256k1::RecoveryId,
             roster_idx: u32,
         ) -> Self {
             ReturnHandshake {
                 handshake,
                 export_path_secret,
                 enclave_sig,
+                recovery_id,
                 roster_idx,
             }
         }
@@ -367,8 +396,12 @@ pub mod output {
             self.export_path_secret
         }
 
-        pub fn encode_enclave_sig(&self) -> [u8; 64] {
-            self.enclave_sig.serialize()
+        pub fn encode_enclave_sig(&self) -> [u8; 65] {
+            let mut ret = [0u8; 65];
+            let sig = self.enclave_sig.serialize();
+            ret[..64].copy_from_slice(&sig);
+            ret[64] = self.recovery_id.serialize() + RECOVERY_ID_OFFSET;
+            ret
         }
 
         pub fn roster_idx(&self) -> u32 {

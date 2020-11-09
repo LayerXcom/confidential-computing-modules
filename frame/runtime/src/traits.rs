@@ -72,7 +72,7 @@ pub trait NotificationOps {
 }
 
 pub trait Signer {
-    fn sign(&self, msg: &[u8]) -> Result<secp256k1::Signature>;
+    fn sign(&self, msg: &[u8]) -> Result<(secp256k1::Signature, secp256k1::RecoveryId)>;
 }
 
 pub trait GroupKeyOps: Sized {

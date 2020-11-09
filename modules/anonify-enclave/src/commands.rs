@@ -49,7 +49,7 @@ impl<AP: AccessPolicy> EnclaveEngine for MsgSender<AP> {
 
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
-        let command_output = output::Command::new(ciphertext, enclave_sig);
+        let command_output = output::Command::new(ciphertext, enclave_sig.0, enclave_sig.1);
 
         enclave_context.set_notification(account_id);
 
