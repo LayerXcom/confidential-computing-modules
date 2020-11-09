@@ -15,14 +15,17 @@ members = [
     "example/erc20/enclave",
     "example/erc20/server",
     "example/erc20/state-transition",
-    "example/invoice-flow/api",
-    "example/invoice-flow/enclave",
-    "example/invoice-flow/server",
-    "example/invoice-flow/state-transition",
     "config",
     "wallet",
     "tests/integration",
     "tests/units/enclave",
     "tests/units/host",
     "tests/utils",
+]
+
+exclude = [
+    "example/invoice-flow/api",
+    "example/invoice-flow/enclave",
+    "example/invoice-flow/server",
+    "example/invoice-flow/state-transition",
 ]
