@@ -98,7 +98,7 @@ impl Web3Contract {
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
         let handshake = ecall_output.encode_handshake();
-        let mut enclave_sig = &ecall_output.encode_enclave_sig().to_vec();
+        let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
         let recovery_id = ecall_output.export_recovery_id();
         enclave_sig.push(recovery_id);
         let gas = output.gas;
