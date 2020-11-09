@@ -1,5 +1,5 @@
 # inherit the baidu sdk image
-FROM baiduxlab/sgx-rust:1804-1.1.2
+FROM baiduxlab/sgx-rust:1804-1.1.3
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 WORKDIR /root/anonify/example/erc20/server
