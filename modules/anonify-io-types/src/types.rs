@@ -158,7 +158,7 @@ pub mod output {
             let mut ciphertext_buf = vec![0u8; ciphertext_len];
             value.read(&mut ciphertext_buf)?;
 
-            let mut recovery_id_buf = value.read_byte()?;
+            let recovery_id_buf = value.read_byte()?;
 
             let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
             let ciphertext = Ciphertext::decode(&mut &ciphertext_buf[..])?;
@@ -346,7 +346,7 @@ pub mod output {
             value.read(&mut enclave_sig_buf)?;
             let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
 
-            let mut recovery_id_buf = value.read_byte()?;
+            let recovery_id_buf = value.read_byte()?;
             let recovery_id = secp256k1::RecoveryId::parse(recovery_id_buf)
                 .expect("recovery_id should be parsed");
 
