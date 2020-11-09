@@ -2,12 +2,12 @@
 //! binary trees. For more info, see section 5.1 of the MLS spec.
 //! referemnce: https://github.com/trailofbits/molasses/blob/master/src/tree_math.rs
 
-use std::vec::Vec;
+use crate::localstd::{iter, usize, vec::Vec};
 
 // Suppose usize is u64. If there are k := 2^(63)+1 leaves, then there are a total of 2(k-1) + 1 =
 // 2(2^(63))+1 = 2^(64)+1 nodes in the tree, which is outside the representable range. So our upper
 // bound is 2^(63) leaves, which gives a tree with 2^(64)-1 nodes.
-pub(crate) const MAX_LEAVES: usize = (std::usize::MAX >> 1) + 1;
+pub(crate) const MAX_LEAVES: usize = (usize::MAX >> 1) + 1;
 
 /// Returns `Some(floor(log2(x))` when `x != 0`, and `None` otherwise
 fn log2(x: usize) -> Option<usize> {
@@ -253,7 +253,7 @@ pub(crate) fn node_extended_direct_path(
     start_idx: usize,
     num_leaves: usize,
 ) -> impl Iterator<Item = usize> {
-    let root = std::iter::once(root_idx(num_leaves));
+    let root = iter::once(root_idx(num_leaves));
     node_direct_path(start_idx, num_leaves).chain(root)
 }
 

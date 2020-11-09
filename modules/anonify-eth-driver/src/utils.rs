@@ -2,7 +2,8 @@ use crate::{error::Result, eth::connection::Web3Contract};
 use anonify_io_types::*;
 use anyhow::anyhow;
 use ethabi::Contract as ContractABI;
-use frame_common::{state_types::StateType, traits::*};
+use frame_common::traits::*;
+use frame_treekem::EciesCiphertext;
 use std::{fs::File, io::BufReader, marker::PhantomData, path::Path, str::FromStr};
 use web3::types::Address;
 
@@ -35,16 +36,16 @@ impl<'a, P: AsRef<Path>> ContractInfo<'a, P> {
 }
 
 #[derive(Debug, Clone)]
-pub struct StateInfo<'a, ST: State, C: CallNameConverter> {
-    state: ST,
+pub struct CommandInfo<'a, C: CallNameConverter> {
+    encrypted_command: EciesCiphertext,
     call_name: &'a str,
     phantom: PhantomData<C>,
 }
 
-impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
-    pub fn new(state: ST, call_name: &'a str) -> Self {
-        StateInfo {
-            state,
+impl<'a, C: CallNameConverter> CommandInfo<'a, C> {
+    pub fn new(encrypted_command: EciesCiphertext, call_name: &'a str) -> Self {
+        CommandInfo {
+            encrypted_command,
             call_name,
             phantom: PhantomData::<C>,
         }
@@ -56,9 +57,7 @@ impl<'a, ST: State, C: CallNameConverter> StateInfo<'a, ST, C> {
 
     pub fn crate_input<AP: AccessPolicy>(self, access_policy: AP) -> input::Command<AP> {
         let call_id = self.call_name_to_id();
-        let state = StateType::new(self.state.encode_s());
-
-        input::Command::new(access_policy, state, call_id)
+        input::Command::new(access_policy, self.encrypted_command, call_id)
     }
 }
 

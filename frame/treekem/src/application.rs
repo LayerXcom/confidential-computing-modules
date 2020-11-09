@@ -6,14 +6,15 @@ use crate::crypto::{
     SHA256_OUTPUT_LEN,
 };
 use crate::group_state::GroupState;
+use crate::local_anyhow::{anyhow, ensure, Result};
+use crate::local_log::warn;
+use crate::local_ring::aead::{
+    Aad, BoundKey, Nonce, OpeningKey, SealingKey, UnboundKey, AES_256_GCM,
+};
+use crate::localstd::{convert::TryFrom, prelude::v1::*};
 use crate::ratchet_tree::RatchetTreeNode;
-use anyhow::{anyhow, ensure, Result};
 use codec::Encode;
 use frame_common::crypto::Ciphertext;
-use log::warn;
-use ring::aead::{Aad, BoundKey, Nonce, OpeningKey, SealingKey, UnboundKey, AES_256_GCM};
-use std::convert::TryFrom;
-use std::prelude::v1::*;
 
 /// Application Keychain manages each member's `AppMemberSecret' and generation.
 #[derive(Debug, Clone, Default)]
@@ -172,6 +173,7 @@ pub(crate) mod tests {
     use super::*;
     use crate::handshake::{PathSecretKVS, PathSecretSource};
     use crate::test_funcs;
+    #[cfg(feature = "sgx")]
     use test_utils::*;
 
     pub(crate) fn run_tests() -> bool {
@@ -179,7 +181,7 @@ pub(crate) mod tests {
     }
 
     fn test_app_msg_correctness() {
-        std::env::set_var("AUDITOR_ENDPOINT", "test");
+        crate::localstd::env::set_var("AUDITOR_ENDPOINT", "test");
         let msg = b"app msg correctnesss test";
 
         let mut kvs = PathSecretKVS::new();

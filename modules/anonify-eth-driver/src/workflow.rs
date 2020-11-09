@@ -1,4 +1,4 @@
-use crate::utils::StateInfo;
+use crate::utils::CommandInfo;
 use anonify_io_types::*;
 use config::constants::*;
 use frame_common::{
@@ -7,21 +7,19 @@ use frame_common::{
     traits::*,
 };
 use frame_host::engine::*;
+use frame_treekem::EciesCiphertext;
 use std::marker::PhantomData;
 use web3::types::Address;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
 
-pub struct CommandWorkflow<S: State, C: CallNameConverter, AP: AccessPolicy> {
-    s: PhantomData<S>,
+pub struct CommandWorkflow<C: CallNameConverter, AP: AccessPolicy> {
     c: PhantomData<C>,
     ap: PhantomData<AP>,
 }
 
-impl<S: State, C: CallNameConverter, AP: AccessPolicy> HostEngine
-    for CommandWorkflow<S, C, AP>
-{
-    type HI = host_input::Command<S, C, AP>;
+impl<C: CallNameConverter, AP: AccessPolicy> HostEngine for CommandWorkflow<C, AP> {
+    type HI = host_input::Command<C, AP>;
     type EI = input::Command<AP>;
     type EO = output::Command;
     type HO = host_output::Command;
@@ -99,11 +97,22 @@ impl HostEngine for InsertHandshakeWorkflow {
     const CMD: u32 = INSERT_HANDSHAKE_CMD;
 }
 
+pub struct GetEncryptingKeyWorkflow;
+
+impl HostEngine for GetEncryptingKeyWorkflow {
+    type HI = host_input::GetEncryptingKey;
+    type EI = input::GetEncryptingKey;
+    type EO = output::ReturnEncryptingKey;
+    type HO = host_output::ReturnEncryptingKey;
+    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const CMD: u32 = GET_ENCRYPTING_KEY_CMD;
+}
+
 pub mod host_input {
     use super::*;
 
-    pub struct Command<S: State, C: CallNameConverter, AP: AccessPolicy> {
-        state: S,
+    pub struct Command<C: CallNameConverter, AP: AccessPolicy> {
+        encrypted_command: EciesCiphertext,
         call_name: String,
         access_policy: AP,
         signer: Address,
@@ -111,16 +120,16 @@ pub mod host_input {
         phantom: PhantomData<C>,
     }
 
-    impl<S: State, C: CallNameConverter, AP: AccessPolicy> Command<S, C, AP> {
+    impl<C: CallNameConverter, AP: AccessPolicy> Command<C, AP> {
         pub fn new(
-            state: S,
+            encrypted_command: EciesCiphertext,
             call_name: String,
             access_policy: AP,
             signer: Address,
             gas: u64,
         ) -> Self {
             Command {
-                state,
+                encrypted_command,
                 call_name,
                 access_policy,
                 signer,
@@ -130,13 +139,13 @@ pub mod host_input {
         }
     }
 
-    impl<S: State, C: CallNameConverter, AP: AccessPolicy> HostInput for Command<S, C, AP> {
+    impl<C: CallNameConverter, AP: AccessPolicy> HostInput for Command<C, AP> {
         type EcallInput = input::Command<AP>;
         type HostOutput = host_output::Command;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let state_info = StateInfo::<_, C>::new(self.state, &self.call_name);
-            let ecall_input = state_info.crate_input(self.access_policy);
+            let command_info = CommandInfo::<C>::new(self.encrypted_command, &self.call_name);
+            let ecall_input = command_info.crate_input(self.access_policy);
             let host_output = host_output::Command::new(self.signer, self.gas);
 
             Ok((ecall_input, host_output))
@@ -272,6 +281,18 @@ pub mod host_input {
             let ecall_input = Self::EcallInput::new(self.handshake);
 
             Ok((ecall_input, Self::HostOutput::default()))
+        }
+    }
+
+    #[derive(Default)]
+    pub struct GetEncryptingKey;
+
+    impl HostInput for GetEncryptingKey {
+        type EcallInput = input::GetEncryptingKey;
+        type HostOutput = host_output::ReturnEncryptingKey;
+
+        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+            Ok((Self::EcallInput::default(), Self::HostOutput::new()))
         }
     }
 }
@@ -412,5 +433,25 @@ pub mod host_output {
 
     impl HostOutput for InsertHandshake {
         type EcallOutput = output::Empty;
+    }
+
+    pub struct ReturnEncryptingKey {
+        pub ecall_output: Option<output::ReturnEncryptingKey>,
+    }
+
+    impl HostOutput for ReturnEncryptingKey {
+        type EcallOutput = output::ReturnEncryptingKey;
+
+        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+            self.ecall_output = Some(output);
+
+            Ok(self)
+        }
+    }
+
+    impl ReturnEncryptingKey {
+        pub fn new() -> Self {
+            ReturnEncryptingKey { ecall_output: None }
+        }
     }
 }

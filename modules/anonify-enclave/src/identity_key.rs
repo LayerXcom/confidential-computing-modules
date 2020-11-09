@@ -1,9 +1,12 @@
 //! This module contains enclave specific cryptographic logics.
 
 use crate::error::Result;
+use anonify_io_types::*;
 use codec::Encode;
-use frame_common::{crypto::sgx_rand_assign, traits::Keccak256};
-use frame_treekem::{DhPrivateKey, DhPubKey};
+use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
+use frame_enclave::EnclaveEngine;
+use frame_runtime::traits::*;
+use frame_treekem::{DhPrivateKey, DhPubKey, EciesCiphertext};
 use secp256k1::{self, util::SECRET_KEY_SIZE, Message, PublicKey, SecretKey, Signature, RecoveryId};
 use sgx_types::sgx_report_data_t;
 use std::prelude::v1::Vec;
@@ -12,6 +15,28 @@ const HASHED_PUBKEY_SIZE: usize = 20;
 const ENCRYPTING_KEY_SIZE: usize = 33;
 const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCRYPTING_KEY_SIZE;
 const REPORT_DATA_SIZE: usize = 64;
+
+#[derive(Debug, Clone)]
+pub struct EncryptingKeyGetter {}
+
+impl EnclaveEngine for EncryptingKeyGetter {
+    type EI = input::GetEncryptingKey;
+    type EO = output::ReturnEncryptingKey;
+
+    fn handle<R, C>(
+        ecall_input: Self::EI,
+        enclave_context: &C,
+        _max_mem_size: usize,
+    ) -> anyhow::Result<Self::EO>
+    where
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
+    {
+        let encrypting_key = enclave_context.encrypting_key();
+
+        Ok(output::ReturnEncryptingKey::new(encrypting_key))
+    }
+}
 
 /// Enclave Identity Key
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -24,7 +49,7 @@ impl EnclaveIdentityKey {
     pub fn new() -> Result<Self> {
         let signing_privkey = loop {
             let mut ret = [0u8; SECRET_KEY_SIZE];
-            sgx_rand_assign(&mut ret)?;
+            rand_assign(&mut ret)?;
 
             if let Ok(key) = SecretKey::parse(&ret) {
                 break key;
@@ -43,6 +68,12 @@ impl EnclaveIdentityKey {
         let msg = Message::parse_slice(msg)?;
         let sig = secp256k1::sign(&msg, &self.signing_privkey)?;
         Ok(sig)
+    }
+
+    pub fn decrypt(&self, ciphertext: EciesCiphertext) -> Result<Vec<u8>> {
+        ciphertext
+            .decrypt(&self.decrypting_privkey)
+            .map_err(Into::into)
     }
 
     pub fn verifying_key(&self) -> PublicKey {

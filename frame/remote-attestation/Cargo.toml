@@ -5,12 +5,12 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anyhow = { rev = "sgx_1.1.2", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
+anyhow = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
 webpki = { branch = "mesalock_sgx", git = "https://github.com/mesalock-linux/webpki" } # Specify branch name due to rustls dependency
-sgx_tstd = { rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net"] }
-http_req = { rev = "sgx_1.1.2", git = "https://github.com/mesalock-linux/http_req-sgx" }
-serde_json = { rev = "sgx_1.1.2", git = "https://github.com/mesalock-linux/serde-json-sgx" }
+sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net"] }
+http_req = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/http_req-sgx" }
+serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx" }
 serde = { git = "https://github.com/mesalock-linux/serde-sgx.git" } # Don't specify version due to serde_json dependency
-base64 = { rev = "sgx_1.1.2", git = "https://github.com/mesalock-linux/rust-base64-sgx" }
-rustls = { rev = "sgx_1.1.2", git = "https://github.com/mesalock-linux/rustls" }
-log = { rev = "sgx_1.1.2", git = "https://github.com/mesalock-linux/log-sgx" }
+base64 = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rust-base64-sgx" }
+rustls = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rustls" }
+log = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/log-sgx" }

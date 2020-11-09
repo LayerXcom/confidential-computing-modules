@@ -6,7 +6,10 @@ edition = "2018"
 
 [dependencies]
 erc20-api = { path = "../api" }
+erc20-state-transition = { path = "../state-transition" }
 frame-common = { path = "../../../frame/common" }
+frame-treekem = { path = "../../../frame/treekem" }
+frame-runtime = { path = "../../../frame/runtime" }
 anonify-wallet = { path = "../../../wallet" }
 reqwest = "0.9"
 clap = "~2.32"
@@ -18,3 +21,8 @@ log = "0.4"
 env_logger = "0.7"
 tiny-bip39 = "0.6.0"
 ed25519-dalek = "1.0.0-pre.2"
+web3 = { git = "https://github.com/tomusdrw/rust-web3", rev = "d7393708e257f7ef4ad354917889a8001cf2927c" }
+ethabi = "12.0.0"
+codec = { package = "parity-scale-codec", version = "1.1" }
+anyhow = "1.0"
+thiserror = "1.0"

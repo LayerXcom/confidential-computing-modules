@@ -1,19 +1,28 @@
 #[macro_use]
 extern crate lazy_static;
 use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
+use codec::{Decode, Encode};
 use erc20_state_transition::{
     approve, burn, construct, mint, transfer, transfer_from, CallName, MemName, CIPHERTEXT_SIZE,
 };
+use ethabi::Contract as ContractABI;
 use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
     traits::*,
 };
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
+use frame_treekem::{DhPubKey, EciesCiphertext};
 use sgx_types::*;
-use std::{collections::BTreeMap, env};
+use std::{collections::BTreeMap, env, fs::File, io::BufReader, str::FromStr};
+use web3::{
+    contract::{Contract, Options},
+    transports::Http,
+    types::Address,
+    Web3,
+};
 
-const ETH_URL: &'static str = "http://172.28.0.2:8545";
+const ETH_URL: &str = "http://172.28.0.2:8545";
 const ABI_PATH: &str = "../../contract-build/Anonify.abi";
 const BIN_PATH: &str = "../../contract-build/Anonify.bin";
 const CONFIRMATIONS: usize = 0;
@@ -22,6 +31,37 @@ const PASSWORD: &str = "anonify0101";
 
 lazy_static! {
     pub static ref ENV_LOGGER_INIT: () = env_logger::init();
+}
+
+pub async fn get_encrypting_key(
+    contract_addr: &str,
+    dispatcher: &Dispatcher<EthDeployer, EthSender, EventWatcher>,
+) -> DhPubKey {
+    let encrypting_key = dispatcher.get_encrypting_key().unwrap();
+    let transport = Http::new(ETH_URL).unwrap();
+    let web3 = Web3::new(transport);
+    let web3_conn = web3.eth();
+
+    let address = Address::from_str(contract_addr).unwrap();
+    let f = File::open(ABI_PATH).unwrap();
+    let abi = ContractABI::load(BufReader::new(f)).unwrap();
+
+    let query_encrypting_key: Vec<u8> = Contract::new(web3_conn, address, abi)
+        .query(
+            "getEncryptingKey",
+            encrypting_key.encode(),
+            None,
+            Options::default(),
+            None,
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(
+        encrypting_key,
+        DhPubKey::decode(&mut &query_encrypting_key[..]).unwrap()
+    );
+    encrypting_key
 }
 
 #[actix_rt::test]
@@ -63,11 +103,13 @@ async fn test_integration_eth_construct() {
 
     // Init state
     let total_supply = U64::from_raw(100);
-    let init_state = construct { total_supply };
+    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let init_cmd = construct { total_supply };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            init_state,
+            encrypted_command,
             "construct",
             deployer_addr.clone(),
             gas,
@@ -131,12 +173,14 @@ async fn test_auto_notification() {
     dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Init state
+    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let total_supply = U64::from_raw(100);
-    let init_state = construct { total_supply };
+    let init_cmd = construct { total_supply };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            init_state,
+            encrypted_command,
             "construct",
             deployer_addr.clone(),
             gas,
@@ -160,11 +204,12 @@ async fn test_auto_notification() {
     // Send a transaction to contract
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
-    let transfer_state = transfer { amount, recipient };
+    let transfer_cmd = transfer { amount, recipient };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_cmd.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            transfer_state,
+            encrypted_command,
             "transfer",
             deployer_addr,
             gas,
@@ -225,11 +270,13 @@ async fn test_integration_eth_transfer() {
 
     // Init state
     let total_supply = U64::from_raw(100);
-    let init_state = construct { total_supply };
+    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let init_cmd = construct { total_supply };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            init_state,
+            encrypted_command,
             "construct",
             deployer_addr.clone(),
             gas,
@@ -255,11 +302,12 @@ async fn test_integration_eth_transfer() {
     // Send a transaction to contract
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
-    let transfer_state = transfer { amount, recipient };
+    let transfer_cmd = transfer { amount, recipient };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_cmd.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            transfer_state,
+            encrypted_command,
             "transfer",
             deployer_addr,
             gas,
@@ -333,11 +381,13 @@ async fn test_key_rotation() {
 
     // init state
     let total_supply = U64::from_raw(100);
-    let init_state = construct { total_supply };
+    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let init_cmd = construct { total_supply };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            init_state,
+            encrypted_command,
             "construct",
             deployer_addr.clone(),
             gas,
@@ -397,11 +447,13 @@ async fn test_integration_eth_approve() {
 
     // Init state
     let total_supply = U64::from_raw(100);
-    let init_state = construct { total_supply };
+    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let init_cmd = construct { total_supply };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            init_state,
+            encrypted_command,
             "construct",
             deployer_addr.clone(),
             gas,
@@ -426,10 +478,11 @@ async fn test_integration_eth_approve() {
     let amount = U64::from_raw(30);
     let spender = other_access_policy.into_account_id();
     let approve_state = approve { amount, spender };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, approve_state.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            approve_state,
+            encrypted_command,
             "approve",
             deployer_addr,
             gas,
@@ -494,11 +547,13 @@ async fn test_integration_eth_transfer_from() {
 
     // Init state
     let total_supply = U64::from_raw(100);
-    let init_state = construct { total_supply };
+    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let init_cmd = construct { total_supply };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            init_state,
+            encrypted_command,
             "construct",
             deployer_addr.clone(),
             gas,
@@ -536,10 +591,11 @@ async fn test_integration_eth_transfer_from() {
     let amount = U64::from_raw(30);
     let spender = other_access_policy.into_account_id();
     let approve_state = approve { amount, spender };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, approve_state.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            approve_state,
+            encrypted_command,
             "approve",
             deployer_addr.clone(),
             gas,
@@ -581,15 +637,16 @@ async fn test_integration_eth_transfer_from() {
     let amount = U64::from_raw(20);
     let owner = my_access_policy.into_account_id();
     let recipient = third_access_policy.into_account_id();
-    let transferred_from_state = transfer_from {
+    let transfer_from_cmd = transfer_from {
         owner,
         recipient,
         amount,
     };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_from_cmd.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             other_access_policy.clone(),
-            transferred_from_state,
+            encrypted_command,
             "transfer_from",
             deployer_addr,
             gas,
@@ -667,11 +724,13 @@ async fn test_integration_eth_mint() {
 
     // Init state
     let total_supply = U64::from_raw(100);
-    let init_state = construct { total_supply };
+    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let init_cmd = construct { total_supply };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            init_state,
+            encrypted_command,
             "construct",
             deployer_addr.clone(),
             gas,
@@ -688,10 +747,11 @@ async fn test_integration_eth_mint() {
     let amount = U64::from_raw(50);
     let recipient = other_access_policy.into_account_id();
     let minting_state = mint { amount, recipient };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, minting_state.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            minting_state,
+            encrypted_command,
             "mint",
             deployer_addr,
             gas,
@@ -753,11 +813,13 @@ async fn test_integration_eth_burn() {
 
     // Init state
     let total_supply = U64::from_raw(100);
-    let init_state = construct { total_supply };
+    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let init_cmd = construct { total_supply };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            init_state,
+            encrypted_command,
             "construct",
             deployer_addr.clone(),
             gas,
@@ -773,11 +835,12 @@ async fn test_integration_eth_burn() {
     // Send a transaction to contract
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
-    let transfer_state = transfer { amount, recipient };
+    let transfer_cmd = transfer { amount, recipient };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_cmd.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             my_access_policy.clone(),
-            transfer_state,
+            encrypted_command,
             "transfer",
             deployer_addr.clone(),
             gas,
@@ -792,10 +855,11 @@ async fn test_integration_eth_burn() {
     // Send a transaction to contract
     let amount = U64::from_raw(20);
     let burn_state = burn { amount };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, burn_state.encode()).unwrap();
     let receipt = dispatcher
-        .send_command::<_, CallName, _>(
+        .send_command::<CallName, _>(
             other_access_policy.clone(),
-            burn_state,
+            encrypted_command,
             "burn",
             deployer_addr,
             gas,

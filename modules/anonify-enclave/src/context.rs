@@ -1,5 +1,5 @@
 use crate::{
-    crypto::EnclaveIdentityKey, error::Result, group_key::GroupKey, kvs::EnclaveDB,
+    error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
 use anonify_io_types::*;
@@ -15,7 +15,7 @@ use frame_enclave::{
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
-    init_path_secret_kvs,
+    init_path_secret_kvs, DhPubKey, EciesCiphertext,
 };
 use sgx_types::*;
 use std::prelude::v1::*;
@@ -89,12 +89,20 @@ impl NotificationOps for EnclaveContext {
     }
 }
 
-impl Signer for EnclaveContext {
+impl IdentityKeyOps for EnclaveContext {
     /// Generate a signature using enclave's identity key.
     /// This signature is used to verify enclave's program dependencies and
     /// should be verified in the public available place such as smart contract on blockchain.
     fn sign(&self, msg: &[u8]) -> anyhow::Result<(secp256k1::Signature, secp256k1::RecoveryId)> {
         self.identity_key.sign(msg).map_err(Into::into)
+    }
+
+    fn decrypt(&self, ciphertext: EciesCiphertext) -> anyhow::Result<Vec<u8>> {
+        self.identity_key.decrypt(ciphertext).map_err(Into::into)
+    }
+
+    fn encrypting_key(&self) -> DhPubKey {
+        self.identity_key.encrypting_key()
     }
 }
 

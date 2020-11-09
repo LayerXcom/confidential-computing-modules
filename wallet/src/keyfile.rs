@@ -3,6 +3,7 @@ use crate::{
     error::{Result, WalletError},
     SerdeBytes,
 };
+use anyhow::anyhow;
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, SECRET_KEY_LENGTH};
 use parity_crypto as crypto;
 use parity_crypto::Keccak256;
@@ -57,7 +58,8 @@ impl KeyFile {
         rng: &mut R,
     ) -> Result<Self> {
         assert!(seed.len() > SECRET_KEY_LENGTH);
-        let secret = SecretKey::from_bytes(&seed[..SECRET_KEY_LENGTH])?;
+        let secret =
+            SecretKey::from_bytes(&seed[..SECRET_KEY_LENGTH]).map_err(|e| anyhow!("{:?}", e))?;
         let public = PublicKey::from(&secret);
         let key_pair = Keypair { secret, public };
 
@@ -129,7 +131,7 @@ impl KeyCiphertext {
         crypto::aes::decrypt_128_ctr(&derived_left, &self.iv.0, &self.ciphertext.0, &mut plain)
             .map_err(crypto::Error::from)?;
 
-        let key_pair = Keypair::from_bytes(&plain.to_vec()[..])?;
+        let key_pair = Keypair::from_bytes(&plain.to_vec()[..]).map_err(|e| anyhow!("{:?}", e))?;
 
         Ok(key_pair)
     }
