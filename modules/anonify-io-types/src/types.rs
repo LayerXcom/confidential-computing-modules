@@ -8,11 +8,6 @@ use frame_common::{
 };
 use frame_treekem::{DhPubKey, EciesCiphertext};
 
-// libsecp256k1 library generates RecoveryId as 0/1.
-// However Secp256k1 used in solidity use 27/28 as a value to make the signature unique.
-// RECOVERY_ID_OFFSET is used to adjust the difference between libsecp256k1 and Secp256k1.
-const RECOVERY_ID_OFFSET: u8 = 27;
-
 pub mod input {
     use super::*;
 
@@ -202,7 +197,7 @@ pub mod output {
         }
 
         pub fn export_recovery_id(&self) -> u8 {
-            self.recovery_id.serialize() + RECOVERY_ID_OFFSET
+            self.recovery_id.serialize()
         }
 
         pub fn encode_enclave_sig(&self) -> [u8; 64] {
@@ -421,7 +416,7 @@ pub mod output {
         }
 
         pub fn export_recovery_id(&self) -> u8 {
-            self.recovery_id.serialize() + RECOVERY_ID_OFFSET
+            self.recovery_id.serialize()
         }
 
         pub fn encode_enclave_sig(&self) -> [u8; 64] {
