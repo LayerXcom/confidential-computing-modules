@@ -152,4 +152,21 @@ impl_runtime! {
         let approved = self.get_map::<Approved>(caller, "Approved")?;
         return_state![approved]
     }
+
+    #[fn_id=7]
+    pub fn total_supply(
+        self,
+        caller: AccountId
+    ) {
+        let total_supply = self.get_map::<U64>(*OWNER_ACCOUNT_ID, "TotalSupply")?;
+        return_state![total_supply]
+    }
+
+    #[fn_id=8]
+    pub fn owner(
+        self,
+        caller: AccountId
+    ) {
+        return_state![*OWNER_ACCOUNT_ID]
+    }
 }
