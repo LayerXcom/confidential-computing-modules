@@ -176,6 +176,31 @@ where
         }
     }
 
+    pub fn get_state<ST, AP, C>(
+        &self,
+        access_policy: AP,
+        call_name: &str,
+    ) -> Result<ST>
+    where
+        ST: State + TryFrom<Vec<u8>>,
+        <ST as TryFrom<Vec<u8>>>::Error: Debug,
+        AP: AccessPolicy,
+        C: CallNameConverter,
+    {
+        let call_id = C::as_id(call_name);
+        let eid = self.inner.read().deployer.get_enclave_id();
+        let input = host_input::GetState::new(access_policy, call_id);
+
+        let state = GetStateWorkflow::exec(input, eid)?
+            .ecall_output
+            .expect("must have ecall_output")
+            .into_vec()
+            .try_into()
+            .unwrap();
+
+        Ok(state)
+    }
+
     pub async fn handshake(&self, signer: Address, gas: u64) -> Result<(H256, ExportPathSecret)> {
         let inner = self.inner.read();
         let input = host_input::Handshake::new(signer, gas);
@@ -241,28 +266,4 @@ where
 
         Ok(())
     }
-}
-
-pub fn get_state<S, M, AP>(
-    access_policy: AP,
-    enclave_id: sgx_enclave_id_t,
-    mem_name: &str,
-) -> Result<S>
-where
-    S: State + TryFrom<Vec<u8>>,
-    <S as TryFrom<Vec<u8>>>::Error: Debug,
-    M: MemNameConverter,
-    AP: AccessPolicy,
-{
-    let mem_id = M::as_id(mem_name);
-    let input = host_input::GetState::new(access_policy, mem_id);
-
-    let state = GetStateWorkflow::exec(input, enclave_id)?
-        .ecall_output
-        .unwrap()
-        .into_vec()
-        .try_into()
-        .unwrap();
-
-    Ok(state)
 }

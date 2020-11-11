@@ -67,8 +67,8 @@ impl StateOps for EnclaveContext {
 
         match res {
             ReturnState::Updated(_) => Err(anyhow!(
-                "Calling getting state function, but the called function is for state transition").into()
-            ),
+                "Calling getting state function, but the called function is for state transition"
+            )),
             ReturnState::Get(state) => Ok(state)
         }
     }

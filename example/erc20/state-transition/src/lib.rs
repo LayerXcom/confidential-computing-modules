@@ -136,12 +136,20 @@ impl_runtime! {
     }
 
     #[fn_id=6]
-    pub fn get_balance(
+    pub fn balance_of(
         self,
         caller: AccountId
     ) {
         let balance = self.get_map::<U64>(caller, "Balance")?;
-
         return_state![balance]
+    }
+
+    #[fn_id=7]
+    pub fn approved(
+        self,
+        caller: AccountId
+    ) {
+        let approved = self.get_map::<Approved>(caller, "Approved")?;
+        return_state![approved]
     }
 }
