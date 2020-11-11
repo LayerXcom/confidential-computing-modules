@@ -167,6 +167,7 @@ impl_runtime! {
         self,
         caller: AccountId
     ) {
-        get_state![*OWNER_ACCOUNT_ID]
+        let owner = self.get_map::<AccountId>(*OWNER_ACCOUNT_ID, "Owner")?;
+        get_state![owner]
     }
 }
