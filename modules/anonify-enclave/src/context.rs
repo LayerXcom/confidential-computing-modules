@@ -5,7 +5,7 @@ use crate::{
 use anonify_io_types::*;
 use frame_common::{
     crypto::AccountId,
-    state_types::{MemId, StateType, UpdatedState},
+    state_types::{MemId, StateType, UpdatedState, ReturnState},
     AccessPolicy,
 };
 use frame_enclave::{
@@ -24,6 +24,7 @@ use std::{
     marker::PhantomData,
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
 };
+use anyhow::anyhow;
 
 pub const MRENCLAVE_VERSION: usize = 0;
 
@@ -47,11 +48,29 @@ impl ContextOps for EnclaveContext {
 impl StateOps for EnclaveContext {
     type S = StateType;
 
-    fn get_state<U>(&self, key: U, mem_id: MemId) -> Self::S
+    fn get_state_by_mem_id<U>(&self, key: U, mem_id: MemId) -> Self::S
     where
         U: Into<AccountId>,
     {
         self.db.get(key.into(), mem_id)
+    }
+
+    fn get_state_by_call_id<U, R, CTX>(ctx: CTX, call_id: u32, account_id: U) -> anyhow::Result<Self::S>
+    where
+        U: Into<AccountId>,
+        R: RuntimeExecutor<CTX, S = Self::S>,
+        CTX: ContextOps<S = Self::S>,
+    {
+        let mut empty_params = vec![];
+        let call_kind = R::C::new(call_id, &mut empty_params)?;
+        let res = R::new(ctx).execute(call_kind, account_id.into())?;
+
+        match res {
+            ReturnState::Updated(_) => Err(anyhow!(
+                "Calling getting state function, but the called function is for state transition").into()
+            ),
+            ReturnState::Get(state) => Ok(state)
+        }
     }
 
     /// Returns a updated state of registerd account_id in notification.
@@ -211,7 +230,7 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
         C: ContextOps<S = StateType> + Clone,
     {
         let account_id = ecall_input.access_policy().into_account_id();
-        let user_state = enclave_context.get_state(account_id, ecall_input.mem_id());
+        let user_state = C::get_state_by_call_id::<_,R,_>(enclave_context.clone(), ecall_input.call_id(), account_id)?;
 
         Ok(output::ReturnState::new(user_state))
     }

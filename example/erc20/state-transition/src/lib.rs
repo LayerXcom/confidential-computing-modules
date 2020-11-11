@@ -136,7 +136,10 @@ impl_runtime! {
     }
 
     #[fn_id=6]
-    pub fn get_balance(self, caller: AccountId) {
+    pub fn get_balance(
+        self,
+        caller: AccountId
+    ) {
         let balance = self.get_map::<U64>(caller, "Balance")?;
 
         return_state![balance]

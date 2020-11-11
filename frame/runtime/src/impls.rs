@@ -103,9 +103,9 @@ macro_rules! __impl_inner_runtime {
             type R = Runtime<G>;
             type S = StateType;
 
-            fn new(id: u32, state: &mut [u8]) -> Result<Self> {
+            fn new(id: u32, cmd: &mut [u8]) -> Result<Self> {
                 match id {
-                    $( $fn_id => Ok(CallKind::$fn_name($fn_name::decode_s(state)?)), )*
+                    $( $fn_id => Ok(CallKind::$fn_name($fn_name::decode_s(cmd)?)), )*
                     _ => return Err(anyhow!("Invalid Call ID")),
                 }
             }
@@ -152,7 +152,7 @@ macro_rules! __impl_inner_runtime {
                 name: &str
             ) -> Result<S> {
                 let mem_id = MemName::as_id(name);
-                let mut tmp = self.db.get_state(key, mem_id).into_vec();
+                let mut tmp = self.db.get_state_by_mem_id(key, mem_id).into_vec();
                 if tmp.is_empty() {
                     Ok(S::default())
                 } else {
@@ -162,7 +162,7 @@ macro_rules! __impl_inner_runtime {
 
             pub fn get(&self, name: &str) -> StateType {
                 let mem_id = MemName::as_id(name);
-                self.db.get_state(name, mem_id)
+                self.db.get_state_by_mem_id(name, mem_id)
             }
 
             $(

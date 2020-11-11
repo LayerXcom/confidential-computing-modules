@@ -2,7 +2,7 @@ use crate::localstd::vec::Vec;
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake, ExportPathSecret},
-    state_types::{MemId, StateType, UpdatedState},
+    state_types::{ StateType, UpdatedState},
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
@@ -86,16 +86,16 @@ pub mod input {
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct GetState<AP: AccessPolicy> {
         access_policy: AP,
-        mem_id: MemId,
+        call_id: u32,
     }
 
     impl<AP: AccessPolicy> EcallInput for GetState<AP> {}
 
     impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, mem_id: MemId) -> Self {
+        pub fn new(access_policy: AP, call_id: u32) -> Self {
             GetState {
                 access_policy,
-                mem_id,
+                call_id,
             }
         }
 
@@ -103,8 +103,8 @@ pub mod input {
             &self.access_policy
         }
 
-        pub fn mem_id(&self) -> MemId {
-            self.mem_id
+        pub fn call_id(&self) -> u32 {
+            self.call_id
         }
     }
 

@@ -172,7 +172,8 @@ impl<R: RuntimeExecutor<CTX, S = StateType>, CTX: ContextOps> Commands<R, CTX> {
         match res {
             ReturnState::Updated(updates) => Ok(updates),
             ReturnState::Get(_) => Err(anyhow!(
-                "Calling state transition function, but the called function is for getting state.").into()),
+                "Calling state transition function, but the called function is for getting state.").into()
+            ),
         }
     }
 }
