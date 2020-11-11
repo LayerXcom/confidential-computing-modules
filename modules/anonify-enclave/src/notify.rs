@@ -63,18 +63,15 @@ impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
 #[cfg(debug_assertions)]
 pub(crate) mod tests {
     use super::*;
-    use test_utils::*;
-    use std::{
-        vec::Vec,
-        string::String,
+    use ed25519_dalek::{
+        PublicKey, Signature, SignatureError, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH,
     };
     use frame_common::crypto::Ed25519ChallengeResponse;
-    use ed25519_dalek::{Signature, PublicKey, SignatureError, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH};
+    use std::{string::String, vec::Vec};
+    use test_utils::*;
 
     pub(crate) fn run_tests() -> bool {
-        run_tests!(
-        test_notifier,
-    )
+        run_tests!(test_notifier,)
     }
 
     fn test_notifier() {
@@ -82,24 +79,40 @@ pub(crate) mod tests {
         let access_policy = build_access_right().unwrap();
         let account_id = access_policy.verified_account_id().unwrap();
 
-        assert!(!notifier.contains(&account_id), "notifier contains un-registered account_id: {:?}", account_id);
-        assert!(notifier.register(account_id.clone()), "Failed to register account_id: {:?}", account_id);
-        assert!(notifier.contains(&account_id), "notifier doesn't contain registered account_id: {:?}", account_id);
+        assert!(
+            !notifier.contains(&account_id),
+            "notifier contains un-registered account_id: {:?}",
+            account_id
+        );
+        assert!(
+            notifier.register(account_id.clone()),
+            "Failed to register account_id: {:?}",
+            account_id
+        );
+        assert!(
+            notifier.contains(&account_id),
+            "notifier doesn't contain registered account_id: {:?}",
+            account_id
+        );
     }
 
     fn build_access_right() -> Result<Ed25519ChallengeResponse, SignatureError> {
-        const SIG: [u8; SIGNATURE_LENGTH] = [21, 54, 136, 84, 150, 59, 196, 71, 164, 136, 222, 128, 100, 84, 208, 219, 84, 7, 61, 11,
-            230, 220, 25, 138, 67, 247, 95, 97, 30, 76, 120, 160, 73, 48, 110, 43, 94, 79, 192, 195,
-            82, 199, 73, 80, 48, 148, 233, 143, 87, 237, 159, 97, 252, 226, 68, 160, 137, 127, 195,
-            116, 128, 181, 47, 2];
+        const SIG: [u8; SIGNATURE_LENGTH] = [
+            21, 54, 136, 84, 150, 59, 196, 71, 164, 136, 222, 128, 100, 84, 208, 219, 84, 7, 61,
+            11, 230, 220, 25, 138, 67, 247, 95, 97, 30, 76, 120, 160, 73, 48, 110, 43, 94, 79, 192,
+            195, 82, 199, 73, 80, 48, 148, 233, 143, 87, 237, 159, 97, 252, 226, 68, 160, 137, 127,
+            195, 116, 128, 181, 47, 2,
+        ];
 
         const PUBKEY: [u8; PUBLIC_KEY_LENGTH] = [
-            164, 189, 195, 42, 48, 163, 27, 74, 84, 147, 25, 254, 16, 14, 206, 134, 153, 148, 33, 189,
-            55, 149, 7, 15, 11, 101, 106, 28, 48, 130, 133, 143];
+            164, 189, 195, 42, 48, 163, 27, 74, 84, 147, 25, 254, 16, 14, 206, 134, 153, 148, 33,
+            189, 55, 149, 7, 15, 11, 101, 106, 28, 48, 130, 133, 143,
+        ];
 
         const CHALLENGE: [u8; 32] = [
-            119, 177, 182, 220, 100, 44, 96, 179, 173, 47, 220, 49, 105, 204, 132, 230, 211, 24, 166,
-            219, 82, 76, 27, 205, 211, 232, 142, 98, 66, 130, 150, 202];
+            119, 177, 182, 220, 100, 44, 96, 179, 173, 47, 220, 49, 105, 204, 132, 230, 211, 24,
+            166, 219, 82, 76, 27, 205, 211, 232, 142, 98, 66, 130, 150, 202,
+        ];
 
         let sig = Signature::from_bytes(&SIG)?;
         let pubkey = PublicKey::from_bytes(&PUBKEY)?;

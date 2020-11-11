@@ -8,7 +8,7 @@ use crate::localstd::{
 use codec::{Decode, Encode};
 use frame_common::{
     crypto::{AccountId, Ciphertext, ExportHandshake, ExportPathSecret},
-    state_types::{MemId, UpdatedState, ReturnState},
+    state_types::{MemId, ReturnState, UpdatedState},
     traits::*,
 };
 use frame_treekem::{handshake::HandshakeParams, DhPubKey, EciesCiphertext};
@@ -19,8 +19,7 @@ pub trait RuntimeExecutor<G: ContextOps>: Sized {
     type S: State;
 
     fn new(db: G) -> Self;
-    fn execute(self, kind: Self::C, my_account_id: AccountId)
-        -> Result<ReturnState<Self::S>>;
+    fn execute(self, kind: Self::C, my_account_id: AccountId) -> Result<ReturnState<Self::S>>;
 }
 
 /// Execute state transition functions from call kind
@@ -29,11 +28,7 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     type S: State;
 
     fn new(id: u32, state: &mut [u8]) -> Result<Self>;
-    fn execute(
-        self,
-        runtime: Self::R,
-        my_account_id: AccountId,
-    ) -> Result<ReturnState<Self::S>>;
+    fn execute(self, runtime: Self::R, my_account_id: AccountId) -> Result<ReturnState<Self::S>>;
 }
 
 pub trait ContextOps:

@@ -89,7 +89,7 @@ where
             .await?;
         let export_path_secret = host_output
             .ecall_output
-            .expect("must have ecall_output")
+            .ok_or_else(|| HostError::EcallOutputNotSet)?
             .export_path_secret();
 
         Ok((contract_addr, export_path_secret))
@@ -141,7 +141,7 @@ where
 
         let export_path_secret = host_output
             .ecall_output
-            .expect("must have ecall_output")
+            .ok_or_else(|| HostError::EcallOutputNotSet)?
             .export_path_secret();
 
         Ok((tx_hash, export_path_secret))
@@ -176,11 +176,7 @@ where
         }
     }
 
-    pub fn get_state<ST, AP, C>(
-        &self,
-        access_policy: AP,
-        call_name: &str,
-    ) -> Result<ST>
+    pub fn get_state<ST, AP, C>(&self, access_policy: AP, call_name: &str) -> Result<ST>
     where
         ST: State + TryFrom<Vec<u8>>,
         <ST as TryFrom<Vec<u8>>>::Error: Debug,
@@ -193,7 +189,7 @@ where
 
         let state = GetStateWorkflow::exec(input, eid)?
             .ecall_output
-            .expect("must have ecall_output")
+            .ok_or_else(|| HostError::EcallOutputNotSet)?
             .into_vec()
             .try_into()
             .unwrap();
@@ -215,7 +211,7 @@ where
             .await?;
         let export_path_secret = host_output
             .ecall_output
-            .expect("must have ecall_output")
+            .ok_or_else(|| HostError::EcallOutputNotSet)?
             .export_path_secret();
 
         Ok((tx_hash, export_path_secret))
@@ -226,7 +222,6 @@ where
         St: State,
     {
         let inner = self.inner.read();
-
         let eid = inner.deployer.get_enclave_id();
         inner
             .watcher
@@ -251,7 +246,7 @@ where
 
         Ok(encrypting_key
             .ecall_output
-            .expect("must have ecall_output")
+            .ok_or_else(|| HostError::EcallOutputNotSet)?
             .encrypting_key())
     }
 

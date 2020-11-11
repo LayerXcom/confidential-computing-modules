@@ -1,16 +1,16 @@
 use crate::error::Result;
 use anonify_io_types::*;
+use anyhow::anyhow;
 use codec::{Decode, Encode};
 use frame_common::{
     crypto::{AccountId, Ciphertext, Sha256},
-    state_types::{StateType, UpdatedState, ReturnState},
+    state_types::{ReturnState, StateType, UpdatedState},
     traits::Hash256,
     AccessPolicy,
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use std::{marker::PhantomData, vec::Vec};
-use anyhow::anyhow;
 
 /// A message sender that encrypts commands
 #[derive(Debug, Clone)]
@@ -172,8 +172,9 @@ impl<R: RuntimeExecutor<CTX, S = StateType>, CTX: ContextOps> Commands<R, CTX> {
         match res {
             ReturnState::Updated(updates) => Ok(updates),
             ReturnState::Get(_) => Err(anyhow!(
-                "Calling state transition function, but the called function is for getting state.").into()
-            ),
+                "Calling state transition function, but the called function is for getting state."
+            )
+            .into()),
         }
     }
 }

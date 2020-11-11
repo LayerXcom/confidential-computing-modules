@@ -3,9 +3,10 @@ use crate::{
     notify::Notifier,
 };
 use anonify_io_types::*;
+use anyhow::anyhow;
 use frame_common::{
     crypto::AccountId,
-    state_types::{MemId, StateType, UpdatedState, ReturnState},
+    state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
 use frame_enclave::{
@@ -24,7 +25,6 @@ use std::{
     marker::PhantomData,
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
 };
-use anyhow::anyhow;
 
 pub const MRENCLAVE_VERSION: usize = 0;
 
@@ -55,7 +55,11 @@ impl StateOps for EnclaveContext {
         self.db.get(key.into(), mem_id)
     }
 
-    fn get_state_by_call_id<U, R, CTX>(ctx: CTX, call_id: u32, account_id: U) -> anyhow::Result<Self::S>
+    fn get_state_by_call_id<U, R, CTX>(
+        ctx: CTX,
+        call_id: u32,
+        account_id: U,
+    ) -> anyhow::Result<Self::S>
     where
         U: Into<AccountId>,
         R: RuntimeExecutor<CTX, S = Self::S>,
@@ -69,7 +73,7 @@ impl StateOps for EnclaveContext {
             ReturnState::Updated(_) => Err(anyhow!(
                 "Calling getting state function, but the called function is for state transition"
             )),
-            ReturnState::Get(state) => Ok(state)
+            ReturnState::Get(state) => Ok(state),
         }
     }
 
@@ -230,7 +234,11 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
         C: ContextOps<S = StateType> + Clone,
     {
         let account_id = ecall_input.access_policy().into_account_id();
-        let user_state = C::get_state_by_call_id::<_,R,_>(enclave_context.clone(), ecall_input.call_id(), account_id)?;
+        let user_state = C::get_state_by_call_id::<_, R, _>(
+            enclave_context.clone(),
+            ecall_input.call_id(),
+            account_id,
+        )?;
 
         Ok(output::ReturnState::new(user_state))
     }

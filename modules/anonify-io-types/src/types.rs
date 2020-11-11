@@ -2,7 +2,7 @@ use crate::localstd::vec::Vec;
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake, ExportPathSecret},
-    state_types::{ StateType, UpdatedState},
+    state_types::{StateType, UpdatedState},
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };

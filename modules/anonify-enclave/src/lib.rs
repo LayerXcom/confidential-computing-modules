@@ -18,8 +18,8 @@ pub mod workflow {
     pub use crate::commands::{MsgReceiver, MsgSender};
     pub use crate::context::GetState;
     pub use crate::handshake::{HandshakeReceiver, HandshakeSender, JoinGroupSender};
-    pub use crate::notify::RegisterNotification;
     pub use crate::identity_key::EncryptingKeyGetter;
+    pub use crate::notify::RegisterNotification;
 }
 
 #[cfg(debug_assertions)]
@@ -29,8 +29,6 @@ pub mod tests {
     use test_utils::*;
 
     pub fn run_tests() -> bool {
-        check_all_passed!(
-            notify::tests::run_tests(),
-        )
+        check_all_passed!(notify::tests::run_tests(),)
     }
 }

@@ -33,7 +33,7 @@ async fn test_deploy_post() {
         "/api/v1/deploy",
         web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
     ))
-        .await;
+    .await;
 
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -79,7 +79,7 @@ async fn test_multiple_messages() {
                 web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
-        .await;
+    .await;
 
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -184,7 +184,7 @@ async fn test_skip_invalid_event() {
                 web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
-        .await;
+    .await;
 
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -301,7 +301,7 @@ async fn test_node_recovery() {
                 web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
-        .await;
+    .await;
 
     let recovered_enclave = EnclaveDir::new()
         .init_enclave(true)
@@ -335,7 +335,7 @@ async fn test_node_recovery() {
                 web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
-        .await;
+    .await;
 
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -470,7 +470,7 @@ async fn test_join_group_then_handshake() {
                 web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
-        .await;
+    .await;
 
     let enclave2 = EnclaveDir::new()
         .init_enclave(true)
@@ -514,7 +514,7 @@ async fn test_join_group_then_handshake() {
                 web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
-        .await;
+    .await;
 
     // Party 1
 
