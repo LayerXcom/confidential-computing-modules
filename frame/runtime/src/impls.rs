@@ -110,7 +110,7 @@ macro_rules! __impl_inner_runtime {
                 }
             }
 
-            fn execute(self, runtime: Self::R, my_account_id: AccountId) -> Result<Vec<UpdatedState<Self::S>>> {
+            fn execute(self, runtime: Self::R, my_account_id: AccountId) -> Result<ReturnState<Self::S>> {
                 match self {
                     $( CallKind::$fn_name($fn_name) => {
                         runtime.$fn_name(
@@ -139,7 +139,7 @@ macro_rules! __impl_inner_runtime {
                 }
             }
 
-            fn execute(self, kind: Self::C, my_account_id: AccountId) -> Result<Vec<UpdatedState<Self::S>>> {
+            fn execute(self, kind: Self::C, my_account_id: AccountId) -> Result<ReturnState<Self::S>> {
                 kind.execute(self, my_account_id)
             }
         }
@@ -170,7 +170,7 @@ macro_rules! __impl_inner_runtime {
                     $runtime,
                     $sender: $account_id
                     $(, $param_name : $param )*
-                ) -> Result<Vec<UpdatedState<StateType>>> {
+                ) -> Result<ReturnState<StateType>> {
                     $( $impl )*
                 }
             )*
@@ -190,8 +190,15 @@ macro_rules! update {
 }
 
 #[macro_export]
-macro_rules! insert {
+macro_rules! return_update {
     ( $($update:expr),* ) => {
-        Ok(vec![$( $update),* ])
+        Ok(ReturnState::Updated(vec![$( $update),* ]))
+    };
+}
+
+#[macro_export]
+macro_rules! return_state {
+    ( $state:expr ) => {
+        Ok(ReturnState::Get($state.into()))
     };
 }

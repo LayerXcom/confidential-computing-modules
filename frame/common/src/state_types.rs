@@ -44,6 +44,12 @@ impl From<AccountId> for StateType {
     }
 }
 
+#[derive(Debug, Clone, Encode, Decode)]
+pub enum ReturnState<S: State> {
+    Updated(Vec<UpdatedState<S>>),
+    Get(S),
+}
+
 #[derive(Debug, Clone, Default, Encode, Decode)]
 pub struct UpdatedState<S: State> {
     pub account_id: AccountId,
