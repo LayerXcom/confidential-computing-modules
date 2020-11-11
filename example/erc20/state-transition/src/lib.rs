@@ -141,7 +141,7 @@ impl_runtime! {
         caller: AccountId
     ) {
         let balance = self.get_map::<U64>(caller, "Balance")?;
-        return_state![balance]
+        get_state![balance]
     }
 
     #[fn_id=7]
@@ -150,23 +150,23 @@ impl_runtime! {
         caller: AccountId
     ) {
         let approved = self.get_map::<Approved>(caller, "Approved")?;
-        return_state![approved]
+        get_state![approved]
     }
 
-    #[fn_id=7]
+    #[fn_id=8]
     pub fn total_supply(
         self,
         caller: AccountId
     ) {
         let total_supply = self.get_map::<U64>(*OWNER_ACCOUNT_ID, "TotalSupply")?;
-        return_state![total_supply]
+        get_state![total_supply]
     }
 
-    #[fn_id=8]
+    #[fn_id=9]
     pub fn owner(
         self,
         caller: AccountId
     ) {
-        return_state![*OWNER_ACCOUNT_ID]
+        get_state![*OWNER_ACCOUNT_ID]
     }
 }

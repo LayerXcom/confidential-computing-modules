@@ -197,7 +197,7 @@ macro_rules! return_update {
 }
 
 #[macro_export]
-macro_rules! return_state {
+macro_rules! get_state {
     ( $state:expr ) => {
         Ok(ReturnState::Get($state.into()))
     };
