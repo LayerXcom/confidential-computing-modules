@@ -26,7 +26,7 @@ impl_runtime! {
         let sender_balance = update!(sender, "Balance", total_supply);
         let total_supply = update!(*OWNER_ACCOUNT_ID, "TotalSupply", total_supply);
 
-        insert![owner_account_id, sender_balance, total_supply]
+        return_update![owner_account_id, sender_balance, total_supply]
     }
 
     #[fn_id=1]
@@ -44,7 +44,7 @@ impl_runtime! {
         let sender_update = update!(sender, "Balance", sender_balance - amount);
         let recipient_update = update!(recipient, "Balance", recipient_balance + amount);
 
-        insert![sender_update, recipient_update]
+        return_update![sender_update, recipient_update]
     }
 
     #[fn_id=2]
@@ -64,7 +64,7 @@ impl_runtime! {
 
         owner_approved.approve(spender, amount);
         let owner_approved_update = update!(owner, "Approved", owner_approved);
-        insert![owner_approved_update]
+        return_update![owner_approved_update]
     }
 
     #[fn_id=3]
@@ -97,7 +97,7 @@ impl_runtime! {
         let owner_balance_update = update!(owner, "Balance", owner_balance - amount);
         let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount);
 
-        insert![owner_approved_update, owner_balance_update, recipient_balance_update]
+        return_update![owner_approved_update, owner_balance_update, recipient_balance_update]
     }
 
     #[fn_id=4]
@@ -116,7 +116,7 @@ impl_runtime! {
         let total_supply = self.get_map::<U64>(*OWNER_ACCOUNT_ID, "TotalSupply")?;
         let total_supply_update = update!(*OWNER_ACCOUNT_ID, "TotalSupply", total_supply + amount);
 
-        insert![recipient_balance_update, total_supply_update]
+        return_update![recipient_balance_update, total_supply_update]
     }
 
     #[fn_id=5]
@@ -132,6 +132,42 @@ impl_runtime! {
         let total_supply = self.get_map::<U64>(*OWNER_ACCOUNT_ID, "TotalSupply")?;
         let total_supply_update = update!(*OWNER_ACCOUNT_ID, "TotalSupply", total_supply - amount);
 
-        insert![balance_update, total_supply_update]
+        return_update![balance_update, total_supply_update]
+    }
+
+    #[fn_id=6]
+    pub fn balance_of(
+        self,
+        caller: AccountId
+    ) {
+        let balance = self.get_map::<U64>(caller, "Balance")?;
+        get_state![balance]
+    }
+
+    #[fn_id=7]
+    pub fn approved(
+        self,
+        caller: AccountId
+    ) {
+        let approved = self.get_map::<Approved>(caller, "Approved")?;
+        get_state![approved]
+    }
+
+    #[fn_id=8]
+    pub fn total_supply(
+        self,
+        caller: AccountId
+    ) {
+        let total_supply = self.get_map::<U64>(*OWNER_ACCOUNT_ID, "TotalSupply")?;
+        get_state![total_supply]
+    }
+
+    #[fn_id=9]
+    pub fn owner(
+        self,
+        caller: AccountId
+    ) {
+        let owner = self.get_map::<AccountId>(*OWNER_ACCOUNT_ID, "Owner")?;
+        get_state![owner]
     }
 }

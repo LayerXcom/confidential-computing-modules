@@ -24,7 +24,7 @@ impl EnclaveEngine for EncryptingKeyGetter {
     type EO = output::ReturnEncryptingKey;
 
     fn handle<R, C>(
-        ecall_input: Self::EI,
+        _ecall_input: Self::EI,
         enclave_context: &C,
         _max_mem_size: usize,
     ) -> anyhow::Result<Self::EO>

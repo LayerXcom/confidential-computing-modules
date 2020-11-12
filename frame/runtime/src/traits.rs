@@ -8,7 +8,7 @@ use crate::localstd::{
 use codec::{Decode, Encode};
 use frame_common::{
     crypto::{AccountId, Ciphertext, ExportHandshake, ExportPathSecret},
-    state_types::{MemId, UpdatedState},
+    state_types::{MemId, ReturnState, UpdatedState},
     traits::*,
 };
 use frame_treekem::{handshake::HandshakeParams, DhPubKey, EciesCiphertext};
@@ -19,8 +19,7 @@ pub trait RuntimeExecutor<G: ContextOps>: Sized {
     type S: State;
 
     fn new(db: G) -> Self;
-    fn execute(self, kind: Self::C, my_account_id: AccountId)
-        -> Result<Vec<UpdatedState<Self::S>>>;
+    fn execute(self, kind: Self::C, my_account_id: AccountId) -> Result<ReturnState<Self::S>>;
 }
 
 /// Execute state transition functions from call kind
@@ -29,11 +28,7 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     type S: State;
 
     fn new(id: u32, state: &mut [u8]) -> Result<Self>;
-    fn execute(
-        self,
-        runtime: Self::R,
-        my_account_id: AccountId,
-    ) -> Result<Vec<UpdatedState<Self::S>>>;
+    fn execute(self, runtime: Self::R, my_account_id: AccountId) -> Result<ReturnState<Self::S>>;
 }
 
 pub trait ContextOps:
@@ -48,9 +43,17 @@ pub trait StateOps {
 
     /// Get state using memory id.
     /// Assumed this is called in user-defined state transition functions.
-    fn get_state<U>(&self, key: U, mem_id: MemId) -> Self::S
+    fn get_state_by_mem_id<U>(&self, key: U, mem_id: MemId) -> Self::S
     where
         U: Into<AccountId>;
+
+    /// Get state using call id.
+    /// this is called in user-defined state getting functions.
+    fn get_state_by_call_id<U, R, CTX>(ctx: CTX, call_id: u32, account_id: U) -> Result<Self::S>
+    where
+        U: Into<AccountId>,
+        R: RuntimeExecutor<CTX, S = Self::S>,
+        CTX: ContextOps<S = Self::S>;
 
     /// Returns a updated state of registered account_id in notification.
     fn update_state(

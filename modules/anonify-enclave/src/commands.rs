@@ -1,9 +1,10 @@
 use crate::error::Result;
 use anonify_io_types::*;
+use anyhow::anyhow;
 use codec::{Decode, Encode};
 use frame_common::{
     crypto::{AccountId, Ciphertext, Sha256},
-    state_types::{StateType, UpdatedState},
+    state_types::{ReturnState, StateType, UpdatedState},
     traits::Hash256,
     AccessPolicy,
 };
@@ -168,6 +169,12 @@ impl<R: RuntimeExecutor<CTX, S = StateType>, CTX: ContextOps> Commands<R, CTX> {
     fn stf_call(self, ctx: CTX) -> Result<Vec<UpdatedState<StateType>>> {
         let res = R::new(ctx).execute(self.call_kind, self.my_account_id)?;
 
-        Ok(res)
+        match res {
+            ReturnState::Updated(updates) => Ok(updates),
+            ReturnState::Get(_) => Err(anyhow!(
+                "Calling state transition function, but the called function is for getting state."
+            )
+            .into()),
+        }
     }
 }

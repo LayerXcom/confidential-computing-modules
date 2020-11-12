@@ -3,7 +3,6 @@ use anonify_io_types::*;
 use config::constants::*;
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
-    state_types::MemId,
     traits::*,
 };
 use frame_host::engine::*;
@@ -219,14 +218,14 @@ pub mod host_input {
 
     pub struct GetState<AP: AccessPolicy> {
         access_policy: AP,
-        mem_id: MemId,
+        call_id: u32,
     }
 
     impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, mem_id: MemId) -> Self {
+        pub fn new(access_policy: AP, call_id: u32) -> Self {
             GetState {
                 access_policy,
-                mem_id,
+                call_id,
             }
         }
     }
@@ -236,7 +235,7 @@ pub mod host_input {
         type HostOutput = host_output::GetState;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let ecall_input = Self::EcallInput::new(self.access_policy, self.mem_id);
+            let ecall_input = Self::EcallInput::new(self.access_policy, self.call_id);
 
             Ok((ecall_input, Self::HostOutput::new()))
         }
