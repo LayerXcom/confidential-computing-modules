@@ -3,8 +3,9 @@ use frame_common::{
     state_types::{MemId, StateType, UpdatedState},
 };
 use std::{
-    collections::HashMap,
+    collections::hash_map::{HashMap, Values},
     prelude::v1::*,
+    sync::SgxRwLockReadGuard,
     sync::{Arc, SgxRwLock},
 };
 
@@ -32,6 +33,14 @@ impl EnclaveDB {
             Some(v) => v.clone(),
             None => StateType::default(),
         }
+    }
+
+    pub fn values(&self) -> Vec<StateType> {
+         let mut acc = vec![];
+        for v in self.0.read().unwrap().values() {
+            acc.push(v.clone());
+        }
+        acc
     }
 
     pub fn insert_by_updated_state(&self, updated_state: UpdatedState<StateType>) {

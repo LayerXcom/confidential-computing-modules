@@ -41,6 +41,8 @@ pub trait ContextOps:
 pub trait StateOps {
     type S: State;
 
+    fn values(self) -> Vec<Self::S>;
+
     /// Get state using memory id.
     /// Assumed this is called in user-defined state transition functions.
     fn get_state_by_mem_id<U>(&self, key: U, mem_id: MemId) -> Self::S

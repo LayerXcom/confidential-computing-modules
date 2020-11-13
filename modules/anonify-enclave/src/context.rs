@@ -48,6 +48,10 @@ impl ContextOps for EnclaveContext {
 impl StateOps for EnclaveContext {
     type S = StateType;
 
+    fn values(self) -> Vec<Self::S> {
+        self.db.values()
+    }
+
     fn get_state_by_mem_id<U>(&self, key: U, mem_id: MemId) -> Self::S
     where
         U: Into<AccountId>,
