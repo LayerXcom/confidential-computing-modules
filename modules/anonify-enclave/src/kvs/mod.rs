@@ -3,9 +3,8 @@ use frame_common::{
     state_types::{MemId, StateType, UpdatedState},
 };
 use std::{
-    collections::hash_map::{HashMap, Values},
+    collections::hash_map::HashMap,
     prelude::v1::*,
-    sync::SgxRwLockReadGuard,
     sync::{Arc, SgxRwLock},
 };
 
@@ -36,7 +35,7 @@ impl EnclaveDB {
     }
 
     pub fn values(&self) -> Vec<StateType> {
-         let mut acc = vec![];
+        let mut acc = vec![];
         for v in self.0.read().unwrap().values() {
             acc.push(v.clone());
         }
