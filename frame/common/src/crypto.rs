@@ -246,6 +246,22 @@ impl Sha256 {
 
 const CHALLENGE_SIZE: usize = 32;
 
+/// No authentication when evaluating an access policy.
+#[derive(Debug, Clone, Encode, Decode)]
+pub struct NoAuth {
+    account_id: AccountId,
+}
+
+impl AccessPolicy for NoAuth {
+    fn verify(&self) -> Result<(), Error> {
+        Ok(())
+    }
+
+    fn into_account_id(&self) -> AccountId {
+        self.account_id
+    }
+}
+
 /// A challenge and response authentication parameter to read and write to anonify's enclave mem db.
 #[derive(Debug, Clone)]
 pub struct Ed25519ChallengeResponse {
