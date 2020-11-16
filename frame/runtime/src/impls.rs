@@ -160,9 +160,8 @@ macro_rules! __impl_inner_runtime {
                 }
             }
 
-            pub fn get(&self, name: &str) -> StateType {
-                let mem_id = MemName::as_id(name);
-                self.db.get_state_by_mem_id(name, mem_id)
+            pub fn values<S: State>(mut self) -> Result<Vec<S>> {
+                self.db.values().into_iter().map(|e| S::decode_s(&mut e.into_vec())).collect()
             }
 
             $(
