@@ -258,7 +258,7 @@ impl AccessPolicy for NoAuth {
     }
 
     fn into_account_id(&self) -> AccountId {
-        self.clone().account_id
+        self.account_id
     }
 }
 
