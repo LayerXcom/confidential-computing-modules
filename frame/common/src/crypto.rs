@@ -262,6 +262,16 @@ impl AccessPolicy for NoAuth {
     }
 }
 
+impl NoAuth {
+    pub fn new(account_id: AccountId) -> Self {
+        NoAuth { account_id }
+    }
+
+    pub fn account_id(&self) -> AccountId {
+        self.account_id
+    }
+}
+
 /// A challenge and response authentication parameter to read and write to anonify's enclave mem db.
 #[derive(Debug, Clone)]
 pub struct Ed25519ChallengeResponse {
