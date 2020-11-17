@@ -35,6 +35,8 @@ pub trait ContextOps:
     StateOps + GroupKeyGetter + NotificationOps + IdentityKeyOps + QuoteGetter
 {
     fn mrenclave_ver(&self) -> usize;
+    fn ias_url(&self) -> &str;
+    fn sub_key(&self) -> &str;
 }
 
 /// A getter of state stored in enclave memory.

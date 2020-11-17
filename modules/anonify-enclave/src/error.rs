@@ -9,6 +9,9 @@ pub enum EnclaveError {
     #[error("I/O error: {0}")]
     IoError(#[from] io::Error),
 
+    #[error("{0}")]
+    EnvVarError(#[from] std::env::VarError),
+
     #[error("Hex error: {0}")]
     HexError(hex::FromHexError),
 

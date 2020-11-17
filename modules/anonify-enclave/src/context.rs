@@ -33,6 +33,8 @@ pub const MRENCLAVE_VERSION: usize = 0;
 #[derive(Clone)]
 pub struct EnclaveContext {
     version: usize,
+    ias_url: String,
+    sub_key: String,
     spid: sgx_spid_t,
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB,
@@ -43,6 +45,14 @@ pub struct EnclaveContext {
 impl ContextOps for EnclaveContext {
     fn mrenclave_ver(&self) -> usize {
         self.version
+    }
+
+    fn ias_url(&self) -> &str {
+        &self.ias_url
+    }
+
+    fn sub_key(&self) -> &str {
+        &self.sub_key
     }
 }
 
@@ -181,6 +191,9 @@ impl EnclaveContext {
         )?));
         let notifier = Notifier::new();
 
+        let ias_url = env::var("IAS_URL")?;
+        let sub_key = env::var("SUB_KEY")?;
+
         Ok(EnclaveContext {
             spid,
             identity_key,
@@ -188,6 +201,8 @@ impl EnclaveContext {
             notifier,
             group_key,
             version: MRENCLAVE_VERSION,
+            ias_url,
+            sub_key,
         })
     }
 
@@ -267,10 +282,9 @@ impl EnclaveEngine for ReportRegistration {
         C: ContextOps<S = StateType> + Clone,
     {
         let quote = enclave_context.quote()?;
-        let ias_url = env::var("IAS_URL")?;
-        let sub_key = env::var("SUB_KEY")?;
-        let (report, report_sig) =
-            RAService::remote_attestation(ias_url.as_str(), sub_key.as_str(), &quote)?;
+        let ias_url = enclave_context.ias_url();
+        let sub_key = enclave_context.sub_key();
+        let (report, report_sig) = RAService::remote_attestation(ias_url, sub_key, &quote)?;
         let mrenclave_ver = enclave_context.mrenclave_ver();
         let my_roster_idx = enclave_context.read_group_key().my_roster_idx();
 
