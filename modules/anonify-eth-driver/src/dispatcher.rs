@@ -101,6 +101,35 @@ where
             .await
     }
 
+    pub async fn register_report<P: AsRef<Path> + Copy>(
+        &self,
+        signer: Address,
+        gas: u64,
+        contract_addr: &str,
+        abi_path: P,
+    ) -> Result<(H256, ExportPathSecret)> {
+        self.set_contract_addr(contract_addr, abi_path)?;
+
+        let inner = self.inner.read();
+        let eid = inner.deployer.get_enclave_id();
+        let input = host_input::JoinGroup::new(signer, gas);
+        let host_output = JoinGroupWorkflow::exec(input, eid)?;
+
+        let tx_hash = inner
+            .sender
+            .as_ref()
+            .ok_or(HostError::AddressNotSet)?
+            .send_report_handshake(host_output.clone(), method)
+            .await?;
+
+        let export_path_secret = host_output
+            .ecall_output
+            .ok_or_else(|| HostError::EcallOutputNotSet)?
+            .export_path_secret();
+
+        Ok((tx_hash, export_path_secret))
+    }
+
     pub async fn update_mrenclave<P: AsRef<Path> + Copy>(
         &self,
         signer: Address,

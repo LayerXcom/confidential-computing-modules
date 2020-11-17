@@ -18,6 +18,7 @@ use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, DhPubKey, EciesCiphertext,
 };
+use remote_attestation::RAService;
 use sgx_types::*;
 use std::prelude::v1::*;
 use std::{
@@ -245,5 +246,39 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
         )?;
 
         Ok(output::ReturnState::new(user_state))
+    }
+}
+
+/// A report registration engine
+#[derive(Debug, Clone)]
+pub struct ReportRegistration;
+
+impl EnclaveEngine for ReportRegistration {
+    type EI = input::CallRegisterReport;
+    type EO = output::ReturnRegisterReport;
+
+    fn handle<R, C>(
+        _ecall_input: Self::EI,
+        enclave_context: &C,
+        _max_mem_size: usize,
+    ) -> anyhow::Result<Self::EO>
+    where
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
+    {
+        let quote = enclave_context.quote()?;
+        let ias_url = env::var("IAS_URL")?;
+        let sub_key = env::var("SUB_KEY")?;
+        let (report, report_sig) =
+            RAService::remote_attestation(ias_url.as_str(), sub_key.as_str(), &quote)?;
+        let mrenclave_ver = enclave_context.mrenclave_ver();
+        let my_roster_idx = enclave_context.read_group_key().my_roster_idx();
+
+        Ok(output::ReturnRegisterReport::new(
+            report.into_vec(),
+            report_sig.into_vec(),
+            mrenclave_ver,
+            my_roster_idx,
+        ))
     }
 }
