@@ -11,12 +11,7 @@ use frame_host::engine::HostEngine;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{
-    convert::{TryFrom, TryInto},
-    fmt::Debug,
-    marker::Send,
-    path::Path,
-};
+use std::{fmt::Debug, marker::Send, path::Path};
 use web3::types::{Address, H256};
 
 /// This dispatcher communicates with a blockchain node.
@@ -178,8 +173,7 @@ where
 
     pub fn get_state<ST, AP, C>(&self, access_policy: AP, call_name: &str) -> Result<ST>
     where
-        ST: State + TryFrom<Vec<u8>>,
-        <ST as TryFrom<Vec<u8>>>::Error: Debug,
+        ST: State + StateDecoder,
         AP: AccessPolicy,
         C: CallNameConverter,
     {
@@ -187,14 +181,12 @@ where
         let eid = self.inner.read().deployer.get_enclave_id();
         let input = host_input::GetState::new(access_policy, call_id);
 
-        let state = GetStateWorkflow::exec(input, eid)?
+        let vec = GetStateWorkflow::exec(input, eid)?
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?
-            .into_vec()
-            .try_into()
-            .unwrap();
+            .into_vec(); // into Vec<u8> in StateType
 
-        Ok(state)
+        ST::decode_vec(vec).map_err(Into::into)
     }
 
     pub async fn handshake(&self, signer: Address, gas: u64) -> Result<(H256, ExportPathSecret)> {
