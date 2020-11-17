@@ -8,7 +8,11 @@ use crate::localstd::{
 };
 use crate::serde::{Deserialize, Serialize};
 use codec::{Decode, Encode};
-use frame_common::{crypto::AccountId, state_types::StateType, traits::State};
+use frame_common::{
+    crypto::AccountId,
+    state_types::StateType,
+    traits::{State, StateDecoder},
+};
 
 macro_rules! impl_uint {
     ($name:ident, $raw:ident) => {
@@ -29,29 +33,6 @@ macro_rules! impl_uint {
         )]
         #[serde(crate = "crate::serde")]
         pub struct $name($raw);
-
-        impl TryFrom<Vec<u8>> for $name {
-            type Error = Error;
-
-            fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
-                if s.len() == 0 {
-                    return Ok(Default::default());
-                }
-                let mut buf = s;
-                $name::decode_s(&mut buf)
-            }
-        }
-
-        impl TryFrom<&mut [u8]> for $name {
-            type Error = Error;
-
-            fn try_from(s: &mut [u8]) -> Result<Self, Self::Error> {
-                if s.len() == 0 {
-                    return Ok(Default::default());
-                }
-                $name::decode_s(s)
-            }
-        }
 
         impl From<$name> for StateType {
             fn from(u: $name) -> Self {
@@ -107,6 +88,23 @@ macro_rules! impl_uint {
             }
         }
 
+        impl StateDecoder for $name {
+            fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
+                if v.len() == 0 {
+                    return Ok(Default::default());
+                }
+                let mut buf = v;
+                $name::decode_s(&mut buf)
+            }
+
+            fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
+                if b.len() == 0 {
+                    return Ok(Default::default());
+                }
+                $name::decode_s(b)
+            }
+        }
+
         impl $name {
             pub fn as_raw(&self) -> $raw {
                 self.0
@@ -147,6 +145,23 @@ impl Bytes {
 
     pub fn into_raw(self) -> Vec<u8> {
         self.0
+    }
+}
+
+impl StateDecoder for Bytes {
+    fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
+        if v.len() == 0 {
+            return Ok(Default::default());
+        }
+        let mut buf = v;
+        Bytes::decode_s(&mut buf)
+    }
+
+    fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
+        if b.len() == 0 {
+            return Ok(Default::default());
+        }
+        Bytes::decode_s(b)
     }
 }
 
@@ -211,15 +226,20 @@ impl From<Approved> for StateType {
     }
 }
 
-impl TryFrom<Vec<u8>> for Approved {
-    type Error = Error;
-
-    fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
-        if s.is_empty() {
+impl StateDecoder for Approved {
+    fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
+        if v.len() == 0 {
             return Ok(Default::default());
         }
-        let mut buf = s;
+        let mut buf = v;
         Approved::decode_s(&mut buf)
+    }
+
+    fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
+        if b.len() == 0 {
+            return Ok(Default::default());
+        }
+        Approved::decode_s(b)
     }
 }
 
