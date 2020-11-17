@@ -54,6 +54,8 @@ pub trait Sender: Sized {
         method: &str,
     ) -> Result<H256>;
 
+    async fn register_report(&self, host_output: host_output::RegisterReport) -> Result<H256>;
+
     async fn handshake(&self, host_output: host_output::Handshake) -> Result<H256>;
 
     fn get_contract(self) -> ContractKind;

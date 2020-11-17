@@ -53,6 +53,11 @@ impl Sender for EthSender {
             .await
     }
 
+    async fn register_report(&self, host_output: host_output::RegisterReport) -> Result<H256> {
+        debug!("Registering report to blockchain: {:?}", host_output);
+        self.contract.register_report(host_output).await
+    }
+
     async fn send_command(&self, host_output: host_output::Command) -> Result<H256> {
         debug!("Sending a command to blockchain: {:?}", host_output);
         self.contract.send_command(host_output).await

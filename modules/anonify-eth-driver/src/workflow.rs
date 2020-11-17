@@ -37,6 +37,17 @@ impl HostEngine for JoinGroupWorkflow {
     const CMD: u32 = CALL_JOIN_GROUP_CMD;
 }
 
+pub struct RegisterReportWorkflow;
+
+impl HostEngine for RegisterReportWorkflow {
+    type HI = host_input::RegisterReport;
+    type EI = input::CallRegisterReport;
+    type EO = output::ReturnRegisterReport;
+    type HO = host_output::RegisterReport;
+    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const CMD: u32 = CALL_REGISTER_REPORT_CMD;
+}
+
 pub struct HandshakeWorkflow;
 
 impl HostEngine for HandshakeWorkflow {
@@ -168,6 +179,28 @@ pub mod host_input {
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             let host_output = host_output::JoinGroup::new(self.signer, self.gas);
+
+            Ok((Self::EcallInput::default(), host_output))
+        }
+    }
+
+    pub struct RegisterReport {
+        signer: Address,
+        gas: u64,
+    }
+
+    impl RegisterReport {
+        pub fn new(signer: Address, gas: u64) -> Self {
+            RegisterReport { signer, gas }
+        }
+    }
+
+    impl HostInput for RegisterReport {
+        type EcallInput = input::CallRegisterReport;
+        type HostOutput = host_output::RegisterReport;
+
+        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+            let host_output = host_output::RegisterReport::new(self.signer, self.gas);
 
             Ok((Self::EcallInput::default(), host_output))
         }
@@ -346,6 +379,33 @@ pub mod host_output {
     impl JoinGroup {
         pub fn new(signer: Address, gas: u64) -> Self {
             JoinGroup {
+                signer,
+                gas,
+                ecall_output: None,
+            }
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct RegisterReport {
+        pub signer: Address,
+        pub gas: u64,
+        pub ecall_output: Option<output::ReturnRegisterReport>,
+    }
+
+    impl HostOutput for RegisterReport {
+        type EcallOutput = output::ReturnRegisterReport;
+
+        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+            self.ecall_output = Some(output);
+
+            Ok(self)
+        }
+    }
+
+    impl RegisterReport {
+        pub fn new(signer: Address, gas: u64) -> Self {
+            RegisterReport {
                 signer,
                 gas,
                 ecall_output: None,

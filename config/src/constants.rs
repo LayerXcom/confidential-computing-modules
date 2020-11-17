@@ -16,3 +16,4 @@ pub const CALL_JOIN_GROUP_CMD: u32 = 5;
 pub const CALL_HANDSHAKE_CMD: u32 = 6;
 pub const REGISTER_NOTIFICATION_CMD: u32 = 7;
 pub const GET_ENCRYPTING_KEY_CMD: u32 = 8;
+pub const CALL_REGISTER_REPORT_CMD: u32 = 9;
