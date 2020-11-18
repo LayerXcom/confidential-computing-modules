@@ -49,6 +49,11 @@ pub mod input {
 
     impl EcallInput for CallJoinGroup {}
 
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct CallRegisterReport;
+
+    impl EcallInput for CallRegisterReport {}
+
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct InsertCiphertext {
         ciphertext: Ciphertext,
@@ -310,6 +315,48 @@ pub mod output {
 
         pub fn export_path_secret(self) -> ExportPathSecret {
             self.export_path_secret
+        }
+
+        pub fn roster_idx(&self) -> u32 {
+            self.roster_idx
+        }
+    }
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct ReturnRegisterReport {
+        report: Vec<u8>,
+        report_sig: Vec<u8>,
+        mrenclave_ver: u32,
+        roster_idx: u32,
+    }
+
+    impl EcallOutput for ReturnRegisterReport {}
+
+    impl ReturnRegisterReport {
+        pub fn new(
+            report: Vec<u8>,
+            report_sig: Vec<u8>,
+            mrenclave_ver: usize,
+            roster_idx: u32,
+        ) -> Self {
+            ReturnRegisterReport {
+                report,
+                report_sig,
+                mrenclave_ver: mrenclave_ver as u32,
+                roster_idx,
+            }
+        }
+
+        pub fn report(&self) -> &[u8] {
+            &self.report[..]
+        }
+
+        pub fn report_sig(&self) -> &[u8] {
+            &self.report_sig[..]
+        }
+
+        pub fn mrenclave_ver(&self) -> u32 {
+            self.mrenclave_ver
         }
 
         pub fn roster_idx(&self) -> u32 {

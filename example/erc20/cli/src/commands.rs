@@ -34,8 +34,19 @@ pub(crate) fn join_group(anonify_url: String, contract_addr: String) -> Result<(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {:?}", res);
+    println!("Transaction hash: {:?}", res);
+    Ok(())
+}
 
+pub(crate) fn register_report(anonify_url: String, contract_addr: String) -> Result<()> {
+    let req = erc20_api::register_report::post::Request { contract_addr };
+    let res = Client::new()
+        .post(&format!("{}/api/v1/register_report", &anonify_url))
+        .json(&req)
+        .send()?
+        .text()?;
+
+    println!("Transaction hash: {:?}", res);
     Ok(())
 }
 
@@ -47,8 +58,7 @@ pub(crate) fn update_mrenclave(anonify_url: String, contract_addr: String) -> Re
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {:?}", res);
-
+    println!("Transaction hash: {:?}", res);
     Ok(())
 }
 
@@ -84,8 +94,7 @@ pub(crate) fn init_state<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {:?}", res);
-
+    println!("Transaction hash: {:?}", res);
     Ok(())
 }
 
@@ -115,7 +124,7 @@ pub(crate) fn transfer<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {:?}", res);
+    println!("Transaction hash: {:?}", res);
     Ok(())
 }
 
@@ -145,7 +154,7 @@ pub(crate) fn approve<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {:?}", res);
+    println!("Transaction hash: {:?}", res);
     Ok(())
 }
 
@@ -179,7 +188,7 @@ pub(crate) fn transfer_from<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {:?}", res);
+    println!("Transaction hash: {:?}", res);
     Ok(())
 }
 
@@ -209,7 +218,7 @@ pub(crate) fn mint<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {:?}", res);
+    println!("Transaction hash: {:?}", res);
     Ok(())
 }
 
@@ -237,7 +246,7 @@ pub(crate) fn burn<R: Rng>(
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {:?}", res);
+    println!("Transaction hash: {:?}", res);
     Ok(())
 }
 
@@ -247,7 +256,7 @@ pub(crate) fn key_rotation(anonify_url: String) -> Result<()> {
         .send()?
         .text()?;
 
-    println!("Transaction Receipt: {:?}", res);
+    println!("Transaction hash: {:?}", res);
 
     Ok(())
 }

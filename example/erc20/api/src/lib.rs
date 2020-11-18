@@ -565,3 +565,17 @@ pub mod register_notification {
         }
     }
 }
+
+pub mod register_report {
+    pub mod post {
+        use super::super::*;
+
+        #[derive(Clone, Debug, Deserialize, Serialize)]
+        pub struct Request {
+            pub contract_addr: String,
+        }
+
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Response(pub H256);
+    }
+}

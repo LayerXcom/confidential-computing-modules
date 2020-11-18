@@ -72,6 +72,30 @@ impl Web3Contract {
             .map_err(Into::into)
     }
 
+    pub async fn register_report(&self, output: host_output::RegisterReport) -> Result<H256> {
+        let ecall_output = output
+            .ecall_output
+            .ok_or_else(|| HostError::EcallOutputNotSet)?;
+        let report = ecall_output.report().to_vec();
+        let report_sig = ecall_output.report_sig().to_vec();
+        let gas = output.gas;
+
+        self.contract
+            .call(
+                "registerReport",
+                (
+                    report,
+                    report_sig,
+                    ecall_output.mrenclave_ver(),
+                    ecall_output.roster_idx(),
+                ),
+                output.signer,
+                Options::with(|opt| opt.gas = Some(gas.into())),
+            )
+            .await
+            .map_err(Into::into)
+    }
+
     pub async fn send_command(&self, output: host_output::Command) -> Result<H256> {
         let ecall_output = output
             .ecall_output

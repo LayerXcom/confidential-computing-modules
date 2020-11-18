@@ -333,6 +333,10 @@ async fn test_node_recovery() {
             .route(
                 "/api/v1/encrypting_key",
                 web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/register_report",
+                web::post().to(handle_register_report::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -405,6 +409,15 @@ async fn test_node_recovery() {
     let resp = test::call_service(&mut recovered_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
+    let req = test::TestRequest::post()
+        .uri("/api/v1/register_report")
+        .set_json(&erc20_api::register_report::post::Request {
+            contract_addr: contract_addr.0.clone(),
+        })
+        .to_request();
+    let resp = test::call_service(&mut recovered_app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
     let req = test::TestRequest::get()
         .uri("/api/v1/balance_of")
         .set_json(&BALANCE_OF_REQ)
@@ -414,33 +427,31 @@ async fn test_node_recovery() {
     let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
     assert_eq!(balance.0.as_raw(), 90);
 
-    // TODO: Call registering report #281
+    let req = test::TestRequest::get()
+        .uri("/api/v1/encrypting_key")
+        .to_request();
+    let resp = test::call_service(&mut recovered_app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
+    let enc_key =
+        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
 
-    // let req = test::TestRequest::get()
-    //     .uri("/api/v1/encrypting_key")
-    //     .to_request();
-    // let resp = test::call_service(&mut recovered_app, req).await;
-    // assert!(resp.status().is_success(), "response: {:?}", resp);
-    // let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
-    // let enc_key =
-    //     verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+    let transfer_10_req = transfer_10_req(&enc_key);
+    let req = test::TestRequest::post()
+        .uri("/api/v1/transfer")
+        .set_json(&transfer_10_req)
+        .to_request();
+    let resp = test::call_service(&mut recovered_app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
 
-    // let transfer_10_req = transfer_10_req(&enc_key);
-    // let req = test::TestRequest::post()
-    //     .uri("/api/v1/transfer")
-    //     .set_json(&transfer_10_req)
-    //     .to_request();
-    // let resp = test::call_service(&mut recovered_app, req).await;
-    // assert!(resp.status().is_success(), "response: {:?}", resp);
-
-    // let req = test::TestRequest::get()
-    //     .uri("/api/v1/balance_of")
-    //     .set_json(&BALANCE_OF_REQ)
-    //     .to_request();
-    // let resp = test::call_service(&mut recovered_app, req).await;
-    // assert!(resp.status().is_success(), "response: {:?}", resp);
-    // let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
-    // assert_eq!(balance.0.as_raw(), 80);
+    let req = test::TestRequest::get()
+        .uri("/api/v1/balance_of")
+        .set_json(&BALANCE_OF_REQ)
+        .to_request();
+    let resp = test::call_service(&mut recovered_app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
+    assert_eq!(balance.0.as_raw(), 80);
 }
 
 #[actix_rt::test]
