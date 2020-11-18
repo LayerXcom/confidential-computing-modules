@@ -480,3 +480,31 @@ where
 
     Ok(HttpResponse::Ok().finish())
 }
+
+pub async fn handle_register_report<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
+    req: web::Json<erc20_api::register_report::post::Request>,
+) -> Result<HttpResponse>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher,
+{
+    let sender_address = server
+        .dispatcher
+        .get_account(server.account_index, &server.password)
+        .await
+        .map_err(|e| ServerError::from(e))?;
+    let tx_hash = server
+        .dispatcher
+        .register_report(
+            sender_address,
+            DEFAULT_GAS,
+            &req.contract_addr,
+            &server.abi_path,
+        )
+        .await
+        .map_err(|e| ServerError::from(e))?;
+
+    Ok(HttpResponse::Ok().json(erc20_api::register_report::post::Response(tx_hash)))
+}
