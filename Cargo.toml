@@ -10,6 +10,8 @@ members = [
     "modules/anonify-enclave",
     "modules/anonify-eth-driver",
     "modules/anonify-io-types",
+    "modules/key-vault-enclave",
+    "modules/key-vault-host",
     "example/erc20/api",
     "example/erc20/cli",
     "example/erc20/enclave",
