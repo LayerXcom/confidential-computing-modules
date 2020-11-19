@@ -2,7 +2,7 @@ use crate::localstd::vec::Vec;
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake, ExportPathSecret},
-    state_types::{MemId, StateType, UpdatedState},
+    state_types::{StateType, UpdatedState},
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
@@ -49,6 +49,11 @@ pub mod input {
 
     impl EcallInput for CallJoinGroup {}
 
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct CallRegisterReport;
+
+    impl EcallInput for CallRegisterReport {}
+
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct InsertCiphertext {
         ciphertext: Ciphertext,
@@ -86,16 +91,16 @@ pub mod input {
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct GetState<AP: AccessPolicy> {
         access_policy: AP,
-        mem_id: MemId,
+        call_id: u32,
     }
 
     impl<AP: AccessPolicy> EcallInput for GetState<AP> {}
 
     impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, mem_id: MemId) -> Self {
+        pub fn new(access_policy: AP, call_id: u32) -> Self {
             GetState {
                 access_policy,
-                mem_id,
+                call_id,
             }
         }
 
@@ -103,8 +108,8 @@ pub mod input {
             &self.access_policy
         }
 
-        pub fn mem_id(&self) -> MemId {
-            self.mem_id
+        pub fn call_id(&self) -> u32 {
+            self.call_id
         }
     }
 
@@ -326,6 +331,48 @@ pub mod output {
 
         pub fn export_path_secret(self) -> ExportPathSecret {
             self.export_path_secret
+        }
+
+        pub fn roster_idx(&self) -> u32 {
+            self.roster_idx
+        }
+    }
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct ReturnRegisterReport {
+        report: Vec<u8>,
+        report_sig: Vec<u8>,
+        mrenclave_ver: u32,
+        roster_idx: u32,
+    }
+
+    impl EcallOutput for ReturnRegisterReport {}
+
+    impl ReturnRegisterReport {
+        pub fn new(
+            report: Vec<u8>,
+            report_sig: Vec<u8>,
+            mrenclave_ver: usize,
+            roster_idx: u32,
+        ) -> Self {
+            ReturnRegisterReport {
+                report,
+                report_sig,
+                mrenclave_ver: mrenclave_ver as u32,
+                roster_idx,
+            }
+        }
+
+        pub fn report(&self) -> &[u8] {
+            &self.report[..]
+        }
+
+        pub fn report_sig(&self) -> &[u8] {
+            &self.report_sig[..]
+        }
+
+        pub fn mrenclave_ver(&self) -> u32 {
+            self.mrenclave_ver
         }
 
         pub fn roster_idx(&self) -> u32 {

@@ -1,13 +1,12 @@
 use crate::local_anyhow::{anyhow, Error};
 use crate::localstd::{
     cmp::Ordering,
-    convert::TryFrom,
     io::{self, Read, Write},
     string::String,
     vec::Vec,
 };
 use crate::serde::{Deserialize, Serialize};
-use crate::traits::{AccessPolicy, Hash256, IntoVec};
+use crate::traits::{AccessPolicy, Hash256, IntoVec, StateDecoder};
 use codec::{self, Decode, Encode, Input};
 use ed25519_dalek::{
     Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
@@ -102,16 +101,24 @@ impl From<String> for AccountId {
     }
 }
 
-impl TryFrom<Vec<u8>> for AccountId {
-    type Error = Error;
-
-    fn try_from(s: Vec<u8>) -> Result<Self, Self::Error> {
-        if s.len() < ACCOUNT_ID_SIZE {
+impl StateDecoder for AccountId {
+    fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
+        if v.len() < ACCOUNT_ID_SIZE {
             return Err(anyhow!("source length must be {}", ACCOUNT_ID_SIZE));
         }
 
         let mut res = [0u8; ACCOUNT_ID_SIZE];
-        res.copy_from_slice(&s.as_slice()[..ACCOUNT_ID_SIZE]);
+        res.copy_from_slice(&v.as_slice()[..ACCOUNT_ID_SIZE]);
+        Ok(Self::from_array(res))
+    }
+
+    fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
+        if b.len() < ACCOUNT_ID_SIZE {
+            return Err(anyhow!("source length must be {}", ACCOUNT_ID_SIZE));
+        }
+
+        let mut res = [0u8; ACCOUNT_ID_SIZE];
+        res.copy_from_slice(&b[..ACCOUNT_ID_SIZE]);
         Ok(Self::from_array(res))
     }
 }
@@ -245,6 +252,32 @@ impl Sha256 {
 }
 
 const CHALLENGE_SIZE: usize = 32;
+
+/// No authentication when evaluating an access policy.
+#[derive(Debug, Clone, Encode, Decode)]
+pub struct NoAuth {
+    account_id: AccountId,
+}
+
+impl AccessPolicy for NoAuth {
+    fn verify(&self) -> Result<(), Error> {
+        Ok(())
+    }
+
+    fn into_account_id(&self) -> AccountId {
+        self.account_id
+    }
+}
+
+impl NoAuth {
+    pub fn new(account_id: AccountId) -> Self {
+        NoAuth { account_id }
+    }
+
+    pub fn account_id(&self) -> AccountId {
+        self.account_id
+    }
+}
 
 /// A challenge and response authentication parameter to read and write to anonify's enclave mem db.
 #[derive(Debug, Clone)]

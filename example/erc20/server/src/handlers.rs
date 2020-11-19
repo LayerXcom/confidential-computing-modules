@@ -1,9 +1,9 @@
 use crate::error::{Result, ServerError};
 use crate::Server;
 use actix_web::{web, HttpResponse};
-use anonify_eth_driver::{dispatcher::get_state, traits::*};
+use anonify_eth_driver::traits::*;
 use anyhow::anyhow;
-use erc20_state_transition::{CallName, MemName};
+use erc20_state_transition::CallName;
 use frame_runtime::primitives::{Approved, U64};
 use log::{debug, error, info};
 use std::{sync::Arc, time};
@@ -362,7 +362,9 @@ where
     let access_right = req
         .into_access_right()
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let owner_approved = get_state::<Approved, MemName, _>(access_right, server.eid, "Approved")
+    let owner_approved = server
+        .dispatcher
+        .get_state::<Approved, _, CallName>(access_right, "approved")
         .map_err(|e| ServerError::from(e))?;
     let approved_amount = owner_approved.allowance(&req.spender).unwrap();
     // TODO: stop using unwrap when switching from failure to anyhow.
@@ -391,7 +393,9 @@ where
     let access_right = req
         .into_access_right()
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let state = get_state::<U64, MemName, _>(access_right, server.eid, "Balance")
+    let state = server
+        .dispatcher
+        .get_state::<U64, _, CallName>(access_right, "balance_of")
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state.as_raw())))
@@ -475,4 +479,32 @@ where
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().finish())
+}
+
+pub async fn handle_register_report<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
+    req: web::Json<erc20_api::register_report::post::Request>,
+) -> Result<HttpResponse>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher,
+{
+    let sender_address = server
+        .dispatcher
+        .get_account(server.account_index, &server.password)
+        .await
+        .map_err(|e| ServerError::from(e))?;
+    let tx_hash = server
+        .dispatcher
+        .register_report(
+            sender_address,
+            DEFAULT_GAS,
+            &req.contract_addr,
+            &server.abi_path,
+        )
+        .await
+        .map_err(|e| ServerError::from(e))?;
+
+    Ok(HttpResponse::Ok().json(erc20_api::register_report::post::Response(tx_hash)))
 }

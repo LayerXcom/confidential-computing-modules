@@ -3,9 +3,10 @@ use crate::{
     notify::Notifier,
 };
 use anonify_io_types::*;
+use anyhow::anyhow;
 use frame_common::{
     crypto::AccountId,
-    state_types::{MemId, StateType, UpdatedState},
+    state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
 use frame_enclave::{
@@ -17,6 +18,7 @@ use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, DhPubKey, EciesCiphertext,
 };
+use remote_attestation::RAService;
 use sgx_types::*;
 use std::prelude::v1::*;
 use std::{
@@ -31,6 +33,8 @@ pub const MRENCLAVE_VERSION: usize = 0;
 #[derive(Clone)]
 pub struct EnclaveContext {
     version: usize,
+    ias_url: String,
+    sub_key: String,
     spid: sgx_spid_t,
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB,
@@ -42,16 +46,50 @@ impl ContextOps for EnclaveContext {
     fn mrenclave_ver(&self) -> usize {
         self.version
     }
+
+    fn ias_url(&self) -> &str {
+        &self.ias_url
+    }
+
+    fn sub_key(&self) -> &str {
+        &self.sub_key
+    }
 }
 
 impl StateOps for EnclaveContext {
     type S = StateType;
 
-    fn get_state<U>(&self, key: U, mem_id: MemId) -> Self::S
+    fn values(self) -> Vec<Self::S> {
+        self.db.values()
+    }
+
+    fn get_state_by_mem_id<U>(&self, key: U, mem_id: MemId) -> Self::S
     where
         U: Into<AccountId>,
     {
         self.db.get(key.into(), mem_id)
+    }
+
+    fn get_state_by_call_id<U, R, CTX>(
+        ctx: CTX,
+        call_id: u32,
+        account_id: U,
+    ) -> anyhow::Result<Self::S>
+    where
+        U: Into<AccountId>,
+        R: RuntimeExecutor<CTX, S = Self::S>,
+        CTX: ContextOps<S = Self::S>,
+    {
+        let mut empty_params = vec![];
+        let call_kind = R::C::new(call_id, &mut empty_params)?;
+        let res = R::new(ctx).execute(call_kind, account_id.into())?;
+
+        match res {
+            ReturnState::Updated(_) => Err(anyhow!(
+                "Calling getting state function, but the called function is for state transition"
+            )),
+            ReturnState::Get(state) => Ok(state),
+        }
     }
 
     /// Returns a updated state of registerd account_id in notification.
@@ -153,6 +191,9 @@ impl EnclaveContext {
         )?));
         let notifier = Notifier::new();
 
+        let ias_url = env::var("IAS_URL")?;
+        let sub_key = env::var("SUB_KEY")?;
+
         Ok(EnclaveContext {
             spid,
             identity_key,
@@ -160,6 +201,8 @@ impl EnclaveContext {
             notifier,
             group_key,
             version: MRENCLAVE_VERSION,
+            ias_url,
+            sub_key,
         })
     }
 
@@ -211,8 +254,45 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
         C: ContextOps<S = StateType> + Clone,
     {
         let account_id = ecall_input.access_policy().into_account_id();
-        let user_state = enclave_context.get_state(account_id, ecall_input.mem_id());
+        let user_state = C::get_state_by_call_id::<_, R, _>(
+            enclave_context.clone(),
+            ecall_input.call_id(),
+            account_id,
+        )?;
 
         Ok(output::ReturnState::new(user_state))
+    }
+}
+
+/// A report registration engine
+#[derive(Debug, Clone)]
+pub struct ReportRegistration;
+
+impl EnclaveEngine for ReportRegistration {
+    type EI = input::CallRegisterReport;
+    type EO = output::ReturnRegisterReport;
+
+    fn handle<R, C>(
+        _ecall_input: Self::EI,
+        enclave_context: &C,
+        _max_mem_size: usize,
+    ) -> anyhow::Result<Self::EO>
+    where
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
+    {
+        let quote = enclave_context.quote()?;
+        let ias_url = enclave_context.ias_url();
+        let sub_key = enclave_context.sub_key();
+        let (report, report_sig) = RAService::remote_attestation(ias_url, sub_key, &quote)?;
+        let mrenclave_ver = enclave_context.mrenclave_ver();
+        let my_roster_idx = enclave_context.read_group_key().my_roster_idx();
+
+        Ok(output::ReturnRegisterReport::new(
+            report.into_vec(),
+            report_sig.into_vec(),
+            mrenclave_ver,
+            my_roster_idx,
+        ))
     }
 }

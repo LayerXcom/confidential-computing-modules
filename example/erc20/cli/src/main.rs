@@ -88,6 +88,15 @@ fn subcommand_anonify<R: Rng>(
 
             commands::join_group(anonify_url, contract_addr).expect("Failed to join_group command");
         }
+        ("register_report", Some(matches)) => {
+            let contract_addr = match matches.value_of("contract-addr") {
+                Some(addr) => addr.to_string(),
+                None => default_contract_addr,
+            };
+
+            commands::register_report(anonify_url, contract_addr)
+                .expect("Failed to register_report command");
+        }
         ("update_mrenclave", Some(matches)) => {
             let contract_addr = match matches.value_of("contract-addr") {
                 Some(addr) => addr.to_string(),
@@ -310,6 +319,11 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         .subcommand(
             SubCommand::with_name("join_group")
                 .about("join group a contract from anonify services.")
+                .arg(Arg::with_name("contract-addr").short("c").takes_value(true)),
+        )
+        .subcommand(
+            SubCommand::with_name("register_report")
+                .about("register a report to the blockchain")
                 .arg(Arg::with_name("contract-addr").short("c").takes_value(true)),
         )
         .subcommand(

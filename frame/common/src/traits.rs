@@ -38,6 +38,13 @@ pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
 
 impl<T: Sized + Default + Clone + Encode + Decode + Debug> State for T {}
 
+/// A decoder traits for the types implemented state trait
+pub trait StateDecoder: State {
+    fn decode_vec(v: Vec<u8>) -> Result<Self>;
+
+    fn decode_mut_bytes(b: &mut [u8]) -> Result<Self>;
+}
+
 /// A converter from memory name to memory id
 pub trait MemNameConverter: Debug {
     fn as_id(name: &str) -> MemId;

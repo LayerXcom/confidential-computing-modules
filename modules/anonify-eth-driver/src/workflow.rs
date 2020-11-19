@@ -3,7 +3,6 @@ use anonify_io_types::*;
 use config::constants::*;
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
-    state_types::MemId,
     traits::*,
 };
 use frame_host::engine::*;
@@ -36,6 +35,17 @@ impl HostEngine for JoinGroupWorkflow {
     type HO = host_output::JoinGroup;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
     const CMD: u32 = CALL_JOIN_GROUP_CMD;
+}
+
+pub struct RegisterReportWorkflow;
+
+impl HostEngine for RegisterReportWorkflow {
+    type HI = host_input::RegisterReport;
+    type EI = input::CallRegisterReport;
+    type EO = output::ReturnRegisterReport;
+    type HO = host_output::RegisterReport;
+    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const CMD: u32 = CALL_REGISTER_REPORT_CMD;
 }
 
 pub struct HandshakeWorkflow;
@@ -174,6 +184,28 @@ pub mod host_input {
         }
     }
 
+    pub struct RegisterReport {
+        signer: Address,
+        gas: u64,
+    }
+
+    impl RegisterReport {
+        pub fn new(signer: Address, gas: u64) -> Self {
+            RegisterReport { signer, gas }
+        }
+    }
+
+    impl HostInput for RegisterReport {
+        type EcallInput = input::CallRegisterReport;
+        type HostOutput = host_output::RegisterReport;
+
+        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+            let host_output = host_output::RegisterReport::new(self.signer, self.gas);
+
+            Ok((Self::EcallInput::default(), host_output))
+        }
+    }
+
     pub struct Handshake {
         signer: Address,
         gas: u64,
@@ -219,14 +251,14 @@ pub mod host_input {
 
     pub struct GetState<AP: AccessPolicy> {
         access_policy: AP,
-        mem_id: MemId,
+        call_id: u32,
     }
 
     impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, mem_id: MemId) -> Self {
+        pub fn new(access_policy: AP, call_id: u32) -> Self {
             GetState {
                 access_policy,
-                mem_id,
+                call_id,
             }
         }
     }
@@ -236,7 +268,7 @@ pub mod host_input {
         type HostOutput = host_output::GetState;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let ecall_input = Self::EcallInput::new(self.access_policy, self.mem_id);
+            let ecall_input = Self::EcallInput::new(self.access_policy, self.call_id);
 
             Ok((ecall_input, Self::HostOutput::new()))
         }
@@ -347,6 +379,33 @@ pub mod host_output {
     impl JoinGroup {
         pub fn new(signer: Address, gas: u64) -> Self {
             JoinGroup {
+                signer,
+                gas,
+                ecall_output: None,
+            }
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct RegisterReport {
+        pub signer: Address,
+        pub gas: u64,
+        pub ecall_output: Option<output::ReturnRegisterReport>,
+    }
+
+    impl HostOutput for RegisterReport {
+        type EcallOutput = output::ReturnRegisterReport;
+
+        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+            self.ecall_output = Some(output);
+
+            Ok(self)
+        }
+    }
+
+    impl RegisterReport {
+        pub fn new(signer: Address, gas: u64) -> Self {
+            RegisterReport {
                 signer,
                 gas,
                 ecall_output: None,

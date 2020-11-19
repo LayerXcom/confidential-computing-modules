@@ -11,12 +11,7 @@ use frame_host::engine::HostEngine;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{
-    convert::{TryFrom, TryInto},
-    fmt::Debug,
-    marker::Send,
-    path::Path,
-};
+use std::{fmt::Debug, marker::Send, path::Path};
 use web3::types::{Address, H256};
 
 /// This dispatcher communicates with a blockchain node.
@@ -89,7 +84,7 @@ where
             .await?;
         let export_path_secret = host_output
             .ecall_output
-            .expect("must have ecall_output")
+            .ok_or_else(|| HostError::EcallOutputNotSet)?
             .export_path_secret();
 
         Ok((contract_addr, export_path_secret))
@@ -104,6 +99,30 @@ where
     ) -> Result<(H256, ExportPathSecret)> {
         self.send_report_handshake(signer, gas, contract_addr, abi_path, "joinGroup")
             .await
+    }
+
+    pub async fn register_report<P: AsRef<Path> + Copy>(
+        &self,
+        signer: Address,
+        gas: u64,
+        contract_addr: &str,
+        abi_path: P,
+    ) -> Result<H256> {
+        self.set_contract_addr(contract_addr, abi_path)?;
+
+        let inner = self.inner.read();
+        let eid = inner.deployer.get_enclave_id();
+        let input = host_input::RegisterReport::new(signer, gas);
+        let host_output = RegisterReportWorkflow::exec(input, eid)?;
+
+        let tx_hash = inner
+            .sender
+            .as_ref()
+            .ok_or(HostError::AddressNotSet)?
+            .register_report(host_output)
+            .await?;
+
+        Ok(tx_hash)
     }
 
     pub async fn update_mrenclave<P: AsRef<Path> + Copy>(
@@ -141,7 +160,7 @@ where
 
         let export_path_secret = host_output
             .ecall_output
-            .expect("must have ecall_output")
+            .ok_or_else(|| HostError::EcallOutputNotSet)?
             .export_path_secret();
 
         Ok((tx_hash, export_path_secret))
@@ -176,6 +195,24 @@ where
         }
     }
 
+    pub fn get_state<ST, AP, C>(&self, access_policy: AP, call_name: &str) -> Result<ST>
+    where
+        ST: State + StateDecoder,
+        AP: AccessPolicy,
+        C: CallNameConverter,
+    {
+        let call_id = C::as_id(call_name);
+        let eid = self.inner.read().deployer.get_enclave_id();
+        let input = host_input::GetState::new(access_policy, call_id);
+
+        let vec = GetStateWorkflow::exec(input, eid)?
+            .ecall_output
+            .ok_or_else(|| HostError::EcallOutputNotSet)?
+            .into_vec(); // into Vec<u8> in StateType
+
+        ST::decode_vec(vec).map_err(Into::into)
+    }
+
     pub async fn handshake(&self, signer: Address, gas: u64) -> Result<(H256, ExportPathSecret)> {
         let inner = self.inner.read();
         let input = host_input::Handshake::new(signer, gas);
@@ -190,7 +227,7 @@ where
             .await?;
         let export_path_secret = host_output
             .ecall_output
-            .expect("must have ecall_output")
+            .ok_or_else(|| HostError::EcallOutputNotSet)?
             .export_path_secret();
 
         Ok((tx_hash, export_path_secret))
@@ -201,7 +238,6 @@ where
         St: State,
     {
         let inner = self.inner.read();
-
         let eid = inner.deployer.get_enclave_id();
         inner
             .watcher
@@ -226,7 +262,7 @@ where
 
         Ok(encrypting_key
             .ecall_output
-            .expect("must have ecall_output")
+            .ok_or_else(|| HostError::EcallOutputNotSet)?
             .encrypting_key())
     }
 
@@ -241,28 +277,4 @@ where
 
         Ok(())
     }
-}
-
-pub fn get_state<S, M, AP>(
-    access_policy: AP,
-    enclave_id: sgx_enclave_id_t,
-    mem_name: &str,
-) -> Result<S>
-where
-    S: State + TryFrom<Vec<u8>>,
-    <S as TryFrom<Vec<u8>>>::Error: Debug,
-    M: MemNameConverter,
-    AP: AccessPolicy,
-{
-    let mem_id = M::as_id(mem_name);
-    let input = host_input::GetState::new(access_policy, mem_id);
-
-    let state = GetStateWorkflow::exec(input, enclave_id)?
-        .ecall_output
-        .unwrap()
-        .into_vec()
-        .try_into()
-        .unwrap();
-
-    Ok(state)
 }
