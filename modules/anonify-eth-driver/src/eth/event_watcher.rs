@@ -16,7 +16,7 @@ use frame_common::{
     traits::*,
 };
 use frame_host::engine::HostEngine;
-use log::{debug, error, warn};
+use log::{debug, info, error, warn};
 use sgx_types::sgx_enclave_id_t;
 use std::{cmp::Ordering, path::Path};
 use web3::types::{Address, Log};
@@ -98,7 +98,7 @@ impl Web3Logs {
         let mut latest_blc_num = 0;
 
         for (i, log) in self.logs.iter().enumerate() {
-            debug!("Inserting enclave log: {:?}, \nindex: {:?}", log, i);
+            info!("Inserting enclave log: {:?}, \nindex: {:?}", log, i);
             if contract_addr != log.address {
                 error!("Each log should have same contract address.: index: {}", i);
                 continue;
@@ -231,7 +231,7 @@ impl InnerEnclaveLog {
             for e in self.payloads {
                 match e.payload {
                     Payload::Ciphertext(ciphertext) => {
-                        debug!(
+                        info!(
                             "Fetch a ciphertext: roster_idx: {}, epoch: {}, generation: {}",
                             ciphertext.roster_idx(),
                             ciphertext.epoch(),
@@ -298,7 +298,7 @@ impl InnerEnclaveLog {
                         };
                     }
                     Payload::Handshake(handshake) => {
-                        debug!(
+                        info!(
                             "Fetch a handshake: roster_idx: {}, epoch: {}",
                             handshake.roster_idx(),
                             handshake.prior_epoch(),
