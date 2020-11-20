@@ -3,6 +3,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::vec::Vec;
+use crate::server::RequestHandler;
 
 pub struct Connection<S: rustls::Session> {
     stream: rustls::StreamOwned<S, TcpStream>,
@@ -44,6 +45,17 @@ impl<S: rustls::Session> Connection<S> {
         self.stream.write(&header)?;
         self.stream.write_all(&buf)?;
         self.stream.flush()?;
+
+        Ok(())
+    }
+
+    pub fn serve<H: RequestHandler>(&mut self, handler: H) -> Result<()> {
+        loop {
+            let request = self.read_frame()?;
+            unimplemented!();
+            // let response = handler.handle(&request)?;
+            // self.write_frame(response)?;
+        }
 
         Ok(())
     }
