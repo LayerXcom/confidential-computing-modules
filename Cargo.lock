@@ -2663,6 +2663,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "mra-tls"
+version = "0.1.0"
+dependencies = [
+ "rustls 0.16.0 (git+https://github.com/mesalock-linux/rustls?rev=sgx_1.1.3)",
+ "sgx_tstd",
+]
+
+[[package]]
 name = "native-tls"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
