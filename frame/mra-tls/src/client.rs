@@ -1,9 +1,10 @@
+use crate::connection::Connection;
 
-pub struct Client {
-
+pub struct Client<S: rustls::Session> {
+    connection: Connection<S>
 }
 
-impl Client {
+impl<S: rustls::Session> Client<S> {
     pub fn new() -> Self {
         unimplemented!();
     }
