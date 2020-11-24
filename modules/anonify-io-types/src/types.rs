@@ -147,7 +147,7 @@ pub mod output {
         fn encode(&self) -> Vec<u8> {
             let mut acc = vec![];
             acc.extend_from_slice(&self.encode_enclave_sig());
-            acc.push(self.export_recovery_id());
+            acc.push(self.encode_recovery_id());
             acc.extend_from_slice(&self.encode_ciphertext());
 
             acc
@@ -163,14 +163,14 @@ pub mod output {
 
             let ciphertext_len = value
                 .remaining_len()?
-                .expect("Ciphertext length should not be zero");
+                .ok_or(codec::Error::from("Ciphertext length should not be zero"))?;
             let mut ciphertext_buf = vec![0u8; ciphertext_len];
             value.read(&mut ciphertext_buf)?;
 
             let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
             let ciphertext = Ciphertext::decode(&mut &ciphertext_buf[..])?;
             let recovery_id = secp256k1::RecoveryId::parse(recovery_id_buf)
-                .expect("recovery_id should be parsed");
+                .map_err(|_| codec::Error::from("Failed to parse recovery_id"))?;
 
             Ok(Command {
                 enclave_sig,
@@ -201,7 +201,7 @@ pub mod output {
             self.ciphertext.encode()
         }
 
-        pub fn export_recovery_id(&self) -> u8 {
+        pub fn encode_recovery_id(&self) -> u8 {
             self.recovery_id.serialize()
         }
 
@@ -396,7 +396,7 @@ pub mod output {
             let mut acc = vec![];
             acc.extend_from_slice(&self.export_path_secret_as_ref().encode());
             acc.extend_from_slice(&self.encode_enclave_sig());
-            acc.push(self.export_recovery_id());
+            acc.push(self.encode_recovery_id());
             acc.extend_from_slice(&self.roster_idx().encode());
             acc.extend_from_slice(&self.encode_handshake());
 
@@ -414,7 +414,7 @@ pub mod output {
 
             let recovery_id_buf = value.read_byte()?;
             let recovery_id = secp256k1::RecoveryId::parse(recovery_id_buf)
-                .expect("recovery_id should be parsed");
+                .map_err(|_| codec::Error::from("Failed to parse recovery_id"))?;
 
             let roster_idx = u32::decode(value)?;
             let handshake = ExportHandshake::decode(value)?;
@@ -462,7 +462,7 @@ pub mod output {
             self.export_path_secret
         }
 
-        pub fn export_recovery_id(&self) -> u8 {
+        pub fn encode_recovery_id(&self) -> u8 {
             self.recovery_id.serialize()
         }
 

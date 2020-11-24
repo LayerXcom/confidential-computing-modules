@@ -19,7 +19,7 @@ const UNLOCK_DURATION: u16 = 60;
 const EVENT_LIMIT: usize = 100;
 
 // libsecp256k1 library generates RecoveryId as 0/1.
-// However Secp256k1 used in solidity use 27/28 as a value to make the signature unique.
+// However Secp256k1 used in solidity use 27/28 as a value to make a public key unique to recover.
 // RECOVERY_ID_OFFSET is used to adjust the difference between libsecp256k1 and Secp256k1.
 const RECOVERY_ID_OFFSET: u8 = 27;
 
@@ -107,7 +107,7 @@ impl Web3Contract {
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
         let ciphertext = ecall_output.encode_ciphertext();
         let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
-        let recovery_id = ecall_output.export_recovery_id() + RECOVERY_ID_OFFSET;
+        let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
         let gas = output.gas;
 
@@ -128,7 +128,7 @@ impl Web3Contract {
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
         let handshake = ecall_output.encode_handshake();
         let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
-        let recovery_id = ecall_output.export_recovery_id() + RECOVERY_ID_OFFSET;
+        let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
         let gas = output.gas;
 
