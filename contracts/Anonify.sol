@@ -127,7 +127,6 @@ contract Anonify is ReportHandle {
             sha256(abi.encodePacked(_handshake, _rosterIdx)),
             _enclaveSig
         );
-        address verifyingKey = Secp256k1.recover(sha256(abi.encodePacked(_handshake, _rosterIdx)), _enclaveSig);
         require(
             verifyingKey != address(0),
             "recovered verifyingKey was address(0)"
