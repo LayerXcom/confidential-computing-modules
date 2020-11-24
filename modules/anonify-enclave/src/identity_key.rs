@@ -7,7 +7,7 @@ use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak25
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::{DhPrivateKey, DhPubKey, EciesCiphertext};
-use secp256k1::{self, util::SECRET_KEY_SIZE, Message, PublicKey, SecretKey, Signature};
+use secp256k1::{self, util::SECRET_KEY_SIZE, Message, PublicKey, SecretKey, Signature, RecoveryId};
 use sgx_types::sgx_report_data_t;
 use std::prelude::v1::Vec;
 
@@ -64,10 +64,10 @@ impl EnclaveIdentityKey {
         })
     }
 
-    pub fn sign(&self, msg: &[u8]) -> Result<Signature> {
+    pub fn sign(&self, msg: &[u8]) -> Result<(Signature, RecoveryId)> {
         let msg = Message::parse_slice(msg)?;
         let sig = secp256k1::sign(&msg, &self.signing_privkey)?;
-        Ok(sig.0)
+        Ok(sig)
     }
 
     pub fn decrypt(&self, ciphertext: EciesCiphertext) -> Result<Vec<u8>> {
@@ -102,7 +102,7 @@ impl EnclaveIdentityKey {
     }
 
     fn verifying_key_into_array(&self) -> [u8; HASHED_PUBKEY_SIZE] {
-        let pubkey = &self.verifying_key().serialize();
+        let pubkey = &self.verifying_key().serialize()[1..];
         let account_id = &pubkey.keccak256()[12..];
         assert_eq!(account_id.len(), HASHED_PUBKEY_SIZE);
         let mut res = [0u8; HASHED_PUBKEY_SIZE];

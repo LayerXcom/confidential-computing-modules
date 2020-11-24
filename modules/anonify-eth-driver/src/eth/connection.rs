@@ -18,6 +18,11 @@ use web3::{
 const UNLOCK_DURATION: u16 = 60;
 const EVENT_LIMIT: usize = 100;
 
+// libsecp256k1 library generates RecoveryId as 0/1.
+// However Secp256k1 used in solidity use 27/28 as a value to make a public key unique to recover.
+// RECOVERY_ID_OFFSET is used to adjust the difference between libsecp256k1 and Secp256k1.
+const RECOVERY_ID_OFFSET: u8 = 27;
+
 /// Web3 connection components of a contract.
 #[derive(Debug)]
 pub struct Web3Contract {
@@ -101,13 +106,15 @@ impl Web3Contract {
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
         let ciphertext = ecall_output.encode_ciphertext();
-        let enclave_sig = &ecall_output.encode_enclave_sig();
+        let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
+        let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
+        enclave_sig.push(recovery_id);
         let gas = output.gas;
 
         self.contract
             .call(
                 "storeCommand",
-                (ciphertext, enclave_sig.to_vec()),
+                (ciphertext, enclave_sig),
                 output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
             )
@@ -120,13 +127,15 @@ impl Web3Contract {
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
         let handshake = ecall_output.encode_handshake();
-        let enclave_sig = &ecall_output.encode_enclave_sig();
+        let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
+        let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
+        enclave_sig.push(recovery_id);
         let gas = output.gas;
 
         self.contract
             .call(
                 "handshake",
-                (handshake, enclave_sig.to_vec(), ecall_output.roster_idx()),
+                (handshake, enclave_sig, ecall_output.roster_idx()),
                 output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
             )

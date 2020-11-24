@@ -81,7 +81,7 @@ pub trait NotificationOps {
 }
 
 pub trait IdentityKeyOps {
-    fn sign(&self, msg: &[u8]) -> Result<secp256k1::Signature>;
+    fn sign(&self, msg: &[u8]) -> Result<(secp256k1::Signature, secp256k1::RecoveryId)>;
 
     fn decrypt(&self, ciphertext: EciesCiphertext) -> Result<Vec<u8>>;
 

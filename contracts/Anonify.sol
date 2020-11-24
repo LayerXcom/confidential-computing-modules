@@ -103,6 +103,10 @@ contract Anonify is ReportHandle {
             _enclaveSig
         );
         require(
+            verifyingKey != address(0),
+            "recovered verifyingKey was address(0)"
+        );
+        require(
             verifyingKeyMapping[verifyingKey] == verifyingKey,
             "Invalid enclave signature."
         );
@@ -122,6 +126,10 @@ contract Anonify is ReportHandle {
         address verifyingKey = Secp256k1.recover(
             sha256(abi.encodePacked(_handshake, _rosterIdx)),
             _enclaveSig
+        );
+        require(
+            verifyingKey != address(0),
+            "recovered verifyingKey was address(0)"
         );
         require(
             verifyingKeyMapping[verifyingKey] == verifyingKey,
