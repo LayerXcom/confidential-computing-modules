@@ -1,5 +1,5 @@
 use anyhow::{ensure, Result};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::vec::Vec;
@@ -52,11 +52,8 @@ impl<S: rustls::Session> Connection<S> {
     pub fn serve<H: RequestHandler>(&mut self, handler: H) -> Result<()> {
         loop {
             let request = self.read_frame()?;
-            unimplemented!();
-            // let response = handler.handle(&request)?;
-            // self.write_frame(response)?;
+            let response = handler.handle(&request)?;
+            self.write_frame(response)?;
         }
-
-        Ok(())
     }
 }
