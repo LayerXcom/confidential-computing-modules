@@ -1,9 +1,10 @@
+use crate::server::RequestHandler;
 use anyhow::{ensure, Result};
-use serde::{de::DeserializeOwned, Serialize};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::vec::Vec;
-use crate::server::RequestHandler;
+
+const MAX_FRAME_LEN: u64 = 2048;
 
 pub struct Connection<S: rustls::Session> {
     stream: rustls::StreamOwned<S, TcpStream>,
@@ -11,39 +12,32 @@ pub struct Connection<S: rustls::Session> {
 }
 
 impl<S: rustls::Session> Connection<S> {
-    pub fn new(sess: S, sock: TcpStream, max_frame_len: u64) -> Self {
+    pub fn new(sess: S, sock: TcpStream) -> Self {
         Connection {
             stream: rustls::StreamOwned::new(sess, sock),
-            max_frame_len,
+            max_frame_len: MAX_FRAME_LEN,
         }
     }
 
-    pub fn read_frame<DE>(&mut self) -> Result<DE>
-    where
-        DE: DeserializeOwned,
-    {
+    pub fn read_frame(&mut self) -> Result<Vec<u8>> {
         let mut header = [0u8; 8];
 
         self.stream.read_exact(&mut header)?;
-        let buf_len = u64::from_be_bytes(header);
-        ensure!(buf_len <= self.max_frame_len, "Exceed max frame length");
+        let frame_len = u64::from_be_bytes(header);
+        ensure!(frame_len <= self.max_frame_len, "Exceed max frame length");
 
-        let mut buf = Vec::with_capacity(buf_len as usize);
-        self.stream.read_exact(&mut buf)?;
+        let mut frame = Vec::with_capacity(frame_len as usize);
+        self.stream.read_exact(&mut frame)?;
 
-        serde_json::from_slice(&buf).map_err(Into::into)
+        Ok(frame)
     }
 
-    pub fn write_frame<SE>(&mut self, message: SE) -> Result<()>
-    where
-        SE: Serialize,
-    {
-        let buf = serde_json::to_vec(&message)?;
-        let buf_len = buf.len() as u64;
-        let header = buf_len.to_be_bytes();
+    pub fn write_frame(&mut self, frame: Vec<u8>) -> Result<()> {
+        let frame_len = frame.len() as u64;
+        let header = frame_len.to_be_bytes();
 
         self.stream.write(&header)?;
-        self.stream.write_all(&buf)?;
+        self.stream.write_all(&frame)?;
         self.stream.flush()?;
 
         Ok(())

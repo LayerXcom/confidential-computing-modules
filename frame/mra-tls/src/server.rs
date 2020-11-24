@@ -14,28 +14,20 @@ pub trait RequestHandler {
 }
 
 pub struct Server {
-    // connection: Connection<rustls::ServerSession>,
     address: String,
     config: ServerConfig,
-    max_frame_len: u64,
 }
 
 impl Server {
-    pub fn new(address: String, config: ServerConfig, max_frame_len: u64) -> Self {
-        Server {
-            address,
-            config,
-            max_frame_len,
-        }
+    pub fn new(address: String, config: ServerConfig) -> Self {
+        Server { address, config }
     }
 
     pub fn run<H: RequestHandler + Clone>(&mut self, handler: H) -> Result<()> {
-        let tls_config = self.config.tls();
-
         let listener = std::net::TcpListener::bind(&self.address)?;
         for stream in listener.incoming() {
             let session = rustls::ServerSession::new(&Arc::new(self.config.tls().clone()));
-            match Connection::new(session, stream?, self.max_frame_len).serve(handler.clone()) {
+            match Connection::new(session, stream?).serve(handler.clone()) {
                 Ok(_) => {}
                 Err(e) => error!("{:?}", e),
             }
