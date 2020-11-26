@@ -6,7 +6,8 @@ use frame_common::{
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_treekem::EciesCiphertext;
+use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 
 pub mod input {
     use super::*;
@@ -237,17 +238,17 @@ pub mod output {
 
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct ReturnEncryptingKey {
-        encrypting_key: DhPubKey,
+        encrypting_key: SodiumPublicKey,
     }
 
     impl EcallOutput for ReturnEncryptingKey {}
 
     impl ReturnEncryptingKey {
-        pub fn new(encrypting_key: DhPubKey) -> Self {
+        pub fn new(encrypting_key: SodiumPublicKey) -> Self {
             ReturnEncryptingKey { encrypting_key }
         }
 
-        pub fn encrypting_key(self) -> DhPubKey {
+        pub fn encrypting_key(self) -> SodiumPublicKey {
             self.encrypting_key
         }
     }

@@ -6,9 +6,12 @@ use codec::Encode;
 use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_treekem::{DhPrivateKey, DhPubKey, EciesCiphertext};
-use secp256k1::{self, util::SECRET_KEY_SIZE, Message, PublicKey, SecretKey, Signature, RecoveryId};
+use frame_treekem::EciesCiphertext;
+use secp256k1::{
+    self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
+};
 use sgx_types::sgx_report_data_t;
+use sodiumoxide::crypto::box_::{self, SecretKey as SodiumSecretKey, PublicKey as SodiumPublicKey};
 use std::prelude::v1::Vec;
 
 const HASHED_PUBKEY_SIZE: usize = 20;
@@ -42,7 +45,7 @@ impl EnclaveEngine for EncryptingKeyGetter {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct EnclaveIdentityKey {
     signing_privkey: SecretKey,
-    decrypting_privkey: DhPrivateKey,
+    decrypting_privkey: SodiumSecretKey,
 }
 
 impl EnclaveIdentityKey {
@@ -56,11 +59,11 @@ impl EnclaveIdentityKey {
             }
         };
 
-        let decrypting_privkey = DhPrivateKey::from_random()?;
+        let keypair = box_::gen_keypair();
 
         Ok(EnclaveIdentityKey {
             signing_privkey,
-            decrypting_privkey,
+            decrypting_privkey: keypair.decrypting_privkey,
         })
     }
 
@@ -80,8 +83,8 @@ impl EnclaveIdentityKey {
         PublicKey::from_secret_key(&self.signing_privkey)
     }
 
-    pub fn encrypting_key(&self) -> DhPubKey {
-        DhPubKey::from_private_key(&self.decrypting_privkey)
+    pub fn encrypting_key(&self) -> SodiumPublicKey {
+        self.decrypting_privkey.public_key()
     }
 
     /// Generate a value of REPORTDATA field in REPORT struct.
@@ -111,7 +114,7 @@ impl EnclaveIdentityKey {
     }
 
     fn encrypting_key_into_vec(&self) -> Vec<u8> {
-        let res = self.encrypting_key().encode();
+        let res = self.encrypting_key().0.to_vec();
         assert_eq!(res.len(), ENCRYPTING_KEY_SIZE);
         res
     }

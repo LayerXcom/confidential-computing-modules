@@ -16,7 +16,7 @@ use frame_enclave::{
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
-    init_path_secret_kvs, DhPubKey, EciesCiphertext,
+    init_path_secret_kvs, EciesCiphertext,
 };
 use remote_attestation::RAService;
 use sgx_types::*;
@@ -26,6 +26,7 @@ use std::{
     marker::PhantomData,
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
 };
+use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 
 pub const MRENCLAVE_VERSION: usize = 0;
 
@@ -139,7 +140,7 @@ impl IdentityKeyOps for EnclaveContext {
         self.identity_key.decrypt(ciphertext).map_err(Into::into)
     }
 
-    fn encrypting_key(&self) -> DhPubKey {
+    fn encrypting_key(&self) -> SodiumPublicKey {
         self.identity_key.encrypting_key()
     }
 }

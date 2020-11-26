@@ -5,7 +5,8 @@ use erc20_state_transition::{construct, transfer};
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::AccountId;
 use frame_runtime::primitives::U64;
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_treekem::EciesCiphertext;
+use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 use integration_tests::set_env_vars;
 use std::{fs::File, io::BufReader, path::Path, str::FromStr, time};
 use web3::{
@@ -645,11 +646,11 @@ fn other_turn() {
 }
 
 async fn verify_encrypting_key<P: AsRef<Path>>(
-    encrypting_key: DhPubKey,
+    encrypting_key: SodiumPublicKey,
     abi_path: P,
     eth_url: &str,
     contract_addr: &str,
-) -> DhPubKey {
+) -> SodiumPublicKey {
     let transport = Http::new(eth_url).unwrap();
     let web3 = Web3::new(transport);
     let web3_conn = web3.eth();
@@ -661,7 +662,7 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
     let query_encrypting_key: Vec<u8> = Contract::new(web3_conn, address, abi)
         .query(
             "getEncryptingKey",
-            encrypting_key.encode(),
+            encrypting_key.0.to_vec(),
             None,
             Options::default(),
             None,
@@ -671,14 +672,14 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
 
     assert_eq!(
         encrypting_key,
-        DhPubKey::decode(&mut &query_encrypting_key[..]).unwrap()
+        SodiumPublicKey::from_slice(&mut &query_encrypting_key[..]).unwrap()
     );
 
     encrypting_key
 }
 
 // to me
-fn init_100_req(enc_key: &DhPubKey) -> erc20_api::init_state::post::Request {
+fn init_100_req(enc_key: &SodiumPublicKey) -> erc20_api::init_state::post::Request {
     let init_100 = construct {
         total_supply: U64::from_raw(100),
     };
@@ -704,7 +705,7 @@ fn init_100_req(enc_key: &DhPubKey) -> erc20_api::init_state::post::Request {
 }
 
 // from me to other
-fn transfer_10_req(enc_key: &DhPubKey) -> erc20_api::transfer::post::Request {
+fn transfer_10_req(enc_key: &SodiumPublicKey) -> erc20_api::transfer::post::Request {
     let transfer_10 = transfer {
         amount: U64::from_raw(10),
         recipient: AccountId([
@@ -734,7 +735,7 @@ fn transfer_10_req(enc_key: &DhPubKey) -> erc20_api::transfer::post::Request {
 }
 
 // from me to other
-fn transfer_110_req(enc_key: &DhPubKey) -> erc20_api::transfer::post::Request {
+fn transfer_110_req(enc_key: &SodiumPublicKey) -> erc20_api::transfer::post::Request {
     let transfer_110 = transfer {
         amount: U64::from_raw(110),
         recipient: AccountId([

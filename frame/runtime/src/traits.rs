@@ -11,7 +11,8 @@ use frame_common::{
     state_types::{MemId, ReturnState, UpdatedState},
     traits::*,
 };
-use frame_treekem::{handshake::HandshakeParams, DhPubKey, EciesCiphertext};
+use frame_treekem::{handshake::HandshakeParams, EciesCiphertext};
+use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 
 /// Execute state transition functions from runtime
 pub trait RuntimeExecutor<G: ContextOps>: Sized {
@@ -85,7 +86,7 @@ pub trait IdentityKeyOps {
 
     fn decrypt(&self, ciphertext: EciesCiphertext) -> Result<Vec<u8>>;
 
-    fn encrypting_key(&self) -> DhPubKey;
+    fn encrypting_key(&self) -> SodiumPublicKey;
 }
 
 pub trait GroupKeyOps: Sized {

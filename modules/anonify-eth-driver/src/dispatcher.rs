@@ -8,11 +8,12 @@ use crate::{
 };
 use frame_common::{crypto::ExportPathSecret, state_types::UpdatedState, traits::*};
 use frame_host::engine::HostEngine;
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_treekem::EciesCiphertext;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{fmt::Debug, marker::Send, path::Path};
 use web3::types::{Address, H256};
+use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
@@ -255,7 +256,7 @@ where
             .await
     }
 
-    pub fn get_encrypting_key(&self) -> Result<DhPubKey> {
+    pub fn get_encrypting_key(&self) -> Result<SodiumPublicKey> {
         let input = host_input::GetEncryptingKey::default();
         let eid = self.inner.read().deployer.get_enclave_id();
         let encrypting_key = GetEncryptingKeyWorkflow::exec(input, eid)?;

@@ -4,7 +4,7 @@ extern crate clap;
 use crate::config::*;
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use frame_common::crypto::AccountId;
-use frame_treekem::DhPubKey;
+use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 use rand::{rngs::OsRng, Rng};
 use std::{env, path::PathBuf};
 use term::Term;
@@ -71,7 +71,7 @@ fn subcommand_anonify<R: Rng>(
     mut term: Term,
     root_dir: PathBuf,
     default_contract_addr: String,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPublicKey,
     anonify_url: String,
     matches: &ArgMatches,
     rng: &mut R,

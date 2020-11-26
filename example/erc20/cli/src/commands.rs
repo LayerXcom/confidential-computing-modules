@@ -11,7 +11,8 @@ use ed25519_dalek::Keypair;
 use erc20_state_transition::{approve, burn, construct, mint, transfer, transfer_from};
 use frame_common::crypto::AccountId;
 use frame_runtime::primitives::U64;
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_treekem::EciesCiphertext;
+use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 use rand::Rng;
 use reqwest::Client;
 use std::path::PathBuf;
@@ -62,7 +63,7 @@ pub(crate) fn update_mrenclave(anonify_url: String, contract_addr: String) -> Re
     Ok(())
 }
 
-pub(crate) fn get_encrypting_key(anonify_url: String) -> Result<DhPubKey> {
+pub(crate) fn get_encrypting_key(anonify_url: String) -> Result<SodiumPublicKey> {
     Client::new()
         .get(&format!("{}/api/v1/encrypting_key", &anonify_url))
         .send()?
@@ -76,7 +77,7 @@ pub(crate) fn init_state<R: Rng>(
     anonify_url: String,
     index: usize,
     total_supply: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPublicKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
@@ -105,7 +106,7 @@ pub(crate) fn transfer<R: Rng>(
     index: usize,
     recipient: AccountId,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPublicKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
@@ -135,7 +136,7 @@ pub(crate) fn approve<R: Rng>(
     index: usize,
     spender: AccountId,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPublicKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
@@ -166,7 +167,7 @@ pub(crate) fn transfer_from<R: Rng>(
     owner: AccountId,
     recipient: AccountId,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPublicKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
@@ -199,7 +200,7 @@ pub(crate) fn mint<R: Rng>(
     index: usize,
     recipient: AccountId,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPublicKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
@@ -228,7 +229,7 @@ pub(crate) fn burn<R: Rng>(
     anonify_url: String,
     index: usize,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPublicKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;

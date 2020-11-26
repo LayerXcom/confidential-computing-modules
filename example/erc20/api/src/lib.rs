@@ -5,7 +5,8 @@ use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse},
     traits::State,
 };
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_treekem::EciesCiphertext;
+use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_big_array::big_array;
@@ -117,7 +118,7 @@ pub mod encrypting_key {
         use super::super::*;
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub DhPubKey);
+        pub struct Response(pub SodiumPublicKey);
     }
 }
 

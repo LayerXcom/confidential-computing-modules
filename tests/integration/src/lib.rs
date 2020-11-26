@@ -12,7 +12,8 @@ use frame_common::{
 };
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_treekem::EciesCiphertext;
+use sodiumoxide::crypto::box_::{self, PublicKey as SodiumPublicKey};
 use sgx_types::*;
 use std::{collections::BTreeMap, env, fs::File, io::BufReader, str::FromStr};
 use web3::{
@@ -36,7 +37,7 @@ lazy_static! {
 pub async fn get_encrypting_key(
     contract_addr: &str,
     dispatcher: &Dispatcher<EthDeployer, EthSender, EventWatcher>,
-) -> DhPubKey {
+) -> SodiumPublicKey {
     let encrypting_key = dispatcher.get_encrypting_key().unwrap();
     let transport = Http::new(ETH_URL).unwrap();
     let web3 = Web3::new(transport);
@@ -49,7 +50,7 @@ pub async fn get_encrypting_key(
     let query_encrypting_key: Vec<u8> = Contract::new(web3_conn, address, abi)
         .query(
             "getEncryptingKey",
-            encrypting_key.encode(),
+            encrypting_key.0.to_vec(),
             None,
             Options::default(),
             None,
@@ -59,7 +60,7 @@ pub async fn get_encrypting_key(
 
     assert_eq!(
         encrypting_key,
-        DhPubKey::decode(&mut &query_encrypting_key[..]).unwrap()
+        SodiumPublicKey::from_slice(&mut &query_encrypting_key[..]).unwrap()
     );
     encrypting_key
 }
@@ -75,6 +76,8 @@ async fn test_integration_eth_construct() {
     let cache = EventCache::default();
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
+
+    let (my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -105,7 +108,8 @@ async fn test_integration_eth_construct() {
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+    let nonce = box_::gen_nonce();
+    let encrypted_command = box_::seal(init_cmd.encode(), &nonce, &pubkey, &my_encrypting_privkey);
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
