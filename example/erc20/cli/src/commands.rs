@@ -9,7 +9,7 @@ use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use codec::Encode;
 use ed25519_dalek::Keypair;
 use erc20_state_transition::{approve, burn, construct, mint, transfer, transfer_from};
-use frame_common::crypto::AccountId;
+use frame_common::crypto::{AccountId, ClientCiphertext};
 use frame_runtime::primitives::U64;
 use frame_treekem::EciesCiphertext;
 use rand::Rng;
@@ -85,11 +85,11 @@ pub(crate) fn init_state<R: Rng>(
     let init_state = construct {
         total_supply: U64::from_raw(total_supply),
     };
-    let nonce = box_::gen_nonce();
-    let encrypted_total_supply = box_::seal(&init_state.encode(), &nonce, &enc_key, &sk);
+    let (_, client_priv_key) = box_::gen_keypair();
+    let encrypted_total_supply =
+        ClientCiphertext::encrypt(encrypting_key, &client_priv_key, init_state.encode())?;
 
-    let req =
-        erc20_api::init_state::post::Request::new(&keypair, encrypted_total_supply, nonce.0, rng);
+    let req = erc20_api::init_state::post::Request::new(&keypair, encrypted_total_supply, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/init_state", &anonify_url))
         .json(&req)
@@ -116,11 +116,11 @@ pub(crate) fn transfer<R: Rng>(
         amount: U64::from_raw(amount),
         recipient,
     };
-    let nonce = box_::gen_nonce();
-    let encrypted_transfer_cmd = box_::seal(&transfer_cmd.encode(), &nonce, &enc_key, &sk);
+    let (_, client_priv_key) = box_::gen_keypair();
+    let encrypted_transfer_cmd =
+        ClientCiphertext::encrypt(encrypting_key, &client_priv_key, transfer_cmd.encode())?;
 
-    let req =
-        erc20_api::transfer::post::Request::new(&keypair, encrypted_transfer_cmd, nonce.0, rng);
+    let req = erc20_api::transfer::post::Request::new(&keypair, encrypted_transfer_cmd, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/transfer", &anonify_url))
         .json(&req)
@@ -147,10 +147,11 @@ pub(crate) fn approve<R: Rng>(
         amount: U64::from_raw(amount),
         spender,
     };
-    let nonce = box_::gen_nonce();
-    let encrypted_approve_cmd = box_::seal(&approve_cmd.encode(), &nonce, &enc_key, &sk);
+    let (_, client_priv_key) = box_::gen_keypair();
+    let encrypted_approve_cmd =
+        ClientCiphertext::encrypt(encrypting_key, &client_priv_key, approve_cmd.encode())?;
 
-    let req = erc20_api::approve::post::Request::new(&keypair, encrypted_approve_cmd, nonce.0, rng);
+    let req = erc20_api::approve::post::Request::new(&keypair, encrypted_approve_cmd, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/approve", &anonify_url))
         .json(&req)
@@ -179,16 +180,12 @@ pub(crate) fn transfer_from<R: Rng>(
         owner,
         recipient,
     };
-    let nonce = box_::gen_nonce();
+    let (_, client_priv_key) = box_::gen_keypair();
     let encrypted_transfer_from_cmd =
-        box_::seal(&transfer_from_cmd.encode(), &nonce, &enc_key, &sk);
+        ClientCiphertext::encrypt(encrypting_key, &client_priv_key, transfer_from_cmd.encode())?;
 
-    let req = erc20_api::transfer_from::post::Request::new(
-        &keypair,
-        encrypted_transfer_from_cmd,
-        nonce.0,
-        rng,
-    );
+    let req =
+        erc20_api::transfer_from::post::Request::new(&keypair, encrypted_transfer_from_cmd, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/transfer_from", &anonify_url))
         .json(&req)
@@ -215,10 +212,11 @@ pub(crate) fn mint<R: Rng>(
         amount: U64::from_raw(amount),
         recipient,
     };
-    let nonce = box_::gen_nonce();
-    let encrypted_mint_cmd = box_::seal(&mint_cmd.encode(), &nonce, &enc_key, &sk);
+    let (_, client_priv_key) = box_::gen_keypair();
+    let encrypted_mint_cmd =
+        ClientCiphertext::encrypt(encrypting_key, &client_priv_key, mint_cmd.encode())?;
 
-    let req = erc20_api::mint::post::Request::new(&keypair, encrypted_mint_cmd, nonce.0, rng);
+    let req = erc20_api::mint::post::Request::new(&keypair, encrypted_mint_cmd, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/mint", &anonify_url))
         .json(&req)
@@ -243,10 +241,11 @@ pub(crate) fn burn<R: Rng>(
     let burn_cmd = burn {
         amount: U64::from_raw(amount),
     };
-    let nonce = box_::gen_nonce();
-    let encrypted_burn_cmd = box_::seal(&burn_cmd.encode(), &nonce, &enc_key, &sk);
+    let (_, client_priv_key) = box_::gen_keypair();
+    let encrypted_burn_cmd =
+        ClientCiphertext::encrypt(encrypting_key, &client_priv_key, burn_cmd.encode())?;
 
-    let req = erc20_api::burn::post::Request::new(&keypair, encrypted_burn_cmd, nonce.0, rng);
+    let req = erc20_api::burn::post::Request::new(&keypair, encrypted_burn_cmd, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/burn", &anonify_url))
         .json(&req)

@@ -2,8 +2,7 @@ use crate::{error::Result, eth::connection::Web3Contract};
 use anonify_io_types::*;
 use anyhow::anyhow;
 use ethabi::Contract as ContractABI;
-use frame_common::traits::*;
-use frame_treekem::EciesCiphertext;
+use frame_common::{crypto::ClientCiphertext, traits::*};
 use std::{fs::File, io::BufReader, marker::PhantomData, path::Path, str::FromStr};
 use web3::types::Address;
 
@@ -37,13 +36,13 @@ impl<'a, P: AsRef<Path>> ContractInfo<'a, P> {
 
 #[derive(Debug, Clone)]
 pub struct CommandInfo<'a, C: CallNameConverter> {
-    encrypted_command: EciesCiphertext,
+    encrypted_command: ClientCiphertext,
     call_name: &'a str,
     phantom: PhantomData<C>,
 }
 
 impl<'a, C: CallNameConverter> CommandInfo<'a, C> {
-    pub fn new(encrypted_command: EciesCiphertext, call_name: &'a str) -> Self {
+    pub fn new(encrypted_command: ClientCiphertext, call_name: &'a str) -> Self {
         CommandInfo {
             encrypted_command,
             call_name,

@@ -2,20 +2,22 @@
 
 use crate::error::Result;
 use anonify_io_types::*;
-use codec::Encode;
-use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
+use frame_common::{
+    crypto::{rand_assign, ClientCiphertext},
+    state_types::StateType,
+    traits::Keccak256,
+};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_treekem::EciesCiphertext;
 use secp256k1::{
     self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
 };
 use sgx_types::sgx_report_data_t;
-use sodiumoxide::crypto::box_::{self, SecretKey as SodiumSecretKey, PublicKey as SodiumPublicKey};
+use sodiumoxide::crypto::box_::{self, PublicKey as SodiumPublicKey, SecretKey as SodiumSecretKey};
 use std::prelude::v1::Vec;
 
 const HASHED_PUBKEY_SIZE: usize = 20;
-const ENCRYPTING_KEY_SIZE: usize = 33;
+const ENCRYPTING_KEY_SIZE: usize = box_::PUBLICKEYBYTES;
 const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCRYPTING_KEY_SIZE;
 const REPORT_DATA_SIZE: usize = 64;
 
@@ -42,7 +44,7 @@ impl EnclaveEngine for EncryptingKeyGetter {
 }
 
 /// Enclave Identity Key
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct EnclaveIdentityKey {
     signing_privkey: SecretKey,
     decrypting_privkey: SodiumSecretKey,
@@ -63,7 +65,7 @@ impl EnclaveIdentityKey {
 
         Ok(EnclaveIdentityKey {
             signing_privkey,
-            decrypting_privkey: keypair.decrypting_privkey,
+            decrypting_privkey: keypair.1,
         })
     }
 
@@ -73,7 +75,7 @@ impl EnclaveIdentityKey {
         Ok(sig)
     }
 
-    pub fn decrypt(&self, ciphertext: EciesCiphertext) -> Result<Vec<u8>> {
+    pub fn decrypt(&self, ciphertext: ClientCiphertext) -> Result<Vec<u8>> {
         ciphertext
             .decrypt(&self.decrypting_privkey)
             .map_err(Into::into)
@@ -89,10 +91,10 @@ impl EnclaveIdentityKey {
 
     /// Generate a value of REPORTDATA field in REPORT struct.
     /// REPORTDATA consists of a hashed sining public key and a encrypting public key.
-    /// The hashed sining public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
+    /// The hashed signing public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
     /// because this enclave identity key is binding to enclave's code.
     /// The encrypting public key is used for secure communication between clients and TEE.
-    /// 20 bytes: hashed sining public key
+    /// 20 bytes: hashed signing public key
     /// 33 bytes: encrypting public key
     /// 11 bytes: zero padding
     pub fn report_data(&self) -> Result<sgx_report_data_t> {

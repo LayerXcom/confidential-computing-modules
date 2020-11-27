@@ -6,14 +6,17 @@ use crate::{
     utils::*,
     workflow::host_input,
 };
-use frame_common::{crypto::ExportPathSecret, state_types::UpdatedState, traits::*};
+use frame_common::{
+    crypto::{ClientCiphertext, ExportPathSecret},
+    state_types::UpdatedState,
+    traits::*,
+};
 use frame_host::engine::HostEngine;
-use frame_treekem::EciesCiphertext;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
+use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 use std::{fmt::Debug, marker::Send, path::Path};
 use web3::types::{Address, H256};
-use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
@@ -170,7 +173,7 @@ where
     pub async fn send_command<C, AP>(
         &self,
         access_policy: AP,
-        encrypted_command: EciesCiphertext,
+        encrypted_command: ClientCiphertext,
         call_name: &str,
         signer: Address,
         gas: u64,

@@ -19,6 +19,7 @@ use rand_core::{CryptoRng, RngCore};
 #[cfg(feature = "std")]
 use rand_os::OsRng;
 use sha2::Digest;
+use sodiumoxide::crypto::box_;
 
 const ACCOUNT_ID_SIZE: usize = 20;
 pub const COMMON_SECRET: [u8; SECRET_KEY_LENGTH] = [
@@ -575,5 +576,77 @@ impl ExportHandshake {
 
     pub fn handshake(&self) -> &[u8] {
         &self.handshake[..]
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ClientCiphertext {
+    nonce: box_::Nonce,
+    client_pub_key: box_::PublicKey,
+    ciphertext: Vec<u8>,
+}
+
+impl ClientCiphertext {
+    #[cfg(any(feature = "std", feature = "test"))]
+    pub fn encrypt(
+        server_pub_key: &box_::PublicKey,
+        client_priv_key: &box_::SecretKey,
+        plaintext: Vec<u8>,
+    ) -> Result<Self, Error> {
+        let nonce = box_::gen_nonce();
+        let ciphertext = box_::seal(&plaintext, &nonce, &server_pub_key, &client_priv_key);
+        let client_pub_key = client_priv_key.public_key();
+        Ok(ClientCiphertext {
+            nonce,
+            client_pub_key,
+            ciphertext,
+        })
+    }
+
+    pub fn decrypt(self, server_priv_key: &box_::SecretKey) -> Result<Vec<u8>, Error> {
+        box_::open(
+            &self.ciphertext,
+            &self.nonce,
+            &self.client_pub_key,
+            &server_priv_key,
+        )
+        .map_err(|_| anyhow!("Failed to decrypt"))
+    }
+}
+
+impl Encode for ClientCiphertext {
+    fn encode(&self) -> Vec<u8> {
+        let mut acc = vec![];
+        acc.extend_from_slice(&self.nonce.0);
+        acc.extend_from_slice(&self.client_pub_key.0);
+        acc.extend_from_slice(&self.ciphertext);
+
+        acc
+    }
+}
+
+impl Decode for ClientCiphertext {
+    fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let mut nonce_buf = [0u8; box_::NONCEBYTES];
+        value.read(&mut nonce_buf)?;
+        let nonce = box_::Nonce::from_slice(&nonce_buf)
+            .ok_or(codec::Error::from("Failed to parse nonce"))?;
+
+        let mut client_pub_key_buf = [0u8; box_::PUBLICKEYBYTES];
+        value.read(&mut client_pub_key_buf)?;
+        let client_pub_key = box_::PublicKey::from_slice(&client_pub_key_buf)
+            .ok_or(codec::Error::from("Failed to parse client_pub_key"))?;
+
+        let ciphertext_len = value
+            .remaining_len()?
+            .ok_or(codec::Error::from("ciphertext length should not be zero"))?;
+        let mut ciphertext = vec![0u8; ciphertext_len];
+        value.read(&mut ciphertext)?;
+
+        Ok(ClientCiphertext {
+            nonce,
+            client_pub_key,
+            ciphertext,
+        })
     }
 }

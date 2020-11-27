@@ -7,11 +7,11 @@ use crate::localstd::{
 };
 use codec::{Decode, Encode};
 use frame_common::{
-    crypto::{AccountId, Ciphertext, ExportHandshake, ExportPathSecret},
+    crypto::{AccountId, Ciphertext, ClientCiphertext, ExportHandshake, ExportPathSecret},
     state_types::{MemId, ReturnState, UpdatedState},
     traits::*,
 };
-use frame_treekem::{handshake::HandshakeParams, EciesCiphertext};
+use frame_treekem::handshake::HandshakeParams;
 use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 
 /// Execute state transition functions from runtime
@@ -84,7 +84,7 @@ pub trait NotificationOps {
 pub trait IdentityKeyOps {
     fn sign(&self, msg: &[u8]) -> Result<(secp256k1::Signature, secp256k1::RecoveryId)>;
 
-    fn decrypt(&self, ciphertext: EciesCiphertext) -> Result<Vec<u8>>;
+    fn decrypt(&self, ciphertext: ClientCiphertext) -> Result<Vec<u8>>;
 
     fn encrypting_key(&self) -> SodiumPublicKey;
 }

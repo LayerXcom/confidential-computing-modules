@@ -7,13 +7,13 @@ use erc20_state_transition::{
 };
 use ethabi::Contract as ContractABI;
 use frame_common::{
-    crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
+    crypto::{AccountId, ClientCiphertext, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
     traits::*,
 };
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
-use sodiumoxide::crypto::box_::{self, PublicKey as SodiumPublicKey};
 use sgx_types::*;
+use sodiumoxide::crypto::box_::{self, PublicKey as SodiumPublicKey};
 use std::{collections::BTreeMap, env, fs::File, io::BufReader, str::FromStr};
 use web3::{
     contract::{Contract, Options},
@@ -76,7 +76,7 @@ async fn test_integration_eth_construct() {
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
-    let (my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
+    let (_my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -107,8 +107,9 @@ async fn test_integration_eth_construct() {
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let init_cmd = construct { total_supply };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(init_cmd.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, init_cmd.encode())?;
+
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -154,7 +155,7 @@ async fn test_auto_notification() {
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
-    let (my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
+    let (_my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -184,8 +185,9 @@ async fn test_auto_notification() {
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let total_supply = U64::from_raw(100);
     let init_cmd = construct { total_supply };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(init_cmd.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, init_cmd.encode())?;
+
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -214,8 +216,9 @@ async fn test_auto_notification() {
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
     let transfer_cmd = transfer { amount, recipient };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(transfer_cmd.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, transfer_cmd.encode())?;
+
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -254,7 +257,7 @@ async fn test_integration_eth_transfer() {
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
-    let (my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
+    let (_my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -284,8 +287,8 @@ async fn test_integration_eth_transfer() {
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let init_cmd = construct { total_supply };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(init_cmd.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, init_cmd.encode())?;
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -320,8 +323,8 @@ async fn test_integration_eth_transfer() {
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
     let transfer_cmd = transfer { amount, recipient };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(transfer_cmd.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, transfer_cmd.encode())?;
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -367,7 +370,7 @@ async fn test_key_rotation() {
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
-    let (my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
+    let (_my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -407,8 +410,8 @@ async fn test_key_rotation() {
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let init_cmd = construct { total_supply };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(init_cmd.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, init_cmd.encode())?;
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -452,7 +455,7 @@ async fn test_integration_eth_approve() {
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
-    let (my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
+    let (_my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -482,8 +485,8 @@ async fn test_integration_eth_approve() {
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let init_cmd = construct { total_supply };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(init_cmd.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, init_cmd.encode())?;
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -514,8 +517,8 @@ async fn test_integration_eth_approve() {
     let amount = U64::from_raw(30);
     let spender = other_access_policy.into_account_id();
     let approve_state = approve { amount, spender };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(approve_state.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, approve_state.encode())?;
 
     let receipt = dispatcher
         .send_command::<CallName, _>(
@@ -562,7 +565,7 @@ async fn test_integration_eth_transfer_from() {
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
-    let (my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
+    let (_my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -592,8 +595,8 @@ async fn test_integration_eth_transfer_from() {
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let init_cmd = construct { total_supply };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(init_cmd.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, init_cmd.encode())?;
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -641,8 +644,8 @@ async fn test_integration_eth_transfer_from() {
     let amount = U64::from_raw(30);
     let spender = other_access_policy.into_account_id();
     let approve_state = approve { amount, spender };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(approve_state.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, approve_state.encode())?;
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -699,8 +702,8 @@ async fn test_integration_eth_transfer_from() {
         recipient,
         amount,
     };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(transfer_from_cmd.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, transfer_from_cmd.encode())?;
     let receipt = dispatcher
         .send_command::<CallName, _>(
             other_access_policy.clone(),
@@ -762,7 +765,7 @@ async fn test_integration_eth_mint() {
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
-    let (my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
+    let (_my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -792,8 +795,8 @@ async fn test_integration_eth_mint() {
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let init_cmd = construct { total_supply };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(init_cmd.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, init_cmd.encode())?;
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -814,8 +817,8 @@ async fn test_integration_eth_mint() {
     let amount = U64::from_raw(50);
     let recipient = other_access_policy.into_account_id();
     let minting_state = mint { amount, recipient };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(minting_state.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, minting_state.encode())?;
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -860,7 +863,7 @@ async fn test_integration_eth_burn() {
     let dispatcher =
         Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
-    let (my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
+    let (_my_encrypting_pubkey, my_encrypting_privkey) = box_::gen_keypair();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -890,8 +893,8 @@ async fn test_integration_eth_burn() {
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let init_cmd = construct { total_supply };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(init_cmd.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, init_cmd.encode())?;
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -912,8 +915,8 @@ async fn test_integration_eth_burn() {
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
     let transfer_cmd = transfer { amount, recipient };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(transfer_cmd.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, transfer_cmd.encode())?;
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -932,8 +935,8 @@ async fn test_integration_eth_burn() {
     // Send a transaction to contract
     let amount = U64::from_raw(20);
     let burn_state = burn { amount };
-    let nonce = box_::gen_nonce();
-    let encrypted_command = box_::seal(burn_state.encode(), &nonce, &pubkey, &my_encrypting_privkey);
+    let encrypted_command =
+        ClientCiphertext::encrypt(&pubkey, &my_encrypting_privkey, burn_state.encode())?;
     let receipt = dispatcher
         .send_command::<CallName, _>(
             other_access_policy.clone(),

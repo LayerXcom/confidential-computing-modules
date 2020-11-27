@@ -1,13 +1,12 @@
 use crate::localstd::vec::Vec;
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
-    crypto::{Ciphertext, ExportHandshake, ExportPathSecret},
+    crypto::{Ciphertext, ClientCiphertext, ExportHandshake, ExportPathSecret},
     state_types::{StateType, UpdatedState},
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
-use frame_treekem::EciesCiphertext;
-use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
+use sodiumoxide::crypto::box_;
 
 pub mod input {
     use super::*;
@@ -15,14 +14,14 @@ pub mod input {
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct Command<AP: AccessPolicy> {
         pub access_policy: AP,
-        pub encrypted_command: EciesCiphertext,
+        pub encrypted_command: ClientCiphertext,
         pub call_id: u32,
     }
 
     impl<AP: AccessPolicy> EcallInput for Command<AP> {}
 
     impl<AP: AccessPolicy> Command<AP> {
-        pub fn new(access_policy: AP, encrypted_command: EciesCiphertext, call_id: u32) -> Self {
+        pub fn new(access_policy: AP, encrypted_command: ClientCiphertext, call_id: u32) -> Self {
             Command {
                 access_policy,
                 encrypted_command,
@@ -236,19 +235,39 @@ pub mod output {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Debug, Clone)]
     pub struct ReturnEncryptingKey {
-        encrypting_key: SodiumPublicKey,
+        encrypting_key: box_::PublicKey,
     }
 
     impl EcallOutput for ReturnEncryptingKey {}
 
+    impl Encode for ReturnEncryptingKey {
+        fn encode(&self) -> Vec<u8> {
+            let mut acc = vec![];
+            acc.extend_from_slice(&self.encrypting_key.0);
+
+            acc
+        }
+    }
+
+    impl Decode for ReturnEncryptingKey {
+        fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
+            let mut encrypting_key_buf = [0u8; box_::PUBLICKEYBYTES];
+            value.read(&mut encrypting_key_buf)?;
+            let encrypting_key = box_::PublicKey::from_slice(&encrypting_key_buf)
+                .ok_or(codec::Error::from("Failed to parse encrypting_key"))?;
+
+            Ok(ReturnEncryptingKey { encrypting_key })
+        }
+    }
+
     impl ReturnEncryptingKey {
-        pub fn new(encrypting_key: SodiumPublicKey) -> Self {
+        pub fn new(encrypting_key: box_::PublicKey) -> Self {
             ReturnEncryptingKey { encrypting_key }
         }
 
-        pub fn encrypting_key(self) -> SodiumPublicKey {
+        pub fn encrypting_key(self) -> box_::PublicKey {
             self.encrypting_key
         }
     }

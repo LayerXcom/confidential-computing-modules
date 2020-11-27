@@ -5,7 +5,7 @@ use crate::{
 use anonify_io_types::*;
 use anyhow::anyhow;
 use frame_common::{
-    crypto::AccountId,
+    crypto::{AccountId, ClientCiphertext},
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
@@ -16,17 +16,17 @@ use frame_enclave::{
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
-    init_path_secret_kvs, EciesCiphertext,
+    init_path_secret_kvs,
 };
 use remote_attestation::RAService;
 use sgx_types::*;
+use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 use std::prelude::v1::*;
 use std::{
     env,
     marker::PhantomData,
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
 };
-use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 
 pub const MRENCLAVE_VERSION: usize = 0;
 
@@ -136,7 +136,7 @@ impl IdentityKeyOps for EnclaveContext {
         self.identity_key.sign(msg).map_err(Into::into)
     }
 
-    fn decrypt(&self, ciphertext: EciesCiphertext) -> anyhow::Result<Vec<u8>> {
+    fn decrypt(&self, ciphertext: ClientCiphertext) -> anyhow::Result<Vec<u8>> {
         self.identity_key.decrypt(ciphertext).map_err(Into::into)
     }
 

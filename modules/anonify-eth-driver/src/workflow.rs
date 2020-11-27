@@ -2,13 +2,13 @@ use crate::utils::CommandInfo;
 use anonify_io_types::*;
 use config::constants::*;
 use frame_common::{
-    crypto::{Ciphertext, ExportHandshake},
+    crypto::{Ciphertext, ExportHandshake, ClientCiphertext},
     traits::*,
 };
 use frame_host::engine::*;
-use frame_treekem::EciesCiphertext;
 use std::marker::PhantomData;
 use web3::types::Address;
+use sodiumoxide::crypto::box_;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
 
@@ -122,7 +122,7 @@ pub mod host_input {
     use super::*;
 
     pub struct Command<C: CallNameConverter, AP: AccessPolicy> {
-        encrypted_command: EciesCiphertext,
+        encrypted_command: ClientCiphertext,
         call_name: String,
         access_policy: AP,
         signer: Address,
@@ -132,7 +132,7 @@ pub mod host_input {
 
     impl<C: CallNameConverter, AP: AccessPolicy> Command<C, AP> {
         pub fn new(
-            encrypted_command: EciesCiphertext,
+            encrypted_command: ClientCiphertext,
             call_name: String,
             access_policy: AP,
             signer: Address,

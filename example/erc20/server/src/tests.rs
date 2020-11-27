@@ -3,7 +3,7 @@ use actix_web::{test, web, App};
 use codec::{Decode, Encode};
 use erc20_state_transition::{construct, transfer};
 use ethabi::Contract as ContractABI;
-use frame_common::crypto::AccountId;
+use frame_common::crypto::{AccountId, ClientCiphertext};
 use frame_runtime::primitives::U64;
 use frame_treekem::EciesCiphertext;
 use integration_tests::set_env_vars;
@@ -684,8 +684,8 @@ fn init_100_req(enc_key: &SodiumPublicKey) -> erc20_api::init_state::post::Reque
         total_supply: U64::from_raw(100),
     };
 
-    let nonce = box_::gen_nonce();
-    let enc_cmd = box_::seal(&init_100.encode(), &nonce, &enc_key, &sk);
+    let (_, client_priv_key) = box_::gen_keypair();
+    let enc_cmd = ClientCiphertext::encrypt(enc_key, &client_priv_key, init_100.encode())?;
 
     erc20_api::init_state::post::Request {
         sig: [
@@ -703,7 +703,6 @@ fn init_100_req(enc_key: &SodiumPublicKey) -> erc20_api::init_state::post::Reque
             245, 3, 101, 33, 155, 58, 175, 168, 63, 73, 125, 205, 225,
         ],
         encrypted_total_supply: enc_cmd,
-        nonce: nonce.0,
     }
 }
 
@@ -716,8 +715,8 @@ fn transfer_10_req(enc_key: &SodiumPublicKey) -> erc20_api::transfer::post::Requ
             118,
         ]),
     };
-    let nonce = box_::gen_nonce();
-    let enc_cmd = box_::seal(&transfer_10.encode(), &nonce, &enc_key, &sk);
+    let (_, client_priv_key) = box_::gen_keypair();
+    let enc_cmd = ClientCiphertext::encrypt(enc_key, &client_priv_key, transfer_10.encode())?;
 
     erc20_api::transfer::post::Request {
         sig: [
@@ -735,7 +734,6 @@ fn transfer_10_req(enc_key: &SodiumPublicKey) -> erc20_api::transfer::post::Requ
             215, 186, 25, 30, 135, 114, 237, 169, 138, 122, 81, 61, 43, 183,
         ],
         encrypted_transfer_cmd: enc_cmd,
-        nonce: nonce.0,
     }
 }
 
@@ -748,8 +746,8 @@ fn transfer_110_req(enc_key: &SodiumPublicKey) -> erc20_api::transfer::post::Req
             118,
         ]),
     };
-    let nonce = box_::gen_nonce();
-    let enc_cmd = box_::seal(&transfer_110.encode(), &nonce, &enc_key, &sk);
+    let (_, client_priv_key) = box_::gen_keypair();
+    let enc_cmd = ClientCiphertext::encrypt(enc_key, &client_priv_key, transfer_110.encode())?;
 
     erc20_api::transfer::post::Request {
         sig: [
@@ -767,7 +765,6 @@ fn transfer_110_req(enc_key: &SodiumPublicKey) -> erc20_api::transfer::post::Req
             215, 186, 25, 30, 135, 114, 237, 169, 138, 122, 81, 61, 43, 183,
         ],
         encrypted_transfer_cmd: enc_cmd,
-        nonce: nonce.0,
     }
 }
 

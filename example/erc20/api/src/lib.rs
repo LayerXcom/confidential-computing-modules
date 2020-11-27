@@ -2,13 +2,12 @@ use ed25519_dalek::{
     Keypair, PublicKey, Signature, SignatureError, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH,
 };
 use frame_common::{
-    crypto::{AccountId, Ed25519ChallengeResponse},
+    crypto::{AccountId, ClientCiphertext, Ed25519ChallengeResponse},
     traits::State,
 };
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_big_array::big_array;
-use sodiumoxide::crypto::box_::{self, PublicKey as SodiumPublicKey};
 use std::fmt;
 use web3::types::H256;
 
@@ -65,15 +64,13 @@ pub mod init_state {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub encrypted_total_supply: Vec<u8>,
-            pub nonce: [u8; box_::NONCEBYTES],
+            pub encrypted_total_supply: ClientCiphertext,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                encrypted_total_supply: Vec<u8>,
-                nonce: [u8; box_::NONCEBYTES],
+                encrypted_total_supply: ClientCiphertext,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -85,7 +82,6 @@ pub mod init_state {
                     pubkey: keypair.public.to_bytes(),
                     challenge,
                     encrypted_total_supply,
-                    nonce,
                 }
             }
 
@@ -101,12 +97,11 @@ pub mod init_state {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, encrypted_total_supply: {:?}, nonce: {:?} }}",
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, encrypted_total_supply: {:?} }}",
                     &self.sig[..],
                     self.pubkey,
                     self.challenge,
                     self.encrypted_total_supply,
-                    self.nonce,
                 )
             }
         }
@@ -136,15 +131,13 @@ pub mod transfer {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub encrypted_transfer_cmd: Vec<u8>,
-            pub nonce: [u8; box_::NONCEBYTES],
+            pub encrypted_transfer_cmd: ClientCiphertext,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                encrypted_transfer_cmd: Vec<u8>,
-                nonce: [u8; box_::NONCEBYTES],
+                encrypted_transfer_cmd: ClientCiphertext,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -156,7 +149,6 @@ pub mod transfer {
                     pubkey: keypair.public.to_bytes(),
                     challenge,
                     encrypted_transfer_cmd,
-                    nonce,
                 }
             }
 
@@ -172,8 +164,8 @@ pub mod transfer {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, encrypted_transfer_cmd: {:?}, nonce: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.encrypted_transfer_cmd, self.nonce,
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, encrypted_transfer_cmd: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.encrypted_transfer_cmd,
                 )
             }
         }
@@ -194,15 +186,13 @@ pub mod approve {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub encrypted_approve_cmd: Vec<u8>,
-            pub nonce: [u8; box_::NONCEBYTES],
+            pub encrypted_approve_cmd: ClientCiphertext,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                encrypted_approve_cmd: Vec<u8>,
-                nonce: [u8; box_::NONCEBYTES],
+                encrypted_approve_cmd: ClientCiphertext,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -214,7 +204,6 @@ pub mod approve {
                     pubkey: keypair.public.to_bytes(),
                     challenge,
                     encrypted_approve_cmd,
-                    nonce,
                 }
             }
 
@@ -230,8 +219,8 @@ pub mod approve {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, encrypted_approve_cmd: {:?}, nonce: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.encrypted_approve_cmd, self.nonce,
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, encrypted_approve_cmd: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.encrypted_approve_cmd,
         )
             }
         }
@@ -252,15 +241,13 @@ pub mod transfer_from {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub encrypted_transfer_from_cmd: Vec<u8>,
-            pub nonce: [u8; box_::NONCEBYTES],
+            pub encrypted_transfer_from_cmd: ClientCiphertext,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                encrypted_transfer_from_cmd: Vec<u8>,
-                nonce: [u8; box_::NONCEBYTES],
+                encrypted_transfer_from_cmd: ClientCiphertext,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -272,7 +259,6 @@ pub mod transfer_from {
                     pubkey: keypair.public.to_bytes(),
                     challenge,
                     encrypted_transfer_from_cmd,
-                    nonce,
                 }
             }
 
@@ -288,8 +274,8 @@ pub mod transfer_from {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, encrypted_transfer_from_cmd: {:?}, nonce: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.encrypted_transfer_from_cmd, self.nonce,
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, encrypted_transfer_from_cmd: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.encrypted_transfer_from_cmd,
                 )
             }
         }
@@ -310,15 +296,13 @@ pub mod mint {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub encrypted_mint_cmd: Vec<u8>,
-            pub nonce: [u8; box_::NONCEBYTES],
+            pub encrypted_mint_cmd: ClientCiphertext,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                encrypted_mint_cmd: Vec<u8>,
-                nonce: [u8; box_::NONCEBYTES],
+                encrypted_mint_cmd: ClientCiphertext,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -330,7 +314,6 @@ pub mod mint {
                     pubkey: keypair.public.to_bytes(),
                     challenge,
                     encrypted_mint_cmd,
-                    nonce,
                 }
             }
 
@@ -346,8 +329,8 @@ pub mod mint {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, encrypted_mint_cmd: {:?}, nonce: {:?} }}",
-                    &self.sig[..], self.pubkey, self.challenge, self.encrypted_mint_cmd, self.nonce,
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, encrypted_mint_cmd: {:?} }}",
+                    &self.sig[..], self.pubkey, self.challenge, self.encrypted_mint_cmd,
                 )
             }
         }
@@ -368,15 +351,13 @@ pub mod burn {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub encrypted_burn_cmd: Vec<u8>,
-            pub nonce: [u8; box_::NONCEBYTES],
+            pub encrypted_burn_cmd: ClientCiphertext,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                encrypted_burn_cmd: Vec<u8>,
-                nonce: [u8; box_::NONCEBYTES],
+                encrypted_burn_cmd: ClientCiphertext,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -388,7 +369,6 @@ pub mod burn {
                     pubkey: keypair.public.to_bytes(),
                     challenge,
                     encrypted_burn_cmd,
-                    nonce,
                 }
             }
 
@@ -404,12 +384,11 @@ pub mod burn {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(
                     f,
-                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, encrypted_burn_cmd: {:?}, nonce: {:?} }}",
+                    "Request {{ sig: {:?}, pubkey: {:?}, challenge: {:?}, encrypted_burn_cmd: {:?} }}",
                     &self.sig[..],
                     self.pubkey,
                     self.challenge,
                     self.encrypted_burn_cmd,
-                    self.nonce,
                 )
             }
         }
