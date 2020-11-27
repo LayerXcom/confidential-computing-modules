@@ -12,6 +12,7 @@ pub fn ecall_run_tests() {
     let ret = check_all_passed!(
         frame_treekem::tests::run_tests(),
         anonify_enclave::tests::run_tests(),
+        frame_mra_tls::tests::run_tests(),
     );
 
     assert!(ret);

@@ -2,15 +2,12 @@ use crate::config::ServerConfig;
 use crate::connection::Connection;
 use anyhow::Result;
 use log::error;
-use serde::{de::DeserializeOwned, Serialize};
 use std::string::String;
 use std::sync::Arc;
+use std::vec::Vec;
 
 pub trait RequestHandler {
-    fn handle<SE, DE>(&self, message: SE) -> Result<DE>
-    where
-        SE: Serialize,
-        DE: DeserializeOwned;
+    fn handle_json(&self, msg: &[u8]) -> Result<Vec<u8>>;
 }
 
 pub struct Server {
@@ -27,7 +24,7 @@ impl Server {
         let listener = std::net::TcpListener::bind(&self.address)?;
         for stream in listener.incoming() {
             let session = rustls::ServerSession::new(&Arc::new(self.config.tls().clone()));
-            match Connection::new(session, stream?).serve(handler.clone()) {
+            match Connection::new(session, stream?).serve_json(handler.clone()) {
                 Ok(_) => {}
                 Err(e) => error!("{:?}", e),
             }

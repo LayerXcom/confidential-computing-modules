@@ -6,8 +6,8 @@ pub mod client;
 pub mod config;
 mod connection;
 pub mod server;
-#[cfg(test)]
-mod tests;
+#[cfg(debug_assertions)]
+pub mod tests;
 
 pub use client::Client;
 pub use server::{Server, RequestHandler};
