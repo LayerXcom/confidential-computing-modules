@@ -1315,6 +1315,7 @@ dependencies = [
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.117 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde-big-array",
+ "sodiumoxide",
  "web3",
 ]
 
@@ -2277,7 +2278,6 @@ dependencies = [
  "frame-common",
  "frame-host",
  "frame-runtime",
- "frame-treekem",
  "lazy_static",
  "parity-scale-codec",
  "sgx_types 1.1.1",
