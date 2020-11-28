@@ -39,7 +39,7 @@ echo "Unit testing..."
 cd ../../../scripts
 make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave
 cd ..
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test -p unit-tests-host -p anonify-eth-driver -p frame-runtime -- --nocapture
+RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test -p unit-tests-host -p anonify-eth-driver -p frame-runtime -- --nocapture
 
 # Buildings
 
