@@ -46,6 +46,9 @@ impl<S: rustls::Session> Connection<S> {
     pub fn serve_json<H: RequestHandler>(&mut self, handler: H) -> Result<()> {
         loop {
             let req = self.read_frame()?;
+            if req.len() == 0 {
+                return Ok(())
+            }
             let resp = handler.handle_json(&req)?;
             self.write_frame(resp)?;
         }

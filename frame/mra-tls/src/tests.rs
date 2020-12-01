@@ -6,7 +6,8 @@ use std::thread;
 use std::vec::Vec;
 use test_utils::*;
 
-const ADDRESS: &str = "127.0.0.1:0";
+const CLIENT_ADDRESS: &str = "localhost:12345";
+const SERVER_ADDRESS: &str = "127.0.0.1:12345";
 
 pub fn run_tests() -> bool {
     check_all_passed!(run_tests!(test_request_response,),)
@@ -30,7 +31,7 @@ fn test_request_response() {
         "message": "Hello test_request_response"
     }"#;
     let client_config = ClientConfig::default();
-    let mut client = Client::new(ADDRESS, client_config).unwrap();
+    let mut client = Client::new(CLIENT_ADDRESS, client_config).unwrap();
     let resp: String = client.send_json(msg).unwrap();
 
     assert_eq!(msg, resp);
@@ -38,7 +39,7 @@ fn test_request_response() {
 
 fn start_server() {
     let config = ServerConfig::default();
-    let mut server = Server::new(ADDRESS.to_string(), config);
+    let mut server = Server::new(SERVER_ADDRESS.to_string(), config);
     let handler = EchoHandler::default();
-    thread::spawn(move || server.run(handler).unwrap());
+    server.run(handler).unwrap();
 }
