@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 #[derive(Clone)]
 pub struct ClientConfig {
     tls: rustls::ClientConfig,
@@ -11,9 +13,15 @@ impl ClientConfig {
 
 impl Default for ClientConfig {
     fn default() -> Self {
-        let tls = rustls::ClientConfig::new();
+        let mut client_tls_config = rustls::ClientConfig::new();
 
-        Self { tls }
+        client_tls_config
+            .dangerous()
+            .set_certificate_verifier(NoServerVerify::new());
+
+        Self {
+            tls: client_tls_config,
+        }
     }
 }
 
@@ -36,9 +44,16 @@ impl Default for ServerConfig {
     }
 }
 
-struct NoServerAuth;
+struct NoServerVerify;
 
-impl rustls::ServerCertVerifier for NoServerAuth {
+impl NoServerVerify {
+    #[allow(clippy::new_ret_no_self)]
+    pub fn new() -> Arc<dyn rustls::ServerCertVerifier> {
+        Arc::new(NoServerVerify)
+    }
+}
+
+impl rustls::ServerCertVerifier for NoServerVerify {
     fn verify_server_cert(
         &self,
         _roots: &rustls::RootCertStore,
