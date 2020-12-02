@@ -41,5 +41,5 @@ fn start_server() {
     let config = ServerConfig::default();
     let mut server = Server::new(SERVER_ADDRESS.to_string(), config);
     let handler = EchoHandler::default();
-    server.run(handler).unwrap();
+    thread::spawn(move || server.run(handler).unwrap());
 }
