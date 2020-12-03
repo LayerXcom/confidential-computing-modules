@@ -1,13 +1,14 @@
 SGX_SDK_RUST ?= $(HOME)/sgx
 ANONIFY_ROOT_DIR := ..
-ANONIFY_CORE_ROOT := $(ANONIFY_ROOT_DIR)/core
+#ANONIFY_CORE_ROOT := $(ANONIFY_ROOT_DIR)/core
 FRAME_ROOT := $(ANONIFY_ROOT_DIR)/frame
 CONFIG_DIR := $(ANONIFY_ROOT_DIR)/config
-ANONIFY_ENCLAVE_DIR := $(ANONIFY_CORE_ROOT)/enclave
-ANONIFY_HOST_DIR := $(ANONIFY_CORE_ROOT)/host
+#ANONIFY_ENCLAVE_DIR := $(ANONIFY_CORE_ROOT)/enclave
+#ANONIFY_HOST_DIR := $(ANONIFY_CORE_ROOT)/host
 ANONIFY_BIN_DIR := $(ANONIFY_ROOT_DIR)/.anonify
 ANONIFY_EDL_DIR := $(ANONIFY_ROOT_DIR)/edl
 ANONIFY_BUILD_DIR := $(ANONIFY_ROOT_DIR)/build
+SODIUM_ROOT := /root/libsodium-stable/src/libsodium
 
 ######## Settings for Circle CI ######
 CARGO ?= cargo
@@ -46,7 +47,7 @@ endif
 
 ifeq ($(SGX_ARCH), x86)
 	SGX_COMMON_CFLAGS := -m32
-	SGX_LIBRARY_PATH := $(SGX_SDK)/lib
+	SGX_LIBRARY_PATH := $(SGX_SDK)/lib # /opt/sgxsdk/lib
 	SGX_ENCLAVE_SIGNER := $(SGX_SDK)/bin/x86/sgx_sign
 	SGX_EDGER8R := $(SGX_SDK)/bin/x86/sgx_edger8r
 else
@@ -81,7 +82,8 @@ CUSTOM_COMMON_PATH := $(SGX_SDK_RUST)/common
 
 ######## EDL Settings ########
 
-Enclave_EDL_Files := $(ANONIFY_ENCLAVE_DIR)/$(T_C_FILE) $(ANONIFY_ENCLAVE_DIR)/$(T_H_FILE) $(ANONIFY_HOST_DIR)/$(U_C_FILE) $(ANONIFY_HOST_DIR)/$(U_H_FILE)
+#Enclave_EDL_Files := $(ANONIFY_ENCLAVE_DIR)/$(T_C_FILE) $(ANONIFY_ENCLAVE_DIR)/$(T_H_FILE) $(ANONIFY_HOST_DIR)/$(U_C_FILE) $(ANONIFY_HOST_DIR)/$(U_H_FILE)
+Enclave_EDL_Files := TEMP_EDL_CONST_I_WILL_FIX
 
 ######## Enclave Settings ########
 
@@ -95,9 +97,12 @@ endif
 Crypto_Library_Name := sgx_tcrypto
 
 RustEnclave_Include_Paths := -I$(CUSTOM_COMMON_PATH)/inc -I$(CUSTOM_EDL_PATH) -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SDK)/include/epid -I $(ANONIFY_ENCLAVE_DIR) -I./include
-RustEnclave_Link_Libs := -L$(CUSTOM_LIBRARY_PATH) -lenclave
-RustEnclave_Compile_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(RustEnclave_Include_Paths)
-RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) \
+RustEnclave_Link_Libs := -L$(CUSTOM_LIBRARY_PATH) -lenclave -L/usr/local/lib -lsodium
+
+LibSodium_Include_Paths := -I$(SODIUM_ROOT)/include -I$(SODIUM_ROOT)/include/sodium -I$(SODIUM_ROOT)/include/sodium/private -I$(SODIUM_ROOT)/crypto_scalarmult/curve25519/sandy2x
+
+RustEnclave_Compile_Flags := $(SGX_COMMON_CFLAGS) $(LibSodium_Include_Paths) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(RustEnclave_Include_Paths)
+RustEnclave_Link_Flags := -Bdynamic $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) \
 	-Wl,--whole-archive -l$(Trts_Library_Name) -Wl,--no-whole-archive \
 	-Wl,--start-group -lsgx_tstdc -l$(Service_Library_Name) -l$(Crypto_Library_Name) $(RustEnclave_Link_Libs) -Wl,--end-group \
 	-Wl,-Bstatic -Wl,-Bsymbolic -Wl,--no-undefined \
@@ -110,6 +115,8 @@ RustEnclave_Name := $(ANONIFY_BUILD_DIR)/enclave.so
 Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/enclave.signed.so
 Rust_Enclave_Name := libenclave.a
 Rust_Enclave_Files := $(wildcard src/*.rs)
+
+LibSodium_Link_Libs := $(SODIUM_ROOT)/crypto_scalarmult/libsodium_la-crypto_scalarmult.o
 
 .PHONY: all
 all: $(Signed_RustEnclave_Name)
@@ -135,7 +142,8 @@ $(Rust_Enclave_Name): $(Rust_Enclave_Files)
 	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/libenclave.a
 
 $(RustEnclave_Name): $(Rust_Enclave_Name) $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
-	@$(CXX) $(ANONIFY_BUILD_DIR)/$(T_O_FILE) -o $@ $(RustEnclave_Link_Flags)
+	@echo "RustEnclave_Link_Flags =>  $(RustEnclave_Link_Flags)"
+	@$(CXX) $(LibSodium_Link_Libs) $(ANONIFY_BUILD_DIR)/$(T_O_FILE) -o $@ $(RustEnclave_Link_Flags)
 	@echo "LINK =>  $@"
 
 $(Signed_RustEnclave_Name): $(RustEnclave_Name)
