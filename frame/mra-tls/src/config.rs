@@ -1,4 +1,6 @@
-use std::sync::Arc;
+use crate::error::MraTLSError;
+use anyhow::anyhow;
+use std::{sync::Arc, vec::Vec};
 
 #[derive(Clone)]
 pub struct ClientConfig {
@@ -9,6 +11,20 @@ impl ClientConfig {
     pub fn tls(&self) -> &rustls::ClientConfig {
         &self.tls
     }
+
+    pub fn add_pem_to_root(&mut self, ca_cert: &str) -> Result<(), MraTLSError> {
+        let (_, invalid_count) = self
+            .tls
+            .root_store
+            .add_pem_file(&mut ca_cert.as_bytes())
+            .map_err(|e| anyhow!("failed to add pem file: {:?}", e))?;
+
+        if invalid_count > 0 {
+            return Err(MraTLSError::Error(anyhow!("invalid_count")));
+        }
+
+        Ok(())
+    }
 }
 
 impl Default for ClientConfig {
@@ -18,6 +34,11 @@ impl Default for ClientConfig {
         client_tls_config
             .dangerous()
             .set_certificate_verifier(NoServerVerify::new());
+
+        client_tls_config.versions.clear();
+        client_tls_config
+            .versions
+            .push(rustls::ProtocolVersion::TLSv1_3);
 
         Self {
             tls: client_tls_config,
@@ -32,6 +53,16 @@ pub struct ServerConfig {
 impl ServerConfig {
     pub fn tls(&self) -> &rustls::ServerConfig {
         &self.tls
+    }
+
+    pub fn set_single_cert(
+        &mut self,
+        cert_chain: Vec<rustls::Certificate>,
+        key_der: rustls::PrivateKey,
+    ) -> Result<(), MraTLSError> {
+        self.tls
+            .set_single_cert(cert_chain, key_der)
+            .map_err(Into::into)
     }
 }
 

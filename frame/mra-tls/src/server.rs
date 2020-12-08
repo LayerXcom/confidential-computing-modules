@@ -22,7 +22,18 @@ impl Server {
 
     pub fn run<H: RequestHandler + Clone>(&mut self, handler: H) -> Result<()> {
         let listener = std::net::TcpListener::bind(&self.address)?;
+
+        #[cfg(not(test))]
         for stream in listener.incoming() {
+            let session = rustls::ServerSession::new(&Arc::new(self.config.tls().clone()));
+            match Connection::new(session, stream?).serve_json(handler.clone()) {
+                Ok(_) => {}
+                Err(e) => error!("{:?}", e),
+            }
+        }
+
+        #[cfg(test)]
+        for stream in listener.incoming().take(1) {
             let session = rustls::ServerSession::new(&Arc::new(self.config.tls().clone()));
             match Connection::new(session, stream?).serve_json(handler.clone()) {
                 Ok(_) => {}

@@ -20,23 +20,14 @@ impl<S: rustls::Session> Connection<S> {
     }
 
     pub fn read_frame(&mut self) -> Result<Vec<u8>> {
-        let mut header = [0u8; 8];
+        let mut buf = [0 as u8; MAX_FRAME_LEN as usize];
+        let len = self.stream.read(&mut buf)?;
 
-        self.stream.read_exact(&mut header)?;
-        let frame_len = u64::from_be_bytes(header);
-        ensure!(frame_len <= self.max_frame_len, "Exceed max frame length");
-
-        let mut frame = Vec::with_capacity(frame_len as usize);
-        self.stream.read_exact(&mut frame)?;
-
-        Ok(frame)
+        ensure!(len as u64 <= self.max_frame_len, "Exceed max frame length");
+        Ok(buf[..len].to_vec())
     }
 
     pub fn write_frame(&mut self, frame: Vec<u8>) -> Result<()> {
-        let frame_len = frame.len() as u64;
-        let header = frame_len.to_be_bytes();
-
-        self.stream.write(&header)?;
         self.stream.write_all(&frame)?;
         self.stream.flush()?;
 
@@ -44,13 +35,13 @@ impl<S: rustls::Session> Connection<S> {
     }
 
     pub fn serve_json<H: RequestHandler>(&mut self, handler: H) -> Result<()> {
-        loop {
-            let req = self.read_frame()?;
-            if req.len() == 0 {
-                return Ok(())
-            }
-            let resp = handler.handle_json(&req)?;
-            self.write_frame(resp)?;
+        let req = self.read_frame().unwrap();
+        if req.len() == 0 {
+            dbg!("request's length is 0");
+            return Ok(());
         }
+        let resp = handler.handle_json(&req)?;
+        self.write_frame(resp)?;
+        Ok(())
     }
 }

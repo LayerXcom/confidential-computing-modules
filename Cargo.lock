@@ -1616,7 +1616,9 @@ dependencies = [
  "serde_json 1.0.51",
  "sgx_tstd",
  "test-utils",
+ "thiserror 1.0.9",
  "webpki",
+ "webpki-roots",
 ]
 
 [[package]]
