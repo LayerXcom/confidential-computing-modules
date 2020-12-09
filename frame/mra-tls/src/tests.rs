@@ -3,7 +3,6 @@ use anyhow::Result;
 use rustls::internal::pemfile;
 use serde_json::Value;
 use std::{
-    io, sgxfs as fs,
     string::{String, ToString},
     thread,
     vec::Vec,
@@ -27,7 +26,6 @@ struct EchoHandler;
 impl RequestHandler for EchoHandler {
     fn handle_json(&self, msg: &[u8]) -> Result<Vec<u8>> {
         let msg_json: Value = serde_json::from_slice(&msg)?;
-        // assert_eq!(msg_json["message"], b"Hello test_request_response");
         serde_json::to_vec(&msg_json).map_err(Into::into)
     }
 }
@@ -56,7 +54,9 @@ fn start_server() {
     let private_keys = pemfile::rsa_private_keys(&mut SERVER_PRIVATE_KEY).unwrap();
     let certs = pemfile::certs(&mut SERVER_CERTIFICATE.as_bytes()).unwrap();
     let mut server_config = ServerConfig::default();
-    server_config.set_single_cert(certs, private_keys.first().unwrap().clone());
+    server_config
+        .set_single_cert(certs, private_keys.first().unwrap().clone())
+        .unwrap();
 
     let mut server = Server::new(SERVER_ADDRESS.to_string(), server_config);
     let handler = EchoHandler::default();

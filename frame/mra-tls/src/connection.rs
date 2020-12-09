@@ -20,14 +20,23 @@ impl<S: rustls::Session> Connection<S> {
     }
 
     pub fn read_frame(&mut self) -> Result<Vec<u8>> {
-        let mut buf = [0 as u8; MAX_FRAME_LEN as usize];
-        let len = self.stream.read(&mut buf)?;
+        let mut header = [0u8; 8];
+        self.stream.read_exact(&mut header)?;
+        let frame_len = u64::from_be_bytes(header);
 
-        ensure!(len as u64 <= self.max_frame_len, "Exceed max frame length");
-        Ok(buf[..len].to_vec())
+        ensure!(frame_len <= self.max_frame_len, "Exceed max frame length");
+
+        let mut frame = vec![0u8; frame_len as usize];
+        self.stream.read_exact(&mut frame)?;
+
+        Ok(frame)
     }
 
     pub fn write_frame(&mut self, frame: Vec<u8>) -> Result<()> {
+        let frame_len = frame.len() as u64;
+        let header = frame_len.to_be_bytes();
+
+        self.stream.write(&header)?;
         self.stream.write_all(&frame)?;
         self.stream.flush()?;
 
