@@ -1,0 +1,18 @@
+[package]
+name = "frame-mra-tls"
+version = "0.1.0"
+authors = ["osuketh <dish230@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net", "backtrace", "thread"] }
+rustls = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rustls", features = ["dangerous_configuration"] }
+anyhow = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
+thiserror = { git = "https://github.com/mesalock-linux/thiserror-sgx.git" }
+serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx" }
+serde = { git = "https://github.com/mesalock-linux/serde-sgx.git" } # Don't specify version due to serde_json dependency
+http = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/http-sgx" }
+webpki = { branch = "mesalock_sgx", git = "https://github.com/mesalock-linux/webpki" } # Specify branch name due to rustls dependency
+webpki-roots = { branch = "mesalock_sgx", git = "https://github.com/mesalock-linux/webpki-roots" }
+log = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/log-sgx" }
+test-utils = { path = "../../tests/utils" }

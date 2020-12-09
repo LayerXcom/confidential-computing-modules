@@ -3,6 +3,8 @@ enclave {
     from "sgx_backtrace.edl" import *;
     from "sgx_tstdc.edl" import *;
     from "sgx_env.edl" import *;
+    from "sgx_thread.edl" import *;
+    from "sgx_net.edl" import *;
 
     trusted {
         public void ecall_run_tests();
