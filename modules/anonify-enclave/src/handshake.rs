@@ -1,10 +1,11 @@
 use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
-use frame_common::{crypto::Sha256, state_types::StateType};
+use frame_common::{crypto::{Sha256, BackupPathSecret}, state_types::StateType};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::handshake::HandshakeParams;
+use frame_mra_tls::{Client, ClientConfig};
 use remote_attestation::RAService;
 
 /// A add handshake Sender
@@ -32,8 +33,16 @@ impl EnclaveEngine for JoinGroupSender {
         let group_key = &*enclave_context.read_group_key();
         let (handshake, path_secret, epoch) = group_key.create_handshake()?;
         let export_path_secret =
-            path_secret.try_into_exporting(epoch, handshake.hash().as_ref())?;
+            path_secret.clone().try_into_exporting(epoch, handshake.hash().as_ref())?;
         let export_handshake = handshake.into_export();
+
+        let backup_path_secret = BackupPathSecret::new(path_secret.as_bytes().to_vec(), epoch);
+        let mut client_config = ClientConfig::default();
+        let ca_certificate = enclave_context.ca_certificate();
+        let mra_tls_server_address = enclave_context.server_address();
+        client_config.add_pem_to_root(ca_certificate)?;
+        let mut mra_tls_client = Client::new(mra_tls_server_address, client_config)?;
+        let _resp = mra_tls_client.send_json(backup_path_secret)?;
 
         Ok(output::ReturnJoinGroup::new(
             report.into_vec(),

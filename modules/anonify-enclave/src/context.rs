@@ -22,10 +22,12 @@ use remote_attestation::RAService;
 use sgx_types::*;
 use std::prelude::v1::*;
 use std::{
+    sgxfs,
     env,
     marker::PhantomData,
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
 };
+use std::io::Read;
 
 pub const MRENCLAVE_VERSION: usize = 0;
 
@@ -35,6 +37,8 @@ pub struct EnclaveContext {
     version: usize,
     ias_url: String,
     sub_key: String,
+    ca_certificate: String,
+    server_address: String,
     spid: sgx_spid_t,
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB,
@@ -53,6 +57,13 @@ impl ContextOps for EnclaveContext {
 
     fn sub_key(&self) -> &str {
         &self.sub_key
+    }
+
+    fn ca_certificate(&self) -> &str {
+        &self.ca_certificate
+    }
+    fn server_address(&self) -> &str {
+        &self.server_address
     }
 }
 
@@ -193,6 +204,11 @@ impl EnclaveContext {
 
         let ias_url = env::var("IAS_URL")?;
         let sub_key = env::var("SUB_KEY")?;
+        // let ca_certificate_path: &str = ;
+        let mut ca_certificate_file = sgxfs::SgxFile::open(env::var("CA_CERTIFICATE_PATH")?)?;
+        let mut ca_certificate = String::new();
+        ca_certificate_file.read_to_string(&mut ca_certificate)?;
+        let server_address = env::var("MRA_TLS_SERVER_ADDRESS")?;
 
         Ok(EnclaveContext {
             spid,
@@ -203,6 +219,8 @@ impl EnclaveContext {
             version: MRENCLAVE_VERSION,
             ias_url,
             sub_key,
+            ca_certificate,
+            server_address,
         })
     }
 

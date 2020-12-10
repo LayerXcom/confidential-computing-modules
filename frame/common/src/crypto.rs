@@ -577,3 +577,25 @@ impl ExportHandshake {
         &self.handshake[..]
     }
 }
+
+/// PathSecret for a backup via mra-tls
+#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
+#[serde(crate = "crate::serde")]
+pub struct BackupPathSecret {
+    path_secret: Vec<u8>,
+    epoch: u32,
+}
+
+impl BackupPathSecret {
+    pub fn new(path_secret: Vec<u8>, epoch: u32) -> Self {
+        BackupPathSecret { path_secret, epoch }
+    }
+
+    pub fn epoch(&self) -> u32 {
+        self.epoch
+    }
+
+    pub fn path_secret(&self) -> &[u8] {
+        &self.path_secret[..]
+    }
+}

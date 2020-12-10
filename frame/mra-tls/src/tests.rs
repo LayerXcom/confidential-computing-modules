@@ -9,8 +9,8 @@ use std::{
 };
 use test_utils::*;
 
-const CLIENT_ADDRESS: &str = "localhost:12345";
-const SERVER_ADDRESS: &str = "0.0.0.0:12345";
+const SERVER_ADDRESS: &str = "localhost:12345";
+const LISTEN_ADDRESS: &str = "0.0.0.0:12345";
 
 const SERVER_PRIVATE_KEY: &'static [u8] = include_bytes!("../certs/localhost.key");
 const SERVER_CERTIFICATE: &str = include_str!("../certs/localhost_v3.crt");
@@ -47,7 +47,7 @@ fn build_client() -> Client {
 
     client_config.add_pem_to_root(CA_CERTIFICATE).unwrap();
 
-    Client::new(CLIENT_ADDRESS, client_config).unwrap()
+    Client::new(SERVER_ADDRESS, client_config).unwrap()
 }
 
 fn start_server() {
@@ -58,7 +58,7 @@ fn start_server() {
         .set_single_cert(certs, private_keys.first().unwrap().clone())
         .unwrap();
 
-    let mut server = Server::new(SERVER_ADDRESS.to_string(), server_config);
+    let mut server = Server::new(LISTEN_ADDRESS.to_string(), server_config);
     let handler = EchoHandler::default();
     thread::spawn(move || server.run(handler).unwrap());
 }

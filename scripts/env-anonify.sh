@@ -15,3 +15,5 @@ export PASSWORD=anonify0101
 export SPID=
 export IAS_URL=https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report
 export SUB_KEY=
+export CA_CERTIFICATE_PATH=../certs/ca_v3.crt
+export MRA_TLS_SERVER_ADDRESS=localhost:12345

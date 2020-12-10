@@ -37,6 +37,8 @@ pub trait ContextOps:
     fn mrenclave_ver(&self) -> usize;
     fn ias_url(&self) -> &str;
     fn sub_key(&self) -> &str;
+    fn ca_certificate(&self) -> &str;
+    fn server_address(&self) -> &str;
 }
 
 /// A getter of state stored in enclave memory.

@@ -6,6 +6,8 @@ pub const UNTIL_ROSTER_IDX: usize = 10;
 pub const UNTIL_EPOCH: usize = 30;
 pub const IAS_URL: &str = "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report";
 pub const TEST_SUB_KEY: &str = "77e2533de0624df28dc3be3a5b9e50d9";
+pub const CA_CERTIFICATE_PATH: &str = "../certs/ca_v3.crt";
+pub const MRA_TLS_SERVER_ADDRESS: &str = "localhost:12345";
 
 // commands
 pub const ENCRYPT_COMMAND_CMD: u32 = 1;
