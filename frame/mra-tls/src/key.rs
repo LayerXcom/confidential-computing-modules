@@ -1,10 +1,10 @@
 use anyhow::Result;
+use bit_vec::BitVec;
 use sgx_tcrypto::SgxEccHandle;
 use sgx_types::{sgx_ec256_private_t, sgx_ec256_public_t};
 use std::vec::Vec;
 use yasna::models::ObjectIdentifier;
 use yasna::{construct_der, Tag};
-use bit_vec::BitVec;
 
 pub struct NistP256KeyPair {
     priv_key: sgx_ec256_private_t,
@@ -44,14 +44,44 @@ impl NistP256KeyPair {
                     writer.write_sequence(|writer| {
                         writer.next().write_u8(1);
                         writer.next().write_bytes(&priv_key_bytes); // Writes &[u8] as an ASN.1 OCTETSTRING value.
-                        writer.next().write_tagged(Tag::context(1), |writer| { // Writes a (explicitly) tagged value.
-                            writer.write_bitvec(&BitVec::from_bytes(&pub_key_bytes)); // Writes BitVec as an ASN.1 BITSTRING value.
+                        writer.next().write_tagged(Tag::context(1), |writer| {
+                            // Writes a (explicitly) tagged value.
+                            writer.write_bitvec(&BitVec::from_bytes(&pub_key_bytes));
+                            // Writes BitVec as an ASN.1 BITSTRING value.
                         });
                     });
                 });
                 writer.next().write_bytes(&inner_key_der);
             });
         })
+    }
+
+    pub fn create_cert_with_extension(
+        &self,
+        issuer: &str,
+        subject: &str,
+        payload: &[u8],
+    ) -> Vec<u8> {
+        // http://oid-info.com/get/1.2.840.10045.4.3.2
+        let ecdsa_with_sha256_oid = ObjectIdentifier::from_slice(&[1, 2, 840, 10045, 4, 3, 2]);
+        // http://oid-info.com/get/2.5.4.3
+        let common_name_oid = ObjectIdentifier::from_slice(&[2, 5, 4, 3]);
+        // http://oid-info.com/get/1.2.840.10045.2.1
+        let ec_public_key_oid = ObjectIdentifier::from_slice(&[1, 2, 840, 10045, 2, 1]);
+        // http://oid-info.com/get/1.2.840.10045.3.1.7
+        let prime256v1_oid = ObjectIdentifier::from_slice(&[1, 2, 840, 10045, 3, 1, 7]);
+        // http://oid-info.com/get/2.16.840.1.113730.1.13
+        let comment_oid = ObjectIdentifier::from_slice(&[2, 16, 840, 1, 113_730, 1, 13]);
+
+        let pub_key_bytes = self.pub_key_into_bytes();
+
+
+
+        unimplemented!();
+    }
+
+    pub fn pub_key(&self) -> sgx_ec256_public_t {
+        self.pub_key
     }
 
     /// The Standards of Efficient Cryptography (SEC) encoding is used to serialize ECDSA public keys.

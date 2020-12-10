@@ -393,7 +393,7 @@ name = "anonify-wallet"
 version = "0.1.0"
 dependencies = [
  "anyhow 1.0.34",
- "chrono",
+ "chrono 0.4.19",
  "ed25519-dalek",
  "frame-common",
  "parity-crypto",
@@ -584,6 +584,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "904dfeac50f3cdaba28fc6f57fdcddb75f49ed61346676a78c4ffe55877802fd"
 
 [[package]]
+name = "bit-vec"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "349f9b6a179ed607305526ca489b34ad0a41aed5f7980fa90eb03160b69598fb"
+
+[[package]]
 name = "bitflags"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -597,16 +603,6 @@ checksum = "41262f11d771fd4a61aa3ce019fca363b4b6c282fca9da2a31186d3965a47a5c"
 dependencies = [
  "either",
  "radium",
-]
-
-[[package]]
-name = "bitvec"
-version = "0.17.4"
-source = "git+https://github.com/mesalock-linux/bitvec-sgx?rev=sgx_1.1.3#9f9d51071ebb93e2fedc30419108566adc412375"
-dependencies = [
- "either",
- "radium",
- "sgx_tstd",
 ]
 
 [[package]]
@@ -842,13 +838,23 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
+version = "0.4.11"
+source = "git+https://github.com/mesalock-linux/chrono-sgx#f964ae7f5f65bd2c9cd6f44a067e7980afc08ca0"
+dependencies = [
+ "num-integer 0.1.41",
+ "num-traits 0.2.10",
+ "sgx_tstd",
+]
+
+[[package]]
+name = "chrono"
 version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73"
 dependencies = [
  "libc",
- "num-integer",
- "num-traits",
+ "num-integer 0.1.44",
+ "num-traits 0.2.14",
  "time 0.1.44",
  "winapi 0.3.9",
 ]
@@ -1619,9 +1625,10 @@ name = "frame-mra-tls"
 version = "0.1.0"
 dependencies = [
  "anyhow 1.0.28",
- "bitvec 0.17.4 (git+https://github.com/mesalock-linux/bitvec-sgx?rev=sgx_1.1.3)",
+ "bit-vec",
  "http 0.2.1 (git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.3)",
  "log 0.4.8 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.3)",
+ "num-bigint",
  "rustls 0.16.0 (git+https://github.com/mesalock-linux/rustls?rev=sgx_1.1.3)",
  "serde 1.0.117 (git+https://github.com/mesalock-linux/serde-sgx.git)",
  "serde_json 1.0.51",
@@ -2762,13 +2769,43 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72ef4a56884ca558e5ddb05a1d1e7e1bfd9a68d9ed024c21704cc98872dae1bb"
 
 [[package]]
+name = "num-bigint"
+version = "0.2.5"
+source = "git+https://github.com/mesalock-linux/num-bigint-sgx#76a5bed94dc31c32bd1670dbf72877abcf9bbc09"
+dependencies = [
+ "autocfg 1.0.1",
+ "num-integer 0.1.41",
+ "num-traits 0.2.10",
+ "sgx_tstd",
+]
+
+[[package]]
+name = "num-integer"
+version = "0.1.41"
+source = "git+https://github.com/mesalock-linux/num-integer-sgx#404c50e5378ca635261688b080dee328ff42b6bd"
+dependencies = [
+ "autocfg 0.1.7",
+ "num-traits 0.2.10",
+ "sgx_tstd",
+]
+
+[[package]]
 name = "num-integer"
 version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db"
 dependencies = [
  "autocfg 1.0.1",
- "num-traits",
+ "num-traits 0.2.14",
+]
+
+[[package]]
+name = "num-traits"
+version = "0.2.10"
+source = "git+https://github.com/mesalock-linux/num-traits-sgx#af046e0b15c594c960007418097dd4ff37ec3f7a"
+dependencies = [
+ "autocfg 0.1.7",
+ "sgx_tstd",
 ]
 
 [[package]]
@@ -2885,7 +2922,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c740e5fbcb6847058b40ac7e5574766c6388f585e184d769910fe0d3a2ca861"
 dependencies = [
  "arrayvec",
- "bitvec 0.17.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitvec",
  "byte-slice-cast",
  "parity-scale-codec-derive",
  "serde 1.0.117 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -4825,7 +4862,7 @@ checksum = "3179a61e9eccceead5f1574fd173cf2e162ac42638b9bf214c6ad0baf7efa24a"
 dependencies = [
  "base64 0.11.0",
  "bytes 0.5.6",
- "chrono",
+ "chrono 0.4.19",
  "http 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "mime",
 ]
@@ -5207,6 +5244,9 @@ name = "yasna"
 version = "0.3.1"
 source = "git+https://github.com/mesalock-linux/yasna.rs-sgx?rev=sgx_1.1.3#a1f50714cd3eb29608ecf7888cacedc173edfdb2"
 dependencies = [
+ "bit-vec",
+ "chrono 0.4.11",
+ "num-bigint",
  "sgx_tstd",
 ]
 
