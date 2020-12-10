@@ -54,8 +54,8 @@ mod test_funcs;
 pub use crate::application::AppKeyChain;
 pub use crate::crypto::dh::{DhPrivateKey, DhPubKey};
 pub use crate::crypto::ecies::EciesCiphertext;
-#[cfg(feature = "sgx")]
 pub use crate::crypto::secrets::SealedPathSecret;
+#[cfg(feature = "sgx")]
 pub use crate::crypto::secrets::{PathSecret, UnsealedPathSecret};
 #[cfg(feature = "sgx")]
 pub use crate::group_state::GroupState;

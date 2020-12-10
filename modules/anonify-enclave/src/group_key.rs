@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Result};
-use frame_common::crypto::{Ciphertext, ExportHandshake, ExportPathSecret};
+use frame_common::crypto::Ciphertext;
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{HandshakeParams, PathSecretSource},
-    AppKeyChain, GroupState, Handshake,
+    AppKeyChain, GroupState, Handshake, PathSecret,
 };
 use std::vec::Vec;
 
@@ -37,9 +37,9 @@ impl GroupKey {
 }
 
 impl GroupKeyOps for GroupKey {
-    fn create_handshake(&self) -> Result<(ExportHandshake, ExportPathSecret)> {
-        let (handshake, exp_ps) = self.group_state.create_handshake(&self.source)?;
-        Ok((handshake.into_export(), exp_ps))
+    fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret, u32)> {
+        let (handshake, path_secret, epoch) = self.group_state.create_handshake(&self.source)?;
+        Ok((handshake, path_secret, epoch))
     }
 
     fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()> {
@@ -49,7 +49,7 @@ impl GroupKeyOps for GroupKey {
             self.max_roster_idx as u32,
             frame_enclave::ocalls::import_path_secret,
         )?;
-        // TODO: If the handshake transaction is flying out the air, wait updating the sender_keychain until the all remaining messages are proccessed.
+        // TODO: If the handshake transaction is flying out the air, wait updating the sender_keychain until the all remaining messages are processed.
         // The number of remaining messages are difference between sender_keychain's generation and receiver_keychain's one.
         self.sender_keychain = keychain.clone();
         self.receiver_keychain = keychain;

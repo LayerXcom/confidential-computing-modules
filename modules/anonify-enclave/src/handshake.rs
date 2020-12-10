@@ -30,7 +30,10 @@ impl EnclaveEngine for JoinGroupSender {
         let (report, report_sig) = RAService::remote_attestation(ias_url, sub_key, &quote)?;
         let mrenclave_ver = enclave_context.mrenclave_ver();
         let group_key = &*enclave_context.read_group_key();
-        let (export_handshake, export_path_secret) = group_key.create_handshake()?;
+        let (handshake, path_secret, epoch) = group_key.create_handshake()?;
+        let export_path_secret =
+            path_secret.try_into_exporting(epoch, handshake.hash().as_ref())?;
+        let export_handshake = handshake.into_export();
 
         Ok(output::ReturnJoinGroup::new(
             report.into_vec(),
@@ -61,7 +64,10 @@ impl EnclaveEngine for HandshakeSender {
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &*enclave_context.read_group_key();
-        let (export_handshake, export_path_secret) = group_key.create_handshake()?;
+        let (handshake, path_secret, epoch) = group_key.create_handshake()?;
+        let export_path_secret =
+            path_secret.try_into_exporting(epoch, handshake.hash().as_ref())?;
+        let export_handshake = handshake.into_export();
         let roster_idx = export_handshake.roster_idx();
         let msg = Sha256::hash_with_u32(&export_handshake.encode(), roster_idx);
         let sig = enclave_context.sign(msg.as_bytes())?;

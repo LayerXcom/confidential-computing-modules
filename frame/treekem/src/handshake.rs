@@ -18,7 +18,7 @@ pub trait Handshake: Sized {
     fn create_handshake(
         &self,
         source: &PathSecretSource,
-    ) -> Result<(HandshakeParams, ExportPathSecret)>;
+    ) -> Result<(HandshakeParams, PathSecret, u32)>;
 
     /// Process a received handshake from other members.
     fn process_handshake<F>(

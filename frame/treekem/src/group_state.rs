@@ -27,7 +27,7 @@ impl Handshake for GroupState {
     fn create_handshake(
         &self,
         source: &PathSecretSource,
-    ) -> Result<(HandshakeParams, ExportPathSecret)> {
+    ) -> Result<(HandshakeParams, PathSecret, u32)> {
         let my_roster_idx = self.my_roster_idx;
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(my_roster_idx)?;
 
@@ -45,10 +45,8 @@ impl Handshake for GroupState {
             .encrypt_direct_path_secret(my_tree_idx, path_secret.clone())?;
 
         let handshake = HandshakeParams::new(self.epoch, my_roster_idx, direct_path_msg);
-        let export_path_secret =
-            path_secret.try_into_exporting(self.epoch, handshake.hash().as_ref())?;
 
-        Ok((handshake, export_path_secret))
+        Ok((handshake, path_secret, self.epoch))
     }
 
     fn process_handshake<F>(

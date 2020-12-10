@@ -21,7 +21,7 @@ pub fn do_handshake_three_party(
     source: &PathSecretSource,
 ) -> (AppKeyChain, AppKeyChain, AppKeyChain) {
     let max_roster_idx = 2;
-    let (handshake, _) = my_group.create_handshake(source).unwrap();
+    let (handshake, _, _) = my_group.create_handshake(source).unwrap();
     let dummy_fn = |_: &[u8]| Err(anyhow!("This is dummy_fn"));
 
     let my_keychain = my_group

@@ -7,11 +7,11 @@ use crate::localstd::{
 };
 use codec::{Decode, Encode};
 use frame_common::{
-    crypto::{AccountId, Ciphertext, ExportHandshake, ExportPathSecret},
+    crypto::{AccountId, Ciphertext},
     state_types::{MemId, ReturnState, UpdatedState},
     traits::*,
 };
-use frame_treekem::{handshake::HandshakeParams, DhPubKey, EciesCiphertext};
+use frame_treekem::{handshake::HandshakeParams, DhPubKey, EciesCiphertext, PathSecret};
 
 /// Execute state transition functions from runtime
 pub trait RuntimeExecutor<G: ContextOps>: Sized {
@@ -89,7 +89,7 @@ pub trait IdentityKeyOps {
 }
 
 pub trait GroupKeyOps: Sized {
-    fn create_handshake(&self) -> Result<(ExportHandshake, ExportPathSecret)>;
+    fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret, u32)>;
 
     fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()>;
 
