@@ -1,7 +1,12 @@
+use crate::asn1_seq;
 use anyhow::Result;
 use bit_vec::BitVec;
+use chrono::TimeZone;
+use num_bigint::BigUint;
 use sgx_tcrypto::SgxEccHandle;
 use sgx_types::{sgx_ec256_private_t, sgx_ec256_public_t};
+use std::time::{SystemTime, UNIX_EPOCH};
+use std::untrusted::time::SystemTimeEx;
 use std::vec::Vec;
 use yasna::models::ObjectIdentifier;
 use yasna::{construct_der, Tag};
@@ -74,8 +79,6 @@ impl NistP256KeyPair {
         let comment_oid = ObjectIdentifier::from_slice(&[2, 16, 840, 1, 113_730, 1, 13]);
 
         let pub_key_bytes = self.pub_key_into_bytes();
-
-
 
         unimplemented!();
     }
