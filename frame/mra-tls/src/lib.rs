@@ -9,6 +9,8 @@ pub mod server;
 #[cfg(debug_assertions)]
 pub mod tests;
 mod error;
+mod key;
+mod cert;
 
 pub use client::Client;
 pub use server::{Server, RequestHandler};
