@@ -17,7 +17,10 @@ const SERVER_CERTIFICATE: &str = include_str!("../certs/localhost_v3.crt");
 const CA_CERTIFICATE: &str = include_str!("../certs/ca_v3.crt");
 
 pub fn run_tests() -> bool {
-    check_all_passed!(run_tests!(test_request_response,),)
+    check_all_passed!(
+        run_tests!(test_request_response,),
+        crate::key::tests::run_tests(),
+    )
 }
 
 #[derive(Default, Clone)]

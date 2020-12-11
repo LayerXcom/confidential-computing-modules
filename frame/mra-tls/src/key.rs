@@ -194,3 +194,27 @@ impl NistP256KeyPair {
         priv_key_bytes
     }
 }
+
+#[cfg(debug_assertions)]
+pub(crate) mod tests {
+    use super::*;
+    use test_utils::*;
+    use std::string::String;
+
+    pub(crate) fn run_tests() -> bool {
+        run_tests!(test_parse_cert,)
+    }
+
+    fn test_parse_cert() {
+        let cert = NistP256KeyPair::new().unwrap().create_cert_with_extension("a", "b", &[0]);
+        let asn = yasna::parse_der(&cert, |reader| {
+            reader.read_sequence(|reader| {
+                let tbs_cert_der = reader.next().read_bytes().unwrap();
+                let sig_algo = reader.next().read_oid().unwrap();
+                let sig_value = reader.next().read_bitvec().unwrap().to_bytes();
+                println!("sig_algo: {:?}", sig_algo);
+                Ok(())
+            })
+        }).unwrap();
+    }
+}
