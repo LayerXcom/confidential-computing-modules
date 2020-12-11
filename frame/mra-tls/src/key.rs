@@ -207,18 +207,18 @@ pub(crate) mod tests {
 
     // TODO: implement
     fn test_parse_cert() {
-        let cert = NistP256KeyPair::new().unwrap().create_cert_with_extension("issuer", "subject", &[4]);
-        let asn = yasna::parse_der(&cert, |reader| {
-            reader.read_sequence(|reader| {
-                reader.next().read_sequence(|reader| {
-                    // let tbs_cert_der = reader.next().read_bytes().unwrap();
-                    Ok(())
-                }).unwrap();
-                // let sig_algo = reader.next().read_oid().unwrap();
-                // let sig_value = reader.next().read_bitvec().unwrap().to_bytes();
-                Ok(())
-            }).unwrap();
-            Ok(())
-        }).unwrap();
+        // let cert = NistP256KeyPair::new().unwrap().create_cert_with_extension("issuer", "subject", &[4]);
+        // let asn = yasna::parse_der(&cert, |reader| {
+        //     reader.read_sequence(|reader| {
+        //         reader.next().read_sequence(|reader| {
+        //             let tbs_cert_der = reader.next().read_bytes().unwrap();
+        //             Ok(())
+        //         }).unwrap();
+        //         let sig_algo = reader.next().read_oid().unwrap();
+        //         let sig_value = reader.next().read_bitvec().unwrap().to_bytes();
+        //         Ok(())
+        //     }).unwrap();
+        //     Ok(())
+        // }).unwrap();
     }
 }
