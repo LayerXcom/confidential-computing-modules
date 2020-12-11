@@ -97,9 +97,9 @@ impl NistP256KeyPair {
 
         let tbs_cert_der = construct_der(|writer| {
             // When extensions are used, as expected in this profile, version MUST be 3 (value is 2)
-            let version = 2;
+            let version: i8 = 2;
             // must be positive integer and unique for each certificate issued by a given CA
-            let serial = 1;
+            let serial: u8 = 1;
             // the algorithm identifier for the algorithm used by the CA to sign the certificate
             let cert_sign_algo = asn1_seq!(ecdsa_with_sha256_oid.clone());
             //  the entity that has signed and issued the certificate
@@ -205,16 +205,20 @@ pub(crate) mod tests {
         run_tests!(test_parse_cert,)
     }
 
+    // TODO: implement
     fn test_parse_cert() {
-        let cert = NistP256KeyPair::new().unwrap().create_cert_with_extension("a", "b", &[0]);
+        let cert = NistP256KeyPair::new().unwrap().create_cert_with_extension("issuer", "subject", &[4]);
         let asn = yasna::parse_der(&cert, |reader| {
             reader.read_sequence(|reader| {
-                let tbs_cert_der = reader.next().read_bytes().unwrap();
-                let sig_algo = reader.next().read_oid().unwrap();
-                let sig_value = reader.next().read_bitvec().unwrap().to_bytes();
-                println!("sig_algo: {:?}", sig_algo);
+                reader.next().read_sequence(|reader| {
+                    // let tbs_cert_der = reader.next().read_bytes().unwrap();
+                    Ok(())
+                }).unwrap();
+                // let sig_algo = reader.next().read_oid().unwrap();
+                // let sig_value = reader.next().read_bitvec().unwrap().to_bytes();
                 Ok(())
-            })
+            }).unwrap();
+            Ok(())
         }).unwrap();
     }
 }
