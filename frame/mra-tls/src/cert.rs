@@ -346,6 +346,7 @@ macro_rules! asn1_seq_ty {
     };
 }
 
+#[macro_export]
 macro_rules! asn1_set_ty {
     ($t: ty) => { Set<$t, Nil> };
     ($t: ty, $($tt: ty),* $(,)?) => {
