@@ -15,14 +15,6 @@ extern "C" {
         id_len: usize,
     ) -> sgx_status_t;
 }
-extern "C" {
-    pub fn ocall_get_update_info(
-        retval: *mut UntrustedStatus,
-        platformBlob: *mut sgx_platform_info_t,
-        enclaveTrusted: i32,
-        update_info: *mut sgx_update_info_bit_t,
-    ) -> sgx_status_t;
-}
 
 pub fn import_path_secret(id: &[u8]) -> anyhow::Result<ExportPathSecret> {
     let mut id_arr = [0u8; EXPORT_ID_SIZE];
@@ -61,30 +53,4 @@ fn inner_import_path_secret(id: [u8; EXPORT_ID_SIZE]) -> Result<ExportPathSecret
     }
 
     Ok(exported_path_secret)
-}
-
-pub fn get_update_info(buf: Vec<u8>) -> Result<()> {
-    let mut update_info = sgx_update_info_bit_t::default();
-    let mut rt = UntrustedStatus::default();
-
-    let status = unsafe {
-        ocall_get_update_info(
-            &mut rt as *mut UntrustedStatus,
-            buf.as_slice().as_ptr() as *mut sgx_platform_info_t,
-            1,
-            &mut update_info as *mut sgx_update_info_bit_t,
-        )
-    };
-
-    if status != sgx_status_t::SGX_SUCCESS {
-        return Err(FrameEnclaveError::SgxError { err: status });
-    }
-    if rt.is_err() {
-        return Err(FrameEnclaveError::UntrustedError {
-            status: rt,
-            function: "ocall_get_update_info",
-        });
-    }
-
-    Ok(())
 }
