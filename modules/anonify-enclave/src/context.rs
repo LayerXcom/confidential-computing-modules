@@ -18,7 +18,7 @@ use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, DhPubKey, EciesCiphertext,
 };
-use remote_attestation::RAService;
+use remote_attestation::Quote;
 use sgx_types::*;
 use std::prelude::v1::*;
 use std::{
@@ -146,9 +146,10 @@ impl IdentityKeyOps for EnclaveContext {
 
 impl QuoteGetter for EnclaveContext {
     fn quote(&self) -> anyhow::Result<String> {
-        let target_info = self.init_quote()?;
-        let report = self.report(&target_info)?;
-        self.encoded_quote(report).map_err(Into::into)
+        let report_data = &self.identity_key.report_data()?;
+        Quote::new()?
+            .create_enclave_report(&report_data)?
+            .create_quote()
     }
 }
 
@@ -204,30 +205,6 @@ impl EnclaveContext {
             ias_url,
             sub_key,
         })
-    }
-
-    pub(crate) fn init_quote(&self) -> Result<sgx_target_info_t> {
-        let target_info = sgx_init_quote()?;
-        Ok(target_info)
-    }
-
-    /// Return Attestation report
-    fn report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {
-        let mut report = sgx_report_t::default();
-        let report_data = &self.identity_key.report_data()?;
-
-        if let Ok(r) = sgx_tse::rsgx_create_report(&target_info, &report_data) {
-            report = r;
-        }
-
-        Ok(report)
-    }
-
-    fn encoded_quote(&self, report: sgx_report_t) -> Result<String> {
-        let quote = get_quote(report, &self.spid)?;
-
-        // Use base64-encoded QUOTE structure to communicate via defined API.
-        Ok(base64::encode(&quote))
     }
 }
 

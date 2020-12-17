@@ -6,6 +6,7 @@ mod client;
 mod quote;
 
 pub use crate::client::{AttestationReport, RAService, ReportSig};
+pub use crate::quote::Quote;
 
 pub const IAS_REPORT_CA: &str = "-----BEGIN CERTIFICATE-----
 MIIFSzCCA7OgAwIBAgIJANEHdl0yo7CUMA0GCSqGSIb3DQEBCwUAMH4xCzAJBgNV

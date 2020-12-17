@@ -86,13 +86,18 @@ pub extern "C" fn ocall_sgx_init_quote(
     }
 
     let mut att_pub_key_id: Vec<u8> = vec![0u8; att_pub_key_id_size];
-    unsafe {
+    let ret = unsafe {
         sgx_init_quote_ex(
             p_att_key_id,
             p_qe_target_info,
             &mut att_pub_key_id_size as _,
             att_pub_key_id.as_mut_ptr(),
         )
+    };
+    if ret != sgx_status_t::SGX_SUCCESS {
+        UntrustedStatus::error()
+    } else {
+        UntrustedStatus::success()
     }
 }
 

@@ -11,6 +11,7 @@ use std::{
     io::{BufReader, Write},
     prelude::v1::*,
     str,
+    string::String,
     time::SystemTime,
 };
 
@@ -30,16 +31,23 @@ static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
 ];
 
 /// The very high level service for remote attestations
-pub struct RAService;
+/// Use base64-encoded QUOTE structure to communicate via defined API.
+pub struct RAService {
+    base64_quote: String,
+}
 
 impl RAService {
+    pub fn new(base64_quote: String) -> Self {
+        Self { base64_quote }
+    }
+
     pub fn remote_attestation(
+        &self,
         uri: &str,
         ias_api_key: &str,
-        quote: &str,
     ) -> Result<(AttestationReport, ReportSig)> {
         let uri: Uri = uri.parse().expect("Invalid uri");
-        let body = format!("{{\"isvEnclaveQuote\":\"{}\"}}\r\n", quote);
+        let body = format!("{{\"isvEnclaveQuote\":\"{}\"}}\r\n", &self.base64_quote);
         let mut writer = Vec::new();
 
         let response = RAClient::new(&uri)

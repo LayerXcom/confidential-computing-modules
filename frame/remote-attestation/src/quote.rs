@@ -1,6 +1,7 @@
 use anyhow::Result;
 use frame_types::UntrustedStatus;
-use sgx_types::*;
+use std::sgx_types::*;
+use crate::client::RAService;
 
 extern "C" {
     /// Ocall to use sgx_init_quote_ex to init the quote and key_id.
@@ -79,8 +80,8 @@ impl Quote {
     }
 
     /// Get quote with attestation key ID and enclave's local report.
-    pub fn get_quote(self) -> Result<Vec<u8>> {
-        unimplemented()!;
+    pub fn create_quote(self) -> Result<RAService> {
+        unimplemented!();
     }
 }
 
