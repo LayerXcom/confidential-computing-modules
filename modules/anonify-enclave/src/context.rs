@@ -145,7 +145,7 @@ impl QuoteGetter for EnclaveContext {
     fn quote(&self) -> anyhow::Result<RAService> {
         let report_data = &self.identity_key.report_data()?;
         Quote::new()?
-            .create_enclave_report(&report_data)?
+            .set_enclave_report(&report_data)?
             .create_quote()
             .map_err(|e| anyhow!("{:?}", e))
     }

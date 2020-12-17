@@ -1,7 +1,7 @@
-use frame_types::UntrustedStatus;
-use sgx_types::*;
 use crate::client::RAService;
 use crate::error::{FrameRAError, Result};
+use frame_types::UntrustedStatus;
+use sgx_types::*;
 
 extern "C" {
     /// Ocall to use sgx_init_quote_ex to init the quote and key_id.
@@ -21,8 +21,9 @@ extern "C" {
     ) -> sgx_status_t;
 
     /// Ocall to use sgx_get_quote_ex to generate a quote with enclave's report.
+    /// sgx_qe_report_info_t: Data structure that contains the information from app enclave and report gen- erated by Quoting Enclave.
     fn ocall_sgx_get_quote(
-        p_retval: *mut sgx_status_t,
+        p_retval: *mut UntrustedStatus,
         p_report: *const sgx_report_t,
         p_sgx_att_key_id: *const sgx_att_key_id_t,
         p_qe_report_info: *mut sgx_qe_report_info_t,
@@ -31,6 +32,7 @@ extern "C" {
     ) -> sgx_status_t;
 
     /// OCall to get target information of myself.
+    /// Generates self target info from the self cryptographic report of an enclave
     fn sgx_self_target(p_target_info: *mut sgx_target_info_t) -> sgx_status_t;
 }
 
@@ -57,7 +59,10 @@ impl Quote {
         };
 
         if status != sgx_status_t::SGX_SUCCESS {
-            return Err(FrameRAError::SgxError { err: status });
+            return Err(FrameRAError::OcallError {
+                status,
+                function: "ocall_sgx_init_quote",
+            });
         }
         if rt.is_err() {
             return Err(FrameRAError::UntrustedError {
@@ -73,52 +78,102 @@ impl Quote {
         })
     }
 
-    pub fn create_enclave_report(mut self, report_data: &sgx_report_data_t) -> Result<Self> {
+    pub fn set_enclave_report(mut self, report_data: &sgx_report_data_t) -> Result<Self> {
         let enclave_report =
-            sgx_tse::rsgx_create_report(&self.target_info, &report_data)
-            .map_err(|err| FrameRAError::SgxError { err })?;
+            sgx_tse::rsgx_create_report(&self.target_info, &report_data).map_err(|err| {
+                FrameRAError::OcallError {
+                    status: err,
+                    function: "sgx_tse::rsgx_create_report",
+                }
+            })?;
         self.enclave_report = Some(enclave_report);
         Ok(self)
     }
 
-    /// Get quote with attestation key ID and enclave's local report.
+    /// Create quote with attestation key ID and enclave's local report.
     pub fn create_quote(self) -> Result<RAService> {
-        unimplemented!();
+        let mut rt = UntrustedStatus::default();
+        let mut quote_len: u32 = 0;
+        let status = unsafe {
+            ocall_sgx_get_quote_size(&mut rt as _, &self.att_key_id as _, &mut quote_len as _)
+        };
+        if status != sgx_status_t::SGX_SUCCESS {
+            return Err(FrameRAError::OcallError {
+                status,
+                function: "ocall_sgx_get_quote_size",
+            });
+        }
+        if rt.is_err() {
+            return Err(FrameRAError::UntrustedError {
+                status: rt,
+                function: "ocall_sgx_get_quote_size",
+            });
+        }
+
+        let mut qe_report_info = sgx_qe_report_info_t::default();
+        let mut quote_nonce = sgx_quote_nonce_t::default();
+        sgx_trts::trts::rsgx_read_rand(&mut quote_nonce.rand).map_err(FrameRAError::Others)?;
+        qe_report_info.nonce = quote_nonce;
+
+        let status = unsafe { sgx_self_target(&mut qe_report_info.app_enclave_target_info as _) };
+        if status != sgx_status_t::SGX_SUCCESS {
+            return Err(FrameRAError::OcallError {
+                status,
+                function: "sgx_self_target",
+            });
+        }
+
+        let mut quote = vec![0; quote_len as usize];
+        let status = unsafe {
+            ocall_sgx_get_quote(
+                &mut rt as _,
+                &self.enclave_report.unwrap() as _, // enclave_report must be set
+                &self.att_key_id as _,
+                &mut qe_report_info as _,
+                quote.as_mut_ptr(),
+                quote_len,
+            )
+        };
+        if status != sgx_status_t::SGX_SUCCESS {
+            return Err(FrameRAError::OcallError {
+                status,
+                function: "ocall_sgx_get_quote",
+            });
+        }
+        if rt.is_err() {
+            return Err(FrameRAError::UntrustedError {
+                status: rt,
+                function: "ocall_sgx_get_quote",
+            });
+        }
+
+        // compares the input report MAC value with the calculated MAC value to determine whether the report is valid or not.
+        let qe_report = qe_report_info.qe_report;
+        sgx_tse::rsgx_verify_report(&qe_report)
+            .map_err(FrameRAError::VerifyReportError)?;
+        Self::verify_quote(qe_report.body.report_data, quote_nonce, &quote)?;
+
+        Ok(RAService::new(base64::encode(&quote)))
+    }
+
+    /// verify the QUOTE it received is not modified by the untrusted SW stack, and not a replay.
+    /// report.data[..32] = SHA256(p_nonce||p_quote)
+    fn verify_quote(
+        report_data: sgx_report_data_t,
+        quote_nonce: sgx_quote_nonce_t,
+        quote: &[u8],
+    ) -> Result<()> {
+        let mut rhs_vec = quote_nonce.rand.to_vec();
+        rhs_vec.extend(quote);
+        let rhs = sgx_tcrypto::rsgx_sha256_slice(&rhs_vec).map_err(FrameRAError::Others)?;
+        let lhs = &report_data.d[..32];
+        if rhs != lhs {
+            return Err(FrameRAError::VerifyQuoteError {
+                rhs: rhs.to_vec(),
+                lhs: lhs.to_vec(),
+            });
+        }
+
+        Ok(())
     }
 }
-
-// pub fn get_quote(report: sgx_report_t, spid: &sgx_spid_t) -> Result<Vec<u8>> {
-//     const RET_QUOTE_BUF_LEN: u32 = 2048;
-//     let mut quote_len: u32 = 0;
-//     let mut rt = UntrustedStatus::default();
-//     let mut quote = vec![0u8; RET_QUOTE_BUF_LEN as usize];
-
-//     let status = unsafe {
-//         ocall_get_quote(
-//             &mut rt as *mut UntrustedStatus,
-//             std::ptr::null(), // p_sigrl
-//             0,                // sigrl_len
-//             &report as *const sgx_report_t,
-//             sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE, // quote_type
-//             spid as *const sgx_spid_t,                       // p_spid
-//             std::ptr::null(),                                // p_nonce
-//             std::ptr::null_mut(),                            // p_qe_report
-//             quote.as_mut_ptr() as *mut sgx_quote_t,
-//             RET_QUOTE_BUF_LEN, // maxlen
-//             &mut quote_len as *mut u32,
-//         )
-//     };
-
-//     if status != sgx_status_t::SGX_SUCCESS {
-//         return Err(FrameRAError::SgxError { err: status });
-//     }
-//     if rt.is_err() {
-//         return Err(FrameRAError::UntrustedError {
-//             status: rt,
-//             function: "ocall_get_quote",
-//         });
-//     }
-
-//     let _ = quote.split_off(quote_len as usize);
-//     Ok(quote)
-// }

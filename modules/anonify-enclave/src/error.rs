@@ -15,9 +15,6 @@ pub enum EnclaveError {
     #[error("Hex error: {0}")]
     HexError(hex::FromHexError),
 
-    #[error("Base64 error: {0}")]
-    Base64Error(#[from] base64::DecodeError),
-
     #[error("Secp256k1 error: {0:?}")]
     Secp256k1Error(secp256k1::Error),
 
