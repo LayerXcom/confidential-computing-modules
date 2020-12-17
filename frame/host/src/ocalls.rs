@@ -10,9 +10,6 @@ use std::{
     ptr, slice,
 };
 
-const DEV_HOSTNAME: &str = "api.trustedservices.intel.com";
-const HTTPS_PORT: u16 = 443;
-
 #[no_mangle]
 pub extern "C" fn ocall_import_path_secret(
     path_secret: *mut u8,
@@ -97,43 +94,6 @@ pub extern "C" fn ocall_get_quote(
     }
 
     UntrustedStatus::success()
-}
-
-#[no_mangle]
-pub extern "C" fn ocall_get_ias_socket(ret_fd: *mut c_int) -> UntrustedStatus {
-    let addr = match lookup_ipv4(DEV_HOSTNAME, HTTPS_PORT) {
-        Ok(addr) => addr,
-        Err(_) => {
-            debug!("Failed to lookup ipv4 address.");
-            return UntrustedStatus::error();
-        }
-    };
-    let sock = match TcpStream::connect(&addr) {
-        Ok(sock) => sock,
-        Err(_) => {
-            debug!("[-] Connect tls server failed!");
-            return UntrustedStatus::error();
-        }
-    };
-
-    unsafe {
-        *ret_fd = sock.into_raw_fd();
-    }
-
-    UntrustedStatus::success()
-}
-
-fn lookup_ipv4(host: &str, port: u16) -> Result<SocketAddr> {
-    use std::net::ToSocketAddrs;
-
-    let addrs = (host, port).to_socket_addrs()?;
-    for addr in addrs {
-        if let SocketAddr::V4(_) = addr {
-            return Ok(addr);
-        }
-    }
-
-    unreachable!("Cannot lookup address");
 }
 
 #[no_mangle]
