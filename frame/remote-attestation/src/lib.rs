@@ -4,6 +4,7 @@ extern crate sgx_tstd as std;
 
 mod client;
 mod quote;
+mod error;
 
 pub use crate::client::{AttestationReport, RAService, ReportSig};
 pub use crate::quote::Quote;

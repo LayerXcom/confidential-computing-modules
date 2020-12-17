@@ -5,7 +5,6 @@ use frame_common::{crypto::Sha256, state_types::StateType};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::handshake::HandshakeParams;
-use remote_attestation::RAService;
 
 /// A add handshake Sender
 #[derive(Debug, Clone)]

@@ -1,7 +1,7 @@
-use anyhow::Result;
 use frame_types::UntrustedStatus;
-use std::sgx_types::*;
+use sgx_types::*;
 use crate::client::RAService;
+use crate::error::{FrameRAError, Result};
 
 extern "C" {
     /// Ocall to use sgx_init_quote_ex to init the quote and key_id.
@@ -57,10 +57,10 @@ impl Quote {
         };
 
         if status != sgx_status_t::SGX_SUCCESS {
-            return Err(FrameEnclaveError::SgxError { err: status });
+            return Err(FrameRAError::SgxError { err: status });
         }
         if rt.is_err() {
-            return Err(FrameEnclaveError::UntrustedError {
+            return Err(FrameRAError::UntrustedError {
                 status: rt,
                 function: "ocall_sgx_init_quote",
             });
@@ -69,12 +69,14 @@ impl Quote {
         Ok(Self {
             att_key_id,
             target_info,
+            enclave_report: None,
         })
     }
 
     pub fn create_enclave_report(mut self, report_data: &sgx_report_data_t) -> Result<Self> {
         let enclave_report =
-            sgx_tse::rsgx_create_report(&self.target_info, &report_data).map_err(Into::into)?;
+            sgx_tse::rsgx_create_report(&self.target_info, &report_data)
+            .map_err(|err| FrameRAError::SgxError { err })?;
         self.enclave_report = Some(enclave_report);
         Ok(self)
     }
@@ -108,10 +110,10 @@ impl Quote {
 //     };
 
 //     if status != sgx_status_t::SGX_SUCCESS {
-//         return Err(FrameEnclaveError::SgxError { err: status });
+//         return Err(FrameRAError::SgxError { err: status });
 //     }
 //     if rt.is_err() {
-//         return Err(FrameEnclaveError::UntrustedError {
+//         return Err(FrameRAError::UntrustedError {
 //             status: rt,
 //             function: "ocall_get_quote",
 //         });

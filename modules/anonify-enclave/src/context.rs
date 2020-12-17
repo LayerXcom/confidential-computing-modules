@@ -9,16 +9,13 @@ use frame_common::{
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
-use frame_enclave::{
-    ocalls::{get_quote, sgx_init_quote},
-    EnclaveEngine,
-};
+use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, DhPubKey, EciesCiphertext,
 };
-use remote_attestation::Quote;
+use remote_attestation::{Quote, RAService};
 use sgx_types::*;
 use std::prelude::v1::*;
 use std::{
@@ -145,11 +142,12 @@ impl IdentityKeyOps for EnclaveContext {
 }
 
 impl QuoteGetter for EnclaveContext {
-    fn quote(&self) -> anyhow::Result<String> {
+    fn quote(&self) -> anyhow::Result<RAService> {
         let report_data = &self.identity_key.report_data()?;
         Quote::new()?
             .create_enclave_report(&report_data)?
             .create_quote()
+            .map_err(|e| anyhow!("{:?}", e))
     }
 }
 
@@ -258,10 +256,11 @@ impl EnclaveEngine for ReportRegistration {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let quote = enclave_context.quote()?;
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
-        let (report, report_sig) = RAService::remote_attestation(ias_url, sub_key, &quote)?;
+        let (report, report_sig) = enclave_context.quote()?
+            .remote_attestation(ias_url, sub_key)?;
+
         let mrenclave_ver = enclave_context.mrenclave_ver();
         let my_roster_idx = enclave_context.read_group_key().my_roster_idx();
 

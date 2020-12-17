@@ -4,7 +4,6 @@ use codec::Decode;
 use frame_common::crypto::{ExportPathSecret, EXPORT_ID_SIZE, EXPORT_PATH_SECRET_SIZE};
 use frame_types::UntrustedStatus;
 use sgx_types::*;
-use std::vec::Vec;
 
 extern "C" {
     pub fn ocall_import_path_secret(
