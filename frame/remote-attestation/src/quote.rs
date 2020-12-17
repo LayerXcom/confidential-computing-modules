@@ -1,7 +1,10 @@
-use crate::client::RAService;
+use crate::client::*;
 use crate::error::{FrameRAError, Result};
 use frame_types::UntrustedStatus;
+use http_req::uri::Uri;
 use sgx_types::*;
+use std::string::String;
+use std::vec::Vec;
 
 extern "C" {
     /// Ocall to use sgx_init_quote_ex to init the quote and key_id.
@@ -36,14 +39,45 @@ extern "C" {
     fn sgx_self_target(p_target_info: *mut sgx_target_info_t) -> sgx_status_t;
 }
 
-#[derive(Clone, Copy, Default)]
+/// The very high level service for remote attestations
+/// Use base64-encoded QUOTE structure to communicate via defined API.
 pub struct Quote {
+    base64_quote: String,
+}
+
+impl Quote {
+    pub fn new(base64_quote: String) -> Self {
+        Self { base64_quote }
+    }
+
+    pub fn remote_attestation(
+        &self,
+        uri: &str,
+        ias_api_key: &str,
+    ) -> Result<(AttestationReport, ReportSig)> {
+        let uri: Uri = uri.parse().expect("Invalid uri");
+        let body = format!("{{\"isvEnclaveQuote\":\"{}\"}}\r\n", &self.base64_quote);
+        let mut writer = Vec::new();
+
+        let response = RAClient::new(&uri)
+            .ias_apikey_header_mut(ias_api_key)
+            .quote_body_mut(&body.as_bytes())
+            .send(&mut writer)?;
+
+        let ra_resp = RAResponse::from_response(writer, response)?.verify_attestation_report()?;
+
+        Ok((ra_resp.attestation_report, ra_resp.report_sig))
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+pub struct QuoteTarget {
     att_key_id: sgx_att_key_id_t,
     target_info: sgx_target_info_t,
     enclave_report: Option<sgx_report_t>,
 }
 
-impl Quote {
+impl QuoteTarget {
     /// Returns information required by an Intel® SGX application to get a quote of one of its enclaves.
     pub fn new() -> Result<Self> {
         let mut rt = UntrustedStatus::default();
@@ -91,7 +125,7 @@ impl Quote {
     }
 
     /// Create quote with attestation key ID and enclave's local report.
-    pub fn create_quote(self) -> Result<RAService> {
+    pub fn create_quote(self) -> Result<Quote> {
         let mut rt = UntrustedStatus::default();
         let mut quote_len: u32 = 0;
         let status = unsafe {
@@ -149,11 +183,10 @@ impl Quote {
 
         // compares the input report MAC value with the calculated MAC value to determine whether the report is valid or not.
         let qe_report = qe_report_info.qe_report;
-        sgx_tse::rsgx_verify_report(&qe_report)
-            .map_err(FrameRAError::VerifyReportError)?;
+        sgx_tse::rsgx_verify_report(&qe_report).map_err(FrameRAError::VerifyReportError)?;
         Self::verify_quote(qe_report.body.report_data, quote_nonce, &quote)?;
 
-        Ok(RAService::new(base64::encode(&quote)))
+        Ok(Quote::new(base64::encode(&quote)))
     }
 
     /// verify the QUOTE it received is not modified by the untrusted SW stack, and not a replay.

@@ -30,37 +30,6 @@ static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
     &webpki::RSA_PKCS1_3072_8192_SHA384,
 ];
 
-/// The very high level service for remote attestations
-/// Use base64-encoded QUOTE structure to communicate via defined API.
-pub struct RAService {
-    base64_quote: String,
-}
-
-impl RAService {
-    pub fn new(base64_quote: String) -> Self {
-        Self { base64_quote }
-    }
-
-    pub fn remote_attestation(
-        &self,
-        uri: &str,
-        ias_api_key: &str,
-    ) -> Result<(AttestationReport, ReportSig)> {
-        let uri: Uri = uri.parse().expect("Invalid uri");
-        let body = format!("{{\"isvEnclaveQuote\":\"{}\"}}\r\n", &self.base64_quote);
-        let mut writer = Vec::new();
-
-        let response = RAClient::new(&uri)
-            .ias_apikey_header_mut(ias_api_key)
-            .quote_body_mut(&body.as_bytes())
-            .send(&mut writer)?;
-
-        let ra_resp = RAResponse::from_response(writer, response)?.verify_attestation_report()?;
-
-        Ok((ra_resp.attestation_report, ra_resp.report_sig))
-    }
-}
-
 /// A client for remote attestation with IAS
 pub struct RAClient<'a> {
     request: Request<'a>,
@@ -110,25 +79,25 @@ impl<'a> RAClient<'a> {
 
 /// A response from IAS
 #[derive(Debug, Clone)]
-pub struct RAResponse {
-    attestation_report: AttestationReport,
-    report_sig: ReportSig,
+pub(crate) struct RAResponse {
+    pub(crate) attestation_report: AttestationReport,
+    pub(crate) report_sig: ReportSig,
     cert: Vec<u8>,
 }
 
 impl RAResponse {
-    pub fn from_response(body: Vec<u8>, resp: Response) -> Result<Self> {
+    pub(crate) fn from_response(body: Vec<u8>, resp: Response) -> Result<Self> {
         debug!("RA response: {:?}", resp);
 
         let headers = resp.headers();
         let sig = headers
-            .get("X-IASReport-Signature")
-            .ok_or_else(|| anyhow!("Not found X-IASReport-Signature header"))?;
+            .get("X-DCAPReport-Signature")
+            .ok_or_else(|| anyhow!("Not found X-DCAPReport-Signature header"))?;
         let report_sig = ReportSig::base64_decode(sig.as_bytes())?;
 
         let cert = headers
-            .get("X-IASReport-Signing-Certificate")
-            .ok_or_else(|| anyhow!("Not found X-IASReport-Signing-Certificate"))?
+            .get("X-DCAPReport-Signing-Certificate")
+            .ok_or_else(|| anyhow!("Not found X-DCAPReport-Signing-Certificate"))?
             .replace("%0A", "");
         let cert = percent_decode(cert)?;
 
@@ -144,7 +113,7 @@ impl RAResponse {
     /// 2. report's signature
     /// 3. report's timestamp
     /// 4. quote status
-    fn verify_attestation_report(self) -> Result<Self> {
+    pub(crate) fn verify_attestation_report(self) -> Result<Self> {
         let now_func = webpki::Time::try_from(SystemTime::now())?;
 
         let mut ca_reader = BufReader::new(IAS_REPORT_CA.as_bytes());

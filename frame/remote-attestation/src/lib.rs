@@ -6,8 +6,8 @@ mod client;
 mod quote;
 mod error;
 
-pub use crate::client::{AttestationReport, RAService, ReportSig};
-pub use crate::quote::Quote;
+pub use crate::client::{AttestationReport, ReportSig};
+pub use crate::quote::{Quote, QuoteTarget};
 
 pub const IAS_REPORT_CA: &str = "-----BEGIN CERTIFICATE-----
 MIIFSzCCA7OgAwIBAgIJANEHdl0yo7CUMA0GCSqGSIb3DQEBCwUAMH4xCzAJBgNV

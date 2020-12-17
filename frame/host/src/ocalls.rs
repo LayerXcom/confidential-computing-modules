@@ -1,14 +1,8 @@
 use crate::StorePathSecrets;
-use anyhow::Result;
 use codec::Encode;
 use frame_types::UntrustedStatus;
-use log::debug;
 use sgx_types::*;
-use std::{
-    net::{SocketAddr, TcpStream},
-    os::unix::io::IntoRawFd,
-    ptr, slice,
-};
+use std::{ptr, slice};
 
 #[link(name = "sgx_quote_ex")]
 extern "C" {
