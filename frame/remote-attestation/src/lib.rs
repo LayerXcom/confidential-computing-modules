@@ -3,8 +3,8 @@
 extern crate sgx_tstd as std;
 
 mod client;
-mod quote;
 mod error;
+mod quote;
 
 pub use crate::client::{AttestationReport, ReportSig};
 pub use crate::quote::{Quote, QuoteTarget};

@@ -121,13 +121,13 @@ impl QuoteTarget {
         let status = unsafe {
             ocall_get_quote(
                 &mut rt as *mut UntrustedStatus,
-                std::ptr::null(), // p_sigrl
-                0,                // sigrl_len
+                std::ptr::null(),                                     // p_sigrl
+                0,                                                    // sigrl_len
                 &self.enclave_report.unwrap() as *const sgx_report_t, // enclave_report must be set
-                sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE, // quote_type
-                spid as *const sgx_spid_t,                       // p_spid
-                std::ptr::null(),                                // p_nonce
-                std::ptr::null_mut(),                            // p_qe_report
+                sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE,      // quote_type
+                spid as *const sgx_spid_t,                            // p_spid
+                std::ptr::null(),                                     // p_nonce
+                std::ptr::null_mut(),                                 // p_qe_report
                 quote.as_mut_ptr() as *mut sgx_quote_t,
                 RET_QUOTE_BUF_LEN, // maxlen
                 &mut quote_len as *mut u32,

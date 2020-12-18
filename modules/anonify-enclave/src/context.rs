@@ -258,7 +258,8 @@ impl EnclaveEngine for ReportRegistration {
     {
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
-        let (report, report_sig) = enclave_context.quote()?
+        let (report, report_sig) = enclave_context
+            .quote()?
             .remote_attestation(ias_url, sub_key)?;
 
         let mrenclave_ver = enclave_context.mrenclave_ver();
