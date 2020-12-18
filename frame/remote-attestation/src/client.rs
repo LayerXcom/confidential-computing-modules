@@ -91,13 +91,13 @@ impl RAResponse {
 
         let headers = resp.headers();
         let sig = headers
-            .get("X-DCAPReport-Signature")
-            .ok_or_else(|| anyhow!("Not found X-DCAPReport-Signature header"))?;
+            .get("X-IASReport-Signature")
+            .ok_or_else(|| anyhow!("Not found X-IASReport-Signature header"))?;
         let report_sig = ReportSig::base64_decode(sig.as_bytes())?;
 
         let cert = headers
-            .get("X-DCAPReport-Signing-Certificate")
-            .ok_or_else(|| anyhow!("Not found X-DCAPReport-Signing-Certificate"))?
+            .get("X-IASReport-Signing-Certificate")
+            .ok_or_else(|| anyhow!("Not found X-IASReport-Signing-Certificate"))?
             .replace("%0A", "");
         let cert = percent_decode(cert)?;
 
