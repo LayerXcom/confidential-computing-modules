@@ -4,35 +4,6 @@ use frame_types::UntrustedStatus;
 use sgx_types::*;
 use std::{ptr, slice};
 
-#[link(name = "sgx_quote_ex")]
-extern "C" {
-    fn sgx_select_att_key_id(
-        p_att_key_id_list: *const u8,
-        att_key_idlist_size: u32,
-        p_att_key_id: *mut sgx_att_key_id_t,
-    ) -> sgx_status_t;
-
-    fn sgx_init_quote_ex(
-        p_att_key_id: *const sgx_att_key_id_t,
-        p_qe_target_info: *mut sgx_target_info_t,
-        p_pub_key_id_size: *mut usize,
-        p_pub_key_id: *mut u8,
-    ) -> sgx_status_t;
-
-    fn sgx_get_quote_size_ex(
-        p_att_key_id: *const sgx_att_key_id_t,
-        p_quote_size: *mut u32,
-    ) -> sgx_status_t;
-
-    fn sgx_get_quote_ex(
-        p_isv_enclave_report: *const sgx_report_t,
-        p_att_key_id: *const sgx_att_key_id_t,
-        p_qe_report: *mut sgx_qe_report_info_t,
-        p_quote: *mut u8,
-        quote_size: u32,
-    ) -> sgx_status_t;
-}
-
 #[no_mangle]
 pub extern "C" fn ocall_import_path_secret(
     path_secret: *mut u8,
@@ -57,68 +28,64 @@ pub extern "C" fn ocall_import_path_secret(
 
 #[no_mangle]
 pub extern "C" fn ocall_sgx_init_quote(
-    p_att_key_id: *mut sgx_att_key_id_t,
-    p_qe_target_info: *mut sgx_target_info_t,
+    ret_ti: *mut sgx_target_info_t,
+    ret_gid: *mut sgx_epid_group_id_t,
 ) -> UntrustedStatus {
-    // used to select the attestation key.
-    let ret = unsafe { sgx_select_att_key_id(ptr::null(), 0, p_att_key_id) };
+    let ret = unsafe { sgx_init_quote(ret_ti, ret_gid) };
+
     if ret != sgx_status_t::SGX_SUCCESS {
+        println!("sgx_init_quote returned {}", ret);
         return UntrustedStatus::error();
     }
 
-    let mut att_pub_key_id_size: usize = 0;
-    let ret = unsafe {
-        sgx_init_quote_ex(
-            p_att_key_id,
-            p_qe_target_info,
-            &mut att_pub_key_id_size as _,
-            ptr::null_mut(),
-        )
-    };
-    if ret != sgx_status_t::SGX_SUCCESS {
-        return UntrustedStatus::error();
-    }
-
-    let mut att_pub_key_id: Vec<u8> = vec![0u8; att_pub_key_id_size];
-    let ret = unsafe {
-        sgx_init_quote_ex(
-            p_att_key_id,
-            p_qe_target_info,
-            &mut att_pub_key_id_size as _,
-            att_pub_key_id.as_mut_ptr(),
-        )
-    };
-    if ret != sgx_status_t::SGX_SUCCESS {
-        UntrustedStatus::error()
-    } else {
-        UntrustedStatus::success()
-    }
-}
-
-/// returns the required buffer size for the quote.
-#[no_mangle]
-pub extern "C" fn ocall_sgx_get_quote_size(
-    p_att_key_id: *const sgx_att_key_id_t,
-    p_quote_size: *mut u32,
-) -> sgx_status_t {
-    unsafe { sgx_get_quote_size_ex(p_att_key_id as _, p_quote_size) }
+    UntrustedStatus::success()
 }
 
 #[no_mangle]
-pub extern "C" fn ocall_sgx_get_quote(
+pub extern "C" fn ocall_get_quote(
+    p_sigrl: *const u8,
+    sigrl_len: u32,
     p_report: *const sgx_report_t,
-    p_att_key_id: *const sgx_att_key_id_t,
-    p_qe_report_info: *mut sgx_qe_report_info_t,
+    quote_type: sgx_quote_sign_type_t,
+    p_spid: *const sgx_spid_t,
+    p_nonce: *const sgx_quote_nonce_t,
+    p_qe_report: *mut sgx_report_t,
     p_quote: *mut u8,
-    quote_size: u32,
-) -> sgx_status_t {
-    unsafe {
-        sgx_get_quote_ex(
-            p_report,
-            p_att_key_id,
-            p_qe_report_info,
-            p_quote as _,
-            quote_size,
-        )
+    _maxlen: u32,
+    p_quote_len: *mut u32,
+) -> UntrustedStatus {
+    let mut real_quote_len: u32 = 0;
+
+    let ret = unsafe { sgx_calc_quote_size(p_sigrl, sigrl_len, &mut real_quote_len as *mut u32) };
+
+    if ret != sgx_status_t::SGX_SUCCESS {
+        println!("sgx_calc_quote_size returned {}", ret);
+        return UntrustedStatus::error();
     }
+
+    println!("quote size = {}", real_quote_len);
+    unsafe {
+        *p_quote_len = real_quote_len;
+    }
+
+    let ret = unsafe {
+        sgx_get_quote(
+            p_report,
+            quote_type,
+            p_spid,
+            p_nonce,
+            p_sigrl,
+            sigrl_len,
+            p_qe_report,
+            p_quote as *mut sgx_quote_t,
+            real_quote_len,
+        )
+    };
+
+    if ret != sgx_status_t::SGX_SUCCESS {
+        println!("sgx_calc_quote_size returned {}", ret);
+        return UntrustedStatus::error();
+    }
+
+    UntrustedStatus::success()
 }

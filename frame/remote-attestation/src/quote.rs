@@ -7,36 +7,25 @@ use std::string::String;
 use std::vec::Vec;
 
 extern "C" {
-    /// Ocall to use sgx_init_quote_ex to init the quote and key_id.
-    /// p_att_key_id: Selected attestation key ID returned by sgx_select_att_key_id.
-    /// p_target_info: Allows an enclave for that the quote is being created to create the report that only QE can verify.
-    pub fn ocall_sgx_init_quote(
-        p_retval: *mut UntrustedStatus,
-        p_sgx_att_key_id: *mut sgx_att_key_id_t,
-        p_target_info: *mut sgx_target_info_t,
+    fn ocall_sgx_init_quote(
+        retval: *mut UntrustedStatus,
+        ret_ti: *mut sgx_target_info_t,
+        ret_gid: *mut sgx_epid_group_id_t,
     ) -> sgx_status_t;
 
-    /// Ocall to get the required buffer size for the quote.
-    fn ocall_sgx_get_quote_size(
-        p_retval: *mut UntrustedStatus,
-        p_sgx_att_key_id: *const sgx_att_key_id_t,
-        p_quote_size: *mut u32,
+    fn ocall_get_quote(
+        retval: *mut UntrustedStatus,
+        p_sigrl: *const u8,
+        sigrl_len: u32,
+        report: *const sgx_report_t,
+        quote_type: sgx_quote_sign_type_t,
+        p_spid: *const sgx_spid_t,
+        p_nonce: *const sgx_quote_nonce_t,
+        p_qe_report: *mut sgx_report_t,
+        p_quote: *mut sgx_quote_t,
+        maxlen: u32,
+        p_quote_len: *mut u32,
     ) -> sgx_status_t;
-
-    /// Ocall to use sgx_get_quote_ex to generate a quote with enclave's report.
-    /// sgx_qe_report_info_t: Data structure that contains the information from app enclave and report gen- erated by Quoting Enclave.
-    fn ocall_sgx_get_quote(
-        p_retval: *mut UntrustedStatus,
-        p_report: *const sgx_report_t,
-        p_sgx_att_key_id: *const sgx_att_key_id_t,
-        p_qe_report_info: *mut sgx_qe_report_info_t,
-        p_quote: *mut u8,
-        quote_size: u32,
-    ) -> sgx_status_t;
-
-    /// OCall to get target information of myself.
-    /// Generates self target info from the self cryptographic report of an enclave
-    fn sgx_self_target(p_target_info: *mut sgx_target_info_t) -> sgx_status_t;
 }
 
 /// The very high level service for remote attestations
@@ -72,7 +61,6 @@ impl Quote {
 
 #[derive(Clone, Copy, Default)]
 pub struct QuoteTarget {
-    att_key_id: sgx_att_key_id_t,
     target_info: sgx_target_info_t,
     enclave_report: Option<sgx_report_t>,
 }
@@ -81,14 +69,14 @@ impl QuoteTarget {
     /// Returns information required by an Intel® SGX application to get a quote of one of its enclaves.
     pub fn new() -> Result<Self> {
         let mut rt = UntrustedStatus::default();
-        let mut att_key_id = sgx_att_key_id_t::default();
         let mut target_info = sgx_target_info_t::default();
+        let mut gid = sgx_epid_group_id_t::default();
 
         let status = unsafe {
             ocall_sgx_init_quote(
                 &mut rt as *mut UntrustedStatus,
-                &mut att_key_id as _,
-                &mut target_info as _,
+                &mut target_info as *mut sgx_target_info_t,
+                &mut gid as *mut sgx_epid_group_id_t,
             )
         };
 
@@ -106,7 +94,6 @@ impl QuoteTarget {
         }
 
         Ok(Self {
-            att_key_id,
             target_info,
             enclave_report: None,
         })
@@ -125,47 +112,25 @@ impl QuoteTarget {
     }
 
     /// Create quote with attestation key ID and enclave's local report.
-    pub fn create_quote(self) -> Result<Quote> {
+    pub fn create_quote(self, spid: &sgx_spid_t) -> Result<Quote> {
+        const RET_QUOTE_BUF_LEN: u32 = 2048;
         let mut rt = UntrustedStatus::default();
+        let mut quote = vec![0u8; RET_QUOTE_BUF_LEN as usize];
         let mut quote_len: u32 = 0;
+
         let status = unsafe {
-            ocall_sgx_get_quote_size(&mut rt as _, &self.att_key_id as _, &mut quote_len as _)
-        };
-        if status != sgx_status_t::SGX_SUCCESS {
-            return Err(FrameRAError::OcallError {
-                status,
-                function: "ocall_sgx_get_quote_size",
-            });
-        }
-        if rt.is_err() {
-            return Err(FrameRAError::UntrustedError {
-                status: rt,
-                function: "ocall_sgx_get_quote_size",
-            });
-        }
-
-        let mut qe_report_info = sgx_qe_report_info_t::default();
-        let mut quote_nonce = sgx_quote_nonce_t::default();
-        sgx_trts::trts::rsgx_read_rand(&mut quote_nonce.rand).map_err(FrameRAError::Others)?;
-        qe_report_info.nonce = quote_nonce;
-
-        let status = unsafe { sgx_self_target(&mut qe_report_info.app_enclave_target_info as _) };
-        if status != sgx_status_t::SGX_SUCCESS {
-            return Err(FrameRAError::OcallError {
-                status,
-                function: "sgx_self_target",
-            });
-        }
-
-        let mut quote = vec![0; quote_len as usize];
-        let status = unsafe {
-            ocall_sgx_get_quote(
-                &mut rt as _,
-                &self.enclave_report.unwrap() as _, // enclave_report must be set
-                &self.att_key_id as _,
-                &mut qe_report_info as _,
-                quote.as_mut_ptr(),
-                quote_len,
+            ocall_get_quote(
+                &mut rt as *mut UntrustedStatus,
+                std::ptr::null(), // p_sigrl
+                0,                // sigrl_len
+                &self.enclave_report.unwrap() as *const sgx_report_t, // enclave_report must be set
+                sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE, // quote_type
+                spid as *const sgx_spid_t,                       // p_spid
+                std::ptr::null(),                                // p_nonce
+                std::ptr::null_mut(),                            // p_qe_report
+                quote.as_mut_ptr() as *mut sgx_quote_t,
+                RET_QUOTE_BUF_LEN, // maxlen
+                &mut quote_len as *mut u32,
             )
         };
         if status != sgx_status_t::SGX_SUCCESS {
@@ -181,32 +146,7 @@ impl QuoteTarget {
             });
         }
 
-        // compares the input report MAC value with the calculated MAC value to determine whether the report is valid or not.
-        let qe_report = qe_report_info.qe_report;
-        sgx_tse::rsgx_verify_report(&qe_report).map_err(FrameRAError::VerifyReportError)?;
-        Self::verify_quote(qe_report.body.report_data, quote_nonce, &quote)?;
-
+        let _ = quote.split_off(quote_len as usize);
         Ok(Quote::new(base64::encode(&quote)))
-    }
-
-    /// verify the QUOTE it received is not modified by the untrusted SW stack, and not a replay.
-    /// report.data[..32] = SHA256(p_nonce||p_quote)
-    fn verify_quote(
-        report_data: sgx_report_data_t,
-        quote_nonce: sgx_quote_nonce_t,
-        quote: &[u8],
-    ) -> Result<()> {
-        let mut rhs_vec = quote_nonce.rand.to_vec();
-        rhs_vec.extend(quote);
-        let rhs = sgx_tcrypto::rsgx_sha256_slice(&rhs_vec).map_err(FrameRAError::Others)?;
-        let lhs = &report_data.d[..32];
-        if rhs != lhs {
-            return Err(FrameRAError::VerifyQuoteError {
-                rhs: rhs.to_vec(),
-                lhs: lhs.to_vec(),
-            });
-        }
-
-        Ok(())
     }
 }

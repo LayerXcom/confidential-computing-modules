@@ -146,7 +146,7 @@ impl QuoteGetter for EnclaveContext {
         let report_data = &self.identity_key.report_data()?;
         QuoteTarget::new()?
             .set_enclave_report(&report_data)?
-            .create_quote()
+            .create_quote(&self.spid)
             .map_err(|e| anyhow!("{:?}", e))
     }
 }
