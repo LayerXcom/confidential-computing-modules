@@ -5,7 +5,6 @@ use frame_common::{crypto::Sha256, state_types::StateType};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::handshake::HandshakeParams;
-use remote_attestation::RAService;
 
 /// A add handshake Sender
 #[derive(Debug, Clone)]
@@ -24,10 +23,12 @@ impl EnclaveEngine for JoinGroupSender {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let quote = enclave_context.quote()?;
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
-        let (report, report_sig) = RAService::remote_attestation(ias_url, sub_key, &quote)?;
+        let (report, report_sig) = enclave_context
+            .quote()?
+            .remote_attestation(ias_url, sub_key)?;
+
         let mrenclave_ver = enclave_context.mrenclave_ver();
         let group_key = &*enclave_context.read_group_key();
         let (export_handshake, export_path_secret) = group_key.create_handshake()?;

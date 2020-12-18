@@ -11,6 +11,7 @@ use std::{
     io::{BufReader, Write},
     prelude::v1::*,
     str,
+    string::String,
     time::SystemTime,
 };
 
@@ -28,30 +29,6 @@ static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
     &webpki::RSA_PKCS1_2048_8192_SHA512,
     &webpki::RSA_PKCS1_3072_8192_SHA384,
 ];
-
-/// The very high level service for remote attestations
-pub struct RAService;
-
-impl RAService {
-    pub fn remote_attestation(
-        uri: &str,
-        ias_api_key: &str,
-        quote: &str,
-    ) -> Result<(AttestationReport, ReportSig)> {
-        let uri: Uri = uri.parse().expect("Invalid uri");
-        let body = format!("{{\"isvEnclaveQuote\":\"{}\"}}\r\n", quote);
-        let mut writer = Vec::new();
-
-        let response = RAClient::new(&uri)
-            .ias_apikey_header_mut(ias_api_key)
-            .quote_body_mut(&body.as_bytes())
-            .send(&mut writer)?;
-
-        let ra_resp = RAResponse::from_response(writer, response)?.verify_attestation_report()?;
-
-        Ok((ra_resp.attestation_report, ra_resp.report_sig))
-    }
-}
 
 /// A client for remote attestation with IAS
 pub struct RAClient<'a> {
@@ -102,14 +79,14 @@ impl<'a> RAClient<'a> {
 
 /// A response from IAS
 #[derive(Debug, Clone)]
-pub struct RAResponse {
-    attestation_report: AttestationReport,
-    report_sig: ReportSig,
+pub(crate) struct RAResponse {
+    pub(crate) attestation_report: AttestationReport,
+    pub(crate) report_sig: ReportSig,
     cert: Vec<u8>,
 }
 
 impl RAResponse {
-    pub fn from_response(body: Vec<u8>, resp: Response) -> Result<Self> {
+    pub(crate) fn from_response(body: Vec<u8>, resp: Response) -> Result<Self> {
         debug!("RA response: {:?}", resp);
 
         let headers = resp.headers();
@@ -136,7 +113,7 @@ impl RAResponse {
     /// 2. report's signature
     /// 3. report's timestamp
     /// 4. quote status
-    fn verify_attestation_report(self) -> Result<Self> {
+    pub(crate) fn verify_attestation_report(self) -> Result<Self> {
         let now_func = webpki::Time::try_from(SystemTime::now())?;
 
         let mut ca_reader = BufReader::new(IAS_REPORT_CA.as_bytes());

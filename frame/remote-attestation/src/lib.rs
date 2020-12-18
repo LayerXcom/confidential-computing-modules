@@ -3,8 +3,11 @@
 extern crate sgx_tstd as std;
 
 mod client;
+mod error;
+mod quote;
 
-pub use crate::client::{AttestationReport, RAService, ReportSig};
+pub use crate::client::{AttestationReport, ReportSig};
+pub use crate::quote::{Quote, QuoteTarget};
 
 pub const IAS_REPORT_CA: &str = "-----BEGIN CERTIFICATE-----
 MIIFSzCCA7OgAwIBAgIJANEHdl0yo7CUMA0GCSqGSIb3DQEBCwUAMH4xCzAJBgNV

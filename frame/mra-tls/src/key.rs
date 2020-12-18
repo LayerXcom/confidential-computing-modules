@@ -198,8 +198,8 @@ impl NistP256KeyPair {
 #[cfg(debug_assertions)]
 pub(crate) mod tests {
     use super::*;
-    use test_utils::*;
     use std::string::String;
+    use test_utils::*;
 
     pub(crate) fn run_tests() -> bool {
         run_tests!(test_parse_cert,)

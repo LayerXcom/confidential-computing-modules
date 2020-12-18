@@ -1,17 +1,8 @@
 use crate::StorePathSecrets;
-use anyhow::Result;
 use codec::Encode;
 use frame_types::UntrustedStatus;
-use log::debug;
 use sgx_types::*;
-use std::{
-    net::{SocketAddr, TcpStream},
-    os::unix::io::IntoRawFd,
-    ptr, slice,
-};
-
-const DEV_HOSTNAME: &str = "api.trustedservices.intel.com";
-const HTTPS_PORT: u16 = 443;
+use std::{ptr, slice};
 
 #[no_mangle]
 pub extern "C" fn ocall_import_path_secret(
@@ -93,59 +84,6 @@ pub extern "C" fn ocall_get_quote(
 
     if ret != sgx_status_t::SGX_SUCCESS {
         println!("sgx_calc_quote_size returned {}", ret);
-        return UntrustedStatus::error();
-    }
-
-    UntrustedStatus::success()
-}
-
-#[no_mangle]
-pub extern "C" fn ocall_get_ias_socket(ret_fd: *mut c_int) -> UntrustedStatus {
-    let addr = match lookup_ipv4(DEV_HOSTNAME, HTTPS_PORT) {
-        Ok(addr) => addr,
-        Err(_) => {
-            debug!("Failed to lookup ipv4 address.");
-            return UntrustedStatus::error();
-        }
-    };
-    let sock = match TcpStream::connect(&addr) {
-        Ok(sock) => sock,
-        Err(_) => {
-            debug!("[-] Connect tls server failed!");
-            return UntrustedStatus::error();
-        }
-    };
-
-    unsafe {
-        *ret_fd = sock.into_raw_fd();
-    }
-
-    UntrustedStatus::success()
-}
-
-fn lookup_ipv4(host: &str, port: u16) -> Result<SocketAddr> {
-    use std::net::ToSocketAddrs;
-
-    let addrs = (host, port).to_socket_addrs()?;
-    for addr in addrs {
-        if let SocketAddr::V4(_) = addr {
-            return Ok(addr);
-        }
-    }
-
-    unreachable!("Cannot lookup address");
-}
-
-#[no_mangle]
-pub extern "C" fn ocall_get_update_info(
-    platform_blob: *const sgx_platform_info_t,
-    enclave_trusted: i32,
-    update_info: *mut sgx_update_info_bit_t,
-) -> UntrustedStatus {
-    let ret = unsafe { sgx_report_attestation_status(platform_blob, enclave_trusted, update_info) };
-
-    if ret != sgx_status_t::SGX_SUCCESS {
-        println!("sgx_report_attestation_status returned {}", ret);
         return UntrustedStatus::error();
     }
 
