@@ -7,6 +7,7 @@ use frame_common::{
     EcallInput, EcallOutput,
 };
 use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_mra_tls::primitives::{Certificate, PrivateKey};
 
 pub mod input {
     use super::*;
@@ -129,6 +130,36 @@ pub mod input {
             &self.access_policy
         }
     }
+
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct CallServerStarter {
+        private_key: PrivateKey,
+        certificates: Vec<Certificate>,
+    }
+
+    impl EcallInput for CallServerStarter {}
+
+    impl CallServerStarter {
+        pub fn new(private_key: PrivateKey, certificates: Vec<Certificate>) -> Self {
+            CallServerStarter {
+                private_key,
+                certificates,
+            }
+        }
+
+        pub fn private_key(&self) -> &PrivateKey {
+            &self.private_key
+        }
+
+        pub fn certificates(&self) -> &Vec<Certificate> {
+            &self.certificates
+        }
+    }
+
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct CallServerStopper;
+
+    impl EcallInput for CallServerStopper {}
 }
 
 pub mod output {

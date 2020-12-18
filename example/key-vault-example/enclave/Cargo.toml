@@ -1,0 +1,22 @@
+[package]
+name = "key-vault-example-enclave"
+version = "0.1.0"
+authors = ["cipepser <respepic@gmail.com>"]
+edition = "2018"
+
+[lib]
+name = "anonifyenclave"
+crate-type = ["staticlib"]
+
+[dependencies]
+config = { path = "../../../config", default-features = false, features = ["sgx"]}
+frame-enclave = { path = "../../../frame/enclave" }
+frame-types = { path = "../../../frame/types" }
+frame-common = { path = "../../../frame/common", default-features = false, features = ["sgx"] }
+anonify-enclave = { path = "../../../modules/anonify-enclave" }
+key-vault-enclave = { path = "../../../modules/key-vault-enclave" }
+key-vault-example-state-transition = { path = "../state-transition", default-features = false, features = ["sgx"] }
+sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git"}
+lazy_static = { version = "1.4", features = ["spin_no_std"] }
+codec = { package = "parity-scale-codec", version = "1.1", default-features = false }
+anyhow = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }

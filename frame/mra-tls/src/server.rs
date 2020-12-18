@@ -1,13 +1,13 @@
 use crate::config::ServerConfig;
 use crate::connection::Connection;
-use anyhow::Result;
+use crate::error::Result;
 use log::error;
 use std::string::String;
 use std::sync::Arc;
 use std::vec::Vec;
 
 pub trait RequestHandler {
-    fn handle_json(&self, msg: &[u8]) -> Result<Vec<u8>>;
+    fn handle_json(&self, msg: &[u8]) -> anyhow::Result<Vec<u8>>;
 }
 
 pub struct Server {
@@ -16,7 +16,8 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new(address: String, config: ServerConfig) -> Self {
+    pub fn new(addr: &str, config: ServerConfig) -> Self {
+        let address = String::from(addr);
         Server { address, config }
     }
 

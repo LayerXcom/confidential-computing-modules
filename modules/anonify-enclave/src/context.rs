@@ -20,14 +20,14 @@ use frame_treekem::{
 };
 use remote_attestation::RAService;
 use sgx_types::*;
-use std::prelude::v1::*;
 use std::{
-    sgxfs,
     env,
+    io::Read,
     marker::PhantomData,
+    prelude::v1::*,
+    sgxfs,
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
 };
-use std::io::Read;
 
 pub const MRENCLAVE_VERSION: usize = 0;
 
@@ -204,7 +204,6 @@ impl EnclaveContext {
 
         let ias_url = env::var("IAS_URL")?;
         let sub_key = env::var("SUB_KEY")?;
-        // let ca_certificate_path: &str = ;
         let mut ca_certificate_file = sgxfs::SgxFile::open(env::var("CA_CERTIFICATE_PATH")?)?;
         let mut ca_certificate = String::new();
         ca_certificate_file.read_to_string(&mut ca_certificate)?;

@@ -1,9 +1,14 @@
+#![cfg_attr(not(target_env = "sgx"), no_std)]
+#![cfg_attr(target_env = "sgx", feature(rustc_private))]
 
+#[cfg(not(target_env = "sgx"))]
+#[macro_use]
+extern crate sgx_tstd as std;
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
+mod error;
+mod handlers;
+pub mod server;
+
+pub mod workflow {
+    pub use crate::server::{ServerStarter, ServerStopper};
 }

@@ -1,4 +1,5 @@
 use crate::error::MraTLSError;
+use crate::primitives::{Certificate, PrivateKey};
 use anyhow::anyhow;
 use std::{sync::Arc, vec::Vec};
 
@@ -20,7 +21,7 @@ impl ClientConfig {
             .map_err(|e| anyhow!("failed to add pem file: {:?}", e))?;
 
         if invalid_count > 0 {
-            return Err(MraTLSError::Error(anyhow!("invalid_count")));
+            return Err(anyhow!("invalid_count").into());
         }
 
         Ok(())
@@ -57,11 +58,13 @@ impl ServerConfig {
 
     pub fn set_single_cert(
         &mut self,
-        cert_chain: Vec<rustls::Certificate>,
-        key_der: rustls::PrivateKey,
+        cert_chain: &Vec<Certificate>,
+        key_der: &PrivateKey,
     ) -> Result<(), MraTLSError> {
+        let certs = cert_chain.iter().map(|cert| cert.as_rustls()).collect();
+
         self.tls
-            .set_single_cert(cert_chain, key_der)
+            .set_single_cert(certs, key_der.as_rustls())
             .map_err(Into::into)
     }
 }

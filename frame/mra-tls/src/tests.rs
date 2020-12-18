@@ -1,9 +1,8 @@
 use crate::{Client, ClientConfig, RequestHandler, Server, ServerConfig};
-use anyhow::Result;
-use rustls::internal::pemfile;
+use crate::primitives::pemfile;
 use serde_json::Value;
 use std::{
-    string::{String, ToString},
+    string::String,
     thread,
     vec::Vec,
 };
@@ -13,7 +12,7 @@ const SERVER_ADDRESS: &str = "localhost:12345";
 const LISTEN_ADDRESS: &str = "0.0.0.0:12345";
 
 const SERVER_PRIVATE_KEY: &'static [u8] = include_bytes!("../certs/localhost.key");
-const SERVER_CERTIFICATE: &str = include_str!("../certs/localhost_v3.crt");
+const SERVER_CERTIFICATES: &str = include_str!("../certs/localhost_v3.crt");
 const CA_CERTIFICATE: &str = include_str!("../certs/ca_v3.crt");
 
 pub fn run_tests() -> bool {
@@ -24,7 +23,7 @@ pub fn run_tests() -> bool {
 struct EchoHandler;
 
 impl RequestHandler for EchoHandler {
-    fn handle_json(&self, msg: &[u8]) -> Result<Vec<u8>> {
+    fn handle_json(&self, msg: &[u8]) -> anyhow::Result<Vec<u8>> {
         let msg_json: Value = serde_json::from_slice(&msg)?;
         serde_json::to_vec(&msg_json).map_err(Into::into)
     }
@@ -52,13 +51,13 @@ fn build_client() -> Client {
 
 fn start_server() {
     let private_keys = pemfile::rsa_private_keys(&mut SERVER_PRIVATE_KEY).unwrap();
-    let certs = pemfile::certs(&mut SERVER_CERTIFICATE.as_bytes()).unwrap();
+    let certs = pemfile::certs(&mut SERVER_CERTIFICATES.as_bytes()).unwrap();
     let mut server_config = ServerConfig::default();
     server_config
-        .set_single_cert(certs, private_keys.first().unwrap().clone())
+        .set_single_cert(&certs, &private_keys.first().unwrap())
         .unwrap();
 
-    let mut server = Server::new(LISTEN_ADDRESS.to_string(), server_config);
+    let mut server = Server::new(LISTEN_ADDRESS, server_config);
     let handler = EchoHandler::default();
     thread::spawn(move || server.run(handler).unwrap());
 }

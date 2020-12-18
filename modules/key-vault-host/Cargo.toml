@@ -5,3 +5,9 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+config = { path = "../../config" }
+frame-host = { path = "../../frame/host" }
+frame-mra-tls = { path = "../../frame/mra-tls" }
+anonify-io-types = { path = "../anonify-io-types" }
+parking_lot = "0.10"
+rustls = "0.19.0"
