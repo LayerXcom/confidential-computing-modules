@@ -9,6 +9,7 @@ enclave {
     from "sgx_pipe.edl" import *;
     from "sgx_env.edl" import *;
     from "sgx_pthread.edl" import *;
+    from "sgx_sys.edl" import *;
 
     include "sgx_quote.h"
     include "frame-types.h"

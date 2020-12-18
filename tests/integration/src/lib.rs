@@ -942,7 +942,6 @@ pub fn set_env_vars() {
         "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report",
     );
     env::set_var("SUB_KEY", "77e2533de0624df28dc3be3a5b9e50d9");
-    env::set_var("CA_CERTIFICATE_PATH", "../certs/ca_v3.crt");
     env::set_var("MRA_TLS_SERVER_ADDRESS", "localhost:12345");
     env::set_var("AUDITOR_ENDPOINT", "test");
 }

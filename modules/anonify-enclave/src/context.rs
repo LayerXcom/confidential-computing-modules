@@ -22,14 +22,13 @@ use remote_attestation::RAService;
 use sgx_types::*;
 use std::{
     env,
-    io::Read,
     marker::PhantomData,
     prelude::v1::*,
-    sgxfs,
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
 };
 
 pub const MRENCLAVE_VERSION: usize = 0;
+const CA_CERTIFICATE: &str = include_str!("../../../frame/mra-tls/certs/ca_v3.crt");
 
 /// spid: Service provider ID for the ISV.
 #[derive(Clone)]
@@ -204,9 +203,6 @@ impl EnclaveContext {
 
         let ias_url = env::var("IAS_URL")?;
         let sub_key = env::var("SUB_KEY")?;
-        let mut ca_certificate_file = sgxfs::SgxFile::open(env::var("CA_CERTIFICATE_PATH")?)?;
-        let mut ca_certificate = String::new();
-        ca_certificate_file.read_to_string(&mut ca_certificate)?;
         let server_address = env::var("MRA_TLS_SERVER_ADDRESS")?;
 
         Ok(EnclaveContext {
@@ -218,7 +214,7 @@ impl EnclaveContext {
             version: MRENCLAVE_VERSION,
             ias_url,
             sub_key,
-            ca_certificate,
+            ca_certificate: CA_CERTIFICATE.to_string(),
             server_address,
         })
     }
