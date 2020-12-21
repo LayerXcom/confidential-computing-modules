@@ -331,9 +331,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "anonify-config"
+version = "0.1.0"
+dependencies = [
+ "anyhow 1.0.28",
+ "anyhow 1.0.34",
+ "lazy_static",
+ "serde 1.0.117 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.117 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.3)",
+ "sgx_tstd",
+ "toml 0.5.3",
+ "toml 0.5.7",
+]
+
+[[package]]
 name = "anonify-enclave"
 version = "0.1.0"
 dependencies = [
+ "anonify-config",
  "anonify-io-types",
  "anyhow 1.0.28",
  "ed25519-dalek",
@@ -356,10 +371,10 @@ dependencies = [
 name = "anonify-eth-driver"
 version = "0.1.0"
 dependencies = [
+ "anonify-config",
  "anonify-io-types",
  "anyhow 1.0.34",
  "async-trait",
- "config",
  "ed25519-dalek",
  "ethabi",
  "frame-common",
@@ -912,20 +927,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "config"
-version = "0.1.0"
-dependencies = [
- "anyhow 1.0.28",
- "anyhow 1.0.34",
- "lazy_static",
- "serde 1.0.117 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.117 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.3)",
- "sgx_tstd",
- "toml 0.5.3",
- "toml 0.5.7",
-]
-
-[[package]]
 name = "console"
 version = "0.7.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1369,9 +1370,9 @@ dependencies = [
 name = "erc20-enclave"
 version = "0.1.0"
 dependencies = [
+ "anonify-config",
  "anonify-enclave",
  "anyhow 1.0.28",
- "config",
  "ed25519-dalek",
  "erc20-state-transition",
  "frame-common",
@@ -1622,6 +1623,7 @@ dependencies = [
 name = "frame-mra-tls"
 version = "0.1.0"
 dependencies = [
+ "anonify-config",
  "anyhow 1.0.28",
  "bit-vec",
  "chrono 0.4.11",

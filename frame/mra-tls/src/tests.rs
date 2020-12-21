@@ -1,5 +1,6 @@
 use crate::{Client, ClientConfig, RequestHandler, Server, ServerConfig};
 use anyhow::Result;
+use anonify_config::IAS_ROOT_CERT;
 use rustls::internal::pemfile;
 use serde_json::Value;
 use std::{
@@ -47,19 +48,15 @@ fn test_request_response() {
 
 fn build_client() -> Client {
     let mut client_config = ClientConfig::default();
-
-    client_config.add_pem_to_root(CA_CERTIFICATE).unwrap();
+    client_config.set_attestation_report_verifier(IAS_ROOT_CERT);
 
     Client::new(CLIENT_ADDRESS, client_config).unwrap()
 }
 
 fn start_server() {
-    let private_keys = pemfile::rsa_private_keys(&mut SERVER_PRIVATE_KEY).unwrap();
-    let certs = pemfile::certs(&mut SERVER_CERTIFICATE.as_bytes()).unwrap();
     let mut server_config = ServerConfig::default();
     server_config
-        .set_single_cert(certs, private_keys.first().unwrap().clone())
-        .unwrap();
+        .set_attestation_report_verifier(IAS_ROOT_CERT);
 
     let mut server = Server::new(SERVER_ADDRESS.to_string(), server_config);
     let handler = EchoHandler::default();

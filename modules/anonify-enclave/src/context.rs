@@ -2,6 +2,7 @@ use crate::{
     error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
+use anonify_config::IAS_ROOT_CERT;
 use anonify_io_types::*;
 use anyhow::anyhow;
 use frame_common::{
@@ -260,7 +261,7 @@ impl EnclaveEngine for ReportRegistration {
         let sub_key = enclave_context.sub_key();
         let resp = enclave_context
             .quote()?
-            .remote_attestation(ias_url, sub_key)?;
+            .remote_attestation(ias_url, sub_key, IAS_ROOT_CERT.to_vec())?;
 
         let mrenclave_ver = enclave_context.mrenclave_ver();
         let my_roster_idx = enclave_context.read_group_key().my_roster_idx();

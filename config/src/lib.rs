@@ -25,3 +25,11 @@ extern crate lazy_static;
 pub mod constants;
 
 pub use crate::constants::*;
+use crate::localstd::vec::Vec;
+
+lazy_static! {
+    pub static ref IAS_ROOT_CERT: Vec<u8> = {
+        let ias_root_cert = include_bytes!("../ias_root_cert.pem");
+        ias_root_cert.to_vec()
+    };
+}

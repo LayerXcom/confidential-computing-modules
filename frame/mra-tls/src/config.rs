@@ -1,5 +1,6 @@
 use crate::error::{MraTLSError, Result};
 use crate::key::NistP256KeyPair;
+use crate::verifier::AttestationReportVerifier;
 use anyhow::anyhow;
 use remote_attestation::QuoteTarget;
 use sgx_types::sgx_spid_t;
@@ -54,6 +55,13 @@ impl ClientConfig {
 
         Ok(())
     }
+
+    pub fn set_attestation_report_verifier(mut self, root_cert: Vec<u8>) -> Self {
+        let verifier = Arc::new(AttestationReportVerifier::new(root_cert));
+        self.tls.dangerous().set_certificate_verifier(verifier);
+
+        self
+    }
 }
 
 impl Default for ClientConfig {
@@ -92,6 +100,13 @@ impl ServerConfig {
         self.tls
             .set_single_cert(cert_chain, key_der)
             .map_err(Into::into)
+    }
+
+    pub fn set_attestation_report_verifier(mut self, root_cert: Vec<u8>) -> Self {
+        let verifier = Arc::new(AttestationReportVerifier::new(root_cert));
+        self.tls.set_client_certificate_verifier(verifier);
+
+        self
     }
 }
 

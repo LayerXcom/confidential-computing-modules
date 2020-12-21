@@ -1,4 +1,3 @@
-use crate::IAS_REPORT_CA;
 use anyhow::{anyhow, bail, ensure, Result};
 use http_req::{
     request::{Method, Request},
@@ -118,10 +117,10 @@ impl RAResponse {
     /// 3. report's timestamp
     /// 4. quote status
     #[must_use]
-    pub(crate) fn verify_attestation_report(self) -> Result<Self> {
+    pub(crate) fn verify_attestation_report(self, root_cert: Vec<u8>) -> Result<Self> {
         let now_func = webpki::Time::try_from(SystemTime::now())?;
 
-        let mut ca_reader = BufReader::new(IAS_REPORT_CA.as_bytes());
+        let mut ca_reader = BufReader::new(&root_cert[..]);
         let mut root_store = rustls::RootCertStore::empty();
         root_store
             .add_pem_file(&mut ca_reader)
@@ -133,7 +132,7 @@ impl RAResponse {
             .map(|cert| cert.to_trust_anchor())
             .collect();
 
-        let ias_cert_dec = Self::decode_ias_report_ca()?;
+        let ias_cert_dec = Self::decode_ias_report_ca(root_cert)?;
         let mut chain: Vec<&[u8]> = Vec::new();
         chain.push(&ias_cert_dec);
 
@@ -201,8 +200,8 @@ impl RAResponse {
         }
     }
 
-    fn decode_ias_report_ca() -> Result<Vec<u8>> {
-        let mut ias_ca_stripped = IAS_REPORT_CA.as_bytes().to_vec();
+    fn decode_ias_report_ca(root_cert: Vec<u8>) -> Result<Vec<u8>> {
+        let mut ias_ca_stripped = root_cert;
         ias_ca_stripped.retain(|&x| x != 0x0d && x != 0x0a);
         let head_len = "-----BEGIN CERTIFICATE-----".len();
         let tail_len = "-----END CERTIFICATE-----".len();

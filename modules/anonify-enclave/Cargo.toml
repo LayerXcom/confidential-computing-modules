@@ -10,6 +10,7 @@ frame-enclave = { path = "../../frame/enclave" }
 frame-runtime = { path = "../../frame/runtime", default-features = false, features = ["sgx"] }
 frame-treekem = { path = "../../frame/treekem", default-features = false, features = ["sgx"] }
 frame-common = { path = "../../frame/common", default-features = false, features = ["sgx"] }
+anonify-config = { path = "../../config", default-features = false, features = ["sgx"] }
 anonify-io-types = { path = "../anonify-io-types", default-features = false, features = ["sgx"] }
 remote-attestation = { path = "../../frame/remote-attestation" }
 test-utils = { path = "../../tests/utils" }

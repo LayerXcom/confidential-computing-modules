@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 remote-attestation = { path = "../remote-attestation" }
+anonify-config = { path = "../../config", default-features = false, features = ["sgx"] } # Only used tests to use IAS_ROOT_CERT
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net", "backtrace", "thread"] }
 sgx_tcrypto = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }

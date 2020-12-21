@@ -1,6 +1,6 @@
 use crate::utils::CommandInfo;
 use anonify_io_types::*;
-use config::constants::*;
+use anonify_config::constants::*;
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
     traits::*,

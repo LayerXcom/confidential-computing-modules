@@ -1,3 +1,4 @@
+use anonify_config::IAS_ROOT_CERT;
 use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
@@ -27,7 +28,7 @@ impl EnclaveEngine for JoinGroupSender {
         let sub_key = enclave_context.sub_key();
         let resp = enclave_context
             .quote()?
-            .remote_attestation(ias_url, sub_key)?;
+            .remote_attestation(ias_url, sub_key, IAS_ROOT_CERT.to_vec())?;
 
         let mrenclave_ver = enclave_context.mrenclave_ver();
         let group_key = &*enclave_context.read_group_key();
