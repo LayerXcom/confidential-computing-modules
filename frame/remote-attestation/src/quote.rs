@@ -43,7 +43,7 @@ impl Quote {
         &self,
         uri: &str,
         ias_api_key: &str,
-    ) -> Result<(AttestationReport, ReportSig)> {
+    ) -> Result<RAResponse> {
         let uri: Uri = uri.parse().expect("Invalid uri");
         let body = format!("{{\"isvEnclaveQuote\":\"{}\"}}\r\n", &self.base64_quote);
         let mut writer = Vec::new();
@@ -53,9 +53,9 @@ impl Quote {
             .quote_body_mut(&body.as_bytes())
             .send(&mut writer)?;
 
-        let ra_resp = RAResponse::from_response(writer, response)?.verify_attestation_report()?;
-
-        Ok((ra_resp.attestation_report, ra_resp.report_sig))
+        RAResponse::from_response(writer, response)?
+            .verify_attestation_report()
+            .map_err(Into::into)
     }
 }
 

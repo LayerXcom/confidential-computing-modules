@@ -1,6 +1,35 @@
-use crate::error::MraTLSError;
+use crate::error::{MraTLSError, Result};
+use crate::key::NistP256KeyPair;
 use anyhow::anyhow;
+use remote_attestation::QuoteTarget;
+use sgx_types::sgx_spid_t;
 use std::{sync::Arc, vec::Vec};
+
+const CERT_ISSUER: &str = "Anonify";
+const CERT_SUBJECT: &str = "CN=Anonify";
+
+#[derive(Debug)]
+pub struct AttestedTlsConfig {
+    ee_cert: Vec<u8>,
+    priv_key: Vec<u8>,
+}
+
+impl AttestedTlsConfig {
+    fn remote_attestation(spid: sgx_spid_t, ias_url: &str, sub_key: &str) -> Result<Self> {
+        let key_pair = NistP256KeyPair::new()?;
+        let report_data = key_pair.report_data();
+        let resp = QuoteTarget::new()?
+            .set_enclave_report(&report_data)?
+            .create_quote(&spid)?
+            .remote_attestation(ias_url, sub_key)?;
+
+        let extension = serde_json::to_vec(&resp)?;
+        let ee_cert = key_pair.create_cert_with_extension(CERT_ISSUER, CERT_SUBJECT, &extension);
+        let priv_key = key_pair.priv_key_into_der();
+
+        Ok(Self { ee_cert, priv_key })
+    }
+}
 
 #[derive(Clone)]
 pub struct ClientConfig {
@@ -12,7 +41,7 @@ impl ClientConfig {
         &self.tls
     }
 
-    pub fn add_pem_to_root(&mut self, ca_cert: &str) -> Result<(), MraTLSError> {
+    pub fn add_pem_to_root(&mut self, ca_cert: &str) -> Result<()> {
         let (_, invalid_count) = self
             .tls
             .root_store
@@ -59,7 +88,7 @@ impl ServerConfig {
         &mut self,
         cert_chain: Vec<rustls::Certificate>,
         key_der: rustls::PrivateKey,
-    ) -> Result<(), MraTLSError> {
+    ) -> Result<()> {
         self.tls
             .set_single_cert(cert_chain, key_der)
             .map_err(Into::into)
@@ -91,7 +120,7 @@ impl rustls::ServerCertVerifier for NoServerVerify {
         _certs: &[rustls::Certificate],
         _hostname: webpki::DNSNameRef<'_>,
         _ocsp: &[u8],
-    ) -> Result<rustls::ServerCertVerified, rustls::TLSError> {
+    ) -> std::result::Result<rustls::ServerCertVerified, rustls::TLSError> {
         Ok(rustls::ServerCertVerified::assertion())
     }
 }

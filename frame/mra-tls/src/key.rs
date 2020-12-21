@@ -5,7 +5,7 @@ use bit_vec::BitVec;
 use chrono::TimeZone;
 use num_bigint::BigUint;
 use sgx_tcrypto::SgxEccHandle;
-use sgx_types::{sgx_ec256_private_t, sgx_ec256_public_t};
+use sgx_types::{sgx_ec256_private_t, sgx_ec256_public_t, sgx_report_data_t};
 use std::borrow::ToOwned;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::untrusted::time::SystemTimeEx;
@@ -170,8 +170,16 @@ impl NistP256KeyPair {
         })
     }
 
-    pub fn pub_key(&self) -> sgx_ec256_public_t {
-        self.pub_key
+    pub fn report_data(&self) -> sgx_report_data_t {
+        let mut report_data = sgx_report_data_t::default();
+        let mut pub_key_gx = self.pub_key.gx;
+        pub_key_gx.reverse();
+        let mut pub_key_gy = self.pub_key.gy;
+        pub_key_gx.reverse();
+        report_data.d[..32].copy_from_slice(&pub_key_gx);
+        report_data.d[32..].copy_from_slice(&pub_key_gy);
+
+        report_data
     }
 
     /// The Standards of Efficient Cryptography (SEC) encoding is used to serialize ECDSA public keys.

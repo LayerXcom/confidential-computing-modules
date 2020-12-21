@@ -6,7 +6,7 @@ mod client;
 mod error;
 mod quote;
 
-pub use crate::client::{AttestationReport, ReportSig};
+pub use crate::error::FrameRAError as Error;
 pub use crate::quote::{Quote, QuoteTarget};
 
 pub const IAS_REPORT_CA: &str = "-----BEGIN CERTIFICATE-----

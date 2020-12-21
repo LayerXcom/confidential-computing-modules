@@ -258,7 +258,7 @@ impl EnclaveEngine for ReportRegistration {
     {
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
-        let (report, report_sig) = enclave_context
+        let resp = enclave_context
             .quote()?
             .remote_attestation(ias_url, sub_key)?;
 
@@ -266,8 +266,8 @@ impl EnclaveEngine for ReportRegistration {
         let my_roster_idx = enclave_context.read_group_key().my_roster_idx();
 
         Ok(output::ReturnRegisterReport::new(
-            report.into_vec(),
-            report_sig.into_vec(),
+            resp.attestation_report().to_vec(),
+            resp.report_sig().to_vec(),
             mrenclave_ver,
             my_roster_idx,
         ))
