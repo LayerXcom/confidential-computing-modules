@@ -13,7 +13,7 @@ http_req = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/http_re
 serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx" }
 serde = { git = "https://github.com/mesalock-linux/serde-sgx.git", features = ["derive"] } # Don't specify version due to serde_json dependency
 base64 = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rust-base64-sgx" }
-rustls = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rustls" }
+rustls = { branch = "mesalock_sgx", version = "^0.19", git = "https://github.com/mesalock-linux/rustls" }
 log = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/log-sgx" }
 thiserror = { git = "https://github.com/mesalock-linux/thiserror-sgx.git" }
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }

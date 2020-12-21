@@ -10,7 +10,7 @@ anonify-config = { path = "../../config", default-features = false, features = [
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net", "backtrace", "thread"] }
 sgx_tcrypto = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
-rustls = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rustls", features = ["dangerous_configuration"] }
+rustls = { branch = "mesalock_sgx", version = "^0.19", git = "https://github.com/mesalock-linux/rustls", features = ["dangerous_configuration"] }
 anyhow = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
 thiserror = { git = "https://github.com/mesalock-linux/thiserror-sgx.git" }
 serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx" }

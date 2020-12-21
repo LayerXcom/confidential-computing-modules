@@ -2,7 +2,7 @@ use std::vec::Vec;
 
 #[derive(Clone)]
 pub struct AttestationReportVerifier {
-    root_cert: Vec<u8>
+    root_cert: Vec<u8>,
 }
 
 impl AttestationReportVerifier {
@@ -22,13 +22,17 @@ impl AttestationReportVerifier {
 }
 
 impl rustls::ClientCertVerifier for AttestationReportVerifier {
-    fn client_auth_root_subjects(&self) -> rustls::DistinguishedNames {
-        rustls::DistinguishedNames::new()
+    fn client_auth_root_subjects(
+        &self,
+        _sni: Option<&webpki::DNSName>,
+    ) -> Option<rustls::DistinguishedNames> {
+        Some(rustls::DistinguishedNames::new())
     }
 
     fn verify_client_cert(
         &self,
         certs: &[rustls::Certificate],
+        _sni: Option<&webpki::DNSName>,
     ) -> std::result::Result<rustls::ClientCertVerified, rustls::TLSError> {
         if certs.len() != 1 {
             return Err(rustls::TLSError::NoCertificatesPresented);

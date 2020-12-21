@@ -16,13 +16,18 @@ pub struct AttestedTlsConfig {
 }
 
 impl AttestedTlsConfig {
-    fn remote_attestation(spid: sgx_spid_t, ias_url: &str, sub_key: &str) -> Result<Self> {
+    fn remote_attestation(
+        spid: sgx_spid_t,
+        ias_url: &str,
+        sub_key: &str,
+        root_cert: Vec<u8>,
+    ) -> Result<Self> {
         let key_pair = NistP256KeyPair::new()?;
         let report_data = key_pair.report_data();
         let resp = QuoteTarget::new()?
             .set_enclave_report(&report_data)?
             .create_quote(&spid)?
-            .remote_attestation(ias_url, sub_key)?;
+            .remote_attestation(ias_url, sub_key, root_cert)?;
 
         let extension = serde_json::to_vec(&resp)?;
         let ee_cert = key_pair.create_cert_with_extension(CERT_ISSUER, CERT_SUBJECT, &extension);
@@ -40,20 +45,6 @@ pub struct ClientConfig {
 impl ClientConfig {
     pub fn tls(&self) -> &rustls::ClientConfig {
         &self.tls
-    }
-
-    pub fn add_pem_to_root(&mut self, ca_cert: &str) -> Result<()> {
-        let (_, invalid_count) = self
-            .tls
-            .root_store
-            .add_pem_file(&mut ca_cert.as_bytes())
-            .map_err(|e| anyhow!("failed to add pem file: {:?}", e))?;
-
-        if invalid_count > 0 {
-            return Err(MraTLSError::Error(anyhow!("invalid_count")));
-        }
-
-        Ok(())
     }
 
     pub fn set_attestation_report_verifier(mut self, root_cert: Vec<u8>) -> Self {
@@ -90,16 +81,6 @@ pub struct ServerConfig {
 impl ServerConfig {
     pub fn tls(&self) -> &rustls::ServerConfig {
         &self.tls
-    }
-
-    pub fn set_single_cert(
-        &mut self,
-        cert_chain: Vec<rustls::Certificate>,
-        key_der: rustls::PrivateKey,
-    ) -> Result<()> {
-        self.tls
-            .set_single_cert(cert_chain, key_der)
-            .map_err(Into::into)
     }
 
     pub fn set_attestation_report_verifier(mut self, root_cert: Vec<u8>) -> Self {
