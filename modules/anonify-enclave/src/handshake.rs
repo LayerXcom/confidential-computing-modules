@@ -25,7 +25,7 @@ impl EnclaveEngine for JoinGroupSender {
     {
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
-        let (report, report_sig) = enclave_context
+        let resp = enclave_context
             .quote()?
             .remote_attestation(ias_url, sub_key)?;
 
@@ -34,8 +34,8 @@ impl EnclaveEngine for JoinGroupSender {
         let (export_handshake, export_path_secret) = group_key.create_handshake()?;
 
         Ok(output::ReturnJoinGroup::new(
-            report.into_vec(),
-            report_sig.into_vec(),
+            resp.attestation_report().to_vec(),
+            resp.report_sig().to_vec(),
             export_handshake.encode(),
             mrenclave_ver,
             export_handshake.roster_idx(),
