@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 frame-common = { path = "../../frame/common", default-features = false }
 frame-treekem = { path = "../../frame/treekem", default-features = false }
-frame-mra-tls = { path = "../../frame/mra-tls" }
+frame-mra-tls = { path = "../../frame/mra-tls", optional = true }
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
 libsecp256k1 = { version = "0.2", default-features = false }
@@ -21,5 +21,6 @@ std = [
 sgx = [
     "frame-common/sgx",
     "frame-treekem/sgx",
+    "frame-mra-tls",
     "sgx_tstd",
 ]

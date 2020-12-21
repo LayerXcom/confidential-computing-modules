@@ -7,6 +7,7 @@ use frame_common::{
     EcallInput, EcallOutput,
 };
 use frame_treekem::{DhPubKey, EciesCiphertext};
+#[cfg(feature = "sgx")]
 use frame_mra_tls::primitives::{Certificate, PrivateKey};
 
 pub mod input {
@@ -131,14 +132,17 @@ pub mod input {
         }
     }
 
+    #[cfg(feature = "sgx")]
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct CallServerStarter {
         private_key: PrivateKey,
         certificates: Vec<Certificate>,
     }
 
+    #[cfg(feature = "sgx")]
     impl EcallInput for CallServerStarter {}
 
+    #[cfg(feature = "sgx")]
     impl CallServerStarter {
         pub fn new(private_key: PrivateKey, certificates: Vec<Certificate>) -> Self {
             CallServerStarter {
@@ -156,9 +160,11 @@ pub mod input {
         }
     }
 
+    #[cfg(feature = "sgx")]
     #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct CallServerStopper;
 
+    #[cfg(feature = "sgx")]
     impl EcallInput for CallServerStopper {}
 }
 
