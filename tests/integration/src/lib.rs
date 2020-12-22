@@ -7,6 +7,7 @@ use erc20_state_transition::{
 };
 use ethabi::Contract as ContractABI;
 use frame_common::{
+    benchmark::PENDING_TX,
     crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
     traits::*,
 };
@@ -45,6 +46,8 @@ pub async fn get_encrypting_key(
     let address = Address::from_str(contract_addr).unwrap();
     let f = File::open(ABI_PATH).unwrap();
     let abi = ContractABI::load(BufReader::new(f)).unwrap();
+
+    println!("### {:?}", PENDING_TX.get(0));
 
     let query_encrypting_key: Vec<u8> = Contract::new(web3_conn, address, abi)
         .query(
@@ -310,6 +313,7 @@ async fn test_integration_eth_transfer() {
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
     let transfer_cmd = transfer { amount, recipient };
+    println!("##### benchmark start");
     let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_cmd.encode()).unwrap();
     let receipt = dispatcher
         .send_command::<CallName, _>(
@@ -325,7 +329,7 @@ async fn test_integration_eth_transfer() {
 
     // Update state inside enclave
     dispatcher.fetch_events::<U64>().await.unwrap();
-
+    println!("##### benchmark end");
     // Check the updated states
     let my_updated_state = dispatcher
         .get_state::<U64, _, CallName>(my_access_policy, "balance_of")

@@ -60,6 +60,7 @@ impl Sender for EthSender {
 
     async fn send_command(&self, host_output: host_output::Command) -> Result<H256> {
         info!("Sending a command to blockchain: {:?}", host_output);
+        println!("##### t1 {:?}");
         self.contract.send_command(host_output).await
     }
 

@@ -17,6 +17,7 @@ use sgx_anyhow as local_anyhow;
 #[macro_use]
 extern crate lazy_static;
 
+// pub mod benchmark;
 pub mod crypto;
 pub mod state_types;
 pub mod traits;

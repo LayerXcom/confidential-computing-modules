@@ -41,11 +41,14 @@ impl<AP: AccessPolicy> EnclaveEngine for MsgSender<AP> {
         group_key.sender_ratchet(roster_idx)?;
 
         let account_id = ecall_input.access_policy().into_account_id();
+        println!("##### t1 {:?}");
         let mut command = enclave_context.decrypt(ecall_input.encrypted_command)?;
 
+        println!("##### t1 {:?}");
         let ciphertext = Commands::<R, C>::new(ecall_input.call_id, &mut command, account_id)?
             .encrypt(group_key, max_mem_size)?;
 
+        println!("##### t1 {:?}");
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
         let command_output = output::Command::new(ciphertext, enclave_sig.0, enclave_sig.1);

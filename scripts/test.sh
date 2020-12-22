@@ -25,15 +25,15 @@ cd ../tests/integration
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 
 cd ../../example/erc20/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_deploy_post -- --nocapture
-sleep 1
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture
-sleep 1
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_skip_invalid_event -- --nocapture
-sleep 1
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture
-sleep 1
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture
+# RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_deploy_post -- --nocapture
+# sleep 1
+# RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture
+# sleep 1
+# RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_skip_invalid_event -- --nocapture
+# sleep 1
+# RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture
+# sleep 1
+# RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture
 
 echo "Unit testing..."
 cd ../../../scripts

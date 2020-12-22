@@ -52,6 +52,7 @@ impl EnclaveConnector {
 
         let mut ret = EnclaveStatus::default();
 
+        println!("##### t1: {:?}");
         let status = unsafe {
             ecall_entry_point(
                 self.eid,
@@ -64,6 +65,7 @@ impl EnclaveConnector {
                 &mut output_len,
             )
         };
+        println!("##### t1: {:?}");
 
         if status != sgx_status_t::SGX_SUCCESS {
             return Err(FrameHostError::SgxStatus {

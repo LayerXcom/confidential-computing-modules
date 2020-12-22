@@ -110,7 +110,7 @@ impl Web3Contract {
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
         let gas = output.gas;
-
+        println!("##### t1 {:?}");
         self.contract
             .call(
                 "storeCommand",

@@ -186,13 +186,15 @@ where
             signer,
             gas,
         );
+        println!("##### t1: {:?}");
         let eid = inner.deployer.get_enclave_id();
         let host_output = CommandWorkflow::exec(input, eid)?;
-
+        println!("##### t1: {:?}");
         match &inner.sender {
             Some(s) => s.send_command(host_output).await,
             None => Err(HostError::AddressNotSet),
         }
+        println!("##### t1: {:?}");
     }
 
     pub fn get_state<ST, AP, C>(&self, access_policy: AP, call_name: &str) -> Result<ST>

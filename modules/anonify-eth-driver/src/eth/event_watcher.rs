@@ -49,6 +49,7 @@ impl Watcher for EventWatcher {
         &self,
         eid: sgx_enclave_id_t,
     ) -> Result<Option<Vec<UpdatedState<S>>>> {
+        // TODO: jkcomment ここ直す
         let enclave_updated_state = self
             .contract
             .get_event(self.cache.clone(), self.contract.address())
