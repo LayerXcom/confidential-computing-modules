@@ -1,19 +1,10 @@
-use crate::workflow::*;
 use crate::{
-    cache::EventCache,
-    error::{HostError, Result},
-    traits::*,
-    utils::*,
-    workflow::host_input,
+    error::Result,
+    workflow::*,
 };
-use frame_common::{crypto::ExportPathSecret, state_types::UpdatedState, traits::*};
 use frame_host::engine::HostEngine;
-use frame_mra_tls::primitives::{Certificate, PrivateKey};
-use frame_treekem::{DhPubKey, EciesCiphertext};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{fmt::Debug, marker::Send, path::Path};
-use web3::types::{Address, H256};
 
 /// This dispatcher communicates with a mra-tls server.
 #[derive(Debug)]
@@ -28,9 +19,9 @@ impl Dispatcher {
         Ok(Dispatcher { inner })
     }
 
-    pub fn start(&self, private_key: PrivateKey, certificates: Vec<Certificate>) -> Result<()> {
+    pub fn start(&self) -> Result<()> {
         let inner = self.inner.read();
-        let input = host_input::StartServer::new(private_key, certificates);
+        let input = host_input::StartServer::new();
         let eid = inner.get_enclave_id();
         let _host_output = StartServerWorkflow::exec(input, eid)?;
 

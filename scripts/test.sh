@@ -35,6 +35,12 @@ RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture
 sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture
 
+cd ../../../scripts
+make DEBUG=1 ENCLAVE_DIR=example/key-vault-example/enclave
+
+cd ../example/key-vault-example/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocapture
+
 echo "Unit testing..."
 cd ../../../scripts
 make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave
@@ -49,3 +55,8 @@ export ANONIFY_URL=http://172.28.1.1:8080
 echo "Building ERC20 server..."
 cd example/erc20/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo build
+
+echo "Building key-vault server..."
+cd example/key-vault-example/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo build
+

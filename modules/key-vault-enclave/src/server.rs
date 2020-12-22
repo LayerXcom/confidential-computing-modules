@@ -1,12 +1,17 @@
 use crate::handlers::BackupHandler;
 use anonify_io_types::*;
+use anyhow::anyhow;
 use frame_common::state_types::StateType;
-use frame_mra_tls::{Server, ServerConfig};
-use frame_runtime::traits::*;
 use frame_enclave::EnclaveEngine;
+use frame_mra_tls::{primitives::pemfile, Server, ServerConfig};
+use frame_runtime::traits::*;
 use std::thread;
 
 const SERVER_ADDRESS: &str = "0.0.0.0:12345";
+
+const SERVER_PRIVATE_KEY: &'static [u8] =
+    include_bytes!("../../../frame/mra-tls/certs/localhost.key");
+const SERVER_CERTIFICATES: &str = include_str!("../../../frame/mra-tls/certs/localhost_v3.crt");
 
 /// A server starter
 #[derive(Debug, Clone)]
@@ -17,7 +22,7 @@ impl EnclaveEngine for ServerStarter {
     type EO = output::Empty;
 
     fn handle<R, C>(
-        ecall_input: Self::EI,
+        _ecall_input: Self::EI,
         _enclave_context: &C,
         _max_mem_size: usize,
     ) -> anyhow::Result<Self::EO>
@@ -25,10 +30,17 @@ impl EnclaveEngine for ServerStarter {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let certificates = ecall_input.certificates();
-        let private_key = ecall_input.private_key();
+        let certificates = pemfile::certs(&mut SERVER_CERTIFICATES.as_bytes())
+            .map_err(|_| anyhow!("failed to extract certificates"))?;
+        let private_key = pemfile::rsa_private_keys(&mut SERVER_PRIVATE_KEY)
+            .map_err(|_| anyhow!("failed to extract RSA private key"))?;
         let mut server_config = ServerConfig::default();
-        server_config.set_single_cert(certificates, private_key)?;
+        server_config.set_single_cert(
+            &certificates,
+            private_key
+                .first()
+                .ok_or_else(|| anyhow!("private_key is unset"))?,
+        )?;
 
         let mut server = Server::new(SERVER_ADDRESS, server_config);
         let handler = BackupHandler::default();

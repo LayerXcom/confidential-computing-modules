@@ -1,7 +1,6 @@
 use anonify_io_types::*;
 use config::constants::*;
 use frame_host::engine::*;
-use frame_mra_tls::primitives::{Certificate, PrivateKey};
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
 
@@ -9,7 +8,7 @@ pub struct StartServerWorkflow;
 
 impl HostEngine for StartServerWorkflow {
     type HI = host_input::StartServer;
-    type EI = input::CallStartServer;
+    type EI = input::CallServerStarter;
     type EO = output::Empty;
     type HO = host_output::StartServer;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -20,7 +19,7 @@ pub struct StopServerWorkflow;
 
 impl HostEngine for StopServerWorkflow {
     type HI = host_input::StopServer;
-    type EI = input::CallStopServer;
+    type EI = input::CallServerStopper;
     type EO = output::Empty;
     type HO = host_output::StopServer;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -30,16 +29,11 @@ impl HostEngine for StopServerWorkflow {
 pub mod host_input {
     use super::*;
 
-    pub struct StartServer {
-        private_key: PrivateKey,
-        certificates: Vec<Certificate>,
-    }
+    pub struct StartServer;
 
     impl StartServer {
-        pub fn new(private_key: PrivateKey, certificates: Vec<Certificate>) -> Self {
+        pub fn new() -> Self {
             StartServer {
-                private_key,
-                certificates,
             }
         }
     }
@@ -49,9 +43,7 @@ pub mod host_input {
         type HostOutput = host_output::StartServer;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let ecall_input = Self::EcallInput::new(self.private_key, self.certificates);
-
-            Ok((ecall_input, Self::HostOutput::default()))
+            Ok((Self::EcallInput::default(), Self::HostOutput::default()))
         }
     }
 

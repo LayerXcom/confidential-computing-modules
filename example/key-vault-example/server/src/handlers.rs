@@ -7,7 +7,7 @@ use std::sync::Arc;
 pub async fn handle_start(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     let resp = server
         .dispatcher
-        .start(&server.server_private_key, &server.server_certificates)
+        .start()
         .await
         .map_err(|e| ServerError::from(e))?;
 

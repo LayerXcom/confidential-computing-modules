@@ -1,37 +1,28 @@
 use actix_web::{web, App, HttpServer};
 use frame_host::{EnclaveDir, StorePathSecrets};
-use frame_mra_tls::primitives::{pemfile, Certificate, PrivateKey};
 use handlers::*;
-use key_vault_enclave::Dispatcher;
+use key_vault_host::Dispatcher;
 use sgx_types::sgx_enclave_id_t;
 use std::{env, io, sync::Arc};
 
 mod error;
 mod handlers;
 
-const SERVER_PRIVATE_KEY: &'static [u8] = include_bytes!("../certs/localhost.key");
-const SERVER_CERTIFICATES: &str = include_str!("../certs/localhost_v3.crt");
+#[cfg(test)]
+mod tests;
 
 #[derive(Debug)]
 pub struct Server {
     pub eid: sgx_enclave_id_t,
     pub dispatcher: Dispatcher,
-    server_private_key: PrivateKey,
-    pub server_certificates: Vec<Certificate>,
 }
 
 impl Server {
     pub fn new(eid: sgx_enclave_id_t) -> Self {
-        let dispatcher = Dispatcher::new(eid, &eth_url, cache).unwrap();
-
-        let private_keys = pemfile::rsa_private_keys(&mut SERVER_PRIVATE_KEY).unwrap();
-        let certs = pemfile::certs(&mut SERVER_CERTIFICATES.as_bytes()).unwrap();
-
+        let dispatcher = Dispatcher::new(eid).unwrap();
         Server {
             eid,
             dispatcher,
-            server_private_key: private_keys.first().unwrap().clone(),
-            server_certificates: certs,
         }
     }
 }
