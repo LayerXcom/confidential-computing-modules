@@ -6,6 +6,7 @@ use std::{
     string::{String, ToString},
     thread,
     vec::Vec,
+    time::Duration,
 };
 use test_utils::*;
 
@@ -64,4 +65,5 @@ fn start_server() {
     let mut server = Server::new(SERVER_ADDRESS.to_string(), server_config);
     let handler = EchoHandler::default();
     thread::spawn(move || server.run(handler).unwrap());
+    thread::sleep(Duration::from_secs(1));
 }
