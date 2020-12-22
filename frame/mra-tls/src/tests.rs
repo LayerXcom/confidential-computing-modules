@@ -1,14 +1,19 @@
 use crate::{Client, ClientConfig, RequestHandler, Server, ServerConfig};
 use crate::primitives::pemfile;
 use serde_json::Value;
+use once_cell::sync::Lazy;
 use std::{
+    env,
     string::String,
     thread,
     vec::Vec,
 };
 use test_utils::*;
 
-const SERVER_ADDRESS: &str = "localhost:12345";
+static SERVER_ADDRESS: Lazy<String> = Lazy::new( || {
+    let host = env::var("HOSTNAME").expect("failed to get env 'HOSTNAME'");
+    format!("{}:12345", host)
+});
 const LISTEN_ADDRESS: &str = "0.0.0.0:12345";
 
 const SERVER_PRIVATE_KEY: &'static [u8] = include_bytes!("../certs/localhost.key");
@@ -46,7 +51,7 @@ fn build_client() -> Client {
 
     client_config.add_pem_to_root(CA_CERTIFICATE).unwrap();
 
-    Client::new(SERVER_ADDRESS, client_config).unwrap()
+    Client::new(&*SERVER_ADDRESS, client_config).unwrap()
 }
 
 fn start_server() {

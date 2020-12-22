@@ -1614,6 +1614,7 @@ dependencies = [
  "anyhow 1.0.28",
  "http 0.2.1 (git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.3)",
  "log 0.4.8 (git+https://github.com/mesalock-linux/log-sgx?rev=sgx_1.1.3)",
+ "once_cell 1.4.0",
  "parity-scale-codec",
  "rustls 0.16.0 (git+https://github.com/mesalock-linux/rustls?rev=sgx_1.1.3)",
  "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
@@ -2863,6 +2864,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "532c29a261168a45ce28948f9537ddd7a5dd272cc513b3017b1e82a88f962c37"
 dependencies = [
  "parking_lot 0.7.1",
+]
+
+[[package]]
+name = "once_cell"
+version = "1.4.0"
+source = "git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3#cefcaa03fed4d85276b3235d875f1b45d399cc3c"
+dependencies = [
+ "sgx_tstd",
 ]
 
 [[package]]
