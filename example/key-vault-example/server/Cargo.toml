@@ -13,8 +13,6 @@ thiserror = "1.0"
 rustls = "0.19.0"
 sgx_types = "1.1.1"
 env_logger = "0.7"
-frame-mra-tls = { path = "../../../frame/mra-tls"}
 frame-host = { path = "../../../frame/host" }
-key-vault-enclave = { path = "../../../modules/key-vault-enclave" }
 key-vault-host = { path = "../../../modules/key-vault-host" }
 key-vault-example-api = { path = "../api" }

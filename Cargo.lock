@@ -383,7 +383,6 @@ name = "anonify-io-types"
 version = "0.1.0"
 dependencies = [
  "frame-common",
- "frame-mra-tls",
  "frame-treekem",
  "libsecp256k1 0.2.2",
  "parity-scale-codec",
@@ -2445,7 +2444,6 @@ dependencies = [
 name = "key-vault-example-api"
 version = "0.1.0"
 dependencies = [
- "key-vault-host",
  "serde 1.0.117",
 ]
 
@@ -2475,8 +2473,6 @@ dependencies = [
  "anyhow 1.0.34",
  "env_logger",
  "frame-host",
- "frame-mra-tls",
- "key-vault-enclave",
  "key-vault-example-api",
  "key-vault-host",
  "rustls 0.19.0",

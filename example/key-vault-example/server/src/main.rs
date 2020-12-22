@@ -1,5 +1,5 @@
 use actix_web::{web, App, HttpServer};
-use frame_host::{EnclaveDir, StorePathSecrets};
+use frame_host::EnclaveDir;
 use handlers::*;
 use key_vault_host::Dispatcher;
 use sgx_types::sgx_enclave_id_t;

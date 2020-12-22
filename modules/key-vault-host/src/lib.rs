@@ -5,4 +5,4 @@ mod workflow;
 mod error;
 
 pub use dispatcher::Dispatcher;
-
+pub use error::KeyVaultHostError;

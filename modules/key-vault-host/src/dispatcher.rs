@@ -19,7 +19,7 @@ impl Dispatcher {
         Ok(Dispatcher { inner })
     }
 
-    pub fn start(&self) -> Result<()> {
+    pub async fn start(&self) -> Result<()> {
         let inner = self.inner.read();
         let input = host_input::StartServer::new();
         let eid = inner.get_enclave_id();
@@ -28,7 +28,7 @@ impl Dispatcher {
         Ok(())
     }
 
-    pub fn stop(&self) -> Result<()> {
+    pub async fn stop(&self) -> Result<()> {
         let inner = self.inner.read();
         let input = host_input::StopServer::default();
         let eid = inner.get_enclave_id();
