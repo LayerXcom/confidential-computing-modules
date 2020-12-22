@@ -12,9 +12,6 @@ pub enum EnclaveError {
     #[error("{0}")]
     EnvVarError(#[from] std::env::VarError),
 
-    #[error("Hex error: {0}")]
-    HexError(hex::FromHexError),
-
     #[error("Secp256k1 error: {0:?}")]
     Secp256k1Error(secp256k1::Error),
 
@@ -31,12 +28,6 @@ pub enum EnclaveError {
 impl From<sgx_types::sgx_status_t> for EnclaveError {
     fn from(err: sgx_types::sgx_status_t) -> Self {
         anyhow!("Sgx error: {:?}", err).into()
-    }
-}
-
-impl From<hex::FromHexError> for EnclaveError {
-    fn from(err: hex::FromHexError) -> Self {
-        anyhow!("Hex error: {:?}", err).into()
     }
 }
 
