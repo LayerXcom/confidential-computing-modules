@@ -39,6 +39,7 @@ pub trait ContextOps:
     fn sub_key(&self) -> &str;
     fn ca_certificate(&self) -> &str;
     fn server_address(&self) -> &str;
+    fn is_backup_enabled(&self) -> bool;
 }
 
 /// A getter of state stored in enclave memory.
