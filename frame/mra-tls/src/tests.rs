@@ -1,21 +1,18 @@
-use crate::{Client, ClientConfig, RequestHandler, Server, ServerConfig};
+use crate::{AttestedTlsConfig, Client, ClientConfig, RequestHandler, Server, ServerConfig};
+use anonify_config::IAS_ROOT_CERT;
 use anyhow::Result;
-use rustls::internal::pemfile;
 use serde_json::Value;
 use std::{
+    env,
     string::{String, ToString},
     thread,
-    vec::Vec,
     time::Duration,
+    vec::Vec,
 };
 use test_utils::*;
 
 const CLIENT_ADDRESS: &str = "localhost:12345";
 const SERVER_ADDRESS: &str = "0.0.0.0:12345";
-
-const SERVER_PRIVATE_KEY: &'static [u8] = include_bytes!("../certs/localhost.key");
-const SERVER_CERTIFICATE: &str = include_str!("../certs/localhost_v3.crt");
-const CA_CERTIFICATE: &str = include_str!("../certs/ca_v3.crt");
 
 pub fn run_tests() -> bool {
     check_all_passed!(
@@ -35,8 +32,20 @@ impl RequestHandler for EchoHandler {
 }
 
 fn test_request_response() {
-    start_server();
-    let mut client = build_client();
+    set_env_vars();
+    let spid = env::var("SPID").unwrap();
+    let ias_url = env::var("IAS_URL").unwrap();
+    let sub_key = env::var("SUB_KEY").unwrap();
+
+    let attested_tls_config =
+        AttestedTlsConfig::remote_attestation(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())
+            .unwrap();
+
+    start_server(attested_tls_config.clone());
+
+    let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)
+        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
+    let mut client = Client::new(CLIENT_ADDRESS, client_config).unwrap();
 
     let msg = r#"{
         "message": "Hello test_request_response"
@@ -46,21 +55,10 @@ fn test_request_response() {
     assert_eq!(msg, resp);
 }
 
-fn build_client() -> Client {
-    let mut client_config = ClientConfig::default();
-
-    client_config.add_pem_to_root(CA_CERTIFICATE).unwrap();
-
-    Client::new(CLIENT_ADDRESS, client_config).unwrap()
-}
-
-fn start_server() {
-    let private_keys = pemfile::rsa_private_keys(&mut SERVER_PRIVATE_KEY).unwrap();
-    let certs = pemfile::certs(&mut SERVER_CERTIFICATE.as_bytes()).unwrap();
-    let mut server_config = ServerConfig::default();
-    server_config
-        .set_single_cert(certs, private_keys.first().unwrap().clone())
-        .unwrap();
+fn start_server(attested_tls_config: AttestedTlsConfig) {
+    let server_config = ServerConfig::from_attested_tls_config(attested_tls_config)
+        .unwrap()
+        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
 
     let mut server = Server::new(SERVER_ADDRESS.to_string(), server_config);
     let handler = EchoHandler::default();

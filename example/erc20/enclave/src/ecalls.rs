@@ -1,8 +1,8 @@
 use crate::ENCLAVE_CONTEXT;
+use anonify_config::constants::*;
 use anonify_enclave::{context::EnclaveContext, workflow::*};
 use anyhow::anyhow;
 use codec::{Decode, Encode};
-use config::constants::*;
 use erc20_state_transition::{Runtime, MAX_MEM_SIZE};
 use frame_common::{
     crypto::Ed25519ChallengeResponse,

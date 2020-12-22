@@ -11,7 +11,8 @@ mod key;
 pub mod server;
 #[cfg(debug_assertions)]
 pub mod tests;
+mod verifier;
 
 pub use client::Client;
-pub use config::{ClientConfig, ServerConfig};
+pub use config::{AttestedTlsConfig, ClientConfig, ServerConfig};
 pub use server::{RequestHandler, Server};

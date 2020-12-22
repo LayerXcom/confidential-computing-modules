@@ -1,4 +1,3 @@
-use crate::IAS_REPORT_CA;
 use anyhow::{anyhow, bail, ensure, Result};
 use http_req::{
     request::{Method, Request},
@@ -6,6 +5,7 @@ use http_req::{
     uri::Uri,
 };
 use log::debug;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
     io::{BufReader, Write},
@@ -78,10 +78,13 @@ impl<'a> RAClient<'a> {
 }
 
 /// A response from IAS
-#[derive(Debug, Clone)]
-pub(crate) struct RAResponse {
-    pub(crate) attestation_report: AttestationReport,
-    pub(crate) report_sig: ReportSig,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RAResponse {
+    /// A report returned from Attestation Service
+    attestation_report: Vec<u8>,
+    /// A signature of the report
+    report_sig: Vec<u8>,
+    /// A certificate of the signing key of the signature
     cert: Vec<u8>,
 }
 
@@ -93,7 +96,7 @@ impl RAResponse {
         let sig = headers
             .get("X-IASReport-Signature")
             .ok_or_else(|| anyhow!("Not found X-IASReport-Signature header"))?;
-        let report_sig = ReportSig::base64_decode(sig.as_bytes())?;
+        let report_sig = base64::decode(&sig)?;
 
         let cert = headers
             .get("X-IASReport-Signing-Certificate")
@@ -102,7 +105,7 @@ impl RAResponse {
         let cert = percent_decode(cert)?;
 
         Ok(RAResponse {
-            attestation_report: AttestationReport::new(body),
+            attestation_report: body,
             report_sig,
             cert,
         })
@@ -113,10 +116,11 @@ impl RAResponse {
     /// 2. report's signature
     /// 3. report's timestamp
     /// 4. quote status
-    pub(crate) fn verify_attestation_report(self) -> Result<Self> {
+    #[must_use]
+    pub(crate) fn verify_attestation_report(self, root_cert: Vec<u8>) -> Result<Self> {
         let now_func = webpki::Time::try_from(SystemTime::now())?;
 
-        let mut ca_reader = BufReader::new(IAS_REPORT_CA.as_bytes());
+        let mut ca_reader = BufReader::new(&root_cert[..]);
         let mut root_store = rustls::RootCertStore::empty();
         root_store
             .add_pem_file(&mut ca_reader)
@@ -128,7 +132,7 @@ impl RAResponse {
             .map(|cert| cert.to_trust_anchor())
             .collect();
 
-        let ias_cert_dec = Self::decode_ias_report_ca()?;
+        let ias_cert_dec = Self::decode_ias_report_ca(root_cert)?;
         let mut chain: Vec<&[u8]> = Vec::new();
         chain.push(&ias_cert_dec);
 
@@ -143,15 +147,27 @@ impl RAResponse {
 
         sig_cert.verify_signature(
             &webpki::RSA_PKCS1_2048_8192_SHA256,
-            &self.attestation_report.as_bytes(),
-            &self.report_sig.as_bytes(),
+            &self.attestation_report,
+            &self.report_sig,
         )?;
 
-        let attn_report = self.attestation_report.as_json()?;
+        let attn_report = serde_json::from_slice(&self.attestation_report)?;
         self.verify_timestamp(&attn_report)?;
         self.verify_quote_status(&attn_report)?;
 
         Ok(self)
+    }
+
+    pub fn attestation_report(&self) -> &[u8] {
+        &self.attestation_report
+    }
+
+    pub fn report_sig(&self) -> &[u8] {
+        &self.report_sig
+    }
+
+    pub fn cert(&self) -> &[u8] {
+        &self.cert
     }
 
     /// Verify report's timestamp is within 24H (90day is recommended by Intel)
@@ -184,8 +200,8 @@ impl RAResponse {
         }
     }
 
-    fn decode_ias_report_ca() -> Result<Vec<u8>> {
-        let mut ias_ca_stripped = IAS_REPORT_CA.as_bytes().to_vec();
+    fn decode_ias_report_ca(root_cert: Vec<u8>) -> Result<Vec<u8>> {
+        let mut ias_ca_stripped = root_cert;
         ias_ca_stripped.retain(|&x| x != 0x0d && x != 0x0a);
         let head_len = "-----BEGIN CERTIFICATE-----".len();
         let tail_len = "-----END CERTIFICATE-----".len();
@@ -194,51 +210,6 @@ impl RAResponse {
         let ias_ca_core: &[u8] = &ias_ca_stripped[head_len..full_len - tail_len];
         let ias_cert_dec = base64::decode(ias_ca_core)?;
         Ok(ias_cert_dec)
-    }
-}
-
-/// A report returned from IAS
-#[derive(Debug, Clone, Default)]
-pub struct AttestationReport(Vec<u8>);
-
-impl AttestationReport {
-    pub fn new(report: Vec<u8>) -> Self {
-        AttestationReport(report)
-    }
-
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.0[..]
-    }
-
-    pub fn into_vec(self) -> Vec<u8> {
-        self.0
-    }
-
-    pub fn as_json(&self) -> Result<Value> {
-        serde_json::from_slice(&self.as_bytes()).map_err(Into::into)
-    }
-}
-
-/// Signature of the attestation report
-#[derive(Debug, Clone, Default)]
-pub struct ReportSig(Vec<u8>);
-
-impl ReportSig {
-    pub fn base64_decode(v: &[u8]) -> Result<Self> {
-        let v = base64::decode(v)?;
-        Ok(ReportSig(v))
-    }
-
-    pub fn new(report_sig: Vec<u8>) -> Self {
-        ReportSig(report_sig)
-    }
-
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.0[..]
-    }
-
-    pub fn into_vec(self) -> Vec<u8> {
-        self.0
     }
 }
 

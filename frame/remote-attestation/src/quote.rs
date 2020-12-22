@@ -1,5 +1,6 @@
 use crate::client::*;
 use crate::error::{FrameRAError, Result};
+use anyhow::anyhow;
 use frame_types::UntrustedStatus;
 use http_req::uri::Uri;
 use sgx_types::*;
@@ -43,7 +44,8 @@ impl Quote {
         &self,
         uri: &str,
         ias_api_key: &str,
-    ) -> Result<(AttestationReport, ReportSig)> {
+        root_cert: Vec<u8>,
+    ) -> Result<RAResponse> {
         let uri: Uri = uri.parse().expect("Invalid uri");
         let body = format!("{{\"isvEnclaveQuote\":\"{}\"}}\r\n", &self.base64_quote);
         let mut writer = Vec::new();
@@ -53,9 +55,9 @@ impl Quote {
             .quote_body_mut(&body.as_bytes())
             .send(&mut writer)?;
 
-        let ra_resp = RAResponse::from_response(writer, response)?.verify_attestation_report()?;
-
-        Ok((ra_resp.attestation_report, ra_resp.report_sig))
+        RAResponse::from_response(writer, response)?
+            .verify_attestation_report(root_cert)
+            .map_err(Into::into)
     }
 }
 
@@ -112,11 +114,16 @@ impl QuoteTarget {
     }
 
     /// Create quote with attestation key ID and enclave's local report.
-    pub fn create_quote(self, spid: &sgx_spid_t) -> Result<Quote> {
+    pub fn create_quote(self, spid: &str) -> Result<Quote> {
         const RET_QUOTE_BUF_LEN: u32 = 2048;
         let mut rt = UntrustedStatus::default();
         let mut quote = vec![0u8; RET_QUOTE_BUF_LEN as usize];
         let mut quote_len: u32 = 0;
+
+        let spid_vec = hex::decode(spid).map_err(|e| anyhow!("{:?}", e))?;
+        let mut id = [0; 16];
+        id.copy_from_slice(&spid_vec);
+        let spid: sgx_spid_t = sgx_spid_t { id };
 
         let status = unsafe {
             ocall_get_quote(
@@ -125,7 +132,7 @@ impl QuoteTarget {
                 0,                                                    // sigrl_len
                 &self.enclave_report.unwrap() as *const sgx_report_t, // enclave_report must be set
                 sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE,      // quote_type
-                spid as *const sgx_spid_t,                            // p_spid
+                &spid as *const sgx_spid_t,                           // p_spid
                 std::ptr::null(),                                     // p_nonce
                 std::ptr::null_mut(),                                 // p_qe_report
                 quote.as_mut_ptr() as *mut sgx_quote_t,

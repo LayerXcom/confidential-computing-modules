@@ -2,6 +2,7 @@ use crate::{
     error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
+use anonify_config::IAS_ROOT_CERT;
 use anonify_io_types::*;
 use anyhow::anyhow;
 use frame_common::{
@@ -32,7 +33,7 @@ pub struct EnclaveContext {
     version: usize,
     ias_url: String,
     sub_key: String,
-    spid: sgx_spid_t,
+    spid: String,
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB,
     notifier: Notifier,
@@ -153,12 +154,7 @@ impl QuoteGetter for EnclaveContext {
 
 // TODO: Consider SGX_ERROR_BUSY.
 impl EnclaveContext {
-    pub fn new(spid: &str) -> Result<Self> {
-        let spid_vec = hex::decode(spid)?;
-        let mut id = [0; 16];
-        id.copy_from_slice(&spid_vec);
-        let spid: sgx_spid_t = sgx_spid_t { id };
-
+    pub fn new(spid: String) -> Result<Self> {
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
 
@@ -258,16 +254,18 @@ impl EnclaveEngine for ReportRegistration {
     {
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
-        let (report, report_sig) = enclave_context
-            .quote()?
-            .remote_attestation(ias_url, sub_key)?;
+        let resp = enclave_context.quote()?.remote_attestation(
+            ias_url,
+            sub_key,
+            IAS_ROOT_CERT.to_vec(),
+        )?;
 
         let mrenclave_ver = enclave_context.mrenclave_ver();
         let my_roster_idx = enclave_context.read_group_key().my_roster_idx();
 
         Ok(output::ReturnRegisterReport::new(
-            report.into_vec(),
-            report_sig.into_vec(),
+            resp.attestation_report().to_vec(),
+            resp.report_sig().to_vec(),
             mrenclave_ver,
             my_roster_idx,
         ))
