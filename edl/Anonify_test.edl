@@ -6,7 +6,30 @@ enclave {
     from "sgx_thread.edl" import *;
     from "sgx_net.edl" import *;
 
+    include "sgx_quote.h"
+    include "frame-types.h"
+
     trusted {
         public void ecall_run_tests();
+    };
+
+    untrusted {
+        UntrustedStatus ocall_sgx_init_quote(
+            [out] sgx_target_info_t *ret_ti,
+            [out] sgx_epid_group_id_t *ret_gid
+        );
+
+        UntrustedStatus ocall_get_quote(
+            [in, size = sigrl_len] const uint8_t *p_sigrl,
+            uint32_t sigrl_len,
+            [in] const sgx_report_t *report,
+            sgx_quote_sign_type_t quote_type,
+            [in] const sgx_spid_t *p_spid,
+            [in] const sgx_quote_nonce_t *p_nonce,
+            [out] sgx_report_t *p_qe_report,
+            [out, size = maxlen] sgx_quote_t *p_quote,
+            uint32_t maxlen,
+            [out] uint32_t* p_quote_len
+        );
     };
 };
