@@ -254,9 +254,11 @@ impl EnclaveEngine for ReportRegistration {
     {
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
-        let resp = enclave_context
-            .quote()?
-            .remote_attestation(ias_url, sub_key, IAS_ROOT_CERT.to_vec())?;
+        let resp = enclave_context.quote()?.remote_attestation(
+            ias_url,
+            sub_key,
+            IAS_ROOT_CERT.to_vec(),
+        )?;
 
         let mrenclave_ver = enclave_context.mrenclave_ver();
         let my_roster_idx = enclave_context.read_group_key().my_roster_idx();

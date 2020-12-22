@@ -5,9 +5,9 @@ extern crate sgx_tstd as std;
 extern crate inventory;
 
 use serde::{Deserialize, Serialize};
+use std::env;
 use std::string::String;
 use std::vec::Vec;
-use std::env;
 pub use test_utils_proc_macro::test_case;
 
 #[derive(Default, Serialize, Deserialize, Debug)]

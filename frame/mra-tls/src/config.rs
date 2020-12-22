@@ -47,7 +47,9 @@ impl ClientConfig {
         let key_der = rustls::PrivateKey(attested_tls_config.priv_key);
 
         let mut client_config = ClientConfig::default();
-        client_config.tls.set_single_client_cert(cert_chain, key_der);
+        client_config
+            .tls
+            .set_single_client_cert(cert_chain, key_der);
 
         client_config
     }
