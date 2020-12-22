@@ -32,6 +32,7 @@ impl RequestHandler for EchoHandler {
 }
 
 fn test_request_response() {
+    set_env_vars();
     let spid = env::var("SPID").unwrap();
     let ias_url = env::var("IAS_URL").unwrap();
     let sub_key = env::var("SUB_KEY").unwrap();
