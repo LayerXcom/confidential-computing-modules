@@ -175,7 +175,7 @@ impl NistP256KeyPair {
         let mut pub_key_gx = self.pub_key.gx;
         pub_key_gx.reverse();
         let mut pub_key_gy = self.pub_key.gy;
-        pub_key_gx.reverse();
+        pub_key_gy.reverse();
         report_data.d[..32].copy_from_slice(&pub_key_gx);
         report_data.d[32..].copy_from_slice(&pub_key_gy);
 
