@@ -33,7 +33,7 @@ pub struct EnclaveContext {
     version: usize,
     ias_url: String,
     sub_key: String,
-    spid: sgx_spid_t,
+    spid: String,
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB,
     notifier: Notifier,
@@ -154,12 +154,7 @@ impl QuoteGetter for EnclaveContext {
 
 // TODO: Consider SGX_ERROR_BUSY.
 impl EnclaveContext {
-    pub fn new(spid: &str) -> Result<Self> {
-        let spid_vec = hex::decode(spid)?;
-        let mut id = [0; 16];
-        id.copy_from_slice(&spid_vec);
-        let spid: sgx_spid_t = sgx_spid_t { id };
-
+    pub fn new(spid: String) -> Result<Self> {
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
 

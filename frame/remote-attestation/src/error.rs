@@ -9,7 +9,6 @@ pub type Result<T> = std::result::Result<T, FrameRAError>;
 pub enum FrameRAError {
     #[error("I/O error: {0}")]
     IoError(#[from] io::Error),
-
     #[error("Anyhow error: {0}")]
     AnyhowError(#[from] anyhow::Error),
 

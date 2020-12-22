@@ -1,12 +1,13 @@
-use crate::{Client, ClientConfig, RequestHandler, Server, ServerConfig};
+use crate::{AttestedTlsConfig, Client, ClientConfig, RequestHandler, Server, ServerConfig};
 use anonify_config::IAS_ROOT_CERT;
 use anyhow::Result;
 use serde_json::Value;
 use std::{
+    env,
     string::{String, ToString},
     thread,
-    vec::Vec,
     time::Duration,
+    vec::Vec,
 };
 use test_utils::*;
 
@@ -31,8 +32,19 @@ impl RequestHandler for EchoHandler {
 }
 
 fn test_request_response() {
-    start_server();
-    let mut client = build_client();
+    let spid = env::var("SPID").unwrap();
+    let ias_url = env::var("IAS_URL").unwrap();
+    let sub_key = env::var("SUB_KEY").unwrap();
+
+    let attested_tls_config =
+        AttestedTlsConfig::remote_attestation(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())
+            .unwrap();
+
+    start_server(attested_tls_config.clone());
+
+    let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)
+        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
+    let mut client = Client::new(CLIENT_ADDRESS, client_config).unwrap();
 
     let msg = r#"{
         "message": "Hello test_request_response"
@@ -42,16 +54,10 @@ fn test_request_response() {
     assert_eq!(msg, resp);
 }
 
-fn build_client() -> Client {
-    let client_config =
-        ClientConfig::default().set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
-
-    Client::new(CLIENT_ADDRESS, client_config).unwrap()
-}
-
-fn start_server() {
-    let server_config =
-        ServerConfig::default().set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
+fn start_server(attested_tls_config: AttestedTlsConfig) {
+    let server_config = ServerConfig::from_attested_tls_config(attested_tls_config)
+        .unwrap()
+        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
 
     let mut server = Server::new(SERVER_ADDRESS.to_string(), server_config);
     let handler = EchoHandler::default();

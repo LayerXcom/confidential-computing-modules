@@ -14,5 +14,5 @@ pub mod tests;
 mod verifier;
 
 pub use client::Client;
-pub use config::{ClientConfig, ServerConfig};
+pub use config::{ClientConfig, ServerConfig, AttestedTlsConfig};
 pub use server::{RequestHandler, Server};

@@ -3,21 +3,20 @@ use crate::key::NistP256KeyPair;
 use crate::verifier::AttestationReportVerifier;
 use anyhow::anyhow;
 use remote_attestation::QuoteTarget;
-use sgx_types::sgx_spid_t;
 use std::{sync::Arc, vec::Vec};
 
 const CERT_ISSUER: &str = "Anonify";
 const CERT_SUBJECT: &str = "CN=Anonify";
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AttestedTlsConfig {
     ee_cert: Vec<u8>,
     priv_key: Vec<u8>,
 }
 
 impl AttestedTlsConfig {
-    fn remote_attestation(
-        spid: sgx_spid_t,
+    pub fn remote_attestation(
+        spid: &str,
         ias_url: &str,
         sub_key: &str,
         root_cert: Vec<u8>,
@@ -43,6 +42,16 @@ pub struct ClientConfig {
 }
 
 impl ClientConfig {
+    pub fn from_attested_tls_config(attested_tls_config: AttestedTlsConfig) -> Self {
+        let cert_chain = vec![rustls::Certificate(attested_tls_config.ee_cert)];
+        let key_der = rustls::PrivateKey(attested_tls_config.priv_key);
+
+        let mut client_config = ClientConfig::default();
+        client_config.tls.set_single_client_cert(cert_chain, key_der);
+
+        client_config
+    }
+
     pub fn tls(&self) -> &rustls::ClientConfig {
         &self.tls
     }
@@ -79,6 +88,16 @@ pub struct ServerConfig {
 }
 
 impl ServerConfig {
+    pub fn from_attested_tls_config(attested_tls_config: AttestedTlsConfig) -> Result<Self> {
+        let cert_chain = vec![rustls::Certificate(attested_tls_config.ee_cert)];
+        let key_der = rustls::PrivateKey(attested_tls_config.priv_key);
+
+        let mut server_config = ServerConfig::default();
+        server_config.tls.set_single_cert(cert_chain, key_der)?;
+
+        Ok(server_config)
+    }
+
     pub fn tls(&self) -> &rustls::ServerConfig {
         &self.tls
     }
