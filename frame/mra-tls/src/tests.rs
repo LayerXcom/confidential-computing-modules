@@ -1,16 +1,11 @@
-use crate::{Client, ClientConfig, RequestHandler, Server, ServerConfig};
 use crate::primitives::pemfile;
-use serde_json::Value;
+use crate::{Client, ClientConfig, RequestHandler, Server, ServerConfig};
 use once_cell::sync::Lazy;
-use std::{
-    env,
-    string::String,
-    thread,
-    vec::Vec,
-};
+use serde_json::Value;
+use std::{env, string::String, thread, time::Duration, vec::Vec};
 use test_utils::*;
 
-static SERVER_ADDRESS: Lazy<String> = Lazy::new( || {
+static SERVER_ADDRESS: Lazy<String> = Lazy::new(|| {
     let host = env::var("HOSTNAME").expect("failed to get env 'HOSTNAME'");
     format!("{}:12345", host)
 });
@@ -65,4 +60,5 @@ fn start_server() {
     let mut server = Server::new(LISTEN_ADDRESS, server_config);
     let handler = EchoHandler::default();
     thread::spawn(move || server.run(handler).unwrap());
+    thread::sleep(Duration::from_secs(1));
 }
