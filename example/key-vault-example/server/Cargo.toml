@@ -14,13 +14,14 @@ rustls = "0.19.0"
 sgx_types = "1.1.1"
 env_logger = "0.7"
 frame-host = { path = "../../../frame/host" }
-frame-common = { path = "../../../frame/common" }
-frame-runtime = { path = "../../../frame/runtime" }
-frame-treekem = { path = "../../../frame/treekem" }
 key-vault-host = { path = "../../../modules/key-vault-host" }
 key-vault-example-api = { path = "../api" }
-erc20-state-transition = { path = "../../erc20/state-transition" }
-anonify-eth-driver = { path = "../../../modules/anonify-eth-driver" }
 
 [dev-dependencies]
 integration-tests = { path = "../../../tests/integration" }
+frame-common = { path = "../../../frame/common" }
+frame-runtime = { path = "../../../frame/runtime" }
+frame-treekem = { path = "../../../frame/treekem" }
+erc20-state-transition = { path = "../../erc20/state-transition" }
+anonify-eth-driver = { path = "../../../modules/anonify-eth-driver" }
+codec = { package = "parity-scale-codec", version = "1.1" }

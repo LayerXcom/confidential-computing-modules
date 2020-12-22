@@ -1,16 +1,16 @@
 use crate::*;
-
 use actix_web::{test, web, App};
 use anonify_eth_driver::{
     dispatcher::Dispatcher as EthDispatcher,
     eth::{EthDeployer, EthSender, EventWatcher},
     EventCache,
 };
+use codec::{Decode, Encode};
+use erc20_state_transition::{construct, CallName, MemName, CIPHERTEXT_SIZE};
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_runtime::primitives::U64;
 use frame_treekem::EciesCiphertext;
-use integration_tests::{set_env_vars, get_encrypting_key};
-use erc20_state_transition::{construct, CallName, MemName, CIPHERTEXT_SIZE};
+use integration_tests::{get_encrypting_key, set_env_vars};
 
 const ETH_URL: &str = "http://172.28.0.2:8545";
 const ABI_PATH: &str = "../../contract-build/Anonify.abi";
@@ -50,7 +50,8 @@ async fn test_backup_path_secret() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        EthDispatcher::<EthDeployer, EthSender, EventWatcher>::new(app_eid, ETH_URL, cache).unwrap();
+        EthDispatcher::<EthDeployer, EthSender, EventWatcher>::new(app_eid, ETH_URL, cache)
+            .unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
