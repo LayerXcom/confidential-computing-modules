@@ -5,7 +5,7 @@ extern crate sgx_tstd as localstd;
 
 use frame_runtime::prelude::*;
 
-pub const MAX_MEM_SIZE: usize = 5000;
+pub const MAX_MEM_SIZE: usize = 100;
 
 impl_memory! {
     (0, "Balance", U64),
