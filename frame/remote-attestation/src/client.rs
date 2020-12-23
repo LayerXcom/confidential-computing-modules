@@ -7,13 +7,7 @@ use http_req::{
 use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{
-    io::{BufReader, Write},
-    prelude::v1::*,
-    str,
-    string::String,
-    time::SystemTime,
-};
+use std::{io::Write, prelude::v1::*, str, string::String, time::SystemTime};
 
 type SignatureAlgorithms = &'static [&'static webpki::SignatureAlgorithm];
 static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
@@ -79,16 +73,16 @@ impl<'a> RAClient<'a> {
 
 /// A response from IAS
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RAResponse {
+pub struct AttestedReport {
     /// A report returned from Attestation Service
-    attestation_report: Vec<u8>,
+    report: Vec<u8>,
     /// A signature of the report
     report_sig: Vec<u8>,
     /// A certificate of the signing key of the signature
-    cert: Vec<u8>,
+    report_cert: Vec<u8>,
 }
 
-impl RAResponse {
+impl AttestedReport {
     pub(crate) fn from_response(body: Vec<u8>, resp: Response) -> Result<Self> {
         debug!("RA response: {:?}", resp);
 
@@ -102,29 +96,26 @@ impl RAResponse {
             .get("X-IASReport-Signing-Certificate")
             .ok_or_else(|| anyhow!("Not found X-IASReport-Signing-Certificate"))?
             .replace("%0A", "");
-        let cert = percent_decode(cert)?;
+        let report_cert = percent_decode(cert)?;
 
-        Ok(RAResponse {
-            attestation_report: body,
+        Ok(AttestedReport {
+            report: body,
             report_sig,
-            cert,
+            report_cert,
         })
     }
 
     /// Verify that
     /// 1. TLS server certificate
     /// 2. report's signature
-    /// 3. report's timestamp
+    /// 3. report's version
     /// 4. quote status
     #[must_use]
-    pub(crate) fn verify_attestation_report(self, root_cert: Vec<u8>) -> Result<Self> {
+    pub fn verify_attested_report(self, root_cert: Vec<u8>) -> Result<Self> {
         let now_func = webpki::Time::try_from(SystemTime::now())?;
 
-        let mut ca_reader = BufReader::new(&root_cert[..]);
         let mut root_store = rustls::RootCertStore::empty();
-        root_store
-            .add_pem_file(&mut ca_reader)
-            .expect("Failed to add CA");
+        root_store.add(&rustls::Certificate(root_cert.clone()))?;
 
         let trust_anchors: Vec<webpki::TrustAnchor> = root_store
             .roots
@@ -132,61 +123,66 @@ impl RAResponse {
             .map(|cert| cert.to_trust_anchor())
             .collect();
 
-        let ias_cert_dec = Self::decode_ias_report_ca(root_cert)?;
         let mut chain: Vec<&[u8]> = Vec::new();
-        chain.push(&ias_cert_dec);
+        chain.push(&root_cert);
 
-        let sig_cert = webpki::EndEntityCert::from(&self.cert)?;
+        let report_cert = webpki::EndEntityCert::from(&self.report_cert)?;
 
-        sig_cert.verify_is_valid_tls_server_cert(
+        report_cert.verify_is_valid_tls_server_cert(
             SUPPORTED_SIG_ALGS,
             &webpki::TLSServerTrustAnchors(&trust_anchors),
             &chain,
             now_func,
         )?;
 
-        sig_cert.verify_signature(
+        report_cert.verify_signature(
             &webpki::RSA_PKCS1_2048_8192_SHA256,
-            &self.attestation_report,
+            &self.report,
             &self.report_sig,
         )?;
 
-        let attn_report = serde_json::from_slice(&self.attestation_report)?;
-        self.verify_timestamp(&attn_report)?;
-        self.verify_quote_status(&attn_report)?;
+        let report = serde_json::from_slice(&self.report)?;
+        Self::verify_version(&report)?;
+        Self::verify_quote_status(&report)?;
 
         Ok(self)
     }
 
-    pub fn attestation_report(&self) -> &[u8] {
-        &self.attestation_report
+    pub fn get_quote_body(&self) -> Result<Vec<u8>> {
+        let report: Value = serde_json::from_slice(&self.report)?;
+        let encoded_quote = report["isvEnclaveQuoteBody"]
+            .as_str()
+            .ok_or_else(|| anyhow!("Invalid isvEnclaveQuoteBody"))?;
+        base64::decode(encoded_quote).map_err(Into::into)
+    }
+
+    pub fn report(&self) -> &[u8] {
+        &self.report
     }
 
     pub fn report_sig(&self) -> &[u8] {
         &self.report_sig
     }
 
-    pub fn cert(&self) -> &[u8] {
-        &self.cert
+    pub fn report_cert(&self) -> &[u8] {
+        &self.report_cert
     }
 
-    /// Verify report's timestamp is within 24H (90day is recommended by Intel)
-    fn verify_timestamp(&self, attn_report: &Value) -> Result<()> {
-        if let Value::String(_time) = &attn_report["timestamp"] {
-            Ok(())
-        // TODO
-        // let time_fixed = time.clone() + "+0000";
-        // let ts = DateTime::parse_from_str(&time_fixed, "%Y-%m-%dT%H:%M:%S%.f%z").unwrap().timestamp();
-        // let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
-        // ensure!(now - ts > 0, "")
-        } else {
-            bail!("Failed to fetch timestamp from attestation report");
-        }
+    /// Verify API version is supported
+    fn verify_version(report: &Value) -> Result<()> {
+        let version = report["version"]
+            .as_u64()
+            .ok_or_else(|| anyhow!("The Remote Attestation API version is not valid"))?;
+        ensure!(
+            version == 3,
+            "The Remote Attestation API version is not supported"
+        );
+        Ok(())
     }
 
     /// Verify the quote status included the attestation report is OK
-    fn verify_quote_status(&self, attn_report: &Value) -> Result<()> {
-        if let Value::String(quote_status) = &attn_report["isvEnclaveQuoteStatus"] {
+    fn verify_quote_status(report: &Value) -> Result<()> {
+        if let Value::String(quote_status) = &report["isvEnclaveQuoteStatus"] {
             match quote_status.as_ref() {
                 "OK" => Ok(()),
                 "GROUP_OUT_OF_DATE" => {
@@ -198,18 +194,6 @@ impl RAResponse {
         } else {
             bail!("Failed to fetch isvEnclaveQuoteStatus from attestation report");
         }
-    }
-
-    fn decode_ias_report_ca(root_cert: Vec<u8>) -> Result<Vec<u8>> {
-        let mut ias_ca_stripped = root_cert;
-        ias_ca_stripped.retain(|&x| x != 0x0d && x != 0x0a);
-        let head_len = "-----BEGIN CERTIFICATE-----".len();
-        let tail_len = "-----END CERTIFICATE-----".len();
-
-        let full_len = ias_ca_stripped.len();
-        let ias_ca_core: &[u8] = &ias_ca_stripped[head_len..full_len - tail_len];
-        let ias_cert_dec = base64::decode(ias_ca_core)?;
-        Ok(ias_cert_dec)
     }
 }
 

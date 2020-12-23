@@ -31,11 +31,11 @@ extern "C" {
 
 /// The very high level service for remote attestations
 /// Use base64-encoded QUOTE structure to communicate via defined API.
-pub struct Quote {
+pub struct EncodedQuote {
     base64_quote: String,
 }
 
-impl Quote {
+impl EncodedQuote {
     pub fn new(base64_quote: String) -> Self {
         Self { base64_quote }
     }
@@ -45,7 +45,7 @@ impl Quote {
         uri: &str,
         ias_api_key: &str,
         root_cert: Vec<u8>,
-    ) -> Result<RAResponse> {
+    ) -> Result<AttestedReport> {
         let uri: Uri = uri.parse().expect("Invalid uri");
         let body = format!("{{\"isvEnclaveQuote\":\"{}\"}}\r\n", &self.base64_quote);
         let mut writer = Vec::new();
@@ -55,8 +55,8 @@ impl Quote {
             .quote_body_mut(&body.as_bytes())
             .send(&mut writer)?;
 
-        RAResponse::from_response(writer, response)?
-            .verify_attestation_report(root_cert)
+        AttestedReport::from_response(writer, response)?
+            .verify_attested_report(root_cert)
             .map_err(Into::into)
     }
 }
@@ -114,7 +114,7 @@ impl QuoteTarget {
     }
 
     /// Create quote with attestation key ID and enclave's local report.
-    pub fn create_quote(self, spid: &str) -> Result<Quote> {
+    pub fn create_quote(self, spid: &str) -> Result<EncodedQuote> {
         const RET_QUOTE_BUF_LEN: u32 = 2048;
         let mut rt = UntrustedStatus::default();
         let mut quote = vec![0u8; RET_QUOTE_BUF_LEN as usize];
@@ -154,6 +154,6 @@ impl QuoteTarget {
         }
 
         let _ = quote.split_off(quote_len as usize);
-        Ok(Quote::new(base64::encode(&quote)))
+        Ok(EncodedQuote::new(base64::encode(&quote)))
     }
 }

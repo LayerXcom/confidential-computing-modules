@@ -1,7 +1,6 @@
-use crate::error::{MraTLSError, Result};
+use crate::error::Result;
 use crate::key::NistP256KeyPair;
-use crate::verifier::AttestationReportVerifier;
-use anyhow::anyhow;
+use crate::verifier::AttestedReportVerifier;
 use remote_attestation::QuoteTarget;
 use std::{sync::Arc, vec::Vec};
 
@@ -15,20 +14,15 @@ pub struct AttestedTlsConfig {
 }
 
 impl AttestedTlsConfig {
-    pub fn remote_attestation(
-        spid: &str,
-        ias_url: &str,
-        sub_key: &str,
-        root_cert: Vec<u8>,
-    ) -> Result<Self> {
+    pub fn new_by_ra(spid: &str, ias_url: &str, sub_key: &str, root_cert: Vec<u8>) -> Result<Self> {
         let key_pair = NistP256KeyPair::new()?;
         let report_data = key_pair.report_data();
-        let resp = QuoteTarget::new()?
+        let attested_report = QuoteTarget::new()?
             .set_enclave_report(&report_data)?
             .create_quote(&spid)?
             .remote_attestation(ias_url, sub_key, root_cert)?;
 
-        let extension = serde_json::to_vec(&resp)?;
+        let extension = serde_json::to_vec(&attested_report)?;
         let ee_cert = key_pair.create_cert_with_extension(CERT_ISSUER, CERT_SUBJECT, &extension);
         let priv_key = key_pair.priv_key_into_der();
 
@@ -42,16 +36,16 @@ pub struct ClientConfig {
 }
 
 impl ClientConfig {
-    pub fn from_attested_tls_config(attested_tls_config: AttestedTlsConfig) -> Self {
+    pub fn from_attested_tls_config(attested_tls_config: AttestedTlsConfig) -> Result<Self> {
         let cert_chain = vec![rustls::Certificate(attested_tls_config.ee_cert)];
         let key_der = rustls::PrivateKey(attested_tls_config.priv_key);
 
         let mut client_config = ClientConfig::default();
         client_config
             .tls
-            .set_single_client_cert(cert_chain, key_der);
+            .set_single_client_cert(cert_chain, key_der)?;
 
-        client_config
+        Ok(client_config)
     }
 
     pub fn tls(&self) -> &rustls::ClientConfig {
@@ -59,7 +53,7 @@ impl ClientConfig {
     }
 
     pub fn set_attestation_report_verifier(mut self, root_cert: Vec<u8>) -> Self {
-        let verifier = Arc::new(AttestationReportVerifier::new(root_cert));
+        let verifier = Arc::new(AttestedReportVerifier::new(root_cert));
         self.tls.dangerous().set_certificate_verifier(verifier);
 
         self
@@ -105,7 +99,7 @@ impl ServerConfig {
     }
 
     pub fn set_attestation_report_verifier(mut self, root_cert: Vec<u8>) -> Self {
-        let verifier = Arc::new(AttestationReportVerifier::new(root_cert));
+        let verifier = Arc::new(AttestedReportVerifier::new(root_cert));
         self.tls.set_client_certificate_verifier(verifier);
 
         self
