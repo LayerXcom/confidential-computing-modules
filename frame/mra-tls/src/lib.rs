@@ -8,7 +8,6 @@ pub mod config;
 mod connection;
 mod error;
 mod key;
-mod report;
 pub mod server;
 #[cfg(debug_assertions)]
 pub mod tests;

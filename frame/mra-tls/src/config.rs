@@ -14,12 +14,7 @@ pub struct AttestedTlsConfig {
 }
 
 impl AttestedTlsConfig {
-    pub fn new_by_ra(
-        spid: &str,
-        ias_url: &str,
-        sub_key: &str,
-        root_cert: Vec<u8>,
-    ) -> Result<Self> {
+    pub fn new_by_ra(spid: &str, ias_url: &str, sub_key: &str, root_cert: Vec<u8>) -> Result<Self> {
         let key_pair = NistP256KeyPair::new()?;
         let report_data = key_pair.report_data();
         let attested_report = QuoteTarget::new()?

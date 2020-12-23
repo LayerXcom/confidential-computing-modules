@@ -1,9 +1,9 @@
 use crate::cert::*;
-use crate::error::{Result, MraTLSError};
+use crate::error::{MraTLSError, Result};
+use anyhow::anyhow;
 use remote_attestation::AttestedReport;
 use std::io::{Cursor, Read};
 use std::vec::Vec;
-use anyhow::anyhow;
 
 #[derive(Clone, Debug)]
 pub struct AttestedReportVerifier {
@@ -51,7 +51,9 @@ impl AttestedReportVerifier {
         let raw_pubkey = (pubkey.1).0.to_bytes();
         let is_uncompressed = raw_pubkey[0] == 4;
         if !is_uncompressed || &raw_pubkey[1..] != &report_data[..] {
-            return Err(MraTLSError::Error(anyhow!("ee_cert's pubkey is not equal to report data")));
+            return Err(MraTLSError::Error(anyhow!(
+                "ee_cert's pubkey is not equal to report data"
+            )));
         }
 
         Ok(())
