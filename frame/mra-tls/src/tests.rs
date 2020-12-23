@@ -38,8 +38,7 @@ fn test_request_response() {
     let sub_key = env::var("SUB_KEY").unwrap();
 
     let attested_tls_config =
-        AttestedTlsConfig::remote_attestation(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())
-            .unwrap();
+        AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec()).unwrap();
 
     start_server(attested_tls_config.clone());
 

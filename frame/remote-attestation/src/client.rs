@@ -79,16 +79,16 @@ impl<'a> RAClient<'a> {
 
 /// A response from IAS
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RAResponse {
+pub struct AttestedReport {
     /// A report returned from Attestation Service
-    attestation_report: Vec<u8>,
+    report: Vec<u8>,
     /// A signature of the report
     report_sig: Vec<u8>,
     /// A certificate of the signing key of the signature
-    cert: Vec<u8>,
+    report_cert: Vec<u8>,
 }
 
-impl RAResponse {
+impl AttestedReport {
     pub(crate) fn from_response(body: Vec<u8>, resp: Response) -> Result<Self> {
         debug!("RA response: {:?}", resp);
 
@@ -102,12 +102,12 @@ impl RAResponse {
             .get("X-IASReport-Signing-Certificate")
             .ok_or_else(|| anyhow!("Not found X-IASReport-Signing-Certificate"))?
             .replace("%0A", "");
-        let cert = percent_decode(cert)?;
+        let report_cert = percent_decode(cert)?;
 
-        Ok(RAResponse {
-            attestation_report: body,
+        Ok(AttestedReport {
+            report: body,
             report_sig,
-            cert,
+            report_cert,
         })
     }
 
@@ -117,7 +117,7 @@ impl RAResponse {
     /// 3. report's timestamp
     /// 4. quote status
     #[must_use]
-    pub(crate) fn verify_attestation_report(self, root_cert: Vec<u8>) -> Result<Self> {
+    pub(crate) fn verify_attested_report(self, root_cert: Vec<u8>) -> Result<Self> {
         let now_func = webpki::Time::try_from(SystemTime::now())?;
 
         let mut ca_reader = BufReader::new(&root_cert[..]);
@@ -136,42 +136,42 @@ impl RAResponse {
         let mut chain: Vec<&[u8]> = Vec::new();
         chain.push(&ias_cert_dec);
 
-        let sig_cert = webpki::EndEntityCert::from(&self.cert)?;
+        let report_cert = webpki::EndEntityCert::from(&self.report_cert)?;
 
-        sig_cert.verify_is_valid_tls_server_cert(
+        report_cert.verify_is_valid_tls_server_cert(
             SUPPORTED_SIG_ALGS,
             &webpki::TLSServerTrustAnchors(&trust_anchors),
             &chain,
             now_func,
         )?;
 
-        sig_cert.verify_signature(
+        report_cert.verify_signature(
             &webpki::RSA_PKCS1_2048_8192_SHA256,
-            &self.attestation_report,
+            &self.report,
             &self.report_sig,
         )?;
 
-        let attn_report = serde_json::from_slice(&self.attestation_report)?;
-        self.verify_timestamp(&attn_report)?;
-        self.verify_quote_status(&attn_report)?;
+        let attn_report = serde_json::from_slice(&self.report)?;
+        Self::verify_timestamp(&attn_report)?;
+        Self::verify_quote_status(&attn_report)?;
 
         Ok(self)
     }
 
-    pub fn attestation_report(&self) -> &[u8] {
-        &self.attestation_report
+    pub fn report(&self) -> &[u8] {
+        &self.report
     }
 
     pub fn report_sig(&self) -> &[u8] {
         &self.report_sig
     }
 
-    pub fn cert(&self) -> &[u8] {
-        &self.cert
+    pub fn report_cert(&self) -> &[u8] {
+        &self.report_cert
     }
 
     /// Verify report's timestamp is within 24H (90day is recommended by Intel)
-    fn verify_timestamp(&self, attn_report: &Value) -> Result<()> {
+    fn verify_timestamp(attn_report: &Value) -> Result<()> {
         if let Value::String(_time) = &attn_report["timestamp"] {
             Ok(())
         // TODO
@@ -185,7 +185,7 @@ impl RAResponse {
     }
 
     /// Verify the quote status included the attestation report is OK
-    fn verify_quote_status(&self, attn_report: &Value) -> Result<()> {
+    fn verify_quote_status(attn_report: &Value) -> Result<()> {
         if let Value::String(quote_status) = &attn_report["isvEnclaveQuoteStatus"] {
             match quote_status.as_ref() {
                 "OK" => Ok(()),
