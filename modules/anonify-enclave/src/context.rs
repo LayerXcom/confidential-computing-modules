@@ -16,7 +16,7 @@ use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, DhPubKey, EciesCiphertext,
 };
-use remote_attestation::{Quote, QuoteTarget};
+use remote_attestation::{EncodedQuote, QuoteTarget};
 use std::prelude::v1::*;
 use std::{
     env,
@@ -142,7 +142,7 @@ impl IdentityKeyOps for EnclaveContext {
 }
 
 impl QuoteGetter for EnclaveContext {
-    fn quote(&self) -> anyhow::Result<Quote> {
+    fn quote(&self) -> anyhow::Result<EncodedQuote> {
         let report_data = &self.identity_key.report_data()?;
         QuoteTarget::new()?
             .set_enclave_report(&report_data)?

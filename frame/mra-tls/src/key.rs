@@ -8,7 +8,6 @@ use sgx_tcrypto::SgxEccHandle;
 use sgx_types::{sgx_ec256_private_t, sgx_ec256_public_t, sgx_report_data_t};
 use std::borrow::ToOwned;
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::untrusted::time::SystemTimeEx;
 use std::vec::Vec;
 use yasna::models::{ObjectIdentifier, UTCTime};
 use yasna::{construct_der, Tag};

@@ -1,6 +1,8 @@
 use crate::cert::*;
 use crate::error::Result;
+use std::io::{Cursor, Read};
 use std::vec::Vec;
+use remote_attestation::AttestedReport;
 
 #[derive(Clone, Debug)]
 pub struct AttestedReportVerifier {
@@ -17,7 +19,7 @@ impl AttestedReportVerifier {
         // Parse DER formatted x.509 end entity certificate
         let x509 = yasna::parse_der(&ee_cert, X509::load)?;
         // Extract tbs (To Be Signed) Certificate
-        let tbs_cert = <TbsCert as Asn1Ty>::ValueTy = x509.0;
+        let tbs_cert: <TbsCert as Asn1Ty>::ValueTy = x509.0;
         let pub_key: <PubKey as Asn1Ty>::ValueTy = ((((((tbs_cert.1).1).1).1).1).1).0;
         let pub_k = (pub_key.1).0;
 
@@ -25,11 +27,26 @@ impl AttestedReportVerifier {
         let cert_ext_payload: Vec<u8> = ((cert_ext.0).1).0;
 
         // Verify the deserialized attested_report which is included in extension field of X.509 cert
-        let attested_report = serde_json::from_slice(&cert_ext_payload)?
-            .verify_attested_report(&self.root_cert.to_vec())?;
+        let attested_report = serde_json::from_slice::<AttestedReport>(&cert_ext_payload)?
+            .verify_attested_report(self.root_cert.to_vec())?;
 
-        
+        let mut quote = Cursor::new(attested_report.get_quote_body()?);
+        let mut mr_enclave = [0u8; 32];
+        let mut mr_signer = [0u8; 32];
+        let mut report_data = [0u8; 64];
+
+        quote.set_position(112);
+        quote.read_exact(&mut mr_enclave)?;
+        quote.set_position(176);
+        quote.read_exact(&mut mr_signer)?;
+        quote.set_position(368);
+        quote.read_exact(&mut report_data)?;
+
         unimplemented!();
+    }
+
+    fn verify_pubkey_eq() -> Result<()> {
+        Ok(())
     }
 
     fn verify_measurements(&self) -> bool {

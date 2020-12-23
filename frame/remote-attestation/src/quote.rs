@@ -31,11 +31,11 @@ extern "C" {
 
 /// The very high level service for remote attestations
 /// Use base64-encoded QUOTE structure to communicate via defined API.
-pub struct Quote {
+pub struct EncodedQuote {
     base64_quote: String,
 }
 
-impl Quote {
+impl EncodedQuote {
     pub fn new(base64_quote: String) -> Self {
         Self { base64_quote }
     }
@@ -114,7 +114,7 @@ impl QuoteTarget {
     }
 
     /// Create quote with attestation key ID and enclave's local report.
-    pub fn create_quote(self, spid: &str) -> Result<Quote> {
+    pub fn create_quote(self, spid: &str) -> Result<EncodedQuote> {
         const RET_QUOTE_BUF_LEN: u32 = 2048;
         let mut rt = UntrustedStatus::default();
         let mut quote = vec![0u8; RET_QUOTE_BUF_LEN as usize];
@@ -154,6 +154,56 @@ impl QuoteTarget {
         }
 
         let _ = quote.split_off(quote_len as usize);
-        Ok(Quote::new(base64::encode(&quote)))
+        Ok(EncodedQuote::new(base64::encode(&quote)))
     }
 }
+
+// /// QUOTE Structure defined in "Attestation Service for Intel® Software Guard Extensions (Intel® SGX): API Documentation version 6.0"
+// pub strcut Quote {
+//     /// Version of this structure. (Little-endian integer)
+//     version: u16,
+//     /// ID of platform’s EPID Group.
+//     gid: u32,
+//     /// The security version of the QE.
+//     isv_svn_qe: u16,
+//     /// The security version of the PCE.
+//     isv_svn_pce: u16,
+
+//     // isv_enclave_report
+
+// }
+
+// impl Quote {
+//     pub fn parse<R: Read>(reader: R) -> Result<Self> {
+
+//     }
+// }
+
+// /// QUOTE's REPORTBODY Structure defined in "Attestation Service for Intel® Software Guard Extensions (Intel® SGX): API Documentation version 6.0"
+// pub struct EnclaveReport {
+//     /// The security version of the CPU represented as a byte array.
+//     cpu_svn: [u8; 16],
+//     /// SSA frame extended feature set for the enclave.
+//     misc_select: u32,
+//     /// The values of the attributes flags for the enclave,
+//     /// for example, whether the enclave is running in debug mode.
+//     attributes: [u8; 16],
+//     /// Enclave measurement represented as SHA256 digest
+//     mr_enclave: [u8; 32],
+//     /// SHA256 digest (as defined in FIPS PUB 180-4) of the big endian format modulus of
+//     /// the RSA public key of the enclave’s signing key pair.
+//     mr_signer: [u8; 32],
+//     /// Enclave Product ID
+//     isv_prod_id: u16,
+//     /// The security version of the enclave.
+//     isv_svn: u16,
+//     /// The value of REPORT.ReportData in REPORT input of
+//     /// GetQuote() or UserData in NB_UD input of GetQuote().
+//     report_data: [u8; 64],
+// }
+
+// impl EnclaveReport {
+//     pub fn parse_from_bytes(bytes: &[u8]) -> Result<Self> {
+
+//     }
+// }

@@ -111,7 +111,7 @@ impl AttestedReport {
     /// 3. report's version
     /// 4. quote status
     #[must_use]
-    pub(crate) fn verify_attested_report(self, root_cert: Vec<u8>) -> Result<Self> {
+    pub fn verify_attested_report(self, root_cert: Vec<u8>) -> Result<Self> {
         let now_func = webpki::Time::try_from(SystemTime::now())?;
 
         let mut root_store = rustls::RootCertStore::empty();
@@ -148,6 +148,14 @@ impl AttestedReport {
         Ok(self)
     }
 
+    pub fn get_quote_body(&self) -> Result<Vec<u8>> {
+        let report: Value = serde_json::from_slice(&self.report)?;
+        let encoded_quote = report["isvEnclaveQuoteBody"]
+            .as_str()
+            .ok_or_else(|| anyhow!("Invalid isvEnclaveQuoteBody"))?;
+        base64::decode(encoded_quote).map_err(Into::into)
+    }
+
     pub fn report(&self) -> &[u8] {
         &self.report
     }
@@ -166,7 +174,7 @@ impl AttestedReport {
             .as_u64()
             .ok_or_else(|| anyhow!("The Remote Attestation API version is not valid"))?;
         ensure!(
-            version == 4,
+            version == 3,
             "The Remote Attestation API version is not supported"
         );
         Ok(())

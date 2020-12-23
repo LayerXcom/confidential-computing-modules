@@ -1,7 +1,6 @@
-use crate::error::{MraTLSError, Result};
+use crate::error::Result;
 use crate::key::NistP256KeyPair;
 use crate::verifier::AttestedReportVerifier;
-use anyhow::anyhow;
 use remote_attestation::QuoteTarget;
 use std::{sync::Arc, vec::Vec};
 

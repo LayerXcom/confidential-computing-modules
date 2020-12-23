@@ -7,4 +7,5 @@ mod error;
 mod quote;
 
 pub use crate::error::FrameRAError as Error;
-pub use crate::quote::{Quote, QuoteTarget};
+pub use crate::quote::{QuoteTarget, EncodedQuote};
+pub use crate::client::AttestedReport;
