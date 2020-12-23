@@ -57,6 +57,5 @@ cd example/erc20/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo build
 
 echo "Building key-vault server..."
-cd example/key-vault-example/server
+cd ../../key-vault-example/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo build
-
