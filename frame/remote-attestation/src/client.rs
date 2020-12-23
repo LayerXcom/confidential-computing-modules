@@ -108,7 +108,7 @@ impl AttestedReport {
     /// Verify that
     /// 1. TLS server certificate
     /// 2. report's signature
-    /// 3. report's timestamp
+    /// 3. report's version
     /// 4. quote status
     #[must_use]
     pub(crate) fn verify_attested_report(self, root_cert: Vec<u8>) -> Result<Self> {
@@ -141,9 +141,9 @@ impl AttestedReport {
             &self.report_sig,
         )?;
 
-        let attn_report = serde_json::from_slice(&self.report)?;
-        Self::verify_timestamp(&attn_report)?;
-        Self::verify_quote_status(&attn_report)?;
+        let report = serde_json::from_slice(&self.report)?;
+        Self::verify_version(&report)?;
+        Self::verify_quote_status(&report)?;
 
         Ok(self)
     }
@@ -160,23 +160,21 @@ impl AttestedReport {
         &self.report_cert
     }
 
-    /// Verify report's timestamp is within 24H (90day is recommended by Intel)
-    fn verify_timestamp(attn_report: &Value) -> Result<()> {
-        if let Value::String(_time) = &attn_report["timestamp"] {
-            Ok(())
-        // TODO
-        // let time_fixed = time.clone() + "+0000";
-        // let ts = DateTime::parse_from_str(&time_fixed, "%Y-%m-%dT%H:%M:%S%.f%z").unwrap().timestamp();
-        // let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
-        // ensure!(now - ts > 0, "")
-        } else {
-            bail!("Failed to fetch timestamp from attestation report");
-        }
+    /// Verify API version is supported
+    fn verify_version(report: &Value) -> Result<()> {
+        let version = report["version"]
+            .as_u64()
+            .ok_or_else(|| anyhow!("The Remote Attestation API version is not valid"))?;
+        ensure!(
+            version == 4,
+            "The Remote Attestation API version is not supported"
+        );
+        Ok(())
     }
 
     /// Verify the quote status included the attestation report is OK
-    fn verify_quote_status(attn_report: &Value) -> Result<()> {
-        if let Value::String(quote_status) = &attn_report["isvEnclaveQuoteStatus"] {
+    fn verify_quote_status(report: &Value) -> Result<()> {
+        if let Value::String(quote_status) = &report["isvEnclaveQuoteStatus"] {
             match quote_status.as_ref() {
                 "OK" => Ok(()),
                 "GROUP_OUT_OF_DATE" => {

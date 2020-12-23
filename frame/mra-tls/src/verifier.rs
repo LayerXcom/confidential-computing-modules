@@ -14,26 +14,21 @@ impl AttestedReportVerifier {
     }
 
     fn verify_cert(&self, ee_cert: &[u8]) -> Result<()> {
-        // // Parse DER formatted x.509 end entity certificate
-        // let x509 = yasna::parse_der(&ee_cert, X509::load)?;
-        // // Extract tbs (To Be Signed) Certificate
-        // let tbs_cert = <TbsCert as Asn1Ty>::ValueTy = x509.0;
-        // let pub_key: <PubKey as Asn1Ty>::ValueTy = ((((((tbs_cert.1).1).1).1).1).1).0;
-        // let pub_k = (pub_key.1).0;
+        // Parse DER formatted x.509 end entity certificate
+        let x509 = yasna::parse_der(&ee_cert, X509::load)?;
+        // Extract tbs (To Be Signed) Certificate
+        let tbs_cert = <TbsCert as Asn1Ty>::ValueTy = x509.0;
+        let pub_key: <PubKey as Asn1Ty>::ValueTy = ((((((tbs_cert.1).1).1).1).1).1).0;
+        let pub_k = (pub_key.1).0;
 
-        // let cert_ext: <SgxRaCertExt as Asn1Ty>::ValueTy = (((((((tbs_cert.1).1).1).1).1).1).1).0;
-        // let cert_ext_payload: Vec<u8> = ((cert_ext.0).1).0;
+        let cert_ext: <SgxRaCertExt as Asn1Ty>::ValueTy = (((((((tbs_cert.1).1).1).1).1).1).1).0;
+        let cert_ext_payload: Vec<u8> = ((cert_ext.0).1).0;
 
-        // // serialize attested_report from extension field of X.509 cert
-        // let attested_report = serde_json::from_slice(&cert_ext_payload)?;
-        // let report_cert = webpki::EndEntityCert::from(&attested_report.report_cert())?;
-        // // let root_store = {
-        // //     let mut root_store = rustls::RootCertStore::empty();
-        // //     root_store.add(&))?;
-        // //     root_store
-        // // };
-        // let trust_anchors = vec![rustls::Certificate(&self.root_cert.to_vec()).to_trust_anchor()];
-        // let chain =
+        // Verify the deserialized attested_report which is included in extension field of X.509 cert
+        let attested_report = serde_json::from_slice(&cert_ext_payload)?
+            .verify_attested_report(&self.root_cert.to_vec())?;
+
+        
         unimplemented!();
     }
 
