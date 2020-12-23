@@ -132,9 +132,8 @@ impl AttestedReport {
             .map(|cert| cert.to_trust_anchor())
             .collect();
 
-        let ias_cert_dec = Self::decode_ias_report_ca(root_cert)?;
         let mut chain: Vec<&[u8]> = Vec::new();
-        chain.push(&ias_cert_dec);
+        chain.push(&root_cert);
 
         let report_cert = webpki::EndEntityCert::from(&self.report_cert)?;
 
@@ -198,18 +197,6 @@ impl AttestedReport {
         } else {
             bail!("Failed to fetch isvEnclaveQuoteStatus from attestation report");
         }
-    }
-
-    fn decode_ias_report_ca(root_cert: Vec<u8>) -> Result<Vec<u8>> {
-        let mut ias_ca_stripped = root_cert;
-        ias_ca_stripped.retain(|&x| x != 0x0d && x != 0x0a);
-        let head_len = "-----BEGIN CERTIFICATE-----".len();
-        let tail_len = "-----END CERTIFICATE-----".len();
-
-        let full_len = ias_ca_stripped.len();
-        let ias_ca_core: &[u8] = &ias_ca_stripped[head_len..full_len - tail_len];
-        let ias_cert_dec = base64::decode(ias_ca_core)?;
-        Ok(ias_cert_dec)
     }
 }
 
