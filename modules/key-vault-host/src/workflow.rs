@@ -1,5 +1,5 @@
 use anonify_io_types::*;
-use config::constants::*;
+use anonify_config::constants::*;
 use frame_host::engine::*;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
