@@ -13,7 +13,7 @@ use anonify_enclave::context::EnclaveContext;
 lazy_static! {
     pub static ref ENCLAVE_CONTEXT: EnclaveContext = {
         let spid = std::env::var("SPID").expect("SPID is not set");
-        let is_backup_enabled = false;
+        let is_backup_enabled = true;
         EnclaveContext::new(spid.as_str(), is_backup_enabled)
             .expect("Failed to instantiate ENCLAVE_CONTEXT")
     };

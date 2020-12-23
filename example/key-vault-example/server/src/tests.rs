@@ -12,7 +12,7 @@ use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use integration_tests::set_env_vars;
-use std::{fs::File, io::BufReader};
+use std::{fs::File, io::BufReader, str::FromStr};
 use web3::{
     contract::{Contract, Options},
     transports::Http,

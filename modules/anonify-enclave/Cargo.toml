@@ -14,6 +14,8 @@ anonify-io-types = { path = "../anonify-io-types", default-features = false, fea
 remote-attestation = { path = "../../frame/remote-attestation" }
 frame-mra-tls = { path = "../../frame/mra-tls" }
 test-utils = { path = "../../tests/utils" }
+serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx" }
+serde = { git = "https://github.com/mesalock-linux/serde-sgx.git" } # Don't specify version due to serde_json dependency
 
 libsecp256k1 = { version = "0.2", default-features = false }
 hex = { version = "0.4", default-features = false }

@@ -44,7 +44,7 @@ impl EnclaveEngine for JoinGroupSender {
             client_config.add_pem_to_root(ca_certificate)?;
 
             let mut mra_tls_client = Client::new(mra_tls_server_address, client_config)?;
-            let _resp = mra_tls_client.send_json(backup_path_secret)?;
+            let _resp: serde_json::Value = mra_tls_client.send_json(backup_path_secret)?;
         }
 
         Ok(output::ReturnJoinGroup::new(
