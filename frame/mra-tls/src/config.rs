@@ -41,16 +41,16 @@ pub struct ClientConfig {
 }
 
 impl ClientConfig {
-    pub fn from_attested_tls_config(attested_tls_config: AttestedTlsConfig) -> Self {
+    pub fn from_attested_tls_config(attested_tls_config: AttestedTlsConfig) -> Result<Self> {
         let cert_chain = vec![rustls::Certificate(attested_tls_config.ee_cert)];
         let key_der = rustls::PrivateKey(attested_tls_config.priv_key);
 
         let mut client_config = ClientConfig::default();
         client_config
             .tls
-            .set_single_client_cert(cert_chain, key_der);
+            .set_single_client_cert(cert_chain, key_der)?;
 
-        client_config
+        Ok(client_config)
     }
 
     pub fn tls(&self) -> &rustls::ClientConfig {

@@ -1,8 +1,9 @@
 use crate::cert::*;
-use crate::error::Result;
+use crate::error::{Result, MraTLSError};
+use remote_attestation::AttestedReport;
 use std::io::{Cursor, Read};
 use std::vec::Vec;
-use remote_attestation::AttestedReport;
+use anyhow::anyhow;
 
 #[derive(Clone, Debug)]
 pub struct AttestedReportVerifier {
@@ -20,9 +21,7 @@ impl AttestedReportVerifier {
         let x509 = yasna::parse_der(&ee_cert, X509::load)?;
         // Extract tbs (To Be Signed) Certificate
         let tbs_cert: <TbsCert as Asn1Ty>::ValueTy = x509.0;
-        let pub_key: <PubKey as Asn1Ty>::ValueTy = ((((((tbs_cert.1).1).1).1).1).1).0;
-        let pub_k = (pub_key.1).0;
-
+        let pubkey: <PubKey as Asn1Ty>::ValueTy = ((((((tbs_cert.1).1).1).1).1).1).0;
         let cert_ext: <SgxRaCertExt as Asn1Ty>::ValueTy = (((((((tbs_cert.1).1).1).1).1).1).1).0;
         let cert_ext_payload: Vec<u8> = ((cert_ext.0).1).0;
 
@@ -35,6 +34,7 @@ impl AttestedReportVerifier {
         let mut mr_signer = [0u8; 32];
         let mut report_data = [0u8; 64];
 
+        // Offsets are defined in "Attestation Service for Intel® Software Guard Extensions (Intel® SGX): API Documentation version 6.0"
         quote.set_position(112);
         quote.read_exact(&mut mr_enclave)?;
         quote.set_position(176);
@@ -42,10 +42,18 @@ impl AttestedReportVerifier {
         quote.set_position(368);
         quote.read_exact(&mut report_data)?;
 
-        unimplemented!();
+        Self::verify_pubkey_eq(pubkey, report_data)?;
+
+        Ok(())
     }
 
-    fn verify_pubkey_eq() -> Result<()> {
+    fn verify_pubkey_eq(pubkey: <PubKey as Asn1Ty>::ValueTy, report_data: [u8; 64]) -> Result<()> {
+        let raw_pubkey = (pubkey.1).0.to_bytes();
+        let is_uncompressed = raw_pubkey[0] == 4;
+        if !is_uncompressed || &raw_pubkey[1..] != &report_data[..] {
+            return Err(MraTLSError::Error(anyhow!("ee_cert's pubkey is not equal to report data")));
+        }
+
         Ok(())
     }
 

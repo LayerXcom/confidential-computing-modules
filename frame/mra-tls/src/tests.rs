@@ -43,6 +43,7 @@ fn test_request_response() {
     start_server(attested_tls_config.clone());
 
     let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)
+        .unwrap()
         .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
     let mut client = Client::new(CLIENT_ADDRESS, client_config).unwrap();
 
