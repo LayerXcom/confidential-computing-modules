@@ -31,7 +31,7 @@ impl EnclaveEngine for JoinGroupSender {
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
         let spid = enclave_context.spid();
-        let resp = enclave_context.quote()?.remote_attestation(
+        let attested_report = enclave_context.quote()?.remote_attestation(
             ias_url,
             sub_key,
             IAS_ROOT_CERT.to_vec(),
@@ -48,14 +48,10 @@ impl EnclaveEngine for JoinGroupSender {
         if enclave_context.is_backup_enabled() {
             let backup_path_secret = BackupPathSecret::new(path_secret.as_bytes().to_vec(), epoch);
 
-            let attested_tls_config = AttestedTlsConfig::remote_attestation(
-                &spid,
-                &ias_url,
-                &sub_key,
-                IAS_ROOT_CERT.to_vec(),
-            )?;
+            let attested_tls_config =
+                AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
 
-            let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)
+            let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
                 .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
             let mra_tls_server_address = enclave_context.server_address();
             let mut mra_tls_client = Client::new(mra_tls_server_address, client_config).unwrap();
@@ -63,8 +59,8 @@ impl EnclaveEngine for JoinGroupSender {
         }
 
         Ok(output::ReturnJoinGroup::new(
-            resp.attestation_report().to_vec(),
-            resp.report_sig().to_vec(),
+            attested_report.report().to_vec(),
+            attested_report.report_sig().to_vec(),
             export_handshake.encode(),
             mrenclave_ver,
             export_handshake.roster_idx(),

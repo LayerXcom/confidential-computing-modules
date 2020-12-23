@@ -42,12 +42,12 @@ fn test_request_response() {
     let sub_key = env::var("SUB_KEY").unwrap();
 
     let attested_tls_config =
-        AttestedTlsConfig::remote_attestation(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())
-            .unwrap();
+        AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec()).unwrap();
 
     start_server(attested_tls_config.clone());
 
     let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)
+        .unwrap()
         .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
     let mut client = Client::new(&*SERVER_ADDRESS, client_config).unwrap();
 

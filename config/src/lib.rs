@@ -27,9 +27,11 @@ pub mod constants;
 pub use crate::constants::*;
 use crate::localstd::vec::Vec;
 
+#[cfg(feature = "sgx")]
 lazy_static! {
     pub static ref IAS_ROOT_CERT: Vec<u8> = {
         let ias_root_cert = include_bytes!("../ias_root_cert.pem");
-        ias_root_cert.to_vec()
+        let pem = pem::parse(ias_root_cert).expect("Cannot parse PEM File");
+        pem.contents
     };
 }

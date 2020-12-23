@@ -10,8 +10,8 @@ use frame_common::{
     state_types::{MemId, ReturnState, UpdatedState},
     traits::*,
 };
-use remote_attestation::Quote;
 use frame_treekem::{handshake::HandshakeParams, DhPubKey, EciesCiphertext, PathSecret};
+use remote_attestation::EncodedQuote;
 
 /// Execute state transition functions from runtime
 pub trait RuntimeExecutor<G: ContextOps>: Sized {
@@ -116,5 +116,5 @@ pub trait QuoteGetter: Sized {
     /// Generate Base64-encoded QUOTE data structure.
     /// QUOTE will be sent to Attestation Service to verify SGX's status.
     /// For more information: https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf
-    fn quote(&self) -> Result<Quote>;
+    fn quote(&self) -> Result<EncodedQuote>;
 }

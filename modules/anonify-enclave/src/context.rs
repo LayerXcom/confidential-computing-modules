@@ -16,8 +16,7 @@ use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, DhPubKey, EciesCiphertext,
 };
-use remote_attestation::{Quote, QuoteTarget};
-use sgx_types::*;
+use remote_attestation::{EncodedQuote, QuoteTarget};
 use std::{
     env,
     marker::PhantomData,
@@ -155,7 +154,7 @@ impl IdentityKeyOps for EnclaveContext {
 }
 
 impl QuoteGetter for EnclaveContext {
-    fn quote(&self) -> anyhow::Result<Quote> {
+    fn quote(&self) -> anyhow::Result<EncodedQuote> {
         let report_data = &self.identity_key.report_data()?;
         QuoteTarget::new()?
             .set_enclave_report(&report_data)?
@@ -269,7 +268,7 @@ impl EnclaveEngine for ReportRegistration {
     {
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
-        let resp = enclave_context.quote()?.remote_attestation(
+        let attested_report = enclave_context.quote()?.remote_attestation(
             ias_url,
             sub_key,
             IAS_ROOT_CERT.to_vec(),
@@ -279,8 +278,8 @@ impl EnclaveEngine for ReportRegistration {
         let my_roster_idx = enclave_context.read_group_key().my_roster_idx();
 
         Ok(output::ReturnRegisterReport::new(
-            resp.attestation_report().to_vec(),
-            resp.report_sig().to_vec(),
+            attested_report.report().to_vec(),
+            attested_report.report_sig().to_vec(),
             mrenclave_ver,
             my_roster_idx,
         ))
