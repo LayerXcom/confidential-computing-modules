@@ -7,17 +7,56 @@ use anonify_eth_driver::{
 };
 use codec::{Decode, Encode};
 use erc20_state_transition::{construct, CallName, MemName, CIPHERTEXT_SIZE};
+use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_runtime::primitives::U64;
-use frame_treekem::EciesCiphertext;
-use integration_tests::{get_encrypting_key, set_env_vars};
+use frame_treekem::{DhPubKey, EciesCiphertext};
+use integration_tests::set_env_vars;
+use std::{fs::File, io::BufReader};
+use web3::{
+    contract::{Contract, Options},
+    transports::Http,
+    types::Address,
+    Web3,
+};
 
 const ETH_URL: &str = "http://172.28.0.2:8545";
-const ABI_PATH: &str = "../../contract-build/Anonify.abi";
-const BIN_PATH: &str = "../../contract-build/Anonify.bin";
+const ABI_PATH: &str = "../../../contract-build/Anonify.abi";
+const BIN_PATH: &str = "../../../contract-build/Anonify.bin";
 const CONFIRMATIONS: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
+
+pub async fn get_encrypting_key(
+    contract_addr: &str,
+    dispatcher: &EthDispatcher<EthDeployer, EthSender, EventWatcher>,
+) -> DhPubKey {
+    let encrypting_key = dispatcher.get_encrypting_key().unwrap();
+    let transport = Http::new(ETH_URL).unwrap();
+    let web3 = Web3::new(transport);
+    let web3_conn = web3.eth();
+
+    let address = Address::from_str(contract_addr).unwrap();
+    let f = File::open(ABI_PATH).unwrap();
+    let abi = ContractABI::load(BufReader::new(f)).unwrap();
+
+    let query_encrypting_key: Vec<u8> = Contract::new(web3_conn, address, abi)
+        .query(
+            "getEncryptingKey",
+            encrypting_key.encode(),
+            None,
+            Options::default(),
+            None,
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(
+        encrypting_key,
+        DhPubKey::decode(&mut &query_encrypting_key[..]).unwrap()
+    );
+    encrypting_key
+}
 
 #[actix_rt::test]
 async fn test_backup_path_secret() {
@@ -26,7 +65,7 @@ async fn test_backup_path_secret() {
     // Setup backup server
     let server_enclave = EnclaveDir::new()
         .init_enclave(true)
-        .expect("Failed to initialize enclave.");
+        .expect("Failed to initialize server enclave.");
     let server_eid = server_enclave.geteid();
     let server = Arc::new(Server::new(server_eid));
 
@@ -42,8 +81,12 @@ async fn test_backup_path_secret() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
+    std::thread::sleep(std::time::Duration::from_secs(1));
+
     // Setup ERC20 application
-    let app_enclave = EnclaveDir::new().init_enclave(true).unwrap();
+    let app_enclave = EnclaveDir::new()
+        .init_enclave(true)
+        .expect("Failed to initialize client enclave.");
     let app_eid = app_enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
