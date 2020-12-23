@@ -16,8 +16,7 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new(addr: &str, config: ServerConfig) -> Self {
-        let address = String::from(addr);
+    pub fn new(address: String, config: ServerConfig) -> Self {
         Server { address, config }
     }
 

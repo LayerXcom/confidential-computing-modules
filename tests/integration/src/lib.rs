@@ -29,10 +29,6 @@ const CONFIRMATIONS: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
 
-lazy_static! {
-    pub static ref ENV_LOGGER_INIT: () = env_logger::init();
-}
-
 pub async fn get_encrypting_key(
     contract_addr: &str,
     dispatcher: &Dispatcher<EthDeployer, EthSender, EventWatcher>,
@@ -929,6 +925,10 @@ async fn test_integration_eth_burn() {
     assert_eq!(actual_total_supply, U64::from_raw(80)); // 100 - 20(burn)
     assert_eq!(owner_balance, U64::from_raw(70)); // 100 - 30(transfer)
     assert_eq!(other_balance, U64::from_raw(10)); // 30 - 20(burn)
+}
+
+lazy_static! {
+    pub static ref ENV_LOGGER_INIT: () = env_logger::init();
 }
 
 pub fn set_env_vars() {

@@ -7,7 +7,9 @@ use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak25
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::{DhPrivateKey, DhPubKey, EciesCiphertext};
-use secp256k1::{self, util::SECRET_KEY_SIZE, Message, PublicKey, SecretKey, Signature, RecoveryId};
+use secp256k1::{
+    self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
+};
 use sgx_types::sgx_report_data_t;
 use std::prelude::v1::Vec;
 

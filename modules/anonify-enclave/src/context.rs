@@ -2,6 +2,7 @@ use crate::{
     error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
+use anonify_config::IAS_ROOT_CERT;
 use anonify_io_types::*;
 use anyhow::anyhow;
 use frame_common::{
@@ -9,16 +10,13 @@ use frame_common::{
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
-use frame_enclave::{
-    ocalls::{get_quote, sgx_init_quote},
-    EnclaveEngine,
-};
+use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, DhPubKey, EciesCiphertext,
 };
-use remote_attestation::RAService;
+use remote_attestation::{Quote, QuoteTarget};
 use sgx_types::*;
 use std::{
     env,
@@ -28,7 +26,6 @@ use std::{
 };
 
 pub const MRENCLAVE_VERSION: usize = 0;
-const CA_CERTIFICATE: &str = include_str!("../../../frame/mra-tls/certs/ca_v3.crt");
 
 /// spid: Service provider ID for the ISV.
 #[derive(Clone)]
@@ -36,9 +33,8 @@ pub struct EnclaveContext {
     version: usize,
     ias_url: String,
     sub_key: String,
-    ca_certificate: String,
     server_address: String,
-    spid: sgx_spid_t,
+    spid: String,
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB,
     notifier: Notifier,
@@ -59,12 +55,11 @@ impl ContextOps for EnclaveContext {
         &self.sub_key
     }
 
-    fn ca_certificate(&self) -> &str {
-        &self.ca_certificate
-    }
     fn server_address(&self) -> &str {
         &self.server_address
     }
+
+    fn spid(&self) -> &str { &self.spid }
 
     fn is_backup_enabled(&self) -> bool {
         self.is_backup_enabled
@@ -160,21 +155,18 @@ impl IdentityKeyOps for EnclaveContext {
 }
 
 impl QuoteGetter for EnclaveContext {
-    fn quote(&self) -> anyhow::Result<String> {
-        let target_info = self.init_quote()?;
-        let report = self.report(&target_info)?;
-        self.encoded_quote(report).map_err(Into::into)
+    fn quote(&self) -> anyhow::Result<Quote> {
+        let report_data = &self.identity_key.report_data()?;
+        QuoteTarget::new()?
+            .set_enclave_report(&report_data)?
+            .create_quote(&self.spid)
+            .map_err(|e| anyhow!("{:?}", e))
     }
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
 impl EnclaveContext {
-    pub fn new(spid: &str, is_backup_enabled: bool) -> Result<Self> {
-        let spid_vec = hex::decode(spid)?;
-        let mut id = [0; 16];
-        id.copy_from_slice(&spid_vec);
-        let spid: sgx_spid_t = sgx_spid_t { id };
-
+    pub fn new(spid: String, is_backup_enabled: bool) -> Result<Self> {
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
 
@@ -219,34 +211,9 @@ impl EnclaveContext {
             version: MRENCLAVE_VERSION,
             ias_url,
             sub_key,
-            ca_certificate: CA_CERTIFICATE.to_string(),
             server_address,
             is_backup_enabled,
         })
-    }
-
-    pub(crate) fn init_quote(&self) -> Result<sgx_target_info_t> {
-        let target_info = sgx_init_quote()?;
-        Ok(target_info)
-    }
-
-    /// Return Attestation report
-    fn report(&self, target_info: &sgx_target_info_t) -> Result<sgx_report_t> {
-        let mut report = sgx_report_t::default();
-        let report_data = &self.identity_key.report_data()?;
-
-        if let Ok(r) = sgx_tse::rsgx_create_report(&target_info, &report_data) {
-            report = r;
-        }
-
-        Ok(report)
-    }
-
-    fn encoded_quote(&self, report: sgx_report_t) -> Result<String> {
-        let quote = get_quote(report, &self.spid)?;
-
-        // Use base64-encoded QUOTE structure to communicate via defined API.
-        Ok(base64::encode(&quote))
     }
 }
 
@@ -300,16 +267,20 @@ impl EnclaveEngine for ReportRegistration {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let quote = enclave_context.quote()?;
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
-        let (report, report_sig) = RAService::remote_attestation(ias_url, sub_key, &quote)?;
+        let resp = enclave_context.quote()?.remote_attestation(
+            ias_url,
+            sub_key,
+            IAS_ROOT_CERT.to_vec(),
+        )?;
+
         let mrenclave_ver = enclave_context.mrenclave_ver();
         let my_roster_idx = enclave_context.read_group_key().my_roster_idx();
 
         Ok(output::ReturnRegisterReport::new(
-            report.into_vec(),
-            report_sig.into_vec(),
+            resp.attestation_report().to_vec(),
+            resp.report_sig().to_vec(),
             mrenclave_ver,
             my_roster_idx,
         ))

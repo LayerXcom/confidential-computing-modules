@@ -1,7 +1,40 @@
-use crate::error::MraTLSError;
-use crate::primitives::{Certificate, PrivateKey};
+use crate::error::{MraTLSError, Result};
+use crate::key::NistP256KeyPair;
+use crate::verifier::AttestationReportVerifier;
 use anyhow::anyhow;
+use remote_attestation::QuoteTarget;
 use std::{sync::Arc, vec::Vec};
+
+const CERT_ISSUER: &str = "Anonify";
+const CERT_SUBJECT: &str = "CN=Anonify";
+
+#[derive(Debug, Clone)]
+pub struct AttestedTlsConfig {
+    ee_cert: Vec<u8>,
+    priv_key: Vec<u8>,
+}
+
+impl AttestedTlsConfig {
+    pub fn remote_attestation(
+        spid: &str,
+        ias_url: &str,
+        sub_key: &str,
+        root_cert: Vec<u8>,
+    ) -> Result<Self> {
+        let key_pair = NistP256KeyPair::new()?;
+        let report_data = key_pair.report_data();
+        let resp = QuoteTarget::new()?
+            .set_enclave_report(&report_data)?
+            .create_quote(&spid)?
+            .remote_attestation(ias_url, sub_key, root_cert)?;
+
+        let extension = serde_json::to_vec(&resp)?;
+        let ee_cert = key_pair.create_cert_with_extension(CERT_ISSUER, CERT_SUBJECT, &extension);
+        let priv_key = key_pair.priv_key_into_der();
+
+        Ok(Self { ee_cert, priv_key })
+    }
+}
 
 #[derive(Clone)]
 pub struct ClientConfig {
@@ -9,22 +42,27 @@ pub struct ClientConfig {
 }
 
 impl ClientConfig {
+    pub fn from_attested_tls_config(attested_tls_config: AttestedTlsConfig) -> Self {
+        let cert_chain = vec![rustls::Certificate(attested_tls_config.ee_cert)];
+        let key_der = rustls::PrivateKey(attested_tls_config.priv_key);
+
+        let mut client_config = ClientConfig::default();
+        client_config
+            .tls
+            .set_single_client_cert(cert_chain, key_der);
+
+        client_config
+    }
+
     pub fn tls(&self) -> &rustls::ClientConfig {
         &self.tls
     }
 
-    pub fn add_pem_to_root(&mut self, ca_cert: &str) -> Result<(), MraTLSError> {
-        let (_, invalid_count) = self
-            .tls
-            .root_store
-            .add_pem_file(&mut ca_cert.as_bytes())
-            .map_err(|e| anyhow!("failed to add pem file: {:?}", e))?;
+    pub fn set_attestation_report_verifier(mut self, root_cert: Vec<u8>) -> Self {
+        let verifier = Arc::new(AttestationReportVerifier::new(root_cert));
+        self.tls.dangerous().set_certificate_verifier(verifier);
 
-        if invalid_count > 0 {
-            return Err(anyhow!("invalid_count").into());
-        }
-
-        Ok(())
+        self
     }
 }
 
@@ -52,20 +90,25 @@ pub struct ServerConfig {
 }
 
 impl ServerConfig {
+    pub fn from_attested_tls_config(attested_tls_config: AttestedTlsConfig) -> Result<Self> {
+        let cert_chain = vec![rustls::Certificate(attested_tls_config.ee_cert)];
+        let key_der = rustls::PrivateKey(attested_tls_config.priv_key);
+
+        let mut server_config = ServerConfig::default();
+        server_config.tls.set_single_cert(cert_chain, key_der)?;
+
+        Ok(server_config)
+    }
+
     pub fn tls(&self) -> &rustls::ServerConfig {
         &self.tls
     }
 
-    pub fn set_single_cert(
-        &mut self,
-        cert_chain: &Vec<Certificate>,
-        key_der: &PrivateKey,
-    ) -> Result<(), MraTLSError> {
-        let certs = cert_chain.iter().map(|cert| cert.as_rustls()).collect();
+    pub fn set_attestation_report_verifier(mut self, root_cert: Vec<u8>) -> Self {
+        let verifier = Arc::new(AttestationReportVerifier::new(root_cert));
+        self.tls.set_client_certificate_verifier(verifier);
 
-        self.tls
-            .set_single_cert(certs, key_der.as_rustls())
-            .map_err(Into::into)
+        self
     }
 }
 
@@ -94,7 +137,7 @@ impl rustls::ServerCertVerifier for NoServerVerify {
         _certs: &[rustls::Certificate],
         _hostname: webpki::DNSNameRef<'_>,
         _ocsp: &[u8],
-    ) -> Result<rustls::ServerCertVerified, rustls::TLSError> {
+    ) -> std::result::Result<rustls::ServerCertVerified, rustls::TLSError> {
         Ok(rustls::ServerCertVerified::assertion())
     }
 }
