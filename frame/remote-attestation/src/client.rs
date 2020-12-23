@@ -7,13 +7,7 @@ use http_req::{
 use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{
-    io::{BufReader, Write},
-    prelude::v1::*,
-    str,
-    string::String,
-    time::SystemTime,
-};
+use std::{io::Write, prelude::v1::*, str, string::String, time::SystemTime};
 
 type SignatureAlgorithms = &'static [&'static webpki::SignatureAlgorithm];
 static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
@@ -120,11 +114,8 @@ impl AttestedReport {
     pub(crate) fn verify_attested_report(self, root_cert: Vec<u8>) -> Result<Self> {
         let now_func = webpki::Time::try_from(SystemTime::now())?;
 
-        let mut ca_reader = BufReader::new(&root_cert[..]);
         let mut root_store = rustls::RootCertStore::empty();
-        root_store
-            .add_pem_file(&mut ca_reader)
-            .expect("Failed to add CA");
+        root_store.add(&rustls::Certificate(root_cert.clone()))?;
 
         let trust_anchors: Vec<webpki::TrustAnchor> = root_store
             .roots

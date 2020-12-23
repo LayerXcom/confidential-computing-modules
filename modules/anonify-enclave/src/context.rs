@@ -17,7 +17,6 @@ use frame_treekem::{
     init_path_secret_kvs, DhPubKey, EciesCiphertext,
 };
 use remote_attestation::{Quote, QuoteTarget};
-use sgx_types::*;
 use std::prelude::v1::*;
 use std::{
     env,
