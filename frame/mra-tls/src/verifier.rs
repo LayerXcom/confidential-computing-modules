@@ -8,7 +8,6 @@ use std::vec::Vec;
 #[derive(Clone, Debug)]
 pub struct AttestedReportVerifier {
     root_cert: Vec<u8>,
-    // ee_cert: Vec<u8>,
 }
 
 impl AttestedReportVerifier {
