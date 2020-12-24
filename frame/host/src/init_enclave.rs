@@ -12,7 +12,7 @@ use std::{
 pub struct EnclaveDir(PathBuf);
 
 impl EnclaveDir {
-    pub fn new(enclave_dir: PathBuf) -> Self {
+    pub fn new() -> Self {
         let enclave_dir = PJ_ROOT_DIR.join(ENCLAVE_DIR);
         println!("enclave_dir: {:?}", enclave_dir);
         if !enclave_dir.is_dir() {
