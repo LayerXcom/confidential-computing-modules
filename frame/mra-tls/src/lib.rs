@@ -12,7 +12,6 @@ pub mod server;
 #[cfg(debug_assertions)]
 pub mod tests;
 mod verifier;
-pub mod primitives;
 
 pub use client::Client;
 pub use config::{AttestedTlsConfig, ClientConfig, ServerConfig};

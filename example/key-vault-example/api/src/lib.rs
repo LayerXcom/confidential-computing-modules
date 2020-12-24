@@ -5,7 +5,9 @@ pub mod start {
         use super::super::*;
 
         #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub String);
+        pub struct Response {
+            pub status: String,
+        }
     }
 }
 

@@ -37,9 +37,8 @@ impl GroupKey {
 }
 
 impl GroupKeyOps for GroupKey {
-    fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret, u32)> {
-        let (handshake, path_secret, epoch) = self.group_state.create_handshake(&self.source)?;
-        Ok((handshake, path_secret, epoch))
+    fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret)> {
+        self.group_state.create_handshake(&self.source)
     }
 
     fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()> {

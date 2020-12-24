@@ -39,7 +39,8 @@ impl EnclaveEngine for JoinGroupSender {
 
         let mrenclave_ver = enclave_context.mrenclave_ver();
         let group_key = &*enclave_context.read_group_key();
-        let (handshake, path_secret, epoch) = group_key.create_handshake()?;
+        let (handshake, path_secret) = group_key.create_handshake()?;
+        let epoch = handshake.prior_epoch();
         let export_path_secret = path_secret
             .clone()
             .try_into_exporting(epoch, handshake.hash().as_ref())?;
@@ -87,7 +88,8 @@ impl EnclaveEngine for HandshakeSender {
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &*enclave_context.read_group_key();
-        let (handshake, path_secret, epoch) = group_key.create_handshake()?;
+        let (handshake, path_secret) = group_key.create_handshake()?;
+        let epoch = handshake.prior_epoch();
         let export_path_secret =
             path_secret.try_into_exporting(epoch, handshake.hash().as_ref())?;
         let export_handshake = handshake.into_export();

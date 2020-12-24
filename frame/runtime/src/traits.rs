@@ -92,7 +92,7 @@ pub trait IdentityKeyOps {
 }
 
 pub trait GroupKeyOps: Sized {
-    fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret, u32)>;
+    fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret)>;
 
     fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()>;
 

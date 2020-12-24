@@ -80,6 +80,9 @@ async fn test_backup_path_secret() {
     let req = test::TestRequest::post().uri("/api/v1/start").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    let start_response: key_vault_example_api::start::post::Response =
+        test::read_body_json(resp).await;
+    assert_eq!(start_response.status, "success".to_string());
 
     std::thread::sleep(std::time::Duration::from_secs(1));
 
