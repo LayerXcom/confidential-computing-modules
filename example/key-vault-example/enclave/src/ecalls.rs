@@ -19,8 +19,13 @@ register_ecall!(
     (INSERT_CIPHERTEXT_CMD, MsgReceiver),
     // Insert handshake received from blockchain nodes into enclave.
     (INSERT_HANDSHAKE_CMD, HandshakeReceiver),
+    (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
     (CALL_JOIN_GROUP_CMD, JoinGroupSender),
     (CALL_HANDSHAKE_CMD, HandshakeSender),
+    (
+        REGISTER_NOTIFICATION_CMD,
+        RegisterNotification<Ed25519ChallengeResponse>
+    ),
     (GET_ENCRYPTING_KEY_CMD, EncryptingKeyGetter),
     (START_SERVER_CMD, ServerStarter),
     (STOP_SERVER_CMD, ServerStopper),
