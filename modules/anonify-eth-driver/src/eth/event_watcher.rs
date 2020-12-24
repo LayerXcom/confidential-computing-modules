@@ -49,14 +49,19 @@ impl Watcher for EventWatcher {
         &self,
         eid: sgx_enclave_id_t,
     ) -> Result<Option<Vec<UpdatedState<S>>>> {
-        // TODO: jkcomment ここ直す
-        let enclave_updated_state = self
+        let event_logs = self
             .contract
             .get_event(self.cache.clone(), self.contract.address())
-            .await?
-            .into_enclave_log()
-            .insert_enclave(eid)
-            .save_cache(self.contract.address());
+            .await?;
+        
+        let start_enclave_updated_state = std::time::SystemTime::now();
+        println!("########## start enclave_updated_state: {:?}", start_enclave_updated_state);
+        let enclave_updated_state = event_logs.into_enclave_log()
+            .insert_enclave(eid);
+        let end_enclave_updated_state = std::time::SystemTime::now();
+        println!("########## end enclave_updated_state: {:?}", end_enclave_updated_state);
+
+        let enclave_updated_state = enclave_updated_state.save_cache(self.contract.address());
 
         Ok(enclave_updated_state.updated_states())
     }
@@ -195,6 +200,7 @@ impl EnclaveLog {
         match self.inner {
             Some(log) => {
                 let next_blc_num = log.latest_blc_num + 1;
+                // ここね！
                 let updated_states = log.invoke_ecall(eid);
 
                 EnclaveUpdatedState {
@@ -231,6 +237,7 @@ impl InnerEnclaveLog {
 
             for e in self.payloads {
                 match e.payload {
+                    // 暗号文が存在してたらそれをTEE上で処理する
                     Payload::Ciphertext(ciphertext) => {
                         info!(
                             "Fetch a ciphertext: roster_idx: {}, epoch: {}, generation: {}",
@@ -240,6 +247,7 @@ impl InnerEnclaveLog {
                         );
 
                         let inp = host_input::InsertCiphertext::new(ciphertext.clone());
+                        // InsertCiphertextWorkflowのCMDは2
                         match InsertCiphertextWorkflow::exec(inp, eid)
                             .map_err(Into::into)
                             .and_then(|e| {

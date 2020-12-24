@@ -7,7 +7,6 @@ use erc20_state_transition::{
 };
 use ethabi::Contract as ContractABI;
 use frame_common::{
-    benchmark::PENDING_TX,
     crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
     traits::*,
 };
@@ -46,9 +45,6 @@ pub async fn get_encrypting_key(
     let address = Address::from_str(contract_addr).unwrap();
     let f = File::open(ABI_PATH).unwrap();
     let abi = ContractABI::load(BufReader::new(f)).unwrap();
-
-    println!("### {:?}", PENDING_TX.get(0));
-
     let query_encrypting_key: Vec<u8> = Contract::new(web3_conn, address, abi)
         .query(
             "getEncryptingKey",
@@ -313,8 +309,15 @@ async fn test_integration_eth_transfer() {
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
     let transfer_cmd = transfer { amount, recipient };
-    println!("##### benchmark start");
+
+    let start_benchmark = std::time::SystemTime::now();
+    println!("##### start benchmark and start encrypted_command: {:?}", start_benchmark);
+    // TEEで実行する状態遷移コマンド(transfer)を暗号化(ECIES暗号文取得)
     let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_cmd.encode()).unwrap();
+    // TXを生成し、BCに送信する処理
+    // 中でグループキーのローテーションや各種暗号処理を行い、最後にBCへTXを送信
+    let start_send_command = std::time::SystemTime::now();
+    println!("##### end encrypted_command and start send_command: {:?}", start_send_command);
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -325,11 +328,15 @@ async fn test_integration_eth_transfer() {
         )
         .await
         .unwrap();
-    println!("receipt: {:?}", receipt);
+    let end_send_command = std::time::SystemTime::now();
+    println!("##### end send_command and start fetch_events: {:?}", end_send_command);
+    // println!("receipt: {:?}", receipt);
 
+    // BCからイベントを取得
     // Update state inside enclave
     dispatcher.fetch_events::<U64>().await.unwrap();
-    println!("##### benchmark end");
+    let end_benchmark = std::time::SystemTime::now();
+    println!("##### end fetch_event and benchmark: {:?}", end_benchmark);
     // Check the updated states
     let my_updated_state = dispatcher
         .get_state::<U64, _, CallName>(my_access_policy, "balance_of")

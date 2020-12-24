@@ -35,24 +35,37 @@ impl<AP: AccessPolicy> EnclaveEngine for MsgSender<AP> {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
+        let t1 = std::time::SystemTime::now();
+        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t1: {:?}", t1);
+        // グループキー取得
         let group_key = &mut *enclave_context.write_group_key();
         let roster_idx = group_key.my_roster_idx() as usize;
+        let t2 = std::time::SystemTime::now();
+        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t2: {:?}", t2);
+        // グループ鍵交換
         // ratchet sender's app keychain per tx.
         group_key.sender_ratchet(roster_idx)?;
-
         let account_id = ecall_input.access_policy().into_account_id();
-        println!("##### t1 {:?}");
+        let t3 = std::time::SystemTime::now();
+        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t3: {:?}", t3);
+        // 暗号化された状態遷移コマンドを復号
         let mut command = enclave_context.decrypt(ecall_input.encrypted_command)?;
-
-        println!("##### t1 {:?}");
+        let t4 = std::time::SystemTime::now();
+        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t4 {:?}", t4);
+        // 暗号文作成(TX送信用?)
         let ciphertext = Commands::<R, C>::new(ecall_input.call_id, &mut command, account_id)?
             .encrypt(group_key, max_mem_size)?;
-
-        println!("##### t1 {:?}");
+        let t5 = std::time::SystemTime::now();
+        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t5 {:?}", t5);
+        // 署名
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
+        let t6 = std::time::SystemTime::now();
+        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t6 {:?}", t6);
+        // コマンド(TXに入れるやつ)生成
         let command_output = output::Command::new(ciphertext, enclave_sig.0, enclave_sig.1);
-
+        let t7 = std::time::SystemTime::now();
+        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t7 {:?}", t7);
         enclave_context.set_notification(account_id);
 
         Ok(command_output)
@@ -67,6 +80,7 @@ impl EnclaveEngine for MsgReceiver {
     type EI = input::InsertCiphertext;
     type EO = output::ReturnUpdatedState;
 
+    // BCからeventを取得して、その中に暗号文が入っている場合、Enclaveの中ではこの処理が実行される
     fn handle<R, C>(
         ecall_input: Self::EI,
         enclave_context: &C,
@@ -89,21 +103,34 @@ impl EnclaveEngine for MsgReceiver {
         // In addition to these, `sync_ratchet` fails even if the receiver generation is larger than that of the sender
         // So if you run `sync_ratchet` first,
         // it will either succeed or both fail for the mutable `app_keychain`, so it will be atomic.
+        // グループキー同期
+        let t1 = std::time::SystemTime::now();
+        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t1: {:?}", t1);
         group_key.sync_ratchet(roster_idx, msg_gen)?;
         group_key.receiver_ratchet(roster_idx)?;
-
+        let t2 = std::time::SystemTime::now();
+        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t2: {:?}", t2);
         // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
+        // 状態遷移ロジック実行
+        // 暗号文を平文に変換し、runtime上で状態遷移を実行
         let iter_op = Commands::<R, C>::state_transition(
             enclave_context.clone(),
             ecall_input.ciphertext(),
             group_key,
         )?;
+        let t3 = std::time::SystemTime::now();
+        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t2: {:?}", t3);
         let mut output = output::ReturnUpdatedState::default();
 
         if let Some(updated_state_iter) = iter_op {
+            let t4 = std::time::SystemTime::now();
+            println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t4: {:?}", t4);
+            // 状態遷移処理が成功したらupdate_state -> insert_by_updated_state
             if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
                 output.update(updated_state);
             }
+            let t5 = std::time::SystemTime::now();
+            println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t5: {:?}", t5);
         }
 
         Ok(output)

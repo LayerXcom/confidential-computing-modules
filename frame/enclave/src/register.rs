@@ -24,7 +24,14 @@ macro_rules! register_ecall {
             let input = EE::EI::decode(&mut &input_payload[..])
                 .map_err(|e| anyhow!("{:?}", e))?;
             EE::eval_policy(&input)?;
+
+            let start_handle = std::time::SystemTime::now();
+            println!("##### start TEE process: {:?}", start_handle);
+            // txを送る側の場合、MsgSenderのhandleを、
+            // eventを取得する側の場合、MsgReceiverのhandleを実行
             let res = EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?;
+            let end_handle = std::time::SystemTime::now();
+            println!("##### end TEE process: {:?}", end_handle);
 
             Ok(res.encode())
         }

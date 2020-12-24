@@ -186,15 +186,17 @@ where
             signer,
             gas,
         );
-        println!("##### t1: {:?}");
         let eid = inner.deployer.get_enclave_id();
+
+        let s_t1 = std::time::SystemTime::now();
+        println!("########## s_t1: {:?}", s_t1);
         let host_output = CommandWorkflow::exec(input, eid)?;
-        println!("##### t1: {:?}");
+        let end_exec = std::time::SystemTime::now();
+        println!("########## end CommandWorkflow::exec and start send tx to blockchain: {:?}", end_exec);
         match &inner.sender {
             Some(s) => s.send_command(host_output).await,
             None => Err(HostError::AddressNotSet),
         }
-        println!("##### t1: {:?}");
     }
 
     pub fn get_state<ST, AP, C>(&self, access_policy: AP, call_name: &str) -> Result<ST>
