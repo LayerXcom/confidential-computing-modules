@@ -11,7 +11,8 @@ use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
-use std::{fs::File, io::BufReader, str::FromStr, env};
+use once_cell::sync::Lazy;
+use std::{env, fs::File, io::BufReader, str::FromStr};
 use web3::{
     contract::{Contract, Options},
     transports::Http,
@@ -143,11 +144,9 @@ async fn test_backup_path_secret() {
     println!("init state receipt: {:?}", receipt);
 }
 
-lazy_static! {
-    pub static ref ENV_LOGGER_INIT: () = env_logger::init();
-}
+pub static ENV_LOGGER_INIT: Lazy<()> = Lazy::new(|| { env_logger::init(); });
 
-pub fn set_env_vars() {
+fn set_env_vars() {
     *ENV_LOGGER_INIT;
     env::set_var("RUST_LOG", "DEBUG");
     env::set_var("MY_ROSTER_IDX", "0");
