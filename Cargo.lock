@@ -345,6 +345,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow 1.0.28",
  "anyhow 1.0.34",
+ "hex",
  "lazy_static",
  "pem",
  "serde 1.0.117 (registry+https://github.com/rust-lang/crates.io-index)",

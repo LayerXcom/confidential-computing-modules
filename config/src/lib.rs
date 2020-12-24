@@ -27,6 +27,7 @@ pub mod constants;
 pub use crate::constants::*;
 use crate::local_anyhow::Result;
 use crate::localstd::{env, string::String, untrusted::fs, vec::Vec};
+use sgx_types::SGX_HASH_SIZE;
 
 #[cfg(feature = "sgx")]
 lazy_static! {
@@ -40,19 +41,43 @@ lazy_static! {
         let measurement_file_path = format!("../../.anonify/{}_measurement.txt", pkg_name);
         let content =
             fs::read_to_string(&measurement_file_path).expect("Cannot read measurement file");
-        EnclaveMeasurement::new_from_dumpfile(content).unwrap()
+        EnclaveMeasurement::new_from_dumpfile(content)
     };
 }
 
 #[cfg(feature = "sgx")]
 pub struct EnclaveMeasurement {
-    mr_signer: [u8; sgx_types::SGX_HASH_SIZE],
-    mr_enclave: [u8; sgx_types::SGX_HASH_SIZE],
+    mr_signer: [u8; SGX_HASH_SIZE],
+    mr_enclave: [u8; SGX_HASH_SIZE],
 }
 
 impl EnclaveMeasurement {
-    pub fn new_from_dumpfile(content: String) -> Result<Self> {
+    pub fn new_from_dumpfile(content: String) -> Self {
         let lines: Vec<&str> = content.split("\n").collect();
-        unimplemented!();
+        let mr_signer_index = lines
+            .iter()
+            .position(|&line| line == "mrsigner->value:")
+            .expect("mrsigner must be included");
+        let mr_enclave_index = lines
+            .iter()
+            .position(|&line| line == "metadata->enclave_css.body.enclave_hash.m:")
+            .expect("mrenclave must be included");
+
+        let mr_signer_vec =
+            hex::decode([lines[mr_signer_index + 1], lines[mr_signer_index + 2]].concat())
+                .expect("Failed decoding mr_signer hex");
+        let mr_enclave_vec =
+            hex::decode([lines[mr_enclave_index + 1], lines[mr_enclave_index + 2]].concat())
+                .expect("Failed decoding mr_enclave hex");
+
+        let mut mr_signer = [0u8; SGX_HASH_SIZE];
+        mr_signer.copy_from_slice(&mr_signer_vec);
+        let mut mr_enclave = [0u8; SGX_HASH_SIZE];
+        mr_enclave.copy_from_slice(&mr_enclave_vec);
+
+        Self {
+            mr_signer,
+            mr_enclave,
+        }
     }
 }
