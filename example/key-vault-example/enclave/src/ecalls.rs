@@ -1,6 +1,6 @@
 use crate::ENCLAVE_CONTEXT;
 use anonify_config::constants::*;
-use anonify_enclave::{context::EnclaveContext, workflow::JoinGroupSender};
+use anonify_enclave::{context::EnclaveContext, workflow::*};
 use anyhow::anyhow;
 use codec::{Decode, Encode};
 use frame_common::traits::{EcallInput, EcallOutput};
@@ -14,8 +14,13 @@ register_ecall!(
     MAX_MEM_SIZE,
     Runtime<EnclaveContext>,
     EnclaveContext,
+    (ENCRYPT_COMMAND_CMD, MsgSender<Ed25519ChallengeResponse>),
+    // Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
+    (INSERT_CIPHERTEXT_CMD, MsgReceiver),
+    // Insert handshake received from blockchain nodes into enclave.
     (INSERT_HANDSHAKE_CMD, HandshakeReceiver),
     (CALL_JOIN_GROUP_CMD, JoinGroupSender),
+    (CALL_HANDSHAKE_CMD, HandshakeSender),
     (GET_ENCRYPTING_KEY_CMD, EncryptingKeyGetter),
     (START_SERVER_CMD, ServerStarter),
     (STOP_SERVER_CMD, ServerStopper),
