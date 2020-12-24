@@ -81,4 +81,12 @@ impl EnclaveMeasurement {
             mr_enclave,
         }
     }
+
+    pub fn mr_signer(&self) -> [u8; 32] {
+        self.mr_signer
+    }
+
+    pub fn mr_enclave(&self) -> [u8; 32] {
+        self.mr_enclave
+    }
 }
