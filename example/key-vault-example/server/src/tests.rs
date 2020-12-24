@@ -11,8 +11,7 @@ use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
-use integration_tests::set_env_vars;
-use std::{fs::File, io::BufReader, str::FromStr};
+use std::{fs::File, io::BufReader, str::FromStr, env};
 use web3::{
     contract::{Contract, Options},
     transports::Http,
@@ -87,6 +86,7 @@ async fn test_backup_path_secret() {
     std::thread::sleep(std::time::Duration::from_secs(1));
 
     // Setup ERC20 application
+    env::set_var("ENCLAVE_PKG_NAME", "erc20");
     let app_enclave = EnclaveDir::new()
         .init_enclave(true)
         .expect("Failed to initialize client enclave.");
@@ -141,4 +141,24 @@ async fn test_backup_path_secret() {
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
+}
+
+lazy_static! {
+    pub static ref ENV_LOGGER_INIT: () = env_logger::init();
+}
+
+pub fn set_env_vars() {
+    *ENV_LOGGER_INIT;
+    env::set_var("RUST_LOG", "DEBUG");
+    env::set_var("MY_ROSTER_IDX", "0");
+    env::set_var("MAX_ROSTER_IDX", "2");
+    env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");
+    env::set_var(
+        "IAS_URL",
+        "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report",
+    );
+    env::set_var("SUB_KEY", "77e2533de0624df28dc3be3a5b9e50d9");
+    env::set_var("MRA_TLS_SERVER_ADDRESS", "localhost:12345");
+    env::set_var("AUDITOR_ENDPOINT", "test");
+    env::set_var("ENCLAVE_PKG_NAME", "key_vault_example");
 }

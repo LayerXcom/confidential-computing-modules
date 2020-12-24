@@ -44,7 +44,7 @@ impl EnclaveDir {
     }
 
     fn get_enclave_file_path(&self) -> PathBuf {
-        self.0.join(ENCLAVE_FILE)
+        self.0.join(&*ENCLAVE_FILE)
     }
 
     fn get_launch_token<P: AsRef<Path>>(path: P) -> Result<sgx_launch_token_t> {

@@ -18,7 +18,6 @@ key-vault-host = { path = "../../../modules/key-vault-host" }
 key-vault-example-api = { path = "../api" }
 
 [dev-dependencies]
-integration-tests = { path = "../../../tests/integration" }
 frame-common = { path = "../../../frame/common" }
 frame-runtime = { path = "../../../frame/runtime" }
 frame-treekem = { path = "../../../frame/treekem" }

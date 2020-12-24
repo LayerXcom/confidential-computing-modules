@@ -63,8 +63,7 @@ pub async fn get_encrypting_key(
 #[actix_rt::test]
 async fn test_integration_eth_construct() {
     set_env_vars();
-    let enclave_dir = getenv;
-    let enclave = EnclaveDir::new(enclave_dir).init_enclave(true).unwrap();
+    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
@@ -945,4 +944,5 @@ pub fn set_env_vars() {
     env::set_var("SUB_KEY", "77e2533de0624df28dc3be3a5b9e50d9");
     env::set_var("MRA_TLS_SERVER_ADDRESS", "localhost:12345");
     env::set_var("AUDITOR_ENDPOINT", "test");
+    env::set_var("ENCLAVE_PKG_NAME", "erc20");
 }

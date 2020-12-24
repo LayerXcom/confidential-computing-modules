@@ -95,7 +95,7 @@ endif
 Crypto_Library_Name := sgx_tcrypto
 
 RustEnclave_Include_Paths := -I$(CUSTOM_COMMON_PATH)/inc -I$(CUSTOM_EDL_PATH) -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SDK)/include/epid -I $(ANONIFY_ENCLAVE_DIR) -I./include
-RustEnclave_Link_Libs := -L$(CUSTOM_LIBRARY_PATH) -lenclave
+RustEnclave_Link_Libs := -L$(CUSTOM_LIBRARY_PATH) -l$(ENCLAVE_PKG_NAME)enclave
 RustEnclave_Compile_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(RustEnclave_Include_Paths)
 RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) \
 	-Wl,--whole-archive -l$(Trts_Library_Name) -Wl,--no-whole-archive \
@@ -106,9 +106,9 @@ RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nod
 	-Wl,--gc-sections \
 	-Wl,--version-script=$(CONFIG_DIR)/Enclave.lds
 
-RustEnclave_Name := $(ANONIFY_BUILD_DIR)/enclave.so
-Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/enclave.signed.so
-Rust_Enclave_Name := libenclave.a
+RustEnclave_Name := $(ANONIFY_BUILD_DIR)/$(ENCLAVE_PKG_NAME).enclave.so
+Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).signed.so
+Rust_Enclave_Name := lib$(ENCLAVE_PKG_NAME)enclave.a
 Rust_Enclave_Files := $(wildcard src/*.rs)
 
 .PHONY: all

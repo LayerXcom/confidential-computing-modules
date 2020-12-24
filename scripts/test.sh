@@ -36,7 +36,7 @@ RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture
 sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture
 
-export ENCLAVE_PKG_NAME=key-vault-example
+export ENCLAVE_PKG_NAME=key_vault_example
 cd ${ANONIFY_ROOT}/scripts
 make DEBUG=1 ENCLAVE_DIR=example/key-vault-example/enclave
 
