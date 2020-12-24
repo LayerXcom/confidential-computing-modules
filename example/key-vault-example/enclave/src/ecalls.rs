@@ -14,6 +14,7 @@ register_ecall!(
     MAX_MEM_SIZE,
     Runtime<EnclaveContext>,
     EnclaveContext,
+    (CALL_JOIN_GROUP_CMD, JoinGroupSender),
     (START_SERVER_CMD, ServerStarter),
     (STOP_SERVER_CMD, ServerStopper),
 );
