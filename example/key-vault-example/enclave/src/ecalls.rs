@@ -1,6 +1,9 @@
 use crate::ENCLAVE_CONTEXT;
 use anonify_config::constants::*;
-use anonify_enclave::{context::EnclaveContext, workflow::*};
+use anonify_enclave::{
+    crypto::Ed25519ChallengeResponse,
+    context::EnclaveContext, workflow::*
+};
 use anyhow::anyhow;
 use codec::{Decode, Encode};
 use frame_common::traits::{EcallInput, EcallOutput};
