@@ -25,7 +25,8 @@ extern crate lazy_static;
 pub mod constants;
 
 pub use crate::constants::*;
-use crate::localstd::vec::Vec;
+use crate::local_anyhow::Result;
+use crate::localstd::{env, string::String, untrusted::fs, vec::Vec};
 
 #[cfg(feature = "sgx")]
 lazy_static! {
@@ -34,4 +35,24 @@ lazy_static! {
         let pem = pem::parse(ias_root_cert).expect("Cannot parse PEM File");
         pem.contents
     };
+    pub static ref ENCLAVE_MEASUREMENT: EnclaveMeasurement = {
+        let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
+        let measurement_file_path = format!("../../.anonify/{}_measurement.txt", pkg_name);
+        let content =
+            fs::read_to_string(&measurement_file_path).expect("Cannot read measurement file");
+        EnclaveMeasurement::new_from_dumpfile(content).unwrap()
+    };
+}
+
+#[cfg(feature = "sgx")]
+pub struct EnclaveMeasurement {
+    mr_signer: [u8; sgx_types::SGX_HASH_SIZE],
+    mr_enclave: [u8; sgx_types::SGX_HASH_SIZE],
+}
+
+impl EnclaveMeasurement {
+    pub fn new_from_dumpfile(content: String) -> Result<Self> {
+        let lines: Vec<&str> = content.split("\n").collect();
+        unimplemented!();
+    }
 }
