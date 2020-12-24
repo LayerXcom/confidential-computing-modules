@@ -14,7 +14,9 @@ register_ecall!(
     MAX_MEM_SIZE,
     Runtime<EnclaveContext>,
     EnclaveContext,
+    (INSERT_HANDSHAKE_CMD, HandshakeReceiver),
     (CALL_JOIN_GROUP_CMD, JoinGroupSender),
+    (GET_ENCRYPTING_KEY_CMD, EncryptingKeyGetter),
     (START_SERVER_CMD, ServerStarter),
     (STOP_SERVER_CMD, ServerStopper),
 );
