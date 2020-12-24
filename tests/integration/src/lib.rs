@@ -63,7 +63,8 @@ pub async fn get_encrypting_key(
 #[actix_rt::test]
 async fn test_integration_eth_construct() {
     set_env_vars();
-    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+    let enclave_dir = getenv;
+    let enclave = EnclaveDir::new(enclave_dir).init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
