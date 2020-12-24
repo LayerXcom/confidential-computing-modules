@@ -310,14 +310,14 @@ async fn test_integration_eth_transfer() {
     let recipient = other_access_policy.into_account_id();
     let transfer_cmd = transfer { amount, recipient };
 
-    let start_benchmark = std::time::SystemTime::now();
-    println!("##### start benchmark and start encrypted_command: {:?}", start_benchmark);
+    let t0 = std::time::SystemTime::now();
+    println!("##### t0: {:?}", t0);
     // TEEで実行する状態遷移コマンド(transfer)を暗号化(ECIES暗号文取得)
     let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_cmd.encode()).unwrap();
     // TXを生成し、BCに送信する処理
     // 中でグループキーのローテーションや各種暗号処理を行い、最後にBCへTXを送信
-    let start_send_command = std::time::SystemTime::now();
-    println!("##### end encrypted_command and start send_command: {:?}", start_send_command);
+    let t1 = std::time::SystemTime::now();
+    println!("##### t1: {:?}", t1);
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -328,15 +328,16 @@ async fn test_integration_eth_transfer() {
         )
         .await
         .unwrap();
-    let end_send_command = std::time::SystemTime::now();
-    println!("##### end send_command and start fetch_events: {:?}", end_send_command);
+
+    let t8 = std::time::SystemTime::now();
+    println!("##### t8: {:?}", t8);
     // println!("receipt: {:?}", receipt);
 
     // BCからイベントを取得
     // Update state inside enclave
     dispatcher.fetch_events::<U64>().await.unwrap();
-    let end_benchmark = std::time::SystemTime::now();
-    println!("##### end fetch_event and benchmark: {:?}", end_benchmark);
+    let t11 = std::time::SystemTime::now();
+    println!("##### t11: {:?}", t11);
     // Check the updated states
     let my_updated_state = dispatcher
         .get_state::<U64, _, CallName>(my_access_policy, "balance_of")

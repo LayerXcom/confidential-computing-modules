@@ -111,8 +111,8 @@ impl Web3Contract {
         enclave_sig.push(recovery_id);
         let gas = output.gas;
 
-        let start_contract_call = std::time::SystemTime::now();
-        println!("############### start contract_call {:?}", start_contract_call);
+        let t7 = std::time::SystemTime::now();
+        println!("############### t7 {:?}", t7);
         self.contract
             .call(
                 "storeCommand",

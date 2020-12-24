@@ -15,10 +15,12 @@ pub trait HostEngine {
     fn exec(input: Self::HI, eid: sgx_enclave_id_t) -> anyhow::Result<Self::HO> {
         let (ecall_input, host_output) = input.apply()?;
 
-        println!("############### start invoke_ecall");
+        let t2 = std::time::SystemTime::now();
+        println!("########## t2: {:?}", t2);
         let ecall_output = EnclaveConnector::new(eid, Self::OUTPUT_MAX_LEN)
             .invoke_ecall::<Self::EI, Self::EO>(Self::CMD, ecall_input)?;
-        println!("############### end invoke_ecall");
+        let t5 = std::time::SystemTime::now();
+        println!("########## t5: {:?}", t5);
         
         host_output.set_ecall_output(ecall_output)
     }

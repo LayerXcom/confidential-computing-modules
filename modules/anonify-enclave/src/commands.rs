@@ -35,37 +35,23 @@ impl<AP: AccessPolicy> EnclaveEngine for MsgSender<AP> {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let t1 = std::time::SystemTime::now();
-        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t1: {:?}", t1);
         // グループキー取得
         let group_key = &mut *enclave_context.write_group_key();
         let roster_idx = group_key.my_roster_idx() as usize;
-        let t2 = std::time::SystemTime::now();
-        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t2: {:?}", t2);
-        // グループ鍵交換
+        // 送信側のグループ鍵交換
         // ratchet sender's app keychain per tx.
         group_key.sender_ratchet(roster_idx)?;
         let account_id = ecall_input.access_policy().into_account_id();
-        let t3 = std::time::SystemTime::now();
-        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t3: {:?}", t3);
         // 暗号化された状態遷移コマンドを復号
         let mut command = enclave_context.decrypt(ecall_input.encrypted_command)?;
-        let t4 = std::time::SystemTime::now();
-        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t4 {:?}", t4);
         // 暗号文作成(TX送信用?)
         let ciphertext = Commands::<R, C>::new(ecall_input.call_id, &mut command, account_id)?
             .encrypt(group_key, max_mem_size)?;
-        let t5 = std::time::SystemTime::now();
-        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t5 {:?}", t5);
         // 署名
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
-        let t6 = std::time::SystemTime::now();
-        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t6 {:?}", t6);
         // コマンド(TXに入れるやつ)生成
         let command_output = output::Command::new(ciphertext, enclave_sig.0, enclave_sig.1);
-        let t7 = std::time::SystemTime::now();
-        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t7 {:?}", t7);
         enclave_context.set_notification(account_id);
 
         Ok(command_output)
