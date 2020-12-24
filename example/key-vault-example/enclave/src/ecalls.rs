@@ -1,6 +1,6 @@
 use crate::ENCLAVE_CONTEXT;
 use anonify_config::constants::*;
-use anonify_enclave::context::EnclaveContext;
+use anonify_enclave::{context::EnclaveContext, workflow::JoinGroupSender};
 use anyhow::anyhow;
 use codec::{Decode, Encode};
 use frame_common::traits::{EcallInput, EcallOutput};
