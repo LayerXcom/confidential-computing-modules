@@ -10,6 +10,7 @@ use std::{
     vec::Vec,
 };
 use test_utils::*;
+use anonify_config::ENCLAVE_MEASUREMENT;
 
 const CLIENT_ADDRESS: &str = "localhost:12345";
 const SERVER_ADDRESS: &str = "0.0.0.0:12345";
@@ -44,7 +45,7 @@ fn test_request_response() {
 
     let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)
         .unwrap()
-        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
+        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT);
     let mut client = Client::new(CLIENT_ADDRESS, client_config).unwrap();
 
     let msg = r#"{
@@ -58,7 +59,7 @@ fn test_request_response() {
 fn start_server(attested_tls_config: AttestedTlsConfig) {
     let server_config = ServerConfig::from_attested_tls_config(attested_tls_config)
         .unwrap()
-        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
+        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT);
 
     let mut server = Server::new(SERVER_ADDRESS.to_string(), server_config);
     let handler = EchoHandler::default();

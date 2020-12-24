@@ -14,7 +14,6 @@ serde-std = { package = "serde", version = "1", default-features = false, option
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 lazy_static = { version = "1.4", features = ["spin_no_std"] }
 pem = { version = "0.8.2", git = "https://github.com/mesalock-linux/pem-rs-sgx", optional = true }
-sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 hex = { version = "0.4", default-features = false }
 
 [features]
@@ -31,6 +30,5 @@ sgx = [
     "serde-sgx",
     "serde-sgx/derive",
     "sgx_tstd",
-    "sgx_types",
     "pem",
 ]

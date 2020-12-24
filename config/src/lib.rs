@@ -26,8 +26,7 @@ pub mod constants;
 
 pub use crate::constants::*;
 use crate::local_anyhow::Result;
-use crate::localstd::{env, string::String, untrusted::fs, vec::Vec};
-use sgx_types::SGX_HASH_SIZE;
+use crate::localstd::{env, string::String, vec::Vec};
 
 #[cfg(feature = "sgx")]
 lazy_static! {
@@ -39,18 +38,20 @@ lazy_static! {
     pub static ref ENCLAVE_MEASUREMENT: EnclaveMeasurement = {
         let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
         let measurement_file_path = format!("../../.anonify/{}_measurement.txt", pkg_name);
-        let content =
-            fs::read_to_string(&measurement_file_path).expect("Cannot read measurement file");
+        let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
+            .expect("Cannot read measurement file");
         EnclaveMeasurement::new_from_dumpfile(content)
     };
 }
 
 #[cfg(feature = "sgx")]
+#[derive(Debug, Clone, Copy)]
 pub struct EnclaveMeasurement {
-    mr_signer: [u8; SGX_HASH_SIZE],
-    mr_enclave: [u8; SGX_HASH_SIZE],
+    mr_signer: [u8; 32],
+    mr_enclave: [u8; 32],
 }
 
+#[cfg(feature = "sgx")]
 impl EnclaveMeasurement {
     pub fn new_from_dumpfile(content: String) -> Self {
         let lines: Vec<&str> = content.split("\n").collect();
@@ -70,9 +71,9 @@ impl EnclaveMeasurement {
             hex::decode([lines[mr_enclave_index + 1], lines[mr_enclave_index + 2]].concat())
                 .expect("Failed decoding mr_enclave hex");
 
-        let mut mr_signer = [0u8; SGX_HASH_SIZE];
+        let mut mr_signer = [0u8; 32];
         mr_signer.copy_from_slice(&mr_signer_vec);
-        let mut mr_enclave = [0u8; SGX_HASH_SIZE];
+        let mut mr_enclave = [0u8; 32];
         mr_enclave.copy_from_slice(&mr_enclave_vec);
 
         Self {

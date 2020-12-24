@@ -1,5 +1,6 @@
 use crate::cert::*;
 use crate::error::{MraTLSError, Result};
+use anonify_config::EnclaveMeasurement;
 use anyhow::anyhow;
 use remote_attestation::AttestedReport;
 use std::io::{Cursor, Read};
@@ -8,11 +9,15 @@ use std::vec::Vec;
 #[derive(Clone, Debug)]
 pub struct AttestedReportVerifier {
     root_cert: Vec<u8>,
+    measurement: EnclaveMeasurement,
 }
 
 impl AttestedReportVerifier {
-    pub fn new(root_cert: Vec<u8>) -> Self {
-        Self { root_cert }
+    pub fn new(root_cert: Vec<u8>, measurement: EnclaveMeasurement) -> Self {
+        Self {
+            root_cert,
+            measurement,
+        }
     }
 
     fn verify_cert(&self, ee_cert: &[u8]) -> Result<()> {
