@@ -59,9 +59,7 @@ fn test_request_response() {
     assert_eq!(msg, resp);
 }
 
-fn test_invalid_root_cert_failed() {
-    
-}
+fn test_invalid_root_cert_failed() {}
 
 fn start_server(attested_tls_config: AttestedTlsConfig) {
     let server_config = ServerConfig::from_attested_tls_config(attested_tls_config)

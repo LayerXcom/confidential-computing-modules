@@ -24,10 +24,7 @@ pub struct GroupState {
 }
 
 impl Handshake for GroupState {
-    fn create_handshake(
-        &self,
-        source: &PathSecretSource,
-    ) -> Result<(HandshakeParams, PathSecret)> {
+    fn create_handshake(&self, source: &PathSecretSource) -> Result<(HandshakeParams, PathSecret)> {
         let my_roster_idx = self.my_roster_idx;
         let my_tree_idx = RatchetTree::roster_idx_to_tree_idx(my_roster_idx)?;
 

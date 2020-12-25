@@ -58,7 +58,9 @@ impl ContextOps for EnclaveContext {
         &self.server_address
     }
 
-    fn spid(&self) -> &str { &self.spid }
+    fn spid(&self) -> &str {
+        &self.spid
+    }
 
     fn is_backup_enabled(&self) -> bool {
         self.is_backup_enabled
