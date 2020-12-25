@@ -36,8 +36,8 @@ lazy_static! {
         pem.contents
     };
     pub static ref ENCLAVE_MEASUREMENT: EnclaveMeasurement = {
-        let pkg_name = env::var("ENCLAVE_PKG_NAME").unwrap_or_default();
-        let measurement_file_path = format!("../../.anonify/{}.txt", pkg_name);
+        let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
+        let measurement_file_path = format!("../../.anonify/{}_measurement.txt", pkg_name);
         let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
             .expect("Cannot read measurement file");
         EnclaveMeasurement::new_from_dumpfile(content)
