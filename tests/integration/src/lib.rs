@@ -327,15 +327,15 @@ async fn test_integration_eth_transfer() {
         .await
         .unwrap();
 
-    let t8 = std::time::SystemTime::now();
-    println!("########## t8: {:?}", t8);
+    let t9 = std::time::SystemTime::now();
+    println!("########## t9: {:?}", t9);
     // println!("receipt: {:?}", receipt);
 
     // BCからイベントを取得
     // Update state inside enclave
     dispatcher.fetch_events::<U64>().await.unwrap();
-    let t11 = std::time::SystemTime::now();
-    println!("########## t11: {:?}", t11);
+    let t12 = std::time::SystemTime::now();
+    println!("########## t12: {:?}", t12);
     // Check the updated states
     let my_updated_state = dispatcher
         .get_state::<U64, _, CallName>(my_access_policy, "balance_of")

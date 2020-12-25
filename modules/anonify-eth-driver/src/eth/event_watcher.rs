@@ -54,12 +54,12 @@ impl Watcher for EventWatcher {
             .get_event(self.cache.clone(), self.contract.address())
             .await?;
         
-        let t9 = std::time::SystemTime::now();
-        println!("########## t9: {:?}", t9);
-        let enclave_updated_state = event_logs.into_enclave_log()
-            .insert_enclave(eid);
         let t10 = std::time::SystemTime::now();
         println!("########## t10: {:?}", t10);
+        let enclave_updated_state = event_logs.into_enclave_log()
+            .insert_enclave(eid);
+        let t11 = std::time::SystemTime::now();
+        println!("########## t11: {:?}", t11);
 
         let enclave_updated_state = enclave_updated_state.save_cache(self.contract.address());
 
