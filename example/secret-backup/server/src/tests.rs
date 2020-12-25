@@ -80,7 +80,7 @@ async fn test_backup_path_secret() {
     let req = test::TestRequest::post().uri("/api/v1/start").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let start_response: key_vault_example_api::start::post::Response =
+    let start_response: secret_backup_api::start::post::Response =
         test::read_body_json(resp).await;
     assert_eq!(start_response.status, "success".to_string());
 
@@ -159,5 +159,5 @@ fn set_env_vars() {
     env::set_var("SUB_KEY", "77e2533de0624df28dc3be3a5b9e50d9");
     env::set_var("MRA_TLS_SERVER_ADDRESS", "localhost:12345");
     env::set_var("AUDITOR_ENDPOINT", "test");
-    env::set_var("ENCLAVE_PKG_NAME", "key_vault_example");
+    env::set_var("ENCLAVE_PKG_NAME", "secret_backup");
 }
