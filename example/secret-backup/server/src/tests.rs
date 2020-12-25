@@ -6,7 +6,7 @@ use anonify_eth_driver::{
     EventCache,
 };
 use codec::{Decode, Encode};
-use erc20_state_transition::{construct, CallName, MemName, CIPHERTEXT_SIZE};
+use erc20_state_transition::{construct, CallName};
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_runtime::primitives::U64;
