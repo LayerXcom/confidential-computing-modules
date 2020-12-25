@@ -22,7 +22,7 @@ use web3::{
     Web3,
 };
 
-const ETH_URL: &str = "http://172.28.0.2:8545";
+const ETH_URL: &str = "http://172.48.0.2:8545";
 const ABI_PATH: &str = "../../contract-build/Anonify.abi";
 const BIN_PATH: &str = "../../contract-build/Anonify.bin";
 const CONFIRMATIONS: usize = 0;
