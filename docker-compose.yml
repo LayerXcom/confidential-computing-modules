@@ -19,7 +19,7 @@ services:
   ganache_kim:
       image: trufflesuite/ganache-cli:latest
       ports:
-        - "8545:8545"
+        - "28545:8545"
       volumes:
         - ./ganache_data:/ganache_data
       networks:

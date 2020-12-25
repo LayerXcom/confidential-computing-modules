@@ -90,12 +90,8 @@ impl EnclaveEngine for MsgReceiver {
         // So if you run `sync_ratchet` first,
         // it will either succeed or both fail for the mutable `app_keychain`, so it will be atomic.
         // グループキー同期
-        let t1 = std::time::SystemTime::now();
-        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t1: {:?}", t1);
         group_key.sync_ratchet(roster_idx, msg_gen)?;
         group_key.receiver_ratchet(roster_idx)?;
-        let t2 = std::time::SystemTime::now();
-        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t2: {:?}", t2);
         // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
         // 状態遷移ロジック実行
         // 暗号文を平文に変換し、runtime上で状態遷移を実行
@@ -104,19 +100,13 @@ impl EnclaveEngine for MsgReceiver {
             ecall_input.ciphertext(),
             group_key,
         )?;
-        let t3 = std::time::SystemTime::now();
-        println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t2: {:?}", t3);
         let mut output = output::ReturnUpdatedState::default();
 
         if let Some(updated_state_iter) = iter_op {
-            let t4 = std::time::SystemTime::now();
-            println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t4: {:?}", t4);
             // 状態遷移処理が成功したらupdate_state -> insert_by_updated_state
             if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
                 output.update(updated_state);
             }
-            let t5 = std::time::SystemTime::now();
-            println!("@@@@@@@@@@@@@@@@@@@@@@@@@ t5: {:?}", t5);
         }
 
         Ok(output)
