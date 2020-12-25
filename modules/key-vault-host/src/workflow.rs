@@ -1,5 +1,5 @@
-use anonify_io_types::*;
 use anonify_config::constants::*;
+use anonify_io_types::*;
 use frame_host::engine::*;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
@@ -33,8 +33,7 @@ pub mod host_input {
 
     impl StartServer {
         pub fn new() -> Self {
-            StartServer {
-            }
+            StartServer {}
         }
     }
 

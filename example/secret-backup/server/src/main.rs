@@ -20,10 +20,7 @@ pub struct Server {
 impl Server {
     pub fn new(eid: sgx_enclave_id_t) -> Self {
         let dispatcher = Dispatcher::new(eid).unwrap();
-        Server {
-            eid,
-            dispatcher,
-        }
+        Server { eid, dispatcher }
     }
 }
 

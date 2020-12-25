@@ -1,8 +1,8 @@
 #![crate_type = "lib"]
 
 pub mod dispatcher;
-mod workflow;
 mod error;
+mod workflow;
 
 pub use dispatcher::Dispatcher;
 pub use error::KeyVaultHostError;

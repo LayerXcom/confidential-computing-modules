@@ -6,8 +6,9 @@ edition = "2018"
 build = "build.rs"
 
 [dependencies]
-frame-types = { path = "../../frame/types" }
-frame-common = { path = "../../frame/common" }
+frame-types = { path = "../types" }
+frame-common = { path = "../common" }
+anonify-config = { path = "../../config"}
 anyhow = "1.0"
 thiserror = "1.0"
 sgx_types = "1.1.1"
@@ -15,9 +16,7 @@ sgx_urts = "1.1.1"
 codec = { package = "parity-scale-codec", version = "1.1" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0"
-dirs = "2.0"
 log = "0.4"
-lazy_static = "1.4"
 hex = "0.4"
 
 [build-dependencies]

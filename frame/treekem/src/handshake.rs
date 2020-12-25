@@ -15,10 +15,7 @@ use frame_common::crypto::{ExportHandshake, ExportPathSecret};
 /// A handshake operates sharing a group key to each member.
 pub trait Handshake: Sized {
     /// Create a handshake to broadcast other members.
-    fn create_handshake(
-        &self,
-        source: &PathSecretSource,
-    ) -> Result<(HandshakeParams, PathSecret)>;
+    fn create_handshake(&self, source: &PathSecretSource) -> Result<(HandshakeParams, PathSecret)>;
 
     /// Process a received handshake from other members.
     fn process_handshake<F>(

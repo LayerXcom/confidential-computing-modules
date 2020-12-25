@@ -144,7 +144,9 @@ async fn test_backup_path_secret() {
     println!("init state receipt: {:?}", receipt);
 }
 
-pub static ENV_LOGGER_INIT: Lazy<()> = Lazy::new(|| { env_logger::init(); });
+pub static ENV_LOGGER_INIT: Lazy<()> = Lazy::new(|| {
+    env_logger::init();
+});
 
 fn set_env_vars() {
     *ENV_LOGGER_INIT;

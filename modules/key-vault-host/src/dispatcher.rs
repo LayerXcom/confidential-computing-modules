@@ -1,7 +1,4 @@
-use crate::{
-    error::Result,
-    workflow::*,
-};
+use crate::{error::Result, workflow::*};
 use frame_host::engine::HostEngine;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;

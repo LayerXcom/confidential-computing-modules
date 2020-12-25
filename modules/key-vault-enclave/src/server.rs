@@ -1,5 +1,5 @@
 use crate::handlers::BackupHandler;
-use anonify_config::IAS_ROOT_CERT;
+use anonify_config::{ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
 use anonify_io_types::*;
 use frame_common::state_types::StateType;
 use frame_enclave::EnclaveEngine;
@@ -34,7 +34,7 @@ impl EnclaveEngine for ServerStarter {
             AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
 
         let server_config = ServerConfig::from_attested_tls_config(attested_tls_config)?
-            .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
+            .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT);
 
         let mut server = Server::new(SERVER_ADDRESS.to_string(), server_config);
         let handler = BackupHandler::default();
