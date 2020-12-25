@@ -25,13 +25,13 @@ macro_rules! register_ecall {
                 .map_err(|e| anyhow!("{:?}", e))?;
             EE::eval_policy(&input)?;
 
-            let t3 = std::time::SystemTime::now();
-            println!("########## t3: {:?}", t3);
+            let t5 = std::time::SystemTime::now();
+            println!("########## t5: {:?}", t5);
             // txを送る側の場合、MsgSenderのhandleを、
             // eventを取得する側の場合、MsgReceiverのhandleを実行
             let res = EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?;
-            let t4 = std::time::SystemTime::now();
-            println!("########## t4: {:?}", t4);
+            let t6 = std::time::SystemTime::now();
+            println!("########## t6: {:?}", t6);
 
             Ok(res.encode())
         }

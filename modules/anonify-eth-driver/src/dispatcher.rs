@@ -187,9 +187,11 @@ where
             gas,
         );
         let eid = inner.deployer.get_enclave_id();
+        let t2 = std::time::SystemTime::now();
+        println!("########## t2: {:?}", t2);
         let host_output = CommandWorkflow::exec(input, eid)?;
-        let t6 = std::time::SystemTime::now();
-        println!("########## t6: {:?}", t6);
+        let t7 = std::time::SystemTime::now();
+        println!("########## t7: {:?}", t7);
         match &inner.sender {
             Some(s) => s.send_command(host_output).await,
             None => Err(HostError::AddressNotSet),

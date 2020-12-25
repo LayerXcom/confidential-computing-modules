@@ -310,8 +310,6 @@ async fn test_integration_eth_transfer() {
     let recipient = other_access_policy.into_account_id();
     let transfer_cmd = transfer { amount, recipient };
 
-    let t0 = std::time::SystemTime::now();
-    println!("##### t0: {:?}", t0);
     // TEEで実行する状態遷移コマンド(transfer)を暗号化(ECIES暗号文取得)
     let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_cmd.encode()).unwrap();
     // TXを生成し、BCに送信する処理
