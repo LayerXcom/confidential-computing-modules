@@ -1,5 +1,5 @@
 [package]
-name = "key-vault-example-state-transition"
+name = "secret-backup-state-transition"
 version = "0.1.0"
 authors = ["cipepser <respepic@gmail.com>"]
 edition = "2018"

@@ -9,7 +9,7 @@ use frame_common::{
 };
 use frame_enclave::{register_ecall, EnclaveEngine};
 use key_vault_enclave::workflow::*;
-use key_vault_example_state_transition::{Runtime, MAX_MEM_SIZE};
+use secret_backup_state_transition::{Runtime, MAX_MEM_SIZE};
 use std::{ptr, vec::Vec};
 
 register_ecall!(

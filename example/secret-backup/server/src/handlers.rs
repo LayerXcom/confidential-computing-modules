@@ -15,7 +15,7 @@ pub async fn handle_start(server: web::Data<Arc<Server>>) -> Result<HttpResponse
         .map_err(|e| ServerError::from(e))?;
 
     Ok(
-        HttpResponse::Ok().json(key_vault_example_api::start::post::Response {
+        HttpResponse::Ok().json(secret_backup_api::start::post::Response {
             status: "success".to_string(),
         }),
     )
@@ -29,7 +29,7 @@ pub async fn handle_stop(server: web::Data<Arc<Server>>) -> Result<HttpResponse>
         .map_err(|e| ServerError::from(e))?;
 
     Ok(
-        HttpResponse::Ok().json(key_vault_example_api::stop::post::Response(
+        HttpResponse::Ok().json(secret_backup_api::stop::post::Response(
             SUCCESS.to_string(),
         )),
     )
