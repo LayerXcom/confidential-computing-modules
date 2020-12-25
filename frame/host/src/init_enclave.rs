@@ -1,4 +1,4 @@
-use crate::config::{ENCLAVE_DIR, ENCLAVE_FILE, ENCLAVE_TOKEN};
+use crate::config::{ENCLAVE_DIR, ENCLAVE_TOKEN};
 use crate::error::Result;
 use crate::PJ_ROOT_DIR;
 use sgx_types::*;
