@@ -17,10 +17,10 @@ use frame_treekem::{
     init_path_secret_kvs, DhPubKey, EciesCiphertext,
 };
 use remote_attestation::{EncodedQuote, QuoteTarget};
-use std::prelude::v1::*;
 use std::{
     env,
     marker::PhantomData,
+    prelude::v1::*,
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
 };
 
@@ -32,11 +32,13 @@ pub struct EnclaveContext {
     version: usize,
     ias_url: String,
     sub_key: String,
+    server_address: String,
     spid: String,
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB,
     notifier: Notifier,
     group_key: Arc<SgxRwLock<GroupKey>>,
+    is_backup_enabled: bool,
 }
 
 impl ContextOps for EnclaveContext {
@@ -50,6 +52,16 @@ impl ContextOps for EnclaveContext {
 
     fn sub_key(&self) -> &str {
         &self.sub_key
+    }
+
+    fn server_address(&self) -> &str {
+        &self.server_address
+    }
+
+    fn spid(&self) -> &str { &self.spid }
+
+    fn is_backup_enabled(&self) -> bool {
+        self.is_backup_enabled
     }
 }
 
@@ -153,7 +165,7 @@ impl QuoteGetter for EnclaveContext {
 
 // TODO: Consider SGX_ERROR_BUSY.
 impl EnclaveContext {
-    pub fn new(spid: String) -> Result<Self> {
+    pub fn new(spid: String, is_backup_enabled: bool) -> Result<Self> {
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
 
@@ -187,6 +199,7 @@ impl EnclaveContext {
 
         let ias_url = env::var("IAS_URL")?;
         let sub_key = env::var("SUB_KEY")?;
+        let server_address = env::var("MRA_TLS_SERVER_ADDRESS")?;
 
         Ok(EnclaveContext {
             spid,
@@ -197,6 +210,8 @@ impl EnclaveContext {
             version: MRENCLAVE_VERSION,
             ias_url,
             sub_key,
+            server_address,
+            is_backup_enabled,
         })
     }
 }

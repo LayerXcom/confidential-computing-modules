@@ -11,7 +11,9 @@ export MAX_ROSTER_IDX=2
 export CONFIRMATIONS=1
 export ACCOUNT_INDEX=1
 export PASSWORD=anonify0101
+export ENCLAVE_PKG_NAME=erc20
 
 export SPID=
 export IAS_URL=https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report
 export SUB_KEY=
+export MRA_TLS_SERVER_ADDRESS=localhost:12345

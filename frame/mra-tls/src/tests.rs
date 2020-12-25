@@ -1,6 +1,7 @@
 use crate::{AttestedTlsConfig, Client, ClientConfig, RequestHandler, Server, ServerConfig};
 use anonify_config::IAS_ROOT_CERT;
 use anyhow::Result;
+use once_cell::sync::Lazy;
 use serde_json::Value;
 use std::{
     env,
@@ -11,8 +12,11 @@ use std::{
 };
 use test_utils::*;
 
-const CLIENT_ADDRESS: &str = "localhost:12345";
-const SERVER_ADDRESS: &str = "0.0.0.0:12345";
+static SERVER_ADDRESS: Lazy<String> = Lazy::new(|| {
+    let host = env::var("HOSTNAME").expect("failed to get env 'HOSTNAME'");
+    format!("{}:12345", host)
+});
+const LISTEN_ADDRESS: &str = "0.0.0.0:12345";
 
 pub fn run_tests() -> bool {
     check_all_passed!(
@@ -45,7 +49,7 @@ fn test_request_response() {
     let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)
         .unwrap()
         .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
-    let mut client = Client::new(CLIENT_ADDRESS, client_config).unwrap();
+    let mut client = Client::new(&*SERVER_ADDRESS, client_config).unwrap();
 
     let msg = r#"{
         "message": "Hello test_request_response"
@@ -60,7 +64,7 @@ fn start_server(attested_tls_config: AttestedTlsConfig) {
         .unwrap()
         .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
 
-    let mut server = Server::new(SERVER_ADDRESS.to_string(), server_config);
+    let mut server = Server::new(LISTEN_ADDRESS.to_string(), server_config);
     let handler = EchoHandler::default();
     thread::spawn(move || server.run(handler).unwrap());
     thread::sleep(Duration::from_secs(1));

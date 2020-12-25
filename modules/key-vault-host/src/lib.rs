@@ -1,7 +1,8 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+#![crate_type = "lib"]
+
+pub mod dispatcher;
+mod workflow;
+mod error;
+
+pub use dispatcher::Dispatcher;
+pub use error::KeyVaultHostError;
