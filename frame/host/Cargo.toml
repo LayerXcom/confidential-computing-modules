@@ -19,7 +19,6 @@ dirs = "2.0"
 log = "0.4"
 lazy_static = "1.4"
 hex = "0.4"
-once_cell = "1.5.2"
 
 [build-dependencies]
 dirs = "2.0"
