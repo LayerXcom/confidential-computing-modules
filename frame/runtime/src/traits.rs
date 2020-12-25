@@ -6,11 +6,11 @@ use crate::localstd::{
 };
 use codec::{Decode, Encode};
 use frame_common::{
-    crypto::{AccountId, Ciphertext, ExportHandshake, ExportPathSecret},
+    crypto::{AccountId, Ciphertext},
     state_types::{MemId, ReturnState, UpdatedState},
     traits::*,
 };
-use frame_treekem::{handshake::HandshakeParams, DhPubKey, EciesCiphertext};
+use frame_treekem::{handshake::HandshakeParams, DhPubKey, EciesCiphertext, PathSecret};
 use remote_attestation::EncodedQuote;
 
 /// Execute state transition functions from runtime
@@ -37,6 +37,9 @@ pub trait ContextOps:
     fn mrenclave_ver(&self) -> usize;
     fn ias_url(&self) -> &str;
     fn sub_key(&self) -> &str;
+    fn spid(&self) -> &str;
+    fn server_address(&self) -> &str;
+    fn is_backup_enabled(&self) -> bool;
 }
 
 /// A getter of state stored in enclave memory.
@@ -89,7 +92,7 @@ pub trait IdentityKeyOps {
 }
 
 pub trait GroupKeyOps: Sized {
-    fn create_handshake(&self) -> Result<(ExportHandshake, ExportPathSecret)>;
+    fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret)>;
 
     fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()>;
 

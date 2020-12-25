@@ -2,8 +2,12 @@ use anonify_config::IAS_ROOT_CERT;
 use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
-use frame_common::{crypto::Sha256, state_types::StateType};
+use frame_common::{
+    crypto::{BackupPathSecret, Sha256},
+    state_types::StateType,
+};
 use frame_enclave::EnclaveEngine;
+use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
 use frame_treekem::handshake::HandshakeParams;
 
@@ -26,6 +30,7 @@ impl EnclaveEngine for JoinGroupSender {
     {
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
+        let spid = enclave_context.spid();
         let attested_report = enclave_context.quote()?.remote_attestation(
             ias_url,
             sub_key,
@@ -34,7 +39,25 @@ impl EnclaveEngine for JoinGroupSender {
 
         let mrenclave_ver = enclave_context.mrenclave_ver();
         let group_key = &*enclave_context.read_group_key();
-        let (export_handshake, export_path_secret) = group_key.create_handshake()?;
+        let (handshake, path_secret) = group_key.create_handshake()?;
+        let epoch = handshake.prior_epoch();
+        let export_path_secret = path_secret
+            .clone()
+            .try_into_exporting(epoch, handshake.hash().as_ref())?;
+        let export_handshake = handshake.into_export();
+
+        if enclave_context.is_backup_enabled() {
+            let backup_path_secret = BackupPathSecret::new(path_secret.as_bytes().to_vec(), epoch);
+
+            let attested_tls_config =
+                AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
+
+            let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
+                .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
+            let mra_tls_server_address = enclave_context.server_address();
+            let mut mra_tls_client = Client::new(mra_tls_server_address, client_config).unwrap();
+            let _resp: serde_json::Value = mra_tls_client.send_json(backup_path_secret)?;
+        }
 
         Ok(output::ReturnJoinGroup::new(
             attested_report.report().to_vec(),
@@ -65,7 +88,11 @@ impl EnclaveEngine for HandshakeSender {
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &*enclave_context.read_group_key();
-        let (export_handshake, export_path_secret) = group_key.create_handshake()?;
+        let (handshake, path_secret) = group_key.create_handshake()?;
+        let epoch = handshake.prior_epoch();
+        let export_path_secret =
+            path_secret.try_into_exporting(epoch, handshake.hash().as_ref())?;
+        let export_handshake = handshake.into_export();
         let roster_idx = export_handshake.roster_idx();
         let msg = Sha256::hash_with_u32(&export_handshake.encode(), roster_idx);
         let sig = enclave_context.sign(msg.as_bytes())?;

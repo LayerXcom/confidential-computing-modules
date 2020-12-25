@@ -1,14 +1,15 @@
 use crate::ENCLAVE_CONTEXT;
+use anonify_config::constants::*;
 use anonify_enclave::{context::EnclaveContext, workflow::*};
 use anyhow::anyhow;
 use codec::{Decode, Encode};
-use anonify_config::constants::*;
 use frame_common::{
     crypto::Ed25519ChallengeResponse,
     traits::{EcallInput, EcallOutput},
 };
 use frame_enclave::{register_ecall, EnclaveEngine};
-use invoice_state_transition::{Runtime, MAX_MEM_SIZE};
+use key_vault_enclave::workflow::*;
+use key_vault_example_state_transition::{Runtime, MAX_MEM_SIZE};
 use std::{ptr, vec::Vec};
 
 register_ecall!(
@@ -16,20 +17,21 @@ register_ecall!(
     MAX_MEM_SIZE,
     Runtime<EnclaveContext>,
     EnclaveContext,
-    (
-        ENCRYPT_INSTRUCTION_CMD,
-        Instruction<Ed25519ChallengeResponse>
-    ),
+    (ENCRYPT_COMMAND_CMD, MsgSender<Ed25519ChallengeResponse>),
     // Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
-    (INSERT_CIPHERTEXT_CMD, InsertCiphertext),
+    (INSERT_CIPHERTEXT_CMD, MsgReceiver),
     // Insert handshake received from blockchain nodes into enclave.
-    (INSERT_HANDSHAKE_CMD, InsertHandshake),
+    (INSERT_HANDSHAKE_CMD, HandshakeReceiver),
     // Get current state of the user represented the given public key from enclave memory database.
     (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
-    (CALL_JOIN_GROUP_CMD, CallJoinGroup),
-    (CALL_HANDSHAKE_CMD, CallHandshake),
+    (CALL_JOIN_GROUP_CMD, JoinGroupSender),
+    (CALL_HANDSHAKE_CMD, HandshakeSender),
     (
         REGISTER_NOTIFICATION_CMD,
         RegisterNotification<Ed25519ChallengeResponse>
     ),
+    (GET_ENCRYPTING_KEY_CMD, EncryptingKeyGetter),
+    (CALL_REGISTER_REPORT_CMD, ReportRegistration),
+    (START_SERVER_CMD, ServerStarter),
+    (STOP_SERVER_CMD, ServerStopper),
 );

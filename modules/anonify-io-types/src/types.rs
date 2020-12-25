@@ -129,6 +129,16 @@ pub mod input {
             &self.access_policy
         }
     }
+
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct CallServerStarter;
+
+    impl EcallInput for CallServerStarter {}
+
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct CallServerStopper;
+
+    impl EcallInput for CallServerStopper {}
 }
 
 pub mod output {

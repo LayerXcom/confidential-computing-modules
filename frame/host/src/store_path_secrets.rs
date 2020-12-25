@@ -24,7 +24,7 @@ impl StorePathSecrets {
     pub fn save_to_local_filesystem(&self, eps: &ExportPathSecret) -> Result<()> {
         let file_name = hex::encode(&eps.id_as_ref());
         let file_path = self.local_dir_path.join(file_name);
-        debug!("Saving a selad path secret to the path: {:?}", file_path);
+        debug!("Saving a sealed path secret to the path: {:?}", file_path);
         let mut file = fs::File::create(file_path)?;
         serde_json::to_writer(&mut file, &eps)?;
         file.flush()?;

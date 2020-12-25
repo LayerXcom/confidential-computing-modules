@@ -1,10 +1,10 @@
-use crate::config::{ENCLAVE_DIR, ENCLAVE_FILE, ENCLAVE_TOKEN};
+use crate::config::{ENCLAVE_DIR, ENCLAVE_TOKEN};
 use crate::error::Result;
 use crate::PJ_ROOT_DIR;
 use sgx_types::*;
 use sgx_urts::SgxEnclave;
 use std::{
-    fs,
+    env, fs,
     io::{BufReader, BufWriter, Read, Write},
     path::{Path, PathBuf},
 };
@@ -44,7 +44,12 @@ impl EnclaveDir {
     }
 
     fn get_enclave_file_path(&self) -> PathBuf {
-        self.0.join(ENCLAVE_FILE)
+        let enclave_file = format!(
+            "{}.signed.so",
+            env::var("ENCLAVE_PKG_NAME").expect("failed to get env 'ENCLAVE_PKG_NAME'")
+        );
+
+        self.0.join(enclave_file)
     }
 
     fn get_launch_token<P: AsRef<Path>>(path: P) -> Result<sgx_launch_token_t> {
