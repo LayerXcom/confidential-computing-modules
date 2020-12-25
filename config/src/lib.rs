@@ -26,7 +26,7 @@ pub mod constants;
 
 pub use crate::constants::*;
 use crate::local_anyhow::Result;
-use crate::localstd::{env, string::String, vec::Vec};
+use crate::localstd::{env, ffi::OsStr, path::PathBuf, string::String, vec::Vec};
 
 #[cfg(feature = "sgx")]
 lazy_static! {
@@ -41,6 +41,22 @@ lazy_static! {
         let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
             .expect("Cannot read measurement file");
         EnclaveMeasurement::new_from_dumpfile(content)
+    };
+}
+
+lazy_static! {
+    pub static ref PJ_ROOT_DIR: PathBuf = {
+        let mut current_dir = env::current_dir().unwrap();
+        loop {
+            if current_dir.file_name() == Some(OsStr::new("anonify")) {
+                break;
+            }
+            if !current_dir.pop() {
+                break;
+            }
+        }
+
+        current_dir
     };
 }
 

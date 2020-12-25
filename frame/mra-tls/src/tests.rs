@@ -44,7 +44,7 @@ fn test_request_response() {
     let attested_tls_config =
         AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec()).unwrap();
 
-    start_server(attested_tls_config.clone());
+    start_server(attested_tls_config.clone(), IAS_ROOT_CERT.to_vec());
 
     let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)
         .unwrap()
@@ -59,12 +59,35 @@ fn test_request_response() {
     assert_eq!(msg, resp);
 }
 
-fn test_invalid_root_cert_failed() {}
+fn test_invalid_root_cert_failed() {
+    set_env_vars();
+    let spid = env::var("SPID").unwrap();
+    let ias_url = env::var("IAS_URL").unwrap();
+    let sub_key = env::var("SUB_KEY").unwrap();
+    let invalid_root_cert = pem::parse(INVALID_ROOT_CERT).expect("Cannot parse PEM File").contents;
 
-fn start_server(attested_tls_config: AttestedTlsConfig) {
+    let attested_tls_config =
+        AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec()).unwrap();
+
+    start_server(attested_tls_config.clone(), invalid_root_cert.clone());
+
+    let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)
+        .unwrap()
+        .set_attestation_report_verifier(invalid_root_cert, *ENCLAVE_MEASUREMENT);
+    let mut client = Client::new(&*SERVER_ADDRESS, client_config).unwrap();
+
+    let msg = r#"{
+        "message": "Hello test_request_response"
+    }"#;
+    let resp: String = client.send_json(msg).unwrap();
+
+    assert_eq!(msg, resp);
+}
+
+fn start_server(attested_tls_config: AttestedTlsConfig, ias_root_cert: Vec<u8>) {
     let server_config = ServerConfig::from_attested_tls_config(attested_tls_config)
         .unwrap()
-        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT);
+        .set_attestation_report_verifier(ias_root_cert, *ENCLAVE_MEASUREMENT);
 
     let mut server = Server::new(LISTEN_ADDRESS.to_string(), server_config);
     let handler = EchoHandler::default();
