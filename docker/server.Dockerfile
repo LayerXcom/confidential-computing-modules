@@ -24,7 +24,7 @@ RUN source /opt/sgxsdk/environment && \
     export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
     solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol && \
     cd scripts && \
-    make ENCLAVE_DIR=example/erc20/enclave CARGO_FLAGS=--release && \
+    make ENCLAVE_DIR=example/erc20/enclave ENCLAVE_PKG_NAME=erc20 CARGO_FLAGS=--release && \
     cd ../example/erc20/server && \
     RUST_BACKTRACE=1 RUST_LOG=debug /root/.cargo/bin/cargo build --release
 
@@ -35,7 +35,7 @@ LABEL maintainer="osuke.sudo@layerx.co.jp"
 WORKDIR /root/anonify
 
 RUN cd /root/anonify
-COPY --from=builder /root/anonify/.anonify/enclave.signed.so ./.anonify/enclave.signed.so
+COPY --from=builder /root/anonify/.anonify/erc20.signed.so ./.anonify/erc20.signed.so
 COPY --from=builder /root/anonify/target/release/erc20-server ./target/release/
 COPY --from=builder /root/anonify/contract-build/Anonify.abi ./contract-build/
 COPY --from=builder /root/anonify/contract-build/Anonify.bin ./contract-build/
