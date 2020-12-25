@@ -36,11 +36,11 @@ RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture
 sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture
 
-export ENCLAVE_PKG_NAME=key_vault_example
+export ENCLAVE_PKG_NAME=secret_backup
 cd ${ANONIFY_ROOT}/scripts
-make DEBUG=1 ENCLAVE_DIR=example/key-vault-example/enclave
+make DEBUG=1 ENCLAVE_DIR=example/secret-backup/enclave
 
-cd ${ANONIFY_ROOT}/example/key-vault-example/server
+cd ${ANONIFY_ROOT}/example/secret-backup/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocapture
 
 echo "Unit testing..."
@@ -60,6 +60,6 @@ echo "Building ERC20 server..."
 cd example/erc20/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo build
 
-echo "Building key-vault server..."
-cd ../../key-vault-example/server
+echo "Building secret-backup server..."
+cd ../../secret-backup/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo build
