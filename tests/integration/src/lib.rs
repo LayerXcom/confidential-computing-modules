@@ -315,7 +315,7 @@ async fn test_integration_eth_transfer() {
     // TXを生成し、BCに送信する処理
     // 中でグループキーのローテーションや各種暗号処理を行い、最後にBCへTXを送信
     let t1 = std::time::SystemTime::now();
-    println!("##### t1: {:?}", t1);
+    println!("########## t1: {:?}", t1);
     let receipt = dispatcher
         .send_command::<CallName, _>(
             my_access_policy.clone(),
@@ -328,14 +328,14 @@ async fn test_integration_eth_transfer() {
         .unwrap();
 
     let t8 = std::time::SystemTime::now();
-    println!("##### t8: {:?}", t8);
+    println!("########## t8: {:?}", t8);
     // println!("receipt: {:?}", receipt);
 
     // BCからイベントを取得
     // Update state inside enclave
     dispatcher.fetch_events::<U64>().await.unwrap();
     let t11 = std::time::SystemTime::now();
-    println!("##### t11: {:?}", t11);
+    println!("########## t11: {:?}", t11);
     // Check the updated states
     let my_updated_state = dispatcher
         .get_state::<U64, _, CallName>(my_access_policy, "balance_of")
