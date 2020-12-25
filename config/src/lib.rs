@@ -37,7 +37,7 @@ lazy_static! {
     };
     pub static ref ENCLAVE_MEASUREMENT: EnclaveMeasurement = {
         let pkg_name = env::var("ENCLAVE_PKG_NAME").unwrap_or_default();
-        let measurement_file_path = format!("../../.anonify/{}_measurement.txt", pkg_name);
+        let measurement_file_path = format!("../../.anonify/{}.txt", pkg_name);
         let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
             .expect("Cannot read measurement file");
         EnclaveMeasurement::new_from_dumpfile(content)
@@ -64,22 +64,25 @@ impl EnclaveMeasurement {
             .position(|&line| line == "metadata->enclave_css.body.enclave_hash.m:")
             .expect("mrenclave must be included");
 
-        let mr_signer_vec =
-            hex::decode([lines[mr_signer_index + 1], lines[mr_signer_index + 2]].concat())
-                .expect("Failed decoding mr_signer hex");
-        let mr_enclave_vec =
-            hex::decode([lines[mr_enclave_index + 1], lines[mr_enclave_index + 2]].concat())
-                .expect("Failed decoding mr_enclave hex");
-
-        let mut mr_signer = [0u8; 32];
-        mr_signer.copy_from_slice(&mr_signer_vec);
-        let mut mr_enclave = [0u8; 32];
-        mr_enclave.copy_from_slice(&mr_enclave_vec);
+        let mr_signer = Self::parse_measurement(&lines[..], mr_signer_index);
+        let mr_enclave = Self::parse_measurement(&lines[..], mr_enclave_index);
 
         Self {
             mr_signer,
             mr_enclave,
         }
+    }
+
+    fn parse_measurement(lines: &[&str], index: usize) -> [u8; 32] {
+        let v: Vec<u8> = [lines[index + 1], lines[index + 2]]
+            .concat()
+            .split_whitespace()
+            .map(|e| hex::decode(&e[2..]).unwrap()[0])
+            .collect();
+
+        let mut res = [0u8; 32];
+        res.copy_from_slice(&v);
+        res
     }
 
     pub fn mr_signer(&self) -> [u8; 32] {
