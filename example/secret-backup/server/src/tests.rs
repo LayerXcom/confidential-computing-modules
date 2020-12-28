@@ -105,7 +105,7 @@ async fn test_backup_path_secret() {
         .get_account(ACCOUNT_INDEX, PASSWORD)
         .await
         .unwrap();
-    let (contract_addr, export_path_secret) = dispatcher
+    let contract_addr = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
@@ -120,7 +120,6 @@ async fn test_backup_path_secret() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
-    println!("export_path_secret: {:?}", export_path_secret);
 
     // Get handshake from contract
     dispatcher.fetch_events::<U64>().await.unwrap();
