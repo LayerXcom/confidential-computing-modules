@@ -6,7 +6,8 @@ use crate::local_log::error;
 use crate::localstd::vec::Vec;
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use crate::tree_math;
-use anonify_config::{IAS_ROOT_CERT, LOCAL_PATH_SECRETS_DIR, ENCLAVE_MEASUREMENT};
+use crate::store_path_secrets::StorePathSecrets;
+use anonify_config::{ENCLAVE_MEASUREMENT, IAS_ROOT_CERT, LOCAL_PATH_SECRETS_DIR};
 use codec::Encode;
 use frame_common::crypto::{BackupCmd, BackupRequest, ExportPathSecret, RecoverPathSecret};
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
@@ -50,7 +51,7 @@ impl Handshake for GroupState {
         Ok((handshake, path_secret))
     }
 
-    fn process_handshake<F>(
+    fn process_handshake(
         &mut self,
         handshake: &HandshakeParams,
         source: &PathSecretSource,
@@ -59,11 +60,7 @@ impl Handshake for GroupState {
         ias_url: &str,
         sub_key: &str,
         server_address: &str,
-        req_path_secret_fn: F,
-    ) -> Result<AppKeyChain>
-    where
-        F: FnOnce(&[u8], &str) -> Result<ExportPathSecret>,
-    {
+    ) -> Result<AppKeyChain> {
         ensure!(
             handshake.prior_epoch() == self.epoch,
             "Handshake's prior epoch ({:?}) isn't the current epoch ({:?}).",
@@ -95,11 +92,8 @@ impl Handshake for GroupState {
             if sender_tree_idx == my_tree_idx {
                 let path_secret = match source {
                     PathSecretSource::Local => {
-                        match recover_path_secret_from_local(
-                            handshake.hash().as_ref(),
-                            self.epoch,
-                            req_path_secret_fn,
-                        ) {
+                        match recover_path_secret_from_local(handshake.hash().as_ref(), self.epoch)
+                        {
                             Ok(ps) => ps,
                             Err(e) => {
                                 error!("{:?}", e);
@@ -145,15 +139,9 @@ impl Handshake for GroupState {
     }
 }
 
-fn recover_path_secret_from_local<F>(
-    id: &[u8],
-    epoch: u32,
-    req_path_secret_fn: F,
-) -> Result<PathSecret>
-where
-    F: FnOnce(&[u8], &str) -> Result<ExportPathSecret>,
-{
-    let imported_path_secret = req_path_secret_fn(id, LOCAL_PATH_SECRETS_DIR)?;
+fn recover_path_secret_from_local(id: &[u8], epoch: u32) -> Result<PathSecret> {
+    let store_path_secrets = StorePathSecrets::new(LOCAL_PATH_SECRETS_DIR);
+    let imported_path_secret = store_path_secrets.load_from_local_filesystem(id)?;
     if imported_path_secret.epoch() != epoch {
         return Err(anyhow!(
             "imported_path_secret's epoch isn't the current epoch"

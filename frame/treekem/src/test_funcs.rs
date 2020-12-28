@@ -23,7 +23,6 @@ pub fn do_handshake_three_party(
 ) -> (AppKeyChain, AppKeyChain, AppKeyChain) {
     let max_roster_idx = 2;
     let (handshake, _) = my_group.create_handshake(source).unwrap();
-    let dummy_fn = |_: &[u8], _: &str| Err(anyhow!("This is dummy_fn"));
 
     let my_keychain = my_group
         .process_handshake(
@@ -34,7 +33,6 @@ pub fn do_handshake_three_party(
             IAS_URL,
             TEST_SUB_KEY,
             MRA_TLS_SERVER_ADDRESS,
-            dummy_fn,
         )
         .unwrap();
     let others_keychain1 = others_group1
@@ -46,7 +44,6 @@ pub fn do_handshake_three_party(
             IAS_URL,
             TEST_SUB_KEY,
             MRA_TLS_SERVER_ADDRESS,
-            dummy_fn,
         )
         .unwrap();
     let others_keychain2 = others_group2
@@ -58,7 +55,6 @@ pub fn do_handshake_three_party(
             IAS_URL,
             TEST_SUB_KEY,
             MRA_TLS_SERVER_ADDRESS,
-            dummy_fn,
         )
         .unwrap();
 

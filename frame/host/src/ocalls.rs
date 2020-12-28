@@ -1,40 +1,6 @@
-use crate::StorePathSecrets;
 use codec::Encode;
 use frame_types::UntrustedStatus;
 use sgx_types::*;
-use std::{ptr, slice, str};
-
-#[no_mangle]
-pub extern "C" fn ocall_import_path_secret(
-    path_secret: *mut u8,
-    ps_len: usize,
-    id: *const u8,
-    id_len: usize,
-    path_secret_dir: *const u8,
-    path_secret_dir_len: usize,
-) -> UntrustedStatus {
-    let id = unsafe { slice::from_raw_parts(id, id_len) };
-    let path_secret_dir_slice = unsafe { slice::from_raw_parts(path_secret_dir, path_secret_dir_len) };
-    let path_secret_dir = match str::from_utf8(path_secret_dir_slice) {
-        Ok(path_secret_dir) => path_secret_dir,
-        Err(e) => {
-            println!("Failed to convert path_secret_dir to str: {:?}", e);
-            return UntrustedStatus::error();
-        }
-    };
-
-    match StorePathSecrets::new(&path_secret_dir).load_from_local_filesystem(&id) {
-        Ok(eps) => unsafe {
-            ptr::copy_nonoverlapping(eps.encode().as_ptr(), path_secret, ps_len);
-        },
-        Err(e) => {
-            println!("Failed to load path secret from local filesystem {:?}", e);
-            return UntrustedStatus::error();
-        }
-    }
-
-    UntrustedStatus::success()
-}
 
 #[no_mangle]
 pub extern "C" fn ocall_sgx_init_quote(

@@ -1,8 +1,7 @@
 use anyhow::anyhow;
 use frame_common::crypto::{BackupCmd, BackupPathSecret, RecoverPathSecret};
-use frame_enclave::ocalls::import_path_secret;
 use frame_mra_tls::RequestHandler;
-use frame_treekem::PathSecret;
+use frame_treekem::{PathSecret, StorePathSecrets};
 use serde_json::Value;
 
 use std::vec::Vec;
@@ -27,14 +26,13 @@ impl RequestHandler for BackupHandler {
 fn store_path_secret(body: Value) -> anyhow::Result<Vec<u8>> {
     let backup_path_secret: BackupPathSecret = serde_json::from_value(body)?;
     let path_secret = PathSecret::from(backup_path_secret.path_secret());
-    // let roster_idx = backup_path_secret.roster_idx();
+    let roster_idx = backup_path_secret.roster_idx();
     let epoch = backup_path_secret.epoch();
     let id = backup_path_secret.id();
 
     let eps = path_secret.try_into_exporting(epoch, &id)?;
-    // TODO [cipe]: implement another version of StorePathSecrets to work in enclave
-    // let store_path_secrets = StorePathSecrets::new(format!(".anonify/{}/pathsecrets", roster_idx));
-    // store_path_secrets.save_to_local_filesystem(&eps)?;
+    let store_path_secrets = StorePathSecrets::new(format!(".anonify/{}/pathsecrets", roster_idx));
+    store_path_secrets.save_to_local_filesystem(&eps)?;
 
     serde_json::to_vec(&eps).map_err(Into::into)
 }
@@ -44,7 +42,8 @@ fn recover_path_secret(body: Value) -> anyhow::Result<Vec<u8>> {
     let roster_idx = recover_path_secret.roster_idx();
     let id = recover_path_secret.id();
 
-    let eps = import_path_secret(&id, format!(".anonify/{}/pathsecrets", roster_idx).as_str())?;
+    let store_path_secrets = StorePathSecrets::new(format!(".anonify/{}/pathsecrets", roster_idx));
+    let eps = store_path_secrets.load_from_local_filesystem(id)?;
     let path_secret = PathSecret::try_from_importing(eps)?;
 
     serde_json::to_vec(path_secret.as_bytes()).map_err(Into::into)

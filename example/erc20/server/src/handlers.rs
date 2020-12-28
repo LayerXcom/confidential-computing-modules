@@ -23,7 +23,7 @@ where
         .get_account(server.account_index, &server.password)
         .await
         .map_err(|e| ServerError::from(e))?;
-    let (contract_addr, export_path_secret) = server
+    let contract_addr = server
         .dispatcher
         .deploy(
             sender_address,
@@ -36,11 +36,6 @@ where
         .map_err(|e| ServerError::from(e))?;
 
     debug!("Contract address: {:?}", &contract_addr);
-    debug!("export_path_secret: {:?}", export_path_secret);
-    server
-        .store_path_secrets
-        .save_to_local_filesystem(&export_path_secret)
-        .map_err(|e| ServerError::from(e))?;
     server
         .dispatcher
         .set_contract_addr(&contract_addr, &server.abi_path)
@@ -63,7 +58,7 @@ where
         .get_account(server.account_index, &server.password)
         .await
         .map_err(|e| ServerError::from(e))?;
-    let (tx_hash, export_path_secret) = server
+    let tx_hash = server
         .dispatcher
         .join_group(
             sender_address,
@@ -72,10 +67,6 @@ where
             &server.abi_path,
         )
         .await
-        .map_err(|e| ServerError::from(e))?;
-    server
-        .store_path_secrets
-        .save_to_local_filesystem(&export_path_secret)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::join_group::post::Response(tx_hash)))
@@ -95,7 +86,7 @@ where
         .get_account(server.account_index, &server.password)
         .await
         .map_err(|e| ServerError::from(e))?;
-    let (tx_hash, export_path_secret) = server
+    let tx_hash = server
         .dispatcher
         .update_mrenclave(
             sender_address,
@@ -104,10 +95,6 @@ where
             &server.abi_path,
         )
         .await
-        .map_err(|e| ServerError::from(e))?;
-    server
-        .store_path_secrets
-        .save_to_local_filesystem(&export_path_secret)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::update_mrenclave::post::Response(tx_hash)))
@@ -330,14 +317,10 @@ where
         .get_account(server.account_index, &server.password)
         .await
         .map_err(|e| ServerError::from(e))?;
-    let (tx_hash, export_path_secret) = server
+    let tx_hash = server
         .dispatcher
         .handshake(sender_address, DEFAULT_GAS)
         .await
-        .map_err(|e| ServerError::from(e))?;
-    server
-        .store_path_secrets
-        .save_to_local_filesystem(&export_path_secret)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::key_rotation::post::Response(tx_hash)))

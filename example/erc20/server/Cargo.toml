@@ -7,7 +7,6 @@ edition = "2018"
 [dependencies]
 erc20-api = { path = "../api" }
 erc20-state-transition = { path = "../state-transition" }
-anonify-config = { path = "../../../config" }
 anonify-eth-driver = { path = "../../../modules/anonify-eth-driver" }
 frame-host = { path = "../../../frame/host" }
 frame-runtime = { path = "../../../frame/runtime" }

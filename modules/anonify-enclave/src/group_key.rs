@@ -57,7 +57,6 @@ impl GroupKeyOps for GroupKey {
             ias_url,
             sub_key,
             server_address,
-            frame_enclave::ocalls::import_path_secret,
         )?;
         // TODO: If the handshake transaction is flying out the air, wait updating the sender_keychain until the all remaining messages are processed.
         // The number of remaining messages are difference between sender_keychain's generation and receiver_keychain's one.

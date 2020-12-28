@@ -1,4 +1,4 @@
-use anonify_config::{ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
+use anonify_config::{ENCLAVE_MEASUREMENT, IAS_ROOT_CERT, LOCAL_PATH_SECRETS_DIR};
 use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
@@ -9,7 +9,10 @@ use frame_common::{
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
-use frame_treekem::handshake::HandshakeParams;
+use frame_treekem::{
+    handshake::HandshakeParams,
+    StorePathSecrets,
+};
 
 /// A add handshake Sender
 #[derive(Debug, Clone)]
@@ -43,6 +46,8 @@ impl EnclaveEngine for JoinGroupSender {
         let epoch = handshake.prior_epoch();
         let id = handshake.hash();
         let export_path_secret = path_secret.clone().try_into_exporting(epoch, id.as_ref())?;
+        let store_path_secrets = StorePathSecrets::new(LOCAL_PATH_SECRETS_DIR);
+        store_path_secrets.save_to_local_filesystem(&export_path_secret)?;
         let export_handshake = handshake.clone().into_export();
 
         if enclave_context.is_backup_enabled() {
@@ -70,7 +75,6 @@ impl EnclaveEngine for JoinGroupSender {
             export_handshake.encode(),
             mrenclave_ver,
             export_handshake.roster_idx(),
-            export_path_secret,
         ))
     }
 }
@@ -98,6 +102,10 @@ impl EnclaveEngine for HandshakeSender {
         let export_path_secret =
             path_secret.try_into_exporting(epoch, handshake.hash().as_ref())?;
         let export_handshake = handshake.into_export();
+
+        let store_path_secrets = StorePathSecrets::new(LOCAL_PATH_SECRETS_DIR);
+        store_path_secrets.save_to_local_filesystem(&export_path_secret)?;
+
         let roster_idx = export_handshake.roster_idx();
         let msg = Sha256::hash_with_u32(&export_handshake.encode(), roster_idx);
         let sig = enclave_context.sign(msg.as_bytes())?;
@@ -106,7 +114,6 @@ impl EnclaveEngine for HandshakeSender {
 
         Ok(output::ReturnHandshake::new(
             export_handshake,
-            export_path_secret,
             enclave_sig,
             recovery_id,
             roster_idx,
