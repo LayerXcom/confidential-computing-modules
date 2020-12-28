@@ -3924,6 +3924,7 @@ version = "0.1.0"
 dependencies = [
  "actix-rt",
  "actix-web",
+ "anonify-config",
  "anonify-eth-driver",
  "anyhow 1.0.34",
  "env_logger",
