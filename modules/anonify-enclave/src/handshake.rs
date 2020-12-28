@@ -9,10 +9,8 @@ use frame_common::{
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
-use frame_treekem::{
-    handshake::HandshakeParams,
-    StorePathSecrets,
-};
+use frame_treekem::{handshake::HandshakeParams, StorePathSecrets};
+use std::vec::Vec;
 
 /// A add handshake Sender
 #[derive(Debug, Clone)]
@@ -51,22 +49,16 @@ impl EnclaveEngine for JoinGroupSender {
         let export_handshake = handshake.clone().into_export();
 
         if enclave_context.is_backup_enabled() {
-            let backup_path_secret = BackupPathSecret::new(
+            backup_path_secret_to_remote(
                 path_secret.as_bytes().to_vec(),
                 epoch,
                 handshake.roster_idx(),
                 id.as_ref().to_vec(),
-            );
-
-            let attested_tls_config =
-                AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
-
-            let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
-                .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT);
-            let mra_tls_server_address = enclave_context.server_address();
-            let mut mra_tls_client = Client::new(mra_tls_server_address, client_config).unwrap();
-            let backup_request = BackupRequest::new(BackupCmd::STORE, backup_path_secret);
-            let _resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
+                &spid,
+                &ias_url,
+                &sub_key,
+                enclave_context.server_address(),
+            )?;
         }
 
         Ok(output::ReturnJoinGroup::new(
@@ -96,15 +88,31 @@ impl EnclaveEngine for HandshakeSender {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
+        let ias_url = enclave_context.ias_url();
+        let sub_key = enclave_context.sub_key();
+        let spid = enclave_context.spid();
+
         let group_key = &*enclave_context.read_group_key();
         let (handshake, path_secret) = group_key.create_handshake()?;
         let epoch = handshake.prior_epoch();
-        let export_path_secret =
-            path_secret.try_into_exporting(epoch, handshake.hash().as_ref())?;
-        let export_handshake = handshake.into_export();
-
+        let id = handshake.hash();
+        let export_path_secret = path_secret.clone().try_into_exporting(epoch, id.as_ref())?;
         let store_path_secrets = StorePathSecrets::new(LOCAL_PATH_SECRETS_DIR);
         store_path_secrets.save_to_local_filesystem(&export_path_secret)?;
+        let export_handshake = handshake.clone().into_export();
+
+        if enclave_context.is_backup_enabled() {
+            backup_path_secret_to_remote(
+                path_secret.as_bytes().to_vec(),
+                epoch,
+                handshake.roster_idx(),
+                id.as_ref().to_vec(),
+                &spid,
+                &ias_url,
+                &sub_key,
+                enclave_context.server_address(),
+            )?;
+        }
 
         let roster_idx = export_handshake.roster_idx();
         let msg = Sha256::hash_with_u32(&export_handshake.encode(), roster_idx);
@@ -151,4 +159,27 @@ impl EnclaveEngine for HandshakeReceiver {
 
         Ok(output::Empty::default())
     }
+}
+
+fn backup_path_secret_to_remote(
+    path_secret: Vec<u8>,
+    epoch: u32,
+    roster_idx: u32,
+    id: Vec<u8>,
+    spid: &str,
+    ias_url: &str,
+    sub_key: &str,
+    mra_tls_server_address: &str,
+) -> Result<()> {
+    let backup_path_secret = BackupPathSecret::new(path_secret, epoch, roster_idx, id);
+
+    let attested_tls_config =
+        AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
+    let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
+        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT);
+    let mut mra_tls_client = Client::new(mra_tls_server_address, client_config).unwrap();
+    let backup_request = BackupRequest::new(BackupCmd::STORE, backup_path_secret);
+    let _resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
+
+    Ok(())
 }
