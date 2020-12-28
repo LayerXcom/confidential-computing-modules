@@ -1,6 +1,7 @@
 use crate::error::Result;
 use crate::key::NistP256KeyPair;
 use crate::verifier::AttestedReportVerifier;
+use anonify_config::EnclaveMeasurement;
 use remote_attestation::QuoteTarget;
 use std::{sync::Arc, vec::Vec};
 
@@ -52,8 +53,12 @@ impl ClientConfig {
         &self.tls
     }
 
-    pub fn set_attestation_report_verifier(mut self, root_cert: Vec<u8>) -> Self {
-        let verifier = Arc::new(AttestedReportVerifier::new(root_cert));
+    pub fn set_attestation_report_verifier(
+        mut self,
+        root_cert: Vec<u8>,
+        measurement: EnclaveMeasurement,
+    ) -> Self {
+        let verifier = Arc::new(AttestedReportVerifier::new(root_cert, measurement));
         self.tls.dangerous().set_certificate_verifier(verifier);
 
         self
@@ -98,8 +103,12 @@ impl ServerConfig {
         &self.tls
     }
 
-    pub fn set_attestation_report_verifier(mut self, root_cert: Vec<u8>) -> Self {
-        let verifier = Arc::new(AttestedReportVerifier::new(root_cert));
+    pub fn set_attestation_report_verifier(
+        mut self,
+        root_cert: Vec<u8>,
+        measurement: EnclaveMeasurement,
+    ) -> Self {
+        let verifier = Arc::new(AttestedReportVerifier::new(root_cert, measurement));
         self.tls.set_client_certificate_verifier(verifier);
 
         self

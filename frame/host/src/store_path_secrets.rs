@@ -1,5 +1,5 @@
 use crate::error::Result;
-use crate::PJ_ROOT_DIR;
+use anonify_config::PJ_ROOT_DIR;
 use frame_common::crypto::ExportPathSecret;
 use log::debug;
 use std::fs;

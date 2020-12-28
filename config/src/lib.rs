@@ -25,7 +25,8 @@ extern crate lazy_static;
 pub mod constants;
 
 pub use crate::constants::*;
-use crate::localstd::vec::Vec;
+use crate::local_anyhow::Result;
+use crate::localstd::{env, ffi::OsStr, path::PathBuf, string::String, vec::Vec};
 
 #[cfg(feature = "sgx")]
 lazy_static! {
@@ -34,4 +35,78 @@ lazy_static! {
         let pem = pem::parse(ias_root_cert).expect("Cannot parse PEM File");
         pem.contents
     };
+    pub static ref ENCLAVE_MEASUREMENT: EnclaveMeasurement = {
+        let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
+        let mut measurement_file_path = PJ_ROOT_DIR.clone();
+        measurement_file_path.push(format!(".anonify/{}_measurement.txt", pkg_name));
+        let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
+            .expect("Cannot read measurement file");
+        EnclaveMeasurement::new_from_dumpfile(content)
+    };
+}
+
+lazy_static! {
+    pub static ref PJ_ROOT_DIR: PathBuf = {
+        let mut current_dir = env::current_dir().unwrap();
+        loop {
+            if current_dir.file_name() == Some(OsStr::new("anonify")) {
+                break;
+            }
+            if !current_dir.pop() {
+                break;
+            }
+        }
+
+        current_dir
+    };
+}
+
+#[cfg(feature = "sgx")]
+#[derive(Debug, Clone, Copy)]
+pub struct EnclaveMeasurement {
+    mr_signer: [u8; 32],
+    mr_enclave: [u8; 32],
+}
+
+#[cfg(feature = "sgx")]
+impl EnclaveMeasurement {
+    pub fn new_from_dumpfile(content: String) -> Self {
+        let lines: Vec<&str> = content.split("\n").collect();
+        let mr_signer_index = lines
+            .iter()
+            .position(|&line| line == "mrsigner->value:")
+            .expect("mrsigner must be included");
+        let mr_enclave_index = lines
+            .iter()
+            .position(|&line| line == "metadata->enclave_css.body.enclave_hash.m:")
+            .expect("mrenclave must be included");
+
+        let mr_signer = Self::parse_measurement(&lines[..], mr_signer_index);
+        let mr_enclave = Self::parse_measurement(&lines[..], mr_enclave_index);
+
+        Self {
+            mr_signer,
+            mr_enclave,
+        }
+    }
+
+    fn parse_measurement(lines: &[&str], index: usize) -> [u8; 32] {
+        let v: Vec<u8> = [lines[index + 1], lines[index + 2]]
+            .concat()
+            .split_whitespace()
+            .map(|e| hex::decode(&e[2..]).unwrap()[0])
+            .collect();
+
+        let mut res = [0u8; 32];
+        res.copy_from_slice(&v);
+        res
+    }
+
+    pub fn mr_signer(&self) -> [u8; 32] {
+        self.mr_signer
+    }
+
+    pub fn mr_enclave(&self) -> [u8; 32] {
+        self.mr_enclave
+    }
 }

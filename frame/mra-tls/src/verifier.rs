@@ -1,5 +1,6 @@
 use crate::cert::*;
 use crate::error::{MraTLSError, Result};
+use anonify_config::EnclaveMeasurement;
 use anyhow::anyhow;
 use remote_attestation::AttestedReport;
 use std::io::{Cursor, Read};
@@ -8,11 +9,15 @@ use std::vec::Vec;
 #[derive(Clone, Debug)]
 pub struct AttestedReportVerifier {
     root_cert: Vec<u8>,
+    measurement: EnclaveMeasurement,
 }
 
 impl AttestedReportVerifier {
-    pub fn new(root_cert: Vec<u8>) -> Self {
-        Self { root_cert }
+    pub fn new(root_cert: Vec<u8>, measurement: EnclaveMeasurement) -> Self {
+        Self {
+            root_cert,
+            measurement,
+        }
     }
 
     fn verify_cert(&self, ee_cert: &[u8]) -> Result<()> {
@@ -42,6 +47,7 @@ impl AttestedReportVerifier {
         quote.read_exact(&mut report_data)?;
 
         Self::verify_pubkey_eq(pubkey, report_data)?;
+        self.verify_measurement(mr_enclave, mr_signer)?;
 
         Ok(())
     }
@@ -58,9 +64,23 @@ impl AttestedReportVerifier {
         Ok(())
     }
 
-    fn verify_measurements(&self) -> bool {
-        // TODO
-        true
+    fn verify_measurement(&self, mr_enclave: [u8; 32], mr_signer: [u8; 32]) -> Result<()> {
+        if self.measurement.mr_enclave() != mr_enclave {
+            return Err(MraTLSError::Error(anyhow!(
+                "Invalid mr_enclave: local mr_enclave: {:?}, received mr_enclave: {:?}",
+                self.measurement.mr_enclave(),
+                mr_enclave
+            )));
+        }
+        if self.measurement.mr_signer() != mr_signer {
+            return Err(MraTLSError::Error(anyhow!(
+                "Invalid mr_signer: local mr_signer: {:?}, received mr_signer: {:?}",
+                self.measurement.mr_signer(),
+                mr_signer
+            )));
+        }
+
+        Ok(())
     }
 }
 

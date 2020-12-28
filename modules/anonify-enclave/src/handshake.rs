@@ -1,4 +1,4 @@
-use anonify_config::IAS_ROOT_CERT;
+use anonify_config::{ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
 use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
@@ -57,7 +57,7 @@ impl EnclaveEngine for JoinGroupSender {
                 AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
 
             let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
-                .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
+                .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT);
             let mra_tls_server_address = enclave_context.server_address();
             let mut mra_tls_client = Client::new(mra_tls_server_address, client_config).unwrap();
             let backup_request = BackupRequest::new(BackupCmd::STORE, backup_path_secret);
