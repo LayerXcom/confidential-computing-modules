@@ -3,7 +3,7 @@ use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
 use frame_common::{
-    crypto::{BackupPathSecret, Sha256},
+    crypto::{BackupCmd, BackupPathSecret, BackupRequest, Sha256},
     state_types::StateType,
 };
 use frame_enclave::EnclaveEngine;
@@ -41,13 +41,17 @@ impl EnclaveEngine for JoinGroupSender {
         let group_key = &*enclave_context.read_group_key();
         let (handshake, path_secret) = group_key.create_handshake()?;
         let epoch = handshake.prior_epoch();
-        let export_path_secret = path_secret
-            .clone()
-            .try_into_exporting(epoch, handshake.hash().as_ref())?;
-        let export_handshake = handshake.into_export();
+        let id = handshake.hash();
+        let export_path_secret = path_secret.clone().try_into_exporting(epoch, id.as_ref())?;
+        let export_handshake = handshake.clone().into_export();
 
         if enclave_context.is_backup_enabled() {
-            let backup_path_secret = BackupPathSecret::new(path_secret.as_bytes().to_vec(), epoch);
+            let backup_path_secret = BackupPathSecret::new(
+                path_secret.as_bytes().to_vec(),
+                epoch,
+                handshake.roster_idx(),
+                id.as_ref().to_vec(),
+            );
 
             let attested_tls_config =
                 AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
@@ -56,7 +60,8 @@ impl EnclaveEngine for JoinGroupSender {
                 .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec());
             let mra_tls_server_address = enclave_context.server_address();
             let mut mra_tls_client = Client::new(mra_tls_server_address, client_config).unwrap();
-            let _resp: serde_json::Value = mra_tls_client.send_json(backup_path_secret)?;
+            let backup_request = BackupRequest::new(BackupCmd::STORE, backup_path_secret);
+            let _resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
         }
 
         Ok(output::ReturnJoinGroup::new(
@@ -130,7 +135,12 @@ impl EnclaveEngine for HandshakeReceiver {
         let handshake = HandshakeParams::decode(&mut &ecall_input.handshake().handshake()[..])
             .map_err(|_| anyhow!("HandshakeParams::decode Error"))?;
 
-        group_key.process_handshake(&handshake)?;
+        let spid = enclave_context.spid();
+        let ias_url = enclave_context.ias_url();
+        let sub_key = enclave_context.sub_key();
+        let server_address = enclave_context.server_address();
+
+        group_key.process_handshake(&handshake, spid, ias_url, sub_key, server_address)?;
 
         Ok(output::Empty::default())
     }

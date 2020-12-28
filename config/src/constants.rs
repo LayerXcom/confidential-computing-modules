@@ -8,6 +8,9 @@ pub const IAS_URL: &str = "https://api.trustedservices.intel.com/sgx/dev/attesta
 pub const TEST_SUB_KEY: &str = "77e2533de0624df28dc3be3a5b9e50d9";
 pub const MRA_TLS_SERVER_ADDRESS: &str = "localhost:12345";
 
+// backup
+pub const LOCAL_PATH_SECRETS_DIR: &str = ".anonify/pathsecrets";
+
 // commands
 pub const ENCRYPT_COMMAND_CMD: u32 = 1;
 pub const INSERT_CIPHERTEXT_CMD: u32 = 2;

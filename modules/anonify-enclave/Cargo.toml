@@ -10,10 +10,11 @@ frame-enclave = { path = "../../frame/enclave" }
 frame-runtime = { path = "../../frame/runtime", default-features = false, features = ["sgx"] }
 frame-treekem = { path = "../../frame/treekem", default-features = false, features = ["sgx"] }
 frame-common = { path = "../../frame/common", default-features = false, features = ["sgx"] }
+frame-mra-tls = { path = "../../frame/mra-tls" }
+remote-attestation = { path = "../../frame/remote-attestation" }
 anonify-config = { path = "../../config", default-features = false, features = ["sgx"] }
 anonify-io-types = { path = "../anonify-io-types", default-features = false, features = ["sgx"] }
-remote-attestation = { path = "../../frame/remote-attestation" }
-frame-mra-tls = { path = "../../frame/mra-tls" }
+key-vault-enclave = { path = "../key-vault-enclave" }
 test-utils = { path = "../../tests/utils" }
 serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx" }
 serde = { git = "https://github.com/mesalock-linux/serde-sgx.git" } # Don't specify version due to serde_json dependency

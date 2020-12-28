@@ -4,10 +4,7 @@ use frame_common::crypto::ExportPathSecret;
 use log::debug;
 use std::fs;
 use std::io::{BufReader, Write};
-use std::path::PathBuf;
-use std::str;
-
-const PATH_SECRETS_DIR: &str = ".anonify/pathsecrets";
+use std::path::{PathBuf, Path};
 
 #[derive(Debug, Clone)]
 pub struct StorePathSecrets {
@@ -15,8 +12,8 @@ pub struct StorePathSecrets {
 }
 
 impl StorePathSecrets {
-    pub fn new() -> Self {
-        let local_dir_path = (*PJ_ROOT_DIR).to_path_buf().join(PATH_SECRETS_DIR);
+    pub fn new<P: AsRef<Path>>(path_secrets_dir: P) -> Self {
+        let local_dir_path = (*PJ_ROOT_DIR).to_path_buf().join(path_secrets_dir);
         fs::create_dir_all(&local_dir_path).expect("Failed to create PATH_SECRETS_DIR");
         StorePathSecrets { local_dir_path }
     }

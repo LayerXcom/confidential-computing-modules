@@ -12,16 +12,21 @@ extern "C" {
         ps_len: usize,
         id: *const u8,
         id_len: usize,
+        path_secret_dir: *const u8,
+        path_secret_dir_len: usize,
     ) -> sgx_status_t;
 }
 
-pub fn import_path_secret(id: &[u8]) -> anyhow::Result<ExportPathSecret> {
+pub fn import_path_secret(id: &[u8], path_secret_dir: &str) -> anyhow::Result<ExportPathSecret> {
     let mut id_arr = [0u8; EXPORT_ID_SIZE];
     id_arr.copy_from_slice(&id);
-    inner_import_path_secret(id_arr).map_err(Into::into)
+    inner_import_path_secret(id_arr, path_secret_dir).map_err(Into::into)
 }
 
-fn inner_import_path_secret(id: [u8; EXPORT_ID_SIZE]) -> Result<ExportPathSecret> {
+fn inner_import_path_secret(
+    id: [u8; EXPORT_ID_SIZE],
+    path_secret_dir: &str,
+) -> Result<ExportPathSecret> {
     let mut rt = UntrustedStatus::default();
     let mut buf = [0u8; EXPORT_PATH_SECRET_SIZE];
 
@@ -32,6 +37,8 @@ fn inner_import_path_secret(id: [u8; EXPORT_ID_SIZE]) -> Result<ExportPathSecret
             EXPORT_PATH_SECRET_SIZE,
             id.as_ptr(),
             EXPORT_ID_SIZE,
+            path_secret_dir.as_ptr(),
+            path_secret_dir.len(),
         )
     };
 

@@ -41,11 +41,22 @@ impl GroupKeyOps for GroupKey {
         self.group_state.create_handshake(&self.source)
     }
 
-    fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()> {
+    fn process_handshake(
+        &mut self,
+        handshake: &HandshakeParams,
+        spid: &str,
+        ias_url: &str,
+        sub_key: &str,
+        server_address: &str,
+    ) -> Result<()> {
         let keychain = self.group_state.process_handshake(
             handshake,
             &self.source,
             self.max_roster_idx as u32,
+            spid,
+            ias_url,
+            sub_key,
+            server_address,
             frame_enclave::ocalls::import_path_secret,
         )?;
         // TODO: If the handshake transaction is flying out the air, wait updating the sender_keychain until the all remaining messages are processed.

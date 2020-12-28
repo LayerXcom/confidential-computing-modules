@@ -30,7 +30,9 @@ enclave {
             [out, size=ps_len] uint8_t* path_secret,
             size_t ps_len,
             [in, size=id_len] const uint8_t* id,
-            size_t id_len
+            size_t id_len,
+            [in, size=path_secret_dir_len] const uint8_t* path_secret_dir,
+            size_t path_secret_dir_len
         );
 
         UntrustedStatus ocall_sgx_init_quote(

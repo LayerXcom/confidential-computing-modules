@@ -34,6 +34,10 @@ use std_rand as local_rand;
 use std_rand_core as local_rand_core;
 #[cfg(feature = "std")]
 use std_ring as local_ring;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
+use serde_sgx as serde;
+#[cfg(feature = "std")]
+use serde_std as serde;
 
 #[cfg(feature = "sgx")]
 mod application;

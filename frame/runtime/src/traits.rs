@@ -94,7 +94,14 @@ pub trait IdentityKeyOps {
 pub trait GroupKeyOps: Sized {
     fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret)>;
 
-    fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()>;
+    fn process_handshake(
+        &mut self,
+        handshake: &HandshakeParams,
+        spid: &str,
+        ias_url: &str,
+        sub_key: &str,
+        server_address: &str,
+    ) -> Result<()>;
 
     fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext>;
 

@@ -15,10 +15,7 @@ use frame_common::crypto::{ExportHandshake, ExportPathSecret};
 /// A handshake operates sharing a group key to each member.
 pub trait Handshake: Sized {
     /// Create a handshake to broadcast other members.
-    fn create_handshake(
-        &self,
-        source: &PathSecretSource,
-    ) -> Result<(HandshakeParams, PathSecret)>;
+    fn create_handshake(&self, source: &PathSecretSource) -> Result<(HandshakeParams, PathSecret)>;
 
     /// Process a received handshake from other members.
     fn process_handshake<F>(
@@ -26,10 +23,14 @@ pub trait Handshake: Sized {
         handshake: &HandshakeParams,
         source: &PathSecretSource,
         max_roster_idx: u32,
+        spid: &str,
+        ias_url: &str,
+        sub_key: &str,
+        server_address: &str,
         req_path_secret_fn: F,
     ) -> Result<AppKeyChain>
     where
-        F: FnOnce(&[u8]) -> Result<ExportPathSecret>;
+        F: FnOnce(&[u8], &str) -> Result<ExportPathSecret>;
 }
 
 // TODO: Does need signature over the group's history?
