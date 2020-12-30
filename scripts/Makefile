@@ -94,18 +94,6 @@ else
 endif
 Crypto_Library_Name := sgx_tcrypto
 
-RustEnclave_Include_Paths := -I$(CUSTOM_COMMON_PATH)/inc -I$(CUSTOM_EDL_PATH) -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SDK)/include/epid -I $(ANONIFY_ENCLAVE_DIR) -I./include
-RustEnclave_Link_Libs := -L$(CUSTOM_LIBRARY_PATH) -l$(Rust_Enclave_Lib_Name)enclave
-RustEnclave_Compile_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(RustEnclave_Include_Paths)
-RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) \
-	-Wl,--whole-archive -l$(Trts_Library_Name) -Wl,--no-whole-archive \
-	-Wl,--start-group -lsgx_tstdc -l$(Service_Library_Name) -l$(Crypto_Library_Name) $(RustEnclave_Link_Libs) -Wl,--end-group \
-	-Wl,-Bstatic -Wl,-Bsymbolic -Wl,--no-undefined \
-	-Wl,-pie,-eenclave_entry -Wl,--export-dynamic  \
-	-Wl,--defsym,__ImageBase=0 \
-	-Wl,--gc-sections \
-	-Wl,--version-script=$(CONFIG_DIR)/Enclave.lds
-
 ifeq ($(BACKUP), disable)
 	RustEnclave_Name := $(ANONIFY_BUILD_DIR)/$(ENCLAVE_PKG_NAME).backup_disabled.enclave.so
 	Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).backup_disabled.signed.so
@@ -119,6 +107,18 @@ else
 	RustEnclave_Feature_Flags := $(FEATURE_FLAGS)
 	Measurement_File_Name := $(ENCLAVE_PKG_NAME)_measurement.txt
 endif
+
+RustEnclave_Include_Paths := -I$(CUSTOM_COMMON_PATH)/inc -I$(CUSTOM_EDL_PATH) -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SDK)/include/epid -I $(ANONIFY_ENCLAVE_DIR) -I./include
+RustEnclave_Link_Libs := -L$(CUSTOM_LIBRARY_PATH) -l$(Rust_Enclave_Lib_Name)enclave
+RustEnclave_Compile_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(RustEnclave_Include_Paths)
+RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) \
+	-Wl,--whole-archive -l$(Trts_Library_Name) -Wl,--no-whole-archive \
+	-Wl,--start-group -lsgx_tstdc -l$(Service_Library_Name) -l$(Crypto_Library_Name) $(RustEnclave_Link_Libs) -Wl,--end-group \
+	-Wl,-Bstatic -Wl,-Bsymbolic -Wl,--no-undefined \
+	-Wl,-pie,-eenclave_entry -Wl,--export-dynamic  \
+	-Wl,--defsym,__ImageBase=0 \
+	-Wl,--gc-sections \
+	-Wl,--version-script=$(CONFIG_DIR)/Enclave.lds
 Rust_Enclave_Name := lib$(Rust_Enclave_Lib_Name)enclave.a
 
 Rust_Enclave_Files := $(wildcard src/*.rs)
