@@ -35,7 +35,7 @@ impl StorePathSecrets {
     pub fn load_from_local_filesystem(&self, id: &[u8]) -> Result<ExportPathSecret> {
         let file_name = hex::encode(&id);
         let file_path = self.local_dir_path.join(file_name);
-        debug!("Loading a selad path secret from the path: {:?}", file_path);
+        debug!("Loading a sealed path secret from the path: {:?}", file_path);
         let file = fs::File::open(file_path)?;
         let reader = BufReader::new(file);
         let eps = serde_json::from_reader(reader)?;
