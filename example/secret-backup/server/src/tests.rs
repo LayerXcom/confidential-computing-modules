@@ -128,22 +128,16 @@ async fn test_backup_path_secret() {
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
 
-    let path_secrets_dir = PJ_ROOT_DIR.join("LOCAL_PATH_SECRETS_DIR");
+    let path_secrets_dir = PJ_ROOT_DIR.join(LOCAL_PATH_SECRETS_DIR);
 
-    let id = get_path_secret_id.unwrap();
+    let id = get_path_secret_id().unwrap();
     // local
-    assert!(Path::new(format!("{}/{}", path_secrets_dir, id).as_str()).exists());
+    assert!(path_secrets_dir.join(&id).exists());
     // remote
-    assert!(Path::new(
-        format!(
-            "{}/{}/{}",
-            path_secrets_dir,
-            env::var("MY_ROSTER_IDX").unwrap(),
-            id,
-        )
-        .as_str()
-    )
-    .exists());
+    assert!(path_secrets_dir
+        .join(env::var("MY_ROSTER_IDX").unwrap().as_str())
+        .join(&id)
+        .exists());
 
     delete_path_secrets();
 
@@ -190,12 +184,18 @@ fn set_env_vars() {
 }
 
 fn delete_path_secrets() {
-    fs::remove_dir_all(PJ_ROOT_DIR.join(LOCAL_PATH_SECRETS_DIR)).unwrap();
+    let target = PJ_ROOT_DIR.join(LOCAL_PATH_SECRETS_DIR);
+    if target.exists() {
+        fs::remove_dir_all(target).unwrap();
+    }
 }
 
 fn get_path_secret_id() -> Option<String> {
-    for path in PJ_ROOT_DIR.join(LOCAL_PATH_SECRETS_DIR) {
-        return path.unwrap().file_name().into_string().unwrap();
+    for path in fs::read_dir(PJ_ROOT_DIR.join(LOCAL_PATH_SECRETS_DIR)).unwrap() {
+        if path.as_ref().unwrap().file_type().unwrap().is_dir() {
+            continue;
+        }
+        return Some(path.unwrap().file_name().into_string().unwrap());
     }
 
     None
