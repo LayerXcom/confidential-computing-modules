@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use frame_common::crypto::{BackupCmd, BackupPathSecret, RecoverPathSecret};
+use frame_common::crypto::{BackupPathSecret, RecoverPathSecret};
 use frame_mra_tls::RequestHandler;
 use frame_treekem::{PathSecret, StorePathSecrets};
 use serde_json::Value;
@@ -13,12 +13,13 @@ impl RequestHandler for BackupHandler {
     fn handle_json(&self, msg: &[u8]) -> anyhow::Result<Vec<u8>> {
         let decoded: Value = serde_json::from_slice(&msg)?;
         let cmd = decoded["cmd"]
-            .as_u64()
+            .as_str()
             .ok_or_else(|| anyhow!("msg doesn't contain cmd"))?;
 
-        match BackupCmd::from(cmd) {
-            BackupCmd::STORE => store_path_secret(decoded["body"].clone()),
-            BackupCmd::RECOVER => recover_path_secret(decoded["body"].clone()),
+        match cmd {
+            "STORE" => store_path_secret(decoded["body"].clone()),
+            "RECOVER" => recover_path_secret(decoded["body"].clone()),
+            _ => unreachable!("got unknown command: {:?}", cmd),
         }
     }
 }
