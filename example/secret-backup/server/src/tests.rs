@@ -1,5 +1,6 @@
 use crate::*;
 use actix_web::{test, web, App};
+use anonify_config::{LOCAL_PATH_SECRETS_DIR, PJ_ROOT_DIR};
 use anonify_eth_driver::{
     dispatcher::Dispatcher as EthDispatcher,
     eth::{EthDeployer, EthSender, EventWatcher},
@@ -12,7 +13,13 @@ use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use once_cell::sync::Lazy;
-use std::{env, fs::File, io::BufReader, str::FromStr};
+use std::{
+    env,
+    fs::{self, File},
+    io::BufReader,
+    path::Path,
+    str::FromStr,
+};
 use web3::{
     contract::{Contract, Options},
     transports::Http,
@@ -61,6 +68,7 @@ pub async fn get_encrypting_key(
 #[actix_rt::test]
 async fn test_backup_path_secret() {
     set_env_vars();
+    delete_path_secrets();
 
     // Setup backup server
     let server_enclave = EnclaveDir::new()
@@ -80,8 +88,7 @@ async fn test_backup_path_secret() {
     let req = test::TestRequest::post().uri("/api/v1/start").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let start_response: secret_backup_api::start::post::Response =
-        test::read_body_json(resp).await;
+    let start_response: secret_backup_api::start::post::Response = test::read_body_json(resp).await;
     assert_eq!(start_response.status, "success".to_string());
 
     std::thread::sleep(std::time::Duration::from_secs(1));
@@ -120,6 +127,25 @@ async fn test_backup_path_secret() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    let path_secrets_dir = PJ_ROOT_DIR.join("LOCAL_PATH_SECRETS_DIR");
+
+    let id = get_path_secret_id.unwrap();
+    // local
+    assert!(Path::new(format!("{}/{}", path_secrets_dir, id).as_str()).exists());
+    // remote
+    assert!(Path::new(
+        format!(
+            "{}/{}/{}",
+            path_secrets_dir,
+            env::var("MY_ROSTER_IDX").unwrap(),
+            id,
+        )
+        .as_str()
+    )
+    .exists());
+
+    delete_path_secrets();
 
     // Get handshake from contract
     dispatcher.fetch_events::<U64>().await.unwrap();
@@ -161,4 +187,16 @@ fn set_env_vars() {
     env::set_var("MRA_TLS_SERVER_ADDRESS", "localhost:12345");
     env::set_var("AUDITOR_ENDPOINT", "test");
     env::set_var("ENCLAVE_PKG_NAME", "secret_backup");
+}
+
+fn delete_path_secrets() {
+    fs::remove_dir_all(PJ_ROOT_DIR.join(LOCAL_PATH_SECRETS_DIR)).unwrap();
+}
+
+fn get_path_secret_id() -> Option<String> {
+    for path in PJ_ROOT_DIR.join(LOCAL_PATH_SECRETS_DIR) {
+        return path.unwrap().file_name().into_string().unwrap();
+    }
+
+    None
 }
