@@ -38,7 +38,6 @@ pub struct EnclaveContext {
     db: EnclaveDB,
     notifier: Notifier,
     group_key: Arc<SgxRwLock<GroupKey>>,
-    is_backup_enabled: bool,
 }
 
 impl ContextOps for EnclaveContext {
@@ -60,10 +59,6 @@ impl ContextOps for EnclaveContext {
 
     fn spid(&self) -> &str {
         &self.spid
-    }
-
-    fn is_backup_enabled(&self) -> bool {
-        self.is_backup_enabled
     }
 }
 
@@ -167,7 +162,7 @@ impl QuoteGetter for EnclaveContext {
 
 // TODO: Consider SGX_ERROR_BUSY.
 impl EnclaveContext {
-    pub fn new(spid: String, is_backup_enabled: bool) -> Result<Self> {
+    pub fn new(spid: String) -> Result<Self> {
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
 
@@ -213,7 +208,6 @@ impl EnclaveContext {
             ias_url,
             sub_key,
             server_address,
-            is_backup_enabled,
         })
     }
 }

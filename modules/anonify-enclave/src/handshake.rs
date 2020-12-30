@@ -48,18 +48,17 @@ impl EnclaveEngine for JoinGroupSender {
         store_path_secrets.save_to_local_filesystem(&export_path_secret)?;
         let export_handshake = handshake.clone().into_export();
 
-        if enclave_context.is_backup_enabled() {
-            backup_path_secret_to_remote(
-                path_secret.as_bytes().to_vec(),
-                epoch,
-                handshake.roster_idx(),
-                id.as_ref().to_vec(),
-                &spid,
-                &ias_url,
-                &sub_key,
-                enclave_context.server_address(),
-            )?;
-        }
+        #[cfg(feature = "backup-enable")]
+        backup_path_secret_to_remote(
+            path_secret.as_bytes().to_vec(),
+            epoch,
+            handshake.roster_idx(),
+            id.as_ref().to_vec(),
+            &spid,
+            &ias_url,
+            &sub_key,
+            enclave_context.server_address(),
+        )?;
 
         Ok(output::ReturnJoinGroup::new(
             attested_report.report().to_vec(),
@@ -101,18 +100,17 @@ impl EnclaveEngine for HandshakeSender {
         store_path_secrets.save_to_local_filesystem(&export_path_secret)?;
         let export_handshake = handshake.clone().into_export();
 
-        if enclave_context.is_backup_enabled() {
-            backup_path_secret_to_remote(
-                path_secret.as_bytes().to_vec(),
-                epoch,
-                handshake.roster_idx(),
-                id.as_ref().to_vec(),
-                &spid,
-                &ias_url,
-                &sub_key,
-                enclave_context.server_address(),
-            )?;
-        }
+        #[cfg(feature = "backup-enable")]
+        backup_path_secret_to_remote(
+            path_secret.as_bytes().to_vec(),
+            epoch,
+            handshake.roster_idx(),
+            id.as_ref().to_vec(),
+            &spid,
+            &ias_url,
+            &sub_key,
+            enclave_context.server_address(),
+        )?;
 
         let roster_idx = export_handshake.roster_idx();
         let msg = Sha256::hash_with_u32(&export_handshake.encode(), roster_idx);
@@ -161,6 +159,7 @@ impl EnclaveEngine for HandshakeReceiver {
     }
 }
 
+#[cfg(feature = "backup-enable")]
 fn backup_path_secret_to_remote(
     path_secret: Vec<u8>,
     epoch: u32,
