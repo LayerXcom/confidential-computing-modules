@@ -942,4 +942,5 @@ pub fn set_env_vars() {
     env::set_var("MRA_TLS_SERVER_ADDRESS", "localhost:12345");
     env::set_var("AUDITOR_ENDPOINT", "test");
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
+    env::set_var("BACKUP", "disable");
 }

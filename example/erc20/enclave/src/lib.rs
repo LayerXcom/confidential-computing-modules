@@ -6,6 +6,11 @@ extern crate sgx_tstd as std;
 #[macro_use]
 extern crate lazy_static;
 
+#[cfg(feature = "backup-enable")]
+use anonify_enclave_backup_enabled as anonify_enclave;
+#[cfg(feature = "backup-disable")]
+use anonify_enclave_backup_disabled as anonify_enclave;
+
 mod ecalls;
 
 use anonify_enclave::context::EnclaveContext;

@@ -38,7 +38,15 @@ lazy_static! {
     pub static ref ENCLAVE_MEASUREMENT: EnclaveMeasurement = {
         let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
         let mut measurement_file_path = PJ_ROOT_DIR.clone();
-        measurement_file_path.push(format!(".anonify/{}_measurement.txt", pkg_name));
+
+        let measurement_file = match env::var("BACKUP") {
+            Ok(backup) if backup == "disable" => {
+                format!(".anonify/{}_backup_disabled_measurement.txt", pkg_name)
+            }
+            _ => format!(".anonify/{}_measurement.txt", pkg_name),
+        };
+
+        measurement_file_path.push(measurement_file);
         let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
             .expect("Cannot read measurement file");
         EnclaveMeasurement::new_from_dumpfile(content)
