@@ -1,4 +1,6 @@
-use anonify_config::{ENCLAVE_MEASUREMENT, IAS_ROOT_CERT, LOCAL_PATH_SECRETS_DIR};
+use anonify_config::{
+    ENCLAVE_MEASUREMENT, ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT, LOCAL_PATH_SECRETS_DIR,
+};
 use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
@@ -175,7 +177,7 @@ fn backup_path_secret_to_key_vault(
     let attested_tls_config =
         AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
     let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
-        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT);
+        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT_KEY_VAULT);
     let mut mra_tls_client = Client::new(mra_tls_server_address, client_config).unwrap();
     let backup_request = BackupRequest::new(BackupCmd::STORE, backup_path_secret);
     let _resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;

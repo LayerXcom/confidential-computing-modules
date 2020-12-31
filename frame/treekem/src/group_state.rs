@@ -5,9 +5,11 @@ use crate::local_anyhow::{anyhow, ensure, Result};
 use crate::local_log::error;
 use crate::localstd::vec::Vec;
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
-use crate::tree_math;
 use crate::store_path_secrets::StorePathSecrets;
-use anonify_config::{ENCLAVE_MEASUREMENT, IAS_ROOT_CERT, LOCAL_PATH_SECRETS_DIR};
+use crate::tree_math;
+use anonify_config::{
+    ENCLAVE_MEASUREMENT, ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT, LOCAL_PATH_SECRETS_DIR,
+};
 use codec::Encode;
 use frame_common::crypto::{BackupCmd, BackupRequest, ExportPathSecret, RecoverPathSecret};
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
@@ -164,7 +166,7 @@ fn recover_path_secret_from_key_vault(
         AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
 
     let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
-        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT);
+        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT_KEY_VAULT);
     let mut mra_tls_client = Client::new(server_address, client_config)?;
     let backup_request = BackupRequest::new(BackupCmd::RECOVER, recover_path_secret);
     let resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
