@@ -56,9 +56,9 @@ impl EnclaveEngine for JoinGroupSender {
             handshake.roster_idx(),
             id.as_ref().to_vec(),
             &enclave_context.spid(),
-            enclave_context.server_address(),
-            &sub_key,
             &ias_url,
+            &sub_key,
+            enclave_context.server_address(),
         )?;
 
         Ok(output::ReturnJoinGroup::new(
