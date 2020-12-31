@@ -1,17 +1,17 @@
-use anonify_config::{
-    ENCLAVE_MEASUREMENT, ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT, LOCAL_PATH_SECRETS_DIR,
-};
+use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT, LOCAL_PATH_SECRETS_DIR};
 use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
-use frame_common::{
-    crypto::{BackupCmd, BackupPathSecret, BackupRequest, Sha256},
-    state_types::StateType,
-};
+use frame_common::{crypto::Sha256, state_types::StateType};
 use frame_enclave::EnclaveEngine;
-use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
 use frame_treekem::{handshake::HandshakeParams, StorePathSecrets};
+
+#[cfg(feature = "backup-enable")]
+use frame_common::crypto::{BackupCmd, BackupPathSecret, BackupRequest};
+#[cfg(feature = "backup-enable")]
+use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
+#[cfg(feature = "backup-enable")]
 use std::vec::Vec;
 
 /// A add handshake Sender
@@ -31,9 +31,6 @@ impl EnclaveEngine for JoinGroupSender {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let ias_url = enclave_context.ias_url();
-        let sub_key = enclave_context.sub_key();
-        let spid = enclave_context.spid();
         let attested_report = enclave_context.quote()?.remote_attestation(
             ias_url,
             sub_key,
@@ -56,9 +53,9 @@ impl EnclaveEngine for JoinGroupSender {
             epoch,
             handshake.roster_idx(),
             id.as_ref().to_vec(),
-            &spid,
-            &ias_url,
-            &sub_key,
+            &enclave_context.spid(),
+            &enclave_context.ias_url(),
+            &enclave_context.sub_key(),
             enclave_context.server_address(),
         )?;
 
@@ -89,10 +86,6 @@ impl EnclaveEngine for HandshakeSender {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let ias_url = enclave_context.ias_url();
-        let sub_key = enclave_context.sub_key();
-        let spid = enclave_context.spid();
-
         let group_key = &*enclave_context.read_group_key();
         let (handshake, path_secret) = group_key.create_handshake()?;
         let epoch = handshake.prior_epoch();
@@ -108,9 +101,9 @@ impl EnclaveEngine for HandshakeSender {
             epoch,
             handshake.roster_idx(),
             id.as_ref().to_vec(),
-            &spid,
-            &ias_url,
-            &sub_key,
+            &enclave_context.spid(),
+            &enclave_context.ias_url(),
+            &enclave_context.sub_key(),
             enclave_context.server_address(),
         )?;
 

@@ -7,9 +7,7 @@ use crate::localstd::vec::Vec;
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use crate::store_path_secrets::StorePathSecrets;
 use crate::tree_math;
-use anonify_config::{
-    ENCLAVE_MEASUREMENT, ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT, LOCAL_PATH_SECRETS_DIR,
-};
+use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT, LOCAL_PATH_SECRETS_DIR};
 use codec::Encode;
 use frame_common::crypto::{BackupCmd, BackupRequest, ExportPathSecret, RecoverPathSecret};
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};

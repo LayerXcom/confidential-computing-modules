@@ -17,7 +17,6 @@ use std::{
     env,
     fs::{self, File},
     io::BufReader,
-    path::Path,
     str::FromStr,
 };
 use web3::{
