@@ -68,7 +68,7 @@ pub async fn get_encrypting_key(
 #[actix_rt::test]
 async fn test_backup_path_secret() {
     set_env_vars();
-    delete_path_secrets();
+    clear_path_secrets();
 
     // Setup backup server
     let server_enclave = EnclaveDir::new()
@@ -139,7 +139,7 @@ async fn test_backup_path_secret() {
         .join(&id)
         .exists());
 
-    delete_path_secrets();
+    delete_local_path_secret(id);
 
     // Get handshake from contract
     dispatcher.fetch_events::<U64>().await.unwrap();
@@ -183,7 +183,14 @@ fn set_env_vars() {
     env::set_var("ENCLAVE_PKG_NAME", "secret_backup");
 }
 
-fn delete_path_secrets() {
+fn delete_local_path_secret(id: String) {
+    let target = PJ_ROOT_DIR.join(LOCAL_PATH_SECRETS_DIR).join(id);
+    if target.exists() {
+        fs::remove_file(target).unwrap();
+    }
+}
+
+fn clear_path_secrets() {
     let target = PJ_ROOT_DIR.join(LOCAL_PATH_SECRETS_DIR);
     if target.exists() {
         fs::remove_dir_all(target).unwrap();
