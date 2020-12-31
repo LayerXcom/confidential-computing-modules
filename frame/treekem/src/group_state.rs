@@ -2,7 +2,6 @@ use crate::application::AppKeyChain;
 use crate::crypto::{hkdf, hmac::HmacKey, secrets::*};
 use crate::handshake::{AccessKey, Handshake, HandshakeParams, PathSecretSource};
 use crate::local_anyhow::{anyhow, ensure, Result};
-use crate::local_log::error;
 use crate::localstd::vec::Vec;
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use crate::store_path_secrets::StorePathSecrets;
@@ -96,7 +95,7 @@ impl Handshake for GroupState {
                         {
                             Ok(ps) => ps,
                             Err(e) => {
-                                error!("{:?}", e);
+                                dbg!("Failed to recover path_secret from local. Trying to recover from key-vault server");
                                 recover_path_secret_from_key_vault(
                                     handshake.hash().as_ref(),
                                     handshake.roster_idx(),
