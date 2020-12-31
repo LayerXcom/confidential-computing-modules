@@ -31,8 +31,8 @@ impl EnclaveEngine for JoinGroupSender {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let ias_url = &enclave_context.ias_url();
-        let sub_key = &enclave_context.sub_key();
+        let ias_url = enclave_context.ias_url();
+        let sub_key = enclave_context.sub_key();
         let attested_report = enclave_context.quote()?.remote_attestation(
             ias_url,
             sub_key,
@@ -57,6 +57,8 @@ impl EnclaveEngine for JoinGroupSender {
             id.as_ref().to_vec(),
             &enclave_context.spid(),
             enclave_context.server_address(),
+            &sub_key,
+            &ias_url,
         )?;
 
         Ok(output::ReturnJoinGroup::new(
