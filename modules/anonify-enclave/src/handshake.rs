@@ -49,7 +49,7 @@ impl EnclaveEngine for JoinGroupSender {
         let export_handshake = handshake.clone().into_export();
 
         #[cfg(feature = "backup-enable")]
-        backup_path_secret_to_remote(
+        backup_path_secret_to_key_vault(
             path_secret.as_bytes().to_vec(),
             epoch,
             handshake.roster_idx(),
@@ -101,7 +101,7 @@ impl EnclaveEngine for HandshakeSender {
         let export_handshake = handshake.clone().into_export();
 
         #[cfg(feature = "backup-enable")]
-        backup_path_secret_to_remote(
+        backup_path_secret_to_key_vault(
             path_secret.as_bytes().to_vec(),
             epoch,
             handshake.roster_idx(),
@@ -160,7 +160,7 @@ impl EnclaveEngine for HandshakeReceiver {
 }
 
 #[cfg(feature = "backup-enable")]
-fn backup_path_secret_to_remote(
+fn backup_path_secret_to_key_vault(
     path_secret: Vec<u8>,
     epoch: u32,
     roster_idx: u32,

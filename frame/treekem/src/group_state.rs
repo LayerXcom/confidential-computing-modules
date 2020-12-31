@@ -97,7 +97,7 @@ impl Handshake for GroupState {
                             Ok(ps) => ps,
                             Err(e) => {
                                 error!("{:?}", e);
-                                recover_path_secret_from_remote(
+                                recover_path_secret_from_key_vault(
                                     handshake.hash().as_ref(),
                                     handshake.roster_idx(),
                                     spid,
@@ -150,7 +150,7 @@ fn recover_path_secret_from_local(id: &[u8], epoch: u32) -> Result<PathSecret> {
     PathSecret::try_from_importing(imported_path_secret)
 }
 
-fn recover_path_secret_from_remote(
+fn recover_path_secret_from_key_vault(
     id: &[u8],
     roster_idx: u32,
     spid: &str,
