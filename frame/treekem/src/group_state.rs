@@ -112,6 +112,17 @@ impl Handshake for GroupState {
                     _ => unimplemented!(),
                 };
 
+                let eps = path_secret
+                    .clone()
+                    .try_into_exporting(self.epoch, handshake.hash().as_ref())?;
+                let store_path_secrets = StorePathSecrets::new(format!(
+                    "{}/{}",
+                    env::var("LOCAL_PATH_SECRETS_DIR")
+                        .unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
+                    handshake.roster_idx(),
+                ));
+                store_path_secrets.save_to_local_filesystem(&eps)?;
+
                 let (node_pubkey, node_privkey, _, _) = path_secret.clone().derive_node_values()?;
 
                 my_leaf.update_pub_key(node_pubkey);
