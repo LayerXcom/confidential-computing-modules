@@ -1,6 +1,6 @@
 use crate::*;
 use actix_web::{test, web, App};
-use anonify_config::{LOCAL_PATH_SECRETS_DIR, PJ_ROOT_DIR};
+use anonify_config::PJ_ROOT_DIR;
 use anonify_eth_driver::{
     dispatcher::Dispatcher as EthDispatcher,
     eth::{EthDeployer, EthSender, EventWatcher},
@@ -32,6 +32,7 @@ const BIN_PATH: &str = "../../../contract-build/Anonify.bin";
 const CONFIRMATIONS: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
+const TEST_PATH_SECRETS_DIR: &str = ".anonify/pathsecrets";
 
 pub async fn get_encrypting_key(
     contract_addr: &str,
@@ -127,7 +128,7 @@ async fn test_backup_path_secret() {
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
 
-    let path_secrets_dir = PJ_ROOT_DIR.join(LOCAL_PATH_SECRETS_DIR);
+    let path_secrets_dir = PJ_ROOT_DIR.join(TEST_PATH_SECRETS_DIR);
 
     let id = get_path_secret_id().unwrap();
     // local
@@ -182,21 +183,21 @@ fn set_env_vars() {
 }
 
 fn delete_local_path_secret(id: String) {
-    let target = PJ_ROOT_DIR.join(LOCAL_PATH_SECRETS_DIR).join(id);
+    let target = PJ_ROOT_DIR.join(TEST_PATH_SECRETS_DIR).join(id);
     if target.exists() {
         fs::remove_file(target).unwrap();
     }
 }
 
 fn clear_path_secrets() {
-    let target = PJ_ROOT_DIR.join(LOCAL_PATH_SECRETS_DIR);
+    let target = PJ_ROOT_DIR.join(TEST_PATH_SECRETS_DIR);
     if target.exists() {
         fs::remove_dir_all(target).unwrap();
     }
 }
 
 fn get_path_secret_id() -> Option<String> {
-    for path in fs::read_dir(PJ_ROOT_DIR.join(LOCAL_PATH_SECRETS_DIR)).unwrap() {
+    for path in fs::read_dir(PJ_ROOT_DIR.join(TEST_PATH_SECRETS_DIR)).unwrap() {
         if path.as_ref().unwrap().file_type().unwrap().is_dir() {
             continue;
         }
