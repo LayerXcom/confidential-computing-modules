@@ -1,6 +1,6 @@
-use crate::anonify_enclave::{context::EnclaveContext, workflow::*};
 use crate::ENCLAVE_CONTEXT;
 use anonify_config::constants::*;
+use anonify_enclave::{context::EnclaveContext, workflow::*};
 use anyhow::anyhow;
 use codec::{Decode, Encode};
 use erc20_state_transition::{Runtime, MAX_MEM_SIZE};

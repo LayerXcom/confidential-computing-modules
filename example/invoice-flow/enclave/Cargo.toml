@@ -12,8 +12,7 @@ crate-type = ["staticlib"]
 anonify-config = { path = "../../../config", default-features = false, features = ["sgx"]}
 frame-enclave = { path = "../../../frame/enclave" }
 frame-types = { path = "../../../frame/types" }
-anonify-enclave-backup-enabled = { package = "anonify-enclave", path = "../../../modules/anonify-enclave", optional = true }
-anonify-enclave-backup-disabled = { package = "anonify-enclave",path = "../../../modules/anonify-enclave", default-features = false, optional = true }
+anonify-enclave = { path = "../../../modules/anonify-enclave", default-features = false }
 frame-treekem = { path = "../../../frame/treekem" }
 frame-common = { path = "../../../frame/common", default-features = false, features = ["sgx"] }
 invoice-state-transition = { path = "../state-transition", default-features = false, features = ["sgx"] }
@@ -27,9 +26,4 @@ anyhow = { rev = "sgx_1.1.2", git = "https://github.com/mesalock-linux/anyhow-sg
 
 [features]
 default = ["backup-enable"]
-backup-enable = [
-    "anonify-enclave-backup-enabled",
-]
-backup-disable = [
-    "anonify-enclave-backup-disabled",
-]
+backup-enable = ["anonify-enclave/backup-enable"]

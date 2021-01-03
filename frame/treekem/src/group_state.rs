@@ -94,17 +94,14 @@ impl Handshake for GroupState {
                         match recover_path_secret_from_local(handshake.hash().as_ref(), self.epoch)
                         {
                             Ok(ps) => ps,
-                            Err(e) => {
-                                dbg!("Failed to recover path_secret from local. Trying to recover from key-vault server");
-                                recover_path_secret_from_key_vault(
-                                    handshake.hash().as_ref(),
-                                    handshake.roster_idx(),
-                                    spid,
-                                    ias_url,
-                                    sub_key,
-                                    server_address,
-                                )?
-                            }
+                            Err(_) => recover_path_secret_from_key_vault(
+                                handshake.hash().as_ref(),
+                                handshake.roster_idx(),
+                                spid,
+                                ias_url,
+                                sub_key,
+                                server_address,
+                            )?,
                         }
                     }
                     PathSecretSource::LocalTestKV(_) => {

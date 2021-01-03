@@ -4,11 +4,6 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
-#[cfg(feature = "backup-enable")]
-use anonify_enclave_backup_enabled as anonify_enclave;
-#[cfg(feature = "backup-disable")]
-use anonify_enclave_backup_disabled as anonify_enclave;
-
 use std::prelude::v1::*;
 use test_utils::*;
 
