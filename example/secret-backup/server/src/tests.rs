@@ -107,6 +107,9 @@ async fn test_backup_path_secret() {
         EthDispatcher::<EthDeployer, EthSender, EventWatcher>::new(app_eid, ETH_URL, cache)
             .unwrap();
 
+    // Ensure not to exist path_secret directory on both local and remote
+    assert!(!path_secrets_dir.exists());
+
     // Deploy
     let deployer_addr = dispatcher
         .get_account(ACCOUNT_INDEX, PASSWORD)
@@ -161,6 +164,15 @@ async fn test_backup_path_secret() {
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
+
+    // Get logs from contract and update state inside enclave.
+    dispatcher.fetch_events::<U64>().await.unwrap();
+
+    // Get state from enclave
+    let my_state = dispatcher
+        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of")
+        .unwrap();
+    assert_eq!(my_state, total_supply);
 }
 
 pub static ENV_LOGGER_INIT: Lazy<()> = Lazy::new(|| {
