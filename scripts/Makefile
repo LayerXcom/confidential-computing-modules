@@ -98,7 +98,7 @@ ifeq ($(BACKUP), disable)
 	RustEnclave_Name := $(ANONIFY_BUILD_DIR)/$(ENCLAVE_PKG_NAME).backup_disabled.enclave.so
 	Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).backup_disabled.signed.so
 	Rust_Enclave_Lib_Name := $(ENCLAVE_PKG_NAME)backupdisabled
-	RustEnclave_Feature_Flags := --features backup-disable --no-default-features
+	RustEnclave_Feature_Flags := --features --no-default-features
 	Measurement_File_Name := $(ENCLAVE_PKG_NAME)_backup_disabled_measurement.txt
 else
 	RustEnclave_Name := $(ANONIFY_BUILD_DIR)/$(ENCLAVE_PKG_NAME).enclave.so
