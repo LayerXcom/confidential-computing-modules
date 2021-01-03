@@ -2,20 +2,15 @@ use crate::{
     error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
-#[cfg(feature = "backup-enable")]
-use anonify_config::ENCLAVE_MEASUREMENT_KEY_VAULT;
-use anonify_config::IAS_ROOT_CERT;
+use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT};
 use anonify_io_types::*;
 use anyhow::anyhow;
-#[cfg(feature = "backup-enable")]
-use frame_common::crypto::{BackupCmd, BackupPathSecret, BackupRequest};
 use frame_common::{
-    crypto::AccountId,
+    crypto::{AccountId, BackupCmd, BackupPathSecret, BackupRequest},
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
 use frame_enclave::EnclaveEngine;
-#[cfg(feature = "backup-enable")]
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
 use frame_treekem::{
@@ -23,13 +18,12 @@ use frame_treekem::{
     init_path_secret_kvs, DhPubKey, EciesCiphertext,
 };
 use remote_attestation::{EncodedQuote, QuoteTarget};
-#[cfg(feature = "backup-enable")]
-use std::vec::Vec;
 use std::{
     env,
     marker::PhantomData,
     prelude::v1::*,
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
+    vec::Vec,
 };
 
 pub const MRENCLAVE_VERSION: usize = 0;
