@@ -32,7 +32,6 @@ const BIN_PATH: &str = "../../../contract-build/Anonify.bin";
 const CONFIRMATIONS: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
-const TEST_PATH_SECRETS_DIR: &str = ".anonify/pathsecrets";
 
 pub async fn get_encrypting_key(
     contract_addr: &str,
@@ -108,7 +107,8 @@ async fn test_backup_path_secret() {
             .unwrap();
 
     // Ensure not to exist path_secret directory on both local and remote
-    let path_secrets_dir = PJ_ROOT_DIR.join(TEST_PATH_SECRETS_DIR);
+    let path_secrets_dir = PJ_ROOT_DIR
+        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"));
     assert!(!path_secrets_dir.exists());
 
     // Deploy
@@ -195,21 +195,29 @@ fn set_env_vars() {
 }
 
 fn delete_local_path_secret(id: String) {
-    let target = PJ_ROOT_DIR.join(TEST_PATH_SECRETS_DIR).join(id);
+    let target = PJ_ROOT_DIR
+        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"))
+        .join(id);
     if target.exists() {
         fs::remove_file(target).unwrap();
     }
 }
 
 fn clear_path_secrets() {
-    let target = PJ_ROOT_DIR.join(TEST_PATH_SECRETS_DIR);
+    let target = PJ_ROOT_DIR
+        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"));
     if target.exists() {
         fs::remove_dir_all(target).unwrap();
     }
 }
 
 fn get_path_secret_id() -> Option<String> {
-    for path in fs::read_dir(PJ_ROOT_DIR.join(TEST_PATH_SECRETS_DIR)).unwrap() {
+    for path in fs::read_dir(
+        PJ_ROOT_DIR
+            .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set")),
+    )
+    .unwrap()
+    {
         if path.as_ref().unwrap().file_type().unwrap().is_dir() {
             continue;
         }
