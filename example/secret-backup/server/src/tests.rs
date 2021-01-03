@@ -108,6 +108,7 @@ async fn test_backup_path_secret() {
             .unwrap();
 
     // Ensure not to exist path_secret directory on both local and remote
+    let path_secrets_dir = PJ_ROOT_DIR.join(TEST_PATH_SECRETS_DIR);
     assert!(!path_secrets_dir.exists());
 
     // Deploy
@@ -130,8 +131,6 @@ async fn test_backup_path_secret() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
-
-    let path_secrets_dir = PJ_ROOT_DIR.join(TEST_PATH_SECRETS_DIR);
 
     let id = get_path_secret_id().unwrap();
     // local

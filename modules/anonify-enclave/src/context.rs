@@ -2,21 +2,29 @@ use crate::{
     error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
+#[cfg(feature = "backup-enable")]
+use anonify_config::ENCLAVE_MEASUREMENT_KEY_VAULT;
 use anonify_config::IAS_ROOT_CERT;
 use anonify_io_types::*;
 use anyhow::anyhow;
+#[cfg(feature = "backup-enable")]
+use frame_common::crypto::{BackupCmd, BackupPathSecret, BackupRequest};
 use frame_common::{
     crypto::AccountId,
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
 use frame_enclave::EnclaveEngine;
+#[cfg(feature = "backup-enable")]
+use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, DhPubKey, EciesCiphertext,
 };
 use remote_attestation::{EncodedQuote, QuoteTarget};
+#[cfg(feature = "backup-enable")]
+use std::vec::Vec;
 use std::{
     env,
     marker::PhantomData,
@@ -209,6 +217,34 @@ impl EnclaveContext {
             sub_key,
             server_address,
         })
+    }
+
+    #[cfg(feature = "backup-enable")]
+    fn backup_path_secret_to_key_vault(
+        &self,
+        path_secret: Vec<u8>,
+        epoch: u32,
+        roster_idx: u32,
+        id: Vec<u8>,
+    ) -> Result<()> {
+        let backup_path_secret = BackupPathSecret::new(path_secret, epoch, roster_idx, id);
+
+        let attested_tls_config = AttestedTlsConfig::new_by_ra(
+            self.spid(),
+            self.ias_url(),
+            self.sub_key(),
+            IAS_ROOT_CERT.to_vec(),
+        )?;
+        let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
+            .set_attestation_report_verifier(
+                IAS_ROOT_CERT.to_vec(),
+                *ENCLAVE_MEASUREMENT_KEY_VAULT,
+            );
+        let mut mra_tls_client = Client::new(self.server_address(), client_config).unwrap();
+        let backup_request = BackupRequest::new(BackupCmd::STORE, backup_path_secret);
+        let _resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
+
+        Ok(())
     }
 }
 
