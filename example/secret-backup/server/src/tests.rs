@@ -80,8 +80,7 @@ async fn test_backup_path_secret() {
     let req = test::TestRequest::post().uri("/api/v1/start").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let start_response: secret_backup_api::start::post::Response =
-        test::read_body_json(resp).await;
+    let start_response: secret_backup_api::start::post::Response = test::read_body_json(resp).await;
     assert_eq!(start_response.status, "success".to_string());
 
     std::thread::sleep(std::time::Duration::from_secs(1));
@@ -144,12 +143,12 @@ async fn test_backup_path_secret() {
     println!("init state receipt: {:?}", receipt);
 }
 
-pub static ENV_LOGGER_INIT: Lazy<()> = Lazy::new(|| {
-    env_logger::init();
+pub static SUBSCRIBER_INIT: Lazy<()> = Lazy::new(|| {
+    tracing_subscriber::fmt::init();
 });
 
 fn set_env_vars() {
-    *ENV_LOGGER_INIT;
+    *SUBSCRIBER_INIT;
     env::set_var("RUST_LOG", "DEBUG");
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
