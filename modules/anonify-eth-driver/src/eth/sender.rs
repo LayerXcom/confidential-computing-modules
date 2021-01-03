@@ -1,7 +1,7 @@
 use super::connection::{Web3Contract, Web3Http};
 use crate::{error::Result, traits::*, utils::*, workflow::*};
 use async_trait::async_trait;
-use log::info;
+use tracing::info;
 use sgx_types::sgx_enclave_id_t;
 use std::path::Path;
 use web3::types::{Address, H256};

@@ -1,7 +1,7 @@
 use crate::error::Result;
 use anonify_config::PJ_ROOT_DIR;
 use frame_common::crypto::ExportPathSecret;
-use log::debug;
+use tracing::debug;
 use std::fs;
 use std::io::{BufReader, Write};
 use std::path::PathBuf;
