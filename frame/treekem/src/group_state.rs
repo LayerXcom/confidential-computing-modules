@@ -116,10 +116,9 @@ impl Handshake for GroupState {
                     .clone()
                     .try_into_exporting(self.epoch, handshake.hash().as_ref())?;
                 let store_path_secrets = StorePathSecrets::new(format!(
-                    "{}/{}",
+                    "{}",
                     env::var("LOCAL_PATH_SECRETS_DIR")
                         .unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
-                    handshake.roster_idx(),
                 ));
                 store_path_secrets.save_to_local_filesystem(&eps)?;
 
