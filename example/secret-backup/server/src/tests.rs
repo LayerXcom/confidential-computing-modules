@@ -191,6 +191,7 @@ fn set_env_vars() {
     env::set_var("SUB_KEY", "77e2533de0624df28dc3be3a5b9e50d9");
     env::set_var("MRA_TLS_SERVER_ADDRESS", "localhost:12345");
     env::set_var("ENCLAVE_PKG_NAME", "secret_backup");
+    env::set_var("LOCAL_PATH_SECRETS_DIR", ".anonify/pathsecrets");
 }
 
 fn delete_local_path_secret(id: String) {

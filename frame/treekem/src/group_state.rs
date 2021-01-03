@@ -2,11 +2,13 @@ use crate::application::AppKeyChain;
 use crate::crypto::{hkdf, hmac::HmacKey, secrets::*};
 use crate::handshake::{AccessKey, Handshake, HandshakeParams, PathSecretSource};
 use crate::local_anyhow::{anyhow, ensure, Result};
-use crate::localstd::vec::Vec;
+use crate::localstd::{env, vec::Vec};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use crate::store_path_secrets::StorePathSecrets;
 use crate::tree_math;
-use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT, LOCAL_PATH_SECRETS_DIR};
+use anonify_config::{
+    DEFAULT_LOCAL_PATH_SECRETS_DIR, ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT,
+};
 use codec::Encode;
 use frame_common::crypto::{BackupCmd, BackupRequest, ExportPathSecret, RecoverPathSecret};
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
@@ -136,7 +138,9 @@ impl Handshake for GroupState {
 }
 
 fn recover_path_secret_from_local(id: &[u8], epoch: u32) -> Result<PathSecret> {
-    let store_path_secrets = StorePathSecrets::new(LOCAL_PATH_SECRETS_DIR);
+    let store_path_secrets = StorePathSecrets::new(
+        env::var("LOCAL_PATH_SECRETS_DIR").unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
+    );
     let imported_path_secret = store_path_secrets.load_from_local_filesystem(id)?;
     if imported_path_secret.epoch() != epoch {
         return Err(anyhow!(
