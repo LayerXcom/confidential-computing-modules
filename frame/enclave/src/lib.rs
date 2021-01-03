@@ -4,7 +4,6 @@ extern crate sgx_tstd as std;
 
 pub mod engine;
 mod error;
-pub mod ocalls;
 mod register;
 
 pub use crate::engine::*;

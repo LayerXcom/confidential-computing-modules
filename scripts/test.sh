@@ -21,6 +21,8 @@ echo "Integration testing..."
 export ENCLAVE_PKG_NAME=erc20
 cd ${ANONIFY_ROOT}/scripts
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
+export BACKUP=disable
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
 cd ${ANONIFY_ROOT}/tests/integration
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
@@ -37,6 +39,7 @@ sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture
 
 export ENCLAVE_PKG_NAME=secret_backup
+unset BACKUP
 cd ${ANONIFY_ROOT}/scripts
 make DEBUG=1 ENCLAVE_DIR=example/secret-backup/enclave
 
@@ -45,6 +48,7 @@ RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocaptur
 
 echo "Unit testing..."
 export ENCLAVE_PKG_NAME=units
+export BACKUP=disable
 cd ${ANONIFY_ROOT}/scripts
 make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave
 

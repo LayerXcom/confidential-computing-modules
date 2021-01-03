@@ -5,7 +5,7 @@ use crate::localstd::vec::Vec;
 use codec::{Decode, Encode, Error, Input};
 use frame_common::crypto::rand_assign;
 #[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
+use crate::serde::{Deserialize, Serialize};
 
 const SECRET_KEY_SIZE: usize = 32;
 const COMPRESSED_PUBLIC_KEY_SIZE: usize = 33;
@@ -54,6 +54,7 @@ impl DhPrivateKey {
 
 #[cfg(feature = "std")]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub struct DhPubKey(PublicKey);
 
 #[cfg(feature = "sgx")]

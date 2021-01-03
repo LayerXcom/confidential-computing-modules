@@ -34,6 +34,10 @@ use std_rand as local_rand;
 use std_rand_core as local_rand_core;
 #[cfg(feature = "std")]
 use std_ring as local_ring;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
+use serde_sgx as serde;
+#[cfg(feature = "std")]
+use serde_std as serde;
 
 #[cfg(feature = "sgx")]
 mod application;
@@ -49,6 +53,8 @@ mod tree_math;
 // #[cfg(debug_assertions)]
 #[cfg(feature = "sgx")]
 mod test_funcs;
+#[cfg(feature = "sgx")]
+mod store_path_secrets;
 
 #[cfg(feature = "sgx")]
 pub use crate::application::AppKeyChain;
@@ -64,6 +70,8 @@ pub use crate::group_state::GroupState;
 pub use crate::handshake::Handshake;
 #[cfg(feature = "sgx")]
 pub use crate::test_funcs::init_path_secret_kvs;
+#[cfg(feature = "sgx")]
+pub use store_path_secrets::StorePathSecrets;
 
 #[cfg(feature = "sgx")]
 #[cfg(debug_assertions)]

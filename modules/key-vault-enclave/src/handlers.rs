@@ -1,14 +1,59 @@
-use frame_common::crypto::BackupPathSecret;
+use anonify_config::DEFAULT_LOCAL_PATH_SECRETS_DIR;
+use anyhow::anyhow;
+use frame_common::crypto::{BackupPathSecret, RecoverPathSecret};
 use frame_mra_tls::RequestHandler;
-
-use std::vec::Vec;
+use frame_treekem::{PathSecret, StorePathSecrets};
+use serde_json::Value;
+use std::{env, vec::Vec};
 
 #[derive(Default, Clone)]
 pub struct BackupHandler;
 
 impl RequestHandler for BackupHandler {
     fn handle_json(&self, msg: &[u8]) -> anyhow::Result<Vec<u8>> {
-        let backup_path_secret: BackupPathSecret = serde_json::from_slice(&msg)?;
-        serde_json::to_vec(&backup_path_secret).map_err(Into::into)
+        let decoded: Value = serde_json::from_slice(&msg)?;
+        let cmd = decoded["cmd"]
+            .as_str()
+            .ok_or_else(|| anyhow!("msg doesn't contain cmd"))?;
+
+        match cmd {
+            "STORE" => store_path_secret(decoded["body"].clone()),
+            "RECOVER" => recover_path_secret(decoded["body"].clone()),
+            _ => unreachable!("got unknown command: {:?}", cmd),
+        }
     }
+}
+
+fn store_path_secret(body: Value) -> anyhow::Result<Vec<u8>> {
+    let backup_path_secret: BackupPathSecret = serde_json::from_value(body)?;
+    let path_secret = PathSecret::from(backup_path_secret.path_secret());
+    let roster_idx = backup_path_secret.roster_idx();
+    let epoch = backup_path_secret.epoch();
+    let id = backup_path_secret.id();
+
+    let eps = path_secret.try_into_exporting(epoch, &id)?;
+    let store_path_secrets = StorePathSecrets::new(format!(
+        "{}/{}",
+        env::var("LOCAL_PATH_SECRETS_DIR").unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
+        roster_idx
+    ));
+    store_path_secrets.save_to_local_filesystem(&eps)?;
+
+    serde_json::to_vec(&eps).map_err(Into::into)
+}
+
+fn recover_path_secret(body: Value) -> anyhow::Result<Vec<u8>> {
+    let recover_path_secret: RecoverPathSecret = serde_json::from_value(body)?;
+    let roster_idx = recover_path_secret.roster_idx();
+    let id = recover_path_secret.id();
+
+    let store_path_secrets = StorePathSecrets::new(format!(
+        "{}/{}",
+        env::var("LOCAL_PATH_SECRETS_DIR").unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
+        roster_idx
+    ));
+    let eps = store_path_secrets.load_from_local_filesystem(id)?;
+    let path_secret = PathSecret::try_from_importing(eps)?;
+
+    serde_json::to_vec(path_secret.as_bytes()).map_err(Into::into)
 }

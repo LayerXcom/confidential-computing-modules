@@ -12,6 +12,7 @@ export CONFIRMATIONS=1
 export ACCOUNT_INDEX=1
 export PASSWORD=anonify0101
 export ENCLAVE_PKG_NAME=erc20
+export BACKUP=disable
 
 export SPID=
 export IAS_URL=https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report

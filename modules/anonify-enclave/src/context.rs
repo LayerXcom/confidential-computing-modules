@@ -2,15 +2,16 @@ use crate::{
     error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
-use anonify_config::IAS_ROOT_CERT;
+use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT};
 use anonify_io_types::*;
 use anyhow::anyhow;
 use frame_common::{
-    crypto::AccountId,
+    crypto::{AccountId, BackupCmd, BackupPathSecret, BackupRequest},
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
 use frame_enclave::EnclaveEngine;
+use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
@@ -22,6 +23,7 @@ use std::{
     marker::PhantomData,
     prelude::v1::*,
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
+    vec::Vec,
 };
 
 pub const MRENCLAVE_VERSION: usize = 0;
@@ -38,7 +40,6 @@ pub struct EnclaveContext {
     db: EnclaveDB,
     notifier: Notifier,
     group_key: Arc<SgxRwLock<GroupKey>>,
-    is_backup_enabled: bool,
 }
 
 impl ContextOps for EnclaveContext {
@@ -60,10 +61,6 @@ impl ContextOps for EnclaveContext {
 
     fn spid(&self) -> &str {
         &self.spid
-    }
-
-    fn is_backup_enabled(&self) -> bool {
-        self.is_backup_enabled
     }
 }
 
@@ -165,9 +162,38 @@ impl QuoteGetter for EnclaveContext {
     }
 }
 
+impl BackupOps for EnclaveContext {
+    fn backup_path_secret_to_key_vault(
+        &self,
+        path_secret: Vec<u8>,
+        epoch: u32,
+        roster_idx: u32,
+        id: Vec<u8>,
+    ) -> anyhow::Result<()> {
+        let backup_path_secret = BackupPathSecret::new(path_secret, epoch, roster_idx, id);
+
+        let attested_tls_config = AttestedTlsConfig::new_by_ra(
+            self.spid(),
+            self.ias_url(),
+            self.sub_key(),
+            IAS_ROOT_CERT.to_vec(),
+        )?;
+        let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
+            .set_attestation_report_verifier(
+                IAS_ROOT_CERT.to_vec(),
+                *ENCLAVE_MEASUREMENT_KEY_VAULT,
+            );
+        let mut mra_tls_client = Client::new(self.server_address(), client_config).unwrap();
+        let backup_request = BackupRequest::new(BackupCmd::STORE, backup_path_secret);
+        let _resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
+
+        Ok(())
+    }
+}
+
 // TODO: Consider SGX_ERROR_BUSY.
 impl EnclaveContext {
-    pub fn new(spid: String, is_backup_enabled: bool) -> Result<Self> {
+    pub fn new(spid: String) -> Result<Self> {
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
 
@@ -213,7 +239,6 @@ impl EnclaveContext {
             ias_url,
             sub_key,
             server_address,
-            is_backup_enabled,
         })
     }
 }

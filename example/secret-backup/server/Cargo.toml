@@ -19,6 +19,7 @@ secret-backup-api = { path = "../api" }
 once_cell = "1.5.2"
 
 [dev-dependencies]
+anonify-config = { path = "../../../config" }
 frame-common = { path = "../../../frame/common" }
 frame-runtime = { path = "../../../frame/runtime" }
 frame-treekem = { path = "../../../frame/treekem" }

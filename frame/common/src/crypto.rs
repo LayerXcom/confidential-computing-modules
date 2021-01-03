@@ -5,7 +5,7 @@ use crate::localstd::{
     string::String,
     vec::Vec,
 };
-use crate::serde::{Deserialize, Serialize};
+use crate::serde::{de::DeserializeOwned, Deserialize, Serialize};
 use crate::traits::{AccessPolicy, Hash256, IntoVec, StateDecoder};
 use codec::{self, Decode, Encode, Input};
 use ed25519_dalek::{
@@ -578,17 +578,24 @@ impl ExportHandshake {
     }
 }
 
-/// PathSecret for a backup via mra-tls
+/// PathSecret to backup via mra-tls
 #[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
 #[serde(crate = "crate::serde")]
 pub struct BackupPathSecret {
     path_secret: Vec<u8>,
     epoch: u32,
+    roster_idx: u32,
+    id: Vec<u8>,
 }
 
 impl BackupPathSecret {
-    pub fn new(path_secret: Vec<u8>, epoch: u32) -> Self {
-        BackupPathSecret { path_secret, epoch }
+    pub fn new(path_secret: Vec<u8>, epoch: u32, roster_idx: u32, id: Vec<u8>) -> Self {
+        BackupPathSecret {
+            path_secret,
+            epoch,
+            roster_idx,
+            id,
+        }
     }
 
     pub fn epoch(&self) -> u32 {
@@ -597,5 +604,65 @@ impl BackupPathSecret {
 
     pub fn path_secret(&self) -> &[u8] {
         &self.path_secret[..]
+    }
+
+    pub fn roster_idx(&self) -> u32 {
+        self.roster_idx
+    }
+
+    pub fn id(&self) -> &[u8] {
+        &self.id[..]
+    }
+}
+
+/// PathSecret to recover via mra-tls
+#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
+#[serde(crate = "crate::serde")]
+pub struct RecoverPathSecret {
+    roster_idx: u32,
+    id: Vec<u8>,
+}
+
+impl RecoverPathSecret {
+    pub fn new(roster_idx: u32, id: Vec<u8>) -> Self {
+        RecoverPathSecret { roster_idx, id }
+    }
+
+    pub fn id(&self) -> &[u8] {
+        &self.id[..]
+    }
+
+    pub fn roster_idx(&self) -> u32 {
+        self.roster_idx
+    }
+}
+
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
+pub enum BackupCmd {
+    STORE,
+    RECOVER,
+}
+
+impl From<u64> for BackupCmd {
+    fn from(v: u64) -> Self {
+        match v {
+            0 => Self::STORE,
+            1 => Self::RECOVER,
+            _ => unreachable!("Unknown BackupCmd. got: {:}", v),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(crate = "crate::serde")]
+pub struct BackupRequest<DE: DeserializeOwned> {
+    cmd: BackupCmd,
+    body: DE,
+}
+
+impl<DE: DeserializeOwned> BackupRequest<DE> {
+    pub fn new(cmd: BackupCmd, body: DE) -> BackupRequest<DE> {
+        BackupRequest { cmd, body }
     }
 }

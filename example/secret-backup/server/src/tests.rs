@@ -1,18 +1,24 @@
 use crate::*;
 use actix_web::{test, web, App};
+use anonify_config::PJ_ROOT_DIR;
 use anonify_eth_driver::{
     dispatcher::Dispatcher as EthDispatcher,
     eth::{EthDeployer, EthSender, EventWatcher},
     EventCache,
 };
 use codec::{Decode, Encode};
-use erc20_state_transition::{construct, CallName, MemName, CIPHERTEXT_SIZE};
+use erc20_state_transition::{construct, CallName};
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use once_cell::sync::Lazy;
-use std::{env, fs::File, io::BufReader, str::FromStr};
+use std::{
+    env,
+    fs::{self, File},
+    io::BufReader,
+    str::FromStr,
+};
 use web3::{
     contract::{Contract, Options},
     transports::Http,
@@ -61,6 +67,7 @@ pub async fn get_encrypting_key(
 #[actix_rt::test]
 async fn test_backup_path_secret() {
     set_env_vars();
+    clear_path_secrets();
 
     // Setup backup server
     let server_enclave = EnclaveDir::new()
@@ -80,8 +87,7 @@ async fn test_backup_path_secret() {
     let req = test::TestRequest::post().uri("/api/v1/start").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let start_response: secret_backup_api::start::post::Response =
-        test::read_body_json(resp).await;
+    let start_response: secret_backup_api::start::post::Response = test::read_body_json(resp).await;
     assert_eq!(start_response.status, "success".to_string());
 
     std::thread::sleep(std::time::Duration::from_secs(1));
@@ -100,12 +106,17 @@ async fn test_backup_path_secret() {
         EthDispatcher::<EthDeployer, EthSender, EventWatcher>::new(app_eid, ETH_URL, cache)
             .unwrap();
 
+    // Ensure not to exist path_secret directory on both local and remote
+    let path_secrets_dir = PJ_ROOT_DIR
+        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"));
+    assert!(!path_secrets_dir.exists());
+
     // Deploy
     let deployer_addr = dispatcher
         .get_account(ACCOUNT_INDEX, PASSWORD)
         .await
         .unwrap();
-    let (contract_addr, export_path_secret) = dispatcher
+    let contract_addr = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
@@ -120,7 +131,17 @@ async fn test_backup_path_secret() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
-    println!("export_path_secret: {:?}", export_path_secret);
+
+    let id = get_path_secret_id().unwrap();
+    // local
+    assert!(path_secrets_dir.join(&id).exists());
+    // remote
+    assert!(path_secrets_dir
+        .join(env::var("MY_ROSTER_IDX").unwrap().as_str())
+        .join(&id)
+        .exists());
+
+    delete_local_path_secret(id);
 
     // Get handshake from contract
     dispatcher.fetch_events::<U64>().await.unwrap();
@@ -142,6 +163,15 @@ async fn test_backup_path_secret() {
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
+
+    // Get logs from contract and update state inside enclave.
+    dispatcher.fetch_events::<U64>().await.unwrap();
+
+    // Get state from enclave
+    let my_state = dispatcher
+        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of")
+        .unwrap();
+    assert_eq!(my_state, total_supply);
 }
 
 pub static ENV_LOGGER_INIT: Lazy<()> = Lazy::new(|| {
@@ -160,6 +190,39 @@ fn set_env_vars() {
     );
     env::set_var("SUB_KEY", "77e2533de0624df28dc3be3a5b9e50d9");
     env::set_var("MRA_TLS_SERVER_ADDRESS", "localhost:12345");
-    env::set_var("AUDITOR_ENDPOINT", "test");
     env::set_var("ENCLAVE_PKG_NAME", "secret_backup");
+    env::set_var("LOCAL_PATH_SECRETS_DIR", ".anonify/pathsecrets");
+}
+
+fn delete_local_path_secret(id: String) {
+    let target = PJ_ROOT_DIR
+        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"))
+        .join(id);
+    if target.exists() {
+        fs::remove_file(target).unwrap();
+    }
+}
+
+fn clear_path_secrets() {
+    let target = PJ_ROOT_DIR
+        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"));
+    if target.exists() {
+        fs::remove_dir_all(target).unwrap();
+    }
+}
+
+fn get_path_secret_id() -> Option<String> {
+    for path in fs::read_dir(
+        PJ_ROOT_DIR
+            .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set")),
+    )
+    .unwrap()
+    {
+        if path.as_ref().unwrap().file_type().unwrap().is_dir() {
+            continue;
+        }
+        return Some(path.unwrap().file_name().into_string().unwrap());
+    }
+
+    None
 }
