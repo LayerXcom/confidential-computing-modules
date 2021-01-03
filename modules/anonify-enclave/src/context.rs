@@ -168,6 +168,35 @@ impl QuoteGetter for EnclaveContext {
     }
 }
 
+impl BackupOps for EnclaveContext {
+    fn backup_path_secret_to_key_vault(
+        &self,
+        path_secret: Vec<u8>,
+        epoch: u32,
+        roster_idx: u32,
+        id: Vec<u8>,
+    ) -> anyhow::Result<()> {
+        let backup_path_secret = BackupPathSecret::new(path_secret, epoch, roster_idx, id);
+
+        let attested_tls_config = AttestedTlsConfig::new_by_ra(
+            self.spid(),
+            self.ias_url(),
+            self.sub_key(),
+            IAS_ROOT_CERT.to_vec(),
+        )?;
+        let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
+            .set_attestation_report_verifier(
+                IAS_ROOT_CERT.to_vec(),
+                *ENCLAVE_MEASUREMENT_KEY_VAULT,
+            );
+        let mut mra_tls_client = Client::new(self.server_address(), client_config).unwrap();
+        let backup_request = BackupRequest::new(BackupCmd::STORE, backup_path_secret);
+        let _resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
+
+        Ok(())
+    }
+}
+
 // TODO: Consider SGX_ERROR_BUSY.
 impl EnclaveContext {
     pub fn new(spid: String) -> Result<Self> {
@@ -217,34 +246,6 @@ impl EnclaveContext {
             sub_key,
             server_address,
         })
-    }
-
-    #[cfg(feature = "backup-enable")]
-    fn backup_path_secret_to_key_vault(
-        &self,
-        path_secret: Vec<u8>,
-        epoch: u32,
-        roster_idx: u32,
-        id: Vec<u8>,
-    ) -> Result<()> {
-        let backup_path_secret = BackupPathSecret::new(path_secret, epoch, roster_idx, id);
-
-        let attested_tls_config = AttestedTlsConfig::new_by_ra(
-            self.spid(),
-            self.ias_url(),
-            self.sub_key(),
-            IAS_ROOT_CERT.to_vec(),
-        )?;
-        let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
-            .set_attestation_report_verifier(
-                IAS_ROOT_CERT.to_vec(),
-                *ENCLAVE_MEASUREMENT_KEY_VAULT,
-            );
-        let mut mra_tls_client = Client::new(self.server_address(), client_config).unwrap();
-        let backup_request = BackupRequest::new(BackupCmd::STORE, backup_path_secret);
-        let _resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
-
-        Ok(())
     }
 }
 

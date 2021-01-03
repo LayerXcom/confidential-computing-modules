@@ -16,3 +16,4 @@ mod verifier;
 pub use client::Client;
 pub use config::{AttestedTlsConfig, ClientConfig, ServerConfig};
 pub use server::{RequestHandler, Server};
+pub use error::MraTLSError;

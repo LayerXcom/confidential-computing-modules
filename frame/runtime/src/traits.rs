@@ -32,7 +32,7 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
 }
 
 pub trait ContextOps:
-    StateOps + GroupKeyGetter + NotificationOps + IdentityKeyOps + QuoteGetter
+    StateOps + GroupKeyGetter + NotificationOps + IdentityKeyOps + QuoteGetter + BackupOps
 {
     fn mrenclave_ver(&self) -> usize;
     fn ias_url(&self) -> &str;
@@ -123,4 +123,14 @@ pub trait QuoteGetter: Sized {
     /// QUOTE will be sent to Attestation Service to verify SGX's status.
     /// For more information: https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf
     fn quote(&self) -> Result<EncodedQuote>;
+}
+
+pub trait BackupOps {
+    fn backup_path_secret_to_key_vault(
+        &self,
+        path_secret: Vec<u8>,
+        epoch: u32,
+        roster_idx: u32,
+        id: Vec<u8>,
+    ) -> Result<()>;
 }
