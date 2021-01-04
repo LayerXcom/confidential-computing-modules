@@ -67,7 +67,6 @@ lazy_static! {
             .expect("Cannot read measurement file");
         EnclaveMeasurement::new_from_dumpfile(content)
     };
-
     pub static ref ENCLAVE_MEASUREMENT_ERC20: EnclaveMeasurement = {
         let pkg_name = "erc20";
         let mut measurement_file_path = PJ_ROOT_DIR.clone();
@@ -83,6 +82,12 @@ lazy_static! {
         let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
             .expect("Cannot read measurement file");
         EnclaveMeasurement::new_from_dumpfile(content)
+    };
+    pub static ref SPID: String = {
+        env::var("SPID").expect("SPID is not set")
+    };
+    pub static ref SUB_KEY: String = {
+        env::var("SUB_KEY").expect("SUB_KEY is not set")
     };
 }
 

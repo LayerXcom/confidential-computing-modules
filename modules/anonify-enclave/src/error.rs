@@ -21,9 +21,6 @@ pub enum EnclaveError {
     #[error("Anyhow error: {0}")]
     AnyhowError(#[from] anyhow::Error),
 
-    #[error("Frame Enclave error: {0}")]
-    FrameEnclaveError(#[from] frame_enclave::Error),
-
     #[error("Frame mra-tls error: {0}")]
     FrameMraTLSError(#[from] frame_mra_tls::MraTLSError),
 }
