@@ -15,6 +15,7 @@ Building an Anonify contract.
 $ solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
 ```
 
+
 ## Running anonify nodes
 
 ### docker
