@@ -19,8 +19,8 @@ frame --> modules --> example の依存関係があります。
 ├── example
 │   ├── erc20
 │   │   ├── api: (host) リクエスト・レスポンス型の定義
-│   │   ├── cli: (host)
-│   │   ├── enclave: (enclave)
+│   │   ├── cli: (host)　デモ・動作確認用クライアント
+│   │   ├── enclave: (enclave) ecall関数の定義
 │   │   ├── server: (host) REST APIエンドポイント定義サーバー
 │   │   └── state-transition: (enclave/host) 状態遷移ロジックの記述
 │   └── secret-backup
@@ -29,7 +29,7 @@ frame --> modules --> example の依存関係があります。
 │       ├── server: (host)
 │       └── state-transition: (enclave/host)
 ├── frame:
-│   ├── common: (enclave/host)
+│   ├── common: (enclave/host) 共通的に使われる暗号プリミティブ系など
 │   ├── enclave: (enclave) ecallロジックを簡単に記述できるようマクロ
 │   ├── host: (host) enclaveの初期化、ocallロジック実装など
 │   ├── mra-tls: (enclave) 鍵バックアップ時、異なるマシン上のTEEとmutual attested TLS
