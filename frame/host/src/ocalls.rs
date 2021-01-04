@@ -1,4 +1,3 @@
-use codec::Encode;
 use frame_types::UntrustedStatus;
 use sgx_types::*;
 
@@ -37,7 +36,7 @@ pub extern "C" fn ocall_get_quote(
     if ret != sgx_status_t::SGX_SUCCESS {
         println!("sgx_calc_quote_size returned {}", ret);
         return UntrustedStatus::error();
-    }
+    }   
 
     println!("quote size = {}", real_quote_len);
     unsafe {

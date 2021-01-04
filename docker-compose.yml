@@ -10,6 +10,8 @@ services:
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug
+      SPID: ${SPID}
+      SUB_KEY: ${SUB_KEY}
     stdin_open: true
     tty: true
     networks:

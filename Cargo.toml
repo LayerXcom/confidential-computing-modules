@@ -29,10 +29,3 @@ members = [
     "tests/units/host",
     "tests/utils",
 ]
-
-exclude = [
-    "example/invoice-flow/api",
-    "example/invoice-flow/enclave",
-    "example/invoice-flow/server",
-    "example/invoice-flow/state-transition",
-]
