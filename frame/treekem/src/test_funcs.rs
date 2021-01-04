@@ -31,7 +31,7 @@ pub fn do_handshake_three_party(
             max_roster_idx,
             &*SPID,
             IAS_URL,
-            TEST_SUB_KEY,
+            &*SUB_KEY,
             MRA_TLS_SERVER_ADDRESS,
         )
         .unwrap();
@@ -42,7 +42,7 @@ pub fn do_handshake_three_party(
             max_roster_idx,
             &*SPID,
             IAS_URL,
-            TEST_SUB_KEY,
+            &*SUB_KEY,
             MRA_TLS_SERVER_ADDRESS,
         )
         .unwrap();
@@ -53,7 +53,7 @@ pub fn do_handshake_three_party(
             max_roster_idx,
             &*SPID,
             IAS_URL,
-            TEST_SUB_KEY,
+            &*SUB_KEY,
             MRA_TLS_SERVER_ADDRESS,
         )
         .unwrap();

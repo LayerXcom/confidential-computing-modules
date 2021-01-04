@@ -84,10 +84,10 @@ lazy_static! {
         EnclaveMeasurement::new_from_dumpfile(content)
     };
     pub static ref SPID: String = {
-        env::var("SPID").expect("SPID is not set");
+        env::var("SPID").expect("SPID is not set")
     };
     pub static ref SUB_KEY: String = {
-        env::var("SUB_KEY").expect("SUB_KEY is not set");
+        env::var("SUB_KEY").expect("SUB_KEY is not set")
     };
 }
 
