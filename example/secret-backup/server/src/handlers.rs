@@ -28,9 +28,5 @@ pub async fn handle_stop(server: web::Data<Arc<Server>>) -> Result<HttpResponse>
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(
-        HttpResponse::Ok().json(secret_backup_api::stop::post::Response(
-            SUCCESS.to_string(),
-        )),
-    )
+    Ok(HttpResponse::Ok().json(secret_backup_api::stop::post::Response(SUCCESS.to_string())))
 }

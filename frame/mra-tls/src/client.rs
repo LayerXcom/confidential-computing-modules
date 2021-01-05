@@ -10,7 +10,7 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(address: &str, client_config: ClientConfig) -> Result<Self> {
+    pub fn new(address: &str, client_config: &ClientConfig) -> Result<Self> {
         let uri = address.parse::<Uri>()?;
         let hostname = uri.host().ok_or_else(|| anyhow!("Invalid hostname"))?;
         let hostname = webpki::DNSNameRef::try_from_ascii_str(hostname)?;
