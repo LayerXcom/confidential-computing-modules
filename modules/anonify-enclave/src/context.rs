@@ -40,6 +40,7 @@ pub struct EnclaveContext {
     db: EnclaveDB,
     notifier: Notifier,
     group_key: Arc<SgxRwLock<GroupKey>>,
+    client_config: ClientConfig,
 }
 
 impl ContextOps for EnclaveContext {
@@ -172,18 +173,7 @@ impl BackupOps for EnclaveContext {
     ) -> anyhow::Result<()> {
         let backup_path_secret = BackupPathSecret::new(path_secret, epoch, roster_idx, id);
 
-        let attested_tls_config = AttestedTlsConfig::new_by_ra(
-            self.spid(),
-            self.ias_url(),
-            self.sub_key(),
-            IAS_ROOT_CERT.to_vec(),
-        )?;
-        let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
-            .set_attestation_report_verifier(
-                IAS_ROOT_CERT.to_vec(),
-                *ENCLAVE_MEASUREMENT_KEY_VAULT,
-            );
-        let mut mra_tls_client = Client::new(self.server_address(), client_config).unwrap();
+        let mut mra_tls_client = Client::new(self.server_address(), &self.client_config).unwrap();
         let backup_request = BackupRequest::new(BackupCmd::STORE, backup_path_secret);
         let _resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
 
@@ -229,6 +219,18 @@ impl EnclaveContext {
         let sub_key = env::var("SUB_KEY")?;
         let server_address = env::var("MRA_TLS_SERVER_ADDRESS")?;
 
+        let attested_tls_config = AttestedTlsConfig::new_by_ra(
+            &spid,
+            &ias_url,
+            &sub_key,
+            IAS_ROOT_CERT.to_vec(),
+        )?;
+        let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
+            .set_attestation_report_verifier(
+                IAS_ROOT_CERT.to_vec(),
+                *ENCLAVE_MEASUREMENT_KEY_VAULT,
+            );
+
         Ok(EnclaveContext {
             spid,
             identity_key,
@@ -239,6 +241,7 @@ impl EnclaveContext {
             ias_url,
             sub_key,
             server_address,
+            client_config,
         })
     }
 }
