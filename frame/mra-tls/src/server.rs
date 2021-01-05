@@ -1,7 +1,7 @@
 use crate::config::ServerConfig;
 use crate::connection::Connection;
 use crate::error::Result;
-use log::error;
+use tracing::error;
 use std::string::String;
 use std::sync::Arc;
 use std::vec::Vec;

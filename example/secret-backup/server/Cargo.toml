@@ -12,7 +12,8 @@ serde_json = "1.0"
 thiserror = "1.0"
 rustls = "0.19.0"
 sgx_types = "1.1.1"
-env_logger = "0.7"
+tracing = "0.1"
+tracing-subscriber = "0.2"
 frame-host = { path = "../../../frame/host" }
 key-vault-host = { path = "../../../modules/key-vault-host" }
 secret-backup-api = { path = "../api" }

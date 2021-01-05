@@ -4,7 +4,6 @@ use http_req::{
     response::{Headers, Response},
     uri::Uri,
 };
-use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{io::Write, prelude::v1::*, str, string::String, time::SystemTime};
@@ -84,8 +83,6 @@ pub struct AttestedReport {
 
 impl AttestedReport {
     pub(crate) fn from_response(body: Vec<u8>, resp: Response) -> Result<Self> {
-        debug!("RA response: {:?}", resp);
-
         let headers = resp.headers();
         let sig = headers
             .get("X-IASReport-Signature")

@@ -925,11 +925,11 @@ async fn test_integration_eth_burn() {
 }
 
 lazy_static! {
-    pub static ref ENV_LOGGER_INIT: () = env_logger::init();
+    pub static ref ENV_LOGGER_INIT: () = tracing_subscriber::fmt::init();
 }
 
 pub fn set_env_vars() {
-    *ENV_LOGGER_INIT;
+    lazy_static::initialize(&ENV_LOGGER_INIT);
     env::set_var("RUST_LOG", "DEBUG");
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");

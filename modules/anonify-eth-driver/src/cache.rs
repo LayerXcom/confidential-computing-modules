@@ -1,5 +1,5 @@
 use crate::eth::event_watcher::PayloadType;
-use log::{info, warn};
+use tracing::{info, warn};
 use parking_lot::RwLock;
 use std::collections::hash_map::{Entry, HashMap};
 use std::sync::Arc;

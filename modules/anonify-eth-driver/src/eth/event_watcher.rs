@@ -16,9 +16,9 @@ use frame_common::{
     traits::*,
 };
 use frame_host::engine::HostEngine;
-use log::{debug, error, info, warn};
 use sgx_types::sgx_enclave_id_t;
 use std::{cmp::Ordering, path::Path};
+use tracing::{debug, error, info, warn};
 use web3::types::{Address, Log};
 
 /// Components needed to watch events

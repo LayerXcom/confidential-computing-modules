@@ -26,7 +26,7 @@ impl Server {
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
-    env_logger::init();
+    tracing_subscriber::fmt::init();
     let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
     let num_workers: usize = env::var("NUM_WORKERS")
         .unwrap_or_else(|_| "16".to_string())
