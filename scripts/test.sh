@@ -18,8 +18,10 @@ cargo build
 # Testings
 
 echo "Integration testing..."
-export ENCLAVE_PKG_NAME=erc20
 cd ${ANONIFY_ROOT}/scripts
+export ENCLAVE_PKG_NAME=secret_backup
+make DEBUG=1 ENCLAVE_DIR=example/secret-backup/enclave
+export ENCLAVE_PKG_NAME=erc20
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 export BACKUP=disable
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
@@ -37,11 +39,6 @@ sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture
 sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture
-
-export ENCLAVE_PKG_NAME=secret_backup
-unset BACKUP
-cd ${ANONIFY_ROOT}/scripts
-make DEBUG=1 ENCLAVE_DIR=example/secret-backup/enclave
 
 cd ${ANONIFY_ROOT}/example/secret-backup/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocapture
