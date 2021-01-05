@@ -26,6 +26,10 @@ make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 export BACKUP=disable
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
+#
+# Integration Tests
+#
+
 # Module Tests
 
 cd ${ANONIFY_ROOT}/tests/integration
@@ -47,10 +51,13 @@ RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --n
 # Secret Backup Application Tests
 
 export ENCLAVE_PKG_NAME=secret_backup
+unset BACKUP
 cd ${ANONIFY_ROOT}/example/secret-backup/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocapture
 
+#
 # Unit Tests
+#
 
 echo "Unit testing..."
 export ENCLAVE_PKG_NAME=units
