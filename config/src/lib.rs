@@ -26,7 +26,7 @@ pub mod constants;
 
 pub use crate::constants::*;
 use crate::local_anyhow::Result;
-use crate::localstd::{env, ffi::OsStr, path::PathBuf, string::String, untrusted::fs, vec::Vec};
+use crate::localstd::{env, ffi::OsStr, path::PathBuf, string::String, vec::Vec};
 
 #[cfg(feature = "sgx")]
 lazy_static! {
@@ -47,8 +47,8 @@ lazy_static! {
         };
 
         measurement_file_path.push(measurement_file);
-        let content =
-            fs::read_to_string(&measurement_file_path).expect("Cannot read measurement file");
+        let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
+            .expect("Cannot read measurement file");
         EnclaveMeasurement::new_from_dumpfile(content)
     };
     pub static ref ENCLAVE_MEASUREMENT_KEY_VAULT: EnclaveMeasurement = {
@@ -56,8 +56,8 @@ lazy_static! {
         let mut measurement_file_path = PJ_ROOT_DIR.clone();
         let measurement_file = format!(".anonify/{}_measurement.txt", pkg_name);
         measurement_file_path.push(measurement_file);
-        let content =
-            fs::read_to_string(&measurement_file_path).expect("Cannot read measurement file");
+        let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
+            .expect("Cannot read measurement file");
         EnclaveMeasurement::new_from_dumpfile(content)
     };
     pub static ref ENCLAVE_MEASUREMENT_ERC20: EnclaveMeasurement = {
@@ -72,12 +72,12 @@ lazy_static! {
         };
 
         measurement_file_path.push(measurement_file);
-        let content =
-            fs::read_to_string(&measurement_file_path).expect("Cannot read measurement file");
+        let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
+            .expect("Cannot read measurement file");
         EnclaveMeasurement::new_from_dumpfile(content)
     };
-    pub static ref SPID: String = { env::var("SPID").expect("SPID is not set") };
-    pub static ref SUB_KEY: String = { env::var("SUB_KEY").expect("SUB_KEY is not set") };
+    pub static ref SPID: String = env::var("SPID").expect("SPID is not set");
+    pub static ref SUB_KEY: String = env::var("SUB_KEY").expect("SUB_KEY is not set");
 }
 
 lazy_static! {

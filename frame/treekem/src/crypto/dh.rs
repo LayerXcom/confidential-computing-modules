@@ -2,10 +2,10 @@ use super::{hkdf, hmac::HmacKey};
 use crate::local_anyhow::{anyhow, Result};
 use crate::local_secp256k1::{PublicKey, SecretKey};
 use crate::localstd::vec::Vec;
-use codec::{Decode, Encode, Error, Input};
-use frame_common::crypto::rand_assign;
 #[cfg(feature = "std")]
 use crate::serde::{Deserialize, Serialize};
+use codec::{Decode, Encode, Error, Input};
+use frame_common::crypto::rand_assign;
 
 const SECRET_KEY_SIZE: usize = 32;
 const COMPRESSED_PUBLIC_KEY_SIZE: usize = 33;

@@ -8,9 +8,9 @@ use crate::local_ring::aead::{
     Aad, BoundKey, Nonce, NonceSequence, OpeningKey, SealingKey, UnboundKey, AES_256_GCM,
 };
 use crate::localstd::vec::Vec;
-use codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use crate::serde::{Deserialize, Serialize};
+use codec::{Decode, Encode};
 
 #[cfg(feature = "std")]
 #[derive(Debug, Clone, Encode, Decode, Default, Serialize, Deserialize)]

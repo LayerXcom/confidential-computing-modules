@@ -12,6 +12,10 @@ extern crate core as localstd;
 
 #[cfg(feature = "std")]
 use anyhow as local_anyhow;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
+use serde_sgx as serde;
+#[cfg(feature = "std")]
+use serde_std as serde;
 #[cfg(feature = "sgx")]
 use sgx_anyhow as local_anyhow;
 #[cfg(feature = "sgx")]
@@ -34,10 +38,6 @@ use std_rand as local_rand;
 use std_rand_core as local_rand_core;
 #[cfg(feature = "std")]
 use std_ring as local_ring;
-#[cfg(all(feature = "sgx", not(feature = "std")))]
-use serde_sgx as serde;
-#[cfg(feature = "std")]
-use serde_std as serde;
 
 #[cfg(feature = "sgx")]
 mod application;
@@ -52,9 +52,9 @@ mod ratchet_tree;
 mod tree_math;
 // #[cfg(debug_assertions)]
 #[cfg(feature = "sgx")]
-mod test_funcs;
-#[cfg(feature = "sgx")]
 mod store_path_secrets;
+#[cfg(feature = "sgx")]
+mod test_funcs;
 
 #[cfg(feature = "sgx")]
 pub use crate::application::AppKeyChain;
