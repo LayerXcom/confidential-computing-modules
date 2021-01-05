@@ -44,7 +44,7 @@ impl<S: rustls::Session> Connection<S> {
     }
 
     pub fn serve_json<H: RequestHandler>(&mut self, handler: H) -> Result<()> {
-        let req = self.read_frame().unwrap();
+        let req = self.read_frame()?;
         if req.len() == 0 {
             dbg!("request's length is 0");
             return Ok(());

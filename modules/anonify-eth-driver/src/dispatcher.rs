@@ -6,7 +6,7 @@ use crate::{
     utils::*,
     workflow::host_input,
 };
-use frame_common::{crypto::ExportPathSecret, state_types::UpdatedState, traits::*};
+use frame_common::{state_types::UpdatedState, traits::*};
 use frame_host::engine::HostEngine;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use parking_lot::RwLock;
@@ -72,7 +72,7 @@ where
         abi_path: P,
         bin_path: P,
         confirmations: usize,
-    ) -> Result<(String, ExportPathSecret)> {
+    ) -> Result<String> {
         let mut inner = self.inner.write();
         let eid = inner.deployer.get_enclave_id();
         let input = host_input::JoinGroup::new(deploy_user, gas);
@@ -82,12 +82,7 @@ where
             .deployer
             .deploy(host_output.clone(), abi_path, bin_path, confirmations)
             .await?;
-        let export_path_secret = host_output
-            .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?
-            .export_path_secret();
-
-        Ok((contract_addr, export_path_secret))
+        Ok(contract_addr)
     }
 
     pub async fn join_group<P: AsRef<Path> + Copy>(
@@ -96,7 +91,7 @@ where
         gas: u64,
         contract_addr: &str,
         abi_path: P,
-    ) -> Result<(H256, ExportPathSecret)> {
+    ) -> Result<H256> {
         self.send_report_handshake(signer, gas, contract_addr, abi_path, "joinGroup")
             .await
     }
@@ -131,7 +126,7 @@ where
         gas: u64,
         contract_addr: &str,
         abi_path: P,
-    ) -> Result<(H256, ExportPathSecret)> {
+    ) -> Result<H256> {
         self.send_report_handshake(signer, gas, contract_addr, abi_path, "updateMrenclave")
             .await
     }
@@ -143,7 +138,7 @@ where
         contract_addr: &str,
         abi_path: P,
         method: &str,
-    ) -> Result<(H256, ExportPathSecret)> {
+    ) -> Result<H256> {
         self.set_contract_addr(contract_addr, abi_path)?;
 
         let inner = self.inner.read();
@@ -158,12 +153,7 @@ where
             .send_report_handshake(host_output.clone(), method)
             .await?;
 
-        let export_path_secret = host_output
-            .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?
-            .export_path_secret();
-
-        Ok((tx_hash, export_path_secret))
+        Ok(tx_hash)
     }
 
     pub async fn send_command<C, AP>(
@@ -213,7 +203,7 @@ where
         ST::decode_vec(vec).map_err(Into::into)
     }
 
-    pub async fn handshake(&self, signer: Address, gas: u64) -> Result<(H256, ExportPathSecret)> {
+    pub async fn handshake(&self, signer: Address, gas: u64) -> Result<H256> {
         let inner = self.inner.read();
         let input = host_input::Handshake::new(signer, gas);
         let eid = inner.deployer.get_enclave_id();
@@ -225,12 +215,8 @@ where
             .ok_or(HostError::AddressNotSet)?
             .handshake(host_output.clone())
             .await?;
-        let export_path_secret = host_output
-            .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?
-            .export_path_secret();
 
-        Ok((tx_hash, export_path_secret))
+        Ok(tx_hash)
     }
 
     pub async fn fetch_events<St>(&self) -> Result<Option<Vec<UpdatedState<St>>>>

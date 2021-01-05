@@ -12,6 +12,10 @@ extern crate core as localstd;
 
 #[cfg(feature = "std")]
 use anyhow as local_anyhow;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
+use serde_sgx as serde;
+#[cfg(feature = "std")]
+use serde_std as serde;
 #[cfg(feature = "sgx")]
 use sgx_anyhow as local_anyhow;
 #[cfg(feature = "sgx")]
@@ -48,6 +52,8 @@ mod ratchet_tree;
 mod tree_math;
 // #[cfg(debug_assertions)]
 #[cfg(feature = "sgx")]
+mod store_path_secrets;
+#[cfg(feature = "sgx")]
 mod test_funcs;
 
 #[cfg(feature = "sgx")]
@@ -64,6 +70,8 @@ pub use crate::group_state::GroupState;
 pub use crate::handshake::Handshake;
 #[cfg(feature = "sgx")]
 pub use crate::test_funcs::init_path_secret_kvs;
+#[cfg(feature = "sgx")]
+pub use store_path_secrets::StorePathSecrets;
 
 #[cfg(feature = "sgx")]
 #[cfg(debug_assertions)]

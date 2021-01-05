@@ -2,10 +2,16 @@ use crate::application::AppKeyChain;
 use crate::crypto::{hkdf, hmac::HmacKey, secrets::*};
 use crate::handshake::{AccessKey, Handshake, HandshakeParams, PathSecretSource};
 use crate::local_anyhow::{anyhow, ensure, Result};
+use crate::localstd::{env, vec::Vec};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
+use crate::store_path_secrets::StorePathSecrets;
 use crate::tree_math;
+use anonify_config::{
+    DEFAULT_LOCAL_PATH_SECRETS_DIR, ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT,
+};
 use codec::Encode;
-use frame_common::crypto::ExportPathSecret;
+use frame_common::crypto::{BackupCmd, BackupRequest, ExportPathSecret, RecoverPathSecret};
+use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 
 #[derive(Clone, Debug, Encode)]
 pub struct GroupState {
@@ -46,16 +52,16 @@ impl Handshake for GroupState {
         Ok((handshake, path_secret))
     }
 
-    fn process_handshake<F>(
+    fn process_handshake(
         &mut self,
         handshake: &HandshakeParams,
         source: &PathSecretSource,
         max_roster_idx: u32,
-        req_path_secret_fn: F,
-    ) -> Result<AppKeyChain>
-    where
-        F: FnOnce(&[u8]) -> Result<ExportPathSecret>,
-    {
+        spid: &str,
+        ias_url: &str,
+        sub_key: &str,
+        server_address: &str,
+    ) -> Result<AppKeyChain> {
         ensure!(
             handshake.prior_epoch() == self.epoch,
             "Handshake's prior epoch ({:?}) isn't the current epoch ({:?}).",
@@ -87,18 +93,34 @@ impl Handshake for GroupState {
             if sender_tree_idx == my_tree_idx {
                 let path_secret = match source {
                     PathSecretSource::Local => {
-                        let imported_path_secret = req_path_secret_fn(handshake.hash().as_ref())?;
-                        ensure!(
-                            imported_path_secret.epoch() == self.epoch,
-                            "imported_path_secret's epoch isn't the current epoch"
-                        );
-                        PathSecret::try_from_importing(imported_path_secret)?
+                        match recover_path_secret_from_local(handshake.hash().as_ref(), self.epoch)
+                        {
+                            Ok(ps) => ps,
+                            Err(_) => recover_path_secret_from_key_vault(
+                                handshake.hash().as_ref(),
+                                handshake.roster_idx(),
+                                spid,
+                                ias_url,
+                                sub_key,
+                                server_address,
+                            )?,
+                        }
                     }
                     PathSecretSource::LocalTestKV(_) => {
                         Self::request_new_path_secret(source, self.my_roster_idx, self.epoch)?
                     }
                     _ => unimplemented!(),
                 };
+
+                let eps = path_secret
+                    .clone()
+                    .try_into_exporting(self.epoch, handshake.hash().as_ref())?;
+                let store_path_secrets = StorePathSecrets::new(format!(
+                    "{}",
+                    env::var("LOCAL_PATH_SECRETS_DIR")
+                        .unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
+                ));
+                store_path_secrets.save_to_local_filesystem(&eps)?;
 
                 let (node_pubkey, node_privkey, _, _) = path_secret.clone().derive_node_values()?;
 
@@ -123,6 +145,41 @@ impl Handshake for GroupState {
 
         Ok(app_key_chain)
     }
+}
+
+fn recover_path_secret_from_local(id: &[u8], epoch: u32) -> Result<PathSecret> {
+    let store_path_secrets = StorePathSecrets::new(
+        env::var("LOCAL_PATH_SECRETS_DIR").unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
+    );
+    let imported_path_secret = store_path_secrets.load_from_local_filesystem(id)?;
+    if imported_path_secret.epoch() != epoch {
+        return Err(anyhow!(
+            "imported_path_secret's epoch isn't the current epoch"
+        ));
+    }
+    PathSecret::try_from_importing(imported_path_secret)
+}
+
+fn recover_path_secret_from_key_vault(
+    id: &[u8],
+    roster_idx: u32,
+    spid: &str,
+    ias_url: &str,
+    sub_key: &str,
+    server_address: &str,
+) -> Result<PathSecret> {
+    let recover_path_secret = RecoverPathSecret::new(roster_idx, id.to_vec());
+
+    let attested_tls_config =
+        AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
+
+    let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
+        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT_KEY_VAULT);
+    let mut mra_tls_client = Client::new(server_address, &client_config)?;
+    let backup_request = BackupRequest::new(BackupCmd::RECOVER, recover_path_secret);
+    let resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
+    let inner_ps: Vec<u8> = serde_json::from_value(resp)?;
+    Ok(PathSecret::from(inner_ps))
 }
 
 impl GroupState {

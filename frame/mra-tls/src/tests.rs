@@ -45,7 +45,7 @@ fn test_request_response() {
     let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)
         .unwrap()
         .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT);
-    let mut client = Client::new(&*SERVER_ADDRESS, client_config).unwrap();
+    let mut client = Client::new(&*SERVER_ADDRESS, &client_config).unwrap();
     let msg = r#"{
         "message": "Hello test_request_response"
     }"#;

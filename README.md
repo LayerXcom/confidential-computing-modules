@@ -15,6 +15,11 @@ Building an Anonify contract.
 $ solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
 ```
 
+Copy environment variables and set your `SPID` and `SUB_KEY`.
+```
+$ cp .env.sample .env
+```
+
 ## Running anonify nodes
 
 ### docker

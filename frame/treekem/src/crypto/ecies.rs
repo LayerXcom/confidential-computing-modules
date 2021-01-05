@@ -8,12 +8,13 @@ use crate::local_ring::aead::{
     Aad, BoundKey, Nonce, NonceSequence, OpeningKey, SealingKey, UnboundKey, AES_256_GCM,
 };
 use crate::localstd::vec::Vec;
-use codec::{Decode, Encode};
 #[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
+use crate::serde::{Deserialize, Serialize};
+use codec::{Decode, Encode};
 
 #[cfg(feature = "std")]
 #[derive(Debug, Clone, Encode, Decode, Default, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub struct EciesCiphertext {
     ephemeral_public_key: DhPubKey,
     ciphertext: Vec<u8>,

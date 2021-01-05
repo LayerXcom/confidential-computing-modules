@@ -2,9 +2,7 @@
 extern crate lazy_static;
 use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
 use codec::{Decode, Encode};
-use erc20_state_transition::{
-    approve, burn, construct, mint, transfer, transfer_from, CallName, MemName, CIPHERTEXT_SIZE,
-};
+use erc20_state_transition::{approve, burn, construct, mint, transfer, transfer_from, CallName};
 use ethabi::Contract as ContractABI;
 use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
@@ -77,7 +75,7 @@ async fn test_integration_eth_construct() {
         .get_account(ACCOUNT_INDEX, PASSWORD)
         .await
         .unwrap();
-    let (contract_addr, export_path_secret) = dispatcher
+    let contract_addr = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
@@ -92,7 +90,6 @@ async fn test_integration_eth_construct() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
-    println!("export_path_secret: {:?}", export_path_secret);
 
     // Get handshake from contract
     dispatcher.fetch_events::<U64>().await.unwrap();
@@ -152,7 +149,7 @@ async fn test_auto_notification() {
         .get_account(ACCOUNT_INDEX, PASSWORD)
         .await
         .unwrap();
-    let (contract_addr, _) = dispatcher
+    let contract_addr = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
@@ -248,7 +245,7 @@ async fn test_integration_eth_transfer() {
         .get_account(ACCOUNT_INDEX, PASSWORD)
         .await
         .unwrap();
-    let (contract_addr, _) = dispatcher
+    let contract_addr = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
@@ -357,7 +354,7 @@ async fn test_key_rotation() {
         .get_account(ACCOUNT_INDEX, PASSWORD)
         .await
         .unwrap();
-    let (contract_addr, _) = dispatcher
+    let contract_addr = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
@@ -377,7 +374,7 @@ async fn test_key_rotation() {
     dispatcher.fetch_events::<U64>().await.unwrap();
 
     // Send handshake
-    let (receipt, _) = dispatcher
+    let receipt = dispatcher
         .handshake(deployer_addr.clone(), gas)
         .await
         .unwrap();
@@ -439,7 +436,7 @@ async fn test_integration_eth_approve() {
         .get_account(ACCOUNT_INDEX, PASSWORD)
         .await
         .unwrap();
-    let (contract_addr, _) = dispatcher
+    let contract_addr = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
@@ -544,7 +541,7 @@ async fn test_integration_eth_transfer_from() {
         .get_account(ACCOUNT_INDEX, PASSWORD)
         .await
         .unwrap();
-    let (contract_addr, _) = dispatcher
+    let contract_addr = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
@@ -739,7 +736,7 @@ async fn test_integration_eth_mint() {
         .get_account(ACCOUNT_INDEX, PASSWORD)
         .await
         .unwrap();
-    let (contract_addr, _) = dispatcher
+    let contract_addr = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
@@ -833,7 +830,7 @@ async fn test_integration_eth_burn() {
         .get_account(ACCOUNT_INDEX, PASSWORD)
         .await
         .unwrap();
-    let (contract_addr, _) = dispatcher
+    let contract_addr = dispatcher
         .deploy(
             deployer_addr.clone(),
             gas,
@@ -936,13 +933,12 @@ pub fn set_env_vars() {
     env::set_var("RUST_LOG", "DEBUG");
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
-    env::set_var("SPID", "2C149BFC94A61D306A96211AED155BE9");
     env::set_var(
         "IAS_URL",
         "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report",
     );
-    env::set_var("SUB_KEY", "77e2533de0624df28dc3be3a5b9e50d9");
     env::set_var("MRA_TLS_SERVER_ADDRESS", "localhost:12345");
     env::set_var("AUDITOR_ENDPOINT", "test");
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
+    env::set_var("BACKUP", "disable");
 }

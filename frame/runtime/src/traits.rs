@@ -32,14 +32,13 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
 }
 
 pub trait ContextOps:
-    StateOps + GroupKeyGetter + NotificationOps + IdentityKeyOps + QuoteGetter
+    StateOps + GroupKeyGetter + NotificationOps + IdentityKeyOps + QuoteGetter + BackupOps
 {
     fn mrenclave_ver(&self) -> usize;
     fn ias_url(&self) -> &str;
     fn sub_key(&self) -> &str;
     fn spid(&self) -> &str;
     fn server_address(&self) -> &str;
-    fn is_backup_enabled(&self) -> bool;
 }
 
 /// A getter of state stored in enclave memory.
@@ -94,7 +93,14 @@ pub trait IdentityKeyOps {
 pub trait GroupKeyOps: Sized {
     fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret)>;
 
-    fn process_handshake(&mut self, handshake: &HandshakeParams) -> Result<()>;
+    fn process_handshake(
+        &mut self,
+        handshake: &HandshakeParams,
+        spid: &str,
+        ias_url: &str,
+        sub_key: &str,
+        server_address: &str,
+    ) -> Result<()>;
 
     fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext>;
 
@@ -117,4 +123,14 @@ pub trait QuoteGetter: Sized {
     /// QUOTE will be sent to Attestation Service to verify SGX's status.
     /// For more information: https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf
     fn quote(&self) -> Result<EncodedQuote>;
+}
+
+pub trait BackupOps {
+    fn backup_path_secret_to_key_vault(
+        &self,
+        path_secret: Vec<u8>,
+        epoch: u32,
+        roster_idx: u32,
+        id: Vec<u8>,
+    ) -> Result<()>;
 }

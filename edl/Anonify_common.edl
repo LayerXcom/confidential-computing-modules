@@ -26,13 +26,6 @@ enclave {
     };
 
     untrusted {
-        UntrustedStatus ocall_import_path_secret(
-            [out, size=ps_len] uint8_t* path_secret,
-            size_t ps_len,
-            [in, size=id_len] const uint8_t* id,
-            size_t id_len
-        );
-
         UntrustedStatus ocall_sgx_init_quote(
             [out] sgx_target_info_t *ret_ti,
             [out] sgx_epid_group_id_t *ret_gid

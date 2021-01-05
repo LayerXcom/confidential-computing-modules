@@ -1,6 +1,6 @@
 use actix_web::{web, App, HttpServer};
 use anonify_eth_driver::{eth::*, traits::*, Dispatcher, EventCache};
-use frame_host::{EnclaveDir, StorePathSecrets};
+use frame_host::EnclaveDir;
 use handlers::*;
 use sgx_types::sgx_enclave_id_t;
 use std::{env, io, sync::Arc};
@@ -20,7 +20,6 @@ pub struct Server<D: Deployer, S: Sender, W: Watcher> {
     pub account_index: usize,
     pub password: String,
     pub sync_time: u64,
-    pub store_path_secrets: StorePathSecrets,
     pub dispatcher: Dispatcher<D, S, W>,
 }
 
@@ -48,7 +47,6 @@ where
             .parse()
             .expect("Failed to parse SYNC_BC_TIME to u64");
 
-        let store_path_secrets = StorePathSecrets::new();
         let cache = EventCache::default();
         let dispatcher = Dispatcher::<D, S, W>::new(eid, &eth_url, cache).unwrap();
 
@@ -61,7 +59,6 @@ where
             account_index,
             sync_time,
             password,
-            store_path_secrets,
             dispatcher,
         }
     }

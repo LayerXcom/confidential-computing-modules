@@ -1,7 +1,7 @@
 use crate::localstd::vec::Vec;
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
-    crypto::{Ciphertext, ExportHandshake, ExportPathSecret},
+    crypto::{Ciphertext, ExportHandshake},
     state_types::{StateType, UpdatedState},
     traits::AccessPolicy,
     EcallInput, EcallOutput,
@@ -295,7 +295,6 @@ pub mod output {
         handshake: Vec<u8>,
         mrenclave_ver: u32,
         roster_idx: u32,
-        export_path_secret: ExportPathSecret,
     }
 
     impl EcallOutput for ReturnJoinGroup {}
@@ -307,7 +306,6 @@ pub mod output {
             handshake: Vec<u8>,
             mrenclave_ver: usize,
             roster_idx: u32,
-            export_path_secret: ExportPathSecret,
         ) -> Self {
             ReturnJoinGroup {
                 report,
@@ -315,7 +313,6 @@ pub mod output {
                 handshake,
                 mrenclave_ver: mrenclave_ver as u32,
                 roster_idx,
-                export_path_secret,
             }
         }
 
@@ -333,14 +330,6 @@ pub mod output {
 
         pub fn mrenclave_ver(&self) -> u32 {
             self.mrenclave_ver
-        }
-
-        pub fn export_path_secret_as_ref(&self) -> &ExportPathSecret {
-            &self.export_path_secret
-        }
-
-        pub fn export_path_secret(self) -> ExportPathSecret {
-            self.export_path_secret
         }
 
         pub fn roster_idx(&self) -> u32 {
@@ -392,7 +381,6 @@ pub mod output {
 
     #[derive(Debug, Clone)]
     pub struct ReturnHandshake {
-        export_path_secret: ExportPathSecret,
         enclave_sig: secp256k1::Signature,
         recovery_id: secp256k1::RecoveryId,
         roster_idx: u32,
@@ -404,7 +392,6 @@ pub mod output {
     impl Encode for ReturnHandshake {
         fn encode(&self) -> Vec<u8> {
             let mut acc = vec![];
-            acc.extend_from_slice(&self.export_path_secret_as_ref().encode());
             acc.extend_from_slice(&self.encode_enclave_sig());
             acc.push(self.encode_recovery_id());
             acc.extend_from_slice(&self.roster_idx().encode());
@@ -416,8 +403,6 @@ pub mod output {
 
     impl Decode for ReturnHandshake {
         fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
-            let export_path_secret = ExportPathSecret::decode(value)?;
-
             let mut enclave_sig_buf = [0u8; 64];
             value.read(&mut enclave_sig_buf)?;
             let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
@@ -430,7 +415,6 @@ pub mod output {
             let handshake = ExportHandshake::decode(value)?;
 
             Ok(ReturnHandshake {
-                export_path_secret,
                 enclave_sig,
                 recovery_id,
                 roster_idx,
@@ -442,14 +426,12 @@ pub mod output {
     impl ReturnHandshake {
         pub fn new(
             handshake: ExportHandshake,
-            export_path_secret: ExportPathSecret,
             enclave_sig: secp256k1::Signature,
             recovery_id: secp256k1::RecoveryId,
             roster_idx: u32,
         ) -> Self {
             ReturnHandshake {
                 handshake,
-                export_path_secret,
                 enclave_sig,
                 recovery_id,
                 roster_idx,
@@ -462,14 +444,6 @@ pub mod output {
 
         pub fn encode_handshake(&self) -> Vec<u8> {
             self.handshake.encode()
-        }
-
-        pub fn export_path_secret_as_ref(&self) -> &ExportPathSecret {
-            &self.export_path_secret
-        }
-
-        pub fn export_path_secret(self) -> ExportPathSecret {
-            self.export_path_secret
         }
 
         pub fn encode_recovery_id(&self) -> u8 {
