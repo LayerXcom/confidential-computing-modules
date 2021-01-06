@@ -152,7 +152,7 @@ async fn test_backup_path_secret() {
 #[actix_rt::test]
 async fn test_lost_path_secret() {
     set_env_vars();
-    set_env_vars();
+    set_server_env_vars();
     clear_path_secrets();
 
     let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
