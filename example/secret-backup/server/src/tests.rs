@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{handlers::*, Server};
 use actix_web::{test, web, App};
 use anonify_config::PJ_ROOT_DIR;
 use anonify_eth_driver::{
@@ -10,6 +10,7 @@ use codec::{Decode, Encode};
 use erc20_state_transition::{construct, CallName};
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;
+use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use once_cell::sync::Lazy;
@@ -18,6 +19,7 @@ use std::{
     fs::{self, File},
     io::BufReader,
     str::FromStr,
+    sync::Arc,
 };
 use web3::{
     contract::{Contract, Options},
