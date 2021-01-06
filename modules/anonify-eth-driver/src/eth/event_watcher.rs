@@ -17,7 +17,7 @@ use frame_common::{
 };
 use frame_host::engine::HostEngine;
 use sgx_types::sgx_enclave_id_t;
-use std::{cmp::Ordering, path::Path};
+use std::{cmp::Ordering, fmt, path::Path};
 use tracing::{debug, error, info, warn};
 use web3::types::{Address, Log};
 
@@ -71,6 +71,15 @@ struct EthLog(Log);
 impl From<Log> for EthLog {
     fn from(log: Log) -> Self {
         EthLog(log)
+    }
+}
+
+impl fmt::LowerHex for EthLog {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "EthLog { address: {:?}, data: {:?}, block_hash: {:?}, block_number: {:?},
+        transaction_hash: {:?}, transaction_index: {:?}, log_index: {:?}, transaction_log_index: {:?}, log_type: {:?}, removed: {:?} }",
+        
+        hex::encode(&self.0))
     }
 }
 
