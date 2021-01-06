@@ -54,6 +54,8 @@ export ENCLAVE_PKG_NAME=secret_backup
 unset BACKUP
 cd ${ANONIFY_ROOT}/example/secret-backup/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocapture
+sleep 1
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_lost_path_secret -- --nocapture
 
 #
 # Unit Tests
