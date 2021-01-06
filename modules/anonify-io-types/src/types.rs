@@ -1,4 +1,4 @@
-use crate::localstd::vec::Vec;
+use crate::localstd::{vec::Vec, fmt};
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
@@ -337,12 +337,25 @@ pub mod output {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Clone)]
     pub struct ReturnRegisterReport {
         report: Vec<u8>,
         report_sig: Vec<u8>,
         mrenclave_ver: u32,
         roster_idx: u32,
+    }
+
+    impl fmt::Debug for ReturnRegisterReport {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(
+                f,
+                "ReturnRegisterReport {{ report: 0x{}, report_sig: 0x{}, mrenclave_ver: {:?}, roster_idx: {:?} }}",
+                hex::encode(&self.report),
+                hex::encode(&self.report_sig),
+                self.mrenclave_ver,
+                self.roster_idx
+            )
+        }
     }
 
     impl EcallOutput for ReturnRegisterReport {}

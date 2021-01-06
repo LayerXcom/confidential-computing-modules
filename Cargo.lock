@@ -410,6 +410,7 @@ version = "0.1.0"
 dependencies = [
  "frame-common",
  "frame-treekem",
+ "hex",
  "libsecp256k1 0.2.2",
  "parity-scale-codec",
  "sgx_tstd",
