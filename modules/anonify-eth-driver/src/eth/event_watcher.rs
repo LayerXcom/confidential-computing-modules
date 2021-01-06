@@ -65,7 +65,7 @@ impl Watcher for EventWatcher {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct EthLog(Log);
 
 impl From<Log> for EthLog {
@@ -74,12 +74,26 @@ impl From<Log> for EthLog {
     }
 }
 
+impl fmt::Debug for EthLog {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:#x}", self)
+    }
+}
+
 impl fmt::LowerHex for EthLog {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "EthLog { address: {:?}, data: {:?}, block_hash: {:?}, block_number: {:?},
-        transaction_hash: {:?}, transaction_index: {:?}, log_index: {:?}, transaction_log_index: {:?}, log_type: {:?}, removed: {:?} }",
-        
-        hex::encode(&self.0))
+        write!(f, "EthLog {{ address: {:?}, data: {:?}, block_hash: {:?}, block_number: {:?},
+        transaction_hash: {:?}, transaction_index: {:?}, log_index: {:?}, transaction_log_index: {:?}, log_type: {:?}, removed: {:?} }}",
+        self.0.address,
+        hex::encode(&self.0.data.0),
+        self.0.block_hash,
+        self.0.block_number,
+        self.0.transaction_hash,
+        self.0.transaction_index,
+        self.0.log_index,
+        self.0.transaction_log_index,
+        self.0.log_type,
+        self.0.removed)
     }
 }
 

@@ -1,8 +1,8 @@
 use crate::eth::event_watcher::PayloadType;
-use tracing::{info, warn};
 use parking_lot::RwLock;
 use std::collections::hash_map::{Entry, HashMap};
 use std::sync::Arc;
+use tracing::{info, warn};
 use web3::types::Address as ContractAddr;
 
 type BlockNum = u64;
