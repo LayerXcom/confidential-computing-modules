@@ -4,6 +4,7 @@ use crate::localstd::{
     io::{self, Read, Write},
     string::String,
     vec::Vec,
+    fmt,
 };
 use crate::serde::{de::DeserializeOwned, Deserialize, Serialize};
 use crate::traits::{AccessPolicy, Hash256, IntoVec, StateDecoder};
@@ -428,12 +429,25 @@ impl<T: IntoVec> IntoVec for &[T] {
 }
 
 /// Application message broadcasted to other members.
-#[derive(Clone, Debug, Encode, Decode, Eq, Ord, Hash, Default)]
+#[derive(Clone, Encode, Decode, Eq, Ord, Hash, Default)]
 pub struct Ciphertext {
     generation: u32,
     epoch: u32,
     roster_idx: u32,
     encrypted_state: Vec<u8>,
+}
+
+impl fmt::Debug for Ciphertext {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Ciphertext {{ generation: {:?}, epoch: {:?}, roster_idx: {:?}, encrypted_state: 0x{} }}",
+            self.generation(),
+            self.epoch(),
+            self.roster_idx(),
+            hex::encode(&self.encrypted_state)
+        )
+    }
 }
 
 impl PartialEq for Ciphertext {

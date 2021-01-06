@@ -82,8 +82,7 @@ impl fmt::Debug for EthLog {
 
 impl fmt::LowerHex for EthLog {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "EthLog {{ address: {:?}, data: {:?}, block_hash: {:?}, block_number: {:?},
-        transaction_hash: {:?}, transaction_index: {:?}, log_index: {:?}, transaction_log_index: {:?}, log_type: {:?}, removed: {:?} }}",
+        write!(f, "EthLog {{ address: {:?}, data: 0x{}, block_hash: {:?}, block_number: {:?}, transaction_hash: {:?}, transaction_index: {:?}, log_index: {:?}, transaction_log_index: {:?}, log_type: {:?}, removed: {:?} }}",
         self.0.address,
         hex::encode(&self.0.data.0),
         self.0.block_hash,
@@ -131,7 +130,7 @@ impl Web3Logs {
         let mut latest_blc_num = 0;
 
         for (i, log) in self.logs.iter().enumerate() {
-            info!("Inserting enclave log: {:?}, \nindex: {:?}", log, i);
+            info!("Fetched eth event log: {:?}, \npolling event index: {:?}", log, i);
             if contract_addr != log.0.address {
                 error!("Each log should have same contract address.: index: {}", i);
                 continue;

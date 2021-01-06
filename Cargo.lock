@@ -1594,6 +1594,7 @@ dependencies = [
  "anyhow 1.0.34",
  "base64 0.11.0",
  "ed25519-dalek",
+ "hex",
  "lazy_static",
  "parity-scale-codec",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
