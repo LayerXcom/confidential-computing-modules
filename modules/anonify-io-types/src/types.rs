@@ -288,13 +288,27 @@ pub mod output {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Clone)]
     pub struct ReturnJoinGroup {
         report: Vec<u8>,
         report_sig: Vec<u8>,
         handshake: Vec<u8>,
         mrenclave_ver: u32,
         roster_idx: u32,
+    }
+
+    impl fmt::Debug for ReturnJoinGroup {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(
+                f,
+                "ReturnJoinGroup {{ report: 0x{}, report_sig: 0x{}, handshake: 0x{}, mrenclave_ver: {:?}, roster_idx: {:?} }}",
+                hex::encode(&self.report()),
+                hex::encode(&self.report_sig()),
+                hex::encode(&self.handshake),
+                self.mrenclave_ver,
+                self.roster_idx
+            )
+        }
     }
 
     impl EcallOutput for ReturnJoinGroup {}
