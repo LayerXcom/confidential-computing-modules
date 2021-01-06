@@ -174,6 +174,108 @@ async fn test_backup_path_secret() {
     assert_eq!(my_state, total_supply);
 }
 
+#[actix_rt::test]
+async fn test_lost_path_secret() {
+    set_env_vars();
+    clear_path_secrets();
+
+    // Setup backup server
+    let server_enclave = EnclaveDir::new()
+        .init_enclave(true)
+        .expect("Failed to initialize server enclave.");
+    let server_eid = server_enclave.geteid();
+    let server = Arc::new(Server::new(server_eid));
+
+    let mut app = test::init_service(
+        App::new()
+            .data(server.clone())
+            .route("/api/v1/start", web::post().to(handle_start))
+            .route("/api/v1/stop", web::post().to(handle_stop)),
+    )
+    .await;
+
+    let req = test::TestRequest::post().uri("/api/v1/start").to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let start_response: secret_backup_api::start::post::Response = test::read_body_json(resp).await;
+    assert_eq!(start_response.status, "success".to_string());
+
+    std::thread::sleep(std::time::Duration::from_secs(1));
+
+    // Setup ERC20 application
+    env::set_var("ENCLAVE_PKG_NAME", "erc20");
+    let app_enclave = EnclaveDir::new()
+        .init_enclave(true)
+        .expect("Failed to initialize client enclave.");
+    let app_eid = app_enclave.geteid();
+    let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+
+    let gas = 5_000_000;
+    let cache = EventCache::default();
+    let dispatcher =
+        EthDispatcher::<EthDeployer, EthSender, EventWatcher>::new(app_eid, ETH_URL, cache)
+            .unwrap();
+
+    // Ensure not to exist path_secret directory on both local and remote
+    let path_secrets_dir = PJ_ROOT_DIR
+        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"));
+
+    assert!(!path_secrets_dir.exists());
+
+    // Deploy
+    let deployer_addr = dispatcher
+        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .await
+        .unwrap();
+    let contract_addr = dispatcher
+        .deploy(
+            deployer_addr.clone(),
+            gas,
+            ABI_PATH,
+            BIN_PATH,
+            CONFIRMATIONS,
+        )
+        .await
+        .unwrap();
+    dispatcher
+        .set_contract_addr(&contract_addr, ABI_PATH)
+        .unwrap();
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("deployed contract account_id: {}", contract_addr);
+
+    let id = get_path_secret_id().unwrap();
+    // local
+    assert!(path_secrets_dir.join(&id).exists());
+    // remote
+    assert!(path_secrets_dir
+        .join(env::var("MY_ROSTER_IDX").unwrap().as_str())
+        .join(&id)
+        .exists());
+
+    // delete path_secret both local and remote
+    clear_path_secrets();
+
+    // Get handshake from contract
+    dispatcher.fetch_events::<U64>().await.unwrap();
+
+    // Init state
+    let total_supply = U64::from_raw(100);
+    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let init_cmd = construct { total_supply };
+    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+    let should_err = dispatcher
+        .send_command::<CallName, _>(
+            my_access_policy.clone(),
+            encrypted_command,
+            "construct",
+            deployer_addr.clone(),
+            gas,
+        )
+        .await;
+
+    assert!(should_err.is_err());
+}
+
 pub static SUBSCRIBER_INIT: Lazy<()> = Lazy::new(|| {
     tracing_subscriber::fmt::init();
 });
