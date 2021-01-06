@@ -65,16 +65,26 @@ impl Watcher for EventWatcher {
     }
 }
 
+#[derive(Debug, Clone)]
+struct EthLog(Log);
+
+impl From<Log> for EthLog {
+    fn from(log: Log) -> Self {
+        EthLog(log)
+    }
+}
+
 /// Event fetched logs from smart contracts.
 #[derive(Debug)]
 pub struct Web3Logs {
-    logs: Vec<Log>,
+    logs: Vec<EthLog>,
     cache: EventCache,
     events: EthEvent,
 }
 
 impl Web3Logs {
     pub fn new(logs: Vec<Log>, cache: EventCache, events: EthEvent) -> Self {
+        let logs: Vec<EthLog> = logs.into_iter().map(Into::into).collect();
         Web3Logs {
             logs,
             cache,
@@ -94,12 +104,12 @@ impl Web3Logs {
             };
         }
 
-        let contract_addr = self.logs[0].address;
+        let contract_addr = self.logs[0].0.address;
         let mut latest_blc_num = 0;
 
         for (i, log) in self.logs.iter().enumerate() {
             info!("Inserting enclave log: {:?}, \nindex: {:?}", log, i);
-            if contract_addr != log.address {
+            if contract_addr != log.0.address {
                 error!("Each log should have same contract address.: index: {}", i);
                 continue;
             }
@@ -113,7 +123,7 @@ impl Web3Logs {
             };
 
             // Processing conditions by ciphertext or handshake event
-            if log.topics[0] == self.events.ciphertext_signature() {
+            if log.0.topics[0] == self.events.ciphertext_signature() {
                 let res = match Ciphertext::decode(&mut &data[..]) {
                     Ok(c) => c,
                     Err(e) => {
@@ -128,7 +138,7 @@ impl Web3Logs {
                     Payload::Ciphertext(res),
                 );
                 payloads.push(payload);
-            } else if log.topics[0] == self.events.handshake_signature() {
+            } else if log.0.topics[0] == self.events.handshake_signature() {
                 let res = match ExportHandshake::decode(&mut &data[..]) {
                     Ok(c) => c,
                     Err(e) => {
@@ -144,12 +154,12 @@ impl Web3Logs {
                 );
                 payloads.push(payload);
             } else {
-                error!("Invalid topics: {:?}", log.topics[0]);
+                error!("Invalid topics: {:?}", log.0.topics[0]);
                 continue;
             }
 
             // Update latest block number
-            if let Some(blc_num) = log.block_number {
+            if let Some(blc_num) = log.0.block_number {
                 let blc_num = blc_num.as_u64();
                 if latest_blc_num < blc_num {
                     latest_blc_num = blc_num
@@ -217,7 +227,7 @@ struct InnerEnclaveLog {
     contract_addr: [u8; 20],
     latest_blc_num: u64,
     payloads: Vec<PayloadType>,
-    logs: Vec<Log>,
+    logs: Vec<EthLog>,
 }
 
 impl InnerEnclaveLog {
@@ -486,8 +496,8 @@ impl EthEvent {
     }
 }
 
-fn decode_data(log: &Log) -> Result<Vec<u8>> {
-    let tokens = decode(&[ParamType::Bytes], &log.data.0)?;
+fn decode_data(log: &EthLog) -> Result<Vec<u8>> {
+    let tokens = decode(&[ParamType::Bytes], &log.0.data.0)?;
     let mut res = vec![];
 
     for token in tokens {
