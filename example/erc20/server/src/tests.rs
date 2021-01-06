@@ -8,6 +8,7 @@ use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use integration_tests::set_env_vars;
 use std::{fs::File, io::BufReader, path::Path, str::FromStr, time};
+use tracing_actix_web::TracingLogger;
 use web3::{
     contract::{Contract, Options},
     transports::Http,
@@ -275,6 +276,7 @@ async fn test_node_recovery() {
     let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
         App::new()
+            .wrap(TracingLogger)
             .data(server.clone())
             .route(
                 "/api/v1/deploy",

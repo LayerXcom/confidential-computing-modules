@@ -17,6 +17,7 @@ actix-rt = "1.1"
 failure = "0.1"
 tracing = "0.1"
 tracing-subscriber = "0.2"
+tracing-actix-web = "0.2"
 hex = "0.4"
 anyhow = "1.0"
 web3 = { git = "https://github.com/tomusdrw/rust-web3", rev = "d7393708e257f7ef4ad354917889a8001cf2927c" }
