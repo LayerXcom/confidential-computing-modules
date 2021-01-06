@@ -1,10 +1,10 @@
 use crate::config::ServerConfig;
 use crate::connection::Connection;
 use crate::error::Result;
-use tracing::error;
 use std::string::String;
 use std::sync::Arc;
 use std::vec::Vec;
+use tracing::error;
 
 pub trait RequestHandler {
     fn handle_json(&self, msg: &[u8]) -> anyhow::Result<Vec<u8>>;

@@ -5,8 +5,8 @@ use anonify_eth_driver::traits::*;
 use anyhow::anyhow;
 use erc20_state_transition::CallName;
 use frame_runtime::primitives::{Approved, U64};
-use tracing::{debug, error, info};
 use std::{sync::Arc, time};
+use tracing::{debug, error, info};
 
 const DEFAULT_GAS: u64 = 5_000_000;
 
