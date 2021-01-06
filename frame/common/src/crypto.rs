@@ -563,11 +563,23 @@ impl ExportPathSecret {
 }
 
 /// Handshake parameter for exporting outside enclave
-#[derive(Clone, Debug, Encode, Decode, Hash, Default)]
+#[derive(Clone, Encode, Decode, Hash, Default)]
 pub struct ExportHandshake {
     prior_epoch: u32,
     roster_idx: u32,
     handshake: Vec<u8>,
+}
+
+impl fmt::Debug for ExportHandshake {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "ExportHandshake {{ prior_epoch: {:?}, roster_idx: {:?}, handshake: 0x{} }}",
+            self.prior_epoch,
+            self.roster_idx,
+            hex::encode(&self.handshake)
+        )
+    }
 }
 
 impl ExportHandshake {
