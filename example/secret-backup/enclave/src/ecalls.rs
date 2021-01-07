@@ -12,7 +12,7 @@ struct DummyType;
 
 register_ecall!(
     &*ENCLAVE_CONTEXT,
-    MAX_MEM_SIZE,
+    0,
     DummyType,
     KeyVaultEnclaveContext,
     (START_SERVER_CMD, ServerStarter),
