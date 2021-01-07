@@ -38,7 +38,7 @@ RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 # ERC20 Application Tests
 
 cd ${ANONIFY_ROOT}/example/erc20/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test -j 1 -- --nocapture
 # RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_deploy_post -- --nocapture
 # sleep 1
 # RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture
