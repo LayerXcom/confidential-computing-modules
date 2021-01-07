@@ -1,12 +1,18 @@
-// anonify-enclave
+// treekem
 pub const MY_ROSTER_IDX: usize = 0;
 pub const MAX_ROSTER_IDX: usize = 2;
 pub const UNTIL_ROSTER_IDX: usize = 10;
 pub const UNTIL_EPOCH: usize = 30;
-pub const IAS_URL: &str = "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report";
-pub const MRA_TLS_SERVER_ADDRESS: &str = "localhost:12345";
 
-// backup
+// endpoints
+pub const IAS_URL: &str = "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report";
+pub const KEY_VAULT_ENDPOINT: &str = "localhost:12345";
+
+// versions
+pub const ANONIFY_MRENCLAVE_VERSION: usize = 0;
+pub const KEY_VAULT_MRENCLAVE_VERSION: usize = 0;
+
+// filepath
 pub const DEFAULT_LOCAL_PATH_SECRETS_DIR: &str = ".anonify/pathsecrets";
 
 // commands

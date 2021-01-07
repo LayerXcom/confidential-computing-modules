@@ -2,7 +2,7 @@ use crate::{
     error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
-use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT};
+use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT, ANONIFY_MRENCLAVE_VERSION};
 use anonify_io_types::*;
 use anyhow::anyhow;
 use frame_common::{
@@ -26,15 +26,13 @@ use std::{
     vec::Vec,
 };
 
-pub const MRENCLAVE_VERSION: usize = 0;
-
 /// spid: Service provider ID for the ISV.
 #[derive(Clone)]
-pub struct EnclaveContext {
+pub struct AnonifyEnclaveContext {
     version: usize,
     ias_url: String,
     sub_key: String,
-    server_address: String,
+    key_vault_endpoint: String,
     spid: String,
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB,
@@ -43,7 +41,7 @@ pub struct EnclaveContext {
     client_config: ClientConfig,
 }
 
-impl ContextOps for EnclaveContext {
+impl ConfigGetter for AnonifyEnclaveContext {
     fn mrenclave_ver(&self) -> usize {
         self.version
     }
@@ -56,8 +54,8 @@ impl ContextOps for EnclaveContext {
         &self.sub_key
     }
 
-    fn server_address(&self) -> &str {
-        &self.server_address
+    fn key_vault_endpoint(&self) -> &str {
+        &self.key_vault_endpoint
     }
 
     fn spid(&self) -> &str {
@@ -65,7 +63,7 @@ impl ContextOps for EnclaveContext {
     }
 }
 
-impl StateOps for EnclaveContext {
+impl StateOps for AnonifyEnclaveContext {
     type S = StateType;
 
     fn values(self) -> Vec<Self::S> {
@@ -114,7 +112,7 @@ impl StateOps for EnclaveContext {
     }
 }
 
-impl GroupKeyGetter for EnclaveContext {
+impl GroupKeyGetter for AnonifyEnclaveContext {
     type GK = GroupKey;
 
     fn read_group_key(&self) -> SgxRwLockReadGuard<Self::GK> {
@@ -126,7 +124,7 @@ impl GroupKeyGetter for EnclaveContext {
     }
 }
 
-impl NotificationOps for EnclaveContext {
+impl NotificationOps for AnonifyEnclaveContext {
     fn set_notification(&self, account_id: AccountId) -> bool {
         self.notifier.register(account_id)
     }
@@ -136,7 +134,7 @@ impl NotificationOps for EnclaveContext {
     }
 }
 
-impl IdentityKeyOps for EnclaveContext {
+impl IdentityKeyOps for AnonifyEnclaveContext {
     /// Generate a signature using enclave's identity key.
     /// This signature is used to verify enclave's program dependencies and
     /// should be verified in the public available place such as smart contract on blockchain.
@@ -153,7 +151,7 @@ impl IdentityKeyOps for EnclaveContext {
     }
 }
 
-impl QuoteGetter for EnclaveContext {
+impl QuoteGetter for AnonifyEnclaveContext {
     fn quote(&self) -> anyhow::Result<EncodedQuote> {
         let report_data = &self.identity_key.report_data()?;
         QuoteTarget::new()?
@@ -163,7 +161,7 @@ impl QuoteGetter for EnclaveContext {
     }
 }
 
-impl BackupOps for EnclaveContext {
+impl BackupOps for AnonifyEnclaveContext {
     fn backup_path_secret_to_key_vault(
         &self,
         path_secret: Vec<u8>,
@@ -173,7 +171,8 @@ impl BackupOps for EnclaveContext {
     ) -> anyhow::Result<()> {
         let backup_path_secret = BackupPathSecret::new(path_secret, epoch, roster_idx, id);
 
-        let mut mra_tls_client = Client::new(self.server_address(), &self.client_config).unwrap();
+        let mut mra_tls_client =
+            Client::new(self.key_vault_endpoint(), &self.client_config).unwrap();
         let backup_request = BackupRequest::new(BackupCmd::STORE, backup_path_secret);
         let _resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
 
@@ -182,8 +181,8 @@ impl BackupOps for EnclaveContext {
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
-impl EnclaveContext {
-    pub fn new(spid: String) -> Result<Self> {
+impl AnonifyEnclaveContext {
+    pub fn new() -> Result<Self> {
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
 
@@ -199,6 +198,7 @@ impl EnclaveContext {
             Ok(url) => PathSecretSource::Remote(url),
         };
 
+        let spid = env::var("SPID").expect("SPID is not set");
         let my_roster_idx: usize = env::var("MY_ROSTER_IDX")
             .expect("MY_ROSTER_IDX is not set")
             .parse()
@@ -215,9 +215,10 @@ impl EnclaveContext {
         )?));
         let notifier = Notifier::new();
 
-        let ias_url = env::var("IAS_URL")?;
-        let sub_key = env::var("SUB_KEY")?;
-        let server_address = env::var("MRA_TLS_SERVER_ADDRESS")?;
+        let ias_url = env::var("IAS_URL").expect("IAS_URL is not set");
+        let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
+        let key_vault_endpoint =
+            env::var("KEY_VAULT_ENDPOINT").expect("KEY_VAULT_ENDPOINT is not set");
 
         let attested_tls_config =
             AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
@@ -227,16 +228,16 @@ impl EnclaveContext {
                 *ENCLAVE_MEASUREMENT_KEY_VAULT,
             );
 
-        Ok(EnclaveContext {
+        Ok(AnonifyEnclaveContext {
             spid,
             identity_key,
             db,
             notifier,
             group_key,
-            version: MRENCLAVE_VERSION,
+            version: ANONIFY_MRENCLAVE_VERSION,
             ias_url,
             sub_key,
-            server_address,
+            key_vault_endpoint,
             client_config,
         })
     }

@@ -19,6 +19,7 @@ cargo build
 
 echo "Integration testing..."
 cd ${ANONIFY_ROOT}/scripts
+unset BACKUP
 export ENCLAVE_PKG_NAME=secret_backup
 make DEBUG=1 ENCLAVE_DIR=example/secret-backup/enclave
 export ENCLAVE_PKG_NAME=erc20

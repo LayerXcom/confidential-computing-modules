@@ -4,7 +4,7 @@ use crate::handshake::{Handshake, PathSecretKVS, PathSecretSource};
 use crate::local_anyhow::anyhow;
 use crate::local_rand;
 use crate::local_rand_core::SeedableRng;
-use anonify_config::{IAS_URL, MRA_TLS_SERVER_ADDRESS, SPID, SUB_KEY};
+use anonify_config::{IAS_URL, KEY_VAULT_ENDPOINT, SPID, SUB_KEY};
 
 pub fn init_path_secret_kvs(kvs: &mut PathSecretKVS, until_roster_idx: usize, until_epoch: usize) {
     let mut csprng = local_rand::rngs::StdRng::seed_from_u64(1);
@@ -32,7 +32,7 @@ pub fn do_handshake_three_party(
             &*SPID,
             IAS_URL,
             &*SUB_KEY,
-            MRA_TLS_SERVER_ADDRESS,
+            KEY_VAULT_ENDPOINT,
         )
         .unwrap();
     let others_keychain1 = others_group1
@@ -43,7 +43,7 @@ pub fn do_handshake_three_party(
             &*SPID,
             IAS_URL,
             &*SUB_KEY,
-            MRA_TLS_SERVER_ADDRESS,
+            KEY_VAULT_ENDPOINT,
         )
         .unwrap();
     let others_keychain2 = others_group2
@@ -54,7 +54,7 @@ pub fn do_handshake_three_party(
             &*SPID,
             IAS_URL,
             &*SUB_KEY,
-            MRA_TLS_SERVER_ADDRESS,
+            KEY_VAULT_ENDPOINT,
         )
         .unwrap();
 

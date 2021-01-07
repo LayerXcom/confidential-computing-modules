@@ -21,7 +21,6 @@ members = [
     "example/secret-backup/server",
     "example/secret-backup/api",
     "example/secret-backup/enclave",
-    "example/secret-backup/state-transition",
     "config",
     "wallet",
     "tests/integration",
