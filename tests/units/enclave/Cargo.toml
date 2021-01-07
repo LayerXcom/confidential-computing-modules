@@ -16,5 +16,6 @@ sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.g
 test-utils = { path = "../../utils" }
 
 [features]
-default = ["backup-enable"]
+default = ["backup-enable", "runtime_enabled"]
 backup-enable = ["anonify-enclave/backup-enable"]
+runtime_enabled = []
