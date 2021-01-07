@@ -12,7 +12,6 @@ use key_vault_enclave::context::KeyVaultEnclaveContext;
 
 lazy_static! {
     pub static ref ENCLAVE_CONTEXT: KeyVaultEnclaveContext = {
-        let spid = std::env::var("SPID").expect("SPID is not set");
-        KeyVaultEnclaveContext::new(spid).expect("Failed to instantiate ENCLAVE_CONTEXT")
+        KeyVaultEnclaveContext::new().expect("Failed to instantiate ENCLAVE_CONTEXT")
     };
 }
