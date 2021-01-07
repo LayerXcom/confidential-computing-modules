@@ -30,7 +30,7 @@ pub const MRENCLAVE_VERSION: usize = 0;
 
 /// spid: Service provider ID for the ISV.
 #[derive(Clone)]
-pub struct EnclaveContext {
+pub struct AnonifyEnclaveContext {
     version: usize,
     ias_url: String,
     sub_key: String,
@@ -43,7 +43,7 @@ pub struct EnclaveContext {
     client_config: ClientConfig,
 }
 
-impl ConfigGetter for EnclaveContext {
+impl ConfigGetter for AnonifyEnclaveContext {
     fn mrenclave_ver(&self) -> usize {
         self.version
     }
@@ -65,7 +65,7 @@ impl ConfigGetter for EnclaveContext {
     }
 }
 
-impl StateOps for EnclaveContext {
+impl StateOps for AnonifyEnclaveContext {
     type S = StateType;
 
     fn values(self) -> Vec<Self::S> {
@@ -114,7 +114,7 @@ impl StateOps for EnclaveContext {
     }
 }
 
-impl GroupKeyGetter for EnclaveContext {
+impl GroupKeyGetter for AnonifyEnclaveContext {
     type GK = GroupKey;
 
     fn read_group_key(&self) -> SgxRwLockReadGuard<Self::GK> {
@@ -126,7 +126,7 @@ impl GroupKeyGetter for EnclaveContext {
     }
 }
 
-impl NotificationOps for EnclaveContext {
+impl NotificationOps for AnonifyEnclaveContext {
     fn set_notification(&self, account_id: AccountId) -> bool {
         self.notifier.register(account_id)
     }
@@ -136,7 +136,7 @@ impl NotificationOps for EnclaveContext {
     }
 }
 
-impl IdentityKeyOps for EnclaveContext {
+impl IdentityKeyOps for AnonifyEnclaveContext {
     /// Generate a signature using enclave's identity key.
     /// This signature is used to verify enclave's program dependencies and
     /// should be verified in the public available place such as smart contract on blockchain.
@@ -153,7 +153,7 @@ impl IdentityKeyOps for EnclaveContext {
     }
 }
 
-impl QuoteGetter for EnclaveContext {
+impl QuoteGetter for AnonifyEnclaveContext {
     fn quote(&self) -> anyhow::Result<EncodedQuote> {
         let report_data = &self.identity_key.report_data()?;
         QuoteTarget::new()?
@@ -163,7 +163,7 @@ impl QuoteGetter for EnclaveContext {
     }
 }
 
-impl BackupOps for EnclaveContext {
+impl BackupOps for AnonifyEnclaveContext {
     fn backup_path_secret_to_key_vault(
         &self,
         path_secret: Vec<u8>,
@@ -182,7 +182,7 @@ impl BackupOps for EnclaveContext {
 }
 
 // TODO: Consider SGX_ERROR_BUSY.
-impl EnclaveContext {
+impl AnonifyEnclaveContext {
     pub fn new(spid: String) -> Result<Self> {
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
@@ -227,7 +227,7 @@ impl EnclaveContext {
                 *ENCLAVE_MEASUREMENT_KEY_VAULT,
             );
 
-        Ok(EnclaveContext {
+        Ok(AnonifyEnclaveContext {
             spid,
             identity_key,
             db,

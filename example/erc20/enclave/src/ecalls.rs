@@ -1,6 +1,6 @@
 use crate::ENCLAVE_CONTEXT;
 use anonify_config::constants::*;
-use anonify_enclave::{context::EnclaveContext, workflow::*};
+use anonify_enclave::{context::AnonifyEnclaveContext, workflow::*};
 use anyhow::anyhow;
 use codec::{Decode, Encode};
 use erc20_state_transition::{Runtime, MAX_MEM_SIZE};
@@ -15,8 +15,8 @@ register_ecall!(
     enable_runtime = true,
     &*ENCLAVE_CONTEXT,
     MAX_MEM_SIZE,
-    Runtime<EnclaveContext>,
-    EnclaveContext,
+    Runtime<AnonifyEnclaveContext>,
+    AnonifyEnclaveContext,
     (ENCRYPT_COMMAND_CMD, MsgSender<Ed25519ChallengeResponse>),
     // Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
     (INSERT_CIPHERTEXT_CMD, MsgReceiver),

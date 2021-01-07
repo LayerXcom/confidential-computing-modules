@@ -27,8 +27,8 @@ macro_rules! register_ecall {
             EE::eval_policy(&input)?;
             let res = match $enable_runtime {
                 true => EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?,
-                false => EE::handle_without_runtime::<$ctx_ops>($ctx),
-                _ => return anyhow!("Please set enable_runtime to `true` or `false`");
+                false => EE::handle_without_runtime::<$ctx_ops>($ctx)?,
+                // _ => return anyhow!("Please set enable_runtime to `true` or `false`");
             };
             Ok(res.encode())
         }

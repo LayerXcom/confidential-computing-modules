@@ -1,4 +1,4 @@
-use crate::localstd::{vec::Vec, fmt};
+use crate::localstd::{fmt, vec::Vec};
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
