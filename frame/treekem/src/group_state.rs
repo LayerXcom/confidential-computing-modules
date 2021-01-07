@@ -60,7 +60,7 @@ impl Handshake for GroupState {
         spid: &str,
         ias_url: &str,
         sub_key: &str,
-        server_address: &str,
+        key_vault_endpoint: &str,
     ) -> Result<AppKeyChain> {
         ensure!(
             handshake.prior_epoch() == self.epoch,
@@ -102,7 +102,7 @@ impl Handshake for GroupState {
                                 spid,
                                 ias_url,
                                 sub_key,
-                                server_address,
+                                key_vault_endpoint,
                             )?,
                         }
                     }
@@ -166,7 +166,7 @@ fn recover_path_secret_from_key_vault(
     spid: &str,
     ias_url: &str,
     sub_key: &str,
-    server_address: &str,
+    key_vault_endpoint: &str,
 ) -> Result<PathSecret> {
     let recover_path_secret = RecoverPathSecret::new(roster_idx, id.to_vec());
 
@@ -175,7 +175,7 @@ fn recover_path_secret_from_key_vault(
 
     let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
         .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT_KEY_VAULT);
-    let mut mra_tls_client = Client::new(server_address, &client_config)?;
+    let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
     let backup_request = BackupRequest::new(BackupCmd::RECOVER, recover_path_secret);
     let resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
     let inner_ps: Vec<u8> = serde_json::from_value(resp)?;

@@ -17,4 +17,4 @@ export BACKUP=disable
 export SPID=
 export IAS_URL=https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report
 export SUB_KEY=
-export MRA_TLS_SERVER_ADDRESS=localhost:12345
+export KEY_VAULT_ENDPOINT=localhost:12345

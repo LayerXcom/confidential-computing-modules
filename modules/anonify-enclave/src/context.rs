@@ -34,7 +34,7 @@ pub struct AnonifyEnclaveContext {
     version: usize,
     ias_url: String,
     sub_key: String,
-    server_address: String,
+    key_vault_endpoint: String,
     spid: String,
     identity_key: EnclaveIdentityKey,
     db: EnclaveDB,
@@ -56,8 +56,8 @@ impl ConfigGetter for AnonifyEnclaveContext {
         &self.sub_key
     }
 
-    fn server_address(&self) -> &str {
-        &self.server_address
+    fn key_vault_endpoint(&self) -> &str {
+        &self.key_vault_endpoint
     }
 
     fn spid(&self) -> &str {
@@ -173,7 +173,7 @@ impl BackupOps for AnonifyEnclaveContext {
     ) -> anyhow::Result<()> {
         let backup_path_secret = BackupPathSecret::new(path_secret, epoch, roster_idx, id);
 
-        let mut mra_tls_client = Client::new(self.server_address(), &self.client_config).unwrap();
+        let mut mra_tls_client = Client::new(self.key_vault_endpoint(), &self.client_config).unwrap();
         let backup_request = BackupRequest::new(BackupCmd::STORE, backup_path_secret);
         let _resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
 
@@ -217,7 +217,7 @@ impl AnonifyEnclaveContext {
 
         let ias_url = env::var("IAS_URL")?;
         let sub_key = env::var("SUB_KEY")?;
-        let server_address = env::var("MRA_TLS_SERVER_ADDRESS")?;
+        let key_vault_endpoint = env::var("KEY_VAULT_ENDPOINT")?;
 
         let attested_tls_config =
             AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
@@ -236,7 +236,7 @@ impl AnonifyEnclaveContext {
             version: MRENCLAVE_VERSION,
             ias_url,
             sub_key,
-            server_address,
+            key_vault_endpoint,
             client_config,
         })
     }

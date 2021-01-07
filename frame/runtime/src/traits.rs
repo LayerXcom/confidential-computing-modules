@@ -61,7 +61,7 @@ pub trait ConfigGetter {
     fn ias_url(&self) -> &str;
     fn sub_key(&self) -> &str;
     fn spid(&self) -> &str;
-    fn server_address(&self) -> &str;
+    fn key_vault_endpoint(&self) -> &str;
 }
 
 /// A getter of state stored in enclave memory.
@@ -122,7 +122,7 @@ pub trait GroupKeyOps: Sized {
         spid: &str,
         ias_url: &str,
         sub_key: &str,
-        server_address: &str,
+        key_vault_url: &str,
     ) -> Result<()>;
 
     fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext>;

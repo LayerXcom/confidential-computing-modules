@@ -6,7 +6,7 @@ pub struct KeyVaultEnclaveContext {
     version: usize,
     ias_url: String,
     sub_key: String,
-    server_address: String,
+    key_vault_endpoint: String,
     spid: String,
 }
 
@@ -23,8 +23,8 @@ impl ConfigGetter for KeyVaultEnclaveContext {
         &self.sub_key
     }
 
-    fn server_address(&self) -> &str {
-        &self.server_address
+    fn key_vault_endpoint(&self) -> &str {
+        &self.key_vault_endpoint
     }
 
     fn spid(&self) -> &str {
