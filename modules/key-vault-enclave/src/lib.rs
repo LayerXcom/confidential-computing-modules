@@ -5,7 +5,6 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
-mod error;
 mod handlers;
 pub mod server;
 pub mod context;

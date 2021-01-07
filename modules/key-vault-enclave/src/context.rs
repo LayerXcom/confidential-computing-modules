@@ -1,7 +1,6 @@
-use anyhow::Result;
-use frame_runtime::traits::*;
-use std::{string::String, env};
 use anonify_config::KEY_VAULT_MRENCLAVE_VERSION;
+use frame_runtime::traits::*;
+use std::{env, string::String};
 
 pub struct KeyVaultEnclaveContext {
     version: usize,
