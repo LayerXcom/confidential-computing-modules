@@ -151,6 +151,18 @@ pub mod output {
         recovery_id: secp256k1::RecoveryId,
     }
 
+    impl Default for Command {
+        fn default() -> Self {
+            let enclave_sig = secp256k1::Signature::parse(&[0u8; 64]);
+            let recovery_id = secp256k1::RecoveryId::parse(0).unwrap();
+            Self {
+                enclave_sig,
+                ciphertext: Ciphertext::default(),
+                recovery_id,
+            }
+        }
+    }
+
     impl EcallOutput for Command {}
 
     impl Encode for Command {
