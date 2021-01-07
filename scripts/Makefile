@@ -144,7 +144,7 @@ $(Rust_Enclave_Name): $(Rust_Enclave_Files)
 	@echo "Rust_Enclave_Name <= $(PWD)"
 	@cd $(ANONIFY_ROOT_DIR)/$(ENCLAVE_DIR) && RUST_LOG=debug cargo build $(CARGO_FLAGS) $(RustEnclave_Feature_Flags)
 	mkdir -p $(CUSTOM_LIBRARY_PATH)
-	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/lib$(Rust_Enclave_Lib_Name)enclave.a
+	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/lib$(Rust_Enclave_Lib_Name)enclave.a $(CUSTOM_LIBRARY_PATH)/lib$(Rust_Enclave_Lib_Name)enclave.a
 
 $(RustEnclave_Name): $(Rust_Enclave_Name) $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
 	@$(CXX) $(ANONIFY_BUILD_DIR)/$(T_O_FILE) -o $@ $(RustEnclave_Link_Flags)

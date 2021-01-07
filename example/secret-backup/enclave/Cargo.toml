@@ -5,7 +5,7 @@ authors = ["cipepser <respepic@gmail.com>"]
 edition = "2018"
 
 [lib]
-name = "keyvaultenclave"
+name = "secret_backupenclave"
 crate-type = ["staticlib"]
 
 [dependencies]
