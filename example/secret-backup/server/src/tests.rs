@@ -13,6 +13,7 @@ use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use once_cell::sync::Lazy;
+use sgx_types::sgx_destroy_enclave;
 use std::{
     env,
     fs::{self, File},
@@ -172,6 +173,13 @@ async fn test_backup_path_secret() {
         .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of")
         .unwrap();
     assert_eq!(my_state, total_supply);
+
+    unsafe {
+        sgx_destroy_enclave(server_eid);
+    }
+    unsafe {
+        sgx_destroy_enclave(app_eid);
+    }
 }
 
 #[actix_rt::test]
@@ -274,6 +282,13 @@ async fn test_lost_path_secret() {
         .await;
 
     assert!(should_err.is_err());
+
+    unsafe {
+        sgx_destroy_enclave(server_eid);
+    }
+    unsafe {
+        sgx_destroy_enclave(app_eid);
+    }
 }
 
 pub static SUBSCRIBER_INIT: Lazy<()> = Lazy::new(|| {
