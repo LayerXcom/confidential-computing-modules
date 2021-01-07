@@ -11,7 +11,6 @@ use std::{ptr, vec::Vec};
 struct DummyType;
 
 register_ecall!(
-    enable_runtime = false,
     &*ENCLAVE_CONTEXT,
     MAX_MEM_SIZE,
     DummyType,

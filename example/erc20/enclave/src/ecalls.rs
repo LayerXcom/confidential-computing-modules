@@ -12,7 +12,6 @@ use frame_enclave::{register_ecall, EnclaveEngine};
 use std::{ptr, vec::Vec};
 
 register_ecall!(
-    enable_runtime = true,
     &*ENCLAVE_CONTEXT,
     MAX_MEM_SIZE,
     Runtime<AnonifyEnclaveContext>,
