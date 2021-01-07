@@ -8,6 +8,7 @@ extern crate sgx_tstd as std;
 mod error;
 mod handlers;
 pub mod server;
+pub mod context;
 
 pub mod workflow {
     pub use crate::server::{ServerStarter, ServerStopper};

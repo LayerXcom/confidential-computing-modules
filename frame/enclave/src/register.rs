@@ -26,10 +26,10 @@ macro_rules! register_ecall {
                 .map_err(|e| anyhow!("{:?}", e))?;
             EE::eval_policy(&input)?;
             let res = match $enable_runtime {
-                true => EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?,
-                false => EE::handle_without_runtime::<$ctx_ops>($ctx)?,
-                // _ => return anyhow!("Please set enable_runtime to `true` or `false`");
-            };
+                // true => EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem),
+                true => Err(anyhow!("")),
+                false => EE::handle_without_runtime::<$ctx_ops>($ctx),
+            }?;
             Ok(res.encode())
         }
 

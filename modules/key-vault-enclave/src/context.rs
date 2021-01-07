@@ -1,6 +1,6 @@
 use std::string::String;
 use frame_runtime::traits::*;
-use crate::error::Result;
+use anyhow::Result;
 
 pub struct KeyVaultEnclaveContext {
     version: usize,

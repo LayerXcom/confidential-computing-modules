@@ -31,6 +31,7 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     fn execute(self, runtime: Self::R, my_account_id: AccountId) -> Result<ReturnState<Self::S>>;
 }
 
+/// A trait for all context operations
 pub trait ContextOps:
     StateOps
     + GroupKeyGetter
