@@ -5,7 +5,7 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [lib]
-name = "erc20enclave"
+name = "anonifyenclave"
 crate-type = ["staticlib"]
 
 [dependencies]

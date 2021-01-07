@@ -1,4 +1,4 @@
-#![crate_name = "secret_backupenclave"]
+#![crate_name = "anonifyenclave"]
 #![crate_type = "staticlib"]
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 #[macro_use]
