@@ -5,9 +5,9 @@ use codec::{Decode, Encode};
 use frame_common::traits::{EcallInput, EcallOutput};
 use frame_enclave::{register_ecall, EnclaveEngine};
 use key_vault_enclave::{workflow::*, context::KeyVaultEnclaveContext};
-use secret_backup_state_transition::{Runtime, MAX_MEM_SIZE};
 use std::{ptr, vec::Vec};
 
+#[allow(dead_code)]
 struct DummyType;
 
 register_ecall!(

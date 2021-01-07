@@ -3944,7 +3944,6 @@ dependencies = [
  "key-vault-enclave",
  "lazy_static",
  "parity-scale-codec",
- "secret-backup-state-transition",
  "sgx_tstd",
 ]
 
@@ -3974,15 +3973,6 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "web3",
-]
-
-[[package]]
-name = "secret-backup-state-transition"
-version = "0.1.0"
-dependencies = [
- "frame-runtime",
- "parity-scale-codec",
- "sgx_tstd",
 ]
 
 [[package]]
