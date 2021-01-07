@@ -1,4 +1,4 @@
-#![crate_name = "anonifyenclave"]
+#![crate_name = "keyvaultenclave"]
 #![crate_type = "staticlib"]
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 #[macro_use]
@@ -12,6 +12,6 @@ use key_vault_enclave::context::KeyVaultEnclaveContext;
 
 lazy_static! {
     pub static ref ENCLAVE_CONTEXT: KeyVaultEnclaveContext = {
-        KeyVaultEnclaveContext::new().expect("Failed to instantiate ENCLAVE_CONTEXT")
+        KeyVaultEnclaveContext::new()
     };
 }

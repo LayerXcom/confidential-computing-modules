@@ -2494,7 +2494,6 @@ dependencies = [
  "sgx_tse",
  "sgx_tstd",
  "sgx_types 1.1.3",
- "thiserror 1.0.9",
 ]
 
 [[package]]
@@ -3936,7 +3935,6 @@ name = "secret-backup-enclave"
 version = "0.1.0"
 dependencies = [
  "anonify-config",
- "anonify-enclave",
  "anyhow 1.0.28",
  "frame-common",
  "frame-enclave",
