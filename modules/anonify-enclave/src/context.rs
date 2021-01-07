@@ -43,7 +43,7 @@ pub struct EnclaveContext {
     client_config: ClientConfig,
 }
 
-impl ContextOps for EnclaveContext {
+impl ConfigGetter for EnclaveContext {
     fn mrenclave_ver(&self) -> usize {
         self.version
     }

@@ -17,14 +17,9 @@ impl EnclaveEngine for ServerStarter {
     type EI = input::CallServerStarter;
     type EO = output::Empty;
 
-    fn handle<R, C>(
-        _ecall_input: Self::EI,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> anyhow::Result<Self::EO>
+    fn handle_without_runtime<C>(enclave_context: &C) -> anyhow::Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
-        C: ContextOps<S = StateType> + Clone,
+        C: ConfigGetter,
     {
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();

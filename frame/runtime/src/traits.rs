@@ -31,14 +31,18 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     fn execute(self, runtime: Self::R, my_account_id: AccountId) -> Result<ReturnState<Self::S>>;
 }
 
-pub trait ContextOps:
-    StateOps + GroupKeyGetter + NotificationOps + IdentityKeyOps + QuoteGetter + BackupOps
-{
+/// A trait for getting config parameters from EnclaveContext
+pub trait ConfigGetter {
     fn mrenclave_ver(&self) -> usize;
     fn ias_url(&self) -> &str;
     fn sub_key(&self) -> &str;
     fn spid(&self) -> &str;
     fn server_address(&self) -> &str;
+}
+
+pub trait ContextOps:
+    StateOps + GroupKeyGetter + NotificationOps + IdentityKeyOps + QuoteGetter + BackupOps
+{
 }
 
 /// A getter of state stored in enclave memory.

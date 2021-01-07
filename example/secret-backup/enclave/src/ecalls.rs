@@ -1,6 +1,5 @@
 use crate::ENCLAVE_CONTEXT;
 use anonify_config::constants::*;
-use anonify_enclave::context::EnclaveContext;
 use anyhow::anyhow;
 use codec::{Decode, Encode};
 use frame_common::traits::{EcallInput, EcallOutput};
@@ -10,10 +9,11 @@ use secret_backup_state_transition::{Runtime, MAX_MEM_SIZE};
 use std::{ptr, vec::Vec};
 
 register_ecall!(
+    enable_runtime = false,
     &*ENCLAVE_CONTEXT,
     MAX_MEM_SIZE,
-    Runtime<EnclaveContext>,
-    EnclaveContext,
+    Runtime<KeyVaultEnclaveContext>, // TODO
+    KeyVaultEnclaveContext,
     (START_SERVER_CMD, ServerStarter),
     (STOP_SERVER_CMD, ServerStopper),
 );

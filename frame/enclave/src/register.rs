@@ -1,6 +1,7 @@
 #[macro_export]
 macro_rules! register_ecall {
-    (   $ctx: expr,
+    (   enable_runtime = $enable_runtime:expr,
+        $ctx: expr,
         $max_mem: expr,
         $runtime_exec: ty,
         $ctx_ops: ty,
@@ -24,8 +25,11 @@ macro_rules! register_ecall {
             let input = EE::EI::decode(&mut &input_payload[..])
                 .map_err(|e| anyhow!("{:?}", e))?;
             EE::eval_policy(&input)?;
-            let res = EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?;
-
+            let res = match $enable_runtime {
+                true => EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?,
+                false => EE::handle_without_runtime::<$ctx_ops>($ctx),
+                _ => return anyhow!("Please set enable_runtime to `true` or `false`");
+            };
             Ok(res.encode())
         }
 

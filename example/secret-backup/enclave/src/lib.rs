@@ -8,11 +8,11 @@ extern crate lazy_static;
 
 mod ecalls;
 
-use anonify_enclave::context::EnclaveContext;
+use key_vault_enclave::context::KeyVaultEnclaveContext;
 
 lazy_static! {
-    pub static ref ENCLAVE_CONTEXT: EnclaveContext = {
+    pub static ref ENCLAVE_CONTEXT: KeyVaultEnclaveContext = {
         let spid = std::env::var("SPID").expect("SPID is not set");
-        EnclaveContext::new(spid).expect("Failed to instantiate ENCLAVE_CONTEXT")
+        KeyVaultEnclaveContext::new(spid).expect("Failed to instantiate ENCLAVE_CONTEXT")
     };
 }
