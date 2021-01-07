@@ -11,6 +11,7 @@ use frame_common::{
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
 use frame_treekem::{DhPubKey, EciesCiphertext};
+use sgx_types::sgx_destroy_enclave;
 use sgx_types::*;
 use std::{collections::BTreeMap, env, fs::File, io::BufReader, str::FromStr};
 use web3::{
@@ -128,6 +129,10 @@ async fn test_integration_eth_construct() {
     assert_eq!(owner_account_id, my_access_policy.into_account_id());
     assert_eq!(my_balance, total_supply);
     assert_eq!(actual_total_supply, total_supply);
+
+    unsafe {
+        sgx_destroy_enclave(eid);
+    }
 }
 
 #[actix_rt::test]
@@ -224,6 +229,10 @@ async fn test_auto_notification() {
     );
     assert_eq!(updated_state[0].mem_id.as_raw(), 0);
     assert_eq!(updated_state[0].state, U64::from_raw(70));
+
+    unsafe {
+        sgx_destroy_enclave(eid);
+    }
 }
 
 #[actix_rt::test]
@@ -333,6 +342,10 @@ async fn test_integration_eth_transfer() {
     assert_eq!(my_updated_state, U64::from_raw(70));
     assert_eq!(other_updated_state, amount);
     assert_eq!(third_updated_state, U64::zero());
+
+    unsafe {
+        sgx_destroy_enclave(eid);
+    }
 }
 
 #[actix_rt::test]
@@ -416,6 +429,10 @@ async fn test_key_rotation() {
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, U64::zero());
     assert_eq!(third_state, U64::zero());
+
+    unsafe {
+        sgx_destroy_enclave(eid);
+    }
 }
 
 #[actix_rt::test]
@@ -520,6 +537,10 @@ async fn test_integration_eth_approve() {
     });
     assert_eq!(my_state, want_my_state);
     assert_eq!(other_state, Approved::default());
+
+    unsafe {
+        sgx_destroy_enclave(eid);
+    }
 }
 
 #[actix_rt::test]
@@ -716,6 +737,10 @@ async fn test_integration_eth_transfer_from() {
     assert_eq!(my_state_approved, want_my_state);
     assert_eq!(other_state_approved, Approved::default());
     assert_eq!(third_state_approved, Approved::default());
+
+    unsafe {
+        sgx_destroy_enclave(eid);
+    }
 }
 
 #[actix_rt::test]
@@ -810,6 +835,10 @@ async fn test_integration_eth_mint() {
     assert_eq!(actual_total_supply, U64::from_raw(150));
     assert_eq!(owner_balance, U64::from_raw(100));
     assert_eq!(other_balance, amount);
+
+    unsafe {
+        sgx_destroy_enclave(eid);
+    }
 }
 
 #[actix_rt::test]
@@ -922,6 +951,10 @@ async fn test_integration_eth_burn() {
     assert_eq!(actual_total_supply, U64::from_raw(80)); // 100 - 20(burn)
     assert_eq!(owner_balance, U64::from_raw(70)); // 100 - 30(transfer)
     assert_eq!(other_balance, U64::from_raw(10)); // 30 - 20(burn)
+
+    unsafe {
+        sgx_destroy_enclave(eid);
+    }
 }
 
 lazy_static! {

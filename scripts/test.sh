@@ -33,7 +33,7 @@ make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 # Module Tests
 
 cd ${ANONIFY_ROOT}/tests/integration
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test -j 1 -- --nocapture
 
 # ERC20 Application Tests
 
