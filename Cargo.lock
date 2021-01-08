@@ -3721,6 +3721,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "retrier"
+version = "0.1.0"
+
+[[package]]
 name = "ring"
 version = "0.16.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
