@@ -35,15 +35,31 @@ mod tests {
     use crate::*;
 
     // Ensure the retrier retries 4 times.
+    // delay: 10ms
     #[test]
     fn test_fixed_delay_strategy_success() {
         let mut counter = 1..=4;
-        let res = Retry::new(4, strategy::FixedDelay::new(10)).spawn(|| match counter.next() {
-            Some(c) if c == 4 => Ok(c),
-            Some(_) => Err("Not 4"),
-            None => Err("Not 4"),
-        }).unwrap();
+        let res = Retry::new(4, strategy::FixedDelay::new(10))
+            .spawn(|| match counter.next() {
+                Some(c) if c == 4 => Ok(c),
+                Some(_) => Err("Not 4"),
+                None => Err("Not 4"),
+            })
+            .unwrap();
 
         assert_eq!(res, 4);
+    }
+
+    // Even if the retrier retries 3 times, the operation should not be successful
+    #[test]
+    fn test_fixed_delay_strategy_error() {
+        let mut counter = 1..=5;
+        let res = Retry::new(3, strategy::FixedDelay::new(10)).spawn(|| match counter.next() {
+            Some(c) if c == 5 => Ok(c),
+            Some(_) => Err("Some: Not 4"),
+            None => Err("None: Not 4"),
+        });
+
+        assert_eq!(res, Err("Some: Not 4"));
     }
 }

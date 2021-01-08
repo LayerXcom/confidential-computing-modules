@@ -417,15 +417,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anonify-retrier"
-version = "0.1.0"
-dependencies = [
- "anyhow 1.0.28",
- "anyhow 1.0.34",
- "sgx_tstd",
-]
-
-[[package]]
 name = "anonify-wallet"
 version = "0.1.0"
 dependencies = [
@@ -1680,6 +1671,13 @@ dependencies = [
  "webpki 0.21.4",
  "webpki-roots",
  "yasna",
+]
+
+[[package]]
+name = "frame-retrier"
+version = "0.1.0"
+dependencies = [
+ "sgx_tstd",
 ]
 
 [[package]]
