@@ -1,36 +1,84 @@
 use crate::localstd::{result::Result, thread, time::Duration};
 use tracing::warn;
 
-pub struct Retry<'a, I: Iterator<Item = Duration>> {
+pub struct Retry<'a, I: Iterator<Item = Duration>, E: Clone + PartialEq> {
+    name: &'a str,
     tries: usize,
     strategy: I,
-    name: &'a str,
+    condition: Option<&'a E>,
 }
 
-impl<'a, I: Iterator<Item = Duration>> Retry<'a, I> {
-    pub fn new(tries: usize, strategy: I, name: &'a str) -> Self {
+impl<'a, I: Iterator<Item = Duration>, E: Clone + PartialEq> Retry<'a, I, E> {
+    pub fn new(name: &'a str, tries: usize, strategy: I) -> Self {
         Self {
+            name,
             tries,
             strategy,
-            name,
+            condition: None,
         }
     }
 
-    pub fn spawn<O, T, E>(self, mut operation: O) -> Result<T, E>
+    /// Optionally, define error type to retry
+    pub fn set_condition(mut self, conditon: &'a E) -> Self {
+        self.condition = Some(conditon);
+        self
+    }
+
+    /// Retry a given operation a certain number of times.
+    /// The interval depends on the delay strategy.
+    pub fn spawn<O, T>(self, mut operation: O) -> Result<T, E>
     where
         O: FnMut() -> Result<T, E>,
     {
-        let mut iterator = self.strategy.take(self.tries).into_iter().enumerate();
+        let mut iterator = self.strategy.take(self.tries).enumerate();
+        let condition = self.condition;
         loop {
             match operation() {
                 Ok(value) => return Ok(value),
                 Err(err) => {
-                    if let Some((curr_tries, delay)) = iterator.next() {
-                        warn!(
-                            "The {} operation retries {} times...",
-                            self.name, curr_tries
-                        );
-                        thread::sleep(delay);
+                    // retry if the condition is not set or the error condition is equal with operation's error
+                    if condition.is_none() || Some(&err) == condition {
+                        if let Some((curr_tries, delay)) = iterator.next() {
+                            warn!(
+                                "The {} operation retries {} times...",
+                                self.name, curr_tries
+                            );
+                            thread::sleep(delay);
+                        } else {
+                            return Err(err);
+                        }
+                    // should not retry if the set error condition is not equal with operation's error
+                    } else {
+                        return Err(err);
+                    }
+                }
+            }
+        }
+    }
+
+    #[cfg(feature = "std")]
+    pub async fn spawn_async<O, T>(self, mut operation: O) -> Result<T, E>
+    where
+        O: FnMut() -> Result<T, E>,
+    {
+        let mut iterator = self.strategy.take(self.tries).enumerate();
+        let condition = self.condition;
+        loop {
+            match operation() {
+                Ok(value) => return Ok(value),
+                Err(err) => {
+                    // retry if the condition is not set or the error condition is equal with operation's error
+                    if condition.is_none() || Some(&err) == condition {
+                        if let Some((curr_tries, delay)) = iterator.next() {
+                            warn!(
+                                "The {} operation retries {} times...",
+                                self.name, curr_tries
+                            );
+                            tokio::time::sleep(delay).await;
+                        } else {
+                            return Err(err);
+                        }
+                    // should not retry if the set error condition is not equal with operation's error
                     } else {
                         return Err(err);
                     }
@@ -49,7 +97,7 @@ mod tests {
     #[test]
     fn test_fixed_delay_strategy_success() {
         let mut counter = 1..=4;
-        let res = Retry::<'_>::new(4, strategy::FixedDelay::new(10), "test_counter_success")
+        let res = Retry::<'_>::new("test_counter_success", 4, strategy::FixedDelay::new(10))
             .spawn(|| match counter.next() {
                 Some(c) if c == 4 => Ok(c),
                 Some(_) => Err("Not 4"),
@@ -65,7 +113,7 @@ mod tests {
     fn test_fixed_delay_strategy_error() {
         let mut counter = 1..=5;
         let res =
-            Retry::<'_>::new(3, strategy::FixedDelay::new(10), "test_counter_error").spawn(|| {
+            Retry::<'_>::new("test_counter_error", 3, strategy::FixedDelay::new(10)).spawn(|| {
                 match counter.next() {
                     Some(c) if c == 5 => Ok(c),
                     Some(_) => Err("Some: Not 4"),
