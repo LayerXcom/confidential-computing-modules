@@ -1678,6 +1678,7 @@ name = "frame-retrier"
 version = "0.1.0"
 dependencies = [
  "sgx_tstd",
+ "tracing",
 ]
 
 [[package]]
