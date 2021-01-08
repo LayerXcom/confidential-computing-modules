@@ -1,22 +1,31 @@
-use crate::localstd::{result::Result, time::Duration};
-use crate::strategy::Strategy;
+use crate::localstd::{result::Result, thread, time::Duration};
 
-pub struct Retry {
+pub struct Retry<I: Iterator<Item = Duration>> {
     tries: usize,
-    strategy: Strategy,
+    strategy: I,
 }
 
-impl Retry {
-    pub fn new(tries: usize, strategy: Strategy) -> Self {
+impl<I: Iterator<Item = Duration>> Retry<I> {
+    pub fn new(tries: usize, strategy: I) -> Self {
         Self { tries, strategy }
     }
 
-    pub fn spawn<O, T, E>(&self, operation: O) -> Result<T, E>
+    pub fn spawn<O, T, E>(self, mut operation: O) -> Result<T, E>
     where
-        O: FnOnce() -> Result<T, E>,
+        O: FnMut() -> Result<T, E>,
     {
-        
-        unimplemented!();
+        let mut iterator = self.strategy.take(self.tries).into_iter();
+        loop {
+            match operation() {
+                Ok(value) => return Ok(value),
+                Err(err) => {
+                    if let Some(delay) = iterator.next() {
+                        thread::sleep(delay);
+                    } else {
+                        return Err(err);
+                    }
+                }
+            }
+        }
     }
 }
-

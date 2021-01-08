@@ -1,8 +1,4 @@
-use crate::localstd::{result::Result, time::Duration};
-
-pub enum Strategy {
-    FixedDelay,
-}
+use crate::localstd::time::Duration;
 
 pub struct FixedDelay {
     duration: Duration,
