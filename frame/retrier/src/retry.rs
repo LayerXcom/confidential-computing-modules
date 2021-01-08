@@ -1,14 +1,14 @@
-use crate::localstd::{result::Result, thread, time::Duration};
+use crate::localstd::{fmt, result::Result, thread, time::Duration};
 use tracing::warn;
 
-pub struct Retry<'a, I: Iterator<Item = Duration>, E: Clone + PartialEq> {
+pub struct Retry<'a, I: Iterator<Item = Duration>, E: fmt::Debug + PartialEq> {
     name: &'a str,
     tries: usize,
     strategy: I,
     condition: Option<&'a E>,
 }
 
-impl<'a, I: Iterator<Item = Duration>, E: Clone + PartialEq> Retry<'a, I, E> {
+impl<'a, I: Iterator<Item = Duration>, E: fmt::Debug + PartialEq> Retry<'a, I, E> {
     pub fn new(name: &'a str, tries: usize, strategy: I) -> Self {
         Self {
             name,
@@ -40,8 +40,8 @@ impl<'a, I: Iterator<Item = Duration>, E: Clone + PartialEq> Retry<'a, I, E> {
                     if condition.is_none() || Some(&err) == condition {
                         if let Some((curr_tries, delay)) = iterator.next() {
                             warn!(
-                                "The {} operation retries {} times...",
-                                self.name, curr_tries
+                                "The {} operation retries {} times... (error: {:?})",
+                                self.name, curr_tries, err
                             );
                             thread::sleep(delay);
                         } else {
@@ -71,8 +71,8 @@ impl<'a, I: Iterator<Item = Duration>, E: Clone + PartialEq> Retry<'a, I, E> {
                     if condition.is_none() || Some(&err) == condition {
                         if let Some((curr_tries, delay)) = iterator.next() {
                             warn!(
-                                "The {} operation retries {} times...",
-                                self.name, curr_tries
+                                "The {} operation retries {} times... (error: {:?})",
+                                self.name, curr_tries, err
                             );
                             tokio::time::sleep(delay).await;
                         } else {
