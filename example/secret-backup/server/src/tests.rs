@@ -17,6 +17,7 @@ use std::{
     path::Path,
     str::FromStr,
     sync::Arc,
+    time,
 };
 use web3::{
     contract::{Contract, Options},
@@ -24,6 +25,8 @@ use web3::{
     types::Address,
     Web3,
 };
+
+const SYNC_TIME: u64 = 2000;
 
 #[actix_rt::test]
 async fn test_backup_path_secret() {
@@ -41,16 +44,16 @@ async fn test_backup_path_secret() {
     let key_vault_server_eid = key_vault_server_enclave.geteid();
     let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid));
 
-    let mut app = test::init_service(
+    let mut key_vault_app = test::init_service(
         App::new()
             .data(key_vault_server.clone())
             .route("/api/v1/start", web::post().to(handle_start))
             .route("/api/v1/stop", web::post().to(handle_stop)),
     )
-    .await;
+        .await;
 
     let req = test::TestRequest::post().uri("/api/v1/start").to_request();
-    let resp = test::call_service(&mut app, req).await;
+    let resp = test::call_service(&mut key_vault_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let start_response: secret_backup_api::start::post::Response = test::read_body_json(resp).await;
     assert_eq!(start_response.status, "success".to_string());
@@ -75,6 +78,10 @@ async fn test_backup_path_secret() {
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
+                "/api/v1/start_sync_bc",
+                web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
                 "/api/v1/init_state",
                 web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
             )
@@ -83,11 +90,15 @@ async fn test_backup_path_secret() {
                 web::get().to(handle_balance_of::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
+                "/api/v1/key_rotation",
+                web::post().to(handle_key_rotation::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
                 "/api/v1/encrypting_key",
                 web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
-    .await;
+        .await;
 
     // Ensure not to exist path_secret directory on both local and remote
     let path_secrets_dir = PJ_ROOT_DIR
@@ -102,15 +113,22 @@ async fn test_backup_path_secret() {
     println!("contract address: {:?}", contract_addr.0);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
-        .set_json(&BALANCE_OF_REQ)
+        .uri("/api/v1/start_sync_bc")
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
-    assert_eq!(balance.0.as_raw(), 0);
 
-    // check path_secret is saved
+    let req = test::TestRequest::get()
+        .uri("/api/v1/encrypting_key")
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
+    let enc_key =
+        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+
+    // check storing path_secret
     let id = get_path_secret_id().unwrap();
     // local
     assert!(path_secrets_dir.join(&id).exists());
@@ -120,17 +138,6 @@ async fn test_backup_path_secret() {
         .join(&id)
         .exists());
 
-    delete_local_path_secret(id);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/encrypting_key")
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
-    let enc_key =
-        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
-
     let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/init_state")
@@ -138,6 +145,32 @@ async fn test_backup_path_secret() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/balance_of")
+        .set_json(&BALANCE_OF_REQ)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
+    assert_eq!(balance.0.as_raw(), 100);
+
+    let req = test::TestRequest::post()
+        .uri("/api/v1/key_rotation")
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    clear_local_path_secrets();
+    // local
+    assert!(!path_secrets_dir.join(&id).exists());
+    // remote
+    assert!(path_secrets_dir
+        .join(env::var("MY_ROSTER_IDX").unwrap().as_str())
+        .join(&id)
+        .exists());
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/balance_of")
@@ -165,16 +198,16 @@ async fn test_lost_path_secret() {
     let key_vault_server_eid = key_vault_server_enclave.geteid();
     let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid));
 
-    let mut app = test::init_service(
+    let mut key_vault_app = test::init_service(
         App::new()
             .data(key_vault_server.clone())
             .route("/api/v1/start", web::post().to(handle_start))
             .route("/api/v1/stop", web::post().to(handle_stop)),
     )
-    .await;
+        .await;
 
     let req = test::TestRequest::post().uri("/api/v1/start").to_request();
-    let resp = test::call_service(&mut app, req).await;
+    let resp = test::call_service(&mut key_vault_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let start_response: secret_backup_api::start::post::Response = test::read_body_json(resp).await;
     assert_eq!(start_response.status, "success".to_string());
@@ -199,6 +232,10 @@ async fn test_lost_path_secret() {
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
+                "/api/v1/start_sync_bc",
+                web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
                 "/api/v1/init_state",
                 web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
             )
@@ -207,11 +244,15 @@ async fn test_lost_path_secret() {
                 web::get().to(handle_balance_of::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
+                "/api/v1/key_rotation",
+                web::post().to(handle_key_rotation::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
                 "/api/v1/encrypting_key",
                 web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
-    .await;
+        .await;
 
     // Ensure not to exist path_secret directory on both local and remote
     let path_secrets_dir = PJ_ROOT_DIR
@@ -226,26 +267,10 @@ async fn test_lost_path_secret() {
     println!("contract address: {:?}", contract_addr.0);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
-        .set_json(&BALANCE_OF_REQ)
+        .uri("/api/v1/start_sync_bc")
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
-    assert_eq!(balance.0.as_raw(), 0);
-
-    // check path_secret is saved
-    let id = get_path_secret_id().unwrap();
-    // local
-    assert!(path_secrets_dir.join(&id).exists());
-    // remote
-    assert!(path_secrets_dir
-        .join(env::var("MY_ROSTER_IDX").unwrap().as_str())
-        .join(&id)
-        .exists());
-
-    // delete path_secret both local and remote
-    clear_path_secrets();
 
     let req = test::TestRequest::get()
         .uri("/api/v1/encrypting_key")
@@ -262,7 +287,44 @@ async fn test_lost_path_secret() {
         .set_json(&init_100_req)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_server_error(), "response: {:?}", resp);
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/balance_of")
+        .set_json(&BALANCE_OF_REQ)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: erc20_api::state::get::Response<U64> = test::read_body_json(resp).await;
+    assert_eq!(balance.0.as_raw(), 100);
+
+    // check storing path_secret
+    let id = get_path_secret_id().unwrap();
+    // local
+    assert!(path_secrets_dir.join(&id).exists());
+    // remote
+    assert!(path_secrets_dir
+        .join(env::var("MY_ROSTER_IDX").unwrap().as_str())
+        .join(&id)
+        .exists());
+
+    std::thread::sleep(std::time::Duration::from_secs(5));
+    // delete path_secret both local and remote
+    clear_path_secrets();
+    // local
+    assert!(!path_secrets_dir.join(&id).exists());
+    // remote
+    assert!(!path_secrets_dir
+        .join(env::var("MY_ROSTER_IDX").unwrap().as_str())
+        .join(&id)
+        .exists());
+
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
+    let req = test::TestRequest::post()
+        .uri("/api/v1/key_rotation")
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
 }
 
 pub static SUBSCRIBER_INIT: Lazy<()> = Lazy::new(|| {
@@ -292,11 +354,16 @@ fn set_server_env_vars() {
     env::set_var("PASSWORD", "anonify0101");
 }
 
-fn delete_local_path_secret(id: String) {
-    let target = PJ_ROOT_DIR
-        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"))
-        .join(id);
-    if target.exists() {
+fn clear_local_path_secrets() {
+    let target_dir = PJ_ROOT_DIR
+        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"));
+    let dir = fs::read_dir(&target_dir).unwrap();
+
+    for path in dir {
+        if path.as_ref().unwrap().file_type().unwrap().is_dir() {
+            continue;
+        }
+        let target = target_dir.join(path.unwrap().file_name());
         fs::remove_file(target).unwrap();
     }
 }
@@ -314,7 +381,7 @@ fn get_path_secret_id() -> Option<String> {
         PJ_ROOT_DIR
             .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set")),
     )
-    .unwrap()
+        .unwrap()
     {
         if path.as_ref().unwrap().file_type().unwrap().is_dir() {
             continue;
@@ -358,7 +425,6 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
     encrypting_key
 }
 
-// to me
 fn init_100_req(enc_key: &DhPubKey) -> erc20_api::init_state::post::Request {
     let init_100 = construct {
         total_supply: U64::from_raw(100),
@@ -384,7 +450,6 @@ fn init_100_req(enc_key: &DhPubKey) -> erc20_api::init_state::post::Request {
     }
 }
 
-// me
 const BALANCE_OF_REQ: erc20_api::state::get::Request = erc20_api::state::get::Request {
     sig: [
         21, 54, 136, 84, 150, 59, 196, 71, 164, 136, 222, 128, 100, 84, 208, 219, 84, 7, 61, 11,
