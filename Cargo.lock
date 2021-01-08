@@ -417,6 +417,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "anonify-retrier"
+version = "0.1.0"
+dependencies = [
+ "anyhow 1.0.28",
+ "anyhow 1.0.34",
+ "sgx_tstd",
+]
+
+[[package]]
 name = "anonify-wallet"
 version = "0.1.0"
 dependencies = [
@@ -3719,10 +3728,6 @@ dependencies = [
  "hostname",
  "quick-error",
 ]
-
-[[package]]
-name = "retrier"
-version = "0.1.0"
 
 [[package]]
 name = "ring"

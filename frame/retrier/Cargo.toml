@@ -5,4 +5,16 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+anyhow-std = { version = "1.0", package = "anyhow", optional = true }
+anyhow-sgx = { rev = "sgx_1.1.3", package = "anyhow", git = "https://github.com/mesalock-linux/anyhow-sgx.git", optional = true }
+sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 
+[features]
+default = ["std"]
+std = [
+    "anyhow-std",
+]
+sgx = [
+    "sgx_tstd",
+    "anyhow-sgx",
+]
