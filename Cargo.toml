@@ -8,6 +8,7 @@ members = [
     "frame/runtime",
     "frame/remote-attestation",
     "frame/mra-tls",
+    "frame/retrier",
     "modules/anonify-enclave",
     "modules/anonify-eth-driver",
     "modules/anonify-io-types",
