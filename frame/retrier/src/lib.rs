@@ -14,3 +14,5 @@ extern crate core as localstd;
 
 pub mod retry;
 pub mod strategy;
+
+pub use self::retry::Retry;

@@ -29,3 +29,21 @@ impl<I: Iterator<Item = Duration>> Retry<I> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::*;
+
+    // Ensure the retrier retries 4 times.
+    #[test]
+    fn test_fixed_delay_strategy_success() {
+        let mut counter = 1..=4;
+        let res = Retry::new(4, strategy::FixedDelay::new(10)).spawn(|| match counter.next() {
+            Some(c) if c == 4 => Ok(c),
+            Some(_) => Err("Not 4"),
+            None => Err("Not 4"),
+        }).unwrap();
+
+        assert_eq!(res, 4);
+    }
+}
