@@ -50,7 +50,7 @@ pub trait Sender: Sized {
     /// Attestation with deployed contract.
     async fn send_report_handshake(
         &self,
-        host_output: host_output::JoinGroup,
+        host_output: &host_output::JoinGroup,
         method: &str,
     ) -> Result<H256>;
 

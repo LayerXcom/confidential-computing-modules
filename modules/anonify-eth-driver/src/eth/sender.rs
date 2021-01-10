@@ -1,6 +1,8 @@
 use super::connection::{Web3Contract, Web3Http};
 use crate::{error::Result, traits::*, utils::*, workflow::*};
+use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use async_trait::async_trait;
+use frame_retrier::{strategy, Retry};
 use sgx_types::sgx_enclave_id_t;
 use std::path::Path;
 use tracing::info;
@@ -44,13 +46,21 @@ impl Sender for EthSender {
 
     async fn send_report_handshake(
         &self,
-        host_output: host_output::JoinGroup,
+        host_output: &host_output::JoinGroup,
         method: &str,
     ) -> Result<H256> {
         info!("Sending a handshake to blockchain: {:?}", host_output);
-        self.contract
-            .send_report_handshake(&host_output, method)
-            .await
+        Retry::new(
+            "send_report_handshake",
+            REQUEST_RETRIES,
+            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+        )
+        .spawn_async(|| async {
+            self.contract
+                .send_report_handshake(host_output.clone(), method)
+                .await
+        })
+        .await
     }
 
     async fn register_report(&self, host_output: host_output::RegisterReport) -> Result<H256> {

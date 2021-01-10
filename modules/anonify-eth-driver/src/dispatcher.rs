@@ -150,7 +150,7 @@ where
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .send_report_handshake(host_output.clone(), method)
+            .send_report_handshake(&host_output, method)
             .await?;
 
         Ok(tx_hash)
