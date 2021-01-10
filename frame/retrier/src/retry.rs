@@ -42,23 +42,21 @@ where
         loop {
             match operation() {
                 Ok(value) => return Ok(value),
-                Err(err) => {
-                    // retry if the condition is set `always` or the condition is equal with specified operation's error
-                    if condition.should_retry(&err) {
-                        if let Some((curr_tries, delay)) = iterator.next() {
-                            warn!(
-                                "The {} operation retries {} times... (error: {:?})",
-                                self.name, curr_tries, err
-                            );
-                            thread::sleep(delay);
-                        } else {
-                            return Err(err);
-                        }
-                    // should not retry if the set error condition is not equal with operation's error
+                // retry if the condition is set `always` or the condition is equal with specified operation's error
+                Err(err) if condition.should_retry(&err) => {
+                    if let Some((curr_tries, delay)) = iterator.next() {
+                        warn!(
+                            "The {} operation retries {} times... (error: {:?})",
+                            self.name, curr_tries, err
+                        );
+                        thread::sleep(delay);
                     } else {
+                        // if it overs the number of retries
                         return Err(err);
                     }
                 }
+                // should not retry if the set error condition is not equal with operation's error
+                Err(err) => return Err(err),
             }
         }
     }
@@ -73,23 +71,21 @@ where
         loop {
             match operation() {
                 Ok(value) => return Ok(value),
-                Err(err) => {
-                    // retry if the condition is set `always` or the condition is equal with specified operation's error
-                    if condition.should_retry(&err) {
-                        if let Some((curr_tries, delay)) = iterator.next() {
-                            warn!(
-                                "The {} operation retries {} times... (error: {:?})",
-                                self.name, curr_tries, err
-                            );
-                            tokio::time::sleep(delay).await;
-                        } else {
-                            return Err(err);
-                        }
-                    // should not retry if the set error condition is not equal with operation's error
+                // retry if the condition is set `always` or the condition is equal with specified operation's error
+                Err(err) if condition.should_retry(&err) => {
+                    if let Some((curr_tries, delay)) = iterator.next() {
+                        warn!(
+                            "The {} operation retries {} times... (error: {:?})",
+                            self.name, curr_tries, err
+                        );
+                        tokio::time::sleep(delay).await;
                     } else {
+                        // if it overs the number of retries
                         return Err(err);
                     }
                 }
+                // should not retry if the set error condition is not equal with operation's error
+                Err(err) => return Err(err),
             }
         }
     }
