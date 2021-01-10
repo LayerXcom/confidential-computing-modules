@@ -24,7 +24,11 @@ macro_rules! register_ecall {
             let input = EE::EI::decode(&mut &input_payload[..])
                 .map_err(|e| anyhow!("{:?}", e))?;
             EE::eval_policy(&input)?;
+
+            #[cfg(feature = "runtime_enabled")]
             let res = EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?;
+            #[cfg(not(feature = "runtime_enabled"))]
+            let res =  EE::handle_without_runtime::<$ctx_ops>($ctx)?;
 
             Ok(res.encode())
         }

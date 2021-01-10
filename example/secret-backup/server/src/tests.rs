@@ -191,7 +191,7 @@ fn set_env_vars() {
         "IAS_URL",
         "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report",
     );
-    env::set_var("MRA_TLS_SERVER_ADDRESS", "localhost:12345");
+    env::set_var("KEY_VAULT_ENDPOINT", "localhost:12345");
     env::set_var("ENCLAVE_PKG_NAME", "secret_backup");
     env::set_var("LOCAL_PATH_SECRETS_DIR", ".anonify/pathsecrets");
 }

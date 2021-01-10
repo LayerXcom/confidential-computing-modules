@@ -138,7 +138,7 @@ impl EnclaveEngine for HandshakeReceiver {
         let spid = enclave_context.spid();
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
-        let server_address = enclave_context.server_address();
+        let server_address = enclave_context.key_vault_endpoint();
 
         group_key.process_handshake(&handshake, spid, ias_url, sub_key, server_address)?;
 

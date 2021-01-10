@@ -1,4 +1,4 @@
-use crate::localstd::{vec::Vec, fmt};
+use crate::localstd::{fmt, vec::Vec};
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
@@ -151,6 +151,18 @@ pub mod output {
         recovery_id: secp256k1::RecoveryId,
     }
 
+    impl Default for Command {
+        fn default() -> Self {
+            let enclave_sig = secp256k1::Signature::parse(&[0u8; 64]);
+            let recovery_id = secp256k1::RecoveryId::parse(0).unwrap();
+            Self {
+                enclave_sig,
+                ciphertext: Ciphertext::default(),
+                recovery_id,
+            }
+        }
+    }
+
     impl EcallOutput for Command {}
 
     impl Encode for Command {
@@ -245,7 +257,7 @@ pub mod output {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct ReturnEncryptingKey {
         encrypting_key: DhPubKey,
     }
@@ -267,7 +279,7 @@ pub mod output {
 
     impl EcallOutput for Empty {}
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct ReturnState {
         state: StateType,
     }
@@ -288,7 +300,7 @@ pub mod output {
         }
     }
 
-    #[derive(Encode, Decode, Clone)]
+    #[derive(Encode, Decode, Clone, Default)]
     pub struct ReturnJoinGroup {
         report: Vec<u8>,
         report_sig: Vec<u8>,
@@ -351,7 +363,7 @@ pub mod output {
         }
     }
 
-    #[derive(Encode, Decode, Clone)]
+    #[derive(Encode, Decode, Clone, Default)]
     pub struct ReturnRegisterReport {
         report: Vec<u8>,
         report_sig: Vec<u8>,
@@ -412,6 +424,19 @@ pub mod output {
         recovery_id: secp256k1::RecoveryId,
         roster_idx: u32,
         handshake: ExportHandshake,
+    }
+
+    impl Default for ReturnHandshake {
+        fn default() -> Self {
+            let enclave_sig = secp256k1::Signature::parse(&[0u8; 64]);
+            let recovery_id = secp256k1::RecoveryId::parse(0).unwrap();
+            Self {
+                enclave_sig,
+                recovery_id,
+                roster_idx: u32::default(),
+                handshake: ExportHandshake::default(),
+            }
+        }
     }
 
     impl EcallOutput for ReturnHandshake {}
