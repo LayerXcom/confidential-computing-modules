@@ -393,6 +393,7 @@ dependencies = [
  "ethabi",
  "frame-common",
  "frame-host",
+ "frame-retrier",
  "frame-treekem",
  "frame-types",
  "hex",
