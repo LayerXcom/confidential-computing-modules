@@ -49,7 +49,7 @@ impl Sender for EthSender {
     ) -> Result<H256> {
         info!("Sending a handshake to blockchain: {:?}", host_output);
         self.contract
-            .send_report_handshake(host_output, method)
+            .send_report_handshake(&host_output, method)
             .await
     }
 

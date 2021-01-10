@@ -51,38 +51,39 @@ impl Web3Contract {
 
     pub async fn send_report_handshake(
         &self,
-        output: host_output::JoinGroup,
+        output: &host_output::JoinGroup,
         method: &str,
     ) -> Result<H256> {
-        let ecall_output = output
-            .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?;
-        let report = ecall_output.report().to_vec();
-        let report_sig = ecall_output.report_sig().to_vec();
-        let handshake = ecall_output.handshake().to_vec();
-        let gas = output.gas;
-
         Retry::new(
             "send_report_handshake",
             REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
-        .spawn_async(async || {
-            self.contract
-                .call(
-                    method,
-                    (
-                        report,
-                        report_sig,
-                        handshake,
-                        ecall_output.mrenclave_ver(),
-                        ecall_output.roster_idx(),
-                    ),
-                    output.signer,
-                    Options::with(|opt| opt.gas = Some(gas.into())),
-                )
-                .await
-                .map_err(Into::into)
+        .spawn_async(move || {
+            Box::pin(async move {
+                let ecall_output = output.clone().ecall_output.unwrap();
+                // .ok_or_else(|| HostError::EcallOutputNotSet)?;
+                let report = ecall_output.report().to_vec();
+                let report_sig = ecall_output.report_sig().to_vec();
+                let handshake = ecall_output.handshake().to_vec();
+                let gas = output.gas;
+
+                self.contract
+                    .call(
+                        method,
+                        (
+                            report,
+                            report_sig,
+                            handshake,
+                            ecall_output.mrenclave_ver(),
+                            ecall_output.roster_idx(),
+                        ),
+                        output.signer,
+                        Options::with(|opt| opt.gas = Some(gas.into())),
+                    )
+                    .await
+                    .map_err(Into::into)
+            })
         })
         .await
     }

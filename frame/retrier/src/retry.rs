@@ -1,7 +1,9 @@
+#[cfg(feature = "std")]
+use crate::localstd::future::Future;
 use crate::localstd::{fmt, result::Result, thread, time::Duration};
 use tracing::warn;
 
-pub struct Retry<I: Iterator<Item = Duration>, E> {
+pub struct Retry<I: Iterator<Item = Duration>, E: fmt::Debug> {
     name: String,
     tries: usize,
     strategy: I,
@@ -25,7 +27,7 @@ where
     /// Optionally, define condition to retry
     pub fn set_condition<F>(mut self, custom: F) -> Self
     where
-        F: Fn(&E) -> bool + 'static,
+        F: Fn(&E) -> bool + 'static + Send,
     {
         self.condition = Condition::Custom(Box::new(custom));
         self
@@ -62,14 +64,15 @@ where
     }
 
     #[cfg(feature = "std")]
-    pub async fn spawn_async<O, T>(self, mut operation: O) -> Result<T, E>
+    pub async fn spawn_async<O, R, T>(self, mut operation: O) -> Result<T, E>
     where
-        O: FnMut() -> Result<T, E>,
+        O: FnMut() -> R,
+        R: Future<Output = Result<T, E>>,
     {
         let mut iterator = self.strategy.take(self.tries).enumerate();
         let condition = self.condition;
         loop {
-            match operation() {
+            match operation().await {
                 Ok(value) => return Ok(value),
                 // retry if the condition is set `always` or the condition is equal with specified operation's error
                 Err(err) if condition.should_retry(&err) => {
@@ -93,7 +96,7 @@ where
 
 enum Condition<E> {
     Always,
-    Custom(Box<dyn Fn(&E) -> bool>),
+    Custom(Box<dyn Fn(&E) -> bool + Send>),
 }
 
 impl<E> Condition<E> {
