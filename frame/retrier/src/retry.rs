@@ -11,7 +11,7 @@ pub struct Retry<I: Iterator<Item = Duration>, E> {
 impl<I, E> Retry<I, E>
 where
     I: Iterator<Item = Duration>,
-    E: fmt::Debug,
+    E: fmt::Debug + 'static,
 {
     pub fn new(name: impl ToString, tries: usize, strategy: I) -> Self {
         Self {
@@ -22,11 +22,14 @@ where
         }
     }
 
-    // /// Optionally, define error type to retry
-    // pub fn set_condition(mut self, conditon: &'a E) -> Self {
-    //     self.condition = Some(conditon);
-    //     self
-    // }
+    /// Optionally, define condition to retry
+    pub fn set_condition<F>(mut self, custom: F) -> Self
+    where
+        F: Fn(&E) -> bool + 'static,
+    {
+        self.condition = Condition::Custom(Box::new(custom));
+        self
+    }
 
     /// Retry a given operation a certain number of times.
     /// The interval depends on the delay strategy.
@@ -94,14 +97,14 @@ where
 
 enum Condition<E> {
     Always,
-    Cunstom(Box<dyn Fn(&E) -> bool>),
+    Custom(Box<dyn Fn(&E) -> bool>),
 }
 
 impl<E> Condition<E> {
     fn should_retry(&self, err: &E) -> bool {
         match *self {
             Condition::Always => true,
-            Condition::Cunstom(ref cond) => cond(err),
+            Condition::Custom(ref cond) => cond(err),
         }
     }
 }
@@ -130,14 +133,13 @@ mod tests {
     #[test]
     fn test_fixed_delay_strategy_error() {
         let mut counter = 1..=5;
-        let res =
-            Retry::new("test_counter_error", 3, strategy::FixedDelay::new(10)).spawn(|| {
-                match counter.next() {
-                    Some(c) if c == 5 => Ok(c),
-                    Some(_) => Err("Some: Not 4"),
-                    None => Err("None: Not 4"),
-                }
-            });
+        let res = Retry::new("test_counter_error", 3, strategy::FixedDelay::new(10)).spawn(|| {
+            match counter.next() {
+                Some(c) if c == 5 => Ok(c),
+                Some(_) => Err("Some: Not 4"),
+                None => Err("None: Not 4"),
+            }
+        });
 
         assert_eq!(res, Err("Some: Not 4"));
     }
