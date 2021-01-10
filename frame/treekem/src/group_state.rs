@@ -103,7 +103,7 @@ impl Handshake for GroupState {
                                 ias_url,
                                 sub_key,
                                 server_address,
-                            )?,
+                            ).expect("Failed to recover path_secret from both local and remote"),
                         }
                     }
                     PathSecretSource::LocalTestKV(_) => {
