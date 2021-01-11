@@ -16,13 +16,15 @@ pub trait Deployer: Sized {
     async fn get_account(&self, index: usize, password: &str) -> Result<Address>;
 
     /// Deploying contract with attestation.
-    async fn deploy<P: AsRef<Path> + Send>(
+    async fn deploy<P>(
         &mut self,
-        host_output: host_output::JoinGroup,
+        host_output: &host_output::JoinGroup,
         abi_path: P,
         bin_path: P,
         confirmations: usize,
-    ) -> Result<String>;
+    ) -> Result<String>
+    where
+        P: AsRef<Path> + Send + Sync + Copy;
 
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;
 
@@ -45,18 +47,18 @@ pub trait Sender: Sized {
     async fn get_account(&self, index: usize, password: &str) -> Result<Address>;
 
     /// Send an encrypted command of state transition to blockchain nodes.
-    async fn send_command(&self, host_output: host_output::Command) -> Result<H256>;
+    async fn send_command(&self, host_output: &host_output::Command) -> Result<H256>;
 
     /// Attestation with deployed contract.
     async fn send_report_handshake(
         &self,
-        host_output: host_output::JoinGroup,
+        host_output: &host_output::JoinGroup,
         method: &str,
     ) -> Result<H256>;
 
-    async fn register_report(&self, host_output: host_output::RegisterReport) -> Result<H256>;
+    async fn register_report(&self, host_output: &host_output::RegisterReport) -> Result<H256>;
 
-    async fn handshake(&self, host_output: host_output::Handshake) -> Result<H256>;
+    async fn handshake(&self, host_output: &host_output::Handshake) -> Result<H256>;
 
     fn get_contract(self) -> ContractKind;
 }

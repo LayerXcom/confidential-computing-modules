@@ -65,14 +65,17 @@ where
         Ok(())
     }
 
-    pub async fn deploy<P: AsRef<Path> + Send>(
+    pub async fn deploy<P>(
         &self,
         deploy_user: Address,
         gas: u64,
         abi_path: P,
         bin_path: P,
         confirmations: usize,
-    ) -> Result<String> {
+    ) -> Result<String>
+    where
+        P: AsRef<Path> + Send + Sync + Copy,
+    {
         let mut inner = self.inner.write();
         let eid = inner.deployer.get_enclave_id();
         let input = host_input::JoinGroup::new(deploy_user, gas);
@@ -80,7 +83,7 @@ where
 
         let contract_addr = inner
             .deployer
-            .deploy(host_output.clone(), abi_path, bin_path, confirmations)
+            .deploy(&host_output, abi_path, bin_path, confirmations)
             .await?;
         Ok(contract_addr)
     }
@@ -114,7 +117,7 @@ where
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .register_report(host_output)
+            .register_report(&host_output)
             .await?;
 
         Ok(tx_hash)
@@ -150,7 +153,7 @@ where
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .send_report_handshake(host_output.clone(), method)
+            .send_report_handshake(&host_output, method)
             .await?;
 
         Ok(tx_hash)
@@ -180,7 +183,7 @@ where
         let host_output = CommandWorkflow::exec(input, eid)?;
 
         match &inner.sender {
-            Some(s) => s.send_command(host_output).await,
+            Some(s) => s.send_command(&host_output).await,
             None => Err(HostError::AddressNotSet),
         }
     }
@@ -213,7 +216,7 @@ where
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .handshake(host_output.clone())
+            .handshake(&host_output)
             .await?;
 
         Ok(tx_hash)
