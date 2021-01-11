@@ -41,7 +41,15 @@ impl Sender for EthSender {
     }
 
     async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
-        self.contract.get_account(index, password).await
+        Retry::new(
+            "get_account",
+            REQUEST_RETRIES,
+            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+        )
+        .spawn_async(|| async {
+            self.contract.get_account(index, password).await
+        })
+        .await
     }
 
     async fn send_report_handshake(
@@ -63,19 +71,43 @@ impl Sender for EthSender {
         .await
     }
 
-    async fn register_report(&self, host_output: host_output::RegisterReport) -> Result<H256> {
+    async fn register_report(&self, host_output: &host_output::RegisterReport) -> Result<H256> {
         info!("Registering report to blockchain: {:?}", host_output);
-        self.contract.register_report(host_output).await
+        Retry::new(
+            "send_command",
+            REQUEST_RETRIES,
+            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+        )
+        .spawn_async(|| async {
+            self.contract.register_report(host_output.clone()).await
+        })
+        .await
     }
 
-    async fn send_command(&self, host_output: host_output::Command) -> Result<H256> {
+    async fn send_command(&self, host_output: &host_output::Command) -> Result<H256> {
         info!("Sending a command to blockchain: {:?}", host_output);
-        self.contract.send_command(host_output).await
+        Retry::new(
+            "send_command",
+            REQUEST_RETRIES,
+            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+        )
+        .spawn_async(|| async {
+            self.contract.send_command(host_output.clone()).await
+        })
+        .await
     }
 
-    async fn handshake(&self, host_output: host_output::Handshake) -> Result<H256> {
+    async fn handshake(&self, host_output: &host_output::Handshake) -> Result<H256> {
         info!("Sending a handshake to blockchain: {:?}", host_output);
-        self.contract.handshake(host_output).await
+        Retry::new(
+            "handshake",
+            REQUEST_RETRIES,
+            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+        )
+        .spawn_async(|| async {
+            self.contract.handshake(host_output.clone()).await
+        })
+        .await
     }
 
     fn get_contract(self) -> ContractKind {

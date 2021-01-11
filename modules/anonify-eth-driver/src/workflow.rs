@@ -332,7 +332,7 @@ pub mod host_input {
 pub mod host_output {
     use super::*;
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub struct Command {
         pub signer: Address,
         pub gas: u64,

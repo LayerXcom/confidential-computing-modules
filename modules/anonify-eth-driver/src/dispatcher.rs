@@ -114,7 +114,7 @@ where
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .register_report(host_output)
+            .register_report(&host_output)
             .await?;
 
         Ok(tx_hash)
@@ -180,7 +180,7 @@ where
         let host_output = CommandWorkflow::exec(input, eid)?;
 
         match &inner.sender {
-            Some(s) => s.send_command(host_output).await,
+            Some(s) => s.send_command(&host_output).await,
             None => Err(HostError::AddressNotSet),
         }
     }
@@ -213,7 +213,7 @@ where
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .handshake(host_output.clone())
+            .handshake(&host_output)
             .await?;
 
         Ok(tx_hash)
