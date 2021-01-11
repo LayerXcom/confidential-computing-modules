@@ -24,7 +24,9 @@ anonify-config = { path = "../../../config" }
 frame-common = { path = "../../../frame/common" }
 frame-runtime = { path = "../../../frame/runtime" }
 frame-treekem = { path = "../../../frame/treekem" }
+erc20-server = { path = "../../erc20/server" }
 erc20-state-transition = { path = "../../erc20/state-transition" }
+erc20-api = { path = "../../erc20/api" }
 anonify-eth-driver = { path = "../../../modules/anonify-eth-driver" }
 codec = { package = "parity-scale-codec", version = "1.1" }
 web3 = { git = "https://github.com/tomusdrw/rust-web3", rev = "d7393708e257f7ef4ad354917889a8001cf2927c" }

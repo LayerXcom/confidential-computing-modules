@@ -3969,6 +3969,8 @@ dependencies = [
  "anonify-config",
  "anonify-eth-driver",
  "anyhow 1.0.34",
+ "erc20-api",
+ "erc20-server",
  "erc20-state-transition",
  "ethabi",
  "frame-common",
