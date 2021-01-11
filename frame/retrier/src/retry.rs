@@ -144,23 +144,4 @@ mod tests {
 
         assert_eq!(res, Err("Some: Not 4"));
     }
-
-    #[actix_rt::test]
-    async fn test_fix_delay_strategy_async_asuccess() {
-        let mut counter = 1..=4;
-        let res = Retry::<_, &'static str>::new("test_counter_success", 4, strategy::FixedDelay::new(10))
-            .spawn_async::<_,_,u32>(|| async {
-                // match counter.next() {
-                //     Some(c) if c == 4 => Ok(c),
-                //     Some(_) => Err("Not 4"),
-                //     None => Err("Not 4"),
-                // }
-                Err("err")
-                // Ok(4)
-            })
-            .await
-            .unwrap();
-
-        assert_eq!(res, 4);
-    }
 }
