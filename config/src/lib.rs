@@ -35,6 +35,20 @@ lazy_static! {
         let pem = pem::parse(ias_root_cert).expect("Cannot parse PEM File");
         pem.contents
     };
+    pub static ref ENCLAVE_SIGNED_SO: PathBuf = {
+        let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
+        let mut measurement_file_path = PJ_ROOT_DIR.clone();
+
+        let measurement_file = match env::var("BACKUP") {
+            Ok(backup) if backup == "disable" => {
+                format!(".anonify/{}.backup_disabled.signed.so", pkg_name)
+            }
+            _ => format!(".anonify/{}.signed.so", pkg_name),
+        };
+
+        measurement_file_path.push(measurement_file);
+        measurement_file_path
+    };
     pub static ref ENCLAVE_MEASUREMENT: EnclaveMeasurement = {
         let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
         let mut measurement_file_path = PJ_ROOT_DIR.clone();

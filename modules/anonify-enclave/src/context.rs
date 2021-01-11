@@ -2,7 +2,7 @@ use crate::{
     error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
-use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT, ANONIFY_MRENCLAVE_VERSION};
+use anonify_config::{ANONIFY_MRENCLAVE_VERSION, ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT};
 use anonify_io_types::*;
 use anyhow::anyhow;
 use frame_common::{
