@@ -65,14 +65,17 @@ where
         Ok(())
     }
 
-    pub async fn deploy<P: AsRef<Path> + Send + Copy>(
+    pub async fn deploy<P>(
         &self,
         deploy_user: Address,
         gas: u64,
         abi_path: P,
         bin_path: P,
         confirmations: usize,
-    ) -> Result<String> {
+    ) -> Result<String>
+    where
+        P: AsRef<Path> + Send + Sync + Copy,
+    {
         let mut inner = self.inner.write();
         let eid = inner.deployer.get_enclave_id();
         let input = host_input::JoinGroup::new(deploy_user, gas);

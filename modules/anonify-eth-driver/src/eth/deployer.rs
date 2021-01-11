@@ -31,13 +31,16 @@ impl Deployer for EthDeployer {
         self.web3_conn.get_account(index, password).await
     }
 
-    async fn deploy<P: AsRef<Path> + Send + Copy>(
+    async fn deploy<P>(
         &mut self,
         host_output: &host_output::JoinGroup,
         abi_path: P,
         bin_path: P,
         confirmations: usize,
-    ) -> Result<String> {
+    ) -> Result<String>
+    where
+        P: AsRef<Path> + Send + Sync + Copy,
+    {
         let contract_addr = Retry::new(
             "get_account",
             REQUEST_RETRIES,

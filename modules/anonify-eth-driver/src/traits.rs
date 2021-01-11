@@ -16,13 +16,15 @@ pub trait Deployer: Sized {
     async fn get_account(&self, index: usize, password: &str) -> Result<Address>;
 
     /// Deploying contract with attestation.
-    async fn deploy<P: AsRef<Path> + Send + Copy>(
+    async fn deploy<P>(
         &mut self,
         host_output: &host_output::JoinGroup,
         abi_path: P,
         bin_path: P,
         confirmations: usize,
-    ) -> Result<String>;
+    ) -> Result<String>
+    where
+        P: AsRef<Path> + Send + Sync + Copy;
 
     fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;
 
