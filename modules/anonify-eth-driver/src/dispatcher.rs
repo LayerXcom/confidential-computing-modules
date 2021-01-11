@@ -65,7 +65,7 @@ where
         Ok(())
     }
 
-    pub async fn deploy<P: AsRef<Path> + Send>(
+    pub async fn deploy<P: AsRef<Path> + Send + Copy>(
         &self,
         deploy_user: Address,
         gas: u64,
@@ -80,7 +80,7 @@ where
 
         let contract_addr = inner
             .deployer
-            .deploy(host_output.clone(), abi_path, bin_path, confirmations)
+            .deploy(&host_output, abi_path, bin_path, confirmations)
             .await?;
         Ok(contract_addr)
     }

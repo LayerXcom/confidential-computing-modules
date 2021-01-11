@@ -46,9 +46,7 @@ impl Sender for EthSender {
             REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
-        .spawn_async(|| async {
-            self.contract.get_account(index, password).await
-        })
+        .spawn_async(|| async { self.contract.get_account(index, password).await })
         .await
     }
 
@@ -78,9 +76,7 @@ impl Sender for EthSender {
             REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
-        .spawn_async(|| async {
-            self.contract.register_report(host_output.clone()).await
-        })
+        .spawn_async(|| async { self.contract.register_report(host_output.clone()).await })
         .await
     }
 
@@ -91,9 +87,7 @@ impl Sender for EthSender {
             REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
-        .spawn_async(|| async {
-            self.contract.send_command(host_output.clone()).await
-        })
+        .spawn_async(|| async { self.contract.send_command(host_output.clone()).await })
         .await
     }
 
@@ -104,9 +98,7 @@ impl Sender for EthSender {
             REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
-        .spawn_async(|| async {
-            self.contract.handshake(host_output.clone()).await
-        })
+        .spawn_async(|| async { self.contract.handshake(host_output.clone()).await })
         .await
     }
 
