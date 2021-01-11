@@ -79,9 +79,11 @@ where
                     if let Some((curr_tries, delay)) = iterator.next() {
                         warn!(
                             "The {} operation retries {} times... (error: {:?})",
-                            self.name, curr_tries, err
+                            self.name,
+                            curr_tries + 1,
+                            err
                         );
-                        tokio::time::sleep(delay).await;
+                        actix_rt::time::delay_for(delay).await;
                     } else {
                         // if it overs the number of retries
                         return Err(err);
@@ -141,5 +143,24 @@ mod tests {
         });
 
         assert_eq!(res, Err("Some: Not 4"));
+    }
+
+    #[actix_rt::test]
+    async fn test_fix_delay_strategy_async_asuccess() {
+        let mut counter = 1..=4;
+        let res = Retry::<_, &'static str>::new("test_counter_success", 4, strategy::FixedDelay::new(10))
+            .spawn_async::<_,_,u32>(|| async {
+                // match counter.next() {
+                //     Some(c) if c == 4 => Ok(c),
+                //     Some(_) => Err("Not 4"),
+                //     None => Err("Not 4"),
+                // }
+                Err("err")
+                // Ok(4)
+            })
+            .await
+            .unwrap();
+
+        assert_eq!(res, 4);
     }
 }
