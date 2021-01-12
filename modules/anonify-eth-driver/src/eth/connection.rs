@@ -249,8 +249,7 @@ impl Web3Http {
         let handshake = ecall_output.handshake().to_vec();
         let gas = output.gas;
 
-        let contract = Contract::deploy(self.web3.eth(), abi.as_slice())
-            .map_err(|e| anyhow!("{:?}", e))?
+        let contract = Contract::deploy(self.web3.eth(), abi.as_slice())?
             .options(Options::with(|opt| opt.gas = Some(gas.into())))
             .confirmations(confirmations)
             .execute(
@@ -258,9 +257,7 @@ impl Web3Http {
                 (report, report_sig, handshake, ecall_output.mrenclave_ver()),
                 output.signer,
             )
-            .map_err(|e| anyhow!("{:?}", e))?
-            .await
-            .map_err(|e| anyhow!("{:?}", e))?;
+            .await.unwrap();
 
         Ok(contract.address())
     }

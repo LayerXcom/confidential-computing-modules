@@ -1,11 +1,29 @@
 use super::connection::{Web3Contract, Web3Http};
-use crate::{error::Result, traits::*, utils::*, workflow::*};
+use crate::{
+    error::{HostError, Result},
+    traits::*,
+    utils::*,
+    workflow::*,
+};
 use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use async_trait::async_trait;
 use frame_retrier::{strategy, Retry};
 use sgx_types::sgx_enclave_id_t;
 use std::{marker::Send, path::Path};
 use web3::types::Address;
+
+/// Define a retry condition of deploying contracts.
+/// If it returns true, retry deploying contracts.
+const fn deployer_retry_condition(err: &HostError) -> bool {
+    match err {
+        HostError::Web3Error(web3_err) => match web3_err {
+            web3::Error::Decoder(_) => false,
+            _ => true,
+        },
+        HostError::EcallOutputNotSet => false,
+        _ => true,
+    }
+}
 
 /// Components needed to deploy a contract
 #[derive(Debug)]
@@ -46,6 +64,7 @@ impl Deployer for EthDeployer {
             REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
+        .set_condition(deployer_retry_condition)
         .spawn_async(|| async {
             self.web3_conn
                 .deploy(host_output.clone(), abi_path, bin_path, confirmations)

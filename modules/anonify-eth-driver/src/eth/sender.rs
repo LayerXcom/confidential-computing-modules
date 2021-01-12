@@ -13,10 +13,12 @@ use std::path::Path;
 use tracing::info;
 use web3::types::{Address, H256};
 
+/// Define a retry condition of sending transactions.
+/// If it returns false, don't need to retry sending transactions.
 const fn sender_retry_condition(err: &HostError) -> bool {
     match err {
-        HostError::Web3Error(web3_err) => match web3_err {
-            web3::Error::Decoder(_) => false,
+        HostError::Web3ContractError(web3_err) => match web3_err {
+            web3::contract::Error::Abi(_) => false,
             _ => true,
         },
         HostError::EcallOutputNotSet => false,
