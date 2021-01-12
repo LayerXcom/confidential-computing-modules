@@ -8,17 +8,18 @@ use crate::localstd::{
 use crate::localstd::{fmt, result::Result, thread, time::Duration};
 use tracing::warn;
 
-pub struct Retry<I: Iterator<Item = Duration>, E: fmt::Debug> {
+pub struct Retry<I, T, E> {
     name: String,
     tries: usize,
     strategy: I,
-    condition: Condition<E>,
+    condition: Condition<T, E>,
 }
 
-impl<I, E> Retry<I, E>
+impl<I, T, E> Retry<I, T, E>
 where
     I: Iterator<Item = Duration>,
-    E: fmt::Debug + 'static,
+    T: fmt::Debug,
+    E: fmt::Debug,
 {
     pub fn new(name: impl ToString, tries: usize, strategy: I) -> Self {
         Self {
@@ -32,7 +33,7 @@ where
     /// Optionally, define condition to retry
     pub fn set_condition<F>(mut self, custom: F) -> Self
     where
-        F: Fn(&E) -> bool + 'static + Send,
+        F: Fn(&Result<T, E>) -> bool + 'static + Send,
     {
         self.condition = Condition::Custom(Box::new(custom));
         self
@@ -40,36 +41,34 @@ where
 
     /// Retry a given operation a certain number of times.
     /// The interval depends on the delay strategy.
-    pub fn spawn<O, T>(self, mut operation: O) -> Result<T, E>
+    pub fn spawn<O>(self, mut operation: O) -> Result<T, E>
     where
         O: FnMut() -> Result<T, E>,
     {
         let mut iterator = self.strategy.take(self.tries).enumerate();
         let condition = self.condition;
         loop {
-            match operation() {
-                Ok(value) => return Ok(value),
-                // retry if the condition is set `always` or the condition is equal with specified operation's error
-                Err(err) if condition.should_retry(&err) => {
-                    if let Some((curr_tries, delay)) = iterator.next() {
-                        warn!(
-                            "The {} operation retries {} times... (error: {:?})",
-                            self.name, curr_tries, err
-                        );
-                        thread::sleep(delay);
-                    } else {
-                        // if it overs the number of retries
-                        return Err(err);
-                    }
+            let res = operation();
+            if condition.should_retry(&res) {
+                if let Some((curr_tries, delay)) = iterator.next() {
+                    warn!(
+                        "The {} operation retries {} times... (result: {:?})",
+                        self.name, curr_tries, res
+                    );
+                    thread::sleep(delay);
+                } else {
+                    // if it overs the number of retries
+                    // TODO: return err?
+                    return res;
                 }
-                // should not retry if the set error condition is not equal with operation's error
-                Err(err) => return Err(err),
+            } else {
+                return res;
             }
         }
     }
 
     #[cfg(feature = "std")]
-    pub async fn spawn_async<O, R, T>(self, mut operation: O) -> Result<T, E>
+    pub async fn spawn_async<O, R>(self, mut operation: O) -> Result<T, E>
     where
         O: FnMut() -> R,
         R: Future<Output = Result<T, E>>,
@@ -101,16 +100,16 @@ where
     }
 }
 
-enum Condition<E> {
+enum Condition<T, E> {
     Always,
-    Custom(Box<dyn Fn(&E) -> bool + Send>),
+    Custom(Box<dyn Fn(&Result<T, E>) -> bool + Send>),
 }
 
-impl<E> Condition<E> {
-    fn should_retry(&self, err: &E) -> bool {
+impl<T, E> Condition<T, E> {
+    fn should_retry(&self, result: &Result<T, E>) -> bool {
         match *self {
             Condition::Always => true,
-            Condition::Custom(ref cond) => cond(err),
+            Condition::Custom(ref cond) => cond(result),
         }
     }
 }

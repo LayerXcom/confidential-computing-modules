@@ -14,9 +14,7 @@ use std::{io::Write, prelude::v1::*, str, string::String, time::SystemTime};
 /// Define a retry condition of remote attestation request
 /// If it returns false, don't need to retry remote attestation request
 const fn ra_retry_condition(err: &FrameRAError) -> bool {
-    match err {
-        _ => true,
-    }
+    false
 }
 
 type SignatureAlgorithms = &'static [&'static webpki::SignatureAlgorithm];
