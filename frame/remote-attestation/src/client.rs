@@ -1,5 +1,6 @@
+use crate::error::{FrameRAError, Result};
 use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
-use anyhow::{anyhow, bail, ensure, Result};
+use anyhow::anyhow;
 use frame_retrier::{strategy, Retry};
 use http_req::{
     request::{Method, Request},
@@ -9,6 +10,14 @@ use http_req::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{io::Write, prelude::v1::*, str, string::String, time::SystemTime};
+
+/// Define a retry condition of remote attestation request
+/// If it returns false, don't need to retry remote attestation request
+const fn ra_retry_condition(err: &FrameRAError) -> bool {
+    match err {
+        _ => true,
+    }
+}
 
 type SignatureAlgorithms = &'static [&'static webpki::SignatureAlgorithm];
 static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
@@ -70,12 +79,7 @@ impl<'a> RAClient<'a> {
             REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
-        .spawn(|| {
-            self.request
-                .send(writer)
-                .map_err(|e| anyhow!("{:?}", e))
-                .map_err(Into::into)
-        })
+        .spawn(|| self.request.send(writer).map_err(Into::into))
     }
 }
 
@@ -118,7 +122,7 @@ impl AttestedReport {
     /// 4. quote status
     #[must_use]
     pub fn verify_attested_report(self, root_cert: Vec<u8>) -> Result<Self> {
-        let now_func = webpki::Time::try_from(SystemTime::now())?;
+        let now_func = webpki::Time::try_from(SystemTime::now()).map_err(|e| anyhow!("{:?}", e))?;
 
         let mut root_store = rustls::RootCertStore::empty();
         root_store.add(&rustls::Certificate(root_cert.clone()))?;
@@ -179,10 +183,9 @@ impl AttestedReport {
         let version = report["version"]
             .as_u64()
             .ok_or_else(|| anyhow!("The Remote Attestation API version is not valid"))?;
-        ensure!(
-            version == 3,
-            "The Remote Attestation API version is not supported"
-        );
+        if version != 3 {
+            return Err(FrameRAError::ApiVersionError(version));
+        }
         Ok(())
     }
 
@@ -195,17 +198,20 @@ impl AttestedReport {
                     println!("Enclave Quote Status: GROUP_OUT_OF_DATE");
                     Ok(())
                 }
-                _ => bail!("Invalid Enclave Quote Status: {}", quote_status),
+                _ => Err(FrameRAError::QuoteStatusError(quote_status.to_string())),
             }
         } else {
-            bail!("Failed to fetch isvEnclaveQuoteStatus from attestation report");
+            Err(FrameRAError::NotFoundisvEnclaveQuoteStatusError)
         }
     }
 }
 
 fn percent_decode(orig: String) -> Result<Vec<u8>> {
     let v: Vec<&str> = orig.split('%').collect();
-    ensure!(!v.is_empty(), "Certificate is blank");
+    if v.is_empty() {
+        return Err(FrameRAError::BlankCertError);
+    }
+
     let mut ret = String::new();
     ret.push_str(v[0]);
     if v.len() > 1 {
