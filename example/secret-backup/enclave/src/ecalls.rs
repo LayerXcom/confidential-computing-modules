@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use codec::{Decode, Encode};
 use frame_common::traits::{EcallInput, EcallOutput};
 use frame_enclave::{register_ecall, EnclaveEngine};
-use key_vault_enclave::{workflow::*, context::KeyVaultEnclaveContext};
+use key_vault_enclave::{context::KeyVaultEnclaveContext, workflow::*};
 use std::{ptr, vec::Vec};
 
 #[allow(dead_code)]

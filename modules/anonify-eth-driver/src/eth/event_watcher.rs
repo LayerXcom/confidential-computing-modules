@@ -133,7 +133,10 @@ impl Web3Logs {
         let mut latest_blc_num = 0;
 
         for (i, log) in self.logs.iter().enumerate() {
-            info!("Fetched eth event log: {:?}, \npolling event index: {:?}", log, i);
+            info!(
+                "Fetched eth event log: {:?}, \npolling event index: {:?}",
+                log, i
+            );
             if contract_addr != log.0.address {
                 error!("Each log should have same contract address.: index: {}", i);
                 continue;
