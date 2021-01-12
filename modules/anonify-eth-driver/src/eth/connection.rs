@@ -6,7 +6,6 @@ use crate::{
     workflow::*,
 };
 use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
-use anyhow::anyhow;
 use ethabi::{Topic, TopicFilter};
 use frame_retrier::{strategy, Retry};
 use std::{fs, path::Path};
