@@ -16,11 +16,17 @@ use web3::types::Address;
 /// If it returns true, retry deploying contracts.
 const fn deployer_retry_condition(err: &HostError) -> bool {
     match err {
-        HostError::Web3Error(web3_err) => match web3_err {
-            web3::Error::Decoder(_) => false,
+        HostError::Web3ContractError(web3_err) => match web3_err {
+            web3::contract::Error::Abi(_) => false,
+            _ => true,
+        },
+        HostError::Web3ContractDeployError(web3_err) => match web3_err {
+            web3::contract::deploy::Error::Abi(_) => false,
             _ => true,
         },
         HostError::EcallOutputNotSet => false,
+        // error reading abi and bin path
+        HostError::IoError(_) => false,
         _ => true,
     }
 }

@@ -256,7 +256,7 @@ impl Web3Http {
                 (report, report_sig, handshake, ecall_output.mrenclave_ver()),
                 output.signer,
             )
-            .await.unwrap();
+            .await?;
 
         Ok(contract.address())
     }
