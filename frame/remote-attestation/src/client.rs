@@ -1,4 +1,6 @@
+use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use anyhow::{anyhow, bail, ensure, Result};
+use frame_retrier::{strategy, Retry};
 use http_req::{
     request::{Method, Request},
     response::{Headers, Response},
@@ -63,10 +65,17 @@ impl<'a> RAClient<'a> {
     }
 
     pub fn send<T: Write>(&self, writer: &mut T) -> Result<Response> {
-        self.request
-            .send(writer)
-            .map_err(|e| anyhow!("{:?}", e))
-            .map_err(Into::into)
+        Retry::new(
+            "remote_attestation",
+            REQUEST_RETRIES,
+            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+        )
+        .spawn(|| {
+            self.request
+                .send(writer)
+                .map_err(|e| anyhow!("{:?}", e))
+                .map_err(Into::into)
+        })
     }
 }
 

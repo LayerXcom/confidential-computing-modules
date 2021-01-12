@@ -1,5 +1,10 @@
 #[cfg(feature = "std")]
 use crate::localstd::future::Future;
+#[cfg(feature = "sgx")]
+use crate::localstd::{
+    boxed::Box,
+    string::{String, ToString},
+};
 use crate::localstd::{fmt, result::Result, thread, time::Duration};
 use tracing::warn;
 
