@@ -5,6 +5,8 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
+#[cfg(feature = "backup-enable")]
+mod backup;
 mod commands;
 pub mod context;
 mod error;
@@ -15,6 +17,8 @@ mod kvs;
 mod notify;
 
 pub mod workflow {
+    #[cfg(feature = "backup-enable")]
+    pub use crate::backup::{PathSecretBackupper, PathSecretRecoverer};
     pub use crate::commands::{MsgReceiver, MsgSender};
     pub use crate::context::{GetState, ReportRegistration};
     pub use crate::handshake::{HandshakeReceiver, HandshakeSender, JoinGroupSender};

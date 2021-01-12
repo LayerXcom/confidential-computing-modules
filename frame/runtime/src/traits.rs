@@ -6,7 +6,10 @@ use crate::localstd::{
 };
 use codec::{Decode, Encode};
 use frame_common::{
-    crypto::{AccountId, Ciphertext},
+    crypto::{
+        AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest, RecoverRequest,
+        RecoveredPathSecret,
+    },
     state_types::{MemId, ReturnState, UpdatedState},
     traits::*,
 };
@@ -38,7 +41,7 @@ pub trait ContextOps:
     + NotificationOps
     + IdentityKeyOps
     + QuoteGetter
-    + BackupOps
+    + KeyVaultOps
     + ConfigGetter
 {
 }
@@ -49,7 +52,7 @@ impl<
             + NotificationOps
             + IdentityKeyOps
             + QuoteGetter
-            + BackupOps
+            + KeyVaultOps
             + ConfigGetter,
     > ContextOps for T
 {
@@ -148,12 +151,21 @@ pub trait QuoteGetter: Sized {
     fn quote(&self) -> Result<EncodedQuote>;
 }
 
-pub trait BackupOps {
-    fn backup_path_secret_to_key_vault(
+pub trait KeyVaultOps {
+    fn backup_path_secret(&self, backup_path_secret: BackupPathSecret) -> Result<()>;
+
+    fn recover_path_secret(
         &self,
-        path_secret: Vec<u8>,
-        epoch: u32,
-        roster_idx: u32,
-        id: Vec<u8>,
+        recover_path_secret: RecoverRequest,
+    ) -> Result<RecoveredPathSecret>;
+
+    fn manually_backup_path_secrets_all(
+        &self,
+        backup_path_secrets: Vec<BackupPathSecret>,
     ) -> Result<()>;
+
+    fn manually_recover_path_secrets_all(
+        &self,
+        recover_path_secrets_all: RecoverAllRequest,
+    ) -> Result<Vec<RecoveredPathSecret>>;
 }

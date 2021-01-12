@@ -2,7 +2,10 @@ use anonify_config::{DEFAULT_LOCAL_PATH_SECRETS_DIR, IAS_ROOT_CERT};
 use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
-use frame_common::{crypto::Sha256, state_types::StateType};
+use frame_common::{
+    crypto::{BackupPathSecret, Sha256},
+    state_types::StateType,
+};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::{handshake::HandshakeParams, StorePathSecrets};
@@ -45,12 +48,15 @@ impl EnclaveEngine for JoinGroupSender {
         let export_handshake = handshake.clone().into_export();
 
         #[cfg(feature = "backup-enable")]
-        enclave_context.backup_path_secret_to_key_vault(
-            path_secret.as_bytes().to_vec(),
-            epoch,
-            handshake.roster_idx(),
-            id.as_ref().to_vec(),
-        )?;
+        {
+            let backup_path_secret = BackupPathSecret::new(
+                path_secret.as_bytes().to_vec(),
+                epoch,
+                handshake.roster_idx(),
+                id.as_ref().to_vec(),
+            );
+            enclave_context.backup_path_secret(backup_path_secret)?;
+        }
 
         Ok(output::ReturnJoinGroup::new(
             attested_report.report().to_vec(),
@@ -92,12 +98,15 @@ impl EnclaveEngine for HandshakeSender {
         let export_handshake = handshake.clone().into_export();
 
         #[cfg(feature = "backup-enable")]
-        enclave_context.backup_path_secret_to_key_vault(
-            path_secret.as_bytes().to_vec(),
-            epoch,
-            handshake.roster_idx(),
-            id.as_ref().to_vec(),
-        )?;
+        {
+            let backup_path_secret = BackupPathSecret::new(
+                path_secret.as_bytes().to_vec(),
+                epoch,
+                handshake.roster_idx(),
+                id.as_ref().to_vec(),
+            );
+            enclave_context.backup_path_secret(backup_path_secret)?;
+        }
 
         let roster_idx = export_handshake.roster_idx();
         let msg = Sha256::hash_with_u32(&export_handshake.encode(), roster_idx);

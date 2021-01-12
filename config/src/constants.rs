@@ -27,6 +27,8 @@ pub const GET_ENCRYPTING_KEY_CMD: u32 = 8;
 pub const CALL_REGISTER_REPORT_CMD: u32 = 9;
 pub const START_SERVER_CMD: u32 = 10;
 pub const STOP_SERVER_CMD: u32 = 11;
+pub const BACKUP_PATH_SECRET_ALL_CMD: u32 = 12;
+pub const RECOVER_PATH_SECRET_ALL_CMD: u32 = 13;
 
 // retries
 pub const REQUEST_RETRIES: usize = 10;
