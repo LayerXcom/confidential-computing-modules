@@ -120,6 +120,10 @@ mod tests {
     fn test_fixed_delay_strategy_success() {
         let mut counter = 1..=4;
         let res = Retry::new("test_counter_success", 4, strategy::FixedDelay::new(10))
+            .set_condition(|res| match res {
+                Ok(_) => false,
+                Err(_) => true,
+            })
             .spawn(|| match counter.next() {
                 Some(c) if c == 4 => Ok(c),
                 Some(_) => Err("Not 4"),
@@ -134,13 +138,16 @@ mod tests {
     #[test]
     fn test_fixed_delay_strategy_error() {
         let mut counter = 1..=5;
-        let res = Retry::new("test_counter_error", 3, strategy::FixedDelay::new(10)).spawn(|| {
-            match counter.next() {
+        let res = Retry::new("test_counter_error", 3, strategy::FixedDelay::new(10))
+            .set_condition(|res| match res {
+                Ok(_) => false,
+                Err(_) => true,
+            })
+            .spawn(|| match counter.next() {
                 Some(c) if c == 5 => Ok(c),
                 Some(_) => Err("Some: Not 4"),
                 None => Err("None: Not 4"),
-            }
-        });
+            });
 
         assert_eq!(res, Err("Some: Not 4"));
     }
