@@ -5,9 +5,7 @@ use crate::{
     utils::ContractInfo,
     workflow::*,
 };
-use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use ethabi::{Topic, TopicFilter};
-use frame_retrier::{strategy, Retry};
 use std::{fs, path::Path};
 use web3::{
     contract::{Contract, Options},
@@ -215,19 +213,11 @@ impl Web3Http {
     }
 
     pub async fn get_logs(&self, filter: &Filter) -> Result<Vec<Log>> {
-        Retry::new(
-            "get_logs",
-            REQUEST_RETRIES,
-            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
-        )
-        .spawn_async(|| async {
-            self.web3
-                .eth()
-                .logs(filter.clone())
-                .await
-                .map_err(Into::into)
-        })
-        .await
+        self.web3
+            .eth()
+            .logs(filter.clone())
+            .await
+            .map_err(Into::into)
     }
 
     pub async fn deploy<P: AsRef<Path>>(
