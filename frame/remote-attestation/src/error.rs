@@ -32,6 +32,8 @@ pub enum FrameRAError {
         function: &'static str,
     },
 
+    #[error("The status code indicates that it's not Successful, response: {0:?}")]
+    StatusCodeError(http_req::response::Response),
     #[error("The Remote Attestation API version ({0}) is not supported")]
     ApiVersionError(u64),
     #[error("Invalid Enclave Quote Status: {0}")]

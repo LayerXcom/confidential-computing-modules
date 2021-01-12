@@ -111,6 +111,10 @@ pub struct AttestedReport {
 
 impl AttestedReport {
     pub(crate) fn from_response(body: Vec<u8>, resp: Response) -> Result<Self> {
+        if !resp.status_code().is_success() {
+            return Err(FrameRAError::StatusCodeError(resp));
+        }
+
         let headers = resp.headers();
         let sig = headers
             .get("X-IASReport-Signature")
