@@ -76,25 +76,21 @@ where
         let mut iterator = self.strategy.take(self.tries).enumerate();
         let condition = self.condition;
         loop {
-            match operation().await {
-                Ok(value) => return Ok(value),
-                // retry if the condition is set `always` or the condition is equal with specified operation's error
-                Err(err) if condition.should_retry(&err) => {
-                    if let Some((curr_tries, delay)) = iterator.next() {
-                        warn!(
-                            "The {} operation retries {} times... (error: {:?})",
-                            self.name,
-                            curr_tries + 1,
-                            err
-                        );
-                        actix_rt::time::delay_for(delay).await;
-                    } else {
-                        // if it overs the number of retries
-                        return Err(err);
-                    }
+            let res = operation().await;
+            if condition.should_retry(&res) {
+                if let Some((curr_tries, delay)) = iterator.next() {
+                    warn!(
+                        "The {} operation retries {} times... (result: {:?})",
+                        self.name, curr_tries, res
+                    );
+                    actix_rt::time::delay_for(delay).await;
+                } else {
+                    // if it overs the number of retries
+                    // TODO: return err?
+                    return res;
                 }
-                // should not retry if the set error condition is not equal with operation's error
-                Err(err) => return Err(err),
+            } else {
+                return res;
             }
         }
     }
