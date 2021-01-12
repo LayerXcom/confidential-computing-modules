@@ -1678,8 +1678,8 @@ dependencies = [
 name = "frame-retrier"
 version = "0.1.0"
 dependencies = [
+ "actix-rt",
  "sgx_tstd",
- "tokio 1.0.1",
  "tracing",
 ]
 
@@ -3231,12 +3231,6 @@ name = "pin-project-lite"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c917123afa01924fc84bb20c4c03f004d9c38e5127e3c039bbf7f4b9c76a2f6b"
-
-[[package]]
-name = "pin-project-lite"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e36743d754ccdf9954c2e352ce2d4b106e024c814f6499c2dadff80da9a442d8"
 
 [[package]]
 name = "pin-utils"
@@ -4854,21 +4848,11 @@ dependencies = [
  "mio-named-pipes",
  "mio-uds",
  "num_cpus",
- "pin-project-lite 0.1.11",
+ "pin-project-lite",
  "signal-hook-registry",
  "slab",
  "tokio-macros",
  "winapi 0.3.9",
-]
-
-[[package]]
-name = "tokio"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d258221f566b6c803c7b4714abadc080172b272090cdc5e244a6d4dd13c3a6bd"
-dependencies = [
- "autocfg 1.0.1",
- "pin-project-lite 0.2.1",
 ]
 
 [[package]]
@@ -5017,7 +5001,7 @@ dependencies = [
  "futures-io",
  "futures-sink",
  "log 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
- "pin-project-lite 0.1.11",
+ "pin-project-lite",
  "tokio 0.2.22",
 ]
 
@@ -5053,7 +5037,7 @@ checksum = "b0987850db3733619253fe60e17cb59b82d37c7e6c0236bb81e4d6b87c879f27"
 dependencies = [
  "cfg-if 0.1.10",
  "log 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
- "pin-project-lite 0.1.11",
+ "pin-project-lite",
  "tracing-attributes",
  "tracing-core",
 ]

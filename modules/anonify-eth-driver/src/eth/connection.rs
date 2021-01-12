@@ -5,8 +5,10 @@ use crate::{
     utils::ContractInfo,
     workflow::*,
 };
+use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use anyhow::anyhow;
 use ethabi::{Topic, TopicFilter};
+use frame_retrier::{strategy, Retry};
 use std::{fs, path::Path};
 use web3::{
     contract::{Contract, Options},
@@ -167,7 +169,7 @@ impl Web3Contract {
             .limit(EVENT_LIMIT)
             .build();
 
-        let logs = self.web3_conn.get_logs(filter).await?;
+        let logs = self.web3_conn.get_logs(&filter).await?;
 
         Ok(Web3Logs::new(logs, cache, events))
     }
@@ -213,8 +215,20 @@ impl Web3Http {
         Ok(account)
     }
 
-    pub async fn get_logs(&self, filter: Filter) -> Result<Vec<Log>> {
-        self.web3.eth().logs(filter).await.map_err(Into::into)
+    pub async fn get_logs(&self, filter: &Filter) -> Result<Vec<Log>> {
+        Retry::new(
+            "get_logs",
+            REQUEST_RETRIES,
+            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+        )
+        .spawn_async(|| async {
+            self.web3
+                .eth()
+                .logs(filter.clone())
+                .await
+                .map_err(Into::into)
+        })
+        .await
     }
 
     pub async fn deploy<P: AsRef<Path>>(

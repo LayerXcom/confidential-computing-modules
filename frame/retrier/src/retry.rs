@@ -79,9 +79,11 @@ where
                     if let Some((curr_tries, delay)) = iterator.next() {
                         warn!(
                             "The {} operation retries {} times... (error: {:?})",
-                            self.name, curr_tries, err
+                            self.name,
+                            curr_tries + 1,
+                            err
                         );
-                        tokio::time::sleep(delay).await;
+                        actix_rt::time::delay_for(delay).await;
                     } else {
                         // if it overs the number of retries
                         return Err(err);
