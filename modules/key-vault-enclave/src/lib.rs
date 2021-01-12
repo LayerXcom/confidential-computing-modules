@@ -5,9 +5,9 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
+pub mod context;
 mod handlers;
 pub mod server;
-pub mod context;
 
 pub mod workflow {
     pub use crate::server::{ServerStarter, ServerStopper};

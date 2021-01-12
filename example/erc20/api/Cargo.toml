@@ -11,4 +11,4 @@ serde = { version = "1", features = ["derive"] }
 ed25519-dalek = { version = "1.0.0-pre.2", features = ["serde"] }
 rand = "0.7"
 serde-big-array = "0.2"
-web3 = { git = "https://github.com/tomusdrw/rust-web3", rev = "d7393708e257f7ef4ad354917889a8001cf2927c" }
+web3 = "0.14"
