@@ -1,4 +1,7 @@
-use anyhow::{anyhow, bail, ensure, Result};
+use crate::error::{FrameRAError, Result};
+use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
+use anyhow::anyhow;
+use frame_retrier::{strategy, Retry};
 use http_req::{
     request::{Method, Request},
     response::{Headers, Response},
@@ -63,10 +66,35 @@ impl<'a> RAClient<'a> {
     }
 
     pub fn send<T: Write>(&self, writer: &mut T) -> Result<Response> {
-        self.request
-            .send(writer)
-            .map_err(|e| anyhow!("{:?}", e))
-            .map_err(Into::into)
+        Retry::new(
+            "remote_attestation",
+            REQUEST_RETRIES,
+            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+        )
+        .set_condition(|res: &Result<Response>| {
+            match res {
+                Ok(resp) => {
+                    // 500: Internal Server Error
+                    //      - Internal error occurred.
+                    // 503: Service unavailable
+                    //      - Service is currently not able to process the request (due to a temporary overloading or maintenance).
+                    //        This is a temporary state – the same request can be repeated after some time.
+                    if resp.status_code().is_server_err() {
+                        true
+                    } else {
+                        false
+                    }
+                }
+                Err(err) => match err {
+                    FrameRAError::HttpReqError(http_err) => match http_err {
+                        http_req::error::Error::IO(_) => true,
+                        _ => false,
+                    },
+                    _ => false,
+                },
+            }
+        })
+        .spawn(|| self.request.send(writer).map_err(Into::into))
     }
 }
 
@@ -83,6 +111,10 @@ pub struct AttestedReport {
 
 impl AttestedReport {
     pub(crate) fn from_response(body: Vec<u8>, resp: Response) -> Result<Self> {
+        if !resp.status_code().is_success() {
+            return Err(FrameRAError::StatusCodeError(resp));
+        }
+
         let headers = resp.headers();
         let sig = headers
             .get("X-IASReport-Signature")
@@ -109,7 +141,7 @@ impl AttestedReport {
     /// 4. quote status
     #[must_use]
     pub fn verify_attested_report(self, root_cert: Vec<u8>) -> Result<Self> {
-        let now_func = webpki::Time::try_from(SystemTime::now())?;
+        let now_func = webpki::Time::try_from(SystemTime::now()).map_err(|e| anyhow!("{:?}", e))?;
 
         let mut root_store = rustls::RootCertStore::empty();
         root_store.add(&rustls::Certificate(root_cert.clone()))?;
@@ -170,10 +202,9 @@ impl AttestedReport {
         let version = report["version"]
             .as_u64()
             .ok_or_else(|| anyhow!("The Remote Attestation API version is not valid"))?;
-        ensure!(
-            version == 3,
-            "The Remote Attestation API version is not supported"
-        );
+        if version != 3 {
+            return Err(FrameRAError::ApiVersionError(version));
+        }
         Ok(())
     }
 
@@ -186,17 +217,20 @@ impl AttestedReport {
                     println!("Enclave Quote Status: GROUP_OUT_OF_DATE");
                     Ok(())
                 }
-                _ => bail!("Invalid Enclave Quote Status: {}", quote_status),
+                _ => Err(FrameRAError::QuoteStatusError(quote_status.to_string())),
             }
         } else {
-            bail!("Failed to fetch isvEnclaveQuoteStatus from attestation report");
+            Err(FrameRAError::NotFoundisvEnclaveQuoteStatusError)
         }
     }
 }
 
 fn percent_decode(orig: String) -> Result<Vec<u8>> {
     let v: Vec<&str> = orig.split('%').collect();
-    ensure!(!v.is_empty(), "Certificate is blank");
+    if v.is_empty() {
+        return Err(FrameRAError::BlankCertError);
+    }
+
     let mut ret = String::new();
     ret.push_str(v[0]);
     if v.len() > 1 {
