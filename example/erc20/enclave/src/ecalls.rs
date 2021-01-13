@@ -31,4 +31,6 @@ register_ecall!(
     ),
     (GET_ENCRYPTING_KEY_CMD, EncryptingKeyGetter),
     (CALL_REGISTER_REPORT_CMD, ReportRegistration),
+    (BACKUP_PATH_SECRET_ALL_CMD, PathSecretBackupper),
+    (RECOVER_PATH_SECRET_ALL_CMD, PathSecretRecoverer),
 );
