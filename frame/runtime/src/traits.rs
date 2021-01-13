@@ -7,7 +7,7 @@ use crate::localstd::{
 use codec::{Decode, Encode};
 use frame_common::{
     crypto::{
-        AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest, RecoverRequest,
+        AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest,
         RecoveredPathSecret,
     },
     state_types::{MemId, ReturnState, UpdatedState},
@@ -153,11 +153,6 @@ pub trait QuoteGetter: Sized {
 
 pub trait KeyVaultOps {
     fn backup_path_secret(&self, backup_path_secret: BackupPathSecret) -> Result<()>;
-
-    fn recover_path_secret(
-        &self,
-        recover_request: RecoverRequest,
-    ) -> Result<RecoveredPathSecret>;
 
     fn manually_backup_path_secrets_all(
         &self,

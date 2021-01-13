@@ -14,5 +14,3 @@ serde-big-array = "0.2"
 web3 = "0.14"
 
 [features]
-default = ["backup-enable"]
-backup-enable = []

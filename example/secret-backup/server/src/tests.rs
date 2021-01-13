@@ -391,10 +391,6 @@ async fn test_manually_backup_all() {
             .route(
                 "/api/v1/all_backup_to",
                 web::post().to(handle_all_backup_to::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/all_backup_from",
-                web::post().to(handle_all_backup_from::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -472,11 +468,14 @@ async fn test_manually_backup_all() {
     assert_eq!(remote_ids.len(), 2);
 
     clear_remote_path_secrets(env::var("MY_ROSTER_IDX").unwrap().to_string());
+    // ensure clearing remote path_secrets
+    assert!(!path_secrets_dir
+        .join(env::var("MY_ROSTER_IDX").unwrap().as_str())
+        .exists());
 
     // backup all path_secrets to key-vault server
     let req = test::TestRequest::post()
         .uri("/api/v1/all_backup_to")
-        .set_json(&erc20_api::all_backup_to::post::Request::default())
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -550,10 +549,6 @@ async fn test_manually_recover_all() {
             .route(
                 "/api/v1/encrypting_key",
                 web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/all_backup_to",
-                web::post().to(handle_all_backup_to::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/all_backup_from",
@@ -635,11 +630,12 @@ async fn test_manually_recover_all() {
     assert_eq!(remote_ids.len(), 2);
 
     clear_local_path_secrets();
+    // ensure clearing remote path_secrets
+    assert_eq!(get_local_ids().len(), 0);
 
     // recover all path_secrets from key-vault server
     let req = test::TestRequest::post()
         .uri("/api/v1/all_backup_from")
-        .set_json(&erc20_api::all_backup_from::post::Request::default())
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);

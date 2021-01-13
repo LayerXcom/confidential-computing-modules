@@ -495,7 +495,6 @@ where
 #[cfg(feature = "backup-enable")]
 pub async fn handle_all_backup_to<D, S, W>(
     server: web::Data<Arc<Server<D, S, W>>>,
-    _req: web::Json<erc20_api::all_backup_to::post::Request>,
 ) -> Result<HttpResponse>
 where
     D: Deployer,
@@ -504,13 +503,12 @@ where
 {
     server.dispatcher.all_backup_to()?;
 
-    Ok(HttpResponse::Ok().json(erc20_api::all_backup_to::post::Response))
+    Ok(HttpResponse::Ok().finish())
 }
 
 #[cfg(feature = "backup-enable")]
 pub async fn handle_all_backup_from<D, S, W>(
     server: web::Data<Arc<Server<D, S, W>>>,
-    _req: web::Json<erc20_api::all_backup_from::post::Request>,
 ) -> Result<HttpResponse>
 where
     D: Deployer,
@@ -519,5 +517,5 @@ where
 {
     server.dispatcher.all_backup_from()?;
 
-    Ok(HttpResponse::Ok().json(erc20_api::all_backup_from::post::Response))
+    Ok(HttpResponse::Ok().finish())
 }

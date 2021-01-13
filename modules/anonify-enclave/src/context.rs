@@ -8,7 +8,7 @@ use anyhow::anyhow;
 use frame_common::{
     crypto::{
         AccountId, BackupPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverAllRequest,
-        RecoverRequest, RecoveredPathSecret,
+        RecoveredPathSecret,
     },
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
@@ -172,18 +172,6 @@ impl KeyVaultOps for AnonifyEnclaveContext {
         let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
 
         Ok(())
-    }
-
-    fn recover_path_secret(
-        &self,
-        recover_request: RecoverRequest,
-    ) -> anyhow::Result<RecoveredPathSecret> {
-        let mut mra_tls_client =
-            Client::new(self.key_vault_endpoint(), &self.client_config).unwrap();
-        let key_vault_request = KeyVaultRequest::new(KeyVaultCmd::Recover, recover_request);
-        let path_secret: RecoveredPathSecret = mra_tls_client.send_json(key_vault_request)?;
-
-        Ok(path_secret)
     }
 
     fn manually_backup_path_secrets_all(
