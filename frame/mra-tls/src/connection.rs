@@ -3,6 +3,7 @@ use anyhow::{ensure, Result};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::vec::Vec;
+use tracing::warn;
 
 const MAX_FRAME_LEN: u64 = 2048;
 
@@ -46,7 +47,7 @@ impl<S: rustls::Session> Connection<S> {
     pub fn serve_json<H: RequestHandler>(&mut self, handler: H) -> Result<()> {
         let req = self.read_frame()?;
         if req.len() == 0 {
-            dbg!("request's length is 0");
+            warn!("request's length is 0");
             return Ok(());
         }
         let resp = handler.handle_json(&req)?;
