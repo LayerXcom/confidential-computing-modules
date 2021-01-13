@@ -35,6 +35,10 @@ impl Client {
             REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
+        .set_condition(|res| match res {
+            Ok(_) => false,
+            Err(_) => true,
+        })
         .spawn(|| self.connection.write_frame(&wrt))?;
 
         let rd = self.connection.read_frame()?;

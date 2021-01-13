@@ -30,7 +30,7 @@ where
         }
     }
 
-    /// Optionally, define condition to retry
+    /// Define condition to retry
     pub fn set_condition<F>(mut self, custom: F) -> Self
     where
         F: Fn(&Result<T, E>) -> bool + 'static + Send,
