@@ -3,6 +3,7 @@ use anyhow::{ensure, Result};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::vec::Vec;
+use tracing::info;
 
 const MAX_FRAME_LEN: u64 = 4096;
 
@@ -28,6 +29,7 @@ impl<S: rustls::Session> Connection<S> {
 
         let mut frame = vec![0u8; frame_len as usize];
         self.stream.read_exact(&mut frame)?;
+        info!("read {} bytes frame via m-attested-tls", frame_len);
 
         Ok(frame)
     }
@@ -39,6 +41,7 @@ impl<S: rustls::Session> Connection<S> {
         self.stream.write(&header)?;
         self.stream.write_all(&frame)?;
         self.stream.flush()?;
+        info!("write {} bytes frame via m-attested-tls", frame_len);
 
         Ok(())
     }
