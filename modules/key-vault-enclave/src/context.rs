@@ -1,4 +1,3 @@
-use anonify_config::KEY_VAULT_MRENCLAVE_VERSION;
 use frame_runtime::traits::*;
 use std::{env, string::String};
 
@@ -33,7 +32,7 @@ impl ConfigGetter for KeyVaultEnclaveContext {
 }
 
 impl KeyVaultEnclaveContext {
-    pub fn new() -> Self {
+    pub fn new(version: usize) -> Self {
         let spid = env::var("SPID").expect("SPID is not set");
         let ias_url = env::var("IAS_URL").expect("IAS_URL is not set");
         let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
@@ -41,7 +40,7 @@ impl KeyVaultEnclaveContext {
             env::var("KEY_VAULT_ENDPOINT").expect("KEY_VAULT_ENDPOINT is not set");
 
         Self {
-            version: KEY_VAULT_MRENCLAVE_VERSION,
+            version,
             ias_url,
             sub_key,
             key_vault_endpoint,

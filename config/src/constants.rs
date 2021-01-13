@@ -1,13 +1,3 @@
-// treekem
-pub const MY_ROSTER_IDX: usize = 0;
-pub const MAX_ROSTER_IDX: usize = 2;
-pub const UNTIL_ROSTER_IDX: usize = 10;
-pub const UNTIL_EPOCH: usize = 30;
-
-// versions
-pub const ANONIFY_MRENCLAVE_VERSION: usize = 0;
-pub const KEY_VAULT_MRENCLAVE_VERSION: usize = 0;
-
 // filepath
 pub const DEFAULT_LOCAL_PATH_SECRETS_DIR: &str = ".anonify/pathsecrets";
 

@@ -2,7 +2,7 @@ use crate::{
     error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
-use anonify_config::{ANONIFY_MRENCLAVE_VERSION, ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT};
+use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT};
 use anonify_io_types::*;
 use anyhow::anyhow;
 use frame_common::{
@@ -182,7 +182,7 @@ impl BackupOps for AnonifyEnclaveContext {
 
 // TODO: Consider SGX_ERROR_BUSY.
 impl AnonifyEnclaveContext {
-    pub fn new() -> Result<Self> {
+    pub fn new(version: usize) -> Result<Self> {
         let identity_key = EnclaveIdentityKey::new()?;
         let db = EnclaveDB::new();
 
@@ -234,7 +234,7 @@ impl AnonifyEnclaveContext {
             db,
             notifier,
             group_key,
-            version: ANONIFY_MRENCLAVE_VERSION,
+            version,
             ias_url,
             sub_key,
             key_vault_endpoint,
