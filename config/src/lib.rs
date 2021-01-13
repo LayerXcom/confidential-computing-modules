@@ -15,10 +15,6 @@ use anyhow_std as local_anyhow;
 use serde_sgx as local_serde;
 #[cfg(feature = "std")]
 use serde_std as local_serde;
-#[cfg(all(feature = "sgx", not(feature = "std")))]
-use toml_sgx as local_toml;
-#[cfg(feature = "std")]
-use toml_std as local_toml;
 #[macro_use]
 extern crate lazy_static;
 

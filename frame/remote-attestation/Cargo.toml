@@ -5,6 +5,7 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+frame-config = { path = "../config", default-features = false, features = ["sgx"] }
 frame-types = { path = "../types" }
 frame-retrier = { path = "../retrier", default-features = false, features = ["sgx"]}
 anonify-config = { path = "../../config", default-features = false, features = ["sgx"]}

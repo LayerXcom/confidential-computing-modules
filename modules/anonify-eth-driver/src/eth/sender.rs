@@ -5,8 +5,9 @@ use crate::{
     utils::*,
     workflow::*,
 };
-use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
+use anonify_config::RETRY_DELAY_MILLS;
 use async_trait::async_trait;
+use frame_config::REQUEST_RETRIES;
 use frame_retrier::{strategy, Retry};
 use sgx_types::sgx_enclave_id_t;
 use std::path::Path;
@@ -64,7 +65,7 @@ impl Sender for EthSender {
     async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
         Retry::new(
             "get_account",
-            REQUEST_RETRIES,
+            *REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
         .spawn_async(|| async { self.contract.get_account(index, password).await })
@@ -79,7 +80,7 @@ impl Sender for EthSender {
         info!("Sending a handshake to blockchain: {:?}", host_output);
         Retry::new(
             "send_report_handshake",
-            REQUEST_RETRIES,
+            *REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
@@ -95,7 +96,7 @@ impl Sender for EthSender {
         info!("Registering report to blockchain: {:?}", host_output);
         Retry::new(
             "send_command",
-            REQUEST_RETRIES,
+            *REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
@@ -107,7 +108,7 @@ impl Sender for EthSender {
         info!("Sending a command to blockchain: {:?}", host_output);
         Retry::new(
             "send_command",
-            REQUEST_RETRIES,
+            *REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
@@ -119,7 +120,7 @@ impl Sender for EthSender {
         info!("Sending a handshake to blockchain: {:?}", host_output);
         Retry::new(
             "handshake",
-            REQUEST_RETRIES,
+            *REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)

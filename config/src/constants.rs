@@ -25,5 +25,4 @@ pub const START_SERVER_CMD: u32 = 10;
 pub const STOP_SERVER_CMD: u32 = 11;
 
 // retries
-pub const REQUEST_RETRIES: usize = 10;
 pub const RETRY_DELAY_MILLS: u64 = 100;

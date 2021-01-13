@@ -5,7 +5,8 @@ use crate::{
     utils::*,
     workflow::*,
 };
-use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
+use anonify_config::{RETRY_DELAY_MILLS};
+use frame_config::REQUEST_RETRIES;
 use async_trait::async_trait;
 use frame_retrier::{strategy, Retry};
 use sgx_types::sgx_enclave_id_t;
@@ -70,7 +71,7 @@ impl Deployer for EthDeployer {
     {
         let contract_addr = Retry::new(
             "get_account",
-            REQUEST_RETRIES,
+            *REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
         .set_condition(deployer_retry_condition)

@@ -1,6 +1,7 @@
 use crate::config::ClientConfig;
 use crate::connection::Connection;
-use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
+use anonify_config::{RETRY_DELAY_MILLS};
+use frame_config::{REQUEST_RETRIES};
 use anyhow::{anyhow, Result};
 use frame_retrier::{strategy, Retry};
 use http::Uri;
@@ -32,7 +33,7 @@ impl Client {
         let wrt = serde_json::to_vec(&json)?;
         Retry::new(
             "mutual_attested_tls",
-            REQUEST_RETRIES,
+            *REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
         .set_condition(|res| match res {
