@@ -4,11 +4,24 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
+use std::backtrace;
 use std::prelude::v1::*;
 use test_utils::*;
 
+use once_cell::sync::Lazy;
+
+static ENABLE_BACKTRACE: Lazy<()> = Lazy::new(|| {
+    backtrace::enable_backtrace(
+        &*anonify_config::ENCLAVE_SIGNED_SO,
+        backtrace::PrintFormat::Short,
+    )
+    .unwrap();
+});
+
 #[no_mangle]
 pub fn ecall_run_tests() {
+    *ENABLE_BACKTRACE;
+    
     let ret = check_all_passed!(
         frame_treekem::tests::run_tests(),
         anonify_enclave::tests::run_tests(),
