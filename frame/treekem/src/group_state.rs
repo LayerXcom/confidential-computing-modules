@@ -179,7 +179,7 @@ fn recover_path_secret_from_key_vault(
     let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
         .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT_KEY_VAULT);
     let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
-    let backup_request = KeyVaultRequest::new(KeyVaultCmd::Recover, recover_reques);
+    let backup_request = KeyVaultRequest::new(KeyVaultCmd::Recover, recover_request);
     let recovered_path_secret: RecoveredPathSecret = mra_tls_client.send_json(backup_request)?;
     Ok(PathSecret::from(recovered_path_secret.path_secret()))
 }
