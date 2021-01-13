@@ -5,9 +5,8 @@ use crate::{
     utils::*,
     workflow::*,
 };
-use anonify_config::RETRY_DELAY_MILLS;
 use async_trait::async_trait;
-use frame_config::REQUEST_RETRIES;
+use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use sgx_types::sgx_enclave_id_t;
 use std::path::Path;
@@ -66,7 +65,7 @@ impl Sender for EthSender {
         Retry::new(
             "get_account",
             *REQUEST_RETRIES,
-            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .spawn_async(|| async { self.contract.get_account(index, password).await })
         .await
@@ -81,7 +80,7 @@ impl Sender for EthSender {
         Retry::new(
             "send_report_handshake",
             *REQUEST_RETRIES,
-            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
         .spawn_async(|| async {
@@ -97,7 +96,7 @@ impl Sender for EthSender {
         Retry::new(
             "send_command",
             *REQUEST_RETRIES,
-            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
         .spawn_async(|| async { self.contract.register_report(host_output.clone()).await })
@@ -109,7 +108,7 @@ impl Sender for EthSender {
         Retry::new(
             "send_command",
             *REQUEST_RETRIES,
-            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
         .spawn_async(|| async { self.contract.send_command(host_output.clone()).await })
@@ -121,7 +120,7 @@ impl Sender for EthSender {
         Retry::new(
             "handshake",
             *REQUEST_RETRIES,
-            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
         .spawn_async(|| async { self.contract.handshake(host_output.clone()).await })

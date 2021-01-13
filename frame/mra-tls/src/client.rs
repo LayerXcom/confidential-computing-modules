@@ -1,7 +1,6 @@
 use crate::config::ClientConfig;
 use crate::connection::Connection;
-use anonify_config::{RETRY_DELAY_MILLS};
-use frame_config::{REQUEST_RETRIES};
+use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use anyhow::{anyhow, Result};
 use frame_retrier::{strategy, Retry};
 use http::Uri;
@@ -34,7 +33,7 @@ impl Client {
         Retry::new(
             "mutual_attested_tls",
             *REQUEST_RETRIES,
-            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(|res| match res {
             Ok(_) => false,

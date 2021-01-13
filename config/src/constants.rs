@@ -23,6 +23,3 @@ pub const GET_ENCRYPTING_KEY_CMD: u32 = 8;
 pub const CALL_REGISTER_REPORT_CMD: u32 = 9;
 pub const START_SERVER_CMD: u32 = 10;
 pub const STOP_SERVER_CMD: u32 = 11;
-
-// retries
-pub const RETRY_DELAY_MILLS: u64 = 100;
