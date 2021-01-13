@@ -98,9 +98,13 @@ fn manually_recover_path_secrets_all(body: Value) -> anyhow::Result<Vec<u8>> {
     let recover_path_secret: RecoverAllRequest = serde_json::from_value(body)?;
     let roster_idx = recover_path_secret.roster_idx();
 
-    let path_secrets_dir = env::var("LOCAL_PATH_SECRETS_DIR")
-        .unwrap_or(format!("{}/{}", DEFAULT_LOCAL_PATH_SECRETS_DIR, roster_idx));
+    let path_secrets_dir = format!(
+        "{}/{}",
+        env::var("LOCAL_PATH_SECRETS_DIR").unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
+        roster_idx
+    );
     let store_path_secrets = StorePathSecrets::new(path_secrets_dir.clone());
+
     let ids = get_local_path_secret_ids(path_secrets_dir)?;
     for id in ids {
         let eps = store_path_secrets.load_from_local_filesystem(&id)?;
