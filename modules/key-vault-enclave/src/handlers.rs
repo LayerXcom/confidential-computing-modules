@@ -1,4 +1,4 @@
-use anonify_config::DEFAULT_LOCAL_PATH_SECRETS_DIR;
+use anonify_config::{DEFAULT_LOCAL_PATH_SECRETS_DIR, PJ_ROOT_DIR};
 use anyhow::anyhow;
 use frame_common::crypto::{
     BackupPathSecret, ExportPathSecret, RecoverAllRequest, RecoverRequest, RecoveredPathSecret,
@@ -6,7 +6,12 @@ use frame_common::crypto::{
 use frame_mra_tls::RequestHandler;
 use frame_treekem::{PathSecret, StorePathSecrets};
 use serde_json::Value;
-use std::{env, fs, path::Path, vec::Vec};
+use std::{
+    env, fs,
+    io::BufReader,
+    path::{Path, PathBuf},
+    vec::Vec,
+};
 
 #[derive(Default, Clone)]
 pub struct KeyVaultHandler;
@@ -108,10 +113,21 @@ fn manually_recover_path_secrets_all(body: Value) -> anyhow::Result<Vec<u8>> {
 }
 
 pub fn get_local_path_secret_ids<P: AsRef<Path>>(path: P) -> anyhow::Result<Vec<Vec<u8>>> {
-    Ok(fs::read_dir(path)?
+    let local_path_secret_dir_path = (*PJ_ROOT_DIR).to_path_buf().join(path);
+
+    let file_paths: Vec<PathBuf> = fs::read_dir(local_path_secret_dir_path)?
         .filter_map(|entry| entry.ok())
         .map(|entry| entry.path())
         .filter(|path| path.is_file())
-        .filter_map(|path| Some(path.file_name()?.to_str()?.into()))
-        .collect())
+        .collect();
+
+    let mut ids = vec![];
+    for path in file_paths {
+        let file = fs::File::open(path)?;
+        let reader = BufReader::new(file);
+        let eps: ExportPathSecret = serde_json::from_reader(reader)?;
+        ids.push(eps.id_as_ref().to_vec());
+    }
+
+    Ok(ids)
 }

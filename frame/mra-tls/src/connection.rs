@@ -4,7 +4,7 @@ use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::vec::Vec;
 
-const MAX_FRAME_LEN: u64 = 2048;
+const MAX_FRAME_LEN: u64 = 4096;
 
 pub struct Connection<S: rustls::Session> {
     stream: rustls::StreamOwned<S, TcpStream>,
