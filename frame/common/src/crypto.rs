@@ -1,4 +1,5 @@
 use crate::local_anyhow::{anyhow, Error};
+use crate::local_once_cell::sync::Lazy;
 use crate::localstd::{
     cmp::Ordering,
     fmt,
@@ -31,22 +32,20 @@ pub const COMMON_CHALLENGE: [u8; CHALLENGE_SIZE] = [
     135, 35, 77, 36, 45, 164, 254, 64, 8, 169, 238,
 ];
 
-lazy_static! {
-    pub static ref COMMON_ACCESS_POLICY: Ed25519ChallengeResponse = {
-        let secret = SecretKey::from_bytes(&COMMON_SECRET).unwrap();
-        let pubkey = PublicKey::from(&secret);
-        let keypair = Keypair {
-            secret,
-            public: pubkey,
-        };
-
-        let sig = keypair.sign(&COMMON_CHALLENGE);
-
-        assert!(keypair.verify(&COMMON_CHALLENGE, &sig).is_ok());
-        Ed25519ChallengeResponse::new(sig, keypair.public, COMMON_CHALLENGE)
+pub static COMMON_ACCESS_POLICY: Lazy<Ed25519ChallengeResponse> = Lazy::new(|| {
+    let secret = SecretKey::from_bytes(&COMMON_SECRET).unwrap();
+    let pubkey = PublicKey::from(&secret);
+    let keypair = Keypair {
+        secret,
+        public: pubkey,
     };
-    pub static ref OWNER_ACCOUNT_ID: AccountId = COMMON_ACCESS_POLICY.account_id();
-}
+
+    let sig = keypair.sign(&COMMON_CHALLENGE);
+
+    assert!(keypair.verify(&COMMON_CHALLENGE, &sig).is_ok());
+    Ed25519ChallengeResponse::new(sig, keypair.public, COMMON_CHALLENGE)
+});
+pub static OWNER_ACCOUNT_ID: Lazy<AccountId> = Lazy::new(|| COMMON_ACCESS_POLICY.account_id());
 
 /// User account_id represents last 20 bytes of digest of user's public key.
 /// A signature verification must return true to generate a user account_id.
