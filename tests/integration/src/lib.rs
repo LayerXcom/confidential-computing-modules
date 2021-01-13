@@ -20,6 +20,7 @@ use web3::{
     Web3,
 };
 
+const ETH_URL: &str = "http://172.28.0.2:8545";
 const ABI_PATH: &str = "../../contract-build/Anonify.abi";
 const BIN_PATH: &str = "../../contract-build/Anonify.bin";
 const CONFIRMATIONS: usize = 0;
@@ -30,9 +31,8 @@ pub async fn get_encrypting_key(
     contract_addr: &str,
     dispatcher: &Dispatcher<EthDeployer, EthSender, EventWatcher>,
 ) -> DhPubKey {
-    let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
     let encrypting_key = dispatcher.get_encrypting_key().unwrap();
-    let transport = Http::new(eth_url).unwrap();
+    let transport = Http::new(ETH_URL).unwrap();
     let web3 = Web3::new(transport);
     let web3_conn = web3.eth();
 
@@ -61,7 +61,6 @@ pub async fn get_encrypting_key(
 #[actix_rt::test]
 async fn test_integration_eth_construct() {
     set_env_vars();
-    let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -69,7 +68,7 @@ async fn test_integration_eth_construct() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, eth_url, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -134,7 +133,6 @@ async fn test_integration_eth_construct() {
 #[actix_rt::test]
 async fn test_auto_notification() {
     set_env_vars();
-    let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -144,7 +142,7 @@ async fn test_auto_notification() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, eth_url, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -231,7 +229,6 @@ async fn test_auto_notification() {
 #[actix_rt::test]
 async fn test_integration_eth_transfer() {
     set_env_vars();
-    let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -241,7 +238,7 @@ async fn test_integration_eth_transfer() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, eth_url, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -341,7 +338,6 @@ async fn test_integration_eth_transfer() {
 #[actix_rt::test]
 async fn test_key_rotation() {
     set_env_vars();
-    let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -351,7 +347,7 @@ async fn test_key_rotation() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, eth_url, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -425,7 +421,6 @@ async fn test_key_rotation() {
 #[actix_rt::test]
 async fn test_integration_eth_approve() {
     set_env_vars();
-    let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -434,7 +429,7 @@ async fn test_integration_eth_approve() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, eth_url, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -530,7 +525,6 @@ async fn test_integration_eth_approve() {
 #[actix_rt::test]
 async fn test_integration_eth_transfer_from() {
     set_env_vars();
-    let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -540,7 +534,7 @@ async fn test_integration_eth_transfer_from() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, eth_url, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -727,7 +721,6 @@ async fn test_integration_eth_transfer_from() {
 #[actix_rt::test]
 async fn test_integration_eth_mint() {
     set_env_vars();
-    let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -736,7 +729,7 @@ async fn test_integration_eth_mint() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, eth_url, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -822,7 +815,6 @@ async fn test_integration_eth_mint() {
 #[actix_rt::test]
 async fn test_integration_eth_burn() {
     set_env_vars();
-    let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -831,7 +823,7 @@ async fn test_integration_eth_burn() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, eth_url, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -938,6 +930,7 @@ lazy_static! {
 
 pub fn set_env_vars() {
     lazy_static::initialize(&ENV_LOGGER_INIT);
+    env::set_var("RUST_LOG", "DEBUG");
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
     env::set_var(
