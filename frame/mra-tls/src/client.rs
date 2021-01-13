@@ -1,6 +1,8 @@
 use crate::config::ClientConfig;
 use crate::connection::Connection;
+use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use anyhow::{anyhow, Result};
+use frame_retrier::{strategy, Retry};
 use http::Uri;
 use serde::{de::DeserializeOwned, Serialize};
 use std::sync::Arc;
@@ -28,7 +30,13 @@ impl Client {
         DE: DeserializeOwned,
     {
         let wrt = serde_json::to_vec(&json)?;
-        self.connection.write_frame(wrt)?;
+        Retry::new(
+            "mutual_attested_tls",
+            REQUEST_RETRIES,
+            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+        )
+        .spawn(|| self.connection.write_frame(&wrt))?;
+
         let rd = self.connection.read_frame()?;
         serde_json::from_slice(&rd).map_err(Into::into)
     }

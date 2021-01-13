@@ -32,7 +32,7 @@ impl<S: rustls::Session> Connection<S> {
         Ok(frame)
     }
 
-    pub fn write_frame(&mut self, frame: Vec<u8>) -> Result<()> {
+    pub fn write_frame(&mut self, frame: &[u8]) -> Result<()> {
         let frame_len = frame.len() as u64;
         let header = frame_len.to_be_bytes();
 
@@ -50,7 +50,7 @@ impl<S: rustls::Session> Connection<S> {
             return Ok(());
         }
         let resp = handler.handle_json(&req)?;
-        self.write_frame(resp)?;
+        self.write_frame(&resp)?;
         Ok(())
     }
 }
