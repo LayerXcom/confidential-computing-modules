@@ -10,7 +10,9 @@ use anonify_config::{
     DEFAULT_LOCAL_PATH_SECRETS_DIR, ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT,
 };
 use codec::Encode;
-use frame_common::crypto::{ExportPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverRequest};
+use frame_common::crypto::{
+    ExportPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverRequest, RecoveredPathSecret,
+};
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 
 #[derive(Clone, Debug, Encode)]
@@ -178,9 +180,8 @@ fn recover_path_secret_from_key_vault(
         .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT_KEY_VAULT);
     let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
     let backup_request = KeyVaultRequest::new(KeyVaultCmd::Recover, recover_reques);
-    let resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
-    let inner_ps: Vec<u8> = serde_json::from_value(resp)?;
-    Ok(PathSecret::from(inner_ps))
+    let recovered_path_secret: RecoveredPathSecret = mra_tls_client.send_json(backup_request)?;
+    Ok(PathSecret::from(recovered_path_secret.path_secret()))
 }
 
 impl GroupState {
