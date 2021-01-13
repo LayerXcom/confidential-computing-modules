@@ -1,5 +1,10 @@
 use super::connection::{Web3Contract, Web3Http};
-use crate::{error::Result, traits::*, utils::*, workflow::*};
+use crate::{
+    error::{HostError, Result},
+    traits::*,
+    utils::*,
+    workflow::*,
+};
 use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use async_trait::async_trait;
 use frame_retrier::{strategy, Retry};
@@ -7,6 +12,22 @@ use sgx_types::sgx_enclave_id_t;
 use std::path::Path;
 use tracing::info;
 use web3::types::{Address, H256};
+
+/// Define a retry condition of sending transactions.
+/// If it returns false, don't need to retry sending transactions.
+const fn sender_retry_condition(res: &Result<H256>) -> bool {
+    match res {
+        Ok(_) => false,
+        Err(err) => match err {
+            HostError::Web3ContractError(web3_err) => match web3_err {
+                web3::contract::Error::Abi(_) => false,
+                _ => true,
+            },
+            HostError::EcallOutputNotSet => false,
+            _ => true,
+        },
+    }
+}
 
 /// Components needed to send a transaction
 #[derive(Debug)]
@@ -61,6 +82,7 @@ impl Sender for EthSender {
             REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
+        .set_condition(sender_retry_condition)
         .spawn_async(|| async {
             self.contract
                 .send_report_handshake(host_output.clone(), method)
@@ -76,6 +98,7 @@ impl Sender for EthSender {
             REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
+        .set_condition(sender_retry_condition)
         .spawn_async(|| async { self.contract.register_report(host_output.clone()).await })
         .await
     }
@@ -87,6 +110,7 @@ impl Sender for EthSender {
             REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
+        .set_condition(sender_retry_condition)
         .spawn_async(|| async { self.contract.send_command(host_output.clone()).await })
         .await
     }
@@ -98,6 +122,7 @@ impl Sender for EthSender {
             REQUEST_RETRIES,
             strategy::FixedDelay::new(RETRY_DELAY_MILLS),
         )
+        .set_condition(sender_retry_condition)
         .spawn_async(|| async { self.contract.handshake(host_output.clone()).await })
         .await
     }

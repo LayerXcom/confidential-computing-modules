@@ -7,7 +7,9 @@ pub struct FixedDelay {
 
 impl FixedDelay {
     pub fn new(mills: u64) -> Self {
-        FixedDelay { duration: Duration::from_millis(mills) }
+        FixedDelay {
+            duration: Duration::from_millis(mills),
+        }
     }
 }
 

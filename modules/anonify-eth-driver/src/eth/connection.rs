@@ -5,7 +5,6 @@ use crate::{
     utils::ContractInfo,
     workflow::*,
 };
-use anyhow::anyhow;
 use ethabi::{Topic, TopicFilter};
 use std::{fs, path::Path};
 use web3::{
@@ -167,7 +166,7 @@ impl Web3Contract {
             .limit(EVENT_LIMIT)
             .build();
 
-        let logs = self.web3_conn.get_logs(filter).await?;
+        let logs = self.web3_conn.get_logs(&filter).await?;
 
         Ok(Web3Logs::new(logs, cache, events))
     }
@@ -213,8 +212,12 @@ impl Web3Http {
         Ok(account)
     }
 
-    pub async fn get_logs(&self, filter: Filter) -> Result<Vec<Log>> {
-        self.web3.eth().logs(filter).await.map_err(Into::into)
+    pub async fn get_logs(&self, filter: &Filter) -> Result<Vec<Log>> {
+        self.web3
+            .eth()
+            .logs(filter.clone())
+            .await
+            .map_err(Into::into)
     }
 
     pub async fn deploy<P: AsRef<Path>>(
@@ -235,8 +238,7 @@ impl Web3Http {
         let handshake = ecall_output.handshake().to_vec();
         let gas = output.gas;
 
-        let contract = Contract::deploy(self.web3.eth(), abi.as_slice())
-            .map_err(|e| anyhow!("{:?}", e))?
+        let contract = Contract::deploy(self.web3.eth(), abi.as_slice())?
             .options(Options::with(|opt| opt.gas = Some(gas.into())))
             .confirmations(confirmations)
             .execute(
@@ -244,9 +246,7 @@ impl Web3Http {
                 (report, report_sig, handshake, ecall_output.mrenclave_ver()),
                 output.signer,
             )
-            .map_err(|e| anyhow!("{:?}", e))?
-            .await
-            .map_err(|e| anyhow!("{:?}", e))?;
+            .await?;
 
         Ok(contract.address())
     }
