@@ -579,3 +579,29 @@ pub mod register_report {
         pub struct Response(pub H256);
     }
 }
+
+#[cfg(feature = "backup-enable")]
+pub mod all_backup_to {
+    pub mod post {
+        use super::super::*;
+
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Request;
+
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Response;
+    }
+}
+
+#[cfg(feature = "backup-enable")]
+pub mod all_backup_from {
+    pub mod post {
+        use super::super::*;
+
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Request;
+
+        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
+        pub struct Response;
+    }
+}

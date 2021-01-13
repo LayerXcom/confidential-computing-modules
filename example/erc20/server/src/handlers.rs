@@ -491,3 +491,33 @@ where
 
     Ok(HttpResponse::Ok().json(erc20_api::register_report::post::Response(tx_hash)))
 }
+
+#[cfg(feature = "backup-enable")]
+pub async fn handle_all_backup_to<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
+    _req: web::Json<erc20_api::all_backup_to::post::Request>,
+) -> Result<HttpResponse>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher,
+{
+    server.dispatcher.all_backup_to()?;
+
+    Ok(HttpResponse::Ok().json(erc20_api::all_backup_to::post::Response))
+}
+
+#[cfg(feature = "backup-enable")]
+pub async fn handle_all_backup_from<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
+    _req: web::Json<erc20_api::all_backup_from::post::Request>,
+) -> Result<HttpResponse>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher,
+{
+    server.dispatcher.all_backup_from()?;
+
+    Ok(HttpResponse::Ok().json(erc20_api::all_backup_from::post::Response))
+}
