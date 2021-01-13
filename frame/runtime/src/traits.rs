@@ -156,7 +156,7 @@ pub trait KeyVaultOps {
 
     fn recover_path_secret(
         &self,
-        recover_path_secret: RecoverRequest,
+        recover_request: RecoverRequest,
     ) -> Result<RecoveredPathSecret>;
 
     fn manually_backup_path_secrets_all(

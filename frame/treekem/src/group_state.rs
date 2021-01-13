@@ -10,7 +10,7 @@ use anonify_config::{
     DEFAULT_LOCAL_PATH_SECRETS_DIR, ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT,
 };
 use codec::Encode;
-use frame_common::crypto::{KeyVaultCmd, KeyVaultRequest, ExportPathSecret, RecoverRequest};
+use frame_common::crypto::{ExportPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverRequest};
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 
 #[derive(Clone, Debug, Encode)]
@@ -169,7 +169,7 @@ fn recover_path_secret_from_key_vault(
     sub_key: &str,
     key_vault_endpoint: &str,
 ) -> Result<PathSecret> {
-    let recover_path_secret = RecoverRequest::new(roster_idx, id.to_vec());
+    let recover_request = RecoverRequest::new(roster_idx, id.to_vec());
 
     let attested_tls_config =
         AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
@@ -177,7 +177,7 @@ fn recover_path_secret_from_key_vault(
     let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
         .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT_KEY_VAULT);
     let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
-    let backup_request = KeyVaultRequest::new(KeyVaultCmd::Recover, recover_path_secret);
+    let backup_request = KeyVaultRequest::new(KeyVaultCmd::Recover, recover_reques);
     let resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
     let inner_ps: Vec<u8> = serde_json::from_value(resp)?;
     Ok(PathSecret::from(inner_ps))

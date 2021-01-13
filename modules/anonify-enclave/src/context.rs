@@ -176,11 +176,11 @@ impl KeyVaultOps for AnonifyEnclaveContext {
 
     fn recover_path_secret(
         &self,
-        recover_path_secret: RecoverRequest,
+        recover_request: RecoverRequest,
     ) -> anyhow::Result<RecoveredPathSecret> {
         let mut mra_tls_client =
             Client::new(self.key_vault_endpoint(), &self.client_config).unwrap();
-        let key_vault_request = KeyVaultRequest::new(KeyVaultCmd::Recover, recover_path_secret);
+        let key_vault_request = KeyVaultRequest::new(KeyVaultCmd::Recover, recover_request);
         let path_secret: RecoveredPathSecret = mra_tls_client.send_json(key_vault_request)?;
 
         Ok(path_secret)
