@@ -28,7 +28,7 @@ $ cp .env.sample .env
 You can build a latest docker image and then run the container:
 ```
 $ docker build -t anonify-server:latest -f docker/server.Dockerfile ./
-$ docker run -v /var/run/aesmd:/var/run/aesmd --device /dev/sgx/enclave --name anonify -d --rm -it anonify-server:latest
+$ docker run -v /var/run/aesmd:/var/run/aesmd --device /dev/sgx/enclave --env-file ./.env --name anonify -d --rm -it anonify-server:latest
 ```
 
 ### shell scripts
