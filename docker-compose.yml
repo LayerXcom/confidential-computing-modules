@@ -12,6 +12,20 @@ services:
       RUST_LOG: debug
       SPID: ${SPID}
       SUB_KEY: ${SUB_KEY}
+      MY_ROSTER_IDX: ${MY_ROSTER_IDX}
+      MAX_ROSTER_IDX: ${MAX_ROSTER_IDX}
+      IAS_URL: ${IAS_URL}
+      KEY_VAULT_ENDPOINT: ${KEY_VAULT_ENDPOINT}
+      AUDITOR_ENDPOINT: ${AUDITOR_ENDPOINT}
+      ENCLAVE_PKG_NAME: ${ENCLAVE_PKG_NAME}
+      BACKUP: ${BACKUP}
+      ETH_URL: ${ETH_URL}
+      ANONIFY_URL: ${ANONIFY_URL}
+      ABI_PATH: ${ABI_PATH}
+      BIN_PATH: ${BIN_PATH}
+      CONFIRMATIONS: ${CONFIRMATIONS}
+      ACCOUNT_INDEX: ${ACCOUNT_INDEX}
+      PASSWORD: ${PASSWORD}
     stdin_open: true
     tty: true
     networks:
