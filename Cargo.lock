@@ -2505,6 +2505,7 @@ dependencies = [
  "frame-mra-tls",
  "frame-runtime",
  "frame-treekem",
+ "hex",
  "rustls 0.16.0",
  "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
  "serde_json 1.0.51",

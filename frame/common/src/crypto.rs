@@ -604,7 +604,7 @@ impl ExportHandshake {
     }
 }
 
-/// PathSecret to backup via mra-tls
+/// PathSecret to backup to key-vault server
 #[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
 #[serde(crate = "crate::serde")]
 pub struct BackupPathSecret {
@@ -641,17 +641,48 @@ impl BackupPathSecret {
     }
 }
 
-/// PathSecret to recover via mra-tls
+/// PathSecret recovered from key-vault server
 #[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
 #[serde(crate = "crate::serde")]
-pub struct RecoverPathSecret {
+pub struct RecoveredPathSecret {
+    path_secret: Vec<u8>,
+    epoch: u32,
+    id: Vec<u8>,
+}
+
+impl RecoveredPathSecret {
+    pub fn new(path_secret: Vec<u8>, epoch: u32, id: Vec<u8>) -> Self {
+        RecoveredPathSecret {
+            path_secret,
+            epoch,
+            id,
+        }
+    }
+
+    pub fn epoch(&self) -> u32 {
+        self.epoch
+    }
+
+    pub fn path_secret(&self) -> &[u8] {
+        &self.path_secret[..]
+    }
+
+    pub fn id(&self) -> &[u8] {
+        &self.id[..]
+    }
+}
+
+/// A Request to recover a PathSecret specified by roster_idx and id from key-vault server
+#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
+#[serde(crate = "crate::serde")]
+pub struct RecoverRequest {
     roster_idx: u32,
     id: Vec<u8>,
 }
 
-impl RecoverPathSecret {
+impl RecoverRequest {
     pub fn new(roster_idx: u32, id: Vec<u8>) -> Self {
-        RecoverPathSecret { roster_idx, id }
+        RecoverRequest { roster_idx, id }
     }
 
     pub fn id(&self) -> &[u8] {
@@ -663,32 +694,41 @@ impl RecoverPathSecret {
     }
 }
 
-#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+/// A Request to recover all PathSecrets specified by roster_idx from key-vault server
+#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
 #[serde(crate = "crate::serde")]
-pub enum BackupCmd {
-    STORE,
-    RECOVER,
+pub struct RecoverAllRequest {
+    roster_idx: u32,
 }
 
-impl From<u64> for BackupCmd {
-    fn from(v: u64) -> Self {
-        match v {
-            0 => Self::STORE,
-            1 => Self::RECOVER,
-            _ => unreachable!("Unknown BackupCmd. got: {:}", v),
-        }
+impl RecoverAllRequest {
+    pub fn new(roster_idx: u32) -> Self {
+        RecoverAllRequest { roster_idx }
     }
+
+    pub fn roster_idx(&self) -> u32 {
+        self.roster_idx
+    }
+}
+
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
+pub enum KeyVaultCmd {
+    Store,
+    Recover,
+    ManuallyStoreAll,
+    ManuallyRecoverAll,
 }
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(crate = "crate::serde")]
-pub struct BackupRequest<DE: DeserializeOwned> {
-    cmd: BackupCmd,
+pub struct KeyVaultRequest<DE: DeserializeOwned> {
+    cmd: KeyVaultCmd,
     body: DE,
 }
 
-impl<DE: DeserializeOwned> BackupRequest<DE> {
-    pub fn new(cmd: BackupCmd, body: DE) -> BackupRequest<DE> {
-        BackupRequest { cmd, body }
+impl<DE: DeserializeOwned> KeyVaultRequest<DE> {
+    pub fn new(cmd: KeyVaultCmd, body: DE) -> KeyVaultRequest<DE> {
+        KeyVaultRequest { cmd, body }
     }
 }

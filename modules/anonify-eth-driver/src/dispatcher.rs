@@ -1,3 +1,5 @@
+#[cfg(feature = "backup-enable")]
+use crate::backup::SecretBackup;
 use crate::workflow::*;
 use crate::{
     cache::EventCache,
@@ -26,6 +28,8 @@ struct InnerDispatcher<D: Deployer, S: Sender, W: Watcher> {
     sender: Option<S>,
     watcher: Option<W>,
     cache: EventCache,
+    #[cfg(feature = "backup-enable")]
+    backup: SecretBackup,
 }
 
 impl<D, S, W> Dispatcher<D, S, W>
@@ -41,6 +45,8 @@ where
             cache,
             sender: None,
             watcher: None,
+            #[cfg(feature = "backup-enable")]
+            backup: SecretBackup::default(),
         });
 
         Ok(Dispatcher { inner })
@@ -265,5 +271,19 @@ where
         let _host_output = RegisterNotificationWorkflow::exec(input, eid)?;
 
         Ok(())
+    }
+
+    #[cfg(feature = "backup-enable")]
+    pub fn all_backup_to(&self) -> Result<()> {
+        let inner = self.inner.read();
+        let eid = inner.deployer.get_enclave_id();
+        inner.backup.all_backup_to(eid)
+    }
+
+    #[cfg(feature = "backup-enable")]
+    pub fn all_backup_from(&self) -> Result<()> {
+        let inner = self.inner.read();
+        let eid = inner.deployer.get_enclave_id();
+        inner.backup.all_backup_from(eid)
     }
 }
