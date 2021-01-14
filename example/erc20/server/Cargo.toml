@@ -22,7 +22,7 @@ anyhow = "1.0"
 web3 = { git = "https://github.com/tomusdrw/rust-web3", rev = "d7393708e257f7ef4ad354917889a8001cf2927c" }
 serde_json = "1.0"
 thiserror = "1.0"
-sodiumoxide = { version = "0.2.6", default-features = false }
+sodiumoxide = { git = "https://github.com/sodiumoxide/sodiumoxide", version = "0.2.6", default-features = false }
 
 [dev-dependencies]
 integration-tests = { path = "../../../tests/integration" }
