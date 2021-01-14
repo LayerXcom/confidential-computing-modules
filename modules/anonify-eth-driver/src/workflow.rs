@@ -1,5 +1,4 @@
 use crate::utils::CommandInfo;
-use anonify_config::constants::*;
 use anonify_io_types::*;
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
@@ -23,7 +22,6 @@ impl<C: CallNameConverter, AP: AccessPolicy> HostEngine for CommandWorkflow<C, A
     type EO = output::Command;
     type HO = host_output::Command;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = ENCRYPT_COMMAND_CMD;
 }
 
 pub struct JoinGroupWorkflow;
@@ -34,7 +32,6 @@ impl HostEngine for JoinGroupWorkflow {
     type EO = output::ReturnJoinGroup;
     type HO = host_output::JoinGroup;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = CALL_JOIN_GROUP_CMD;
 }
 
 pub struct RegisterReportWorkflow;
@@ -45,7 +42,6 @@ impl HostEngine for RegisterReportWorkflow {
     type EO = output::ReturnRegisterReport;
     type HO = host_output::RegisterReport;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = CALL_REGISTER_REPORT_CMD;
 }
 
 pub struct HandshakeWorkflow;
@@ -56,7 +52,6 @@ impl HostEngine for HandshakeWorkflow {
     type EO = output::ReturnHandshake;
     type HO = host_output::Handshake;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = CALL_HANDSHAKE_CMD;
 }
 
 pub struct RegisterNotificationWorkflow<AP: AccessPolicy> {
@@ -69,7 +64,6 @@ impl<AP: AccessPolicy> HostEngine for RegisterNotificationWorkflow<AP> {
     type EO = output::Empty;
     type HO = host_output::RegisterNotification;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = REGISTER_NOTIFICATION_CMD;
 }
 
 pub struct GetStateWorkflow<AP: AccessPolicy> {
@@ -82,7 +76,6 @@ impl<AP: AccessPolicy> HostEngine for GetStateWorkflow<AP> {
     type EO = output::ReturnState;
     type HO = host_output::GetState;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = GET_STATE_CMD;
 }
 
 pub struct InsertCiphertextWorkflow;
@@ -93,7 +86,6 @@ impl HostEngine for InsertCiphertextWorkflow {
     type EO = output::ReturnUpdatedState;
     type HO = host_output::InsertCiphertext;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = INSERT_CIPHERTEXT_CMD;
 }
 
 pub struct InsertHandshakeWorkflow;
@@ -104,7 +96,6 @@ impl HostEngine for InsertHandshakeWorkflow {
     type EO = output::Empty;
     type HO = host_output::InsertHandshake;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = INSERT_HANDSHAKE_CMD;
 }
 
 pub struct GetEncryptingKeyWorkflow;
@@ -115,7 +106,6 @@ impl HostEngine for GetEncryptingKeyWorkflow {
     type EO = output::ReturnEncryptingKey;
     type HO = host_output::ReturnEncryptingKey;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = GET_ENCRYPTING_KEY_CMD;
 }
 
 pub mod host_input {
@@ -127,6 +117,7 @@ pub mod host_input {
         access_policy: AP,
         signer: Address,
         gas: u64,
+        ecall_cmd: u32,
         phantom: PhantomData<C>,
     }
 
@@ -137,6 +128,7 @@ pub mod host_input {
             access_policy: AP,
             signer: Address,
             gas: u64,
+            ecall_cmd: u32,
         ) -> Self {
             Command {
                 encrypted_command,
@@ -144,6 +136,7 @@ pub mod host_input {
                 access_policy,
                 signer,
                 gas,
+                ecall_cmd,
                 phantom: PhantomData,
             }
         }
@@ -160,16 +153,25 @@ pub mod host_input {
 
             Ok((ecall_input, host_output))
         }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
+        }
     }
 
     pub struct JoinGroup {
         signer: Address,
         gas: u64,
+        ecall_cmd: u32,
     }
 
     impl JoinGroup {
-        pub fn new(signer: Address, gas: u64) -> Self {
-            JoinGroup { signer, gas }
+        pub fn new(signer: Address, gas: u64, ecall_cmd: u32) -> Self {
+            JoinGroup {
+                signer,
+                gas,
+                ecall_cmd,
+            }
         }
     }
 
@@ -182,16 +184,25 @@ pub mod host_input {
 
             Ok((Self::EcallInput::default(), host_output))
         }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
+        }
     }
 
     pub struct RegisterReport {
         signer: Address,
         gas: u64,
+        ecall_cmd: u32,
     }
 
     impl RegisterReport {
-        pub fn new(signer: Address, gas: u64) -> Self {
-            RegisterReport { signer, gas }
+        pub fn new(signer: Address, gas: u64, ecall_cmd: u32) -> Self {
+            RegisterReport {
+                signer,
+                gas,
+                ecall_cmd,
+            }
         }
     }
 
@@ -204,16 +215,25 @@ pub mod host_input {
 
             Ok((Self::EcallInput::default(), host_output))
         }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
+        }
     }
 
     pub struct Handshake {
         signer: Address,
         gas: u64,
+        ecall_cmd: u32,
     }
 
     impl Handshake {
-        pub fn new(signer: Address, gas: u64) -> Self {
-            Handshake { signer, gas }
+        pub fn new(signer: Address, gas: u64, ecall_cmd: u32) -> Self {
+            Handshake {
+                signer,
+                gas,
+                ecall_cmd,
+            }
         }
     }
 
@@ -226,15 +246,23 @@ pub mod host_input {
 
             Ok((Self::EcallInput::default(), host_output))
         }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
+        }
     }
 
     pub struct RegisterNotification<AP: AccessPolicy> {
         access_policy: AP,
+        ecall_cmd: u32,
     }
 
     impl<AP: AccessPolicy> RegisterNotification<AP> {
-        pub fn new(access_policy: AP) -> Self {
-            RegisterNotification { access_policy }
+        pub fn new(access_policy: AP, ecall_cmd: u32) -> Self {
+            RegisterNotification {
+                access_policy,
+                ecall_cmd,
+            }
         }
     }
 
@@ -247,18 +275,24 @@ pub mod host_input {
 
             Ok((ecall_input, Self::HostOutput::default()))
         }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
+        }
     }
 
     pub struct GetState<AP: AccessPolicy> {
         access_policy: AP,
         call_id: u32,
+        ecall_cmd: u32,
     }
 
     impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, call_id: u32) -> Self {
+        pub fn new(access_policy: AP, call_id: u32, ecall_cmd: u32) -> Self {
             GetState {
                 access_policy,
                 call_id,
+                ecall_cmd,
             }
         }
     }
@@ -272,15 +306,23 @@ pub mod host_input {
 
             Ok((ecall_input, Self::HostOutput::new()))
         }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
+        }
     }
 
     pub struct InsertCiphertext {
         ciphertext: Ciphertext,
+        ecall_cmd: u32,
     }
 
     impl InsertCiphertext {
-        pub fn new(ciphertext: Ciphertext) -> Self {
-            InsertCiphertext { ciphertext }
+        pub fn new(ciphertext: Ciphertext, ecall_cmd: u32) -> Self {
+            InsertCiphertext {
+                ciphertext,
+                ecall_cmd,
+            }
         }
     }
 
@@ -293,15 +335,23 @@ pub mod host_input {
 
             Ok((ecall_input, Self::HostOutput::new()))
         }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
+        }
     }
 
     pub struct InsertHandshake {
         handshake: ExportHandshake,
+        ecall_cmd: u32,
     }
 
     impl InsertHandshake {
-        pub fn new(handshake: ExportHandshake) -> Self {
-            InsertHandshake { handshake }
+        pub fn new(handshake: ExportHandshake, ecall_cmd: u32) -> Self {
+            InsertHandshake {
+                handshake,
+                ecall_cmd,
+            }
         }
     }
 
@@ -314,10 +364,22 @@ pub mod host_input {
 
             Ok((ecall_input, Self::HostOutput::default()))
         }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
+        }
     }
 
     #[derive(Default)]
-    pub struct GetEncryptingKey;
+    pub struct GetEncryptingKey {
+        ecall_cmd: u32,
+    }
+
+    impl GetEncryptingKey {
+        pub fn new(ecall_cmd: u32) -> Self {
+            GetEncryptingKey { ecall_cmd }
+        }
+    }
 
     impl HostInput for GetEncryptingKey {
         type EcallInput = input::GetEncryptingKey;
@@ -325,6 +387,10 @@ pub mod host_input {
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             Ok((Self::EcallInput::default(), Self::HostOutput::new()))
+        }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
         }
     }
 }

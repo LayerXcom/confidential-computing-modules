@@ -72,13 +72,14 @@ where
         abi_path: P,
         bin_path: P,
         confirmations: usize,
+        ecall_cmd: u32,
     ) -> Result<String>
     where
         P: AsRef<Path> + Send + Sync + Copy,
     {
         let mut inner = self.inner.write();
         let eid = inner.deployer.get_enclave_id();
-        let input = host_input::JoinGroup::new(deploy_user, gas);
+        let input = host_input::JoinGroup::new(deploy_user, gas, ecall_cmd);
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
         let contract_addr = inner
@@ -94,8 +95,9 @@ where
         gas: u64,
         contract_addr: &str,
         abi_path: P,
+        ecall_cmd: u32,
     ) -> Result<H256> {
-        self.send_report_handshake(signer, gas, contract_addr, abi_path, "joinGroup")
+        self.send_report_handshake(signer, gas, contract_addr, abi_path, ecall_cmd, "joinGroup")
             .await
     }
 
@@ -105,12 +107,13 @@ where
         gas: u64,
         contract_addr: &str,
         abi_path: P,
+        ecall_cmd: u32,
     ) -> Result<H256> {
         self.set_contract_addr(contract_addr, abi_path)?;
 
         let inner = self.inner.read();
         let eid = inner.deployer.get_enclave_id();
-        let input = host_input::RegisterReport::new(signer, gas);
+        let input = host_input::RegisterReport::new(signer, gas, ecall_cmd);
         let host_output = RegisterReportWorkflow::exec(input, eid)?;
 
         let tx_hash = inner
@@ -129,9 +132,17 @@ where
         gas: u64,
         contract_addr: &str,
         abi_path: P,
+        ecall_cmd: u32,
     ) -> Result<H256> {
-        self.send_report_handshake(signer, gas, contract_addr, abi_path, "updateMrenclave")
-            .await
+        self.send_report_handshake(
+            signer,
+            gas,
+            contract_addr,
+            abi_path,
+            ecall_cmd,
+            "updateMrenclave",
+        )
+        .await
     }
 
     async fn send_report_handshake<P: AsRef<Path> + Copy>(
@@ -140,13 +151,14 @@ where
         gas: u64,
         contract_addr: &str,
         abi_path: P,
+        ecall_cmd: u32,
         method: &str,
     ) -> Result<H256> {
         self.set_contract_addr(contract_addr, abi_path)?;
 
         let inner = self.inner.read();
         let eid = inner.deployer.get_enclave_id();
-        let input = host_input::JoinGroup::new(signer, gas);
+        let input = host_input::JoinGroup::new(signer, gas, ecall_cmd);
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
         let tx_hash = inner
@@ -166,6 +178,7 @@ where
         call_name: &str,
         signer: Address,
         gas: u64,
+        ecall_cmd: u32,
     ) -> Result<H256>
     where
         C: CallNameConverter,
@@ -178,6 +191,7 @@ where
             access_policy,
             signer,
             gas,
+            ecall_cmd,
         );
         let eid = inner.deployer.get_enclave_id();
         let host_output = CommandWorkflow::exec(input, eid)?;
@@ -188,7 +202,12 @@ where
         }
     }
 
-    pub fn get_state<ST, AP, C>(&self, access_policy: AP, call_name: &str) -> Result<ST>
+    pub fn get_state<ST, AP, C>(
+        &self,
+        access_policy: AP,
+        call_name: &str,
+        ecall_cmd: u32,
+    ) -> Result<ST>
     where
         ST: State + StateDecoder,
         AP: AccessPolicy,
@@ -196,7 +215,7 @@ where
     {
         let call_id = C::as_id(call_name);
         let eid = self.inner.read().deployer.get_enclave_id();
-        let input = host_input::GetState::new(access_policy, call_id);
+        let input = host_input::GetState::new(access_policy, call_id, ecall_cmd);
 
         let vec = GetStateWorkflow::exec(input, eid)?
             .ecall_output
@@ -206,9 +225,9 @@ where
         ST::decode_vec(vec).map_err(Into::into)
     }
 
-    pub async fn handshake(&self, signer: Address, gas: u64) -> Result<H256> {
+    pub async fn handshake(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Handshake::new(signer, gas);
+        let input = host_input::Handshake::new(signer, gas, ecall_cmd);
         let eid = inner.deployer.get_enclave_id();
         let host_output = HandshakeWorkflow::exec(input, eid)?;
 
@@ -222,7 +241,11 @@ where
         Ok(tx_hash)
     }
 
-    pub async fn fetch_events<St>(&self) -> Result<Option<Vec<UpdatedState<St>>>>
+    pub async fn fetch_events<St>(
+        &self,
+        fetch_ciphertext_cmd: u32,
+        fetch_handshake_cmd: u32,
+    ) -> Result<Option<Vec<UpdatedState<St>>>>
     where
         St: State,
     {
@@ -232,7 +255,7 @@ where
             .watcher
             .as_ref()
             .ok_or(HostError::EventWatcherNotSet)?
-            .fetch_events(eid)
+            .fetch_events(eid, fetch_ciphertext_cmd, fetch_handshake_cmd)
             .await
     }
 
@@ -244,8 +267,8 @@ where
             .await
     }
 
-    pub fn get_encrypting_key(&self) -> Result<DhPubKey> {
-        let input = host_input::GetEncryptingKey::default();
+    pub fn get_encrypting_key(&self, ecall_cmd: u32) -> Result<DhPubKey> {
+        let input = host_input::GetEncryptingKey::new(ecall_cmd);
         let eid = self.inner.read().deployer.get_enclave_id();
         let encrypting_key = GetEncryptingKeyWorkflow::exec(input, eid)?;
 
@@ -255,12 +278,12 @@ where
             .encrypting_key())
     }
 
-    pub fn register_notification<AP>(&self, access_policy: AP) -> Result<()>
+    pub fn register_notification<AP>(&self, access_policy: AP, ecall_cmd: u32) -> Result<()>
     where
         AP: AccessPolicy,
     {
         let inner = self.inner.read();
-        let input = host_input::RegisterNotification::new(access_policy);
+        let input = host_input::RegisterNotification::new(access_policy, ecall_cmd);
         let eid = inner.deployer.get_enclave_id();
         let _host_output = RegisterNotificationWorkflow::exec(input, eid)?;
 

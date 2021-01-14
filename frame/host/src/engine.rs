@@ -10,12 +10,12 @@ pub trait HostEngine {
     type EO: EcallOutput + Decode;
     type HO: HostOutput<EcallOutput = Self::EO>;
     const OUTPUT_MAX_LEN: usize;
-    const CMD: u32;
 
     fn exec(input: Self::HI, eid: sgx_enclave_id_t) -> anyhow::Result<Self::HO> {
+        let ecall_cmd = input.ecall_cmd();
         let (ecall_input, host_output) = input.apply()?;
         let ecall_output = EnclaveConnector::new(eid, Self::OUTPUT_MAX_LEN)
-            .invoke_ecall::<Self::EI, Self::EO>(Self::CMD, ecall_input)?;
+            .invoke_ecall::<Self::EI, Self::EO>(ecall_cmd, ecall_input)?;
 
         host_output.set_ecall_output(ecall_output)
     }
@@ -26,6 +26,8 @@ pub trait HostInput: Sized {
     type HostOutput: HostOutput;
 
     fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)>;
+
+    fn ecall_cmd(&self) -> u32;
 }
 
 pub trait HostOutput: Sized {

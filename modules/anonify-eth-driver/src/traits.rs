@@ -76,6 +76,8 @@ pub trait Watcher: Sized {
     async fn fetch_events<S: State>(
         &self,
         eid: sgx_enclave_id_t,
+        fetch_ciphertext_cmd: u32,
+        fetch_handshake_cmd: u32,
     ) -> Result<Option<Vec<UpdatedState<S>>>>;
 
     fn get_contract(self) -> ContractKind;
