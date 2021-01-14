@@ -116,7 +116,6 @@ impl HostEngine for BackupPathSecretAllWorkflow {
     type EO = output::Empty;
     type HO = host_output::BackupPathSecretAll;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = BACKUP_PATH_SECRET_ALL_CMD;
 }
 
 pub struct RecoverPathSecretAllWorkflow;
@@ -127,7 +126,6 @@ impl HostEngine for RecoverPathSecretAllWorkflow {
     type EO = output::Empty;
     type HO = host_output::RecoverPathSecretAll;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = RECOVER_PATH_SECRET_ALL_CMD;
 }
 
 pub mod host_input {
@@ -392,7 +390,6 @@ pub mod host_input {
         }
     }
 
-    #[derive(Default)]
     pub struct GetEncryptingKey {
         ecall_cmd: u32,
     }
@@ -416,8 +413,15 @@ pub mod host_input {
         }
     }
 
-    #[derive(Default)]
-    pub struct BackupPathSecretAll;
+    pub struct BackupPathSecretAll {
+        ecall_cmd: u32,
+    }
+
+    impl BackupPathSecretAll {
+        pub fn new(ecall_cmd: u32) -> Self {
+            BackupPathSecretAll { ecall_cmd }
+        }
+    }
 
     impl HostInput for BackupPathSecretAll {
         type EcallInput = input::BackupPathSecretAll;
@@ -426,10 +430,21 @@ pub mod host_input {
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             Ok((Self::EcallInput::default(), Self::HostOutput::default()))
         }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
+        }
     }
 
-    #[derive(Default)]
-    pub struct RecoverPathSecretAll;
+    pub struct RecoverPathSecretAll {
+        ecall_cmd: u32,
+    }
+
+    impl RecoverPathSecretAll {
+        pub fn new(ecall_cmd: u32) -> Self {
+            RecoverPathSecretAll { ecall_cmd }
+        }
+    }
 
     impl HostInput for RecoverPathSecretAll {
         type EcallInput = input::RecoverPathSecretAll;
@@ -437,6 +452,10 @@ pub mod host_input {
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             Ok((Self::EcallInput::default(), Self::HostOutput::default()))
+        }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
         }
     }
 }

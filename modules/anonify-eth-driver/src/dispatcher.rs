@@ -297,16 +297,16 @@ where
     }
 
     #[cfg(feature = "backup-enable")]
-    pub fn all_backup_to(&self) -> Result<()> {
+    pub fn all_backup_to(&self, ecall_cmd: u32) -> Result<()> {
         let inner = self.inner.read();
         let eid = inner.deployer.get_enclave_id();
-        inner.backup.all_backup_to(eid)
+        inner.backup.all_backup_to(eid, ecall_cmd)
     }
 
     #[cfg(feature = "backup-enable")]
-    pub fn all_backup_from(&self) -> Result<()> {
+    pub fn all_backup_from(&self, ecall_cmd: u32) -> Result<()> {
         let inner = self.inner.read();
         let eid = inner.deployer.get_enclave_id();
-        inner.backup.all_backup_from(eid)
+        inner.backup.all_backup_from(eid, ecall_cmd)
     }
 }

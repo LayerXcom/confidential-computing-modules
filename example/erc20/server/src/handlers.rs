@@ -515,7 +515,9 @@ where
     S: Sender,
     W: Watcher,
 {
-    server.dispatcher.all_backup_to()?;
+    server
+        .dispatcher
+        .all_backup_to(BACKUP_PATH_SECRET_ALL_CMD)?;
 
     Ok(HttpResponse::Ok().finish())
 }
@@ -529,7 +531,9 @@ where
     S: Sender,
     W: Watcher,
 {
-    server.dispatcher.all_backup_from()?;
+    server
+        .dispatcher
+        .all_backup_from(RECOVER_PATH_SECRET_ALL_CMD)?;
 
     Ok(HttpResponse::Ok().finish())
 }
