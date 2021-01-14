@@ -48,13 +48,15 @@ impl Watcher for EventWatcher {
     async fn fetch_events<S: State>(
         &self,
         eid: sgx_enclave_id_t,
+        fetch_ciphertext_cmd: u32,
+        fetch_handshake_cmd: u32,
     ) -> Result<Option<Vec<UpdatedState<S>>>> {
         let enclave_updated_state = self
             .contract
             .get_event(self.cache.clone(), self.contract.address())
             .await?
             .into_enclave_log()
-            .insert_enclave(eid)
+            .insert_enclave(eid, fetch_ciphertext_cmd, fetch_handshake_cmd)
             .save_cache(self.contract.address());
 
         Ok(enclave_updated_state.updated_states())
@@ -228,11 +230,17 @@ struct EnclaveLog {
 impl EnclaveLog {
     /// Store logs into enclave in-memory.
     /// This returns a latest block number specified by fetched logs.
-    fn insert_enclave<S: State>(self, eid: sgx_enclave_id_t) -> EnclaveUpdatedState<S> {
+    fn insert_enclave<S: State>(
+        self,
+        eid: sgx_enclave_id_t,
+        fetch_ciphertext_cmd: u32,
+        fetch_handshake_cmd: u32,
+    ) -> EnclaveUpdatedState<S> {
         match self.inner {
             Some(log) => {
                 let next_blc_num = log.latest_blc_num + 1;
-                let updated_states = log.invoke_ecall(eid);
+                let updated_states =
+                    log.invoke_ecall(eid, fetch_ciphertext_cmd, fetch_handshake_cmd);
 
                 EnclaveUpdatedState {
                     block_num: Some(next_blc_num),
@@ -259,7 +267,12 @@ struct InnerEnclaveLog {
 }
 
 impl InnerEnclaveLog {
-    fn invoke_ecall<S: State>(self, eid: sgx_enclave_id_t) -> Option<Vec<UpdatedState<S>>> {
+    fn invoke_ecall<S: State>(
+        self,
+        eid: sgx_enclave_id_t,
+        fetch_ciphertext_cmd: u32,
+        fetch_handshake_cmd: u32,
+    ) -> Option<Vec<UpdatedState<S>>> {
         if self.payloads.is_empty() {
             debug!("No logs to insert into the enclave.");
             None
@@ -276,7 +289,7 @@ impl InnerEnclaveLog {
                             ciphertext.generation()
                         );
 
-                        let inp = host_input::InsertCiphertext::new(ciphertext.clone());
+                        let inp = host_input::InsertCiphertext::new(ciphertext.clone(), fetch_ciphertext_cmd);
                         match InsertCiphertextWorkflow::exec(inp, eid)
                             .map_err(Into::into)
                             .and_then(|e| {
@@ -342,7 +355,7 @@ impl InnerEnclaveLog {
                             handshake.prior_epoch(),
                         );
 
-                        if let Err(e) = Self::insert_handshake(eid, handshake) {
+                        if let Err(e) = Self::insert_handshake(eid, handshake, fetch_handshake_cmd) {
                             error!("Error in enclave (InsertHandshakeWorkflow::exec): {:?}", e);
                             continue;
                         }
@@ -358,8 +371,8 @@ impl InnerEnclaveLog {
         }
     }
 
-    fn insert_handshake(eid: sgx_enclave_id_t, handshake: ExportHandshake) -> Result<()> {
-        let input = host_input::InsertHandshake::new(handshake);
+    fn insert_handshake(eid: sgx_enclave_id_t, handshake: ExportHandshake, fetch_handshake_cmd: u32) -> Result<()> {
+        let input = host_input::InsertHandshake::new(handshake, fetch_handshake_cmd);
         InsertHandshakeWorkflow::exec(input, eid)?;
 
         Ok(())

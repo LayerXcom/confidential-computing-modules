@@ -5,7 +5,6 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anonify-config = { path = "../../config" }
 frame-host = { path = "../../frame/host" }
 anonify-io-types = { path = "../anonify-io-types" }
 parking_lot = "0.10"

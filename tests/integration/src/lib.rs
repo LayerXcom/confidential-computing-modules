@@ -2,7 +2,9 @@
 extern crate lazy_static;
 use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
 use codec::{Decode, Encode};
-use erc20_state_transition::{approve, burn, construct, mint, transfer, transfer_from, CallName};
+use erc20_state_transition::{
+    approve, burn, cmd::*, construct, mint, transfer, transfer_from, CallName,
+};
 use ethabi::Contract as ContractABI;
 use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
@@ -31,7 +33,9 @@ pub async fn get_encrypting_key(
     contract_addr: &str,
     dispatcher: &Dispatcher<EthDeployer, EthSender, EventWatcher>,
 ) -> DhPubKey {
-    let encrypting_key = dispatcher.get_encrypting_key().unwrap();
+    let encrypting_key = dispatcher
+        .get_encrypting_key(GET_ENCRYPTING_KEY_CMD)
+        .unwrap();
     let transport = Http::new(ETH_URL).unwrap();
     let web3 = Web3::new(transport);
     let web3_conn = web3.eth();
@@ -82,6 +86,7 @@ async fn test_integration_eth_construct() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
+            JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
@@ -92,7 +97,10 @@ async fn test_integration_eth_construct() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -106,6 +114,7 @@ async fn test_integration_eth_construct() {
             "construct",
             deployer_addr.clone(),
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
@@ -113,17 +122,20 @@ async fn test_integration_eth_construct() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Get state from enclave
     let owner_account_id = dispatcher
-        .get_state::<AccountId, _, CallName>(COMMON_ACCESS_POLICY.clone(), "owner")
+        .get_state::<AccountId, _, CallName>(COMMON_ACCESS_POLICY.clone(), "owner", GET_STATE_CMD)
         .unwrap();
     let my_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of")
+        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let actual_total_supply = dispatcher
-        .get_state::<U64, _, CallName>(COMMON_ACCESS_POLICY.clone(), "total_supply")
+        .get_state::<U64, _, CallName>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
         .unwrap();
     assert_eq!(owner_account_id, my_access_policy.into_account_id());
     assert_eq!(my_balance, total_supply);
@@ -156,6 +168,7 @@ async fn test_auto_notification() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
+            JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
@@ -166,7 +179,10 @@ async fn test_auto_notification() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
@@ -180,6 +196,7 @@ async fn test_auto_notification() {
             "construct",
             deployer_addr.clone(),
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
@@ -187,7 +204,11 @@ async fn test_auto_notification() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    let updated_state = dispatcher.fetch_events::<U64>().await.unwrap().unwrap();
+    let updated_state = dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap()
+        .unwrap();
 
     assert_eq!(updated_state.len(), 1);
     assert_eq!(
@@ -209,13 +230,18 @@ async fn test_auto_notification() {
             "transfer",
             deployer_addr,
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    let updated_state = dispatcher.fetch_events::<U64>().await.unwrap().unwrap();
+    let updated_state = dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap()
+        .unwrap();
 
     assert_eq!(updated_state.len(), 1);
     assert_eq!(
@@ -252,6 +278,7 @@ async fn test_integration_eth_transfer() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
+            JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
@@ -262,7 +289,10 @@ async fn test_integration_eth_transfer() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -276,6 +306,7 @@ async fn test_integration_eth_transfer() {
             "construct",
             deployer_addr.clone(),
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
@@ -283,17 +314,20 @@ async fn test_integration_eth_transfer() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Get state from enclave
     let my_state = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of")
+        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of")
+        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of")
+        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, U64::zero());
@@ -311,23 +345,27 @@ async fn test_integration_eth_transfer() {
             "transfer",
             deployer_addr,
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Check the updated states
     let my_updated_state = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy, "balance_of")
+        .get_state::<U64, _, CallName>(my_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_updated_state = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy, "balance_of")
+        .get_state::<U64, _, CallName>(other_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_updated_state = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy, "balance_of")
+        .get_state::<U64, _, CallName>(third_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
 
     assert_eq!(my_updated_state, U64::from_raw(70));
@@ -361,6 +399,7 @@ async fn test_key_rotation() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
+            JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
@@ -371,17 +410,23 @@ async fn test_key_rotation() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Send handshake
     let receipt = dispatcher
-        .handshake(deployer_addr.clone(), gas)
+        .handshake(deployer_addr.clone(), gas, SEND_HANDSHAKE_CMD)
         .await
         .unwrap();
     println!("handshake receipt: {:?}", receipt);
 
     // Get handshake from contract
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // init state
     let total_supply = U64::from_raw(100);
@@ -395,23 +440,27 @@ async fn test_key_rotation() {
             "construct",
             deployer_addr.clone(),
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Get state from enclave
     let my_state = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy, "balance_of")
+        .get_state::<U64, _, CallName>(my_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy, "balance_of")
+        .get_state::<U64, _, CallName>(other_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy, "balance_of")
+        .get_state::<U64, _, CallName>(third_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, U64::zero());
@@ -443,6 +492,7 @@ async fn test_integration_eth_approve() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
+            JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
@@ -453,7 +503,10 @@ async fn test_integration_eth_approve() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -467,6 +520,7 @@ async fn test_integration_eth_approve() {
             "construct",
             deployer_addr.clone(),
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
@@ -474,14 +528,17 @@ async fn test_integration_eth_approve() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Get state from enclave
     let my_state = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy.clone(), "approved")
+        .get_state::<Approved, _, CallName>(my_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let other_state = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy.clone(), "approved")
+        .get_state::<Approved, _, CallName>(other_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state, Approved::default());
     assert_eq!(other_state, Approved::default());
@@ -498,20 +555,24 @@ async fn test_integration_eth_approve() {
             "approve",
             deployer_addr,
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Check the updated states
     let my_state = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy, "approved")
+        .get_state::<Approved, _, CallName>(my_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let other_state = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy, "approved")
+        .get_state::<Approved, _, CallName>(other_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let want_my_state = Approved::new({
         let mut bt = BTreeMap::new();
@@ -548,6 +609,7 @@ async fn test_integration_eth_transfer_from() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
+            JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
@@ -558,7 +620,10 @@ async fn test_integration_eth_transfer_from() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -572,6 +637,7 @@ async fn test_integration_eth_transfer_from() {
             "construct",
             deployer_addr.clone(),
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
@@ -579,30 +645,33 @@ async fn test_integration_eth_transfer_from() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Get initial state from enclave
     let my_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of")
+        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of")
+        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of")
+        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state_balance, U64::from_raw(100));
     assert_eq!(other_state_balance, U64::zero());
     assert_eq!(third_state_balance, U64::zero());
 
     let my_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy.clone(), "approved")
+        .get_state::<Approved, _, CallName>(my_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let other_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy.clone(), "approved")
+        .get_state::<Approved, _, CallName>(other_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let third_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(third_access_policy.clone(), "approved")
+        .get_state::<Approved, _, CallName>(third_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state_approved, Approved::default());
     assert_eq!(other_state_approved, Approved::default());
@@ -620,36 +689,40 @@ async fn test_integration_eth_transfer_from() {
             "approve",
             deployer_addr.clone(),
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Check the updated states
     let my_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of")
+        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of")
+        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of")
+        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state_balance, U64::from_raw(100));
     assert_eq!(other_state_balance, U64::zero());
     assert_eq!(third_state_balance, U64::zero());
 
     let my_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy.clone(), "approved")
+        .get_state::<Approved, _, CallName>(my_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let other_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy.clone(), "approved")
+        .get_state::<Approved, _, CallName>(other_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let third_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(third_access_policy.clone(), "approved")
+        .get_state::<Approved, _, CallName>(third_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let want_my_state = Approved::new({
         let mut bt = BTreeMap::new();
@@ -677,36 +750,40 @@ async fn test_integration_eth_transfer_from() {
             "transfer_from",
             deployer_addr,
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Check the final states
     let my_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of")
+        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of")
+        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of")
+        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state_balance, U64::from_raw(80));
     assert_eq!(other_state_balance, U64::zero());
     assert_eq!(third_state_balance, U64::from_raw(20));
 
     let my_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy, "approved")
+        .get_state::<Approved, _, CallName>(my_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let other_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy, "approved")
+        .get_state::<Approved, _, CallName>(other_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let third_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(third_access_policy, "approved")
+        .get_state::<Approved, _, CallName>(third_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let want_my_state = Approved::new({
         let mut bt = BTreeMap::new();
@@ -743,6 +820,7 @@ async fn test_integration_eth_mint() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
+            JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
@@ -753,7 +831,10 @@ async fn test_integration_eth_mint() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -767,6 +848,7 @@ async fn test_integration_eth_mint() {
             "construct",
             deployer_addr.clone(),
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
@@ -774,7 +856,10 @@ async fn test_integration_eth_mint() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // transit state
     let amount = U64::from_raw(50);
@@ -788,6 +873,7 @@ async fn test_integration_eth_mint() {
             "mint",
             deployer_addr,
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
@@ -795,17 +881,20 @@ async fn test_integration_eth_mint() {
     println!("minted state receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Check the final states
     let actual_total_supply = dispatcher
-        .get_state::<U64, _, CallName>(COMMON_ACCESS_POLICY.clone(), "total_supply")
+        .get_state::<U64, _, CallName>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
         .unwrap();
     let owner_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy, "balance_of")
+        .get_state::<U64, _, CallName>(my_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy, "balance_of")
+        .get_state::<U64, _, CallName>(other_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(actual_total_supply, U64::from_raw(150));
     assert_eq!(owner_balance, U64::from_raw(100));
@@ -837,6 +926,7 @@ async fn test_integration_eth_burn() {
             ABI_PATH,
             BIN_PATH,
             CONFIRMATIONS,
+            JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
@@ -847,7 +937,10 @@ async fn test_integration_eth_burn() {
     println!("deployed contract account_id: {}", contract_addr);
 
     // Get handshake from contract
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let total_supply = U64::from_raw(100);
@@ -861,6 +954,7 @@ async fn test_integration_eth_burn() {
             "construct",
             deployer_addr.clone(),
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
@@ -868,7 +962,10 @@ async fn test_integration_eth_burn() {
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Send a transaction to contract
     let amount = U64::from_raw(30);
@@ -882,13 +979,17 @@ async fn test_integration_eth_burn() {
             "transfer",
             deployer_addr.clone(),
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Send a transaction to contract
     let amount = U64::from_raw(20);
@@ -901,23 +1002,27 @@ async fn test_integration_eth_burn() {
             "burn",
             deployer_addr,
             gas,
+            SEND_COMMAND_CMD,
         )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events::<U64>().await.unwrap();
+    dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .unwrap();
 
     // Check the final states
     let actual_total_supply = dispatcher
-        .get_state::<U64, _, CallName>(COMMON_ACCESS_POLICY.clone(), "total_supply")
+        .get_state::<U64, _, CallName>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
         .unwrap();
     let owner_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy, "balance_of")
+        .get_state::<U64, _, CallName>(my_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy, "balance_of")
+        .get_state::<U64, _, CallName>(other_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(actual_total_supply, U64::from_raw(80)); // 100 - 20(burn)
     assert_eq!(owner_balance, U64::from_raw(70)); // 100 - 30(transfer)

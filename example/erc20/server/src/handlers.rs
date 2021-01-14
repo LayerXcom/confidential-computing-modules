@@ -3,7 +3,7 @@ use crate::Server;
 use actix_web::{web, HttpResponse};
 use anonify_eth_driver::traits::*;
 use anyhow::anyhow;
-use erc20_state_transition::CallName;
+use erc20_state_transition::{cmd::*, CallName};
 use frame_runtime::primitives::{Approved, U64};
 use std::{sync::Arc, time};
 use tracing::{debug, error, info};
@@ -31,6 +31,7 @@ where
             &server.abi_path,
             &server.bin_path,
             server.confirmations,
+            JOIN_GROUP_CMD,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
@@ -65,6 +66,7 @@ where
             DEFAULT_GAS,
             &req.contract_addr,
             &server.abi_path,
+            JOIN_GROUP_CMD,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
@@ -93,6 +95,7 @@ where
             DEFAULT_GAS,
             &req.contract_addr,
             &server.abi_path,
+            JOIN_GROUP_CMD,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
@@ -127,6 +130,7 @@ where
             "construct",
             sender_address,
             DEFAULT_GAS,
+            SEND_COMMAND_CMD,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
@@ -161,6 +165,7 @@ where
             "transfer",
             sender_address,
             DEFAULT_GAS,
+            SEND_COMMAND_CMD,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
@@ -195,6 +200,7 @@ where
             "approve",
             sender_address,
             DEFAULT_GAS,
+            SEND_COMMAND_CMD,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
@@ -229,6 +235,7 @@ where
             "mint",
             sender_address,
             DEFAULT_GAS,
+            SEND_COMMAND_CMD,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
@@ -263,6 +270,7 @@ where
             "burn",
             sender_address,
             DEFAULT_GAS,
+            SEND_COMMAND_CMD,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
@@ -297,6 +305,7 @@ where
             "transfer_from",
             sender_address,
             DEFAULT_GAS,
+            SEND_COMMAND_CMD,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
@@ -319,7 +328,7 @@ where
         .map_err(|e| ServerError::from(e))?;
     let tx_hash = server
         .dispatcher
-        .handshake(sender_address, DEFAULT_GAS)
+        .handshake(sender_address, DEFAULT_GAS, SEND_HANDSHAKE_CMD)
         .await
         .map_err(|e| ServerError::from(e))?;
 
@@ -338,7 +347,7 @@ where
 {
     server
         .dispatcher
-        .fetch_events::<U64>()
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .map_err(|e| ServerError::from(e))?;
 
@@ -347,7 +356,7 @@ where
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     let owner_approved = server
         .dispatcher
-        .get_state::<Approved, _, CallName>(access_right, "approved")
+        .get_state::<Approved, _, CallName>(access_right, "approved", GET_STATE_CMD)
         .map_err(|e| ServerError::from(e))?;
     let approved_amount = owner_approved.allowance(&req.spender).unwrap();
     // TODO: stop using unwrap when switching from failure to anyhow.
@@ -369,7 +378,7 @@ where
 {
     server
         .dispatcher
-        .fetch_events::<U64>()
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .map_err(|e| ServerError::from(e))?;
 
@@ -378,7 +387,7 @@ where
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     let state = server
         .dispatcher
-        .get_state::<U64, _, CallName>(access_right, "balance_of")
+        .get_state::<U64, _, CallName>(access_right, "balance_of", GET_STATE_CMD)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state.as_raw())))
@@ -394,7 +403,7 @@ where
 {
     let pub_key = server
         .dispatcher
-        .get_encrypting_key()
+        .get_encrypting_key(GET_ENCRYPTING_KEY_CMD)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::encrypting_key::get::Response(pub_key)))
@@ -412,7 +421,11 @@ where
     actix_rt::Arbiter::new().exec_fn(move || {
         actix_rt::spawn(async move {
             loop {
-                match server.dispatcher.fetch_events::<U64>().await {
+                match server
+                    .dispatcher
+                    .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+                    .await
+                {
                     Ok(updated_states) => info!("State updated: {:?}", updated_states),
                     Err(err) => error!("event fetched error: {:?}", err),
                 };
@@ -458,7 +471,7 @@ where
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     server
         .dispatcher
-        .register_notification(access_right)
+        .register_notification(access_right, REGISTER_NOTIFICATION_CMD)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().finish())
@@ -485,6 +498,7 @@ where
             DEFAULT_GAS,
             &req.contract_addr,
             &server.abi_path,
+            SEND_REGISTER_REPORT_CMD,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
@@ -501,7 +515,9 @@ where
     S: Sender,
     W: Watcher,
 {
-    server.dispatcher.all_backup_to()?;
+    server
+        .dispatcher
+        .all_backup_to(BACKUP_PATH_SECRET_ALL_CMD)?;
 
     Ok(HttpResponse::Ok().finish())
 }
@@ -515,7 +531,9 @@ where
     S: Sender,
     W: Watcher,
 {
-    server.dispatcher.all_backup_from()?;
+    server
+        .dispatcher
+        .all_backup_from(RECOVER_PATH_SECRET_ALL_CMD)?;
 
     Ok(HttpResponse::Ok().finish())
 }

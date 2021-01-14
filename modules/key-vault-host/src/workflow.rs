@@ -1,4 +1,3 @@
-use anonify_config::constants::*;
 use anonify_io_types::*;
 use frame_host::engine::*;
 
@@ -12,7 +11,6 @@ impl HostEngine for StartServerWorkflow {
     type EO = output::Empty;
     type HO = host_output::StartServer;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = START_SERVER_CMD;
 }
 
 pub struct StopServerWorkflow;
@@ -23,17 +21,18 @@ impl HostEngine for StopServerWorkflow {
     type EO = output::Empty;
     type HO = host_output::StopServer;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
-    const CMD: u32 = STOP_SERVER_CMD;
 }
 
 pub mod host_input {
     use super::*;
 
-    pub struct StartServer;
+    pub struct StartServer {
+        ecall_cmd: u32,
+    }
 
     impl StartServer {
-        pub fn new() -> Self {
-            StartServer {}
+        pub fn new(ecall_cmd: u32) -> Self {
+            StartServer { ecall_cmd }
         }
     }
 
@@ -44,10 +43,21 @@ pub mod host_input {
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             Ok((Self::EcallInput::default(), Self::HostOutput::default()))
         }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
+        }
     }
 
-    #[derive(Default)]
-    pub struct StopServer;
+    pub struct StopServer {
+        ecall_cmd: u32,
+    }
+
+    impl StopServer {
+        pub fn new(ecall_cmd: u32) -> Self {
+            StopServer { ecall_cmd }
+        }
+    }
 
     impl HostInput for StopServer {
         type EcallInput = input::CallServerStopper;
@@ -55,6 +65,10 @@ pub mod host_input {
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             Ok((Self::EcallInput::default(), Self::HostOutput::default()))
+        }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
         }
     }
 }

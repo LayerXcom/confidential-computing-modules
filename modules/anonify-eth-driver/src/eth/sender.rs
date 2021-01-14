@@ -5,8 +5,8 @@ use crate::{
     utils::*,
     workflow::*,
 };
-use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use async_trait::async_trait;
+use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use sgx_types::sgx_enclave_id_t;
 use std::path::Path;
@@ -64,8 +64,8 @@ impl Sender for EthSender {
     async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
         Retry::new(
             "get_account",
-            REQUEST_RETRIES,
-            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .spawn_async(|| async { self.contract.get_account(index, password).await })
         .await
@@ -79,8 +79,8 @@ impl Sender for EthSender {
         info!("Sending a handshake to blockchain: {:?}", host_output);
         Retry::new(
             "send_report_handshake",
-            REQUEST_RETRIES,
-            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
         .spawn_async(|| async {
@@ -95,8 +95,8 @@ impl Sender for EthSender {
         info!("Registering report to blockchain: {:?}", host_output);
         Retry::new(
             "send_command",
-            REQUEST_RETRIES,
-            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
         .spawn_async(|| async { self.contract.register_report(host_output.clone()).await })
@@ -107,8 +107,8 @@ impl Sender for EthSender {
         info!("Sending a command to blockchain: {:?}", host_output);
         Retry::new(
             "send_command",
-            REQUEST_RETRIES,
-            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
         .spawn_async(|| async { self.contract.send_command(host_output.clone()).await })
@@ -119,8 +119,8 @@ impl Sender for EthSender {
         info!("Sending a handshake to blockchain: {:?}", host_output);
         Retry::new(
             "handshake",
-            REQUEST_RETRIES,
-            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
         .spawn_async(|| async { self.contract.handshake(host_output.clone()).await })

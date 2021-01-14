@@ -1,6 +1,6 @@
 use crate::error::{FrameRAError, Result};
-use anonify_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use anyhow::anyhow;
+use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use http_req::{
     request::{Method, Request},
@@ -68,8 +68,8 @@ impl<'a> RAClient<'a> {
     pub fn send<T: Write>(&self, writer: &mut T) -> Result<Response> {
         Retry::new(
             "remote_attestation",
-            REQUEST_RETRIES,
-            strategy::FixedDelay::new(RETRY_DELAY_MILLS),
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(|res: &Result<Response>| {
             match res {

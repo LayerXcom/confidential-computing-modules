@@ -17,12 +17,12 @@ frame-common = { path = "../../../frame/common", default-features = false, featu
 anonify-enclave = { path = "../../../modules/anonify-enclave", default-features = false }
 erc20-state-transition = { path = "../state-transition", default-features = false, features = ["sgx"] }
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git"}
-lazy_static = { version = "1.4", features = ["spin_no_std"] }
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 codec = { package = "parity-scale-codec", version = "1.1", default-features = false }
 log = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/log-sgx" }
 anyhow = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
+once_cell = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/once_cell-sgx" }
 
 [features]
 default = ["backup-enable", "runtime_enabled"]
