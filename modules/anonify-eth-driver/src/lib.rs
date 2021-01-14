@@ -7,6 +7,8 @@ pub mod eth;
 pub mod traits;
 mod utils;
 mod workflow;
+#[cfg(feature = "backup-enable")]
+mod backup;
 
 pub use cache::EventCache;
 pub use dispatcher::Dispatcher;

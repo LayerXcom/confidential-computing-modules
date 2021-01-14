@@ -1,4 +1,4 @@
-use crate::handlers::BackupHandler;
+use crate::handlers::KeyVaultHandler;
 use anonify_config::{ENCLAVE_MEASUREMENT_ERC20, IAS_ROOT_CERT};
 use anonify_io_types::*;
 use frame_common::state_types::StateType;
@@ -32,7 +32,7 @@ impl EnclaveEngine for ServerStarter {
             .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT_ERC20);
 
         let mut server = Server::new(SERVER_ADDRESS.to_string(), server_config);
-        let handler = BackupHandler::default();
+        let handler = KeyVaultHandler::default();
         thread::spawn(move || server.run(handler).unwrap());
 
         Ok(output::Empty::default())

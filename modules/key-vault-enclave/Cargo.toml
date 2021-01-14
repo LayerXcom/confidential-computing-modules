@@ -19,3 +19,4 @@ anyhow = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sg
 rustls = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rustls", features = ["dangerous_configuration"] }
 serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx" }
 serde = { git = "https://github.com/mesalock-linux/serde-sgx.git" } # Don't specify version due to serde_json dependency
+hex = { version = "0.4", default-features = false }

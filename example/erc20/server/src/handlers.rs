@@ -505,3 +505,31 @@ where
 
     Ok(HttpResponse::Ok().json(erc20_api::register_report::post::Response(tx_hash)))
 }
+
+#[cfg(feature = "backup-enable")]
+pub async fn handle_all_backup_to<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
+) -> Result<HttpResponse>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher,
+{
+    server.dispatcher.all_backup_to()?;
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+#[cfg(feature = "backup-enable")]
+pub async fn handle_all_backup_from<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
+) -> Result<HttpResponse>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher,
+{
+    server.dispatcher.all_backup_from()?;
+
+    Ok(HttpResponse::Ok().finish())
+}

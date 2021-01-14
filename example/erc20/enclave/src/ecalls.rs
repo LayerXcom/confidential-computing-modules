@@ -10,6 +10,7 @@ use frame_common::{
 use frame_enclave::{register_ecall, EnclaveEngine};
 use std::{ptr, vec::Vec};
 
+#[cfg(not(feature = "backup-enable"))]
 register_ecall!(
     &*ENCLAVE_CONTEXT,
     MAX_MEM_SIZE,
@@ -30,4 +31,29 @@ register_ecall!(
     ),
     (GET_ENCRYPTING_KEY_CMD, EncryptingKeyGetter),
     (SEND_REGISTER_REPORT_CMD, ReportRegistration),
+);
+
+#[cfg(feature = "backup-enable")]
+register_ecall!(
+    &*ENCLAVE_CONTEXT,
+    MAX_MEM_SIZE,
+    Runtime<AnonifyEnclaveContext>,
+    AnonifyEnclaveContext,
+    (ENCRYPT_COMMAND_CMD, MsgSender<Ed25519ChallengeResponse>),
+    // Insert a ciphertext in event logs from blockchain nodes into enclave's memory database.
+    (INSERT_CIPHERTEXT_CMD, MsgReceiver),
+    // Insert handshake received from blockchain nodes into enclave.
+    (INSERT_HANDSHAKE_CMD, HandshakeReceiver),
+    // Get current state of the user represented the given public key from enclave memory database.
+    (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
+    (CALL_JOIN_GROUP_CMD, JoinGroupSender),
+    (CALL_HANDSHAKE_CMD, HandshakeSender),
+    (
+        REGISTER_NOTIFICATION_CMD,
+        RegisterNotification<Ed25519ChallengeResponse>
+    ),
+    (GET_ENCRYPTING_KEY_CMD, EncryptingKeyGetter),
+    (CALL_REGISTER_REPORT_CMD, ReportRegistration),
+    (BACKUP_PATH_SECRET_ALL_CMD, PathSecretBackupper),
+    (RECOVER_PATH_SECRET_ALL_CMD, PathSecretRecoverer),
 );

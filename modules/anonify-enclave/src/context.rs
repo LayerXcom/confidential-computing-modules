@@ -6,7 +6,10 @@ use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT};
 use anonify_io_types::*;
 use anyhow::anyhow;
 use frame_common::{
-    crypto::{AccountId, BackupCmd, BackupPathSecret, BackupRequest},
+    crypto::{
+        AccountId, BackupPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverAllRequest,
+        RecoveredPathSecret,
+    },
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
@@ -161,22 +164,40 @@ impl QuoteGetter for AnonifyEnclaveContext {
     }
 }
 
-impl BackupOps for AnonifyEnclaveContext {
-    fn backup_path_secret_to_key_vault(
-        &self,
-        path_secret: Vec<u8>,
-        epoch: u32,
-        roster_idx: u32,
-        id: Vec<u8>,
-    ) -> anyhow::Result<()> {
-        let backup_path_secret = BackupPathSecret::new(path_secret, epoch, roster_idx, id);
-
+impl KeyVaultOps for AnonifyEnclaveContext {
+    fn backup_path_secret(&self, backup_path_secret: BackupPathSecret) -> anyhow::Result<()> {
         let mut mra_tls_client =
             Client::new(self.key_vault_endpoint(), &self.client_config).unwrap();
-        let backup_request = BackupRequest::new(BackupCmd::STORE, backup_path_secret);
-        let _resp: serde_json::Value = mra_tls_client.send_json(backup_request)?;
+        let key_vault_request = KeyVaultRequest::new(KeyVaultCmd::Store, backup_path_secret);
+        let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
 
         Ok(())
+    }
+
+    fn manually_backup_path_secrets_all(
+        &self,
+        backup_path_secrets: Vec<BackupPathSecret>,
+    ) -> anyhow::Result<()> {
+        let mut mra_tls_client =
+            Client::new(self.key_vault_endpoint(), &self.client_config).unwrap();
+        let key_vault_request =
+            KeyVaultRequest::new(KeyVaultCmd::ManuallyStoreAll, backup_path_secrets);
+        let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
+
+        Ok(())
+    }
+
+    fn manually_recover_path_secrets_all(
+        &self,
+        recover_path_secrets_all: RecoverAllRequest,
+    ) -> anyhow::Result<Vec<RecoveredPathSecret>> {
+        let mut mra_tls_client =
+            Client::new(self.key_vault_endpoint(), &self.client_config).unwrap();
+        let key_vault_request =
+            KeyVaultRequest::new(KeyVaultCmd::ManuallyRecoverAll, recover_path_secrets_all);
+        let path_secrets: Vec<RecoveredPathSecret> = mra_tls_client.send_json(key_vault_request)?;
+
+        Ok(path_secrets)
     }
 }
 

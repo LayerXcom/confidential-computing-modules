@@ -139,6 +139,16 @@ pub mod input {
     pub struct CallServerStopper;
 
     impl EcallInput for CallServerStopper {}
+
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct BackupPathSecretAll;
+
+    impl EcallInput for BackupPathSecretAll {}
+
+    #[derive(Encode, Decode, Debug, Clone, Default)]
+    pub struct RecoverPathSecretAll;
+
+    impl EcallInput for RecoverPathSecretAll {}
 }
 
 pub mod output {

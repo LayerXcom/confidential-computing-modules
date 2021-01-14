@@ -108,6 +108,28 @@ impl HostEngine for GetEncryptingKeyWorkflow {
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
 }
 
+pub struct BackupPathSecretAllWorkflow;
+
+impl HostEngine for BackupPathSecretAllWorkflow {
+    type HI = host_input::BackupPathSecretAll;
+    type EI = input::BackupPathSecretAll;
+    type EO = output::Empty;
+    type HO = host_output::BackupPathSecretAll;
+    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const CMD: u32 = BACKUP_PATH_SECRET_ALL_CMD;
+}
+
+pub struct RecoverPathSecretAllWorkflow;
+
+impl HostEngine for RecoverPathSecretAllWorkflow {
+    type HI = host_input::RecoverPathSecretAll;
+    type EI = input::RecoverPathSecretAll;
+    type EO = output::Empty;
+    type HO = host_output::RecoverPathSecretAll;
+    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const CMD: u32 = RECOVER_PATH_SECRET_ALL_CMD;
+}
+
 pub mod host_input {
     use super::*;
 
@@ -393,6 +415,30 @@ pub mod host_input {
             self.ecall_cmd
         }
     }
+
+    #[derive(Default)]
+    pub struct BackupPathSecretAll;
+
+    impl HostInput for BackupPathSecretAll {
+        type EcallInput = input::BackupPathSecretAll;
+        type HostOutput = host_output::BackupPathSecretAll;
+
+        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+            Ok((Self::EcallInput::default(), Self::HostOutput::default()))
+        }
+    }
+
+    #[derive(Default)]
+    pub struct RecoverPathSecretAll;
+
+    impl HostInput for RecoverPathSecretAll {
+        type EcallInput = input::RecoverPathSecretAll;
+        type HostOutput = host_output::RecoverPathSecretAll;
+
+        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+            Ok((Self::EcallInput::default(), Self::HostOutput::default()))
+        }
+    }
 }
 
 pub mod host_output {
@@ -578,5 +624,19 @@ pub mod host_output {
         pub fn new() -> Self {
             ReturnEncryptingKey { ecall_output: None }
         }
+    }
+
+    #[derive(Default)]
+    pub struct BackupPathSecretAll;
+
+    impl HostOutput for BackupPathSecretAll {
+        type EcallOutput = output::Empty;
+    }
+
+    #[derive(Default)]
+    pub struct RecoverPathSecretAll;
+
+    impl HostOutput for RecoverPathSecretAll {
+        type EcallOutput = output::Empty;
     }
 }
