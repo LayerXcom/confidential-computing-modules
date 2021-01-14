@@ -16,18 +16,18 @@ impl Dispatcher {
         Ok(Dispatcher { inner })
     }
 
-    pub async fn start(&self) -> Result<()> {
+    pub async fn start(&self, ecall_cmd: u32) -> Result<()> {
         let inner = self.inner.read();
-        let input = host_input::StartServer::new();
+        let input = host_input::StartServer::new(ecall_cmd);
         let eid = inner.get_enclave_id();
         let _host_output = StartServerWorkflow::exec(input, eid)?;
 
         Ok(())
     }
 
-    pub async fn stop(&self) -> Result<()> {
+    pub async fn stop(&self, ecall_cmd: u32) -> Result<()> {
         let inner = self.inner.read();
-        let input = host_input::StopServer::default();
+        let input = host_input::StopServer::new(ecall_cmd);
         let eid = inner.get_enclave_id();
         let _host_output = StopServerWorkflow::exec(input, eid)?;
 

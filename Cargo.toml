@@ -21,7 +21,7 @@ members = [
     "example/erc20/server",
     "example/erc20/state-transition",
     "example/secret-backup/server",
-    "example/secret-backup/api",
+    "example/secret-backup/commands",
     "example/secret-backup/enclave",
     "config",
     "wallet",
