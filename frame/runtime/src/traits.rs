@@ -121,6 +121,7 @@ pub trait GroupKeyOps: Sized {
 
     fn process_handshake(
         &mut self,
+        store_path_secrets: &StorePathSecrets,
         handshake: &HandshakeParams,
         spid: &str,
         ias_url: &str,

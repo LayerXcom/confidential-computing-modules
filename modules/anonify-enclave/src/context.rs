@@ -18,8 +18,9 @@ use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
-    init_path_secret_kvs, DhPubKey, EciesCiphertext,
+    init_path_secret_kvs, DhPubKey, EciesCiphertext, StorePathSecrets,
 };
+use frame_config::PATH_SECRETS_DIR;
 use remote_attestation::{EncodedQuote, QuoteTarget};
 use std::{
     env,
@@ -253,7 +254,7 @@ impl AnonifyEnclaveContext {
                 IAS_ROOT_CERT.to_vec(),
                 *ENCLAVE_MEASUREMENT_KEY_VAULT,
             );
-        let store_path_secrets = StorePathSecrets::new(*PATH_SECRETS_DIR);
+        let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
 
         Ok(AnonifyEnclaveContext {
             spid,

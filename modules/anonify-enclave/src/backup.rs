@@ -1,6 +1,5 @@
 #![cfg(feature = "backup-enable")]
 
-use anonify_config::DEFAULT_LOCAL_PATH_SECRETS_DIR;
 use anonify_io_types::*;
 use anyhow::Result;
 use frame_common::{
@@ -9,9 +8,9 @@ use frame_common::{
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_treekem::{PathSecret, StorePathSecrets};
+use frame_treekem::PathSecret;
 use key_vault_enclave::get_local_path_secret_ids;
-use std::{env, vec::Vec};
+use std::vec::Vec;
 
 /// A PathSecret Backupper
 #[derive(Debug, Clone)]
@@ -30,12 +29,10 @@ impl EnclaveEngine for PathSecretBackupper {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
+        let store_path_secrets = enclave_context.store_path_secrets();
         // retrieve local path_secrets IDs
-        let ids = get_local_path_secret_ids(enclave_context.store_path_secrets().local_dir_path())?;
-
-        let store_path_secrets = StorePathSecrets::new(path_secrets_dir);
-        let group_key = &*enclave_context.read_group_key();
-        let roster_idx = group_key.my_roster_idx();
+        let ids = get_local_path_secret_ids(store_path_secrets.local_dir_path())?;
+        let roster_idx = (&*enclave_context.read_group_key()).my_roster_idx();
 
         // backup path_secrets to key-vault server
         let mut backup_path_secrets: Vec<BackupPathSecret> = vec![];

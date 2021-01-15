@@ -362,6 +362,7 @@ dependencies = [
  "anyhow 1.0.28",
  "ed25519-dalek",
  "frame-common",
+ "frame-config",
  "frame-enclave",
  "frame-mra-tls",
  "frame-runtime",

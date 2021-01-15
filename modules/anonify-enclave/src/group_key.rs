@@ -3,7 +3,7 @@ use frame_common::crypto::Ciphertext;
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{HandshakeParams, PathSecretSource},
-    AppKeyChain, GroupState, Handshake, PathSecret,
+    AppKeyChain, GroupState, Handshake, PathSecret, StorePathSecrets,
 };
 use std::vec::Vec;
 
@@ -43,7 +43,7 @@ impl GroupKeyOps for GroupKey {
 
     fn process_handshake(
         &mut self,
-        store_path_secrets: &PathSecretStore,
+        store_path_secrets: &StorePathSecrets,
         handshake: &HandshakeParams,
         spid: &str,
         ias_url: &str,

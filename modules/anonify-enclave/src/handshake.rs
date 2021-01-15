@@ -1,4 +1,4 @@
-use anonify_config::{DEFAULT_LOCAL_PATH_SECRETS_DIR, IAS_ROOT_CERT};
+use anonify_config::IAS_ROOT_CERT;
 use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
@@ -8,8 +8,7 @@ use frame_common::{
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_treekem::{handshake::HandshakeParams, StorePathSecrets};
-use std::env;
+use frame_treekem::handshake::HandshakeParams;
 
 /// A add handshake Sender
 #[derive(Debug, Clone)]
@@ -38,7 +37,8 @@ impl EnclaveEngine for JoinGroupSender {
         let epoch = handshake.prior_epoch();
         let id = handshake.hash();
         let export_path_secret = path_secret.clone().try_into_exporting(epoch, id.as_ref())?;
-        self.store_path_secrets()
+        enclave_context
+            .store_path_secrets()
             .save_to_local_filesystem(&export_path_secret)?;
         let export_handshake = handshake.clone().into_export();
 
