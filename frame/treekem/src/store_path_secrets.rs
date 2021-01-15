@@ -20,6 +20,11 @@ impl StorePathSecrets {
         StorePathSecrets { local_dir_path }
     }
 
+    pub fn push<P: AsRef<Path>>(mut self, path: P) -> Self {
+        self.local_dir_path.push(path);
+        self
+    }
+
     pub fn save_to_local_filesystem(&self, eps: &ExportPathSecret) -> Result<()> {
         let file_name = hex::encode(&eps.id_as_ref());
         let file_path = self.local_dir_path.join(file_name);

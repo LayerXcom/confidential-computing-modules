@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 anonify-config = { path = "../../config", default-features = false, features = ["sgx"], optional = true}
+frame-config = { path = "../config", default-features = false }
 frame-common = { path = "../common", default-features = false }
 frame-mra-tls = { path = "../../frame/mra-tls", optional = true }
 test-utils = { path = "../../tests/utils", optional = true }

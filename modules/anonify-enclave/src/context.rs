@@ -42,6 +42,7 @@ pub struct AnonifyEnclaveContext {
     notifier: Notifier,
     group_key: Arc<SgxRwLock<GroupKey>>,
     client_config: ClientConfig,
+    store_path_secrets: StorePathSecrets,
 }
 
 impl ConfigGetter for AnonifyEnclaveContext {
@@ -63,6 +64,10 @@ impl ConfigGetter for AnonifyEnclaveContext {
 
     fn spid(&self) -> &str {
         &self.spid
+    }
+
+    fn store_path_secrets(&self) -> &StorePathSecrets {
+        &self.store_path_secrets
     }
 }
 
@@ -248,6 +253,7 @@ impl AnonifyEnclaveContext {
                 IAS_ROOT_CERT.to_vec(),
                 *ENCLAVE_MEASUREMENT_KEY_VAULT,
             );
+        let store_path_secrets = StorePathSecrets::new(*PATH_SECRETS_DIR);
 
         Ok(AnonifyEnclaveContext {
             spid,
@@ -260,6 +266,7 @@ impl AnonifyEnclaveContext {
             sub_key,
             key_vault_endpoint,
             client_config,
+            store_path_secrets,
         })
     }
 }

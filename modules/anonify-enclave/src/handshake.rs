@@ -148,8 +148,16 @@ impl EnclaveEngine for HandshakeReceiver {
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
         let server_address = enclave_context.key_vault_endpoint();
+        let store_path_secrets = enclave_context.store_path_secrets();
 
-        group_key.process_handshake(&handshake, spid, ias_url, sub_key, server_address)?;
+        group_key.process_handshake(
+            store_path_secrets,
+            &handshake,
+            spid,
+            ias_url,
+            sub_key,
+            server_address,
+        )?;
 
         Ok(output::Empty::default())
     }

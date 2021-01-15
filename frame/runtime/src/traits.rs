@@ -6,14 +6,13 @@ use crate::localstd::{
 };
 use codec::{Decode, Encode};
 use frame_common::{
-    crypto::{
-        AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest,
-        RecoveredPathSecret,
-    },
+    crypto::{AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest, RecoveredPathSecret},
     state_types::{MemId, ReturnState, UpdatedState},
     traits::*,
 };
-use frame_treekem::{handshake::HandshakeParams, DhPubKey, EciesCiphertext, PathSecret};
+use frame_treekem::{
+    handshake::HandshakeParams, DhPubKey, EciesCiphertext, PathSecret, StorePathSecrets,
+};
 use remote_attestation::EncodedQuote;
 
 /// Execute state transition functions from runtime
@@ -65,6 +64,7 @@ pub trait ConfigGetter {
     fn sub_key(&self) -> &str;
     fn spid(&self) -> &str;
     fn key_vault_endpoint(&self) -> &str;
+    fn store_path_secrets(&self) -> &StorePathSecrets;
 }
 
 /// A getter of state stored in enclave memory.

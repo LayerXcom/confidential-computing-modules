@@ -18,9 +18,6 @@ use serde_std as local_serde;
 #[macro_use]
 extern crate lazy_static;
 
-pub mod constants;
-
-pub use crate::constants::*;
 use crate::local_anyhow::Result;
 use crate::localstd::{env, ffi::OsStr, path::PathBuf, string::String, vec::Vec};
 

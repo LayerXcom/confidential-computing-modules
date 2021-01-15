@@ -43,6 +43,7 @@ impl GroupKeyOps for GroupKey {
 
     fn process_handshake(
         &mut self,
+        store_path_secrets: &PathSecretStore,
         handshake: &HandshakeParams,
         spid: &str,
         ias_url: &str,
@@ -50,6 +51,7 @@ impl GroupKeyOps for GroupKey {
         server_address: &str,
     ) -> Result<()> {
         let keychain = self.group_state.process_handshake(
+            store_path_secrets,
             handshake,
             &self.source,
             self.max_roster_idx as u32,
