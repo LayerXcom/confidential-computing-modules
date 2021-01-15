@@ -8,7 +8,7 @@ use crate::localstd::{
 use anonify_config::PJ_ROOT_DIR;
 use frame_common::crypto::ExportPathSecret;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct StorePathSecrets {
     local_dir_path: PathBuf,
 }
@@ -23,6 +23,10 @@ impl StorePathSecrets {
     pub fn push<P: AsRef<Path>>(mut self, path: P) -> Self {
         self.local_dir_path.push(path);
         self
+    }
+
+    pub fn local_dir_path(&self) -> &Path {
+        &self.local_dir_path
     }
 
     pub fn save_to_local_filesystem(&self, eps: &ExportPathSecret) -> Result<()> {

@@ -32,7 +32,7 @@ impl EnclaveEngine for ServerStarter {
             .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT_ERC20);
 
         let mut server = Server::new(SERVER_ADDRESS.to_string(), server_config);
-        let store_path_secrets = enclacve_context.store_path_secrets();
+        let store_path_secrets = enclave_context.store_path_secrets();
         let handler = KeyVaultHandler::new(store_path_secrets.clone());
         thread::spawn(move || server.run(handler).unwrap());
 
