@@ -34,17 +34,12 @@ impl EnclaveEngine for JoinGroupSender {
             IAS_ROOT_CERT.to_vec(),
         )?;
 
-        let mrenclave_ver = enclave_context.mrenclave_ver();
-        let group_key = &*enclave_context.read_group_key();
-        let (handshake, path_secret) = group_key.create_handshake()?;
+        let (handshake, path_secret) = (&*enclave_context.read_group_key()).create_handshake()?;
         let epoch = handshake.prior_epoch();
         let id = handshake.hash();
         let export_path_secret = path_secret.clone().try_into_exporting(epoch, id.as_ref())?;
-        let store_path_secrets = StorePathSecrets::new(
-            env::var("LOCAL_PATH_SECRETS_DIR")
-                .unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
-        );
-        store_path_secrets.save_to_local_filesystem(&export_path_secret)?;
+        self.store_path_secrets()
+            .save_to_local_filesystem(&export_path_secret)?;
         let export_handshake = handshake.clone().into_export();
 
         #[cfg(feature = "backup-enable")]
@@ -62,7 +57,7 @@ impl EnclaveEngine for JoinGroupSender {
             attested_report.report().to_vec(),
             attested_report.report_sig().to_vec(),
             export_handshake.encode(),
-            mrenclave_ver,
+            enclave_context.mrenclave_ver(),
             export_handshake.roster_idx(),
         ))
     }
@@ -90,11 +85,9 @@ impl EnclaveEngine for HandshakeSender {
         let epoch = handshake.prior_epoch();
         let id = handshake.hash();
         let export_path_secret = path_secret.clone().try_into_exporting(epoch, id.as_ref())?;
-        let store_path_secrets = StorePathSecrets::new(
-            env::var("LOCAL_PATH_SECRETS_DIR")
-                .unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
-        );
-        store_path_secrets.save_to_local_filesystem(&export_path_secret)?;
+        enclave_context
+            .store_path_secrets()
+            .save_to_local_filesystem(&export_path_secret)?;
         let export_handshake = handshake.clone().into_export();
 
         #[cfg(feature = "backup-enable")]

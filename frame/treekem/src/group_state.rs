@@ -11,7 +11,6 @@ use codec::Encode;
 use frame_common::crypto::{
     ExportPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverRequest, RecoveredPathSecret,
 };
-use frame_config::PATH_SECRETS_DIR;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 
 #[derive(Clone, Debug, Encode)]

@@ -31,9 +31,7 @@ impl EnclaveEngine for PathSecretBackupper {
         C: ContextOps<S = StateType> + Clone,
     {
         // retrieve local path_secrets IDs
-        let path_secrets_dir = env::var("LOCAL_PATH_SECRETS_DIR")
-            .unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR));
-        let ids = get_local_path_secret_ids(path_secrets_dir.clone())?;
+        let ids = get_local_path_secret_ids(enclave_context.store_path_secrets().local_dir_path())?;
 
         let store_path_secrets = StorePathSecrets::new(path_secrets_dir);
         let group_key = &*enclave_context.read_group_key();
@@ -80,16 +78,14 @@ impl EnclaveEngine for PathSecretRecoverer {
             enclave_context.manually_recover_path_secrets_all(recover_all_request)?;
 
         // save path_secrets to own file system
-        let path_secrets_dir = env::var("LOCAL_PATH_SECRETS_DIR")
-            .unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR));
-        let store_path_secrets = StorePathSecrets::new(path_secrets_dir);
-
         for rps in recovered_path_secrets {
             let path_secret = PathSecret::from(rps.path_secret());
             let eps = path_secret
                 .clone()
                 .try_into_exporting(rps.epoch(), rps.id())?;
-            store_path_secrets.save_to_local_filesystem(&eps)?;
+            enclave_context
+                .store_path_secrets()
+                .save_to_local_filesystem(&eps)?;
         }
         Ok(output::Empty::default())
     }
