@@ -96,7 +96,6 @@ async fn test_backup_path_secret() {
     // Ensure not to exist path_secret directory on both local and remote
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
-    assert!(!path_secrets_dir.exists());
 
     // Deploy
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
@@ -248,7 +247,6 @@ async fn test_recover_without_key_vault() {
     // Ensure not to exist path_secret directory on both local and remote
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
-    assert!(!path_secrets_dir.exists());
 
     // Deploy
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
@@ -398,7 +396,6 @@ async fn test_manually_backup_all() {
     // Ensure not to exist path_secret directory on both local and remote
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
-    assert!(!path_secrets_dir.exists());
 
     // Deploy
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
@@ -560,7 +557,6 @@ async fn test_manually_recover_all() {
     // Ensure not to exist path_secret directory on both local and remote
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
-    assert!(!path_secrets_dir.exists());
 
     // Deploy
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
