@@ -93,7 +93,6 @@ async fn test_backup_path_secret() {
     )
     .await;
 
-    // Ensure not to exist path_secret directory on both local and remote
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
 
@@ -244,7 +243,6 @@ async fn test_recover_without_key_vault() {
     )
     .await;
 
-    // Ensure not to exist path_secret directory on both local and remote
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
 
@@ -393,7 +391,6 @@ async fn test_manually_backup_all() {
     )
     .await;
 
-    // Ensure not to exist path_secret directory on both local and remote
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
 
@@ -554,7 +551,6 @@ async fn test_manually_recover_all() {
     )
     .await;
 
-    // Ensure not to exist path_secret directory on both local and remote
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
 
@@ -656,7 +652,7 @@ fn set_env_vars() {
     );
     env::set_var("KEY_VAULT_ENDPOINT", "localhost:12345");
     env::set_var("ENCLAVE_PKG_NAME", "secret_backup");
-    env::set_var("PATH_SECRETS_DIR", ".anonify/pathsecrets");
+    env::set_var("PATH_SECRETS_DIR", ".anonify/test_pathsecrets");
 }
 
 fn set_server_env_vars() {
