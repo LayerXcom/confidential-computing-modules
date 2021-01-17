@@ -9,7 +9,7 @@ name = "anonifyenclave"
 crate-type = ["staticlib"]
 
 [dependencies]
-anonify-config = { path = "../../../config", default-features = false, features = ["sgx"]}
+frame-config = { path = "../../../frame/config", default-features = false, features = ["sgx"]}
 frame-enclave = { path = "../../../frame/enclave" }
 frame-types = { path = "../../../frame/types" }
 frame-treekem = { path = "../../../frame/treekem", default-features = false, features = ["sgx"] }

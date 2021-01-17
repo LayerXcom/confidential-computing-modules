@@ -12,7 +12,7 @@ use once_cell::sync::Lazy;
 
 static ENABLE_BACKTRACE: Lazy<()> = Lazy::new(|| {
     backtrace::enable_backtrace(
-        &*anonify_config::ENCLAVE_SIGNED_SO,
+        &*frame_config::ENCLAVE_SIGNED_SO,
         backtrace::PrintFormat::Short,
     )
     .unwrap();
