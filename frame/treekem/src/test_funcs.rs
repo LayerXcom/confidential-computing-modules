@@ -6,7 +6,6 @@ use crate::local_rand;
 use crate::local_rand_core::SeedableRng;
 use crate::localstd::env;
 use crate::StorePathSecrets;
-use anonify_config::{SPID, SUB_KEY};
 use frame_config::PATH_SECRETS_DIR;
 
 pub fn init_path_secret_kvs(kvs: &mut PathSecretKVS, until_roster_idx: usize, until_epoch: usize) {
@@ -30,6 +29,8 @@ pub fn do_handshake_three_party(
         .unwrap();
     let ias_url = env::var("IAS_URL").expect("IAS_URL is not set");
     let key_vault_endpoint = env::var("KEY_VAULT_ENDPOINT").expect("KEY_VAULT_ENDPOINT is not set");
+    let spid = env::var("SPID").expect("SPID is not set");
+    let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
     let (handshake, _) = my_group.create_handshake(source).unwrap();
     let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
 
@@ -39,9 +40,9 @@ pub fn do_handshake_three_party(
             &handshake,
             source,
             max_roster_idx,
-            &*SPID,
+            &spid,
             &ias_url,
-            &*SUB_KEY,
+            &sub_key,
             &key_vault_endpoint,
         )
         .unwrap();
@@ -51,9 +52,9 @@ pub fn do_handshake_three_party(
             &handshake,
             source,
             max_roster_idx,
-            &*SPID,
+            &spid,
             &ias_url,
-            &*SUB_KEY,
+            &sub_key,
             &key_vault_endpoint,
         )
         .unwrap();
@@ -63,9 +64,9 @@ pub fn do_handshake_three_party(
             &handshake,
             source,
             max_roster_idx,
-            &*SPID,
+            &spid,
             &ias_url,
-            &*SUB_KEY,
+            &sub_key,
             &key_vault_endpoint,
         )
         .unwrap();

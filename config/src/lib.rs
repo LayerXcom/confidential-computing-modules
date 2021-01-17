@@ -83,8 +83,6 @@ lazy_static! {
             .expect("Cannot read measurement file");
         EnclaveMeasurement::new_from_dumpfile(content)
     };
-    pub static ref SPID: String = env::var("SPID").expect("SPID is not set");
-    pub static ref SUB_KEY: String = env::var("SUB_KEY").expect("SUB_KEY is not set");
 }
 
 lazy_static! {
