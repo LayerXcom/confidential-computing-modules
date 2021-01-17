@@ -35,6 +35,7 @@ serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde
 default = ["std"]
 std = [
     "frame-common/std",
+    "frame-config/std",
     "anyhow",
     "std-libsecp256k1",
     "std_rand",
@@ -48,6 +49,7 @@ sgx = [
     "anonify-config",
     "frame-mra-tls",
     "frame-common/sgx",
+    "frame-config/sgx",
     "test-utils",
     "sgx-anyhow",
     "sgx-libsecp256k1",
