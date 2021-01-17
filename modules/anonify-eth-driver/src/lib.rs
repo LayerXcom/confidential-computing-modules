@@ -1,5 +1,7 @@
 #![crate_type = "lib"]
 
+#[cfg(feature = "backup-enable")]
+mod backup;
 mod cache;
 pub mod dispatcher;
 mod error;
@@ -7,8 +9,6 @@ pub mod eth;
 pub mod traits;
 mod utils;
 mod workflow;
-#[cfg(feature = "backup-enable")]
-mod backup;
 
 pub use cache::EventCache;
 pub use dispatcher::Dispatcher;

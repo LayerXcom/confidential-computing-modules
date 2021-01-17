@@ -289,7 +289,10 @@ impl InnerEnclaveLog {
                             ciphertext.generation()
                         );
 
-                        let inp = host_input::InsertCiphertext::new(ciphertext.clone(), fetch_ciphertext_cmd);
+                        let inp = host_input::InsertCiphertext::new(
+                            ciphertext.clone(),
+                            fetch_ciphertext_cmd,
+                        );
                         match InsertCiphertextWorkflow::exec(inp, eid)
                             .map_err(Into::into)
                             .and_then(|e| {
@@ -355,7 +358,8 @@ impl InnerEnclaveLog {
                             handshake.prior_epoch(),
                         );
 
-                        if let Err(e) = Self::insert_handshake(eid, handshake, fetch_handshake_cmd) {
+                        if let Err(e) = Self::insert_handshake(eid, handshake, fetch_handshake_cmd)
+                        {
                             error!("Error in enclave (InsertHandshakeWorkflow::exec): {:?}", e);
                             continue;
                         }
@@ -371,7 +375,11 @@ impl InnerEnclaveLog {
         }
     }
 
-    fn insert_handshake(eid: sgx_enclave_id_t, handshake: ExportHandshake, fetch_handshake_cmd: u32) -> Result<()> {
+    fn insert_handshake(
+        eid: sgx_enclave_id_t,
+        handshake: ExportHandshake,
+        fetch_handshake_cmd: u32,
+    ) -> Result<()> {
         let input = host_input::InsertHandshake::new(handshake, fetch_handshake_cmd);
         InsertHandshakeWorkflow::exec(input, eid)?;
 

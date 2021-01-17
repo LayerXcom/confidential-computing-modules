@@ -21,7 +21,7 @@ static ENABLE_BACKTRACE: Lazy<()> = Lazy::new(|| {
 #[no_mangle]
 pub fn ecall_run_tests() {
     *ENABLE_BACKTRACE;
-    
+
     let ret = check_all_passed!(
         frame_treekem::tests::run_tests(),
         anonify_enclave::tests::run_tests(),

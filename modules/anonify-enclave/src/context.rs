@@ -13,6 +13,7 @@ use frame_common::{
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
+use frame_config::PATH_SECRETS_DIR;
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
@@ -20,7 +21,6 @@ use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, DhPubKey, EciesCiphertext, StorePathSecrets,
 };
-use frame_config::PATH_SECRETS_DIR;
 use remote_attestation::{EncodedQuote, QuoteTarget};
 use std::{
     env,

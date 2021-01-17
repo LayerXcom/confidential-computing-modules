@@ -1,5 +1,4 @@
 use crate::local_anyhow::Result;
-use crate::local_log::debug;
 use crate::localstd::{
     fs,
     io::{BufReader, Write},
@@ -8,6 +7,7 @@ use crate::localstd::{
 };
 use anonify_config::PJ_ROOT_DIR;
 use frame_common::crypto::ExportPathSecret;
+use tracing::info;
 
 /// Store exported secret_paths in the local filesystems
 /// For anonify node, it is saved in the following location.
@@ -39,7 +39,7 @@ impl StorePathSecrets {
     pub fn save_to_local_filesystem(&self, eps: &ExportPathSecret) -> Result<()> {
         let file_name = hex::encode(&eps.id_as_ref());
         let file_path = self.local_dir_path.join(file_name);
-        debug!("Saving a sealed path secret to the path: {:?}", file_path);
+        info!("Saving a sealed path secret to the path: {:?}", file_path);
         let mut file = fs::File::create(file_path)?;
         serde_json::to_writer(&mut file, &eps)?;
         file.flush()?;
@@ -51,7 +51,7 @@ impl StorePathSecrets {
     pub fn load_from_local_filesystem(&self, id: &[u8]) -> Result<ExportPathSecret> {
         let file_name = hex::encode(&id);
         let file_path = self.local_dir_path.join(file_name);
-        debug!(
+        info!(
             "Loading a sealed path secret from the path: {:?}",
             file_path
         );

@@ -1,6 +1,6 @@
+use frame_config::PATH_SECRETS_DIR;
 use frame_runtime::traits::*;
 use frame_treekem::StorePathSecrets;
-use frame_config::PATH_SECRETS_DIR;
 use std::{env, string::String};
 
 pub struct KeyVaultEnclaveContext {

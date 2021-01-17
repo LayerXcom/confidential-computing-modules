@@ -53,7 +53,9 @@ where
                 if let Some((curr_tries, delay)) = iterator.next() {
                     warn!(
                         "The {} operation retries {} times... (result: {:?})",
-                        self.name, curr_tries + 1, res
+                        self.name,
+                        curr_tries + 1,
+                        res
                     );
                     thread::sleep(delay);
                 } else {
@@ -80,7 +82,9 @@ where
                 if let Some((curr_tries, delay)) = iterator.next() {
                     warn!(
                         "The {} operation retries {} times... (result: {:?})",
-                        self.name, curr_tries + 1, res
+                        self.name,
+                        curr_tries + 1,
+                        res
                     );
                     actix_rt::time::delay_for(delay).await;
                 } else {
