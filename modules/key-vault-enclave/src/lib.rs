@@ -12,5 +12,3 @@ pub mod server;
 pub mod workflow {
     pub use crate::server::{ServerStarter, ServerStopper};
 }
-
-pub use handlers::get_local_path_secret_ids;

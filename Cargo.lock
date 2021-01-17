@@ -368,7 +368,6 @@ dependencies = [
  "frame-runtime",
  "frame-treekem",
  "frame-types",
- "key-vault-enclave",
  "libsecp256k1 0.2.2",
  "parity-scale-codec",
  "remote-attestation",

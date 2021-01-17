@@ -9,7 +9,6 @@ use frame_common::{
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::PathSecret;
-use key_vault_enclave::get_local_path_secret_ids;
 use std::vec::Vec;
 
 /// A PathSecret Backupper
@@ -31,7 +30,7 @@ impl EnclaveEngine for PathSecretBackupper {
     {
         let store_path_secrets = enclave_context.store_path_secrets();
         // retrieve local path_secrets IDs
-        let ids = get_local_path_secret_ids(store_path_secrets.local_dir_path())?;
+        let ids = store_path_secrets.get_all_path_secret_ids()?;
         let roster_idx = (&*enclave_context.read_group_key()).my_roster_idx();
 
         // backup path_secrets to key-vault server

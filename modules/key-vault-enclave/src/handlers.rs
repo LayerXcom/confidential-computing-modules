@@ -1,4 +1,3 @@
-use anonify_config::PJ_ROOT_DIR;
 use anyhow::anyhow;
 use frame_common::crypto::{
     BackupPathSecret, ExportPathSecret, RecoverAllRequest, RecoverRequest, RecoveredPathSecret,
@@ -6,17 +5,28 @@ use frame_common::crypto::{
 use frame_mra_tls::RequestHandler;
 use frame_treekem::{PathSecret, StorePathSecrets};
 use serde_json::Value;
-use std::{
-    fs,
-    io::BufReader,
-    path::{Path, PathBuf},
-    string::ToString,
-    vec::Vec,
-};
+use std::{string::ToString, vec::Vec};
 
 #[derive(Default, Clone)]
 pub struct KeyVaultHandler {
     store_path_secrets: StorePathSecrets,
+}
+
+impl RequestHandler for KeyVaultHandler {
+    fn handle_json(&self, msg: &[u8]) -> anyhow::Result<Vec<u8>> {
+        let decoded: Value = serde_json::from_slice(&msg)?;
+        let cmd = decoded["cmd"]
+            .as_str()
+            .ok_or_else(|| anyhow!("msg doesn't contain cmd"))?;
+
+        match cmd {
+            "Store" => self.store_path_secret(decoded["body"].clone()),
+            "Recover" => self.recover_path_secret(decoded["body"].clone()),
+            "ManuallyStoreAll" => self.manually_store_path_secrets_all(decoded["body"].clone()),
+            "ManuallyRecoverAll" => self.manually_recover_path_secrets_all(decoded["body"].clone()),
+            _ => unreachable!("got unknown command: {:?}", cmd),
+        }
+    }
 }
 
 impl KeyVaultHandler {
@@ -77,7 +87,7 @@ impl KeyVaultHandler {
             .store_path_secrets
             .clone()
             .create_dir_all(recover_path_secret.roster_idx().to_string())?;
-        let ps_ids = get_local_path_secret_ids(self.store_path_secrets.local_dir_path())?;
+        let ps_ids = store_path_secrets.get_all_path_secret_ids()?;
 
         for ps_id in ps_ids {
             let eps = store_path_secrets.load_from_local_filesystem(&ps_id)?;
@@ -88,41 +98,4 @@ impl KeyVaultHandler {
 
         serde_json::to_vec(&recovered_path_secrets).map_err(Into::into)
     }
-}
-
-impl RequestHandler for KeyVaultHandler {
-    fn handle_json(&self, msg: &[u8]) -> anyhow::Result<Vec<u8>> {
-        let decoded: Value = serde_json::from_slice(&msg)?;
-        let cmd = decoded["cmd"]
-            .as_str()
-            .ok_or_else(|| anyhow!("msg doesn't contain cmd"))?;
-
-        match cmd {
-            "Store" => self.store_path_secret(decoded["body"].clone()),
-            "Recover" => self.recover_path_secret(decoded["body"].clone()),
-            "ManuallyStoreAll" => self.manually_store_path_secrets_all(decoded["body"].clone()),
-            "ManuallyRecoverAll" => self.manually_recover_path_secrets_all(decoded["body"].clone()),
-            _ => unreachable!("got unknown command: {:?}", cmd),
-        }
-    }
-}
-
-pub fn get_local_path_secret_ids<P: AsRef<Path>>(path: P) -> anyhow::Result<Vec<Vec<u8>>> {
-    let local_path_secret_dir_path = (*PJ_ROOT_DIR).to_path_buf().join(path);
-
-    let file_paths: Vec<PathBuf> = fs::read_dir(local_path_secret_dir_path)?
-        .filter_map(|entry| entry.ok())
-        .map(|entry| entry.path())
-        .filter(|path| path.is_file())
-        .collect();
-
-    let mut ids = vec![];
-    for path in file_paths {
-        let file = fs::File::open(path)?;
-        let reader = BufReader::new(file);
-        let eps: ExportPathSecret = serde_json::from_reader(reader)?;
-        ids.push(eps.id_as_ref().to_vec());
-    }
-
-    Ok(ids)
 }
