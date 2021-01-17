@@ -9,6 +9,7 @@ use crate::localstd::sync::RwLock;
 #[cfg(feature = "sgx")]
 use crate::localstd::sync::SgxRwLock as RwLock;
 use crate::localstd::{collections::HashMap, string::String, sync::Arc, vec::Vec};
+use crate::StorePathSecrets;
 use codec::{Decode, Encode};
 use frame_common::crypto::{ExportHandshake, ExportPathSecret};
 
@@ -20,6 +21,7 @@ pub trait Handshake: Sized {
     /// Process a received handshake from other members.
     fn process_handshake(
         &mut self,
+        store_path_secrets: &StorePathSecrets,
         handshake: &HandshakeParams,
         source: &PathSecretSource,
         max_roster_idx: u32,

@@ -1,8 +1,8 @@
+use crate::api;
 use crate::error::{Result, ServerError};
 use crate::Server;
-use crate::api;
-use key_vault_commands::*;
 use actix_web::{web, HttpResponse};
+use key_vault_commands::*;
 use std::sync::Arc;
 
 const SUCCESS: &'static str = r#"{
@@ -16,11 +16,9 @@ pub async fn handle_start(server: web::Data<Arc<Server>>) -> Result<HttpResponse
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(
-        HttpResponse::Ok().json(api::start::post::Response {
-            status: "success".to_string(),
-        }),
-    )
+    Ok(HttpResponse::Ok().json(api::start::post::Response {
+        status: "success".to_string(),
+    }))
 }
 
 pub async fn handle_stop(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {

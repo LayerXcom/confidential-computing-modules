@@ -1,6 +1,5 @@
 #![cfg(feature = "backup-enable")]
 
-use anonify_config::DEFAULT_LOCAL_PATH_SECRETS_DIR;
 use anonify_io_types::*;
 use anyhow::Result;
 use frame_common::{
@@ -9,9 +8,8 @@ use frame_common::{
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_treekem::{PathSecret, StorePathSecrets};
-use key_vault_enclave::get_local_path_secret_ids;
-use std::{env, vec::Vec};
+use frame_treekem::PathSecret;
+use std::vec::Vec;
 
 /// A PathSecret Backupper
 #[derive(Debug, Clone)]
@@ -30,14 +28,10 @@ impl EnclaveEngine for PathSecretBackupper {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
+        let store_path_secrets = enclave_context.store_path_secrets();
         // retrieve local path_secrets IDs
-        let path_secrets_dir = env::var("LOCAL_PATH_SECRETS_DIR")
-            .unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR));
-        let ids = get_local_path_secret_ids(path_secrets_dir.clone())?;
-
-        let store_path_secrets = StorePathSecrets::new(path_secrets_dir);
-        let group_key = &*enclave_context.read_group_key();
-        let roster_idx = group_key.my_roster_idx();
+        let ids = store_path_secrets.get_all_path_secret_ids()?;
+        let roster_idx = (&*enclave_context.read_group_key()).my_roster_idx();
 
         // backup path_secrets to key-vault server
         let mut backup_path_secrets: Vec<BackupPathSecret> = vec![];
@@ -80,16 +74,14 @@ impl EnclaveEngine for PathSecretRecoverer {
             enclave_context.manually_recover_path_secrets_all(recover_all_request)?;
 
         // save path_secrets to own file system
-        let path_secrets_dir = env::var("LOCAL_PATH_SECRETS_DIR")
-            .unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR));
-        let store_path_secrets = StorePathSecrets::new(path_secrets_dir);
-
         for rps in recovered_path_secrets {
             let path_secret = PathSecret::from(rps.path_secret());
             let eps = path_secret
                 .clone()
                 .try_into_exporting(rps.epoch(), rps.id())?;
-            store_path_secrets.save_to_local_filesystem(&eps)?;
+            enclave_context
+                .store_path_secrets()
+                .save_to_local_filesystem(&eps)?;
         }
         Ok(output::Empty::default())
     }

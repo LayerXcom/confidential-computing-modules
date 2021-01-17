@@ -6,9 +6,7 @@ use crate::localstd::{env, vec::Vec};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use crate::store_path_secrets::StorePathSecrets;
 use crate::tree_math;
-use anonify_config::{
-    DEFAULT_LOCAL_PATH_SECRETS_DIR, ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT,
-};
+use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT};
 use codec::Encode;
 use frame_common::crypto::{
     ExportPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverRequest, RecoveredPathSecret,
@@ -56,6 +54,7 @@ impl Handshake for GroupState {
 
     fn process_handshake(
         &mut self,
+        store_path_secrets: &StorePathSecrets,
         handshake: &HandshakeParams,
         source: &PathSecretSource,
         max_roster_idx: u32,
@@ -95,8 +94,11 @@ impl Handshake for GroupState {
             if sender_tree_idx == my_tree_idx {
                 let path_secret = match source {
                     PathSecretSource::Local => {
-                        match recover_path_secret_from_local(handshake.hash().as_ref(), self.epoch)
-                        {
+                        match recover_path_secret_from_local(
+                            store_path_secrets,
+                            handshake.hash().as_ref(),
+                            self.epoch,
+                        ) {
                             Ok(ps) => ps,
                             Err(_) => recover_path_secret_from_key_vault(
                                 handshake.hash().as_ref(),
@@ -118,11 +120,6 @@ impl Handshake for GroupState {
                 let eps = path_secret
                     .clone()
                     .try_into_exporting(self.epoch, handshake.hash().as_ref())?;
-                let store_path_secrets = StorePathSecrets::new(format!(
-                    "{}",
-                    env::var("LOCAL_PATH_SECRETS_DIR")
-                        .unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
-                ));
                 store_path_secrets.save_to_local_filesystem(&eps)?;
 
                 let (node_pubkey, node_privkey, _, _) = path_secret.clone().derive_node_values()?;
@@ -150,10 +147,11 @@ impl Handshake for GroupState {
     }
 }
 
-fn recover_path_secret_from_local(id: &[u8], epoch: u32) -> Result<PathSecret> {
-    let store_path_secrets = StorePathSecrets::new(
-        env::var("LOCAL_PATH_SECRETS_DIR").unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
-    );
+fn recover_path_secret_from_local(
+    store_path_secrets: &StorePathSecrets,
+    id: &[u8],
+    epoch: u32,
+) -> Result<PathSecret> {
     let imported_path_secret = store_path_secrets.load_from_local_filesystem(id)?;
     if imported_path_secret.epoch() != epoch {
         return Err(anyhow!(

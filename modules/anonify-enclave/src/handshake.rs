@@ -1,4 +1,4 @@
-use anonify_config::{DEFAULT_LOCAL_PATH_SECRETS_DIR, IAS_ROOT_CERT};
+use anonify_config::IAS_ROOT_CERT;
 use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
@@ -8,8 +8,7 @@ use frame_common::{
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_treekem::{handshake::HandshakeParams, StorePathSecrets};
-use std::env;
+use frame_treekem::handshake::HandshakeParams;
 
 /// A add handshake Sender
 #[derive(Debug, Clone)]
@@ -34,17 +33,13 @@ impl EnclaveEngine for JoinGroupSender {
             IAS_ROOT_CERT.to_vec(),
         )?;
 
-        let mrenclave_ver = enclave_context.mrenclave_ver();
-        let group_key = &*enclave_context.read_group_key();
-        let (handshake, path_secret) = group_key.create_handshake()?;
+        let (handshake, path_secret) = (&*enclave_context.read_group_key()).create_handshake()?;
         let epoch = handshake.prior_epoch();
         let id = handshake.hash();
         let export_path_secret = path_secret.clone().try_into_exporting(epoch, id.as_ref())?;
-        let store_path_secrets = StorePathSecrets::new(
-            env::var("LOCAL_PATH_SECRETS_DIR")
-                .unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
-        );
-        store_path_secrets.save_to_local_filesystem(&export_path_secret)?;
+        enclave_context
+            .store_path_secrets()
+            .save_to_local_filesystem(&export_path_secret)?;
         let export_handshake = handshake.clone().into_export();
 
         #[cfg(feature = "backup-enable")]
@@ -62,7 +57,7 @@ impl EnclaveEngine for JoinGroupSender {
             attested_report.report().to_vec(),
             attested_report.report_sig().to_vec(),
             export_handshake.encode(),
-            mrenclave_ver,
+            enclave_context.mrenclave_ver(),
             export_handshake.roster_idx(),
         ))
     }
@@ -90,11 +85,9 @@ impl EnclaveEngine for HandshakeSender {
         let epoch = handshake.prior_epoch();
         let id = handshake.hash();
         let export_path_secret = path_secret.clone().try_into_exporting(epoch, id.as_ref())?;
-        let store_path_secrets = StorePathSecrets::new(
-            env::var("LOCAL_PATH_SECRETS_DIR")
-                .unwrap_or(format!("{}", DEFAULT_LOCAL_PATH_SECRETS_DIR)),
-        );
-        store_path_secrets.save_to_local_filesystem(&export_path_secret)?;
+        enclave_context
+            .store_path_secrets()
+            .save_to_local_filesystem(&export_path_secret)?;
         let export_handshake = handshake.clone().into_export();
 
         #[cfg(feature = "backup-enable")]
@@ -148,8 +141,16 @@ impl EnclaveEngine for HandshakeReceiver {
         let ias_url = enclave_context.ias_url();
         let sub_key = enclave_context.sub_key();
         let server_address = enclave_context.key_vault_endpoint();
+        let store_path_secrets = enclave_context.store_path_secrets();
 
-        group_key.process_handshake(&handshake, spid, ias_url, sub_key, server_address)?;
+        group_key.process_handshake(
+            store_path_secrets,
+            &handshake,
+            spid,
+            ias_url,
+            sub_key,
+            server_address,
+        )?;
 
         Ok(output::Empty::default())
     }

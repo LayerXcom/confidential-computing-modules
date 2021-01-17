@@ -1,4 +1,6 @@
+use frame_config::PATH_SECRETS_DIR;
 use frame_runtime::traits::*;
+use frame_treekem::StorePathSecrets;
 use std::{env, string::String};
 
 pub struct KeyVaultEnclaveContext {
@@ -7,6 +9,7 @@ pub struct KeyVaultEnclaveContext {
     sub_key: String,
     key_vault_endpoint: String,
     spid: String,
+    store_path_secrets: StorePathSecrets,
 }
 
 impl ConfigGetter for KeyVaultEnclaveContext {
@@ -29,6 +32,10 @@ impl ConfigGetter for KeyVaultEnclaveContext {
     fn spid(&self) -> &str {
         &self.spid
     }
+
+    fn store_path_secrets(&self) -> &StorePathSecrets {
+        &self.store_path_secrets
+    }
 }
 
 impl KeyVaultEnclaveContext {
@@ -38,6 +45,7 @@ impl KeyVaultEnclaveContext {
         let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
         let key_vault_endpoint =
             env::var("KEY_VAULT_ENDPOINT").expect("KEY_VAULT_ENDPOINT is not set");
+        let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
 
         Self {
             version,
@@ -45,6 +53,7 @@ impl KeyVaultEnclaveContext {
             sub_key,
             key_vault_endpoint,
             spid,
+            store_path_secrets,
         }
     }
 }

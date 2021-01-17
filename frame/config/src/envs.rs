@@ -1,5 +1,8 @@
 use crate::local_once_cell::sync::Lazy;
-use crate::localstd::{env, string::ToString};
+use crate::localstd::{
+    env,
+    string::{String, ToString},
+};
 
 pub static REQUEST_RETRIES: Lazy<usize> = Lazy::new(|| {
     env::var("REQUEST_RETRIES")
@@ -14,3 +17,6 @@ pub static RETRY_DELAY_MILLS: Lazy<u64> = Lazy::new(|| {
         .parse::<u64>()
         .unwrap()
 });
+
+pub static PATH_SECRETS_DIR: Lazy<String> =
+    Lazy::new(|| env::var("PATH_SECRETS_DIR").unwrap_or(".anonify/pathsecrets".to_string()));

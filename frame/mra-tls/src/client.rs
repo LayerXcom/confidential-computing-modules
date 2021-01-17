@@ -1,7 +1,7 @@
 use crate::config::ClientConfig;
 use crate::connection::Connection;
-use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use anyhow::{anyhow, Result};
+use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use http::Uri;
 use serde::{de::DeserializeOwned, Serialize};

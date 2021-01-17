@@ -21,8 +21,6 @@ use sgx_anyhow as local_anyhow;
 #[cfg(feature = "sgx")]
 use sgx_libsecp256k1 as local_secp256k1;
 #[cfg(feature = "sgx")]
-use sgx_log as local_log;
-#[cfg(feature = "sgx")]
 use sgx_rand as local_rand;
 #[cfg(feature = "sgx")]
 use sgx_rand_core as local_rand_core;
@@ -30,8 +28,6 @@ use sgx_rand_core as local_rand_core;
 use sgx_ring as local_ring;
 #[cfg(feature = "std")]
 use std_libsecp256k1 as local_secp256k1;
-#[cfg(feature = "std")]
-use std_log as local_log;
 #[cfg(feature = "std")]
 use std_rand as local_rand;
 #[cfg(feature = "std")]

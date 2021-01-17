@@ -13,12 +13,13 @@ use frame_common::{
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
+use frame_config::PATH_SECRETS_DIR;
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
-    init_path_secret_kvs, DhPubKey, EciesCiphertext,
+    init_path_secret_kvs, DhPubKey, EciesCiphertext, StorePathSecrets,
 };
 use remote_attestation::{EncodedQuote, QuoteTarget};
 use std::{
@@ -42,6 +43,7 @@ pub struct AnonifyEnclaveContext {
     notifier: Notifier,
     group_key: Arc<SgxRwLock<GroupKey>>,
     client_config: ClientConfig,
+    store_path_secrets: StorePathSecrets,
 }
 
 impl ConfigGetter for AnonifyEnclaveContext {
@@ -63,6 +65,10 @@ impl ConfigGetter for AnonifyEnclaveContext {
 
     fn spid(&self) -> &str {
         &self.spid
+    }
+
+    fn store_path_secrets(&self) -> &StorePathSecrets {
+        &self.store_path_secrets
     }
 }
 
@@ -248,6 +254,7 @@ impl AnonifyEnclaveContext {
                 IAS_ROOT_CERT.to_vec(),
                 *ENCLAVE_MEASUREMENT_KEY_VAULT,
             );
+        let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
 
         Ok(AnonifyEnclaveContext {
             spid,
@@ -260,6 +267,7 @@ impl AnonifyEnclaveContext {
             sub_key,
             key_vault_endpoint,
             client_config,
+            store_path_secrets,
         })
     }
 }

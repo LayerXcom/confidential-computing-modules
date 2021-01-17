@@ -7,7 +7,6 @@ use crate::crypto::{
 };
 use crate::group_state::GroupState;
 use crate::local_anyhow::{anyhow, ensure, Result};
-use crate::local_log::warn;
 use crate::local_ring::aead::{
     Aad, BoundKey, Nonce, OpeningKey, SealingKey, UnboundKey, AES_256_GCM,
 };
@@ -15,6 +14,7 @@ use crate::localstd::{convert::TryFrom, prelude::v1::*};
 use crate::ratchet_tree::RatchetTreeNode;
 use codec::Encode;
 use frame_common::crypto::Ciphertext;
+use tracing::warn;
 
 /// Application Keychain manages each member's `AppMemberSecret' and generation.
 #[derive(Debug, Clone, Default)]

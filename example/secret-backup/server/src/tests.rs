@@ -1,4 +1,4 @@
-use crate::{handlers::*, Server as KeyVaultServer, api};
+use crate::{api, handlers::*, Server as KeyVaultServer};
 use actix_web::{test, web, App};
 use anonify_config::PJ_ROOT_DIR;
 use anonify_eth_driver::eth::{EthDeployer, EthSender, EventWatcher};
@@ -93,10 +93,8 @@ async fn test_backup_path_secret() {
     )
     .await;
 
-    // Ensure not to exist path_secret directory on both local and remote
-    let path_secrets_dir = PJ_ROOT_DIR
-        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"));
-    assert!(!path_secrets_dir.exists());
+    let path_secrets_dir =
+        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
 
     // Deploy
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
@@ -245,10 +243,8 @@ async fn test_recover_without_key_vault() {
     )
     .await;
 
-    // Ensure not to exist path_secret directory on both local and remote
-    let path_secrets_dir = PJ_ROOT_DIR
-        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"));
-    assert!(!path_secrets_dir.exists());
+    let path_secrets_dir =
+        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
 
     // Deploy
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
@@ -395,10 +391,8 @@ async fn test_manually_backup_all() {
     )
     .await;
 
-    // Ensure not to exist path_secret directory on both local and remote
-    let path_secrets_dir = PJ_ROOT_DIR
-        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"));
-    assert!(!path_secrets_dir.exists());
+    let path_secrets_dir =
+        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
 
     // Deploy
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
@@ -557,10 +551,8 @@ async fn test_manually_recover_all() {
     )
     .await;
 
-    // Ensure not to exist path_secret directory on both local and remote
-    let path_secrets_dir = PJ_ROOT_DIR
-        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"));
-    assert!(!path_secrets_dir.exists());
+    let path_secrets_dir =
+        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
 
     // Deploy
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
@@ -660,7 +652,7 @@ fn set_env_vars() {
     );
     env::set_var("KEY_VAULT_ENDPOINT", "localhost:12345");
     env::set_var("ENCLAVE_PKG_NAME", "secret_backup");
-    env::set_var("LOCAL_PATH_SECRETS_DIR", ".anonify/pathsecrets");
+    env::set_var("PATH_SECRETS_DIR", ".anonify/test_pathsecrets");
 }
 
 fn set_server_env_vars() {
@@ -673,8 +665,8 @@ fn set_server_env_vars() {
 }
 
 fn clear_local_path_secrets() {
-    let target_dir = PJ_ROOT_DIR
-        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"));
+    let target_dir =
+        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
     let dir = fs::read_dir(&target_dir).unwrap();
 
     for path in dir {
@@ -688,7 +680,7 @@ fn clear_local_path_secrets() {
 
 fn clear_remote_path_secrets(roster_idx: String) {
     let target_dir = PJ_ROOT_DIR
-        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"))
+        .join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"))
         .join(roster_idx);
     let dir = fs::read_dir(&target_dir).unwrap();
 
@@ -702,8 +694,8 @@ fn clear_remote_path_secrets(roster_idx: String) {
 }
 
 fn clear_path_secrets() {
-    let target = PJ_ROOT_DIR
-        .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"));
+    let target =
+        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
     if target.exists() {
         fs::remove_dir_all(target).unwrap();
     }
@@ -711,8 +703,7 @@ fn clear_path_secrets() {
 
 fn get_local_id() -> Option<String> {
     let paths = fs::read_dir(
-        PJ_ROOT_DIR
-            .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set")),
+        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set")),
     )
     .unwrap();
     for path in paths {
@@ -728,8 +719,7 @@ fn get_local_id() -> Option<String> {
 fn get_local_ids() -> Vec<String> {
     let mut ids = vec![];
     let paths = fs::read_dir(
-        PJ_ROOT_DIR
-            .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set")),
+        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set")),
     )
     .unwrap();
     for path in paths {
@@ -746,7 +736,7 @@ fn get_remote_ids(roster_idx: String) -> Vec<String> {
     let mut ids = vec![];
     let paths = fs::read_dir(
         PJ_ROOT_DIR
-            .join(&env::var("LOCAL_PATH_SECRETS_DIR").expect("LOCAL_PATH_SECRETS_DIR is not set"))
+            .join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"))
             .join(roster_idx),
     )
     .unwrap();
