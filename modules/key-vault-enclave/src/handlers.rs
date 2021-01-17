@@ -28,18 +28,25 @@ impl KeyVaultHandler {
         let backup_path_secret: BackupPathSecret = serde_json::from_value(body)?;
         let eps = PathSecret::from(backup_path_secret.path_secret())
             .try_into_exporting(backup_path_secret.epoch(), backup_path_secret.id())?;
-        self.store_path_secrets.save_to_local_filesystem(&eps)?;
+        self.store_path_secrets
+            .clone()
+            .push(backup_path_secret.roster_idx().to_string())
+            .save_to_local_filesystem(&eps)?;
 
         serde_json::to_vec(&eps).map_err(Into::into)
     }
 
     fn recover_path_secret(&self, body: Value) -> anyhow::Result<Vec<u8>> {
         let recover_path_secret: RecoverRequest = serde_json::from_value(body)?;
-        let id = recover_path_secret.id();
-        let eps = self.store_path_secrets.load_from_local_filesystem(id)?;
+        let ps_id = recover_path_secret.id();
+        let eps = self
+            .store_path_secrets
+            .clone()
+            .push(recover_path_secret.roster_idx().to_string())
+            .load_from_local_filesystem(ps_id)?;
         let path_secret = PathSecret::try_from_importing(eps.clone())?;
         let rps =
-            RecoveredPathSecret::new(path_secret.as_bytes().to_vec(), eps.epoch(), id.to_vec());
+            RecoveredPathSecret::new(path_secret.as_bytes().to_vec(), eps.epoch(), ps_id.to_vec());
 
         serde_json::to_vec(&rps).map_err(Into::into)
     }
@@ -70,12 +77,12 @@ impl KeyVaultHandler {
             .store_path_secrets
             .clone()
             .push(recover_path_secret.roster_idx().to_string());
-        let ids = get_local_path_secret_ids(self.store_path_secrets.local_dir_path())?;
+        let ps_ids = get_local_path_secret_ids(self.store_path_secrets.local_dir_path())?;
 
-        for id in ids {
-            let eps = store_path_secrets.load_from_local_filesystem(&id)?;
+        for ps_id in ps_ids {
+            let eps = store_path_secrets.load_from_local_filesystem(&ps_id)?;
             let ps = PathSecret::try_from_importing(eps.clone())?;
-            let rps = RecoveredPathSecret::new(ps.as_bytes().to_vec(), eps.epoch(), id);
+            let rps = RecoveredPathSecret::new(ps.as_bytes().to_vec(), eps.epoch(), ps_id);
             recovered_path_secrets.push(rps);
         }
 
