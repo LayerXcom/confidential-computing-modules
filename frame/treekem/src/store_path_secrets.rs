@@ -20,9 +20,10 @@ impl StorePathSecrets {
         StorePathSecrets { local_dir_path }
     }
 
-    pub fn push<P: AsRef<Path>>(mut self, path: P) -> Self {
+    pub fn create_dir_all<P: AsRef<Path>>(mut self, path: P) -> Result<Self> {
         self.local_dir_path.push(path);
-        self
+        fs::create_dir_all(&self.local_dir_path)?;
+        Ok(self)
     }
 
     pub fn local_dir_path(&self) -> &Path {

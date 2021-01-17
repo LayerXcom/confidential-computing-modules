@@ -30,7 +30,7 @@ impl KeyVaultHandler {
             .try_into_exporting(backup_path_secret.epoch(), backup_path_secret.id())?;
         self.store_path_secrets
             .clone()
-            .push(backup_path_secret.roster_idx().to_string())
+            .create_dir_all(backup_path_secret.roster_idx().to_string())?
             .save_to_local_filesystem(&eps)?;
 
         serde_json::to_vec(&eps).map_err(Into::into)
@@ -42,7 +42,7 @@ impl KeyVaultHandler {
         let eps = self
             .store_path_secrets
             .clone()
-            .push(recover_path_secret.roster_idx().to_string())
+            .create_dir_all(recover_path_secret.roster_idx().to_string())?
             .load_from_local_filesystem(ps_id)?;
         let path_secret = PathSecret::try_from_importing(eps.clone())?;
         let rps =
@@ -61,7 +61,7 @@ impl KeyVaultHandler {
             let store_path_secrets = self
                 .store_path_secrets
                 .clone()
-                .push(backup_path_secret.roster_idx().to_string());
+                .create_dir_all(backup_path_secret.roster_idx().to_string())?;
             store_path_secrets.save_to_local_filesystem(&eps)?;
             epss.push(eps);
         }
@@ -76,7 +76,7 @@ impl KeyVaultHandler {
         let store_path_secrets = self
             .store_path_secrets
             .clone()
-            .push(recover_path_secret.roster_idx().to_string());
+            .create_dir_all(recover_path_secret.roster_idx().to_string())?;
         let ps_ids = get_local_path_secret_ids(self.store_path_secrets.local_dir_path())?;
 
         for ps_id in ps_ids {
