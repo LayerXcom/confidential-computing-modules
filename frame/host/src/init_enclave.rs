@@ -44,7 +44,7 @@ impl EnclaveDir {
     }
 
     fn get_enclave_file_path(&self) -> PathBuf {
-        let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("failed to get env 'ENCLAVE_PKG_NAME'");
+        let pkg_name = env::var("MY_ENCLAVE_PKG_NAME").expect("failed to get env 'MY_ENCLAVE_PKG_NAME'");
 
         let enclave_file = match env::var("BACKUP") {
             Ok(backup) if backup == "disable" => format!("{}.backup_disabled.signed.so", pkg_name),
