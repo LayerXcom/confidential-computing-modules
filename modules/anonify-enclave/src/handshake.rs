@@ -5,7 +5,6 @@ use frame_common::{
     crypto::{BackupPathSecret, Sha256},
     state_types::StateType,
 };
-use frame_config::IAS_ROOT_CERT;
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::handshake::HandshakeParams;
@@ -30,7 +29,7 @@ impl EnclaveEngine for JoinGroupSender {
         let attested_report = enclave_context.quote()?.remote_attestation(
             enclave_context.ias_url(),
             enclave_context.sub_key(),
-            IAS_ROOT_CERT.to_vec(),
+            enclave_context.ias_root_cert().to_vec(),
         )?;
 
         let (handshake, path_secret) = (&*enclave_context.read_group_key()).create_handshake()?;

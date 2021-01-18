@@ -2,10 +2,11 @@ use crate::local_once_cell::sync::Lazy;
 use crate::localstd::{
     env,
     ffi::OsStr,
-    vec::Vec,
     path::PathBuf,
     string::{String, ToString},
+    vec::Vec,
 };
+#[cfg(feature = "sgx")]
 use crate::measurement::EnclaveMeasurement;
 
 pub static REQUEST_RETRIES: Lazy<usize> = Lazy::new(|| {
