@@ -1,10 +1,9 @@
 use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
-use frame_common::{
-    crypto::{BackupPathSecret, Sha256},
-    state_types::StateType,
-};
+#[cfg(feature = "backup-enable")]
+use frame_common::crypto::BackupPathSecret;
+use frame_common::{crypto::Sha256, state_types::StateType};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::handshake::HandshakeParams;
