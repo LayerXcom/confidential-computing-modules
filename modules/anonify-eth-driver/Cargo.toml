@@ -5,7 +5,6 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anonify-config = { path = "../../config" }
 frame-types = { path = "../../frame/types" }
 frame-common = { path = "../../frame/common" }
 frame-treekem = { path = "../../frame/treekem" }

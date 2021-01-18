@@ -1,7 +1,7 @@
 use crate::cert::*;
 use crate::error::{MraTLSError, Result};
-use anonify_config::EnclaveMeasurement;
 use anyhow::anyhow;
+use frame_config::EnclaveMeasurement;
 use remote_attestation::AttestedReport;
 use std::io::{Cursor, Read};
 use std::vec::Vec;

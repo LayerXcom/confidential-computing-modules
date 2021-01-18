@@ -6,7 +6,6 @@ use crate::localstd::{env, vec::Vec};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use crate::store_path_secrets::StorePathSecrets;
 use crate::tree_math;
-use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT};
 use codec::Encode;
 use frame_common::crypto::{
     ExportPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverRequest, RecoveredPathSecret,

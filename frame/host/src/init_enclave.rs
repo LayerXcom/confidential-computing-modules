@@ -1,6 +1,6 @@
 use crate::config::{ENCLAVE_DIR, ENCLAVE_TOKEN};
 use crate::error::Result;
-use anonify_config::PJ_ROOT_DIR;
+use frame_config::PJ_ROOT_DIR;
 use sgx_types::*;
 use sgx_urts::SgxEnclave;
 use std::{
@@ -45,13 +45,7 @@ impl EnclaveDir {
 
     fn get_enclave_file_path(&self) -> PathBuf {
         let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("failed to get env 'ENCLAVE_PKG_NAME'");
-
-        let enclave_file = match env::var("BACKUP") {
-            Ok(backup) if backup == "disable" => format!("{}.backup_disabled.signed.so", pkg_name),
-            _ => format!("{}.signed.so", pkg_name),
-        };
-
-        self.0.join(enclave_file)
+        self.0.join(format!("{}.signed.so", pkg_name))
     }
 
     fn get_launch_token<P: AsRef<Path>>(path: P) -> Result<sgx_launch_token_t> {

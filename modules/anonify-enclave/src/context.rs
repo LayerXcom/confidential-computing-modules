@@ -2,7 +2,6 @@ use crate::{
     error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
-use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT};
 use anonify_io_types::*;
 use anyhow::anyhow;
 use frame_common::{
@@ -13,7 +12,7 @@ use frame_common::{
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
-use frame_config::PATH_SECRETS_DIR;
+use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DIR};
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
@@ -44,6 +43,7 @@ pub struct AnonifyEnclaveContext {
     group_key: Arc<SgxRwLock<GroupKey>>,
     client_config: ClientConfig,
     store_path_secrets: StorePathSecrets,
+    ias_root_cert: Vec<u8>,
 }
 
 impl ConfigGetter for AnonifyEnclaveContext {
@@ -69,6 +69,10 @@ impl ConfigGetter for AnonifyEnclaveContext {
 
     fn store_path_secrets(&self) -> &StorePathSecrets {
         &self.store_path_secrets
+    }
+
+    fn ias_root_cert(&self) -> &[u8] {
+        &self.ias_root_cert
     }
 }
 
@@ -259,7 +263,7 @@ impl AnonifyEnclaveContext {
         let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
             .set_attestation_report_verifier(
                 IAS_ROOT_CERT.to_vec(),
-                *ENCLAVE_MEASUREMENT_KEY_VAULT,
+                *KEY_VAULT_ENCLAVE_MEASUREMENT,
             );
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
 
@@ -275,6 +279,7 @@ impl AnonifyEnclaveContext {
             key_vault_endpoint,
             client_config,
             store_path_secrets,
+            ias_root_cert: (&*IAS_ROOT_CERT).to_vec(),
         })
     }
 }

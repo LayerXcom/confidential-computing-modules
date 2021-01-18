@@ -1,7 +1,7 @@
 use crate::error::Result;
 use crate::key::NistP256KeyPair;
 use crate::verifier::AttestedReportVerifier;
-use anonify_config::EnclaveMeasurement;
+use frame_config::EnclaveMeasurement;
 use remote_attestation::QuoteTarget;
 use std::{sync::Arc, vec::Vec};
 

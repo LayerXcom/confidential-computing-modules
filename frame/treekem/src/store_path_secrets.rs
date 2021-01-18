@@ -5,8 +5,8 @@ use crate::localstd::{
     path::{Path, PathBuf},
     vec::Vec,
 };
-use anonify_config::PJ_ROOT_DIR;
 use frame_common::crypto::ExportPathSecret;
+use frame_config::PJ_ROOT_DIR;
 use tracing::info;
 
 /// Store exported secret_paths in the local filesystems

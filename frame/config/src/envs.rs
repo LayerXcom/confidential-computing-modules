@@ -4,7 +4,10 @@ use crate::localstd::{
     ffi::OsStr,
     path::PathBuf,
     string::{String, ToString},
+    vec::Vec,
 };
+#[cfg(feature = "sgx")]
+use crate::measurement::EnclaveMeasurement;
 
 pub static REQUEST_RETRIES: Lazy<usize> = Lazy::new(|| {
     env::var("REQUEST_RETRIES")
@@ -41,13 +44,52 @@ pub static PJ_ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
 pub static ENCLAVE_SIGNED_SO: Lazy<PathBuf> = Lazy::new(|| {
     let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
     let mut measurement_file_path = PJ_ROOT_DIR.clone();
-
-    let measurement_file = match env::var("BACKUP") {
-        Ok(backup) if backup == "disable" => {
-            format!(".anonify/{}.backup_disabled.signed.so", pkg_name)
-        }
-        _ => format!(".anonify/{}.signed.so", pkg_name),
-    };
-    measurement_file_path.push(measurement_file);
+    measurement_file_path.push(format!(".anonify/{}.signed.so", pkg_name));
     measurement_file_path
+});
+
+#[cfg(feature = "sgx")]
+pub static ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
+    let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
+    let mut measurement_file_path = PJ_ROOT_DIR.clone();
+    measurement_file_path.push(format!(".anonify/{}_measurement.txt", pkg_name));
+
+    let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
+        .expect("Cannot read measurement file");
+    EnclaveMeasurement::new_from_dumpfile(content)
+});
+
+#[cfg(feature = "sgx")]
+pub static ANONIFY_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
+    let pkg_name =
+        env::var("ANONIFY_ENCLAVE_PKG_NAME").expect("ANONIFY_ENCLAVE_PKG_NAME is not set");
+    let mut measurement_file_path = PJ_ROOT_DIR.clone();
+    measurement_file_path.push(format!(".anonify/{}_measurement.txt", pkg_name));
+
+    let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
+        .expect("Cannot read measurement file");
+    EnclaveMeasurement::new_from_dumpfile(content)
+});
+
+#[cfg(feature = "sgx")]
+pub static KEY_VAULT_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
+    let pkg_name =
+        env::var("KEY_VAULT_ENCLAVE_PKG_NAME").expect("KEY_VAULT_ENCLAVE_PKG_NAME is not set");
+    let mut measurement_file_path = PJ_ROOT_DIR.clone();
+    measurement_file_path.push(format!(".anonify/{}_measurement.txt", pkg_name));
+
+    let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
+        .expect("Cannot read measurement file");
+    EnclaveMeasurement::new_from_dumpfile(content)
+});
+
+#[cfg(feature = "sgx")]
+pub static IAS_ROOT_CERT: Lazy<Vec<u8>> = Lazy::new(|| {
+    let ias_root_cert_path = env::var("IAS_ROOT_CERT_PATH").expect("IAS_ROOT_CERT_PATH is not set");
+    let mut file_path = PJ_ROOT_DIR.clone();
+    file_path.push(ias_root_cert_path);
+
+    let ias_root_cert = crate::localstd::untrusted::fs::read(file_path).unwrap();
+    let pem = pem::parse(ias_root_cert).expect("Cannot parse PEM File");
+    pem.contents
 });

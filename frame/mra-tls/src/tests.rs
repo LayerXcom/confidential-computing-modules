@@ -1,6 +1,6 @@
 use crate::{AttestedTlsConfig, Client, ClientConfig, RequestHandler, Server, ServerConfig};
-use anonify_config::{ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
 use anyhow::Result;
+use frame_config::{ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
 use once_cell::sync::Lazy;
 use serde_json::Value;
 use std::{
