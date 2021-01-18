@@ -94,18 +94,15 @@ else
 endif
 Crypto_Library_Name := sgx_tcrypto
 
+RustEnclave_Name := $(ANONIFY_BUILD_DIR)/$(MY_ENCLAVE_PKG_NAME).enclave.so
+Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/$(MY_ENCLAVE_PKG_NAME).signed.so
+Measurement_File_Name := $(MY_ENCLAVE_PKG_NAME)_measurement.txt
 ifeq ($(BACKUP), disable)
-	RustEnclave_Name := $(ANONIFY_BUILD_DIR)/$(MY_ENCLAVE_PKG_NAME).backup_disabled.enclave.so
-	Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/$(MY_ENCLAVE_PKG_NAME).backup_disabled.signed.so
 	Rust_Enclave_Lib_Name := $(MY_ENCLAVE_PKG_NAME)backupdisabled
 	RustEnclave_Feature_Flags := --no-default-features --features runtime_enabled
-	Measurement_File_Name := $(MY_ENCLAVE_PKG_NAME)_backup_disabled_measurement.txt
 else
-	RustEnclave_Name := $(ANONIFY_BUILD_DIR)/$(MY_ENCLAVE_PKG_NAME).enclave.so
-	Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/$(MY_ENCLAVE_PKG_NAME).signed.so
 	Rust_Enclave_Lib_Name := $(MY_ENCLAVE_PKG_NAME)
 	RustEnclave_Feature_Flags := $(FEATURE_FLAGS)
-	Measurement_File_Name := $(MY_ENCLAVE_PKG_NAME)_measurement.txt
 endif
 
 RustEnclave_Include_Paths := -I$(CUSTOM_COMMON_PATH)/inc -I$(CUSTOM_EDL_PATH) -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SDK)/include/epid -I $(ANONIFY_ENCLAVE_DIR) -I./include
