@@ -1,6 +1,6 @@
 use crate::config::{ENCLAVE_DIR, ENCLAVE_TOKEN};
 use crate::error::Result;
-use anonify_config::PJ_ROOT_DIR;
+use frame_config::PJ_ROOT_DIR;
 use sgx_types::*;
 use sgx_urts::SgxEnclave;
 use std::{

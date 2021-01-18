@@ -1,6 +1,6 @@
 use crate::{api, handlers::*, Server as KeyVaultServer};
 use actix_web::{test, web, App};
-use anonify_config::PJ_ROOT_DIR;
+use frame_config::PJ_ROOT_DIR;
 use anonify_eth_driver::eth::{EthDeployer, EthSender, EventWatcher};
 use codec::{Decode, Encode};
 use erc20_server::{handlers::*, Server as ERC20Server};
