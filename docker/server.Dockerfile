@@ -24,7 +24,7 @@ RUN source /opt/sgxsdk/environment && \
     export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
     solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol && \
     cd scripts && \
-    make ENCLAVE_DIR=example/erc20/enclave ENCLAVE_PKG_NAME=erc20 CARGO_FLAGS=--release && \
+    make ENCLAVE_DIR=example/erc20/enclave MY_ENCLAVE_PKG_NAME=erc20 CARGO_FLAGS=--release && \
     cd ../example/erc20/server && \
     RUST_BACKTRACE=1 RUST_LOG=debug /root/.cargo/bin/cargo build --release
 

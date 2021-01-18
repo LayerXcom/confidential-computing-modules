@@ -1622,6 +1622,7 @@ dependencies = [
 name = "frame-config"
 version = "0.1.0"
 dependencies = [
+ "hex",
  "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
  "once_cell 1.5.2",
  "sgx_tstd",

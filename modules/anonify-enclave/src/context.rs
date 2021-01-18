@@ -2,7 +2,7 @@ use crate::{
     error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
-use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT};
+use anonify_config::IAS_ROOT_CERT;
 use anonify_io_types::*;
 use anyhow::anyhow;
 use frame_common::{
@@ -13,7 +13,7 @@ use frame_common::{
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
-use frame_config::PATH_SECRETS_DIR;
+use frame_config::{CONNECTED_ENCLAVE_MEASUREMENT, PATH_SECRETS_DIR};
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
@@ -259,7 +259,7 @@ impl AnonifyEnclaveContext {
         let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
             .set_attestation_report_verifier(
                 IAS_ROOT_CERT.to_vec(),
-                *ENCLAVE_MEASUREMENT_KEY_VAULT,
+                *CONNECTED_ENCLAVE_MEASUREMENT,
             );
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
 

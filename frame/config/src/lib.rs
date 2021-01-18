@@ -12,5 +12,7 @@ use once_cell_sgx as local_once_cell;
 use once_cell_std as local_once_cell;
 
 pub mod envs;
+pub mod measurement;
 
 pub use crate::envs::*;
+pub use crate::measurement::EnclaveMeasurement;

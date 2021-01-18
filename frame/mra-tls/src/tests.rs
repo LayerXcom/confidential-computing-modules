@@ -1,6 +1,7 @@
 use crate::{AttestedTlsConfig, Client, ClientConfig, RequestHandler, Server, ServerConfig};
-use anonify_config::{ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
+use anonify_config::IAS_ROOT_CERT;
 use anyhow::Result;
+use frame_config::CONNECTED_ENCLAVE_MEASUREMENT;
 use once_cell::sync::Lazy;
 use serde_json::Value;
 use std::{
@@ -44,7 +45,7 @@ fn test_request_response() {
     start_server(attested_tls_config.clone(), IAS_ROOT_CERT.to_vec());
     let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)
         .unwrap()
-        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT);
+        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *CONNECTED_ENCLAVE_MEASUREMENT);
     let mut client = Client::new(&*SERVER_ADDRESS, &client_config).unwrap();
     let msg = r#"{
         "message": "Hello test_request_response"
@@ -57,7 +58,7 @@ fn test_request_response() {
 fn start_server(attested_tls_config: AttestedTlsConfig, ias_root_cert: Vec<u8>) {
     let server_config = ServerConfig::from_attested_tls_config(attested_tls_config)
         .unwrap()
-        .set_attestation_report_verifier(ias_root_cert, *ENCLAVE_MEASUREMENT);
+        .set_attestation_report_verifier(ias_root_cert, *CONNECTED_ENCLAVE_MEASUREMENT);
 
     let mut server = Server::new(LISTEN_ADDRESS.to_string(), server_config);
     let handler = EchoHandler::default();

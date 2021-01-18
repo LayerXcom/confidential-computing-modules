@@ -8,6 +8,7 @@ edition = "2018"
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 once_cell_sgx = { package = "once_cell", rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/once_cell-sgx", optional = true }
 once_cell_std = { package = "once_cell", version = "1.5", optional = true }
+hex = { version = "0.4", default-features = false, optional = true }
 
 [features]
 default = ["std"]
@@ -17,4 +18,5 @@ std = [
 sgx = [
     "sgx_tstd",
     "once_cell_sgx",
+    "hex",
 ]

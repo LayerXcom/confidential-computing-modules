@@ -20,9 +20,9 @@ cargo build
 echo "Integration testing..."
 cd ${ANONIFY_ROOT}/scripts
 unset BACKUP
-export ENCLAVE_PKG_NAME=secret_backup
+export MY_ENCLAVE_PKG_NAME=secret_backup
 make DEBUG=1 ENCLAVE_DIR=example/secret-backup/enclave
-export ENCLAVE_PKG_NAME=erc20
+export MY_ENCLAVE_PKG_NAME=erc20
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 export BACKUP=disable
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
@@ -51,7 +51,8 @@ RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --n
 
 # Secret Backup Application Tests
 
-export ENCLAVE_PKG_NAME=secret_backup
+export MY_ENCLAVE_PKG_NAME=secret_backup
+export CONNECTED_ENCLAVE_PKG_NAME=erc20
 unset BACKUP
 cd ${ANONIFY_ROOT}/example/secret-backup/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocapture
@@ -63,7 +64,7 @@ RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_lost_path_secret -- --nocapture
 #
 
 echo "Unit testing..."
-export ENCLAVE_PKG_NAME=units
+export MY_ENCLAVE_PKG_NAME=units
 export BACKUP=disable
 cd ${ANONIFY_ROOT}/scripts
 make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave
