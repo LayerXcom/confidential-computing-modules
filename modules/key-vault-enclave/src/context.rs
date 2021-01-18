@@ -1,7 +1,8 @@
+use frame_config::IAS_ROOT_CERT;
 use frame_config::PATH_SECRETS_DIR;
 use frame_runtime::traits::*;
 use frame_treekem::StorePathSecrets;
-use std::{env, string::String};
+use std::{env, string::String, vec::Vec};
 
 pub struct KeyVaultEnclaveContext {
     version: usize,
