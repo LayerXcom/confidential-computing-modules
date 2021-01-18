@@ -58,7 +58,7 @@ async fn test_backup_path_secret() {
     std::thread::sleep(std::time::Duration::from_secs(1));
 
     // Setup ERC20 application
-    env::set_var("MY_ENCLAVE_PKG_NAME", "erc20");
+    env::set_var("ENCLAVE_PKG_NAME", "erc20");
     let app_enclave = EnclaveDir::new()
         .init_enclave(true)
         .expect("Failed to initialize client enclave.");
@@ -208,7 +208,7 @@ async fn test_recover_without_key_vault() {
     std::thread::sleep(std::time::Duration::from_secs(1));
 
     // Setup ERC20 application
-    env::set_var("MY_ENCLAVE_PKG_NAME", "erc20");
+    env::set_var("ENCLAVE_PKG_NAME", "erc20");
     let app_enclave = EnclaveDir::new()
         .init_enclave(true)
         .expect("Failed to initialize client enclave.");
@@ -352,7 +352,7 @@ async fn test_manually_backup_all() {
     std::thread::sleep(std::time::Duration::from_secs(1));
 
     // Setup ERC20 application
-    env::set_var("MY_ENCLAVE_PKG_NAME", "erc20");
+    env::set_var("ENCLAVE_PKG_NAME", "erc20");
     let app_enclave = EnclaveDir::new()
         .init_enclave(true)
         .expect("Failed to initialize client enclave.");
@@ -512,7 +512,7 @@ async fn test_manually_recover_all() {
     std::thread::sleep(std::time::Duration::from_secs(1));
 
     // Setup ERC20 application
-    env::set_var("MY_ENCLAVE_PKG_NAME", "erc20");
+    env::set_var("ENCLAVE_PKG_NAME", "erc20");
     let app_enclave = EnclaveDir::new()
         .init_enclave(true)
         .expect("Failed to initialize client enclave.");
@@ -651,7 +651,7 @@ fn set_env_vars() {
         "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report",
     );
     env::set_var("KEY_VAULT_ENDPOINT", "localhost:12345");
-    env::set_var("MY_ENCLAVE_PKG_NAME", "secret_backup");
+    env::set_var("ENCLAVE_PKG_NAME", "secret_backup");
     env::set_var("PATH_SECRETS_DIR", ".anonify/test_pathsecrets");
 }
 

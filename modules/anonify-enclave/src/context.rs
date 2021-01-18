@@ -12,7 +12,7 @@ use frame_common::{
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
-use frame_config::{CONNECTED_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT, PATH_SECRETS_DIR};
+use frame_config::{KEY_VAULT_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT, PATH_SECRETS_DIR};
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
@@ -263,7 +263,7 @@ impl AnonifyEnclaveContext {
         let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
             .set_attestation_report_verifier(
                 IAS_ROOT_CERT.to_vec(),
-                *CONNECTED_ENCLAVE_MEASUREMENT,
+                *KEY_VAULT_ENCLAVE_MEASUREMENT,
             );
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
 

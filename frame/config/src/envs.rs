@@ -42,15 +42,15 @@ pub static PJ_ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
 
 #[cfg(feature = "sgx")]
 pub static ENCLAVE_SIGNED_SO: Lazy<PathBuf> = Lazy::new(|| {
-    let pkg_name = env::var("MY_ENCLAVE_PKG_NAME").expect("MY_ENCLAVE_PKG_NAME is not set");
+    let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
     let mut measurement_file_path = PJ_ROOT_DIR.clone();
     measurement_file_path.push(format!(".anonify/{}.signed.so", pkg_name));
     measurement_file_path
 });
 
 #[cfg(feature = "sgx")]
-pub static MY_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
-    let pkg_name = env::var("MY_ENCLAVE_PKG_NAME").expect("MY_ENCLAVE_PKG_NAME is not set");
+pub static ANONIFY_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
+    let pkg_name = env::var("ANONIFY_ENCLAVE_PKG_NAME").expect("ANONIFY_ENCLAVE_PKG_NAME is not set");
     let mut measurement_file_path = PJ_ROOT_DIR.clone();
     measurement_file_path.push(format!(".anonify/{}_measurement.txt", pkg_name));
 
@@ -60,9 +60,9 @@ pub static MY_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
 });
 
 #[cfg(feature = "sgx")]
-pub static CONNECTED_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
+pub static KEY_VAULT_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
     let pkg_name =
-        env::var("CONNECTED_ENCLAVE_PKG_NAME").expect("CONNECTED_ENCLAVE_PKG_NAME is not set");
+        env::var("KEY_VAULT_ENCLAVE_PKG_NAME").expect("KEY_VAULT_ENCLAVE_PKG_NAME is not set");
     let mut measurement_file_path = PJ_ROOT_DIR.clone();
     measurement_file_path.push(format!(".anonify/{}_measurement.txt", pkg_name));
 

@@ -93,7 +93,7 @@ fn recover_path_secret_from_key_vault_for_test(
     roster_idx: u32,
 ) -> crate::local_anyhow::Result<PathSecret> {
     use frame_common::crypto::{KeyVaultCmd, KeyVaultRequest, RecoverRequest, RecoveredPathSecret};
-    use frame_config::{CONNECTED_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
+    use frame_config::{KEY_VAULT_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
     use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 
     let recover_request = RecoverRequest::new(roster_idx, id.to_vec());
@@ -106,7 +106,7 @@ fn recover_path_secret_from_key_vault_for_test(
         AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
 
     let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
-        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *CONNECTED_ENCLAVE_MEASUREMENT);
+        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *KEY_VAULT_ENCLAVE_MEASUREMENT);
     let mut mra_tls_client = Client::new(&key_vault_endpoint, &client_config)?;
     let backup_request = KeyVaultRequest::new(KeyVaultCmd::Recover, recover_request);
     let recovered_path_secret: RecoveredPathSecret = mra_tls_client.send_json(backup_request)?;

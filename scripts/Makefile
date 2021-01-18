@@ -94,14 +94,14 @@ else
 endif
 Crypto_Library_Name := sgx_tcrypto
 
-RustEnclave_Name := $(ANONIFY_BUILD_DIR)/$(MY_ENCLAVE_PKG_NAME).enclave.so
-Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/$(MY_ENCLAVE_PKG_NAME).signed.so
-Measurement_File_Name := $(MY_ENCLAVE_PKG_NAME)_measurement.txt
+RustEnclave_Name := $(ANONIFY_BUILD_DIR)/$(ENCLAVE_PKG_NAME).enclave.so
+Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).signed.so
+Measurement_File_Name := $(ENCLAVE_PKG_NAME)_measurement.txt
 ifeq ($(BACKUP), disable)
-	Rust_Enclave_Lib_Name := $(MY_ENCLAVE_PKG_NAME)backupdisabled
+	Rust_Enclave_Lib_Name := $(ENCLAVE_PKG_NAME)backupdisabled
 	RustEnclave_Feature_Flags := --no-default-features --features runtime_enabled
 else
-	Rust_Enclave_Lib_Name := $(MY_ENCLAVE_PKG_NAME)
+	Rust_Enclave_Lib_Name := $(ENCLAVE_PKG_NAME)
 	RustEnclave_Feature_Flags := $(FEATURE_FLAGS)
 endif
 
