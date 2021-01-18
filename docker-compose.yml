@@ -33,6 +33,8 @@ services:
       RETRY_DELAY_MILLS: ${RETRY_DELAY_MILLS}
       PATH_SECRETS_DIR: ${PATH_SECRETS_DIR}
       IAS_ROOT_CERT_PATH: ${IAS_ROOT_CERT_PATH}
+      EVENT_LIMIT: ${EVENT_LIMIT}
+      UNLOCK_DURATION: ${UNLOCK_DURATION}
     stdin_open: true
     tty: true
     networks:
