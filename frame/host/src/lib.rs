@@ -1,4 +1,3 @@
-mod config;
 pub mod ecalls;
 pub mod engine;
 mod error;

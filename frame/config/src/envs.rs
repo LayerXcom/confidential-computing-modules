@@ -41,19 +41,25 @@ pub static PJ_ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
     current_dir
 });
 
+pub static ANONIFY_PARAMS_DIR: Lazy<PathBuf> = Lazy::new(|| {
+    let mut measurement_file_path = PJ_ROOT_DIR.clone();
+    measurement_file_path.push(".anonify");
+    measurement_file_path
+});
+
 #[cfg(feature = "sgx")]
 pub static ENCLAVE_SIGNED_SO: Lazy<PathBuf> = Lazy::new(|| {
     let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
-    let mut measurement_file_path = PJ_ROOT_DIR.clone();
-    measurement_file_path.push(format!(".anonify/{}.signed.so", pkg_name));
+    let mut measurement_file_path = ANONIFY_PARAMS_DIR.clone();
+    measurement_file_path.push(format!("{}.signed.so", pkg_name));
     measurement_file_path
 });
 
 #[cfg(feature = "sgx")]
 pub static ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
     let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
-    let mut measurement_file_path = PJ_ROOT_DIR.clone();
-    measurement_file_path.push(format!(".anonify/{}_measurement.txt", pkg_name));
+    let mut measurement_file_path = ANONIFY_PARAMS_DIR.clone();
+    measurement_file_path.push(format!("{}_measurement.txt", pkg_name));
 
     let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
         .expect("Cannot read measurement file");
@@ -64,8 +70,8 @@ pub static ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
 pub static ANONIFY_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
     let pkg_name =
         env::var("ANONIFY_ENCLAVE_PKG_NAME").expect("ANONIFY_ENCLAVE_PKG_NAME is not set");
-    let mut measurement_file_path = PJ_ROOT_DIR.clone();
-    measurement_file_path.push(format!(".anonify/{}_measurement.txt", pkg_name));
+    let mut measurement_file_path = ANONIFY_PARAMS_DIR.clone();
+    measurement_file_path.push(format!("{}_measurement.txt", pkg_name));
 
     let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
         .expect("Cannot read measurement file");
@@ -76,8 +82,8 @@ pub static ANONIFY_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| 
 pub static KEY_VAULT_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
     let pkg_name =
         env::var("KEY_VAULT_ENCLAVE_PKG_NAME").expect("KEY_VAULT_ENCLAVE_PKG_NAME is not set");
-    let mut measurement_file_path = PJ_ROOT_DIR.clone();
-    measurement_file_path.push(format!(".anonify/{}_measurement.txt", pkg_name));
+    let mut measurement_file_path = ANONIFY_PARAMS_DIR.clone();
+    measurement_file_path.push(format!("{}_measurement.txt", pkg_name));
 
     let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
         .expect("Cannot read measurement file");
