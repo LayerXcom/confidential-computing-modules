@@ -6,16 +6,13 @@ use crate::{
     workflow::*,
 };
 use ethabi::{Topic, TopicFilter};
-use std::{fs, path::Path};
+use std::{env, fs, path::Path};
 use web3::{
     contract::{Contract, Options},
     transports::Http,
     types::{Address, BlockNumber, Filter, FilterBuilder, Log, H256},
     Web3,
 };
-
-const UNLOCK_DURATION: u16 = 60;
-const EVENT_LIMIT: usize = 100;
 
 // libsecp256k1 library generates RecoveryId as 0/1.
 // However Secp256k1 used in solidity use 27/28 as a value to make a public key unique to recover.
@@ -28,6 +25,7 @@ pub struct Web3Contract {
     contract: Contract<Http>,
     address: Address, // contract address
     web3_conn: Web3Http,
+    event_limit: usize,
 }
 
 impl Web3Contract {
@@ -38,11 +36,16 @@ impl Web3Contract {
         let abi = contract_info.contract_abi()?;
         let address = contract_info.address()?;
         let contract = Contract::new(web3_conn.web3.eth(), address, abi);
+        let event_limit = env::var("EVENT_LIMIT")
+            .unwrap_or_else(|_| "100".to_string())
+            .parse::<usize>()
+            .expect("Failed to parse EVENT_LIMIT");
 
         Ok(Web3Contract {
             contract,
             address,
             web3_conn,
+            event_limit,
         })
     }
 
@@ -163,7 +166,7 @@ impl Web3Contract {
             })
             .from_block(BlockNumber::Number(latest_fetched_num.into()))
             .to_block(BlockNumber::Latest)
-            .limit(EVENT_LIMIT)
+            .limit(self.event_limit)
             .build();
 
         let logs = self.web3_conn.get_logs(&filter).await?;
@@ -185,16 +188,22 @@ impl Web3Contract {
 pub struct Web3Http {
     web3: Web3<Http>,
     eth_url: String,
+    unlock_duration: u16,
 }
 
 impl Web3Http {
     pub fn new(eth_url: &str) -> Result<Self> {
         let transport = Http::new(eth_url)?;
         let web3 = Web3::new(transport);
+        let unlock_duration = env::var("UNLOCK_DURATION")
+            .unwrap_or_else(|_| "60".to_string())
+            .parse::<u16>()
+            .expect("Failed to parse UNLOCK_DURATION");
 
         Ok(Web3Http {
             web3,
             eth_url: eth_url.to_string(),
+            unlock_duration,
         })
     }
 
@@ -203,7 +212,7 @@ impl Web3Http {
         if !self
             .web3
             .personal()
-            .unlock_account(account, password, Some(UNLOCK_DURATION))
+            .unlock_account(account, password, Some(self.unlock_duration))
             .await?
         {
             return Err(HostError::UnlockError);

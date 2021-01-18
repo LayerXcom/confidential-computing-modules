@@ -1,10 +1,11 @@
 use crate::local_once_cell::sync::Lazy;
+#[cfg(feature = "sgx")]
+use crate::localstd::vec::Vec;
 use crate::localstd::{
     env,
     ffi::OsStr,
     path::PathBuf,
     string::{String, ToString},
-    vec::Vec,
 };
 #[cfg(feature = "sgx")]
 use crate::measurement::EnclaveMeasurement;
