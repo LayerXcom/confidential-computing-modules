@@ -5,7 +5,6 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anonify-config = { path = "../../config", default-features = false, features = ["sgx"], optional = true}
 frame-config = { path = "../config", default-features = false }
 frame-common = { path = "../common", default-features = false }
 frame-mra-tls = { path = "../../frame/mra-tls", optional = true }
@@ -44,7 +43,6 @@ std = [
     "serde-std/derive",
 ]
 sgx = [
-    "anonify-config",
     "frame-mra-tls",
     "frame-common/sgx",
     "frame-config/sgx",

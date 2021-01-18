@@ -2,6 +2,7 @@ use crate::local_once_cell::sync::Lazy;
 use crate::localstd::{
     env,
     ffi::OsStr,
+    vec::Vec,
     path::PathBuf,
     string::{String, ToString},
 };
@@ -55,8 +56,7 @@ pub static ENCLAVE_SIGNED_SO: Lazy<PathBuf> = Lazy::new(|| {
 
 #[cfg(feature = "sgx")]
 pub static MY_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
-    let pkg_name =
-        env::var("MY_ENCLAVE_PKG_NAME").expect("MY_ENCLAVE_PKG_NAME is not set");
+    let pkg_name = env::var("MY_ENCLAVE_PKG_NAME").expect("MY_ENCLAVE_PKG_NAME is not set");
     let mut measurement_file_path = PJ_ROOT_DIR.clone();
 
     let measurement_file = match env::var("BACKUP") {
@@ -89,4 +89,15 @@ pub static CONNECTED_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|
     let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
         .expect("Cannot read measurement file");
     EnclaveMeasurement::new_from_dumpfile(content)
+});
+
+#[cfg(feature = "sgx")]
+pub static IAS_ROOT_CERT: Lazy<Vec<u8>> = Lazy::new(|| {
+    let ias_root_cert_path = env::var("IAS_ROOT_CERT_PATH").expect("IAS_ROOT_CERT_PATH is not set");
+    let mut file_path = PJ_ROOT_DIR.clone();
+    file_path.push(ias_root_cert_path);
+
+    let ias_root_cert = crate::localstd::untrusted::fs::read(file_path).unwrap();
+    let pem = pem::parse(ias_root_cert).expect("Cannot parse PEM File");
+    pem.contents
 });

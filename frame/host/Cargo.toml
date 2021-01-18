@@ -8,7 +8,7 @@ build = "build.rs"
 [dependencies]
 frame-types = { path = "../types" }
 frame-common = { path = "../common" }
-anonify-config = { path = "../../config"}
+frame-config = { path = "../config"}
 anyhow = "1.0"
 thiserror = "1.0"
 sgx_types = "1.1.1"

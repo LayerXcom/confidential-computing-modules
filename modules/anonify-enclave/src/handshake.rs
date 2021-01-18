@@ -1,4 +1,3 @@
-use anonify_config::IAS_ROOT_CERT;
 use anonify_io_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
@@ -6,6 +5,7 @@ use frame_common::{
     crypto::{BackupPathSecret, Sha256},
     state_types::StateType,
 };
+use frame_config::IAS_ROOT_CERT;
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::handshake::HandshakeParams;

@@ -1,8 +1,7 @@
 use crate::handlers::KeyVaultHandler;
-use anonify_config::IAS_ROOT_CERT;
 use anonify_io_types::*;
 use frame_common::state_types::StateType;
-use frame_config::CONNECTED_ENCLAVE_MEASUREMENT;
+use frame_config::{CONNECTED_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Server, ServerConfig};
 use frame_runtime::traits::*;

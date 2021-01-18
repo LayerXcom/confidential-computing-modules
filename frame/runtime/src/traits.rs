@@ -65,6 +65,7 @@ pub trait ConfigGetter {
     fn spid(&self) -> &str;
     fn key_vault_endpoint(&self) -> &str;
     fn store_path_secrets(&self) -> &StorePathSecrets;
+    fn ias_root_cert(&self) -> &[u8];
 }
 
 /// A getter of state stored in enclave memory.

@@ -10,6 +10,7 @@ pub struct KeyVaultEnclaveContext {
     key_vault_endpoint: String,
     spid: String,
     store_path_secrets: StorePathSecrets,
+    ias_root_cert: Vec<u8>,
 }
 
 impl ConfigGetter for KeyVaultEnclaveContext {
@@ -36,6 +37,10 @@ impl ConfigGetter for KeyVaultEnclaveContext {
     fn store_path_secrets(&self) -> &StorePathSecrets {
         &self.store_path_secrets
     }
+
+    fn ias_root_cert(&self) -> &[u8] {
+        &self.ias_root_cert
+    }
 }
 
 impl KeyVaultEnclaveContext {
@@ -54,6 +59,7 @@ impl KeyVaultEnclaveContext {
             key_vault_endpoint,
             spid,
             store_path_secrets,
+            ias_root_cert: (&*IAS_ROOT_CERT).to_vec(),
         }
     }
 }

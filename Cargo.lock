@@ -340,24 +340,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "anonify-config"
-version = "0.1.0"
-dependencies = [
- "anyhow 1.0.28",
- "anyhow 1.0.34",
- "hex",
- "lazy_static",
- "pem",
- "serde 1.0.117",
- "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.3)",
- "sgx_tstd",
-]
-
-[[package]]
 name = "anonify-enclave"
 version = "0.1.0"
 dependencies = [
- "anonify-config",
  "anonify-io-types",
  "anyhow 1.0.28",
  "ed25519-dalek",
@@ -383,7 +368,6 @@ dependencies = [
 name = "anonify-eth-driver"
 version = "0.1.0"
 dependencies = [
- "anonify-config",
  "anonify-io-types",
  "anyhow 1.0.34",
  "async-trait",
@@ -1625,6 +1609,7 @@ dependencies = [
  "hex",
  "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
  "once_cell 1.5.2",
+ "pem",
  "sgx_tstd",
 ]
 
@@ -1646,11 +1631,11 @@ dependencies = [
 name = "frame-host"
 version = "0.1.0"
 dependencies = [
- "anonify-config",
  "anyhow 1.0.34",
  "cc",
  "dirs",
  "frame-common",
+ "frame-config",
  "frame-types",
  "hex",
  "parity-scale-codec",
@@ -1666,7 +1651,6 @@ dependencies = [
 name = "frame-mra-tls"
 version = "0.1.0"
 dependencies = [
- "anonify-config",
  "anyhow 1.0.28",
  "bit-vec",
  "chrono 0.4.11",
@@ -1722,7 +1706,6 @@ dependencies = [
 name = "frame-treekem"
 version = "0.1.0"
 dependencies = [
- "anonify-config",
  "anyhow 1.0.28",
  "anyhow 1.0.34",
  "frame-common",
@@ -2512,7 +2495,6 @@ version = "0.1.0"
 name = "key-vault-enclave"
 version = "0.1.0"
 dependencies = [
- "anonify-config",
  "anonify-io-types",
  "anyhow 1.0.28",
  "frame-common",
@@ -3986,7 +3968,6 @@ version = "0.1.0"
 dependencies = [
  "actix-rt",
  "actix-web",
- "anonify-config",
  "anonify-eth-driver",
  "anyhow 1.0.34",
  "erc20-api",
@@ -3994,6 +3975,7 @@ dependencies = [
  "erc20-state-transition",
  "ethabi",
  "frame-common",
+ "frame-config",
  "frame-host",
  "frame-runtime",
  "frame-treekem",
