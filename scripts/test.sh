@@ -22,8 +22,6 @@ cd ${ANONIFY_ROOT}/scripts
 unset BACKUP
 export MY_ENCLAVE_PKG_NAME=secret_backup
 make DEBUG=1 ENCLAVE_DIR=example/secret-backup/enclave
-export MY_ENCLAVE_PKG_NAME=erc20
-make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 export BACKUP=disable
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
@@ -50,6 +48,10 @@ sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture
 
 # Secret Backup Application Tests
+
+export BACKUP=disable
+export MY_ENCLAVE_PKG_NAME=erc20
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
 export MY_ENCLAVE_PKG_NAME=secret_backup
 export CONNECTED_ENCLAVE_PKG_NAME=erc20
