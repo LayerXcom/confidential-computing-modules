@@ -5,9 +5,7 @@ use frame_config::{ANONIFY_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Server, ServerConfig};
 use frame_runtime::traits::*;
-use std::{string::ToString, thread};
-
-const SERVER_ADDRESS: &str = "0.0.0.0:12345";
+use std::{env, string::ToString, thread};
 
 /// A server starter
 #[derive(Debug, Clone)]
@@ -31,7 +29,8 @@ impl EnclaveEngine for ServerStarter {
         let server_config = ServerConfig::from_attested_tls_config(attested_tls_config)?
             .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ANONIFY_ENCLAVE_MEASUREMENT);
 
-        let mut server = Server::new(SERVER_ADDRESS.to_string(), server_config);
+        let key_vault_address = env::var("KEY_VAULT_ADDRESS")?;
+        let mut server = Server::new(key_vault_address, server_config);
         let store_path_secrets = enclave_context.store_path_secrets();
         let handler = KeyVaultHandler::new(store_path_secrets.clone());
         thread::spawn(move || server.run(handler).unwrap());

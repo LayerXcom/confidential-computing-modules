@@ -1,6 +1,5 @@
-use crate::config::{ENCLAVE_DIR, ENCLAVE_TOKEN};
 use crate::error::Result;
-use frame_config::PJ_ROOT_DIR;
+use frame_config::ANONIFY_PARAMS_DIR;
 use sgx_types::*;
 use sgx_urts::SgxEnclave;
 use std::{
@@ -8,18 +7,21 @@ use std::{
     io::{BufReader, BufWriter, Read, Write},
     path::{Path, PathBuf},
 };
+use tracing::info;
+
+const ENCLAVE_TOKEN: &str = "enclave.token";
 
 pub struct EnclaveDir(PathBuf);
 
 impl EnclaveDir {
     pub fn new() -> Self {
-        let enclave_dir = PJ_ROOT_DIR.join(ENCLAVE_DIR);
-        println!("enclave_dir: {:?}", enclave_dir);
+        let enclave_dir = &*ANONIFY_PARAMS_DIR;
+        info!("Enclave.signed.so is generated at: {:?}", enclave_dir);
         if !enclave_dir.is_dir() {
             fs::create_dir_all(&enclave_dir).expect("Cannot create enclave directory.");
         }
 
-        EnclaveDir(enclave_dir)
+        EnclaveDir(enclave_dir.to_path_buf())
     }
 
     pub fn init_enclave(&self, is_debug: bool) -> Result<SgxEnclave> {
