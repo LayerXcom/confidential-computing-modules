@@ -1,11 +1,11 @@
 use crate::{api, handlers::*, Server as KeyVaultServer};
 use actix_web::{test, web, App};
-use frame_config::PJ_ROOT_DIR;
 use anonify_eth_driver::eth::{EthDeployer, EthSender, EventWatcher};
 use codec::{Decode, Encode};
 use erc20_server::{handlers::*, Server as ERC20Server};
 use erc20_state_transition::construct;
 use ethabi::Contract as ContractABI;
+use frame_config::PJ_ROOT_DIR;
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};

@@ -93,7 +93,7 @@ fn recover_path_secret_from_key_vault_for_test(
     roster_idx: u32,
 ) -> crate::local_anyhow::Result<PathSecret> {
     use frame_common::crypto::{KeyVaultCmd, KeyVaultRequest, RecoverRequest, RecoveredPathSecret};
-    use frame_config::{KEY_VAULT_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
+    use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT};
     use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 
     let recover_request = RecoverRequest::new(roster_idx, id.to_vec());

@@ -12,7 +12,7 @@ use frame_common::{
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
-use frame_config::{KEY_VAULT_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT, PATH_SECRETS_DIR};
+use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DIR};
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;

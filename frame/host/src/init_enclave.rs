@@ -44,8 +44,7 @@ impl EnclaveDir {
     }
 
     fn get_enclave_file_path(&self) -> PathBuf {
-        let pkg_name =
-            env::var("ENCLAVE_PKG_NAME").expect("failed to get env 'ENCLAVE_PKG_NAME'");
+        let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("failed to get env 'ENCLAVE_PKG_NAME'");
         self.0.join(format!("{}.signed.so", pkg_name))
     }
 
