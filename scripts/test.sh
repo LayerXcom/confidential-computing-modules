@@ -55,8 +55,7 @@ unset BACKUP
 export MY_ENCLAVE_PKG_NAME=erc20
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
-export MY_ENCLAVE_PKG_NAME=secret_backup
-export CONNECTED_ENCLAVE_PKG_NAME=erc20
+export CONNECTED_ENCLAVE_PKG_NAME=secret_backup
 cd ${ANONIFY_ROOT}/example/secret-backup/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocapture
 sleep 1
