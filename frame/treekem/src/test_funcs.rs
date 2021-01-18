@@ -5,8 +5,7 @@ use crate::local_anyhow::anyhow;
 use crate::local_rand;
 use crate::local_rand_core::SeedableRng;
 use crate::localstd::env;
-use crate::StorePathSecrets;
-use anonify_config::{SPID, SUB_KEY};
+use crate::{PathSecret, StorePathSecrets};
 use frame_config::PATH_SECRETS_DIR;
 
 pub fn init_path_secret_kvs(kvs: &mut PathSecretKVS, until_roster_idx: usize, until_epoch: usize) {
@@ -28,8 +27,6 @@ pub fn do_handshake_three_party(
         .expect("MAX_ROSTER_IDX is not set")
         .parse::<u32>()
         .unwrap();
-    let ias_url = env::var("IAS_URL").expect("IAS_URL is not set");
-    let key_vault_endpoint = env::var("KEY_VAULT_ENDPOINT").expect("KEY_VAULT_ENDPOINT is not set");
     let (handshake, _) = my_group.create_handshake(source).unwrap();
     let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
 
@@ -39,10 +36,7 @@ pub fn do_handshake_three_party(
             &handshake,
             source,
             max_roster_idx,
-            &*SPID,
-            &ias_url,
-            &*SUB_KEY,
-            &key_vault_endpoint,
+            recover_path_secret_from_key_vault_for_test,
         )
         .unwrap();
     let others_keychain1 = others_group1
@@ -51,10 +45,7 @@ pub fn do_handshake_three_party(
             &handshake,
             source,
             max_roster_idx,
-            &*SPID,
-            &ias_url,
-            &*SUB_KEY,
-            &key_vault_endpoint,
+            recover_path_secret_from_key_vault_for_test,
         )
         .unwrap();
     let others_keychain2 = others_group2
@@ -63,10 +54,7 @@ pub fn do_handshake_three_party(
             &handshake,
             source,
             max_roster_idx,
-            &*SPID,
-            &ias_url,
-            &*SUB_KEY,
-            &key_vault_endpoint,
+            recover_path_secret_from_key_vault_for_test,
         )
         .unwrap();
 
@@ -98,4 +86,29 @@ pub fn encrypt_decrypt_helper(
         },
         None => {}
     };
+}
+
+fn recover_path_secret_from_key_vault_for_test(
+    id: &[u8],
+    roster_idx: u32,
+) -> crate::local_anyhow::Result<PathSecret> {
+    use anonify_config::{ENCLAVE_MEASUREMENT_KEY_VAULT, IAS_ROOT_CERT};
+    use frame_common::crypto::{KeyVaultCmd, KeyVaultRequest, RecoverRequest, RecoveredPathSecret};
+    use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
+
+    let recover_request = RecoverRequest::new(roster_idx, id.to_vec());
+    let ias_url = env::var("IAS_URL").expect("IAS_URL is not set");
+    let key_vault_endpoint = env::var("KEY_VAULT_ENDPOINT").expect("KEY_VAULT_ENDPOINT is not set");
+    let spid = env::var("SPID").expect("SPID is not set");
+    let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
+
+    let attested_tls_config =
+        AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
+
+    let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
+        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT_KEY_VAULT);
+    let mut mra_tls_client = Client::new(&key_vault_endpoint, &client_config)?;
+    let backup_request = KeyVaultRequest::new(KeyVaultCmd::Recover, recover_request);
+    let recovered_path_secret: RecoveredPathSecret = mra_tls_client.send_json(backup_request)?;
+    Ok(PathSecret::from(recovered_path_secret.path_secret()))
 }

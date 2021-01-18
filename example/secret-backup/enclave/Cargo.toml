@@ -10,7 +10,7 @@ crate-type = ["staticlib"]
 
 [dependencies]
 key-vault-commands = { path = "../commands", default-features = false, features = ["sgx"]}
-anonify-config = { path = "../../../config", default-features = false, features = ["sgx"]}
+frame-config = { path = "../../../frame/config", default-features = false, features = ["sgx"]}
 frame-enclave = { path = "../../../frame/enclave" }
 frame-types = { path = "../../../frame/types" }
 frame-common = { path = "../../../frame/common", default-features = false, features = ["sgx"] }

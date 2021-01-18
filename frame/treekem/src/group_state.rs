@@ -52,17 +52,17 @@ impl Handshake for GroupState {
         Ok((handshake, path_secret))
     }
 
-    fn process_handshake(
+    fn process_handshake<F>(
         &mut self,
         store_path_secrets: &StorePathSecrets,
         handshake: &HandshakeParams,
         source: &PathSecretSource,
         max_roster_idx: u32,
-        spid: &str,
-        ias_url: &str,
-        sub_key: &str,
-        key_vault_endpoint: &str,
-    ) -> Result<AppKeyChain> {
+        recover_path_secret_from_key_vault: F,
+    ) -> Result<AppKeyChain>
+    where
+        F: FnOnce(&[u8], u32) -> Result<PathSecret>,
+    {
         ensure!(
             handshake.prior_epoch() == self.epoch,
             "Handshake's prior epoch ({:?}) isn't the current epoch ({:?}).",
@@ -103,10 +103,6 @@ impl Handshake for GroupState {
                             Err(_) => recover_path_secret_from_key_vault(
                                 handshake.hash().as_ref(),
                                 handshake.roster_idx(),
-                                spid,
-                                ias_url,
-                                sub_key,
-                                key_vault_endpoint,
                             )
                             .expect("Failed to recover path_secret from both local and remote"),
                         }
@@ -159,27 +155,6 @@ fn recover_path_secret_from_local(
         ));
     }
     PathSecret::try_from_importing(imported_path_secret)
-}
-
-fn recover_path_secret_from_key_vault(
-    id: &[u8],
-    roster_idx: u32,
-    spid: &str,
-    ias_url: &str,
-    sub_key: &str,
-    key_vault_endpoint: &str,
-) -> Result<PathSecret> {
-    let recover_request = RecoverRequest::new(roster_idx, id.to_vec());
-
-    let attested_tls_config =
-        AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
-
-    let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
-        .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ENCLAVE_MEASUREMENT_KEY_VAULT);
-    let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
-    let backup_request = KeyVaultRequest::new(KeyVaultCmd::Recover, recover_request);
-    let recovered_path_secret: RecoveredPathSecret = mra_tls_client.send_json(backup_request)?;
-    Ok(PathSecret::from(recovered_path_secret.path_secret()))
 }
 
 impl GroupState {

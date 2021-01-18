@@ -28,20 +28,6 @@ lazy_static! {
         let pem = pem::parse(ias_root_cert).expect("Cannot parse PEM File");
         pem.contents
     };
-    pub static ref ENCLAVE_SIGNED_SO: PathBuf = {
-        let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
-        let mut measurement_file_path = PJ_ROOT_DIR.clone();
-
-        let measurement_file = match env::var("BACKUP") {
-            Ok(backup) if backup == "disable" => {
-                format!(".anonify/{}.backup_disabled.signed.so", pkg_name)
-            }
-            _ => format!(".anonify/{}.signed.so", pkg_name),
-        };
-
-        measurement_file_path.push(measurement_file);
-        measurement_file_path
-    };
     pub static ref ENCLAVE_MEASUREMENT: EnclaveMeasurement = {
         let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("ENCLAVE_PKG_NAME is not set");
         let mut measurement_file_path = PJ_ROOT_DIR.clone();
@@ -83,8 +69,6 @@ lazy_static! {
             .expect("Cannot read measurement file");
         EnclaveMeasurement::new_from_dumpfile(content)
     };
-    pub static ref SPID: String = env::var("SPID").expect("SPID is not set");
-    pub static ref SUB_KEY: String = env::var("SUB_KEY").expect("SUB_KEY is not set");
 }
 
 lazy_static! {

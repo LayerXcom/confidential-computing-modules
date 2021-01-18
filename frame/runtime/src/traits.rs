@@ -119,15 +119,14 @@ pub trait IdentityKeyOps {
 pub trait GroupKeyOps: Sized {
     fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret)>;
 
-    fn process_handshake(
+    fn process_handshake<F>(
         &mut self,
         store_path_secrets: &StorePathSecrets,
         handshake: &HandshakeParams,
-        spid: &str,
-        ias_url: &str,
-        sub_key: &str,
-        key_vault_url: &str,
-    ) -> Result<()>;
+        recover_path_secret: F,
+    ) -> Result<()>
+    where
+        F: FnOnce(&[u8], u32) -> Result<PathSecret>;
 
     fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext>;
 
@@ -154,6 +153,8 @@ pub trait QuoteGetter: Sized {
 
 pub trait KeyVaultOps {
     fn backup_path_secret(&self, backup_path_secret: BackupPathSecret) -> Result<()>;
+
+    fn recover_path_secret(&self, ps_id: &[u8], roster_idx: u32) -> Result<PathSecret>;
 
     fn manually_backup_path_secrets_all(
         &self,
