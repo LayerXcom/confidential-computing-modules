@@ -37,32 +37,12 @@ async fn main() -> io::Result<()> {
                 web::post().to(handle_update_mrenclave::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/init_state",
-                web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/transfer",
-                web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/state",
+                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/key_rotation",
                 web::post().to(handle_key_rotation::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/approve",
-                web::post().to(handle_approve::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/transfer_from",
-                web::post().to(handle_transfer_from::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/mint",
-                web::post().to(handle_mint::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/burn",
-                web::post().to(handle_burn::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/allowance",
