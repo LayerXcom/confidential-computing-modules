@@ -23,6 +23,7 @@ ethabi = "12.0.0"
 hex = "0.4"
 async-trait = "0.1"
 tracing = "0.1"
+sodiumoxide = { git = "https://github.com/cipepser/sodiumoxide", branch = "sodiumoxide-sgx", version = "0.2.6", default-features = false }
 
 [features]
 default = ["backup-enable"]

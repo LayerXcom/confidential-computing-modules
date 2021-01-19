@@ -5,8 +5,14 @@ use crate::localstd::{
     io::{self, Read, Write},
     string::String,
     vec::Vec,
+    convert::TryFrom,
 };
-use crate::serde::{de::DeserializeOwned, Deserialize, Serialize};
+use crate::serde::{
+    de::{self, DeserializeOwned, Deserializer, SeqAccess, Visitor},
+    ser::{self, Serializer},
+    Deserialize, Serialize,
+};
+
 use crate::traits::{AccessPolicy, Hash256, IntoVec, StateDecoder};
 use codec::{self, Decode, Encode, Input};
 use ed25519_dalek::{
@@ -20,6 +26,7 @@ use rand_core::{CryptoRng, RngCore};
 #[cfg(feature = "std")]
 use rand_os::OsRng;
 use sha2::Digest;
+use sodiumoxide::crypto::box_;
 
 const ACCOUNT_ID_SIZE: usize = 20;
 pub const COMMON_SECRET: [u8; SECRET_KEY_LENGTH] = [
@@ -519,6 +526,245 @@ impl Ciphertext {
 impl IntoVec for Ciphertext {
     fn into_vec(&self) -> Vec<u8> {
         self.encode()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SodiumPublicKey(box_::PublicKey);
+
+impl SodiumPublicKey {
+    pub fn new(inner: box_::PublicKey) -> SodiumPublicKey {
+        SodiumPublicKey(inner)
+    }
+
+    pub fn as_raw(&self) -> box_::PublicKey {
+        self.0
+    }
+}
+
+impl TryFrom<Vec<u8>> for SodiumPublicKey {
+    type Error = Error;
+
+    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
+        let inner = box_::PublicKey::from_slice(vec.as_slice())
+            .ok_or_else(|| anyhow!("Failed to convert SodiumPublicKey from slice"))?;
+
+        Ok(SodiumPublicKey(inner))
+    }
+}
+
+impl TryFrom<&[u8]> for SodiumPublicKey {
+    type Error = Error;
+
+    fn try_from(bs: &[u8]) -> Result<Self, Self::Error> {
+        let inner = box_::PublicKey::from_slice(bs)
+            .ok_or_else(|| anyhow!("Failed to convert SodiumPublicKey from slice"))?;
+
+        Ok(SodiumPublicKey(inner))
+    }
+}
+
+impl ser::Serialize for SodiumPublicKey {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        serializer.serialize_newtype_struct("SodiumPublicKey", &self.0.0.to_vec())
+    }
+}
+
+impl<'de> de::Deserialize<'de> for SodiumPublicKey {
+    fn deserialize<D>(de : D) -> Result<Self, D::Error>
+        where D : Deserializer<'de> {
+        #[derive(Copy, Clone, Debug)]
+        struct PubKeyVisitor;
+
+        impl<'de> Visitor<'de> for PubKeyVisitor {
+            type Value = SodiumPublicKey;
+
+            fn expecting(&self, f : &mut fmt::Formatter) -> fmt::Result {
+                f.write_str("bytes of deserializable SodiumPublicKey")
+            }
+
+            fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
+                where
+                    V: SeqAccess<'de>,
+            {
+                let mut vec: Vec<u8> = Vec::new();
+                while let Some(elem) = visitor.next_element()? {
+                    vec.push(elem);
+                }
+
+                let pk = SodiumPublicKey::try_from(vec)
+                    .map_err(|e| de::Error::custom(e))?;
+                Ok(pk)
+            }
+
+            fn visit_newtype_struct<D>(self, de : D) -> Result<Self::Value, D::Error>
+                where D : Deserializer<'de> {
+                de.deserialize_bytes(PubKeyVisitor)
+            }
+        }
+
+        de.deserialize_newtype_struct("SodiumPublicKey", PubKeyVisitor)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SodiumNonce(box_::Nonce);
+
+impl SodiumNonce {
+    pub fn new(inner: box_::Nonce) -> SodiumNonce {
+        SodiumNonce(inner)
+    }
+
+    pub fn as_raw(&self) -> box_::Nonce {
+        self.0
+    }
+}
+
+impl TryFrom<Vec<u8>> for SodiumNonce {
+    type Error = Error;
+
+    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
+        let inner = box_::Nonce::from_slice(vec.as_slice())
+            .ok_or_else(|| anyhow!("Failed to convert SodiumNonce from slice"))?;
+
+        Ok(SodiumNonce(inner))
+    }
+}
+
+impl TryFrom<&[u8]> for SodiumNonce {
+    type Error = Error;
+
+    fn try_from(bs: &[u8]) -> Result<Self, Self::Error> {
+        let inner = box_::Nonce::from_slice(bs)
+            .ok_or_else(|| anyhow!("Failed to convert SodiumNonce from slice"))?;
+
+        Ok(SodiumNonce(inner))
+    }
+}
+
+impl ser::Serialize for SodiumNonce {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        serializer.serialize_newtype_struct("SodiumNonce", &self.0.0.to_vec())
+    }
+}
+
+impl<'de> de::Deserialize<'de> for SodiumNonce {
+    fn deserialize<D>(de : D) -> Result<Self, D::Error>
+        where D : Deserializer<'de> {
+        #[derive(Copy, Clone, Debug)]
+        struct NonceVisitor;
+
+        impl<'de> Visitor<'de> for NonceVisitor {
+            type Value = SodiumNonce;
+
+            fn expecting(&self, f : &mut fmt::Formatter) -> fmt::Result {
+                f.write_str("bytes of deserializable SodiumNonce")
+            }
+
+            #[inline]
+            fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
+                where
+                    V: SeqAccess<'de>,
+            {
+                let mut vec: Vec<u8> = Vec::new();
+                while let Some(elem) = visitor.next_element()? {
+                    vec.push(elem);
+                }
+
+                let pk = SodiumNonce::try_from(vec)
+                    .map_err(|e| de::Error::custom(e))?;
+                Ok(pk)
+            }
+
+            #[inline]
+            fn visit_newtype_struct<D>(self, de : D) -> Result<Self::Value, D::Error>
+                where D : Deserializer<'de> {
+                de.deserialize_bytes(NonceVisitor)
+            }
+        }
+
+        de.deserialize_newtype_struct("SodiumNonce", NonceVisitor)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize,)]
+#[serde(crate = "crate::serde")]
+pub struct ClientCiphertext {
+    nonce: SodiumNonce,
+    client_pub_key: SodiumPublicKey,
+    ciphertext: Vec<u8>,
+}
+
+impl ClientCiphertext {
+    pub fn encrypt(
+        server_pub_key: &box_::PublicKey,
+        client_priv_key: &box_::SecretKey,
+        plaintext: Vec<u8>,
+    ) -> Result<Self, Error> {
+        let nonce = box_::gen_nonce();
+        let ciphertext = box_::seal(&plaintext, &nonce, &server_pub_key, &client_priv_key);
+        let client_pub_key = client_priv_key.public_key();
+
+        let nonce = SodiumNonce::new(nonce);
+        let client_pub_key = SodiumPublicKey::new(client_pub_key);
+        Ok(ClientCiphertext {
+            nonce,
+            client_pub_key,
+            ciphertext,
+        })
+    }
+
+    pub fn decrypt(self, server_priv_key: &box_::SecretKey) -> Result<Vec<u8>, Error> {
+        box_::open(
+            &self.ciphertext,
+            &self.nonce.as_raw(),
+            &self.client_pub_key.as_raw(),
+            &server_priv_key,
+        )
+        .map_err(|_| anyhow!("Failed to decrypt"))
+    }
+}
+
+impl Encode for ClientCiphertext {
+    fn encode(&self) -> Vec<u8> {
+        let mut acc = vec![];
+        acc.extend_from_slice(&self.nonce.as_raw().0);
+        acc.extend_from_slice(&self.client_pub_key.as_raw().0);
+        acc.extend_from_slice(&self.ciphertext);
+
+        acc
+    }
+}
+
+impl Decode for ClientCiphertext {
+    fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let mut nonce_buf = [0u8; box_::NONCEBYTES];
+        value.read(&mut nonce_buf)?;
+        let nonce = SodiumNonce::try_from(&nonce_buf[..])
+            .map_err(|_| codec::Error::from("Failed to parse SodiumNonce"))?;
+
+        let mut client_pub_key_buf = [0u8; box_::PUBLICKEYBYTES];
+        value.read(&mut client_pub_key_buf)?;
+        let client_pub_key = SodiumPublicKey::try_from(&client_pub_key_buf[..])
+            .map_err(|_| codec::Error::from("Failed to parse SodiumPublicKey"))?;
+
+        let ciphertext_len = value
+            .remaining_len()?
+            .ok_or(codec::Error::from("ciphertext length should not be zero"))?;
+        let mut ciphertext = vec![0u8; ciphertext_len];
+        value.read(&mut ciphertext)?;
+
+        Ok(ClientCiphertext {
+            nonce,
+            client_pub_key,
+            ciphertext,
+        })
     }
 }
 

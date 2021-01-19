@@ -2,11 +2,10 @@ use crate::utils::CommandInfo;
 use anonify_config::constants::*;
 use anonify_io_types::*;
 use frame_common::{
-    crypto::{Ciphertext, ExportHandshake},
+    crypto::{Ciphertext, ClientCiphertext, ExportHandshake},
     traits::*,
 };
 use frame_host::engine::*;
-use frame_treekem::EciesCiphertext;
 use std::marker::PhantomData;
 use web3::types::Address;
 
@@ -144,7 +143,7 @@ pub mod host_input {
     use super::*;
 
     pub struct Command<C: CallNameConverter, AP: AccessPolicy> {
-        encrypted_command: EciesCiphertext,
+        encrypted_command: ClientCiphertext,
         call_name: String,
         access_policy: AP,
         signer: Address,
@@ -154,7 +153,7 @@ pub mod host_input {
 
     impl<C: CallNameConverter, AP: AccessPolicy> Command<C, AP> {
         pub fn new(
-            encrypted_command: EciesCiphertext,
+            encrypted_command: ClientCiphertext,
             call_name: String,
             access_policy: AP,
             signer: Address,

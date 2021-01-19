@@ -2,15 +2,15 @@ use ed25519_dalek::{
     Keypair, PublicKey, Signature, SignatureError, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH,
 };
 use frame_common::{
-    crypto::{AccountId, Ed25519ChallengeResponse},
+    crypto::{AccountId, ClientCiphertext, Ed25519ChallengeResponse},
     traits::State,
 };
-use frame_treekem::{DhPubKey, EciesCiphertext};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_big_array::big_array;
 use std::fmt;
 use web3::types::H256;
+use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 
 // ----------------------
 //  GET and POST types
@@ -65,13 +65,13 @@ pub mod init_state {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub encrypted_total_supply: EciesCiphertext,
+            pub encrypted_total_supply: ClientCiphertext,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                encrypted_total_supply: EciesCiphertext,
+                encrypted_total_supply: ClientCiphertext,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -117,7 +117,7 @@ pub mod encrypting_key {
         use super::super::*;
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub DhPubKey);
+        pub struct Response(pub SodiumPublicKey);
     }
 }
 
@@ -132,13 +132,13 @@ pub mod transfer {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub encrypted_transfer_cmd: EciesCiphertext,
+            pub encrypted_transfer_cmd: ClientCiphertext,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                encrypted_transfer_cmd: EciesCiphertext,
+                encrypted_transfer_cmd: ClientCiphertext,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -187,13 +187,13 @@ pub mod approve {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub encrypted_approve_cmd: EciesCiphertext,
+            pub encrypted_approve_cmd: ClientCiphertext,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                encrypted_approve_cmd: EciesCiphertext,
+                encrypted_approve_cmd: ClientCiphertext,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -242,13 +242,13 @@ pub mod transfer_from {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub encrypted_transfer_from_cmd: EciesCiphertext,
+            pub encrypted_transfer_from_cmd: ClientCiphertext,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                encrypted_transfer_from_cmd: EciesCiphertext,
+                encrypted_transfer_from_cmd: ClientCiphertext,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -297,13 +297,13 @@ pub mod mint {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub encrypted_mint_cmd: EciesCiphertext,
+            pub encrypted_mint_cmd: ClientCiphertext,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                encrypted_mint_cmd: EciesCiphertext,
+                encrypted_mint_cmd: ClientCiphertext,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();
@@ -352,13 +352,13 @@ pub mod burn {
             pub sig: [u8; SIGNATURE_LENGTH],
             pub pubkey: [u8; PUBLIC_KEY_LENGTH],
             pub challenge: [u8; 32],
-            pub encrypted_burn_cmd: EciesCiphertext,
+            pub encrypted_burn_cmd: ClientCiphertext,
         }
 
         impl Request {
             pub fn new<R: Rng>(
                 keypair: &Keypair,
-                encrypted_burn_cmd: EciesCiphertext,
+                encrypted_burn_cmd: ClientCiphertext,
                 rng: &mut R,
             ) -> Self {
                 let challenge: [u8; 32] = rng.gen();

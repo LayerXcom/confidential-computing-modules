@@ -9,11 +9,11 @@ use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use codec::Encode;
 use ed25519_dalek::Keypair;
 use erc20_state_transition::{approve, burn, construct, mint, transfer, transfer_from};
-use frame_common::crypto::AccountId;
+use frame_common::crypto::{AccountId, ClientCiphertext};
 use frame_runtime::primitives::U64;
-use frame_treekem::{DhPubKey, EciesCiphertext};
 use rand::Rng;
 use reqwest::Client;
+use sodiumoxide::crypto::box_::{self, PublicKey as SodiumPublicKey};
 use std::path::PathBuf;
 
 pub(crate) fn deploy(anonify_url: String) -> Result<()> {
@@ -62,7 +62,7 @@ pub(crate) fn update_mrenclave(anonify_url: String, contract_addr: String) -> Re
     Ok(())
 }
 
-pub(crate) fn get_encrypting_key(anonify_url: String) -> Result<DhPubKey> {
+pub(crate) fn get_encrypting_key(anonify_url: String) -> Result<SodiumPublicKey> {
     Client::new()
         .get(&format!("{}/api/v1/encrypting_key", &anonify_url))
         .send()?
@@ -76,7 +76,7 @@ pub(crate) fn init_state<R: Rng>(
     anonify_url: String,
     index: usize,
     total_supply: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPublicKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
@@ -84,8 +84,10 @@ pub(crate) fn init_state<R: Rng>(
     let init_state = construct {
         total_supply: U64::from_raw(total_supply),
     };
-    let encrypted_total_supply = EciesCiphertext::encrypt(&encrypting_key, init_state.encode())
-        .map_err(|e| anyhow!("{:?}", e))?;
+
+    let (_, client_priv_key) = box_::gen_keypair();
+    let encrypted_total_supply =
+        ClientCiphertext::encrypt(encrypting_key, &client_priv_key, init_state.encode())?;
 
     let req = erc20_api::init_state::post::Request::new(&keypair, encrypted_total_supply, rng);
     let res = Client::new()
@@ -105,7 +107,7 @@ pub(crate) fn transfer<R: Rng>(
     index: usize,
     recipient: AccountId,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPublicKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
@@ -114,8 +116,10 @@ pub(crate) fn transfer<R: Rng>(
         amount: U64::from_raw(amount),
         recipient,
     };
-    let encrypted_transfer_cmd = EciesCiphertext::encrypt(&encrypting_key, transfer_cmd.encode())
-        .map_err(|e| anyhow!("{:?}", e))?;
+
+    let (_, client_priv_key) = box_::gen_keypair();
+    let encrypted_transfer_cmd =
+        ClientCiphertext::encrypt(encrypting_key, &client_priv_key, transfer_cmd.encode())?;
 
     let req = erc20_api::transfer::post::Request::new(&keypair, encrypted_transfer_cmd, rng);
     let res = Client::new()
@@ -135,7 +139,7 @@ pub(crate) fn approve<R: Rng>(
     index: usize,
     spender: AccountId,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPublicKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
@@ -144,8 +148,10 @@ pub(crate) fn approve<R: Rng>(
         amount: U64::from_raw(amount),
         spender,
     };
-    let encrypted_approve_cmd = EciesCiphertext::encrypt(&encrypting_key, approve_cmd.encode())
-        .map_err(|e| anyhow!("{:?}", e))?;
+
+    let (_, client_priv_key) = box_::gen_keypair();
+    let encrypted_approve_cmd =
+        ClientCiphertext::encrypt(encrypting_key, &client_priv_key, approve_cmd.encode())?;
 
     let req = erc20_api::approve::post::Request::new(&keypair, encrypted_approve_cmd, rng);
     let res = Client::new()
@@ -166,7 +172,7 @@ pub(crate) fn transfer_from<R: Rng>(
     owner: AccountId,
     recipient: AccountId,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPublicKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
@@ -176,9 +182,10 @@ pub(crate) fn transfer_from<R: Rng>(
         owner,
         recipient,
     };
+
+    let (_, client_priv_key) = box_::gen_keypair();
     let encrypted_transfer_from_cmd =
-        EciesCiphertext::encrypt(&encrypting_key, transfer_from_cmd.encode())
-            .map_err(|e| anyhow!("{:?}", e))?;
+        ClientCiphertext::encrypt(encrypting_key, &client_priv_key, transfer_from_cmd.encode())?;
 
     let req =
         erc20_api::transfer_from::post::Request::new(&keypair, encrypted_transfer_from_cmd, rng);
@@ -199,7 +206,7 @@ pub(crate) fn mint<R: Rng>(
     index: usize,
     recipient: AccountId,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPublicKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
@@ -208,8 +215,10 @@ pub(crate) fn mint<R: Rng>(
         amount: U64::from_raw(amount),
         recipient,
     };
-    let encrypted_mint_cmd = EciesCiphertext::encrypt(&encrypting_key, mint_cmd.encode())
-        .map_err(|e| anyhow!("{:?}", e))?;
+
+    let (_, client_priv_key) = box_::gen_keypair();
+    let encrypted_mint_cmd =
+        ClientCiphertext::encrypt(encrypting_key, &client_priv_key, mint_cmd.encode())?;
 
     let req = erc20_api::mint::post::Request::new(&keypair, encrypted_mint_cmd, rng);
     let res = Client::new()
@@ -228,7 +237,7 @@ pub(crate) fn burn<R: Rng>(
     anonify_url: String,
     index: usize,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPublicKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
@@ -236,8 +245,10 @@ pub(crate) fn burn<R: Rng>(
     let burn_cmd = burn {
         amount: U64::from_raw(amount),
     };
-    let encrypted_burn_cmd = EciesCiphertext::encrypt(&encrypting_key, burn_cmd.encode())
-        .map_err(|e| anyhow!("{:?}", e))?;
+
+    let (_, client_priv_key) = box_::gen_keypair();
+    let encrypted_burn_cmd =
+        ClientCiphertext::encrypt(encrypting_key, &client_priv_key, burn_cmd.encode())?;
 
     let req = erc20_api::burn::post::Request::new(&keypair, encrypted_burn_cmd, rng);
     let res = Client::new()

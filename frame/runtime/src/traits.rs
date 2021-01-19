@@ -7,14 +7,15 @@ use crate::localstd::{
 use codec::{Decode, Encode};
 use frame_common::{
     crypto::{
-        AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest,
+        AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest, ClientCiphertext,
         RecoveredPathSecret,
     },
     state_types::{MemId, ReturnState, UpdatedState},
     traits::*,
 };
-use frame_treekem::{handshake::HandshakeParams, DhPubKey, EciesCiphertext, PathSecret};
+use frame_treekem::{handshake::HandshakeParams, PathSecret};
 use remote_attestation::EncodedQuote;
+use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 
 /// Execute state transition functions from runtime
 pub trait RuntimeExecutor<G: ContextOps>: Sized {
@@ -111,9 +112,9 @@ pub trait NotificationOps {
 pub trait IdentityKeyOps {
     fn sign(&self, msg: &[u8]) -> Result<(secp256k1::Signature, secp256k1::RecoveryId)>;
 
-    fn decrypt(&self, ciphertext: EciesCiphertext) -> Result<Vec<u8>>;
+    fn decrypt(&self, ciphertext: ClientCiphertext) -> Result<Vec<u8>>;
 
-    fn encrypting_key(&self) -> DhPubKey;
+    fn encrypting_key(&self) -> SodiumPublicKey;
 }
 
 pub trait GroupKeyOps: Sized {

@@ -7,8 +7,8 @@ use anonify_io_types::*;
 use anyhow::anyhow;
 use frame_common::{
     crypto::{
-        AccountId, BackupPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverAllRequest,
-        RecoveredPathSecret,
+        AccountId, BackupPathSecret, ClientCiphertext, KeyVaultCmd, KeyVaultRequest,
+        RecoverAllRequest, RecoveredPathSecret,
     },
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
@@ -18,9 +18,10 @@ use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
-    init_path_secret_kvs, DhPubKey, EciesCiphertext,
+    init_path_secret_kvs,
 };
 use remote_attestation::{EncodedQuote, QuoteTarget};
+use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 use std::{
     env,
     marker::PhantomData,
@@ -145,11 +146,11 @@ impl IdentityKeyOps for AnonifyEnclaveContext {
         self.identity_key.sign(msg).map_err(Into::into)
     }
 
-    fn decrypt(&self, ciphertext: EciesCiphertext) -> anyhow::Result<Vec<u8>> {
+    fn decrypt(&self, ciphertext: ClientCiphertext) -> anyhow::Result<Vec<u8>> {
         self.identity_key.decrypt(ciphertext).map_err(Into::into)
     }
 
-    fn encrypting_key(&self) -> DhPubKey {
+    fn encrypting_key(&self) -> SodiumPublicKey {
         self.identity_key.encrypting_key()
     }
 }

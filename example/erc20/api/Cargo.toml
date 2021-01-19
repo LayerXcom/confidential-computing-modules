@@ -6,11 +6,11 @@ edition = "2018"
 
 [dependencies]
 frame-common = { path = "../../../frame/common" }
-frame-treekem = { path = "../../../frame/treekem" }
 serde = { version = "1", features = ["derive"] }
 ed25519-dalek = { version = "1.0.0-pre.2", features = ["serde"] }
 rand = "0.7"
 serde-big-array = "0.2"
 web3 = "0.14"
+sodiumoxide = { git = "https://github.com/cipepser/sodiumoxide", branch = "sodiumoxide-sgx", version = "0.2.6", default-features = false }
 
 [features]
