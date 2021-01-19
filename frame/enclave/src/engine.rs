@@ -1,6 +1,8 @@
 use codec::{Decode, Encode};
 use frame_common::{state_types::StateType, EcallInput, EcallOutput};
 use frame_runtime::{ConfigGetter, ContextOps, RuntimeExecutor};
+use frame_treekem::EciesCiphertext;
+use anyhow::anyhow;
 
 pub trait EnclaveEngine {
     type EI: EcallInput + Decode;
@@ -9,7 +11,8 @@ pub trait EnclaveEngine {
     fn decrypt<C>(ciphertext: EciesCiphertext, enclave_context: &C) -> anyhow::Result<Self::EI>
     where
     C: ContextOps<S = StateType> + Clone {
-        enclave_context.decrypt
+        let buf = enclave_context.decrypt(ciphertext)?;
+        Self::EI::decode(&mut &buf[..]).map_err(|e| anyhow!("{:?}", e))
     }
 
     /// Evaluate policies like authentication and idempotency

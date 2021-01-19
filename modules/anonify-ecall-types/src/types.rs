@@ -1,4 +1,4 @@
-use crate::localstd::{fmt, vec::Vec};
+use crate::localstd::{fmt, vec::Vec, string::{String, ToString}, str};
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
@@ -16,7 +16,7 @@ pub mod input {
     pub struct Command<AP: AccessPolicy, RC: RuntimeCommand> {
         pub access_policy: AP,
         pub runtime_command: RC,
-        pub fn_name: String,
+        pub fn_name: Vec<u8>, // codec does not support for `String`
     }
 
     impl<AP, RC> EcallInput for Command<AP, RC>
@@ -31,11 +31,11 @@ pub mod input {
         AP: AccessPolicy,
         RC: RuntimeCommand,
     {
-        pub fn new(access_policy: AP, runtime_command: RC, fn_name: impl ToString) -> Self {
+        pub fn new(access_policy: AP, runtime_command: RC, fn_name: String) -> Self {
             Command {
                 access_policy,
                 runtime_command,
-                fn_name: fn_name.to_string(),
+                fn_name: fn_name.into_bytes(),
             }
         }
 
@@ -101,16 +101,16 @@ pub mod input {
     #[derive(Encode, Decode, Debug, Clone)]
     pub struct GetState<AP: AccessPolicy> {
         access_policy: AP,
-        call_id: u32,
+        pub fn_name: Vec<u8>, // codec does not support for `String`
     }
 
     impl<AP: AccessPolicy> EcallInput for GetState<AP> {}
 
     impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, call_id: u32) -> Self {
+        pub fn new(access_policy: AP, fn_name: String) -> Self {
             GetState {
                 access_policy,
-                call_id,
+                fn_name: fn_name.into_bytes(),
             }
         }
 
@@ -118,8 +118,8 @@ pub mod input {
             &self.access_policy
         }
 
-        pub fn call_id(&self) -> u32 {
-            self.call_id
+        pub fn fn_name(&self) -> &str {
+            str::from_utf8(&self.fn_name).unwrap()
         }
     }
 
