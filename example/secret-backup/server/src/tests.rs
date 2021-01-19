@@ -75,8 +75,8 @@ async fn test_backup_path_secret() {
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/init_state",
-                web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/state",
+                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/balance_of",
@@ -135,7 +135,7 @@ async fn test_backup_path_secret() {
     // Init state
     let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
-        .uri("/api/v1/init_state")
+        .uri("/api/v1/state")
         .set_json(&init_100_req)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -225,8 +225,8 @@ async fn test_recover_without_key_vault() {
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/init_state",
-                web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/state",
+                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/balance_of",
@@ -285,7 +285,7 @@ async fn test_recover_without_key_vault() {
     // Init state
     let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
-        .uri("/api/v1/init_state")
+        .uri("/api/v1/state")
         .set_json(&init_100_req)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -369,8 +369,8 @@ async fn test_manually_backup_all() {
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/init_state",
-                web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/state",
+                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/balance_of",
@@ -423,7 +423,7 @@ async fn test_manually_backup_all() {
     // Init state
     let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
-        .uri("/api/v1/init_state")
+        .uri("/api/v1/state")
         .set_json(&init_100_req)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -529,8 +529,8 @@ async fn test_manually_recover_all() {
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/init_state",
-                web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/state",
+                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/balance_of",
@@ -550,9 +550,6 @@ async fn test_manually_recover_all() {
             ),
     )
     .await;
-
-    let path_secrets_dir =
-        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
 
     // Deploy
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
@@ -583,7 +580,7 @@ async fn test_manually_recover_all() {
     // Init state
     let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
-        .uri("/api/v1/init_state")
+        .uri("/api/v1/state")
         .set_json(&init_100_req)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -783,13 +780,14 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
     encrypting_key
 }
 
-fn init_100_req(enc_key: &DhPubKey) -> erc20_api::init_state::post::Request {
+fn init_100_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
     let init_100 = construct {
         total_supply: U64::from_raw(100),
     };
     let enc_cmd = EciesCiphertext::encrypt(&enc_key, init_100.encode()).unwrap();
 
-    erc20_api::init_state::post::Request {
+    erc20_api::state::post::Request {
+        function: "construct".to_string(),
         sig: [
             236, 103, 17, 252, 166, 199, 9, 46, 200, 107, 188, 0, 37, 111, 83, 105, 175, 81, 231,
             14, 81, 100, 221, 89, 102, 172, 30, 96, 15, 128, 117, 146, 181, 221, 149, 206, 163,
@@ -804,7 +802,7 @@ fn init_100_req(enc_key: &DhPubKey) -> erc20_api::init_state::post::Request {
             244, 158, 183, 202, 237, 236, 27, 67, 39, 95, 178, 136, 235, 162, 188, 106, 52, 56, 6,
             245, 3, 101, 33, 155, 58, 175, 168, 63, 73, 125, 205, 225,
         ],
-        encrypted_total_supply: enc_cmd,
+        encrypted_command: enc_cmd,
     }
 }
 

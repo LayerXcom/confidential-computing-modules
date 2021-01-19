@@ -103,9 +103,9 @@ where
     Ok(HttpResponse::Ok().json(erc20_api::update_mrenclave::post::Response(tx_hash)))
 }
 
-pub async fn handle_init_state<D, S, W>(
+pub async fn handle_send_command<D, S, W>(
     server: web::Data<Arc<Server<D, S, W>>>,
-    req: web::Json<erc20_api::init_state::post::Request>,
+    req: web::Json<erc20_api::state::post::Request>,
 ) -> Result<HttpResponse>
 where
     D: Deployer,
@@ -120,14 +120,13 @@ where
     let access_right = req
         .into_access_right()
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let encrypted_total_supply = req.encrypted_total_supply.clone();
 
     let tx_hash = server
         .dispatcher
         .send_command::<CallName, _>(
             access_right,
-            encrypted_total_supply,
-            "construct",
+            req.encrypted_command.clone(),
+            &req.function,
             sender_address,
             DEFAULT_GAS,
             SEND_COMMAND_CMD,
@@ -135,182 +134,7 @@ where
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(erc20_api::init_state::post::Response(tx_hash)))
-}
-
-pub async fn handle_transfer<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
-    req: web::Json<erc20_api::transfer::post::Request>,
-) -> Result<HttpResponse>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher,
-{
-    let sender_address = server
-        .dispatcher
-        .get_account(server.account_index, &server.password)
-        .await
-        .map_err(|e| ServerError::from(e))?;
-    let access_right = req
-        .into_access_right()
-        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let encrypted_transfer_cmd = req.encrypted_transfer_cmd.clone();
-
-    let tx_hash = server
-        .dispatcher
-        .send_command::<CallName, _>(
-            access_right,
-            encrypted_transfer_cmd,
-            "transfer",
-            sender_address,
-            DEFAULT_GAS,
-            SEND_COMMAND_CMD,
-        )
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
-    Ok(HttpResponse::Ok().json(erc20_api::transfer::post::Response(tx_hash)))
-}
-
-pub async fn handle_approve<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
-    req: web::Json<erc20_api::approve::post::Request>,
-) -> Result<HttpResponse>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher,
-{
-    let sender_address = server
-        .dispatcher
-        .get_account(server.account_index, &server.password)
-        .await
-        .map_err(|e| ServerError::from(e))?;
-    let access_right = req
-        .into_access_right()
-        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let encrypted_approve_cmd = req.encrypted_approve_cmd.clone();
-
-    let tx_hash = server
-        .dispatcher
-        .send_command::<CallName, _>(
-            access_right,
-            encrypted_approve_cmd,
-            "approve",
-            sender_address,
-            DEFAULT_GAS,
-            SEND_COMMAND_CMD,
-        )
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
-    Ok(HttpResponse::Ok().json(erc20_api::approve::post::Response(tx_hash)))
-}
-
-pub async fn handle_mint<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
-    req: web::Json<erc20_api::mint::post::Request>,
-) -> Result<HttpResponse>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher,
-{
-    let sender_address = server
-        .dispatcher
-        .get_account(server.account_index, &server.password)
-        .await
-        .map_err(|e| ServerError::from(e))?;
-    let access_right = req
-        .into_access_right()
-        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let encrypted_mint_cmd = req.encrypted_mint_cmd.clone();
-
-    let tx_hash = server
-        .dispatcher
-        .send_command::<CallName, _>(
-            access_right,
-            encrypted_mint_cmd,
-            "mint",
-            sender_address,
-            DEFAULT_GAS,
-            SEND_COMMAND_CMD,
-        )
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
-    Ok(HttpResponse::Ok().json(erc20_api::mint::post::Response(tx_hash)))
-}
-
-pub async fn handle_burn<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
-    req: web::Json<erc20_api::burn::post::Request>,
-) -> Result<HttpResponse>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher,
-{
-    let sender_address = server
-        .dispatcher
-        .get_account(server.account_index, &server.password)
-        .await
-        .map_err(|e| ServerError::from(e))?;
-    let access_right = req
-        .into_access_right()
-        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let encrypted_burn_cmd = req.encrypted_burn_cmd.clone();
-
-    let tx_hash = server
-        .dispatcher
-        .send_command::<CallName, _>(
-            access_right,
-            encrypted_burn_cmd,
-            "burn",
-            sender_address,
-            DEFAULT_GAS,
-            SEND_COMMAND_CMD,
-        )
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
-    Ok(HttpResponse::Ok().json(erc20_api::burn::post::Response(tx_hash)))
-}
-
-pub async fn handle_transfer_from<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
-    req: web::Json<erc20_api::transfer_from::post::Request>,
-) -> Result<HttpResponse>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher,
-{
-    let sender_address = server
-        .dispatcher
-        .get_account(server.account_index, &server.password)
-        .await
-        .map_err(|e| ServerError::from(e))?;
-    let access_right = req
-        .into_access_right()
-        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let encrypted_transfer_from_cmd = req.encrypted_transfer_from_cmd.clone();
-
-    let tx_hash = server
-        .dispatcher
-        .send_command::<CallName, _>(
-            access_right,
-            encrypted_transfer_from_cmd,
-            "transfer_from",
-            sender_address,
-            DEFAULT_GAS,
-            SEND_COMMAND_CMD,
-        )
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
-    Ok(HttpResponse::Ok().json(erc20_api::transfer_from::post::Response(tx_hash)))
+    Ok(HttpResponse::Ok().json(erc20_api::state::post::Response(tx_hash)))
 }
 
 pub async fn handle_key_rotation<D, S, W>(
