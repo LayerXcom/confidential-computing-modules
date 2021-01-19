@@ -87,9 +87,10 @@ pub(crate) fn init_state<R: Rng>(
     let encrypted_total_supply = EciesCiphertext::encrypt(&encrypting_key, init_state.encode())
         .map_err(|e| anyhow!("{:?}", e))?;
 
-    let req = erc20_api::init_state::post::Request::new(&keypair, encrypted_total_supply, rng);
+    let req =
+        erc20_api::state::post::Request::new("init_state", &keypair, encrypted_total_supply, rng);
     let res = Client::new()
-        .post(&format!("{}/api/v1/init_state", &anonify_url))
+        .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&req)
         .send()?
         .text()?;
@@ -117,9 +118,10 @@ pub(crate) fn transfer<R: Rng>(
     let encrypted_transfer_cmd = EciesCiphertext::encrypt(&encrypting_key, transfer_cmd.encode())
         .map_err(|e| anyhow!("{:?}", e))?;
 
-    let req = erc20_api::transfer::post::Request::new(&keypair, encrypted_transfer_cmd, rng);
+    let req =
+        erc20_api::state::post::Request::new("transfer", &keypair, encrypted_transfer_cmd, rng);
     let res = Client::new()
-        .post(&format!("{}/api/v1/transfer", &anonify_url))
+        .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&req)
         .send()?
         .text()?;
@@ -147,9 +149,9 @@ pub(crate) fn approve<R: Rng>(
     let encrypted_approve_cmd = EciesCiphertext::encrypt(&encrypting_key, approve_cmd.encode())
         .map_err(|e| anyhow!("{:?}", e))?;
 
-    let req = erc20_api::approve::post::Request::new(&keypair, encrypted_approve_cmd, rng);
+    let req = erc20_api::state::post::Request::new("approve", &keypair, encrypted_approve_cmd, rng);
     let res = Client::new()
-        .post(&format!("{}/api/v1/approve", &anonify_url))
+        .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&req)
         .send()?
         .text()?;
@@ -180,10 +182,14 @@ pub(crate) fn transfer_from<R: Rng>(
         EciesCiphertext::encrypt(&encrypting_key, transfer_from_cmd.encode())
             .map_err(|e| anyhow!("{:?}", e))?;
 
-    let req =
-        erc20_api::transfer_from::post::Request::new(&keypair, encrypted_transfer_from_cmd, rng);
+    let req = erc20_api::state::post::Request::new(
+        "transfer_from",
+        &keypair,
+        encrypted_transfer_from_cmd,
+        rng,
+    );
     let res = Client::new()
-        .post(&format!("{}/api/v1/transfer_from", &anonify_url))
+        .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&req)
         .send()?
         .text()?;
@@ -211,9 +217,9 @@ pub(crate) fn mint<R: Rng>(
     let encrypted_mint_cmd = EciesCiphertext::encrypt(&encrypting_key, mint_cmd.encode())
         .map_err(|e| anyhow!("{:?}", e))?;
 
-    let req = erc20_api::mint::post::Request::new(&keypair, encrypted_mint_cmd, rng);
+    let req = erc20_api::state::post::Request::new("mint", &keypair, encrypted_mint_cmd, rng);
     let res = Client::new()
-        .post(&format!("{}/api/v1/mint", &anonify_url))
+        .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&req)
         .send()?
         .text()?;
@@ -239,9 +245,9 @@ pub(crate) fn burn<R: Rng>(
     let encrypted_burn_cmd = EciesCiphertext::encrypt(&encrypting_key, burn_cmd.encode())
         .map_err(|e| anyhow!("{:?}", e))?;
 
-    let req = erc20_api::burn::post::Request::new(&keypair, encrypted_burn_cmd, rng);
+    let req = erc20_api::state::post::Request::new("burn", &keypair, encrypted_burn_cmd, rng);
     let res = Client::new()
-        .post(&format!("{}/api/v1/burn", &anonify_url))
+        .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&req)
         .send()?
         .text()?;
