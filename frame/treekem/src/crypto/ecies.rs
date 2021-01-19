@@ -27,6 +27,8 @@ pub struct EciesCiphertext {
     ciphertext: Vec<u8>,
 }
 
+impl frame_common::EcallInput for EciesCiphertext {}
+
 impl EciesCiphertext {
     pub fn encrypt(others_pub_key: &DhPubKey, mut plaintext: Vec<u8>) -> Result<Self> {
         let my_ephemeral_secret = DhPrivateKey::from_random()?;

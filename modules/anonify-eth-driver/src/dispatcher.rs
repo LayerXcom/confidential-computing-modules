@@ -8,8 +8,9 @@ use crate::{
     utils::*,
     workflow::host_input,
 };
-use frame_common::{state_types::UpdatedState, traits::*};
+use frame_common::{crypto::Ed25519ChallengeResponse, state_types::UpdatedState, traits::*};
 use frame_host::engine::HostEngine;
+use frame_runtime::RuntimeCommand;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
@@ -177,24 +178,15 @@ where
         Ok(tx_hash)
     }
 
-    pub async fn send_command<C, AP>(
+    pub async fn send_command(
         &self,
         encrypted_req: EciesCiphertext,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
-    ) -> Result<H256>
-    where
-        C: CallNameConverter,
-        AP: AccessPolicy,
-    {
+    ) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Command::<C, AP>::new(
-            encrypted_req,
-            signer,
-            gas,
-            ecall_cmd,
-        );
+        let input = host_input::Command::new(encrypted_req, signer, gas, ecall_cmd);
         let eid = inner.deployer.get_enclave_id();
         let host_output = CommandWorkflow::exec(input, eid)?;
 

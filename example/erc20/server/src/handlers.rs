@@ -120,8 +120,8 @@ where
 
     let tx_hash = server
         .dispatcher
-        .send_command::<CallName, _>(
-            req.encrypted_command.clone(),
+        .send_command(
+            req.encrypted_req.clone(),
             sender_address,
             DEFAULT_GAS,
             SEND_COMMAND_CMD,

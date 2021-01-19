@@ -4,6 +4,7 @@ pub use crate::localstd::prelude::v1::*;
 pub use crate::primitives::*;
 #[cfg(feature = "sgx")]
 pub use crate::traits::*;
+pub use crate::RuntimeCommand;
 pub use crate::{
     __impl_inner_memory, __impl_inner_runtime, get_state, impl_memory, impl_runtime, return_update,
     update,

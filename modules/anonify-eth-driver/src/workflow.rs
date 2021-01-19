@@ -1,24 +1,21 @@
-use crate::utils::CommandInfo;
 use anonify_ecall_types::*;
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
     traits::*,
 };
 use frame_host::engine::*;
+use frame_runtime::RuntimeCommand;
 use frame_treekem::EciesCiphertext;
 use std::marker::PhantomData;
 use web3::types::Address;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
 
-pub struct CommandWorkflow<C: CallNameConverter, AP: AccessPolicy> {
-    c: PhantomData<C>,
-    ap: PhantomData<AP>,
-}
+pub struct CommandWorkflow;
 
-impl<C: CallNameConverter, AP: AccessPolicy> HostEngine for CommandWorkflow<C, AP> {
-    type HI = host_input::Command<C, AP>;
-    type EI = input::Command<AP>;
+impl HostEngine for CommandWorkflow {
+    type HI = host_input::Command;
+    type EI = EciesCiphertext;
     type EO = output::Command;
     type HO = host_output::Command;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -131,15 +128,14 @@ impl HostEngine for RecoverPathSecretAllWorkflow {
 pub mod host_input {
     use super::*;
 
-    pub struct Command<C: CallNameConverter> {
+    pub struct Command {
         encrypted_req: EciesCiphertext,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
-        phantom: PhantomData<C>,
     }
 
-    impl<C: CallNameConverter> Command<C> {
+    impl Command {
         pub fn new(
             encrypted_req: EciesCiphertext,
             signer: Address,
@@ -151,12 +147,11 @@ pub mod host_input {
                 signer,
                 gas,
                 ecall_cmd,
-                phantom: PhantomData,
             }
         }
     }
 
-    impl<C: CallNameConverter, AP: AccessPolicy> HostInput for Command<C, AP> {
+    impl HostInput for Command {
         type EcallInput = EciesCiphertext;
         type HostOutput = host_output::Command;
 

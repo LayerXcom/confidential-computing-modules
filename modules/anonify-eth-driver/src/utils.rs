@@ -35,32 +35,6 @@ impl<'a, P: AsRef<Path>> ContractInfo<'a, P> {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct CommandInfo<'a, C: CallNameConverter> {
-    encrypted_command: EciesCiphertext,
-    call_name: &'a str,
-    phantom: PhantomData<C>,
-}
-
-impl<'a, C: CallNameConverter> CommandInfo<'a, C> {
-    pub fn new(encrypted_command: EciesCiphertext, call_name: &'a str) -> Self {
-        CommandInfo {
-            encrypted_command,
-            call_name,
-            phantom: PhantomData::<C>,
-        }
-    }
-
-    pub fn call_name_to_id(&self) -> u32 {
-        C::as_id(self.call_name)
-    }
-
-    pub fn crate_input<AP: AccessPolicy>(self, access_policy: AP) -> input::Command<AP> {
-        let call_id = self.call_name_to_id();
-        input::Command::new(access_policy, self.encrypted_command, call_id)
-    }
-}
-
 /// A type of contract
 pub enum ContractKind {
     Web3Contract(Web3Contract),

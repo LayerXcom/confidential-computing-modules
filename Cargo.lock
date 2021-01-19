@@ -390,6 +390,7 @@ dependencies = [
  "frame-config",
  "frame-host",
  "frame-retrier",
+ "frame-runtime",
  "frame-treekem",
  "frame-types",
  "hex",
@@ -1435,6 +1436,8 @@ version = "0.1.0"
 dependencies = [
  "frame-runtime",
  "parity-scale-codec",
+ "serde 1.0.117",
+ "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
  "sgx_tstd",
 ]
 
