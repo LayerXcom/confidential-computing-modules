@@ -12,7 +12,7 @@ members = [
     "frame/config",
     "modules/anonify-enclave",
     "modules/anonify-eth-driver",
-    "modules/anonify-io-types",
+    "modules/anonify-ecall-types",
     "modules/key-vault-enclave",
     "modules/key-vault-host",
     "example/erc20/api",

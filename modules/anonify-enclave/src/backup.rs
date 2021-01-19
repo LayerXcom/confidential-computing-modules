@@ -1,6 +1,6 @@
 #![cfg(feature = "backup-enable")]
 
-use anonify_io_types::*;
+use anonify_ecall_types::*;
 use anyhow::Result;
 use frame_common::{
     crypto::{BackupPathSecret, RecoverAllRequest},

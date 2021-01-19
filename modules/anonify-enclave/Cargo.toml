@@ -13,7 +13,7 @@ frame-treekem = { path = "../../frame/treekem", default-features = false, featur
 frame-common = { path = "../../frame/common", default-features = false, features = ["sgx"] }
 frame-mra-tls = { path = "../../frame/mra-tls" }
 remote-attestation = { path = "../../frame/remote-attestation" }
-anonify-io-types = { path = "../anonify-io-types", default-features = false, features = ["sgx"] }
+anonify-ecall-types = { path = "../anonify-ecall-types", default-features = false, features = ["sgx"] }
 test-utils = { path = "../../tests/utils" }
 serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx" }
 serde = { git = "https://github.com/mesalock-linux/serde-sgx.git" } # Don't specify version due to serde_json dependency

@@ -1,4 +1,4 @@
-use anonify_io_types::*;
+use anonify_ecall_types::*;
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
 #[cfg(feature = "backup-enable")]

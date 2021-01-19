@@ -1,4 +1,4 @@
-use anonify_io_types::*;
+use anonify_ecall_types::*;
 use frame_host::engine::*;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;

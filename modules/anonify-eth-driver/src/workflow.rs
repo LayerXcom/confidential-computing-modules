@@ -1,5 +1,5 @@
 use crate::utils::CommandInfo;
-use anonify_io_types::*;
+use anonify_ecall_types::*;
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
     traits::*,

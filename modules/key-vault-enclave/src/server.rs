@@ -1,5 +1,5 @@
 use crate::handlers::KeyVaultHandler;
-use anonify_io_types::*;
+use anonify_ecall_types::*;
 use frame_common::state_types::StateType;
 use frame_config::{ANONIFY_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
 use frame_enclave::EnclaveEngine;
