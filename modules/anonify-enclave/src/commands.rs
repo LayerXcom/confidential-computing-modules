@@ -1,5 +1,5 @@
 use crate::error::Result;
-use anonify_io_types::*;
+use anonify_ecall_types::*;
 use anyhow::anyhow;
 use codec::{Decode, Encode};
 use frame_common::{

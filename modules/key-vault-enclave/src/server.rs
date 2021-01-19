@@ -1,11 +1,11 @@
 use crate::handlers::KeyVaultHandler;
-use anonify_io_types::*;
 use frame_common::state_types::StateType;
 use frame_config::{ANONIFY_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Server, ServerConfig};
 use frame_runtime::traits::*;
-use std::{env, string::ToString, thread};
+use key_vault_ecall_types::*;
+use std::{env, thread};
 
 /// A server starter
 #[derive(Debug, Clone)]

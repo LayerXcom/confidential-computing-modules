@@ -1,5 +1,5 @@
 use crate::{error::Result, eth::connection::Web3Contract};
-use anonify_io_types::*;
+use anonify_ecall_types::*;
 use anyhow::anyhow;
 use ethabi::Contract as ContractABI;
 use frame_common::traits::*;

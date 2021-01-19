@@ -1,4 +1,4 @@
-use anonify_io_types::*;
+use anonify_ecall_types::*;
 use frame_common::{crypto::AccountId, state_types::StateType, AccessPolicy};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;

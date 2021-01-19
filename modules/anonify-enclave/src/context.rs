@@ -2,7 +2,7 @@ use crate::{
     error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
     notify::Notifier,
 };
-use anonify_io_types::*;
+use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{
     crypto::{
