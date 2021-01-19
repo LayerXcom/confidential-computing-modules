@@ -65,12 +65,8 @@ async fn test_multiple_messages() {
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/init_state",
-                web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/transfer",
-                web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/state",
+                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/balance_of",
@@ -109,7 +105,7 @@ async fn test_multiple_messages() {
 
     let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
-        .uri("/api/v1/init_state")
+        .uri("/api/v1/state")
         .set_json(&init_100_req)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -128,7 +124,7 @@ async fn test_multiple_messages() {
     // Sending five messages before receiving any messages
     for _ in 0..5 {
         let req = test::TestRequest::post()
-            .uri("/api/v1/transfer")
+            .uri("/api/v1/state")
             .set_json(&transfer_10_req)
             .to_request();
         let resp = test::call_service(&mut app, req).await;
@@ -170,12 +166,8 @@ async fn test_skip_invalid_event() {
                 web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/init_state",
-                web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/transfer",
-                web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/state",
+                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/balance_of",
@@ -211,7 +203,7 @@ async fn test_skip_invalid_event() {
 
     let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
-        .uri("/api/v1/init_state")
+        .uri("/api/v1/state")
         .set_json(&init_100_req)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -228,7 +220,7 @@ async fn test_skip_invalid_event() {
 
     let transfer_110_req = transfer_110_req(&enc_key);
     let req = test::TestRequest::post()
-        .uri("/api/v1/transfer")
+        .uri("/api/v1/state")
         .set_json(&transfer_110_req)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -245,7 +237,7 @@ async fn test_skip_invalid_event() {
 
     let transfer_10_req = transfer_10_req(&enc_key);
     let req = test::TestRequest::post()
-        .uri("/api/v1/transfer")
+        .uri("/api/v1/state")
         .set_json(&transfer_10_req)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -287,12 +279,8 @@ async fn test_node_recovery() {
                 web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/init_state",
-                web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/transfer",
-                web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/state",
+                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/balance_of",
@@ -329,8 +317,8 @@ async fn test_node_recovery() {
                 web::get().to(handle_set_contract_addr::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/transfer",
-                web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/state",
+                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/encrypting_key",
@@ -366,7 +354,7 @@ async fn test_node_recovery() {
 
     let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
-        .uri("/api/v1/init_state")
+        .uri("/api/v1/state")
         .set_json(&init_100_req)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -383,7 +371,7 @@ async fn test_node_recovery() {
 
     let transfer_10_req_ = transfer_10_req(&enc_key);
     let req = test::TestRequest::post()
-        .uri("/api/v1/transfer")
+        .uri("/api/v1/state")
         .set_json(&transfer_10_req_)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -440,7 +428,7 @@ async fn test_node_recovery() {
 
     let transfer_10_req = transfer_10_req(&enc_key);
     let req = test::TestRequest::post()
-        .uri("/api/v1/transfer")
+        .uri("/api/v1/state")
         .set_json(&transfer_10_req)
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
@@ -499,12 +487,8 @@ async fn test_join_group_then_handshake() {
                 web::post().to(handle_join_group::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/init_state",
-                web::post().to(handle_init_state::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/transfer",
-                web::post().to(handle_transfer::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/state",
+                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/balance_of",
@@ -583,7 +567,7 @@ async fn test_join_group_then_handshake() {
 
     let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
-        .uri("/api/v1/init_state")
+        .uri("/api/v1/state")
         .set_json(&init_100_req)
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
@@ -607,7 +591,7 @@ async fn test_join_group_then_handshake() {
 
     let transfer_10_req = transfer_10_req(&enc_key);
     let req = test::TestRequest::post()
-        .uri("/api/v1/transfer")
+        .uri("/api/v1/state")
         .set_json(&transfer_10_req)
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
@@ -679,13 +663,14 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
 }
 
 // to me
-fn init_100_req(enc_key: &DhPubKey) -> erc20_api::init_state::post::Request {
+fn init_100_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
     let init_100 = construct {
         total_supply: U64::from_raw(100),
     };
     let enc_cmd = EciesCiphertext::encrypt(&enc_key, init_100.encode()).unwrap();
 
-    erc20_api::init_state::post::Request {
+    erc20_api::state::post::Request {
+        function: "init_state".to_string(),
         sig: [
             236, 103, 17, 252, 166, 199, 9, 46, 200, 107, 188, 0, 37, 111, 83, 105, 175, 81, 231,
             14, 81, 100, 221, 89, 102, 172, 30, 96, 15, 128, 117, 146, 181, 221, 149, 206, 163,
@@ -700,12 +685,12 @@ fn init_100_req(enc_key: &DhPubKey) -> erc20_api::init_state::post::Request {
             244, 158, 183, 202, 237, 236, 27, 67, 39, 95, 178, 136, 235, 162, 188, 106, 52, 56, 6,
             245, 3, 101, 33, 155, 58, 175, 168, 63, 73, 125, 205, 225,
         ],
-        encrypted_total_supply: enc_cmd,
+        encrypted_command: enc_cmd,
     }
 }
 
 // from me to other
-fn transfer_10_req(enc_key: &DhPubKey) -> erc20_api::transfer::post::Request {
+fn transfer_10_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
     let transfer_10 = transfer {
         amount: U64::from_raw(10),
         recipient: AccountId([
@@ -715,7 +700,8 @@ fn transfer_10_req(enc_key: &DhPubKey) -> erc20_api::transfer::post::Request {
     };
     let enc_cmd = EciesCiphertext::encrypt(&enc_key, transfer_10.encode()).unwrap();
 
-    erc20_api::transfer::post::Request {
+    erc20_api::state::post::Request {
+        function: "transfer".to_string(),
         sig: [
             227, 77, 52, 167, 149, 64, 24, 23, 103, 227, 13, 120, 90, 186, 1, 62, 110, 60, 186,
             247, 143, 247, 19, 71, 85, 191, 224, 5, 38, 219, 96, 44, 196, 154, 181, 50, 99, 58, 20,
@@ -730,12 +716,12 @@ fn transfer_10_req(enc_key: &DhPubKey) -> erc20_api::transfer::post::Request {
             157, 61, 16, 189, 40, 124, 88, 101, 19, 36, 155, 229, 245, 123, 189, 124, 222, 114,
             215, 186, 25, 30, 135, 114, 237, 169, 138, 122, 81, 61, 43, 183,
         ],
-        encrypted_transfer_cmd: enc_cmd,
+        encrypted_command: enc_cmd,
     }
 }
 
 // from me to other
-fn transfer_110_req(enc_key: &DhPubKey) -> erc20_api::transfer::post::Request {
+fn transfer_110_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
     let transfer_110 = transfer {
         amount: U64::from_raw(110),
         recipient: AccountId([
@@ -745,7 +731,8 @@ fn transfer_110_req(enc_key: &DhPubKey) -> erc20_api::transfer::post::Request {
     };
     let enc_cmd = EciesCiphertext::encrypt(&enc_key, transfer_110.encode()).unwrap();
 
-    erc20_api::transfer::post::Request {
+    erc20_api::state::post::Request {
+        function: "transfer".to_string(),
         sig: [
             227, 77, 52, 167, 149, 64, 24, 23, 103, 227, 13, 120, 90, 186, 1, 62, 110, 60, 186,
             247, 143, 247, 19, 71, 85, 191, 224, 5, 38, 219, 96, 44, 196, 154, 181, 50, 99, 58, 20,
@@ -760,7 +747,7 @@ fn transfer_110_req(enc_key: &DhPubKey) -> erc20_api::transfer::post::Request {
             157, 61, 16, 189, 40, 124, 88, 101, 19, 36, 155, 229, 245, 123, 189, 124, 222, 114,
             215, 186, 25, 30, 135, 114, 237, 169, 138, 122, 81, 61, 43, 183,
         ],
-        encrypted_transfer_cmd: enc_cmd,
+        encrypted_command: enc_cmd,
     }
 }
 
