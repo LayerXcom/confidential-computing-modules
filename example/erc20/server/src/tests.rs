@@ -670,7 +670,7 @@ fn init_100_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
     let enc_cmd = EciesCiphertext::encrypt(&enc_key, init_100.encode()).unwrap();
 
     erc20_api::state::post::Request {
-        function: "init_state".to_string(),
+        function: "construct".to_string(),
         sig: [
             236, 103, 17, 252, 166, 199, 9, 46, 200, 107, 188, 0, 37, 111, 83, 105, 175, 81, 231,
             14, 81, 100, 221, 89, 102, 172, 30, 96, 15, 128, 117, 146, 181, 221, 149, 206, 163,

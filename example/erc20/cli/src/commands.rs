@@ -88,7 +88,7 @@ pub(crate) fn init_state<R: Rng>(
         .map_err(|e| anyhow!("{:?}", e))?;
 
     let req =
-        erc20_api::state::post::Request::new("init_state", &keypair, encrypted_total_supply, rng);
+        erc20_api::state::post::Request::new("construct", &keypair, encrypted_total_supply, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&req)
