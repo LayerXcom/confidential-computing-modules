@@ -1,4 +1,4 @@
-use anonify_ecall_types::*;
+use key_vault_ecall_types::*;
 use frame_host::engine::*;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;

@@ -14,7 +14,7 @@ frame-config = { path = "../../frame/config", default-features = false, features
 frame-common = { path = "../../frame/common", default-features = false, features = ["sgx"] }
 frame-runtime = { path = "../../frame/runtime", default-features = false, features = ["sgx"] }
 frame-treekem = { path = "../../frame/treekem", default-features = false, features = ["sgx"] }
-anonify-ecall-types = { path = "../anonify-ecall-types", default-features = false, features = ["sgx"] }
+key-vault-ecall-types = { path = "../key-vault-ecall-types", default-features = false, features = ["sgx"] }
 anyhow = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
 rustls = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rustls", features = ["dangerous_configuration"] }
 serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx" }

@@ -2492,10 +2492,17 @@ name = "key-vault-commands"
 version = "0.1.0"
 
 [[package]]
+name = "key-vault-ecall-types"
+version = "0.1.0"
+dependencies = [
+ "frame-common",
+ "parity-scale-codec",
+]
+
+[[package]]
 name = "key-vault-enclave"
 version = "0.1.0"
 dependencies = [
- "anonify-ecall-types",
  "anyhow 1.0.28",
  "frame-common",
  "frame-config",
@@ -2504,6 +2511,7 @@ dependencies = [
  "frame-runtime",
  "frame-treekem",
  "hex",
+ "key-vault-ecall-types",
  "rustls 0.16.0",
  "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
  "serde_json 1.0.51",
@@ -2516,9 +2524,9 @@ dependencies = [
 name = "key-vault-host"
 version = "0.1.0"
 dependencies = [
- "anonify-ecall-types",
  "anyhow 1.0.34",
  "frame-host",
+ "key-vault-ecall-types",
  "parking_lot 0.10.2",
  "rustls 0.19.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sgx_types 1.1.3",

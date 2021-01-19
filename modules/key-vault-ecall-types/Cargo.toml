@@ -1,0 +1,18 @@
+[package]
+name = "key-vault-ecall-types"
+version = "0.1.0"
+authors = ["osuketh <dish230@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+frame-common = { path = "../../frame/common", default-features = false }
+codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
+
+[features]
+default = ["std"]
+std = [
+    "frame-common/std",
+]
+sgx = [
+    "frame-common/sgx",
+]
