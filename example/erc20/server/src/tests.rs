@@ -4,11 +4,10 @@ use anonify_eth_driver::eth::*;
 use codec::{Decode, Encode};
 use erc20_state_transition::{construct, transfer};
 use ethabi::Contract as ContractABI;
-use frame_common::crypto::{AccountId, ClientCiphertext};
+use frame_common::crypto::{AccountId, ClientCiphertext, SodiumPublicKey, SodiumSecretKey};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use integration_tests::set_env_vars;
-use sodiumoxide::crypto::box_::{self, PublicKey as SodiumPublicKey};
 use std::{env, fs::File, io::BufReader, path::Path, str::FromStr, sync::Arc, time};
 use web3::{
     contract::{Contract, Options},
@@ -684,7 +683,7 @@ fn init_100_req(enc_key: &SodiumPublicKey) -> erc20_api::init_state::post::Reque
     let init_100 = construct {
         total_supply: U64::from_raw(100),
     };
-    let (_, client_priv_key) = box_::gen_keypair();
+    let client_priv_key = SodiumSecretKey::new();
     let enc_cmd = ClientCiphertext::encrypt(enc_key, &client_priv_key, init_100.encode())?;
 
     erc20_api::init_state::post::Request {
@@ -715,7 +714,7 @@ fn transfer_10_req(enc_key: &SodiumPublicKey) -> erc20_api::transfer::post::Requ
             118,
         ]),
     };
-    let (_, client_priv_key) = box_::gen_keypair();
+    let client_priv_key = SodiumSecretKey::new();
     let enc_cmd = ClientCiphertext::encrypt(enc_key, &client_priv_key, transfer_10.encode())?;
 
     erc20_api::transfer::post::Request {
@@ -746,7 +745,7 @@ fn transfer_110_req(enc_key: &SodiumPublicKey) -> erc20_api::transfer::post::Req
             118,
         ]),
     };
-    let (_, client_priv_key) = box_::gen_keypair();
+    let client_priv_key = SodiumSecretKey::new();
     let enc_cmd = ClientCiphertext::encrypt(enc_key, &client_priv_key, transfer_110.encode())?;
 
     erc20_api::transfer::post::Request {

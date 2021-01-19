@@ -8,7 +8,7 @@ use anyhow::anyhow;
 use frame_common::{
     crypto::{
         AccountId, BackupPathSecret, ClientCiphertext, KeyVaultCmd, KeyVaultRequest,
-        RecoverAllRequest, RecoveredPathSecret,
+        RecoverAllRequest, RecoveredPathSecret, SodiumPublicKey,
     },
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
@@ -21,7 +21,6 @@ use frame_treekem::{
     init_path_secret_kvs,
 };
 use remote_attestation::{EncodedQuote, QuoteTarget};
-use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 use std::{
     env,
     marker::PhantomData,

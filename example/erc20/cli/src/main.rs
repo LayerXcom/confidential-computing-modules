@@ -3,9 +3,8 @@ extern crate clap;
 
 use crate::config::*;
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
-use frame_common::crypto::AccountId;
+use frame_common::crypto::{AccountId, SodiumPublicKey};
 use rand::{rngs::OsRng, Rng};
-use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 use std::{env, path::PathBuf};
 use term::Term;
 

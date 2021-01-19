@@ -3,7 +3,7 @@
 use crate::error::Result;
 use anonify_io_types::*;
 use frame_common::{
-    crypto::{rand_assign, ClientCiphertext},
+    crypto::{rand_assign, ClientCiphertext, SodiumPublicKey, SodiumSecretKey, SODIUM_PUBLIC_KEY_SIZE},
     state_types::StateType,
     traits::Keccak256,
 };
@@ -13,11 +13,10 @@ use secp256k1::{
     self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
 };
 use sgx_types::sgx_report_data_t;
-use sodiumoxide::crypto::box_::{self, PublicKey as SodiumPublicKey, SecretKey as SodiumSecretKey};
 use std::prelude::v1::Vec;
 
 const HASHED_PUBKEY_SIZE: usize = 20;
-const ENCRYPTING_KEY_SIZE: usize = box_::PUBLICKEYBYTES;
+const ENCRYPTING_KEY_SIZE: usize = SODIUM_PUBLIC_KEY_SIZE;
 const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCRYPTING_KEY_SIZE;
 const REPORT_DATA_SIZE: usize = 64;
 
@@ -61,7 +60,7 @@ impl EnclaveIdentityKey {
             }
         };
 
-        let (_, decrypting_privkey) = box_::gen_keypair();
+        let decrypting_privkey= SodiumSecretKey::new();
 
         Ok(EnclaveIdentityKey {
             signing_privkey,
@@ -116,7 +115,7 @@ impl EnclaveIdentityKey {
     }
 
     fn encrypting_key_into_vec(&self) -> Vec<u8> {
-        let res = self.encrypting_key().0.to_vec();
+        let res = self.encrypting_key().as_bytes().to_vec();
         assert_eq!(res.len(), ENCRYPTING_KEY_SIZE);
         res
     }

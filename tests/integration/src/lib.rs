@@ -5,14 +5,16 @@ use codec::{Decode, Encode};
 use erc20_state_transition::{approve, burn, construct, mint, transfer, transfer_from, CallName};
 use ethabi::Contract as ContractABI;
 use frame_common::{
-    crypto::{AccountId, ClientCiphertext, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
+    crypto::{
+        AccountId, ClientCiphertext, Ed25519ChallengeResponse, SodiumPublicKey, SodiumSecretKey,
+        COMMON_ACCESS_POLICY,
+    },
     traits::*,
 };
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
 use sgx_types::*;
-use sodiumoxide::crypto::box_::{self, PublicKey as SodiumPublicKey};
-use std::{collections::BTreeMap, env, fs::File, io::BufReader, str::FromStr};
+use std::{collections::BTreeMap, convert::TryFrom, env, fs::File, io::BufReader, str::FromStr};
 use web3::{
     contract::{Contract, Options},
     transports::Http,
@@ -43,7 +45,7 @@ pub async fn get_encrypting_key(
     let query_encrypting_key: Vec<u8> = Contract::new(web3_conn, address, abi)
         .query(
             "getEncryptingKey",
-            encrypting_key.0.to_vec(),
+            encrypting_key.as_bytes().to_vec(),
             None,
             Options::default(),
             None,
@@ -53,7 +55,7 @@ pub async fn get_encrypting_key(
 
     assert_eq!(
         encrypting_key,
-        SodiumPublicKey::from_slice(&mut &query_encrypting_key[..]).unwrap()
+        SodiumPublicKey::try_from(&query_encrypting_key[..]).unwrap()
     );
     encrypting_key
 }
@@ -64,7 +66,7 @@ async fn test_integration_eth_construct() {
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let (_, my_encrypting_privkey) = box_::gen_keypair();
+    let my_encrypting_privkey = SodiumSecretKey::new();
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -140,8 +142,8 @@ async fn test_auto_notification() {
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let (_, my_encrypting_privkey) = box_::gen_keypair();
-    let (_, other_encrypting_privkey) = box_::gen_keypair();
+    let my_encrypting_privkey = SodiumSecretKey::new();
+    let other_encrypting_privkey = SodiumSecretKey::new();
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -240,8 +242,8 @@ async fn test_integration_eth_transfer() {
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let (_, my_encrypting_privkey) = box_::gen_keypair();
-    let (_, other_encrypting_privkey) = box_::gen_keypair();
+    let my_encrypting_privkey = SodiumSecretKey::new();
+    let other_encrypting_privkey = SodiumSecretKey::new();
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -353,8 +355,8 @@ async fn test_key_rotation() {
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let (_, my_encrypting_privkey) = box_::gen_keypair();
-    let (_, other_encrypting_privkey) = box_::gen_keypair();
+    let my_encrypting_privkey = SodiumSecretKey::new();
+    let other_encrypting_privkey = SodiumSecretKey::new();
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -438,8 +440,8 @@ async fn test_integration_eth_approve() {
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let (_, my_encrypting_privkey) = box_::gen_keypair();
-    let (_, other_encrypting_privkey) = box_::gen_keypair();
+    let my_encrypting_privkey = SodiumSecretKey::new();
+    let other_encrypting_privkey = SodiumSecretKey::new();
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -547,8 +549,8 @@ async fn test_integration_eth_transfer_from() {
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let (_, my_encrypting_privkey) = box_::gen_keypair();
-    let (_, other_encrypting_privkey) = box_::gen_keypair();
+    let my_encrypting_privkey = SodiumSecretKey::new();
+    let other_encrypting_privkey = SodiumSecretKey::new();
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -750,8 +752,8 @@ async fn test_integration_eth_mint() {
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let (_, my_encrypting_privkey) = box_::gen_keypair();
-    let (_, other_encrypting_privkey) = box_::gen_keypair();
+    let my_encrypting_privkey = SodiumSecretKey::new();
+    let other_encrypting_privkey = SodiumSecretKey::new();
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -848,8 +850,8 @@ async fn test_integration_eth_burn() {
     let eid = enclave.geteid();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let (_, my_encrypting_privkey) = box_::gen_keypair();
-    let (_, other_encrypting_privkey) = box_::gen_keypair();
+    let my_encrypting_privkey = SodiumSecretKey::new();
+    let other_encrypting_privkey = SodiumSecretKey::new();
 
     let gas = 5_000_000;
     let cache = EventCache::default();

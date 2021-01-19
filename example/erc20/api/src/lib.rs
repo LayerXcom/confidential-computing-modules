@@ -2,7 +2,7 @@ use ed25519_dalek::{
     Keypair, PublicKey, Signature, SignatureError, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH,
 };
 use frame_common::{
-    crypto::{AccountId, ClientCiphertext, Ed25519ChallengeResponse},
+    crypto::{AccountId, ClientCiphertext, Ed25519ChallengeResponse, SodiumPublicKey},
     traits::State,
 };
 use rand::Rng;
@@ -10,7 +10,6 @@ use serde::{Deserialize, Serialize};
 use serde_big_array::big_array;
 use std::fmt;
 use web3::types::H256;
-use sodiumoxide::crypto::box_::PublicKey as SodiumPublicKey;
 
 // ----------------------
 //  GET and POST types

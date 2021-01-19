@@ -6,7 +6,6 @@ use frame_common::{
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
-use sodiumoxide::crypto::box_;
 
 pub mod input {
     use super::*;
@@ -153,6 +152,7 @@ pub mod input {
 
 pub mod output {
     use super::*;
+    use frame_common::crypto::SodiumPublicKey;
 
     #[derive(Debug, Clone)]
     pub struct Command {
@@ -267,49 +267,19 @@ pub mod output {
         }
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct ReturnEncryptingKey {
-        encrypting_key: box_::PublicKey,
-    }
-
-    impl Default for ReturnEncryptingKey {
-        fn default() -> Self {
-            let secret_key = box_::SecretKey::from_slice(&[0u8; box_::SECRETKEYBYTES])
-                .expect("box_::SecretKey must be generated from a slice of zeros");
-            ReturnEncryptingKey {
-                encrypting_key: secret_key.public_key(),
-            }
-        }
-    }
-
-    impl Encode for ReturnEncryptingKey {
-        fn encode(&self) -> Vec<u8> {
-            let mut acc = vec![];
-            acc.extend_from_slice(&self.encrypting_key.0);
-
-            acc
-        }
-    }
-
-    impl Decode for ReturnEncryptingKey {
-        fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
-            let mut encrypting_key_buf = [0u8; box_::PUBLICKEYBYTES];
-            value.read(&mut encrypting_key_buf)?;
-            let encrypting_key = box_::PublicKey::from_slice(&encrypting_key_buf)
-                .ok_or(codec::Error::from("Failed to decode encrypting_key"))?;
-
-            Ok(ReturnEncryptingKey { encrypting_key })
-        }
+        encrypting_key: SodiumPublicKey,
     }
 
     impl EcallOutput for ReturnEncryptingKey {}
 
     impl ReturnEncryptingKey {
-        pub fn new(encrypting_key: box_::PublicKey) -> Self {
+        pub fn new(encrypting_key: SodiumPublicKey) -> Self {
             ReturnEncryptingKey { encrypting_key }
         }
 
-        pub fn encrypting_key(self) -> box_::PublicKey {
+        pub fn encrypting_key(self) -> SodiumPublicKey {
             self.encrypting_key
         }
     }

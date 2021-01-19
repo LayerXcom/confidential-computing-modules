@@ -4,16 +4,14 @@ use crate::{
     term::Term,
 };
 use anonify_wallet::{DirOperations, KeyFile, KeystoreDirectory, WalletDirectory};
-use anyhow::anyhow;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use codec::Encode;
 use ed25519_dalek::Keypair;
 use erc20_state_transition::{approve, burn, construct, mint, transfer, transfer_from};
-use frame_common::crypto::{AccountId, ClientCiphertext};
+use frame_common::crypto::{AccountId, ClientCiphertext, SodiumPublicKey, SodiumSecretKey};
 use frame_runtime::primitives::U64;
 use rand::Rng;
 use reqwest::Client;
-use sodiumoxide::crypto::box_::{self, PublicKey as SodiumPublicKey};
 use std::path::PathBuf;
 
 pub(crate) fn deploy(anonify_url: String) -> Result<()> {
@@ -85,7 +83,7 @@ pub(crate) fn init_state<R: Rng>(
         total_supply: U64::from_raw(total_supply),
     };
 
-    let (_, client_priv_key) = box_::gen_keypair();
+    let client_priv_key = SodiumSecretKey::new();
     let encrypted_total_supply =
         ClientCiphertext::encrypt(encrypting_key, &client_priv_key, init_state.encode())?;
 
@@ -117,7 +115,7 @@ pub(crate) fn transfer<R: Rng>(
         recipient,
     };
 
-    let (_, client_priv_key) = box_::gen_keypair();
+    let client_priv_key = SodiumSecretKey::new();
     let encrypted_transfer_cmd =
         ClientCiphertext::encrypt(encrypting_key, &client_priv_key, transfer_cmd.encode())?;
 
@@ -149,7 +147,7 @@ pub(crate) fn approve<R: Rng>(
         spender,
     };
 
-    let (_, client_priv_key) = box_::gen_keypair();
+    let client_priv_key = SodiumSecretKey::new();
     let encrypted_approve_cmd =
         ClientCiphertext::encrypt(encrypting_key, &client_priv_key, approve_cmd.encode())?;
 
@@ -183,7 +181,7 @@ pub(crate) fn transfer_from<R: Rng>(
         recipient,
     };
 
-    let (_, client_priv_key) = box_::gen_keypair();
+    let client_priv_key = SodiumSecretKey::new();
     let encrypted_transfer_from_cmd =
         ClientCiphertext::encrypt(encrypting_key, &client_priv_key, transfer_from_cmd.encode())?;
 
@@ -216,7 +214,7 @@ pub(crate) fn mint<R: Rng>(
         recipient,
     };
 
-    let (_, client_priv_key) = box_::gen_keypair();
+    let client_priv_key = SodiumSecretKey::new();
     let encrypted_mint_cmd =
         ClientCiphertext::encrypt(encrypting_key, &client_priv_key, mint_cmd.encode())?;
 
@@ -246,7 +244,7 @@ pub(crate) fn burn<R: Rng>(
         amount: U64::from_raw(amount),
     };
 
-    let (_, client_priv_key) = box_::gen_keypair();
+    let client_priv_key = SodiumSecretKey::new();
     let encrypted_burn_cmd =
         ClientCiphertext::encrypt(encrypting_key, &client_priv_key, burn_cmd.encode())?;
 

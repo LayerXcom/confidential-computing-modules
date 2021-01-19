@@ -28,7 +28,6 @@ integration-tests = { path = "../../../tests/integration" }
 frame-runtime = { path = "../../../frame/runtime" }
 ethabi = "12.0.0"
 codec = { package = "parity-scale-codec", version = "1.1" }
-sodiumoxide = { git = "https://github.com/cipepser/sodiumoxide", branch = "sodiumoxide-sgx", version = "0.2.6", default-features = false }
 
 [features]
 default = ["backup-enable"]

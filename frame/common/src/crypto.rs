@@ -530,15 +530,61 @@ impl IntoVec for Ciphertext {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub struct SodiumSecretKey(box_::SecretKey);
+
+impl SodiumSecretKey {
+    pub fn new() -> SodiumSecretKey {
+        let (_, inner) = box_::gen_keypair();
+        SodiumSecretKey(inner)
+    }
+
+    pub fn public_key(&self) -> SodiumPublicKey {
+        SodiumPublicKey::new(self.0.public_key())
+    }
+}
+
+impl TryFrom<Vec<u8>> for SodiumSecretKey {
+    type Error = Error;
+
+    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
+        let inner = box_::SecretKey::from_slice(vec.as_slice())
+            .ok_or_else(|| anyhow!("Failed to convert SodiumSecretKey from vec"))?;
+
+        Ok(SodiumSecretKey(inner))
+    }
+}
+
+impl TryFrom<&[u8]> for SodiumSecretKey {
+    type Error = Error;
+
+    fn try_from(bs: &[u8]) -> Result<Self, Self::Error> {
+        let inner = box_::SecretKey::from_slice(bs)
+            .ok_or_else(|| anyhow!("Failed to convert SodiumSecretKey from slice"))?;
+
+        Ok(SodiumSecretKey(inner))
+    }
+}
+
+impl Default for SodiumSecretKey {
+    fn default() -> Self {
+        let inner = box_::SecretKey::from_slice(&[0u8; box_::SECRETKEYBYTES])
+            .expect("box_::SecretKey must be generated from a slice of zeros");
+        SodiumSecretKey(inner)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct SodiumPublicKey(box_::PublicKey);
+
+pub const SODIUM_PUBLIC_KEY_SIZE: usize = box_::PUBLICKEYBYTES;
 
 impl SodiumPublicKey {
     pub fn new(inner: box_::PublicKey) -> SodiumPublicKey {
         SodiumPublicKey(inner)
     }
 
-    pub fn as_raw(&self) -> box_::PublicKey {
-        self.0
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0.0[..]
     }
 }
 
@@ -547,7 +593,7 @@ impl TryFrom<Vec<u8>> for SodiumPublicKey {
 
     fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
         let inner = box_::PublicKey::from_slice(vec.as_slice())
-            .ok_or_else(|| anyhow!("Failed to convert SodiumPublicKey from slice"))?;
+            .ok_or_else(|| anyhow!("Failed to convert SodiumPublicKey from vec"))?;
 
         Ok(SodiumPublicKey(inner))
     }
@@ -561,6 +607,25 @@ impl TryFrom<&[u8]> for SodiumPublicKey {
             .ok_or_else(|| anyhow!("Failed to convert SodiumPublicKey from slice"))?;
 
         Ok(SodiumPublicKey(inner))
+    }
+}
+
+impl Default for SodiumPublicKey {
+    fn default() -> Self { SodiumSecretKey::default().public_key() }
+}
+
+impl Encode for SodiumPublicKey {
+    fn encode(&self) -> Vec<u8> { self.0.0.to_vec() }
+}
+
+impl Decode for SodiumPublicKey {
+    fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let mut buf = [0u8; box_::PUBLICKEYBYTES];
+        value.read(&mut buf)?;
+        let public_key = SodiumPublicKey::try_from(&buf[..])
+            .map_err(|_| codec::Error::from("Failed to decode SodiumPublicKey"))?;
+
+        Ok(public_key)
     }
 }
 
@@ -614,12 +679,9 @@ impl<'de> de::Deserialize<'de> for SodiumPublicKey {
 pub struct SodiumNonce(box_::Nonce);
 
 impl SodiumNonce {
-    pub fn new(inner: box_::Nonce) -> SodiumNonce {
+    pub fn new() -> SodiumNonce {
+        let inner = box_::gen_nonce();
         SodiumNonce(inner)
-    }
-
-    pub fn as_raw(&self) -> box_::Nonce {
-        self.0
     }
 }
 
@@ -642,6 +704,21 @@ impl TryFrom<&[u8]> for SodiumNonce {
             .ok_or_else(|| anyhow!("Failed to convert SodiumNonce from slice"))?;
 
         Ok(SodiumNonce(inner))
+    }
+}
+
+impl Encode for SodiumNonce {
+    fn encode(&self) -> Vec<u8> { self.0.0.to_vec() }
+}
+
+impl Decode for SodiumNonce {
+    fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
+        let mut buf = [0u8; box_::NONCEBYTES];
+        value.read(&mut buf)?;
+        let nonce = SodiumNonce::try_from(&buf[..])
+            .map_err(|_| codec::Error::from("Failed to decode SodiumNonce"))?;
+
+        Ok(nonce)
     }
 }
 
@@ -693,7 +770,7 @@ impl<'de> de::Deserialize<'de> for SodiumNonce {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize,)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Encode, Decode)]
 #[serde(crate = "crate::serde")]
 pub struct ClientCiphertext {
     nonce: SodiumNonce,
@@ -703,16 +780,14 @@ pub struct ClientCiphertext {
 
 impl ClientCiphertext {
     pub fn encrypt(
-        server_pub_key: &box_::PublicKey,
-        client_priv_key: &box_::SecretKey,
+        server_pub_key: &SodiumPublicKey,
+        client_priv_key: &SodiumSecretKey,
         plaintext: Vec<u8>,
     ) -> Result<Self, Error> {
-        let nonce = box_::gen_nonce();
-        let ciphertext = box_::seal(&plaintext, &nonce, &server_pub_key, &client_priv_key);
+        let nonce = SodiumNonce::new();
         let client_pub_key = client_priv_key.public_key();
+        let ciphertext = box_::seal(&plaintext, &nonce.0, &server_pub_key.0, &client_priv_key.0);
 
-        let nonce = SodiumNonce::new(nonce);
-        let client_pub_key = SodiumPublicKey::new(client_pub_key);
         Ok(ClientCiphertext {
             nonce,
             client_pub_key,
@@ -720,51 +795,14 @@ impl ClientCiphertext {
         })
     }
 
-    pub fn decrypt(self, server_priv_key: &box_::SecretKey) -> Result<Vec<u8>, Error> {
+    pub fn decrypt(self, server_priv_key: &SodiumSecretKey) -> Result<Vec<u8>, Error> {
         box_::open(
             &self.ciphertext,
-            &self.nonce.as_raw(),
-            &self.client_pub_key.as_raw(),
-            &server_priv_key,
+            &self.nonce.0,
+            &self.client_pub_key.0,
+            &server_priv_key.0,
         )
         .map_err(|_| anyhow!("Failed to decrypt"))
-    }
-}
-
-impl Encode for ClientCiphertext {
-    fn encode(&self) -> Vec<u8> {
-        let mut acc = vec![];
-        acc.extend_from_slice(&self.nonce.as_raw().0);
-        acc.extend_from_slice(&self.client_pub_key.as_raw().0);
-        acc.extend_from_slice(&self.ciphertext);
-
-        acc
-    }
-}
-
-impl Decode for ClientCiphertext {
-    fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
-        let mut nonce_buf = [0u8; box_::NONCEBYTES];
-        value.read(&mut nonce_buf)?;
-        let nonce = SodiumNonce::try_from(&nonce_buf[..])
-            .map_err(|_| codec::Error::from("Failed to parse SodiumNonce"))?;
-
-        let mut client_pub_key_buf = [0u8; box_::PUBLICKEYBYTES];
-        value.read(&mut client_pub_key_buf)?;
-        let client_pub_key = SodiumPublicKey::try_from(&client_pub_key_buf[..])
-            .map_err(|_| codec::Error::from("Failed to parse SodiumPublicKey"))?;
-
-        let ciphertext_len = value
-            .remaining_len()?
-            .ok_or(codec::Error::from("ciphertext length should not be zero"))?;
-        let mut ciphertext = vec![0u8; ciphertext_len];
-        value.read(&mut ciphertext)?;
-
-        Ok(ClientCiphertext {
-            nonce,
-            client_pub_key,
-            ciphertext,
-        })
     }
 }
 
