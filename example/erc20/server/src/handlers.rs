@@ -117,16 +117,11 @@ where
         .get_account(server.account_index, &server.password)
         .await
         .map_err(|e| ServerError::from(e))?;
-    let access_right = req
-        .into_access_right()
-        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
 
     let tx_hash = server
         .dispatcher
         .send_command::<CallName, _>(
-            access_right,
             req.encrypted_command.clone(),
-            &req.function,
             sender_address,
             DEFAULT_GAS,
             SEND_COMMAND_CMD,

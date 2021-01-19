@@ -131,29 +131,23 @@ impl HostEngine for RecoverPathSecretAllWorkflow {
 pub mod host_input {
     use super::*;
 
-    pub struct Command<C: CallNameConverter, AP: AccessPolicy> {
-        encrypted_command: EciesCiphertext,
-        call_name: String,
-        access_policy: AP,
+    pub struct Command<C: CallNameConverter> {
+        encrypted_req: EciesCiphertext,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
         phantom: PhantomData<C>,
     }
 
-    impl<C: CallNameConverter, AP: AccessPolicy> Command<C, AP> {
+    impl<C: CallNameConverter> Command<C> {
         pub fn new(
-            encrypted_command: EciesCiphertext,
-            call_name: String,
-            access_policy: AP,
+            encrypted_req: EciesCiphertext,
             signer: Address,
             gas: u64,
             ecall_cmd: u32,
         ) -> Self {
             Command {
-                encrypted_command,
-                call_name,
-                access_policy,
+                encrypted_req,
                 signer,
                 gas,
                 ecall_cmd,
@@ -163,15 +157,13 @@ pub mod host_input {
     }
 
     impl<C: CallNameConverter, AP: AccessPolicy> HostInput for Command<C, AP> {
-        type EcallInput = input::Command<AP>;
+        type EcallInput = EciesCiphertext;
         type HostOutput = host_output::Command;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let command_info = CommandInfo::<C>::new(self.encrypted_command, &self.call_name);
-            let ecall_input = command_info.crate_input(self.access_policy);
             let host_output = host_output::Command::new(self.signer, self.gas);
 
-            Ok((ecall_input, host_output))
+            Ok((self.encrypted_req, host_output))
         }
 
         fn ecall_cmd(&self) -> u32 {

@@ -179,9 +179,7 @@ where
 
     pub async fn send_command<C, AP>(
         &self,
-        access_policy: AP,
-        encrypted_command: EciesCiphertext,
-        call_name: &str,
+        encrypted_req: EciesCiphertext,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
@@ -192,9 +190,7 @@ where
     {
         let inner = self.inner.read();
         let input = host_input::Command::<C, AP>::new(
-            encrypted_command,
-            call_name.to_string(),
-            access_policy,
+            encrypted_req,
             signer,
             gas,
             ecall_cmd,

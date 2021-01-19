@@ -70,11 +70,14 @@ macro_rules! __impl_inner_runtime {
         )*
     ) => {
         $(
-            #[derive(Encode, Decode, Debug, Clone, Default)]
+            #[derive(Serialize, Deserialize, Encode, Decode, Debug, Clone, Default)]
+            #[serde(crate = "crate::serde")]
             #[allow(non_camel_case_types)]
             pub struct $fn_name {
                 $( pub $param_name: $param, )*
             }
+
+            impl RuntimeCommand for $fn_name {}
         )*
 
         #[derive(Debug, Clone)]
@@ -103,9 +106,9 @@ macro_rules! __impl_inner_runtime {
             type R = Runtime<G>;
             type S = StateType;
 
-            fn new(id: u32, cmd: &mut [u8]) -> Result<Self> {
-                match id {
-                    $( $fn_id => Ok(CallKind::$fn_name($fn_name::decode_s(cmd)?)), )*
+            fn new(cmd_name: String, cmd: serde_json::Value) -> Result<Self> {
+                match cmd_name {
+                    $( $fn_name => Ok(CallKind::$fn_name(serde_json::from_value(cmd)?)), )*
                     _ => return Err(anyhow!("Invalid Call ID")),
                 }
             }

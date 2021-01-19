@@ -344,6 +344,7 @@ name = "anonify-ecall-types"
 version = "0.1.0"
 dependencies = [
  "frame-common",
+ "frame-runtime",
  "frame-treekem",
  "hex",
  "libsecp256k1 0.2.2",
@@ -1357,6 +1358,7 @@ dependencies = [
 name = "erc20-cli"
 version = "0.1.0"
 dependencies = [
+ "anonify-ecall-types",
  "anonify-wallet",
  "anyhow 1.0.34",
  "clap",

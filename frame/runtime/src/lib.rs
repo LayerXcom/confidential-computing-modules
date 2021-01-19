@@ -24,3 +24,6 @@ pub mod traits;
 
 #[cfg(feature = "sgx")]
 pub use crate::traits::*;
+
+/// A marker trait for generalizing the command types of the runtime.
+pub trait RuntimeCommand:  {}

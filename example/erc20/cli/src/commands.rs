@@ -3,6 +3,7 @@ use crate::{
     error::Result,
     term::Term,
 };
+use anonify_ecall_types::input;
 use anonify_wallet::{DirOperations, KeyFile, KeystoreDirectory, WalletDirectory};
 use anyhow::anyhow;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
@@ -81,17 +82,17 @@ pub(crate) fn init_state<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair);
     let init_state = construct {
         total_supply: U64::from_raw(total_supply),
     };
-    let encrypted_total_supply = EciesCiphertext::encrypt(&encrypting_key, init_state.encode())
-        .map_err(|e| anyhow!("{:?}", e))?;
+    let req = input::Command::new(access_policy, init_state, "construct");
+    let encrypted_req =
+        EciesCiphertext::encrypt(&encrypting_key, req.encode()).map_err(|e| anyhow!("{:?}", e))?;
 
-    let req =
-        erc20_api::state::post::Request::new("construct", &keypair, encrypted_total_supply, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&req)
+        .json(&erc20_api::state::post::Request::new(encrypted_req))
         .send()?
         .text()?;
 

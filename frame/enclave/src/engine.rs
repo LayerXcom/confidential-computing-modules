@@ -6,6 +6,12 @@ pub trait EnclaveEngine {
     type EI: EcallInput + Decode;
     type EO: EcallOutput + Encode + Default;
 
+    fn decrypt<C>(ciphertext: EciesCiphertext, enclave_context: &C) -> anyhow::Result<Self::EI>
+    where
+    C: ContextOps<S = StateType> + Clone {
+        enclave_context.decrypt
+    }
+
     /// Evaluate policies like authentication and idempotency
     fn eval_policy(_ecall_input: &Self::EI) -> anyhow::Result<()> {
         Ok(())

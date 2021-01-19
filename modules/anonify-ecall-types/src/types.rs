@@ -6,26 +6,36 @@ use frame_common::{
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
+use frame_runtime::RuntimeCommand;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 
 pub mod input {
     use super::*;
 
     #[derive(Encode, Decode, Debug, Clone)]
-    pub struct Command<AP: AccessPolicy> {
+    pub struct Command<AP: AccessPolicy, RC: RuntimeCommand> {
         pub access_policy: AP,
-        pub encrypted_command: EciesCiphertext,
-        pub call_id: u32,
+        pub runtime_command: RC,
+        pub fn_name: String,
     }
 
-    impl<AP: AccessPolicy> EcallInput for Command<AP> {}
+    impl<AP, RC> EcallInput for Command<AP, RC>
+    where
+        AP: AccessPolicy,
+        RC: RuntimeCommand,
+    {
+    }
 
-    impl<AP: AccessPolicy> Command<AP> {
-        pub fn new(access_policy: AP, encrypted_command: EciesCiphertext, call_id: u32) -> Self {
+    impl<AP, RC> Command<AP, RC>
+    where
+        AP: AccessPolicy,
+        RC: RuntimeCommand,
+    {
+        pub fn new(access_policy: AP, runtime_command: RC, fn_name: impl ToString) -> Self {
             Command {
                 access_policy,
-                encrypted_command,
-                call_id,
+                runtime_command,
+                fn_name: fn_name.to_string(),
             }
         }
 

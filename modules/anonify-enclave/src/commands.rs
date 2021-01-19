@@ -22,6 +22,14 @@ impl<AP: AccessPolicy> EnclaveEngine for MsgSender<AP> {
     type EI = input::Command<AP>;
     type EO = output::Command;
 
+    fn decrypt(ciphertext: EciesCiphertext, enclave_context: &C) -> anyhow::Result<Self::EI>
+    where
+        C: ContextOps<S = StateType> + Clone,
+    {
+        let mut buf = enclave_context.decrypt(ciphertext)?;
+        Self::EI::decode(&mut &buf[..]).map_err(|e| anyhow!("{:?}", e))
+    }
+
     fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
         ecall_input.access_policy().verify()
     }
@@ -40,11 +48,7 @@ impl<AP: AccessPolicy> EnclaveEngine for MsgSender<AP> {
         // ratchet sender's app keychain per tx.
         group_key.sender_ratchet(roster_idx)?;
 
-        let account_id = ecall_input.access_policy().into_account_id();
-        let mut command = enclave_context.decrypt(ecall_input.encrypted_command)?;
-
-        let ciphertext = Commands::<R, C>::new(ecall_input.call_id, &mut command, account_id)?
-            .encrypt(group_key, max_mem_size)?;
+        let ciphertext = Commands::<R, C>::new(ecall_input)?.encrypt(group_key, max_mem_size)?;
 
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
@@ -116,8 +120,9 @@ pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps> {
 }
 
 impl<R: RuntimeExecutor<CTX, S = StateType>, CTX: ContextOps> Commands<R, CTX> {
-    pub fn new(call_id: u32, params: &mut [u8], my_account_id: AccountId) -> Result<Self> {
-        let call_kind = R::C::new(call_id, params)?;
+    pub fn new(ecall_input: input::Command) -> Result<Self> {
+        let my_account_id = ecall_input.access_policy().into_account_id();
+        let call_kind = R::C::new(&ecall_input.fn_name, &ecall_input.runtime_command)?;
 
         Ok(Commands {
             my_account_id,

@@ -332,6 +332,15 @@ impl Decode for Ed25519ChallengeResponse {
 
 impl Ed25519ChallengeResponse {
     #[cfg(feature = "std")]
+    pub fn new_from_keypair<R: RngCore + CryptoRng>(keypair: Keypair, rng: &mut R) -> Self {
+        let challenge: [u8; 32] = rng.gen();
+        let sig = keypair.sign(&challenge[..]);
+        assert!(keypair.verify(&challenge, &sig).is_ok());
+
+        Self::new(sig, keypair.public, challenge)
+    }
+
+    #[cfg(feature = "std")]
     fn inner_new_from_rng<R: RngCore + CryptoRng>(rng: &mut R) -> Self {
         let keypair = Keypair::generate(rng);
         let challenge = rand::thread_rng().gen::<[u8; 32]>();
