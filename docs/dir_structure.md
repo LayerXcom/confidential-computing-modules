@@ -40,9 +40,10 @@ frame --> modules --> example の依存関係があります。
 ├── modules:
 │   ├── anonify-enclave: (enclave) anonifyのenclave内ロジックの実装
 │   ├── anonify-eth-driver: (host) Etheream系ブロックチェーンとweb3経由でやりとり
-│   ├── anonify-ecall-types: (enclave/host) enclave<->host間でやりとりする型定義
+│   ├── anonify-ecall-types: (enclave/host) anonifyモジュールのenclave<->host間でやりとりする型定義
 │   ├── key-vault-enclave: (enclave) 鍵バックアップEnclaveのロジック
-│   └── key-vault-host: (host)
+│   ├── key-vault-host: (host)
+│   └── key-vault-ecall-types: (enclave/host) key-vaultモジュールのenclave<->host間でやりとりする型定義
 ├── scripts
 ├── tests: 結合テスト・Enclave内のユニットテストなど
 └── wallet: （デモ・デバグ用）CLIで用いる署名秘密鍵の管理
