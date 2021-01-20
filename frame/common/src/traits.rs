@@ -8,7 +8,7 @@ use ed25519_dalek::PublicKey;
 use tiny_keccak::Keccak;
 
 /// A trait to verify policy to access resources in the enclave
-pub trait AccessPolicy: Encode + Decode + Clone + Debug + DeserializeOwned + Serialize {
+pub trait AccessPolicy: Encode + Decode + Clone + Debug + DeserializeOwned + Serialize + Default {
     fn verify(&self) -> Result<()>;
 
     fn into_account_id(&self) -> AccountId;

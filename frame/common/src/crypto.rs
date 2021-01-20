@@ -255,7 +255,7 @@ impl Sha256 {
 const CHALLENGE_SIZE: usize = 32;
 
 /// No authentication when evaluating an access policy.
-#[derive(Debug, Clone, Encode, Decode, Serialize, Deserialize)]
+#[derive(Debug, Clone, Encode, Decode, Serialize, Deserialize, Default)]
 #[serde(crate = "crate::serde")]
 pub struct NoAuth {
     account_id: AccountId,
@@ -291,6 +291,16 @@ pub struct Ed25519ChallengeResponse {
     sig: [u8; SIGNATURE_LENGTH],
     pubkey: [u8; PUBLIC_KEY_LENGTH],
     challenge: [u8; CHALLENGE_SIZE],
+}
+
+impl Default for Ed25519ChallengeResponse {
+    fn default() -> Self {
+        Self {
+            sig: [0u8; SIGNATURE_LENGTH],
+            pubkey: [0u8; PUBLIC_KEY_LENGTH],
+            challenge: [0u8; CHALLENGE_SIZE],
+        }
+    }
 }
 
 impl AccessPolicy for Ed25519ChallengeResponse {

@@ -87,8 +87,8 @@ pub(crate) fn init_state<R: Rng>(
         total_supply: U64::from_raw(total_supply),
     };
     let req = input::Command::new(access_policy, init_state, "construct");
-    let encrypted_req =
-        EciesCiphertext::encrypt(&encrypting_key, req.encode()).map_err(|e| anyhow!("{:?}", e))?;
+    let encrypted_req = EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(req)?)
+        .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))

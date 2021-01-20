@@ -11,13 +11,12 @@ use frame_common::{
 use frame_enclave::EnclaveEngine;
 use frame_runtime::{traits::*, RuntimeCommand};
 use frame_treekem::EciesCiphertext;
-use std::{marker::PhantomData, vec::Vec};
+use std::{marker::PhantomData, string::ToString, vec::Vec};
 
 /// A message sender that encrypts commands
-#[derive(Debug, Clone)]
-pub struct MsgSender<AP: AccessPolicy, RC> {
-    phantom: PhantomData<AP>,
-    rc: PhantomData<RC>,
+#[derive(Debug, Clone, Default)]
+pub struct MsgSender<AP: AccessPolicy, RC: RuntimeCommand> {
+    ecall_input: input::Command<AP, RC>,
 }
 
 impl<AP, RC> EnclaveEngine for MsgSender<AP, RC>
@@ -25,26 +24,23 @@ where
     AP: AccessPolicy,
     RC: RuntimeCommand,
 {
-    type EI = input::Command<AP, RC>;
+    type EI = EciesCiphertext;
     type EO = output::Command;
 
-    fn decrypt<C>(ciphertext: EciesCiphertext, enclave_context: &C) -> anyhow::Result<Self::EI>
+    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
         let buf = enclave_context.decrypt(ciphertext)?;
-        Self::EI::decode(&mut &buf[..]).map_err(|e| anyhow!("{:?}", e))
+        let ecall_input = input::Command::decode(&mut &buf[..]).map_err(|e| anyhow!("{:?}", e))?;
+        Ok(Self { ecall_input })
     }
 
-    fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
-        ecall_input.access_policy().verify()
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        self.ecall_input.access_policy().verify()
     }
 
-    fn handle<R, C>(
-        ecall_input: Self::EI,
-        enclave_context: &C,
-        max_mem_size: usize,
-    ) -> anyhow::Result<Self::EO>
+    fn handle<R, C>(self, enclave_context: &C, max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
@@ -54,8 +50,9 @@ where
         // ratchet sender's app keychain per tx.
         group_key.sender_ratchet(roster_idx)?;
 
-        let my_account_id = ecall_input.access_policy().into_account_id();
-        let ciphertext = Commands::<R, C, AP, RC>::new(my_account_id, ecall_input)?.encrypt(group_key, max_mem_size)?;
+        let my_account_id = self.ecall_input.access_policy().into_account_id();
+        let ciphertext = Commands::<R, C, AP, RC>::new(my_account_id, self.ecall_input)?
+            .encrypt(group_key, max_mem_size)?;
 
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
@@ -68,25 +65,41 @@ where
 }
 
 /// A message receiver that decrypt commands and make state transition
-#[derive(Encode, Decode, Debug, Clone)]
-pub struct MsgReceiver;
+#[derive(Encode, Decode, Debug, Clone, Default)]
+pub struct MsgReceiver<AP, RC> {
+    ecall_input: input::InsertCiphertext,
+    ap: PhantomData<AP>,
+    rc: PhantomData<RC>,
+}
 
-impl EnclaveEngine for MsgReceiver {
+impl<AP, RC> EnclaveEngine for MsgReceiver<AP, RC>
+where
+    AP: AccessPolicy,
+    RC: RuntimeCommand,
+{
     type EI = input::InsertCiphertext;
     type EO = output::ReturnUpdatedState;
 
-    fn handle<R, C>(
-        ecall_input: Self::EI,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> anyhow::Result<Self::EO>
+    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    where
+        C: ContextOps<S = StateType> + Clone,
+    {
+        // TODO: decrypt
+        Ok(Self {
+            ecall_input: ciphertext,
+            ap: PhantomData,
+            rc: PhantomData,
+        })
+    }
+
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();
-        let roster_idx = ecall_input.ciphertext().roster_idx() as usize;
-        let msg_gen = ecall_input.ciphertext().generation();
+        let roster_idx = self.ecall_input.ciphertext().roster_idx() as usize;
+        let msg_gen = self.ecall_input.ciphertext().generation();
 
         // Since the sender's keychain has already ratcheted,
         // even if an error occurs in the state transition, the receiver's keychain also ratchet.
@@ -101,9 +114,9 @@ impl EnclaveEngine for MsgReceiver {
         group_key.receiver_ratchet(roster_idx)?;
 
         // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
-        let iter_op = Commands::<R, C>::state_transition(
+        let iter_op = Commands::<R, C, AP, RC>::state_transition(
             enclave_context.clone(),
-            ecall_input.ciphertext(),
+            self.ecall_input.ciphertext(),
             group_key,
         )?;
         let mut output = output::ReturnUpdatedState::default();
@@ -135,8 +148,11 @@ where
     AP: AccessPolicy,
     RC: RuntimeCommand,
 {
-    pub fn new(my_account_id: AccountId, ecall_input: input::Command::<AP,RC>) -> Result<Self> {
-        let call_kind = R::C::new(&ecall_input.fn_name, &ecall_input.runtime_command)?;
+    pub fn new(my_account_id: AccountId, ecall_input: input::Command<AP, RC>) -> Result<Self> {
+        let call_kind = R::C::new(
+            ecall_input.fn_name().to_string(),
+            &ecall_input.runtime_command,
+        )?;
 
         Ok(Commands {
             my_account_id,
@@ -169,7 +185,7 @@ where
         ciphertext: &Ciphertext,
         group_key: &mut GK,
     ) -> Result<Option<impl Iterator<Item = UpdatedState<StateType>> + Clone>> {
-        if let Some(commands) = Commands::<R, CTX>::decrypt(ciphertext, group_key)? {
+        if let Some(commands) = Commands::<R, CTX, AP, RC>::decrypt(ciphertext, group_key)? {
             let state_iter = commands.stf_call(ctx)?.into_iter();
 
             return Ok(Some(state_iter));

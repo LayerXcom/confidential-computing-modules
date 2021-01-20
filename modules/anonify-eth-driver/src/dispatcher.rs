@@ -207,9 +207,8 @@ where
         AP: AccessPolicy,
         C: CallNameConverter,
     {
-        let call_id = C::as_id(call_name);
         let eid = self.inner.read().deployer.get_enclave_id();
-        let input = host_input::GetState::new(access_policy, call_id, ecall_cmd);
+        let input = host_input::GetState::new(access_policy, call_name.to_string(), ecall_cmd);
 
         let vec = GetStateWorkflow::exec(input, eid)?
             .ecall_output

@@ -17,7 +17,7 @@ use frame_treekem::{DhPubKey, EciesCiphertext};
 pub mod input {
     use super::*;
 
-    #[derive(Encode, Decode, Debug, Clone, Deserialize, Serialize)]
+    #[derive(Debug, Clone, Deserialize, Serialize, Default, Encode, Decode)]
     #[serde(crate = "crate::serde")]
     pub struct Command<AP: AccessPolicy, RC: RuntimeCommand> {
         #[serde(deserialize_with = "AP::deserialize")]
@@ -50,6 +50,10 @@ pub mod input {
         pub fn access_policy(&self) -> &AP {
             &self.access_policy
         }
+
+        pub fn fn_name(&self) -> &str {
+            str::from_utf8(&self.fn_name).unwrap()
+        }
     }
 
     #[derive(Encode, Decode, Debug, Clone, Default)]
@@ -72,7 +76,7 @@ pub mod input {
 
     impl EcallInput for CallRegisterReport {}
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct InsertCiphertext {
         ciphertext: Ciphertext,
     }
@@ -89,7 +93,7 @@ pub mod input {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct InsertHandshake {
         handshake: ExportHandshake,
     }
@@ -106,7 +110,7 @@ pub mod input {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct GetState<AP: AccessPolicy> {
         access_policy: AP,
         pub fn_name: Vec<u8>, // codec does not support for `String`
@@ -131,7 +135,7 @@ pub mod input {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct RegisterNotification<AP: AccessPolicy> {
         access_policy: AP,
     }

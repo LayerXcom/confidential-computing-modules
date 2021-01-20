@@ -22,9 +22,10 @@ pub mod primitives;
 #[cfg(feature = "sgx")]
 pub mod traits;
 
+use crate::serde::{de::DeserializeOwned, Serialize};
 #[cfg(feature = "sgx")]
 pub use crate::traits::*;
-use crate::serde::{Serialize, de::DeserializeOwned};
+use codec::{Decode, Encode};
 
 /// A marker trait for generalizing the command types of the runtime.
-pub trait RuntimeCommand: Serialize + DeserializeOwned {}
+pub trait RuntimeCommand: Serialize + DeserializeOwned + Default + Encode + Decode {}

@@ -283,32 +283,38 @@ impl AnonifyEnclaveContext {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct GetState<AP: AccessPolicy> {
-    phantom: PhantomData<AP>,
+    ecall_input: input::GetState<AP>,
 }
 
 impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
     type EI = input::GetState<AP>;
     type EO = output::ReturnState;
 
-    fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
-        ecall_input.access_policy().verify()
+    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    where
+        C: ContextOps<S = StateType> + Clone,
+    {
+        // TODO: decrypt
+        Ok(Self {
+            ecall_input: ciphertext,
+        })
     }
 
-    fn handle<R, C>(
-        ecall_input: Self::EI,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> anyhow::Result<Self::EO>
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        self.ecall_input.access_policy().verify()
+    }
+
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let account_id = ecall_input.access_policy().into_account_id();
+        let account_id = self.ecall_input.access_policy().into_account_id();
         let user_state = C::get_state_by_call_id::<_, R, _>(
             enclave_context.clone(),
-            ecall_input.fn_name(),
+            self.ecall_input.fn_name(),
             account_id,
         )?;
 
@@ -317,7 +323,7 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
 }
 
 /// A report registration engine
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ReportRegistration;
 
 impl EnclaveEngine for ReportRegistration {
@@ -325,7 +331,7 @@ impl EnclaveEngine for ReportRegistration {
     type EO = output::ReturnRegisterReport;
 
     fn handle<R, C>(
-        _ecall_input: Self::EI,
+        self,
         enclave_context: &C,
         _max_mem_size: usize,
     ) -> anyhow::Result<Self::EO>
