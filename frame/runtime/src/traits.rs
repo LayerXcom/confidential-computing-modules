@@ -1,10 +1,11 @@
 use crate::local_anyhow::Result;
 use crate::localstd::{
     fmt::Debug,
+    string::String,
     sync::{SgxRwLockReadGuard, SgxRwLockWriteGuard},
     vec::Vec,
-    string::String,
 };
+use crate::RuntimeCommand;
 use codec::{Decode, Encode};
 use frame_common::{
     crypto::{AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest, RecoveredPathSecret},
@@ -30,7 +31,7 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     type R: RuntimeExecutor<G>;
     type S: State;
 
-    fn new(cmd_name: String, cmd: serde_json::Value) -> Result<Self>;
+    fn new(cmd_name: String, cmd: &mut [u8]) -> Result<Self>;
     fn execute(self, runtime: Self::R, my_account_id: AccountId) -> Result<ReturnState<Self::S>>;
 }
 

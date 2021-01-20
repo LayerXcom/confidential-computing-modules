@@ -32,7 +32,7 @@ where
         C: ContextOps<S = StateType> + Clone,
     {
         let buf = enclave_context.decrypt(ciphertext)?;
-        let ecall_input = input::Command::decode(&mut &buf[..]).map_err(|e| anyhow!("{:?}", e))?;
+        let ecall_input = serde_json::from_slice(&buf[..])?;
         Ok(Self { ecall_input })
     }
 
@@ -133,7 +133,7 @@ where
 
 /// Command data which make state update
 #[derive(Debug, Clone, Encode, Decode)]
-pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps, AP, RC> {
+pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps<S = StateType>, AP, RC> {
     my_account_id: AccountId,
     call_kind: R::C,
     phantom: PhantomData<CTX>,
@@ -144,15 +144,13 @@ pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps, AP, RC> {
 impl<R, CTX, AP, RC> Commands<R, CTX, AP, RC>
 where
     R: RuntimeExecutor<CTX>,
-    CTX: ContextOps,
+    CTX: ContextOps<S = StateType>,
     AP: AccessPolicy,
     RC: RuntimeCommand,
 {
     pub fn new(my_account_id: AccountId, ecall_input: input::Command<AP, RC>) -> Result<Self> {
-        let call_kind = R::C::new(
-            ecall_input.fn_name().to_string(),
-            &ecall_input.runtime_command,
-        )?;
+        let mut cmd = ecall_input.runtime_command.encode();
+        let call_kind = R::C::new(ecall_input.fn_name().to_string(), &mut cmd[..])?;
 
         Ok(Commands {
             my_account_id,

@@ -100,7 +100,8 @@ impl StateOps for AnonifyEnclaveContext {
         R: RuntimeExecutor<CTX, S = Self::S>,
         CTX: ContextOps<S = Self::S>,
     {
-        let call_kind = R::C::new(fn_name.to_string(), serde_json::Value::Null)?;
+        let mut empty_params = vec![];
+        let call_kind = R::C::new(fn_name.to_string(), &mut empty_params)?;
         let res = R::new(ctx).execute(call_kind, account_id.into())?;
 
         match res {
@@ -330,11 +331,7 @@ impl EnclaveEngine for ReportRegistration {
     type EI = input::CallRegisterReport;
     type EO = output::ReturnRegisterReport;
 
-    fn handle<R, C>(
-        self,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> anyhow::Result<Self::EO>
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,

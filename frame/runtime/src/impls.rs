@@ -102,13 +102,16 @@ macro_rules! __impl_inner_runtime {
         }
 
         #[cfg(feature = "sgx")]
-        impl<G: ContextOps<S=StateType>> CallKindExecutor<G> for CallKind {
+        impl<G> CallKindExecutor<G> for CallKind
+        where
+            G: ContextOps<S=StateType>,
+        {
             type R = Runtime<G>;
             type S = StateType;
 
-            fn new(cmd_name: String, cmd: serde_json::Value) -> Result<Self> {
+            fn new(cmd_name: String, cmd: &mut [u8]) -> Result<Self> {
                 match cmd_name {
-                    $( $fn_name => Ok(CallKind::$fn_name(serde_json::from_value(cmd)?)), )*
+                    $( $fn_name => Ok(CallKind::$fn_name($fn_name::decode_s(cmd)?)), )*
                     _ => return Err(anyhow!("Invalid Call ID")),
                 }
             }
@@ -132,7 +135,10 @@ macro_rules! __impl_inner_runtime {
         }
 
         #[cfg(feature = "sgx")]
-        impl<G: ContextOps<S=StateType>> RuntimeExecutor<G> for Runtime<G> {
+        impl<G> RuntimeExecutor<G> for Runtime<G>
+        where
+            G: ContextOps<S=StateType>,
+        {
             type C = CallKind;
             type S = StateType;
 
@@ -148,7 +154,10 @@ macro_rules! __impl_inner_runtime {
         }
 
         #[cfg(feature = "sgx")]
-        impl<G: ContextOps<S=StateType>> Runtime<G> {
+        impl<G> Runtime<G>
+        where
+            G: ContextOps<S=StateType>,
+        {
             pub fn get_map<S: State>(
                 &self,
                 key: AccountId,

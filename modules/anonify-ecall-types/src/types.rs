@@ -17,7 +17,7 @@ use frame_treekem::{DhPubKey, EciesCiphertext};
 pub mod input {
     use super::*;
 
-    #[derive(Debug, Clone, Deserialize, Serialize, Default, Encode, Decode)]
+    #[derive(Debug, Clone, Deserialize, Serialize, Default)]
     #[serde(crate = "crate::serde")]
     pub struct Command<AP: AccessPolicy, RC: RuntimeCommand> {
         #[serde(deserialize_with = "AP::deserialize")]
