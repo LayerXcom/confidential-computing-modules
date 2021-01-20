@@ -1,13 +1,14 @@
 use crate::crypto::AccountId;
 use crate::local_anyhow::{anyhow, Result};
 use crate::localstd::{fmt::Debug, mem::size_of, vec::Vec};
+use crate::serde::{de::DeserializeOwned, Serialize};
 use crate::state_types::MemId;
 use codec::{Decode, Encode};
 use ed25519_dalek::PublicKey;
 use tiny_keccak::Keccak;
 
 /// A trait to verify policy to access resources in the enclave
-pub trait AccessPolicy: Encode + Decode + Clone + Debug {
+pub trait AccessPolicy: Encode + Decode + Clone + Debug + DeserializeOwned + Serialize {
     fn verify(&self) -> Result<()>;
 
     fn into_account_id(&self) -> AccountId;

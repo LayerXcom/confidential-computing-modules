@@ -9,24 +9,30 @@ use frame_common::{
     AccessPolicy,
 };
 use frame_enclave::EnclaveEngine;
-use frame_runtime::traits::*;
+use frame_runtime::{traits::*, RuntimeCommand};
+use frame_treekem::EciesCiphertext;
 use std::{marker::PhantomData, vec::Vec};
 
 /// A message sender that encrypts commands
 #[derive(Debug, Clone)]
-pub struct MsgSender<AP: AccessPolicy> {
+pub struct MsgSender<AP: AccessPolicy, RC> {
     phantom: PhantomData<AP>,
+    rc: PhantomData<RC>,
 }
 
-impl<AP: AccessPolicy> EnclaveEngine for MsgSender<AP> {
-    type EI = input::Command<AP>;
+impl<AP, RC> EnclaveEngine for MsgSender<AP, RC>
+where
+    AP: AccessPolicy,
+    RC: RuntimeCommand,
+{
+    type EI = input::Command<AP, RC>;
     type EO = output::Command;
 
-    fn decrypt(ciphertext: EciesCiphertext, enclave_context: &C) -> anyhow::Result<Self::EI>
+    fn decrypt<C>(ciphertext: EciesCiphertext, enclave_context: &C) -> anyhow::Result<Self::EI>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let mut buf = enclave_context.decrypt(ciphertext)?;
+        let buf = enclave_context.decrypt(ciphertext)?;
         Self::EI::decode(&mut &buf[..]).map_err(|e| anyhow!("{:?}", e))
     }
 
@@ -48,13 +54,14 @@ impl<AP: AccessPolicy> EnclaveEngine for MsgSender<AP> {
         // ratchet sender's app keychain per tx.
         group_key.sender_ratchet(roster_idx)?;
 
-        let ciphertext = Commands::<R, C>::new(ecall_input)?.encrypt(group_key, max_mem_size)?;
+        let my_account_id = ecall_input.access_policy().into_account_id();
+        let ciphertext = Commands::<R, C, AP, RC>::new(my_account_id, ecall_input)?.encrypt(group_key, max_mem_size)?;
 
         let msg = Sha256::hash(&ciphertext.encode());
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
         let command_output = output::Command::new(ciphertext, enclave_sig.0, enclave_sig.1);
 
-        enclave_context.set_notification(account_id);
+        enclave_context.set_notification(my_account_id);
 
         Ok(command_output)
     }
@@ -113,21 +120,30 @@ impl EnclaveEngine for MsgReceiver {
 
 /// Command data which make state update
 #[derive(Debug, Clone, Encode, Decode)]
-pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps> {
+pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps, AP, RC> {
     my_account_id: AccountId,
     call_kind: R::C,
     phantom: PhantomData<CTX>,
+    ap: PhantomData<AP>,
+    rc: PhantomData<RC>,
 }
 
-impl<R: RuntimeExecutor<CTX, S = StateType>, CTX: ContextOps> Commands<R, CTX> {
-    pub fn new(ecall_input: input::Command) -> Result<Self> {
-        let my_account_id = ecall_input.access_policy().into_account_id();
+impl<R, CTX, AP, RC> Commands<R, CTX, AP, RC>
+where
+    R: RuntimeExecutor<CTX>,
+    CTX: ContextOps,
+    AP: AccessPolicy,
+    RC: RuntimeCommand,
+{
+    pub fn new(my_account_id: AccountId, ecall_input: input::Command::<AP,RC>) -> Result<Self> {
         let call_kind = R::C::new(&ecall_input.fn_name, &ecall_input.runtime_command)?;
 
         Ok(Commands {
             my_account_id,
             call_kind,
             phantom: PhantomData,
+            ap: PhantomData,
+            rc: PhantomData,
         })
     }
 

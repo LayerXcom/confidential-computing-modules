@@ -12,6 +12,8 @@ sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.g
 codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
 libsecp256k1 = { version = "0.2", default-features = false }
 hex = { version = "0.4", default-features = false }
+serde-std = { package = "serde", version = "1", default-features = false, optional = true }
+serde-sgx = { package = "serde", git = "https://github.com/mesalock-linux/serde-sgx.git", default-features = false, optional = true, features = ["derive"] }
 
 [features]
 default = ["std"]
@@ -19,10 +21,12 @@ std = [
     "frame-common/std",
     "frame-runtime/std",
     "frame-treekem/std",
+    "serde-std",
 ]
 sgx = [
     "frame-common/sgx",
     "frame-runtime/sgx",
     "frame-treekem/sgx",
     "sgx_tstd",
+    "serde-sgx",
 ]

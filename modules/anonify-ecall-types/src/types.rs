@@ -1,4 +1,9 @@
-use crate::localstd::{fmt, vec::Vec, string::{String, ToString}, str};
+use crate::localstd::{
+    fmt, str,
+    string::{String, ToString},
+    vec::Vec,
+};
+use crate::serde::{de::DeserializeOwned, Deserialize, Serialize};
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
@@ -12,9 +17,12 @@ use frame_treekem::{DhPubKey, EciesCiphertext};
 pub mod input {
     use super::*;
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, Deserialize, Serialize)]
+    #[serde(crate = "crate::serde")]
     pub struct Command<AP: AccessPolicy, RC: RuntimeCommand> {
+        #[serde(deserialize_with = "AP::deserialize")]
         pub access_policy: AP,
+        #[serde(deserialize_with = "RC::deserialize")]
         pub runtime_command: RC,
         pub fn_name: Vec<u8>, // codec does not support for `String`
     }

@@ -349,6 +349,8 @@ dependencies = [
  "hex",
  "libsecp256k1 0.2.2",
  "parity-scale-codec",
+ "serde 1.0.117",
+ "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
  "sgx_tstd",
 ]
 
@@ -1351,7 +1353,7 @@ dependencies = [
  "frame-treekem",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.117",
- "serde-big-array",
+ "serde-big-array 0.2.0",
  "web3",
 ]
 
@@ -1600,6 +1602,8 @@ dependencies = [
  "rand_os",
  "serde 1.0.117",
  "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
+ "serde-big-array 0.2.0",
+ "serde-big-array 0.3.0",
  "serde_json 1.0.51",
  "sgx_trts",
  "sgx_tstd",
@@ -1705,7 +1709,7 @@ dependencies = [
  "parity-scale-codec",
  "remote-attestation",
  "serde 1.0.117",
- "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.3)",
+ "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
  "serde_json 1.0.51",
  "sgx_tstd",
 ]
@@ -4083,6 +4087,15 @@ checksum = "883eee5198ea51720eab8be52a36cf6c0164ac90eea0ed95b649d5e35382404e"
 dependencies = [
  "serde 1.0.117",
  "serde_derive 1.0.117",
+]
+
+[[package]]
+name = "serde-big-array"
+version = "0.3.0"
+source = "git+https://github.com/mesalock-linux/serde-big-array-sgx?rev=sgx_1.1.3#94122c5167aee38b39b09a620a60db2c28cf7428"
+dependencies = [
+ "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
+ "serde_derive 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
 ]
 
 [[package]]

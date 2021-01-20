@@ -16,6 +16,10 @@ use once_cell_std as local_once_cell;
 use serde_sgx as serde;
 #[cfg(feature = "std")]
 use serde_std as serde;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
+use serde_big_array_sgx as serde_big_array;
+#[cfg(feature = "std")]
+use serde_big_array_std as serde_big_array;
 #[cfg(feature = "sgx")]
 use sgx_anyhow as local_anyhow;
 
