@@ -23,13 +23,19 @@ pub mod primitives;
 pub mod traits;
 
 use crate::localstd::fmt;
-use crate::serde::{de::DeserializeOwned, Serialize};
+use crate::serde::{de::DeserializeOwned, Serialize, Deserialize};
 #[cfg(feature = "sgx")]
 pub use crate::traits::*;
 use codec::{Decode, Encode};
 
 /// A marker trait for generalizing the command types of the runtime.
 pub trait RuntimeCommand:
-    Serialize + DeserializeOwned + Default + Encode + Decode + Clone + fmt::Debug
+    Serialize + DeserializeOwned + Default + Encode + Decode + Clone + fmt::Debug + Sized
 {
 }
+
+#[derive(Default, Serialize, Deserialize, Encode, Decode, Clone, Debug)]
+#[serde(crate = "crate::serde")]
+pub struct RCDefaultType;
+
+impl RuntimeCommand for RCDefaultType {}

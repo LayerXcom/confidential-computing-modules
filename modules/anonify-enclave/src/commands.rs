@@ -15,8 +15,8 @@ use std::{marker::PhantomData, string::ToString, vec::Vec};
 
 /// A message sender that encrypts commands
 #[derive(Debug, Clone, Default)]
-pub struct MsgSender<AP: AccessPolicy, RC: RuntimeCommand> {
-    ecall_input: input::Command<AP, RC>,
+pub struct MsgSender<AP: AccessPolicy> {
+    ecall_input: input::Command<AP>,
 }
 
 impl<AP, RC> EnclaveEngine for MsgSender<AP, RC>
@@ -143,7 +143,7 @@ pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps<S = StateType>, AP,
 
 impl<R, CTX, AP, RC> Commands<R, CTX, AP, RC>
 where
-    R: RuntimeExecutor<CTX>,
+    R: RuntimeExecutor<CTX, S = StateType>,
     CTX: ContextOps<S = StateType>,
     AP: AccessPolicy,
     RC: RuntimeCommand,

@@ -1,4 +1,5 @@
 use crate::localstd::{
+    boxed::Box,
     fmt, str,
     string::{String, ToString},
     vec::Vec,
@@ -11,35 +12,45 @@ use frame_common::{
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
-use frame_runtime::RuntimeCommand;
+use frame_runtime::{RCDefaultType, RuntimeCommand};
 use frame_treekem::{DhPubKey, EciesCiphertext};
 
 pub mod input {
     use super::*;
 
-    #[derive(Debug, Clone, Deserialize, Serialize, Default)]
+    #[derive(Debug, Clone, Deserialize, Serialize)]
     #[serde(crate = "crate::serde")]
-    pub struct Command<AP: AccessPolicy, RC: RuntimeCommand> {
+    pub struct Command<AP: AccessPolicy> {
         #[serde(deserialize_with = "AP::deserialize")]
         pub access_policy: AP,
-        #[serde(deserialize_with = "RC::deserialize")]
-        pub runtime_command: RC,
+        pub runtime_command: Box<dyn RuntimeCommand>,
         pub fn_name: Vec<u8>, // codec does not support for `String`
     }
 
-    impl<AP, RC> EcallInput for Command<AP, RC>
+    impl<AP> Default for Command<AP>
     where
         AP: AccessPolicy,
-        RC: RuntimeCommand,
     {
+        fn default() -> Self {
+            Self {
+                access_policy: AP::default(),
+                runtime_command: Box::new(RCDefaultType::default()),
+                fn_name: Vec::<u8>::default(),
+            }
+        }
     }
 
-    impl<AP, RC> Command<AP, RC>
+    impl<AP> EcallInput for Command<AP> where AP: AccessPolicy {}
+
+    impl<AP> Command<AP>
     where
         AP: AccessPolicy,
-        RC: RuntimeCommand,
     {
-        pub fn new(access_policy: AP, runtime_command: RC, fn_name: String) -> Self {
+        pub fn new(
+            access_policy: AP,
+            runtime_command: Box<dyn RuntimeCommand>,
+            fn_name: String,
+        ) -> Self {
             Command {
                 access_policy,
                 runtime_command,

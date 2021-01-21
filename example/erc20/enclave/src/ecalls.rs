@@ -9,6 +9,7 @@ use frame_common::{
 };
 use frame_enclave::{register_ecall, EnclaveEngine};
 use std::{ptr, vec::Vec};
+use frame_treekem::EciesCiphertext;
 
 #[cfg(not(feature = "backup-enable"))]
 register_ecall!(

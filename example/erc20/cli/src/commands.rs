@@ -15,6 +15,7 @@ use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use rand::Rng;
 use reqwest::Client;
+use serde_json::json;
 use std::path::PathBuf;
 
 pub(crate) fn deploy(anonify_url: String) -> Result<()> {
@@ -83,9 +84,9 @@ pub(crate) fn init_state<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair);
-    let init_state = construct {
-        total_supply: U64::from_raw(total_supply),
-    };
+    let init_state = json!({
+        "total_supply": U64::from_raw(total_supply),
+    });
     let req = input::Command::new(access_policy, init_state, "construct");
     let encrypted_req = EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(req)?)
         .map_err(|e| anyhow!("{:?}", e))?;
