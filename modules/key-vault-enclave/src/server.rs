@@ -8,7 +8,7 @@ use key_vault_ecall_types::*;
 use std::{env, thread};
 
 /// A server starter
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ServerStarter;
 
 impl EnclaveEngine for ServerStarter {
@@ -40,18 +40,14 @@ impl EnclaveEngine for ServerStarter {
 }
 
 /// A server stopper
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ServerStopper;
 
 impl EnclaveEngine for ServerStopper {
     type EI = input::CallServerStopper;
     type EO = output::Empty;
 
-    fn handle<R, C>(
-        _ecall_input: Self::EI,
-        _enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> anyhow::Result<Self::EO>
+    fn handle<R, C>(self, _enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
