@@ -110,9 +110,9 @@ async fn test_integration_eth_construct() {
     let init_cmd = json!({
         "total_supply": total_supply,
     });
-    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -195,9 +195,9 @@ async fn test_auto_notification() {
     let init_cmd = json!({
         "total_supply": total_supply,
     });
-    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -232,16 +232,11 @@ async fn test_auto_notification() {
         "amount": amount,
         "recipient": recipient,
     });
-    let req = input::Command::new(my_access_policy, transfer_cmd, "transfer");
+    let req = input::Command::new(my_access_policy.clone(), transfer_cmd, "transfer");
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(
-            encrypted_command,
-            deployer_addr,
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
@@ -311,9 +306,9 @@ async fn test_integration_eth_transfer() {
     let init_cmd = json!({
         "total_supply": total_supply,
     });
-    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -353,16 +348,11 @@ async fn test_integration_eth_transfer() {
         "amount": amount,
         "recipient": recipient,
     });
-    let req = input::Command::new(my_access_policy, transfer_cmd, "transfer");
+    let req = input::Command::new(my_access_policy.clone(), transfer_cmd, "transfer");
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            encrypted_command,
-            deployer_addr,
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
@@ -450,11 +440,11 @@ async fn test_key_rotation() {
     let init_cmd = json!({
         "total_supply": total_supply,
     });
-    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
+        .send_command(
             encrypted_command,
             deployer_addr.clone(),
             gas,
@@ -532,9 +522,9 @@ async fn test_integration_eth_approve() {
     let init_cmd = json!({
         "total_supply": total_supply,
     });
-    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -566,17 +556,15 @@ async fn test_integration_eth_approve() {
     // Send a transaction to contract
     let amount = U64::from_raw(30);
     let spender = other_access_policy.into_account_id();
-    let approve_state = approve { amount, spender };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, approve_state.encode()).unwrap();
+    let approve_cmd = json!({
+        "amount": amount,
+        "spender": spender,
+    });
+    let req = input::Command::new(my_access_policy.clone(), approve_cmd, "approve");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
-            encrypted_command,
-            "approve",
-            deployer_addr,
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
@@ -651,9 +639,9 @@ async fn test_integration_eth_transfer_from() {
     let init_cmd = json!({
         "total_supply": total_supply,
     });
-    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -702,13 +690,16 @@ async fn test_integration_eth_transfer_from() {
     // Send a transaction to contract
     let amount = U64::from_raw(30);
     let spender = other_access_policy.into_account_id();
-    let approve_state = approve { amount, spender };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, approve_state.encode()).unwrap();
+    let approve_cmd = json!({
+        "amount": amount,
+        "spender": spender,
+    });
+    let req = input::Command::new(my_access_policy.clone(), approve_cmd, "approve");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "approve",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -759,21 +750,20 @@ async fn test_integration_eth_transfer_from() {
     let amount = U64::from_raw(20);
     let owner = my_access_policy.into_account_id();
     let recipient = third_access_policy.into_account_id();
-    let transfer_from_cmd = transfer_from {
-        owner,
-        recipient,
-        amount,
-    };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_from_cmd.encode()).unwrap();
+    let transfer_from_cmd = json!({
+        "owner": owner,
+        "recipient": recipient,
+        "amount": amount,
+    });
+    let req = input::Command::new(
+        other_access_policy.clone(),
+        transfer_from_cmd,
+        "transfer_from",
+    );
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            other_access_policy.clone(),
-            encrypted_command,
-            "transfer_from",
-            deployer_addr,
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
@@ -861,12 +851,12 @@ async fn test_integration_eth_mint() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
- let init_cmd = json!({
+    let init_cmd = json!({
         "total_supply": total_supply,
     });
-    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -888,17 +878,15 @@ async fn test_integration_eth_mint() {
     // transit state
     let amount = U64::from_raw(50);
     let recipient = other_access_policy.into_account_id();
-    let minting_state = mint { amount, recipient };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, minting_state.encode()).unwrap();
+    let mint_cmd = json!({
+        "amount": amount,
+        "recipient": recipient,
+    });
+    let req = input::Command::new(my_access_policy.clone(), mint_cmd, "mint");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
-            encrypted_command,
-            "mint",
-            deployer_addr,
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
         .unwrap();
 
@@ -972,9 +960,9 @@ async fn test_integration_eth_burn() {
     let init_cmd = json!({
         "total_supply": total_supply,
     });
-    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -1000,9 +988,9 @@ async fn test_integration_eth_burn() {
         "amount": amount,
         "recipient": recipient,
     });
-    let req = input::Command::new(my_access_policy, transfer_cmd, "transfer");
+    let req = input::Command::new(my_access_policy.clone(), transfer_cmd, "transfer");
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -1022,17 +1010,14 @@ async fn test_integration_eth_burn() {
 
     // Send a transaction to contract
     let amount = U64::from_raw(20);
-    let burn_state = burn { amount };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, burn_state.encode()).unwrap();
+    let burn_cmd = json!({
+        "amount": amount,
+    });
+    let req = input::Command::new(my_access_policy.clone(), burn_cmd, "burn");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            other_access_policy.clone(),
-            encrypted_command,
-            "burn",
-            deployer_addr,
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
