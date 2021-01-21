@@ -5,6 +5,7 @@ use crate::localstd::{
     vec::Vec,
 };
 use crate::serde::{de::DeserializeOwned, Deserialize, Serialize};
+use crate::serde_json;
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
@@ -18,17 +19,15 @@ use frame_treekem::{DhPubKey, EciesCiphertext};
 pub mod input {
     use super::*;
 
-    #[cfg(feature = "sgx")]
     #[derive(Debug, Clone, Deserialize, Serialize)]
     #[serde(crate = "crate::serde")]
     pub struct Command<AP: AccessPolicy> {
         #[serde(deserialize_with = "AP::deserialize")]
         pub access_policy: AP,
         pub runtime_command: serde_json::Value,
-        pub fn_name: Vec<u8>, // codec does not support for `String`
+        pub fn_name: String,
     }
 
-    #[cfg(feature = "sgx")]
     impl<AP> Default for Command<AP>
     where
         AP: AccessPolicy,
@@ -37,15 +36,13 @@ pub mod input {
             Self {
                 access_policy: AP::default(),
                 runtime_command: serde_json::Value::Null,
-                fn_name: Vec::<u8>::default(),
+                fn_name: String::default(),
             }
         }
     }
 
-    #[cfg(feature = "sgx")]
     impl<AP> EcallInput for Command<AP> where AP: AccessPolicy {}
 
-    #[cfg(feature = "sgx")]
     impl<AP> Command<AP>
     where
         AP: AccessPolicy,
@@ -53,12 +50,12 @@ pub mod input {
         pub fn new(
             access_policy: AP,
             runtime_command: serde_json::Value,
-            fn_name: String,
+            fn_name: impl ToString,
         ) -> Self {
             Command {
                 access_policy,
                 runtime_command,
-                fn_name: fn_name.into_bytes(),
+                fn_name: fn_name.to_string(),
             }
         }
 
@@ -67,7 +64,7 @@ pub mod input {
         }
 
         pub fn fn_name(&self) -> &str {
-            str::from_utf8(&self.fn_name).unwrap()
+            &self.fn_name
         }
     }
 

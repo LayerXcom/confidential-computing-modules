@@ -10,6 +10,10 @@ extern crate core as localstd;
 use serde_sgx as serde;
 #[cfg(feature = "std")]
 use serde_std as serde;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
+use serde_json_sgx as serde_json;
+#[cfg(feature = "std")]
+use serde_json_std as serde_json;
 
 pub mod types;
 pub use crate::types::*;

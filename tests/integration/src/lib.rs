@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate lazy_static;
+use anonify_ecall_types::input;
 use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
 use codec::{Decode, Encode};
 use erc20_state_transition::{
@@ -13,6 +14,7 @@ use frame_common::{
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
 use frame_treekem::{DhPubKey, EciesCiphertext};
+use serde_json::json;
 use sgx_types::*;
 use std::{collections::BTreeMap, env, fs::File, io::BufReader, str::FromStr};
 use web3::{
@@ -105,13 +107,15 @@ async fn test_integration_eth_construct() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -187,13 +191,16 @@ async fn test_auto_notification() {
     // Init state
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let total_supply = U64::from_raw(100);
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -221,13 +228,16 @@ async fn test_auto_notification() {
     // Send a transaction to contract
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
-    let transfer_cmd = transfer { amount, recipient };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_cmd.encode()).unwrap();
+    let transfer_cmd = json!({
+        "amount": amount,
+        "recipient": recipient,
+    });
+    let req = input::Command::new(my_access_policy, transfer_cmd, "transfer");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "transfer",
             deployer_addr,
             gas,
             SEND_COMMAND_CMD,
@@ -297,13 +307,16 @@ async fn test_integration_eth_transfer() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -336,13 +349,16 @@ async fn test_integration_eth_transfer() {
     // Send a transaction to contract
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
-    let transfer_cmd = transfer { amount, recipient };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_cmd.encode()).unwrap();
+    let transfer_cmd = json!({
+        "amount": amount,
+        "recipient": recipient,
+    });
+    let req = input::Command::new(my_access_policy, transfer_cmd, "transfer");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command::<CallName, _>(
-            my_access_policy.clone(),
             encrypted_command,
-            "transfer",
             deployer_addr,
             gas,
             SEND_COMMAND_CMD,
@@ -431,13 +447,15 @@ async fn test_key_rotation() {
     // init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command::<CallName, _>(
-            my_access_policy.clone(),
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -511,13 +529,15 @@ async fn test_integration_eth_approve() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -628,13 +648,15 @@ async fn test_integration_eth_transfer_from() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -839,13 +861,15 @@ async fn test_integration_eth_mint() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+ let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -945,13 +969,15 @@ async fn test_integration_eth_burn() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy, init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -970,13 +996,16 @@ async fn test_integration_eth_burn() {
     // Send a transaction to contract
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
-    let transfer_cmd = transfer { amount, recipient };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_cmd.encode()).unwrap();
+    let transfer_cmd = json!({
+        "amount": amount,
+        "recipient": recipient,
+    });
+    let req = input::Command::new(my_access_policy, transfer_cmd, "transfer");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "transfer",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,

@@ -6,7 +6,6 @@ edition = "2018"
 
 [dependencies]
 erc20-api = { path = "../api" }
-erc20-state-transition = { path = "../state-transition" }
 anonify-ecall-types = { path = "../../../modules/anonify-ecall-types" }
 frame-common = { path = "../../../frame/common" }
 frame-treekem = { path = "../../../frame/treekem" }
@@ -24,7 +23,6 @@ tiny-bip39 = "0.6.0"
 ed25519-dalek = "1.0.0-pre.2"
 web3 = "0.14"
 ethabi = "12.0.0"
-codec = { package = "parity-scale-codec", version = "1.1" }
 anyhow = "1.0"
 thiserror = "1.0"
 serde_json = "1.0"
