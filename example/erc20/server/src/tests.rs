@@ -664,6 +664,12 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
 
 // to me
 fn init_100_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
+    let access_policy = Ed25519ChallengeResponse
+    let init_100 = json!({
+        "total_supply": U64::from_raw(100),
+    });
+    let req = input::Command::new(access_policy, init_state, "construct");
+
     let init_100 = construct {
         total_supply: U64::from_raw(100),
     };
