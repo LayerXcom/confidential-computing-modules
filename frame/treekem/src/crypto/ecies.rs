@@ -13,7 +13,7 @@ use crate::serde::{Deserialize, Serialize};
 use codec::{Decode, Encode};
 
 #[cfg(feature = "std")]
-#[derive(Debug, Clone, Encode, Decode, Default, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Encode, Decode, Serialize, Deserialize, Default)]
 #[serde(crate = "crate::serde")]
 pub struct EciesCiphertext {
     ephemeral_public_key: DhPubKey,

@@ -18,6 +18,7 @@ use frame_treekem::{DhPubKey, EciesCiphertext};
 pub mod input {
     use super::*;
 
+    #[cfg(feature = "sgx")]
     #[derive(Debug, Clone, Deserialize, Serialize)]
     #[serde(crate = "crate::serde")]
     pub struct Command<AP: AccessPolicy> {
@@ -27,6 +28,7 @@ pub mod input {
         pub fn_name: Vec<u8>, // codec does not support for `String`
     }
 
+    #[cfg(feature = "sgx")]
     impl<AP> Default for Command<AP>
     where
         AP: AccessPolicy,
@@ -40,8 +42,10 @@ pub mod input {
         }
     }
 
+    #[cfg(feature = "sgx")]
     impl<AP> EcallInput for Command<AP> where AP: AccessPolicy {}
 
+    #[cfg(feature = "sgx")]
     impl<AP> Command<AP>
     where
         AP: AccessPolicy,
