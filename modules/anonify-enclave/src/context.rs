@@ -100,8 +100,7 @@ impl StateOps for AnonifyEnclaveContext {
         R: RuntimeExecutor<CTX, S = Self::S>,
         CTX: ContextOps<S = Self::S>,
     {
-        let mut empty_params = vec![];
-        let call_kind = R::C::new(fn_name.to_string(), &mut empty_params)?;
+        let call_kind = R::C::new(fn_name.to_string(), serde_json::Value::Null)?;
         let res = R::new(ctx).execute(call_kind, account_id.into())?;
 
         match res {

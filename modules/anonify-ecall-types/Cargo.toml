@@ -14,7 +14,8 @@ libsecp256k1 = { version = "0.2", default-features = false }
 hex = { version = "0.4", default-features = false }
 serde-std = { package = "serde", version = "1", default-features = false, optional = true }
 serde-sgx = { package = "serde", git = "https://github.com/mesalock-linux/serde-sgx.git", default-features = false, optional = true, features = ["derive"] }
-typetag = { git = "https://github.com/mesalock-linux/typetag-sgx", optional = true }
+serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx", optional = true }
+
 
 [features]
 default = ["std"]
@@ -30,4 +31,5 @@ sgx = [
     "frame-treekem/sgx",
     "sgx_tstd",
     "serde-sgx",
+    "serde_json",
 ]

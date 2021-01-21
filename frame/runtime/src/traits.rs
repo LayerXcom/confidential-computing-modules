@@ -31,7 +31,7 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     type R: RuntimeExecutor<G>;
     type S: State;
 
-    fn new(cmd_name: String, cmd: &mut [u8]) -> Result<Self>;
+    fn new(cmd_name: String, cmd: serde_json::Value) -> Result<Self>;
     fn execute(self, runtime: Self::R, my_account_id: AccountId) -> Result<ReturnState<Self::S>>;
 }
 

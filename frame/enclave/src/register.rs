@@ -23,9 +23,9 @@ macro_rules! register_ecall {
         {
             #[cfg(feature = "runtime_enabled")]
             let res = {
-                let ciphertext = EciesCiphertext::decode(&mut &input_payload[..])
+                let ciphertext = EE::EI::decode(&mut &input_payload[..])
                     .map_err(|e| anyhow!("{:?}", e))?;
-                let input = EE::decrypt::<$ctx_ops>(ciphertext, $ctx_ops)?;
+                let input = EE::decrypt::<$ctx_ops>(ciphertext, $ctx)?;
                 EE::eval_policy(&input)?;
                 EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?
             };

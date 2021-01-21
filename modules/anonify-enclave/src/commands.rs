@@ -19,10 +19,9 @@ pub struct MsgSender<AP: AccessPolicy> {
     ecall_input: input::Command<AP>,
 }
 
-impl<AP, RC> EnclaveEngine for MsgSender<AP, RC>
+impl<AP> EnclaveEngine for MsgSender<AP>
 where
     AP: AccessPolicy,
-    RC: RuntimeCommand,
 {
     type EI = EciesCiphertext;
     type EO = output::Command;
@@ -51,7 +50,7 @@ where
         group_key.sender_ratchet(roster_idx)?;
 
         let my_account_id = self.ecall_input.access_policy().into_account_id();
-        let ciphertext = Commands::<R, C, AP, RC>::new(my_account_id, self.ecall_input)?
+        let ciphertext = Commands::<R, C, AP>::new(my_account_id, self.ecall_input)?
             .encrypt(group_key, max_mem_size)?;
 
         let msg = Sha256::hash(&ciphertext.encode());
@@ -66,16 +65,14 @@ where
 
 /// A message receiver that decrypt commands and make state transition
 #[derive(Encode, Decode, Debug, Clone, Default)]
-pub struct MsgReceiver<AP, RC> {
+pub struct MsgReceiver<AP> {
     ecall_input: input::InsertCiphertext,
     ap: PhantomData<AP>,
-    rc: PhantomData<RC>,
 }
 
-impl<AP, RC> EnclaveEngine for MsgReceiver<AP, RC>
+impl<AP> EnclaveEngine for MsgReceiver<AP>
 where
     AP: AccessPolicy,
-    RC: RuntimeCommand,
 {
     type EI = input::InsertCiphertext;
     type EO = output::ReturnUpdatedState;
@@ -88,7 +85,6 @@ where
         Ok(Self {
             ecall_input: ciphertext,
             ap: PhantomData,
-            rc: PhantomData,
         })
     }
 
@@ -114,7 +110,7 @@ where
         group_key.receiver_ratchet(roster_idx)?;
 
         // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
-        let iter_op = Commands::<R, C, AP, RC>::state_transition(
+        let iter_op = Commands::<R, C, AP>::state_transition(
             enclave_context.clone(),
             self.ecall_input.ciphertext(),
             group_key,
@@ -133,31 +129,27 @@ where
 
 /// Command data which make state update
 #[derive(Debug, Clone, Encode, Decode)]
-pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps<S = StateType>, AP, RC> {
+pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps<S = StateType>, AP> {
     my_account_id: AccountId,
     call_kind: R::C,
     phantom: PhantomData<CTX>,
     ap: PhantomData<AP>,
-    rc: PhantomData<RC>,
 }
 
-impl<R, CTX, AP, RC> Commands<R, CTX, AP, RC>
+impl<R, CTX, AP> Commands<R, CTX, AP>
 where
     R: RuntimeExecutor<CTX, S = StateType>,
     CTX: ContextOps<S = StateType>,
     AP: AccessPolicy,
-    RC: RuntimeCommand,
 {
-    pub fn new(my_account_id: AccountId, ecall_input: input::Command<AP, RC>) -> Result<Self> {
-        let mut cmd = ecall_input.runtime_command.encode();
-        let call_kind = R::C::new(ecall_input.fn_name().to_string(), &mut cmd[..])?;
+    pub fn new(my_account_id: AccountId, ecall_input: input::Command<AP>) -> Result<Self> {
+        let call_kind = R::C::new(ecall_input.fn_name().to_string(), ecall_input.runtime_command)?;
 
         Ok(Commands {
             my_account_id,
             call_kind,
             phantom: PhantomData,
             ap: PhantomData,
-            rc: PhantomData,
         })
     }
 
@@ -183,7 +175,7 @@ where
         ciphertext: &Ciphertext,
         group_key: &mut GK,
     ) -> Result<Option<impl Iterator<Item = UpdatedState<StateType>> + Clone>> {
-        if let Some(commands) = Commands::<R, CTX, AP, RC>::decrypt(ciphertext, group_key)? {
+        if let Some(commands) = Commands::<R, CTX, AP>::decrypt(ciphertext, group_key)? {
             let state_iter = commands.stf_call(ctx)?.into_iter();
 
             return Ok(Some(state_iter));
@@ -202,7 +194,7 @@ where
     }
 
     fn stf_call(self, ctx: CTX) -> Result<Vec<UpdatedState<StateType>>> {
-        let res = R::new(ctx).execute(self.call_kind, self.my_account_id)?;
+        let res = R::new(ctx).execute(self.call_kind, self.my_account_id)?; 
 
         match res {
             ReturnState::Updated(updates) => Ok(updates),

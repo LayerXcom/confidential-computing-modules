@@ -109,9 +109,9 @@ macro_rules! __impl_inner_runtime {
             type R = Runtime<G>;
             type S = StateType;
 
-            fn new(cmd_name: String, cmd: &mut [u8]) -> Result<Self> {
+            fn new(cmd_name: String, cmd: serde_json::Value) -> Result<Self> {
                 match cmd_name {
-                    $( $fn_name => Ok(CallKind::$fn_name($fn_name::decode_s(cmd)?)), )*
+                    $( $fn_name => Ok(CallKind::$fn_name(serde_json::from_value(cmd)?)), )*
                     _ => return Err(anyhow!("Invalid Call ID")),
                 }
             }

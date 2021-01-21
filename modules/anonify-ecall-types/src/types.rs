@@ -23,7 +23,7 @@ pub mod input {
     pub struct Command<AP: AccessPolicy> {
         #[serde(deserialize_with = "AP::deserialize")]
         pub access_policy: AP,
-        pub runtime_command: Box<dyn RuntimeCommand>,
+        pub runtime_command: serde_json::Value,
         pub fn_name: Vec<u8>, // codec does not support for `String`
     }
 
@@ -34,7 +34,7 @@ pub mod input {
         fn default() -> Self {
             Self {
                 access_policy: AP::default(),
-                runtime_command: Box::new(RCDefaultType::default()),
+                runtime_command: serde_json::Value::Null,
                 fn_name: Vec::<u8>::default(),
             }
         }
@@ -48,7 +48,7 @@ pub mod input {
     {
         pub fn new(
             access_policy: AP,
-            runtime_command: Box<dyn RuntimeCommand>,
+            runtime_command: serde_json::Value,
             fn_name: String,
         ) -> Self {
             Command {
