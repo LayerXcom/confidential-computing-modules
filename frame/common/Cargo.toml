@@ -44,5 +44,4 @@ sgx = [
     "serde-sgx",
     "serde-sgx/derive",
     "serde_json",
-#    "sodiumoxide",
 ]
