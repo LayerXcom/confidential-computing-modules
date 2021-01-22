@@ -10,7 +10,7 @@ erc20-state-transition = { path = "../state-transition" }
 frame-common = { path = "../../../frame/common" }
 frame-treekem = { path = "../../../frame/treekem" }
 frame-runtime = { path = "../../../frame/runtime" }
-anonify-wallet = { path = "../../../wallet" }
+anonify-wallet = { path = "../../../client/wallet" }
 reqwest = "0.9"
 clap = "~2.32"
 rand = "0.7"
