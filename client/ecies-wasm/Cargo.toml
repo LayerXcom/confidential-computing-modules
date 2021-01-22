@@ -1,0 +1,15 @@
+[package]
+name = "ecies-wasm"
+version = "0.1.0"
+authors = ["cipepser <respepic@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0"
+rand = "0.6"
+rand_core = "0.3"
+ring = "0.16.15"
+codec = { package = "parity-scale-codec", version = "1.1", default-features = false }
+libsecp256k1 = { git = "https://github.com/paritytech/libsecp256k1.git", rev = "12e3829d6cd2d6459c2c920d7cf222f3a930b955" }
+serde = { version = "1", default-features = false }
+frame-common = { path = "../../frame/common" }

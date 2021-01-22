@@ -25,6 +25,7 @@ members = [
     "example/secret-backup/commands",
     "example/secret-backup/enclave",
     "client/wallet",
+    "client/ecies-wasm",
     "tests/integration",
     "tests/units/enclave",
     "tests/units/host",
