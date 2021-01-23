@@ -81,7 +81,6 @@ where
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        // TODO: decrypt
         Ok(Self {
             ecall_input: ciphertext,
             ap: PhantomData,
