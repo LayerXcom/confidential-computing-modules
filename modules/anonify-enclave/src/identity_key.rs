@@ -25,11 +25,7 @@ impl EnclaveEngine for EncryptingKeyGetter {
     type EI = input::GetEncryptingKey;
     type EO = output::ReturnEncryptingKey;
 
-    fn handle<R, C>(
-        self,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> anyhow::Result<Self::EO>
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,

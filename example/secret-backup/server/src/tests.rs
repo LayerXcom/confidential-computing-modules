@@ -11,6 +11,7 @@ use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use once_cell::sync::Lazy;
+use serde_json::json;
 use std::{
     env,
     fs::{self, File},
@@ -25,7 +26,6 @@ use web3::{
     types::Address,
     Web3,
 };
-use serde_json::json;
 
 #[actix_rt::test]
 async fn test_backup_path_secret() {

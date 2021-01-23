@@ -16,11 +16,7 @@ impl EnclaveEngine for JoinGroupSender {
     type EI = input::CallJoinGroup;
     type EO = output::ReturnJoinGroup;
 
-    fn handle<R, C>(
-        self,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> Result<Self::EO>
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
@@ -69,11 +65,7 @@ impl EnclaveEngine for HandshakeSender {
     type EI = input::CallHandshake;
     type EO = output::ReturnHandshake;
 
-    fn handle<R, C>(
-        self,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> Result<Self::EO>
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
@@ -129,14 +121,12 @@ impl EnclaveEngine for HandshakeReceiver {
         C: ContextOps<S = StateType> + Clone,
     {
         // TODO: decrypt
-        Ok(Self { ecall_input: ciphertext })
+        Ok(Self {
+            ecall_input: ciphertext,
+        })
     }
 
-    fn handle<R, C>(
-        self,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> Result<Self::EO>
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
