@@ -1013,7 +1013,7 @@ async fn test_integration_eth_burn() {
     let burn_cmd = json!({
         "amount": amount,
     });
-    let req = input::Command::new(my_access_policy.clone(), burn_cmd, "burn");
+    let req = input::Command::new(other_access_policy.clone(), burn_cmd, "burn");
     let encrypted_command =
         EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher

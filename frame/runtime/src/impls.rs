@@ -111,14 +111,14 @@ macro_rules! __impl_inner_runtime {
 
             fn new(cmd_name: String, cmd: serde_json::Value) -> Result<Self> {
                 match cmd_name {
-                    $( $fn_name => {
+                    $( stringify!($fn_name) => {
                         if cmd.is_null() {
-                            Ok(CallKind::$fn_name(Default::default()))
+                            Ok(CallKind::$fn_name($fn_name::default()))
                         } else {
                             Ok(CallKind::$fn_name(serde_json::from_value(cmd)?))
                         }
                     },)*
-                    _ => return Err(anyhow!("Invalid Call ID")),
+                    _ => return Err(anyhow!("Invalid Command Name")),
                 }
             }
 
