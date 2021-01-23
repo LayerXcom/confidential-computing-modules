@@ -3992,6 +3992,7 @@ version = "0.1.0"
 dependencies = [
  "actix-rt",
  "actix-web",
+ "anonify-ecall-types",
  "anonify-eth-driver",
  "anyhow 1.0.34",
  "erc20-api",
