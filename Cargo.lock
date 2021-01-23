@@ -2394,7 +2394,6 @@ name = "integration-tests"
 version = "0.1.0"
 dependencies = [
  "actix-rt",
- "anonify-ecall-types",
  "anonify-eth-driver",
  "erc20-state-transition",
  "ethabi",
