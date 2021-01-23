@@ -23,7 +23,6 @@ impl_memory! {
 }
 
 impl_runtime! {
-    #[fn_id=0]
     pub fn construct(
         self,
         sender: AccountId,
@@ -36,7 +35,6 @@ impl_runtime! {
         return_update![owner_account_id, sender_balance, total_supply]
     }
 
-    #[fn_id=1]
     pub fn transfer(
         self,
         sender: AccountId,
@@ -54,7 +52,6 @@ impl_runtime! {
         return_update![sender_update, recipient_update]
     }
 
-    #[fn_id=2]
     pub fn approve(
         self,
         owner: AccountId,
@@ -74,7 +71,6 @@ impl_runtime! {
         return_update![owner_approved_update]
     }
 
-    #[fn_id=3]
     pub fn transfer_from(
         self,
         sender: AccountId,
@@ -107,7 +103,6 @@ impl_runtime! {
         return_update![owner_approved_update, owner_balance_update, recipient_balance_update]
     }
 
-    #[fn_id=4]
     pub fn mint(
         self,
         executer: AccountId,
@@ -126,7 +121,6 @@ impl_runtime! {
         return_update![recipient_balance_update, total_supply_update]
     }
 
-    #[fn_id=5]
     pub fn burn(
         self,
         sender: AccountId,
@@ -142,7 +136,6 @@ impl_runtime! {
         return_update![balance_update, total_supply_update]
     }
 
-    #[fn_id=6]
     pub fn balance_of(
         self,
         caller: AccountId
@@ -151,7 +144,6 @@ impl_runtime! {
         get_state![balance]
     }
 
-    #[fn_id=7]
     pub fn approved(
         self,
         caller: AccountId
@@ -160,7 +152,6 @@ impl_runtime! {
         get_state![approved]
     }
 
-    #[fn_id=8]
     pub fn total_supply(
         self,
         caller: AccountId
@@ -169,7 +160,6 @@ impl_runtime! {
         get_state![total_supply]
     }
 
-    #[fn_id=9]
     pub fn owner(
         self,
         caller: AccountId

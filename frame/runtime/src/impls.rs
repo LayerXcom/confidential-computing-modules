@@ -59,7 +59,6 @@ macro_rules! impl_runtime {
 macro_rules! __impl_inner_runtime {
     (@imp
         $(
-            #[fn_id=$fn_id:expr]
             pub fn $fn_name:ident(
                 $runtime:ident,
                 $sender:ident : $account_id:ty
