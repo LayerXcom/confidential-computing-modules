@@ -289,15 +289,15 @@ pub mod host_input {
 
     pub struct GetState<AP: AccessPolicy> {
         access_policy: AP,
-        fn_name: String,
+        cmd_name: String,
         ecall_cmd: u32,
     }
 
     impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, fn_name: String, ecall_cmd: u32) -> Self {
+        pub fn new(access_policy: AP, cmd_name: String, ecall_cmd: u32) -> Self {
             GetState {
                 access_policy,
-                fn_name,
+                cmd_name,
                 ecall_cmd,
             }
         }
@@ -308,7 +308,7 @@ pub mod host_input {
         type HostOutput = host_output::GetState;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let ecall_input = Self::EcallInput::new(self.access_policy, self.fn_name);
+            let ecall_input = Self::EcallInput::new(self.access_policy, self.cmd_name);
 
             Ok((ecall_input, Self::HostOutput::new()))
         }

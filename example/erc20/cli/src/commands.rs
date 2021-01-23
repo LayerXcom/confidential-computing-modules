@@ -3,13 +3,11 @@ use crate::{
     error::Result,
     term::Term,
 };
-use anonify_ecall_types::input;
 use anonify_wallet::{DirOperations, KeyFile, KeystoreDirectory, WalletDirectory};
 use anyhow::anyhow;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use ed25519_dalek::Keypair;
 use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
-use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use rand::Rng;
 use reqwest::Client;
@@ -82,10 +80,13 @@ pub(crate) fn init_state<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
-    let init_state = json!({
-        "total_supply": U64::from_raw(total_supply),
+    let req = json!({
+        "access_policy": access_policy,
+        "runtime_command": {
+            "total_supply": total_supply,
+        },
+        "cmd_name": "construct",
     });
-    let req = input::Command::new(access_policy, init_state, "construct");
     let encrypted_req =
         EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
@@ -113,11 +114,14 @@ pub(crate) fn transfer<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
-    let transfer_cmd = json!({
-        "amount": U64::from_raw(amount),
-        "recipient": recipient,
+    let req = json!({
+        "access_policy": access_policy,
+        "runtime_command": {
+            "amount": amount,
+            "recipient": recipient,
+        },
+        "cmd_name": "transfer",
     });
-    let req = input::Command::new(access_policy, transfer_cmd, "transfer");
     let encrypted_transfer_cmd =
         EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
@@ -147,11 +151,14 @@ pub(crate) fn approve<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
-    let approve_cmd = json!({
-        "amount": U64::from_raw(amount),
-        "spender": spender,
+    let req = json!({
+        "access_policy": access_policy,
+        "runtime_command": {
+            "amount": amount,
+            "spender": spender,
+        },
+        "cmd_name": "approve",
     });
-    let req = input::Command::new(access_policy, approve_cmd, "approve");
     let encrypted_approve_cmd =
         EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
@@ -179,14 +186,16 @@ pub(crate) fn transfer_from<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
-    let transfer_from_cmd = json!({
-        "amount": U64::from_raw(amount),
-        "owner": owner,
-        "recipient": recipient,
+    let req = json!({
+        "access_policy": access_policy,
+        "runtime_command": {
+            "amount": amount,
+            "owner": owner,
+            "recipient": recipient,
+        },
+        "cmd_name": "transfer_from",
     });
-    let req = input::Command::new(access_policy, transfer_from_cmd, "transfer_from");
     let encrypted_transfer_from_cmd =
         EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
@@ -215,13 +224,15 @@ pub(crate) fn mint<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
-    let mint_cmd = json!({
-        "amount": U64::from_raw(amount),
-        "recipient": recipient,
+    let req = json!({
+        "access_policy": access_policy,
+        "runtime_command": {
+            "amount": amount,
+            "recipient": recipient,
+        },
+        "cmd_name": "mint",
     });
-    let req = input::Command::new(access_policy, mint_cmd, "mint");
     let encrypted_mint_cmd =
         EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
@@ -247,12 +258,14 @@ pub(crate) fn burn<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
-    let burn_cmd = json!({
-        "amount": U64::from_raw(amount),
+    let req = json!({
+        "access_policy": access_policy,
+        "runtime_command": {
+            "amount": amount,
+        },
+        "cmd_name": "burn",
     });
-    let req = input::Command::new(access_policy, burn_cmd, "burn");
     let encrypted_burn_cmd =
         EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;

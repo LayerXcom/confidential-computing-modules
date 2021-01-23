@@ -1363,7 +1363,6 @@ dependencies = [
 name = "erc20-cli"
 version = "0.1.0"
 dependencies = [
- "anonify-ecall-types",
  "anonify-wallet",
  "anyhow 1.0.34",
  "clap",
@@ -1375,7 +1374,6 @@ dependencies = [
  "erc20-api",
  "ethabi",
  "frame-common",
- "frame-runtime",
  "frame-treekem",
  "log 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2396,7 +2394,6 @@ name = "integration-tests"
 version = "0.1.0"
 dependencies = [
  "actix-rt",
- "anonify-ecall-types",
  "anonify-eth-driver",
  "erc20-state-transition",
  "ethabi",

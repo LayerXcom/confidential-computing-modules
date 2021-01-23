@@ -23,7 +23,7 @@ pub mod input {
         #[serde(deserialize_with = "AP::deserialize")]
         pub access_policy: AP,
         pub runtime_command: serde_json::Value,
-        pub fn_name: String,
+        pub cmd_name: String,
     }
 
     impl<AP> Default for Command<AP>
@@ -34,7 +34,7 @@ pub mod input {
             Self {
                 access_policy: AP::default(),
                 runtime_command: serde_json::Value::Null,
-                fn_name: String::default(),
+                cmd_name: String::default(),
             }
         }
     }
@@ -48,12 +48,12 @@ pub mod input {
         pub fn new(
             access_policy: AP,
             runtime_command: serde_json::Value,
-            fn_name: impl ToString,
+            cmd_name: impl ToString,
         ) -> Self {
             Command {
                 access_policy,
                 runtime_command,
-                fn_name: fn_name.to_string(),
+                cmd_name: cmd_name.to_string(),
             }
         }
 
@@ -61,8 +61,8 @@ pub mod input {
             &self.access_policy
         }
 
-        pub fn fn_name(&self) -> &str {
-            &self.fn_name
+        pub fn cmd_name(&self) -> &str {
+            &self.cmd_name
         }
     }
 
@@ -123,16 +123,16 @@ pub mod input {
     #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct GetState<AP: AccessPolicy> {
         access_policy: AP,
-        pub fn_name: Vec<u8>, // codec does not support for `String`
+        pub cmd_name: Vec<u8>, // codec does not support for `String`
     }
 
     impl<AP: AccessPolicy> EcallInput for GetState<AP> {}
 
     impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, fn_name: String) -> Self {
+        pub fn new(access_policy: AP, cmd_name: String) -> Self {
             GetState {
                 access_policy,
-                fn_name: fn_name.into_bytes(),
+                cmd_name: cmd_name.into_bytes(),
             }
         }
 
@@ -140,8 +140,8 @@ pub mod input {
             &self.access_policy
         }
 
-        pub fn fn_name(&self) -> &str {
-            str::from_utf8(&self.fn_name).unwrap()
+        pub fn cmd_name(&self) -> &str {
+            str::from_utf8(&self.cmd_name).unwrap()
         }
     }
 

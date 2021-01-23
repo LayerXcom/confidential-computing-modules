@@ -313,7 +313,7 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
         let account_id = self.ecall_input.access_policy().into_account_id();
         let user_state = C::get_state_by_cmd_name::<_, R, _>(
             enclave_context.clone(),
-            self.ecall_input.fn_name(),
+            self.ecall_input.cmd_name(),
             account_id,
         )?;
 
