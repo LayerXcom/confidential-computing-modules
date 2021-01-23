@@ -197,8 +197,7 @@ where
 
     pub fn get_state<ST, AP>(
         &self,
-        access_policy: AP,
-        call_name: &str,
+        encrypted_req: EciesCiphertext,
         ecall_cmd: u32,
     ) -> Result<ST>
     where
@@ -206,7 +205,7 @@ where
         AP: AccessPolicy,
     {
         let eid = self.inner.read().deployer.get_enclave_id();
-        let input = host_input::GetState::new(access_policy, call_name.to_string(), ecall_cmd);
+        let input = host_input::GetState::new(encrypted_req, ecall_cmd);
 
         let vec = GetStateWorkflow::exec(input, eid)?
             .ecall_output

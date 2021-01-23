@@ -313,10 +313,9 @@ pub(crate) fn allowance<R: Rng>(
     let encrypted_req =
         EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
-
     let res = Client::new()
         .get(&format!("{}/api/v1/allowance", &anonify_url))
-        .json(&erc20_api::allowance::get::Request::new(encrypted_req))
+        .json(&erc20_api::state::get::Request::new(encrypted_req))
         .send()?
         .text()?;
 
@@ -333,11 +332,19 @@ pub(crate) fn balance_of<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
 
-    let req = erc20_api::state::get::Request::new(&keypair, rng);
+    let req = json!({
+        "access_policy": access_policy,
+        "runtime_command": {},
+        "state_name": "balance_of",
+    });
+    let encrypted_req =
+        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+            .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
         .get(&format!("{}/api/v1/balance_of", &anonify_url))
-        .json(&req)
+        .json(&erc20_api::state::get::Request::new(encrypted_req))
         .send()?
         .text()?;
 
