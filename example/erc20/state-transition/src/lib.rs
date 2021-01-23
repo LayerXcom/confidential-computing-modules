@@ -146,10 +146,11 @@ impl_runtime! {
 
     pub fn approved(
         self,
-        caller: AccountId
+        caller: AccountId,
+        spender: AccountId
     ) {
         let approved = self.get_map::<Approved>(caller, "Approved")?;
-        get_state![approved]
+        get_state![approved.get(spender)]
     }
 
     pub fn total_supply(

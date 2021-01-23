@@ -122,9 +122,9 @@ pub mod input {
     #[serde(crate = "crate::serde")]
     pub struct GetState<AP: AccessPolicy> {
         #[serde(deserialize_with = "AP::deserialize")]
-        access_policy: AP,
-        runtime_command: serde_json::Value,
-        state_name: String,
+        pub access_policy: AP,
+        pub runtime_command: serde_json::Value,
+        pub state_name: String,
     }
 
     impl<AP> Default for GetState<AP>
