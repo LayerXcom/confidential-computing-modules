@@ -110,7 +110,7 @@ macro_rules! __impl_inner_runtime {
             type S = StateType;
 
             fn new(cmd_name: String, cmd: serde_json::Value) -> Result<Self> {
-                match cmd_name {
+                match &cmd_name[..] {
                     $( stringify!($fn_name) => {
                         if cmd.is_null() {
                             Ok(CallKind::$fn_name($fn_name::default()))
