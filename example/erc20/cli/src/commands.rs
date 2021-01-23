@@ -82,10 +82,13 @@ pub(crate) fn init_state<R: Rng>(
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
-    let init_state = json!({
-        "total_supply": U64::from_raw(total_supply),
+    let req = json!({
+        "access_policy": access_policy,
+        "runtime_command": {
+            "total_supply": U64::from_raw(total_supply),
+        },
+        "cmd_name": "construct",
     });
-    let req = input::Command::new(access_policy, init_state, "construct");
     let encrypted_req =
         EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;

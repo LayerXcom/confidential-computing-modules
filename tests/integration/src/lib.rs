@@ -105,10 +105,13 @@ async fn test_integration_eth_construct() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = json!({
-        "total_supply": total_supply,
+    let req = json!({
+        "access_policy": my_access_policy.clone(),
+        "runtime_command": {
+            "total_supply": total_supply,
+        },
+        "cmd_name": "construct",
     });
-    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
     let encrypted_command =
         EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
