@@ -9,9 +9,9 @@ use frame_common::{
     AccessPolicy,
 };
 use frame_enclave::EnclaveEngine;
-use frame_runtime::{traits::*, RuntimeCommand};
+use frame_runtime::traits::*;
 use frame_treekem::EciesCiphertext;
-use std::{marker::PhantomData, string::ToString, vec::Vec};
+use std::{marker::PhantomData, vec::Vec};
 
 /// A message sender that encrypts commands
 #[derive(Debug, Clone, Default)]
@@ -77,7 +77,7 @@ where
     type EI = input::InsertCiphertext;
     type EO = output::ReturnUpdatedState;
 
-    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {

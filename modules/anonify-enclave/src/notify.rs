@@ -2,7 +2,6 @@ use anonify_ecall_types::*;
 use frame_common::{crypto::AccountId, state_types::StateType, AccessPolicy};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use std::marker::PhantomData;
 use std::{
     collections::HashSet,
     sync::{Arc, SgxRwLock},
@@ -40,7 +39,7 @@ impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
     type EI = input::RegisterNotification<AP>;
     type EO = output::Empty;
 
-    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {

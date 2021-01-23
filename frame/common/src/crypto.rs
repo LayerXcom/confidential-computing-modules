@@ -7,10 +7,10 @@ use crate::localstd::{
     string::String,
     vec::Vec,
 };
-use crate::serde::{de::DeserializeOwned, Deserialize, Serialize, Serializer};
+use crate::serde::{de::DeserializeOwned, Deserialize, Serialize};
 use crate::serde_big_array::big_array;
 use crate::traits::{AccessPolicy, Hash256, IntoVec, StateDecoder};
-use codec::{self, Decode, Encode, Input};
+use codec::{self, Decode, Encode};
 use ed25519_dalek::{
     Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
     SIGNATURE_LENGTH,

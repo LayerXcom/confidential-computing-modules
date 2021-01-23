@@ -1,10 +1,7 @@
 use crate::{error::Result, eth::connection::Web3Contract};
-use anonify_ecall_types::*;
 use anyhow::anyhow;
 use ethabi::Contract as ContractABI;
-use frame_common::traits::*;
-use frame_treekem::EciesCiphertext;
-use std::{fs::File, io::BufReader, marker::PhantomData, path::Path, str::FromStr};
+use std::{fs::File, io::BufReader, path::Path, str::FromStr};
 use web3::types::Address;
 
 /// Needed information to handle smart contracts.

@@ -1,14 +1,12 @@
-use anyhow::anyhow;
 use codec::{Decode, Encode};
 use frame_common::{state_types::StateType, EcallInput, EcallOutput};
 use frame_runtime::{ConfigGetter, ContextOps, RuntimeExecutor};
-use frame_treekem::EciesCiphertext;
 
 pub trait EnclaveEngine: Sized + Default {
     type EI: EcallInput + Decode + Default;
     type EO: EcallOutput + Encode + Default;
 
-    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn decrypt<C>(_ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {

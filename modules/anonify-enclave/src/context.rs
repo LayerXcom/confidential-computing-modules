@@ -23,7 +23,6 @@ use frame_treekem::{
 use remote_attestation::{EncodedQuote, QuoteTarget};
 use std::{
     env,
-    marker::PhantomData,
     prelude::v1::*,
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
     vec::Vec,
@@ -292,7 +291,7 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
     type EI = input::GetState<AP>;
     type EO = output::ReturnState;
 
-    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {

@@ -4,7 +4,6 @@ use anonify_ecall_types::input;
 use anonify_eth_driver::eth::{EthDeployer, EthSender, EventWatcher};
 use codec::{Decode, Encode};
 use erc20_server::{handlers::*, Server as ERC20Server};
-use erc20_state_transition::construct;
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_config::PJ_ROOT_DIR;

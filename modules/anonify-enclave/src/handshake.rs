@@ -124,7 +124,7 @@ impl EnclaveEngine for HandshakeReceiver {
     type EI = input::InsertHandshake;
     type EO = output::Empty;
 
-    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {

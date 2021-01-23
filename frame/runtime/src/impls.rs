@@ -77,7 +77,6 @@ macro_rules! __impl_inner_runtime {
                 $( pub $param_name: $param, )*
             }
 
-            impl RuntimeCommand for $fn_name {}
         )*
 
         #[cfg(feature = "sgx")]
