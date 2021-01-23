@@ -371,6 +371,18 @@ impl Ed25519ChallengeResponse {
         }
     }
 
+    pub fn new_from_bytes(
+        sig: [u8; SIGNATURE_LENGTH],
+        pubkey: [u8; PUBLIC_KEY_LENGTH],
+        challenge: [u8; CHALLENGE_SIZE],
+    ) -> Self {
+        Self {
+            sig,
+            pubkey,
+            challenge,
+        }
+    }
+
     pub fn verify_sig(&self) -> Result<(), Error> {
         self.pubkey()
             .verify(&self.challenge, &self.sig())
