@@ -39,8 +39,6 @@ pub mod input {
         }
     }
 
-    impl<AP> EcallInput for Command<AP> where AP: AccessPolicy {}
-
     impl<AP> Command<AP>
     where
         AP: AccessPolicy,
@@ -120,19 +118,34 @@ pub mod input {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Debug, Clone, Deserialize, Serialize)]
+    #[serde(crate = "crate::serde")]
     pub struct GetState<AP: AccessPolicy> {
+        #[serde(deserialize_with = "AP::deserialize")]
         access_policy: AP,
-        pub cmd_name: Vec<u8>, // codec does not support for `String`
+        runtime_command: serde_json::Value,
+        state_name: String,
     }
 
-    impl<AP: AccessPolicy> EcallInput for GetState<AP> {}
+    impl<AP> Default for GetState<AP>
+    where
+        AP: AccessPolicy,
+    {
+        fn default() -> Self {
+            Self {
+                access_policy: AP::default(),
+                runtime_command: serde_json::Value::Null,
+                state_name: String::default(),
+            }
+        }
+    }
 
     impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, cmd_name: String) -> Self {
+        pub fn new(access_policy: AP, runtime_command: serde_json::Value, state_name: String) -> Self {
             GetState {
                 access_policy,
-                cmd_name: cmd_name.into_bytes(),
+                runtime_command,
+                state_name,
             }
         }
 
@@ -140,8 +153,12 @@ pub mod input {
             &self.access_policy
         }
 
-        pub fn cmd_name(&self) -> &str {
-            str::from_utf8(&self.cmd_name).unwrap()
+        pub fn runtime_command(&self) -> &serde_json::Value {
+            &self.runtime_command
+        }
+
+        pub fn state_name(&self) -> &str {
+            &self.state_name
         }
     }
 

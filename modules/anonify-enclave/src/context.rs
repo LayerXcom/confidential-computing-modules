@@ -288,17 +288,17 @@ pub struct GetState<AP: AccessPolicy> {
 }
 
 impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
-    type EI = input::GetState<AP>;
+    type EI = EciesCiphertext;
     type EO = output::ReturnState;
 
     fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        // TODO: decrypt
-        Ok(Self {
-            ecall_input: ciphertext,
-        })
+        let buf = enclave_context.decrypt(ciphertext)?;
+        let ecall_input = serde_json::from_slice(&buf[..])?;
+
+        Ok(Self { ecall_input })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
