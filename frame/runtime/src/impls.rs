@@ -59,7 +59,7 @@ macro_rules! impl_runtime {
 macro_rules! __impl_inner_runtime {
     (@imp
         $(
-            pub fn $fn_name:ident(
+            pub fn $cmd_name:ident(
                 $runtime:ident,
                 $sender:ident : $account_id:ty
                 $(, $param_name:ident : $param:ty )*
@@ -72,7 +72,7 @@ macro_rules! __impl_inner_runtime {
             #[derive(Serialize, Deserialize, Encode, Decode, Debug, Clone, Default)]
             #[serde(crate = "crate::serde")]
             #[allow(non_camel_case_types)]
-            pub struct $fn_name {
+            pub struct $cmd_name {
                 $( pub $param_name: $param, )*
             }
 
@@ -83,7 +83,7 @@ macro_rules! __impl_inner_runtime {
         pub enum CallKind {
             $(
                 #[allow(non_camel_case_types)]
-                $fn_name($fn_name),
+                $cmd_name($cmd_name),
             )*
         }
 
@@ -97,11 +97,11 @@ macro_rules! __impl_inner_runtime {
 
             fn new(cmd_name: &str, cmd: serde_json::Value) -> Result<Self> {
                 match cmd_name {
-                    $( stringify!($fn_name) => {
+                    $( stringify!($cmd_name) => {
                         if cmd.is_null() {
-                            Ok(CallKind::$fn_name($fn_name::default()))
+                            Ok(CallKind::$cmd_name($cmd_name::default()))
                         } else {
-                            Ok(CallKind::$fn_name(serde_json::from_value(cmd)?))
+                            Ok(CallKind::$cmd_name(serde_json::from_value(cmd)?))
                         }
                     },)*
                     _ => return Err(anyhow!("Invalid Command Name")),
@@ -110,10 +110,10 @@ macro_rules! __impl_inner_runtime {
 
             fn execute(self, runtime: Self::R, my_account_id: AccountId) -> Result<ReturnState<Self::S>> {
                 match self {
-                    $( CallKind::$fn_name($fn_name) => {
-                        runtime.$fn_name(
+                    $( CallKind::$cmd_name($cmd_name) => {
+                        runtime.$cmd_name(
                             my_account_id,
-                            $( $fn_name.$param_name, )*
+                            $( $cmd_name.$param_name, )*
                         )
                     }, )*
                     _ => unimplemented!()
@@ -169,7 +169,7 @@ macro_rules! __impl_inner_runtime {
             }
 
             $(
-                pub fn $fn_name (
+                pub fn $cmd_name (
                     $runtime,
                     $sender: $account_id
                     $(, $param_name : $param )*
