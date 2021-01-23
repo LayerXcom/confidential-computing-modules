@@ -301,11 +301,22 @@ pub(crate) fn allowance<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
 
-    let req = erc20_api::allowance::get::Request::new(&keypair, spender, rng);
+    let req = json!({
+        "access_policy": access_policy,
+        "runtime_command": {
+            "spender": spender,
+        },
+        "state_name": "allowance",
+    });
+    let encrypted_req =
+        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+            .map_err(|e| anyhow!("{:?}", e))?;
+
     let res = Client::new()
         .get(&format!("{}/api/v1/allowance", &anonify_url))
-        .json(&req)
+        .json(&erc20_api::allowance::get::Request::new(encrypted_req))
         .send()?
         .text()?;
 

@@ -178,7 +178,6 @@ where
         .get_state::<Approved, _>(access_right, "approved", GET_STATE_CMD)
         .map_err(|e| ServerError::from(e))?;
     let approved_amount = owner_approved.allowance(&req.spender).unwrap();
-    // TODO: stop using unwrap when switching from failure to anyhow.
 
     Ok(HttpResponse::Ok().json(erc20_api::allowance::get::Response(
         (*approved_amount).as_raw(),
@@ -207,6 +206,30 @@ where
     let state = server
         .dispatcher
         .get_state::<U64, _>(access_right, "balance_of", GET_STATE_CMD)
+        .map_err(|e| ServerError::from(e))?;
+
+    Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state.as_raw())))
+}
+
+/// Fetch events from blockchain nodes manually, and then get balance of the address from enclave.
+pub async fn handle_get_state<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
+    req: web::Json<erc20_api::state::get::Request>,
+) -> Result<HttpResponse>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher,
+{
+    server
+        .dispatcher
+        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .map_err(|e| ServerError::from(e))?;
+
+    let state = server
+        .dispatcher
+        .get_state::<U64, _>(req.encrypted_req, GET_STATE_CMD)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state.as_raw())))

@@ -41,16 +41,12 @@ async fn main() -> io::Result<()> {
                 web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
+                "/api/v1/state",
+                web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
                 "/api/v1/key_rotation",
                 web::post().to(handle_key_rotation::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/allowance",
-                web::get().to(handle_allowance::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/balance_of",
-                web::get().to(handle_balance_of::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/start_sync_bc",
