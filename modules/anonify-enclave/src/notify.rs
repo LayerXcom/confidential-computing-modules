@@ -2,7 +2,6 @@ use anonify_ecall_types::*;
 use frame_common::{crypto::AccountId, state_types::StateType, AccessPolicy};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use std::marker::PhantomData;
 use std::{
     collections::HashSet,
     sync::{Arc, SgxRwLock},
@@ -31,29 +30,35 @@ impl Notifier {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct RegisterNotification<AP: AccessPolicy> {
-    phantom: PhantomData<AP>,
+    ecall_input: input::RegisterNotification<AP>,
 }
 
 impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
     type EI = input::RegisterNotification<AP>;
     type EO = output::Empty;
 
-    fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
-        ecall_input.access_policy().verify()
+    fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    where
+        C: ContextOps<S = StateType> + Clone,
+    {
+        // TODO: decrypt
+        Ok(Self {
+            ecall_input: ciphertext,
+        })
     }
 
-    fn handle<R, C>(
-        ecall_input: Self::EI,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> anyhow::Result<Self::EO>
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        self.ecall_input.access_policy().verify()
+    }
+
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let account_id = ecall_input.access_policy().into_account_id();
+        let account_id = self.ecall_input.access_policy().into_account_id();
         enclave_context.set_notification(account_id);
 
         Ok(output::Empty::default())

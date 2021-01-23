@@ -177,28 +177,15 @@ where
         Ok(tx_hash)
     }
 
-    pub async fn send_command<C, AP>(
+    pub async fn send_command(
         &self,
-        access_policy: AP,
-        encrypted_command: EciesCiphertext,
-        call_name: &str,
+        encrypted_req: EciesCiphertext,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
-    ) -> Result<H256>
-    where
-        C: CallNameConverter,
-        AP: AccessPolicy,
-    {
+    ) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Command::<C, AP>::new(
-            encrypted_command,
-            call_name.to_string(),
-            access_policy,
-            signer,
-            gas,
-            ecall_cmd,
-        );
+        let input = host_input::Command::new(encrypted_req, signer, gas, ecall_cmd);
         let eid = inner.deployer.get_enclave_id();
         let host_output = CommandWorkflow::exec(input, eid)?;
 
@@ -208,7 +195,7 @@ where
         }
     }
 
-    pub fn get_state<ST, AP, C>(
+    pub fn get_state<ST, AP>(
         &self,
         access_policy: AP,
         call_name: &str,
@@ -217,11 +204,9 @@ where
     where
         ST: State + StateDecoder,
         AP: AccessPolicy,
-        C: CallNameConverter,
     {
-        let call_id = C::as_id(call_name);
         let eid = self.inner.read().deployer.get_enclave_id();
-        let input = host_input::GetState::new(access_policy, call_id, ecall_cmd);
+        let input = host_input::GetState::new(access_policy, call_name.to_string(), ecall_cmd);
 
         let vec = GetStateWorkflow::exec(input, eid)?
             .ecall_output

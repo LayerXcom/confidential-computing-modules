@@ -26,9 +26,9 @@ frame-common = { path = "../../../frame/common" }
 frame-runtime = { path = "../../../frame/runtime" }
 frame-treekem = { path = "../../../frame/treekem" }
 erc20-server = { path = "../../erc20/server" }
-erc20-state-transition = { path = "../../erc20/state-transition" }
 erc20-api = { path = "../../erc20/api" }
 anonify-eth-driver = { path = "../../../modules/anonify-eth-driver" }
+anonify-ecall-types = { path = "../../../modules/anonify-ecall-types"}
 codec = { package = "parity-scale-codec", version = "1.1" }
 web3 = "0.14"
 ethabi = "12.0.0"

@@ -13,7 +13,7 @@ use crate::serde::{Deserialize, Serialize};
 use codec::{Decode, Encode};
 
 #[cfg(feature = "std")]
-#[derive(Debug, Clone, Encode, Decode, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Encode, Decode, Serialize, Deserialize, Default)]
 #[serde(crate = "crate::serde")]
 pub struct EciesCiphertext {
     ephemeral_public_key: DhPubKey,
@@ -21,11 +21,13 @@ pub struct EciesCiphertext {
 }
 
 #[cfg(feature = "sgx")]
-#[derive(Debug, Clone, Encode, Decode)]
+#[derive(Debug, Clone, Encode, Decode, Default)]
 pub struct EciesCiphertext {
     ephemeral_public_key: DhPubKey,
     ciphertext: Vec<u8>,
 }
+
+impl frame_common::EcallInput for EciesCiphertext {}
 
 impl EciesCiphertext {
     pub fn encrypt(others_pub_key: &DhPubKey, mut plaintext: Vec<u8>) -> Result<Self> {

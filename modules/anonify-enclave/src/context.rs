@@ -23,7 +23,6 @@ use frame_treekem::{
 use remote_attestation::{EncodedQuote, QuoteTarget};
 use std::{
     env,
-    marker::PhantomData,
     prelude::v1::*,
     sync::{Arc, SgxRwLock, SgxRwLockReadGuard, SgxRwLockWriteGuard},
     vec::Vec,
@@ -90,9 +89,9 @@ impl StateOps for AnonifyEnclaveContext {
         self.db.get(key.into(), mem_id)
     }
 
-    fn get_state_by_call_id<U, R, CTX>(
+    fn get_state_by_cmd_name<U, R, CTX>(
         ctx: CTX,
-        call_id: u32,
+        cmd_name: &str,
         account_id: U,
     ) -> anyhow::Result<Self::S>
     where
@@ -100,8 +99,7 @@ impl StateOps for AnonifyEnclaveContext {
         R: RuntimeExecutor<CTX, S = Self::S>,
         CTX: ContextOps<S = Self::S>,
     {
-        let mut empty_params = vec![];
-        let call_kind = R::C::new(call_id, &mut empty_params)?;
+        let call_kind = R::C::new(cmd_name, serde_json::Value::Null)?;
         let res = R::new(ctx).execute(call_kind, account_id.into())?;
 
         match res {
@@ -284,32 +282,38 @@ impl AnonifyEnclaveContext {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct GetState<AP: AccessPolicy> {
-    phantom: PhantomData<AP>,
+    ecall_input: input::GetState<AP>,
 }
 
 impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
     type EI = input::GetState<AP>;
     type EO = output::ReturnState;
 
-    fn eval_policy(ecall_input: &Self::EI) -> anyhow::Result<()> {
-        ecall_input.access_policy().verify()
+    fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    where
+        C: ContextOps<S = StateType> + Clone,
+    {
+        // TODO: decrypt
+        Ok(Self {
+            ecall_input: ciphertext,
+        })
     }
 
-    fn handle<R, C>(
-        ecall_input: Self::EI,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> anyhow::Result<Self::EO>
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        self.ecall_input.access_policy().verify()
+    }
+
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let account_id = ecall_input.access_policy().into_account_id();
-        let user_state = C::get_state_by_call_id::<_, R, _>(
+        let account_id = self.ecall_input.access_policy().into_account_id();
+        let user_state = C::get_state_by_cmd_name::<_, R, _>(
             enclave_context.clone(),
-            ecall_input.call_id(),
+            self.ecall_input.fn_name(),
             account_id,
         )?;
 
@@ -318,18 +322,14 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
 }
 
 /// A report registration engine
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ReportRegistration;
 
 impl EnclaveEngine for ReportRegistration {
     type EI = input::CallRegisterReport;
     type EO = output::ReturnRegisterReport;
 
-    fn handle<R, C>(
-        _ecall_input: Self::EI,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> anyhow::Result<Self::EO>
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,

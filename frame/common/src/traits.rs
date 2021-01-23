@@ -1,13 +1,16 @@
 use crate::crypto::AccountId;
 use crate::local_anyhow::{anyhow, Result};
 use crate::localstd::{fmt::Debug, mem::size_of, vec::Vec};
+use crate::serde::{de::DeserializeOwned, Serialize};
 use crate::state_types::MemId;
 use codec::{Decode, Encode};
 use ed25519_dalek::PublicKey;
 use tiny_keccak::Keccak;
 
 /// A trait to verify policy to access resources in the enclave
-pub trait AccessPolicy: Encode + Decode + Clone + Debug {
+pub trait AccessPolicy:
+    Encode + Decode + Clone + Debug + DeserializeOwned + Serialize + Default
+{
     fn verify(&self) -> Result<()>;
 
     fn into_account_id(&self) -> AccountId;
@@ -48,11 +51,6 @@ pub trait StateDecoder: State {
 /// A converter from memory name to memory id
 pub trait MemNameConverter: Debug {
     fn as_id(name: &str) -> MemId;
-}
-
-/// A converter from call name to call id
-pub trait CallNameConverter: Debug {
-    fn as_id(name: &str) -> u32;
 }
 
 pub trait IntoVec {

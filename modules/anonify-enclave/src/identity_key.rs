@@ -18,18 +18,14 @@ const ENCRYPTING_KEY_SIZE: usize = 33;
 const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCRYPTING_KEY_SIZE;
 const REPORT_DATA_SIZE: usize = 64;
 
-#[derive(Debug, Clone)]
-pub struct EncryptingKeyGetter {}
+#[derive(Debug, Clone, Default)]
+pub struct EncryptingKeyGetter;
 
 impl EnclaveEngine for EncryptingKeyGetter {
     type EI = input::GetEncryptingKey;
     type EO = output::ReturnEncryptingKey;
 
-    fn handle<R, C>(
-        _ecall_input: Self::EI,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> anyhow::Result<Self::EO>
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,

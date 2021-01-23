@@ -8,8 +8,9 @@ use crate::localstd::{
     vec::Vec,
 };
 use crate::serde::{de::DeserializeOwned, Deserialize, Serialize};
+use crate::serde_big_array::big_array;
 use crate::traits::{AccessPolicy, Hash256, IntoVec, StateDecoder};
-use codec::{self, Decode, Encode, Input};
+use codec::{self, Decode, Encode};
 use ed25519_dalek::{
     Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
     SIGNATURE_LENGTH,
@@ -254,7 +255,8 @@ impl Sha256 {
 const CHALLENGE_SIZE: usize = 32;
 
 /// No authentication when evaluating an access policy.
-#[derive(Debug, Clone, Encode, Decode)]
+#[derive(Debug, Clone, Encode, Decode, Serialize, Deserialize, Default)]
+#[serde(crate = "crate::serde")]
 pub struct NoAuth {
     account_id: AccountId,
 }
@@ -279,12 +281,26 @@ impl NoAuth {
     }
 }
 
+big_array! { BigArray; }
+
 /// A challenge and response authentication parameter to read and write to anonify's enclave mem db.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode)]
+#[serde(crate = "crate::serde")]
 pub struct Ed25519ChallengeResponse {
-    sig: Signature,
-    pubkey: PublicKey,
+    #[serde(with = "BigArray")]
+    sig: [u8; SIGNATURE_LENGTH],
+    pubkey: [u8; PUBLIC_KEY_LENGTH],
     challenge: [u8; CHALLENGE_SIZE],
+}
+
+impl Default for Ed25519ChallengeResponse {
+    fn default() -> Self {
+        Self {
+            sig: [0u8; SIGNATURE_LENGTH],
+            pubkey: [0u8; PUBLIC_KEY_LENGTH],
+            challenge: [0u8; CHALLENGE_SIZE],
+        }
+    }
 }
 
 impl AccessPolicy for Ed25519ChallengeResponse {
@@ -297,40 +313,16 @@ impl AccessPolicy for Ed25519ChallengeResponse {
     }
 }
 
-impl Encode for Ed25519ChallengeResponse {
-    fn encode(&self) -> Vec<u8> {
-        let mut acc = vec![];
-        acc.extend_from_slice(&self.sig.to_bytes());
-        acc.extend_from_slice(self.pubkey.as_bytes());
-        acc.extend_from_slice(&self.challenge[..]);
-
-        acc
-    }
-}
-
-impl Decode for Ed25519ChallengeResponse {
-    fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
-        let mut sig_buf = [0u8; SIGNATURE_LENGTH];
-        let mut pubkey_buf = [0u8; PUBLIC_KEY_LENGTH];
-        let mut chal_buf = [0u8; CHALLENGE_SIZE];
-
-        value.read(&mut sig_buf)?;
-        value.read(&mut pubkey_buf)?;
-        value.read(&mut chal_buf)?;
-
-        let sig = Signature::from_bytes(&sig_buf).unwrap();
-        let pubkey = PublicKey::from_bytes(&pubkey_buf)
-            .expect("Failed to decode pubkey of Ed25519ChallengeResponse");
-
-        Ok(Ed25519ChallengeResponse {
-            sig,
-            pubkey,
-            challenge: chal_buf,
-        })
-    }
-}
-
 impl Ed25519ChallengeResponse {
+    #[cfg(feature = "std")]
+    pub fn new_from_keypair<R: Rng>(keypair: Keypair, rng: &mut R) -> Self {
+        let challenge: [u8; 32] = rng.gen();
+        let sig = keypair.sign(&challenge[..]);
+        assert!(keypair.verify(&challenge, &sig).is_ok());
+
+        Self::new(sig, keypair.public, challenge)
+    }
+
     #[cfg(feature = "std")]
     fn inner_new_from_rng<R: RngCore + CryptoRng>(rng: &mut R) -> Self {
         let keypair = Keypair::generate(rng);
@@ -373,6 +365,18 @@ impl Ed25519ChallengeResponse {
         assert!(pubkey.verify(&challenge, &sig).is_ok());
 
         Ed25519ChallengeResponse {
+            sig: sig.to_bytes(),
+            pubkey: pubkey.to_bytes(),
+            challenge,
+        }
+    }
+
+    pub fn new_from_bytes(
+        sig: [u8; SIGNATURE_LENGTH],
+        pubkey: [u8; PUBLIC_KEY_LENGTH],
+        challenge: [u8; CHALLENGE_SIZE],
+    ) -> Self {
+        Self {
             sig,
             pubkey,
             challenge,
@@ -380,8 +384,8 @@ impl Ed25519ChallengeResponse {
     }
 
     pub fn verify_sig(&self) -> Result<(), Error> {
-        self.pubkey
-            .verify(&self.challenge, &self.sig)
+        self.pubkey()
+            .verify(&self.challenge, &self.sig())
             .map_err(|e| anyhow!("{:?}", e))?;
 
         Ok(())
@@ -396,12 +400,12 @@ impl Ed25519ChallengeResponse {
         Ok(AccountId::from_pubkey(&self.pubkey()))
     }
 
-    pub fn sig(&self) -> &Signature {
-        &self.sig
+    pub fn sig(&self) -> Signature {
+        Signature::from_bytes(&self.sig).unwrap()
     }
 
-    pub fn pubkey(&self) -> &PublicKey {
-        &self.pubkey
+    pub fn pubkey(&self) -> PublicKey {
+        PublicKey::from_bytes(&self.pubkey).unwrap()
     }
 
     pub fn challenge(&self) -> &[u8] {

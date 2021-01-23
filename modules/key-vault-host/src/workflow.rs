@@ -1,5 +1,5 @@
-use key_vault_ecall_types::*;
 use frame_host::engine::*;
+use key_vault_ecall_types::*;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
 

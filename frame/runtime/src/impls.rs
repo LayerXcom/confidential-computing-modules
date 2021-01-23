@@ -70,24 +70,14 @@ macro_rules! __impl_inner_runtime {
         )*
     ) => {
         $(
-            #[derive(Encode, Decode, Debug, Clone, Default)]
+            #[derive(Serialize, Deserialize, Encode, Decode, Debug, Clone, Default)]
+            #[serde(crate = "crate::serde")]
             #[allow(non_camel_case_types)]
             pub struct $fn_name {
                 $( pub $param_name: $param, )*
             }
+
         )*
-
-        #[derive(Debug, Clone)]
-        pub struct CallName;
-
-        impl CallNameConverter for CallName {
-            fn as_id(name: &str) -> u32 {
-                match name {
-                    $( stringify!($fn_name) => $fn_id, )*
-                    _ => panic!("invalid call name"),
-                }
-            }
-        }
 
         #[cfg(feature = "sgx")]
         #[derive(Debug, Clone, Encode, Decode)]
@@ -99,14 +89,23 @@ macro_rules! __impl_inner_runtime {
         }
 
         #[cfg(feature = "sgx")]
-        impl<G: ContextOps<S=StateType>> CallKindExecutor<G> for CallKind {
+        impl<G> CallKindExecutor<G> for CallKind
+        where
+            G: ContextOps<S=StateType>,
+        {
             type R = Runtime<G>;
             type S = StateType;
 
-            fn new(id: u32, cmd: &mut [u8]) -> Result<Self> {
-                match id {
-                    $( $fn_id => Ok(CallKind::$fn_name($fn_name::decode_s(cmd)?)), )*
-                    _ => return Err(anyhow!("Invalid Call ID")),
+            fn new(cmd_name: &str, cmd: serde_json::Value) -> Result<Self> {
+                match cmd_name {
+                    $( stringify!($fn_name) => {
+                        if cmd.is_null() {
+                            Ok(CallKind::$fn_name($fn_name::default()))
+                        } else {
+                            Ok(CallKind::$fn_name(serde_json::from_value(cmd)?))
+                        }
+                    },)*
+                    _ => return Err(anyhow!("Invalid Command Name")),
                 }
             }
 
@@ -129,7 +128,10 @@ macro_rules! __impl_inner_runtime {
         }
 
         #[cfg(feature = "sgx")]
-        impl<G: ContextOps<S=StateType>> RuntimeExecutor<G> for Runtime<G> {
+        impl<G> RuntimeExecutor<G> for Runtime<G>
+        where
+            G: ContextOps<S=StateType>,
+        {
             type C = CallKind;
             type S = StateType;
 
@@ -145,7 +147,10 @@ macro_rules! __impl_inner_runtime {
         }
 
         #[cfg(feature = "sgx")]
-        impl<G: ContextOps<S=StateType>> Runtime<G> {
+        impl<G> Runtime<G>
+        where
+            G: ContextOps<S=StateType>,
+        {
             pub fn get_map<S: State>(
                 &self,
                 key: AccountId,

@@ -1,14 +1,15 @@
 use crate::{handlers::*, Server};
 use actix_web::{test, web, App};
+use anonify_ecall_types::input;
 use anonify_eth_driver::eth::*;
 use codec::{Decode, Encode};
-use erc20_state_transition::{construct, transfer};
 use ethabi::Contract as ContractABI;
-use frame_common::crypto::AccountId;
+use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use integration_tests::set_env_vars;
+use serde_json::json;
 use std::{env, fs::File, io::BufReader, path::Path, str::FromStr, sync::Arc, time};
 use web3::{
     contract::{Contract, Options},
@@ -664,91 +665,91 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
 
 // to me
 fn init_100_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
-    let init_100 = construct {
-        total_supply: U64::from_raw(100),
-    };
-    let enc_cmd = EciesCiphertext::encrypt(&enc_key, init_100.encode()).unwrap();
+    let sig = [
+        236, 103, 17, 252, 166, 199, 9, 46, 200, 107, 188, 0, 37, 111, 83, 105, 175, 81, 231, 14,
+        81, 100, 221, 89, 102, 172, 30, 96, 15, 128, 117, 146, 181, 221, 149, 206, 163, 208, 113,
+        198, 241, 16, 150, 248, 99, 170, 85, 122, 165, 197, 14, 120, 110, 37, 69, 32, 36, 218, 100,
+        64, 224, 226, 99, 2,
+    ];
+    let pubkey = [
+        164, 189, 195, 42, 48, 163, 27, 74, 84, 147, 25, 254, 16, 14, 206, 134, 153, 148, 33, 189,
+        55, 149, 7, 15, 11, 101, 106, 28, 48, 130, 133, 143,
+    ];
+    let challenge = [
+        244, 158, 183, 202, 237, 236, 27, 67, 39, 95, 178, 136, 235, 162, 188, 106, 52, 56, 6, 245,
+        3, 101, 33, 155, 58, 175, 168, 63, 73, 125, 205, 225,
+    ];
+    let access_policy = Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge);
+    let init_100 = json!({
+        "total_supply": U64::from_raw(100),
+    });
+    let req = input::Command::new(access_policy, init_100, "construct");
+    let encrypted_req =
+        EciesCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
-    erc20_api::state::post::Request {
-        function: "construct".to_string(),
-        sig: [
-            236, 103, 17, 252, 166, 199, 9, 46, 200, 107, 188, 0, 37, 111, 83, 105, 175, 81, 231,
-            14, 81, 100, 221, 89, 102, 172, 30, 96, 15, 128, 117, 146, 181, 221, 149, 206, 163,
-            208, 113, 198, 241, 16, 150, 248, 99, 170, 85, 122, 165, 197, 14, 120, 110, 37, 69, 32,
-            36, 218, 100, 64, 224, 226, 99, 2,
-        ],
-        pubkey: [
-            164, 189, 195, 42, 48, 163, 27, 74, 84, 147, 25, 254, 16, 14, 206, 134, 153, 148, 33,
-            189, 55, 149, 7, 15, 11, 101, 106, 28, 48, 130, 133, 143,
-        ],
-        challenge: [
-            244, 158, 183, 202, 237, 236, 27, 67, 39, 95, 178, 136, 235, 162, 188, 106, 52, 56, 6,
-            245, 3, 101, 33, 155, 58, 175, 168, 63, 73, 125, 205, 225,
-        ],
-        encrypted_command: enc_cmd,
-    }
+    erc20_api::state::post::Request { encrypted_req }
 }
 
 // from me to other
 fn transfer_10_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
-    let transfer_10 = transfer {
-        amount: U64::from_raw(10),
-        recipient: AccountId([
+    let sig = [
+        227, 77, 52, 167, 149, 64, 24, 23, 103, 227, 13, 120, 90, 186, 1, 62, 110, 60, 186, 247,
+        143, 247, 19, 71, 85, 191, 224, 5, 38, 219, 96, 44, 196, 154, 181, 50, 99, 58, 20, 125,
+        244, 172, 212, 166, 234, 203, 208, 77, 9, 232, 77, 248, 152, 81, 106, 49, 120, 34, 212, 89,
+        92, 100, 221, 14,
+    ];
+    let pubkey = [
+        164, 189, 195, 42, 48, 163, 27, 74, 84, 147, 25, 254, 16, 14, 206, 134, 153, 148, 33, 189,
+        55, 149, 7, 15, 11, 101, 106, 28, 48, 130, 133, 143,
+    ];
+    let challenge = [
+        157, 61, 16, 189, 40, 124, 88, 101, 19, 36, 155, 229, 245, 123, 189, 124, 222, 114, 215,
+        186, 25, 30, 135, 114, 237, 169, 138, 122, 81, 61, 43, 183,
+    ];
+    let access_policy = Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge);
+    let transfer_10 = json!({
+        "amount": U64::from_raw(10),
+        "recipient": AccountId([
             236, 126, 92, 200, 50, 125, 9, 112, 74, 58, 35, 60, 181, 105, 198, 107, 62, 111, 168,
             118,
-        ]),
-    };
-    let enc_cmd = EciesCiphertext::encrypt(&enc_key, transfer_10.encode()).unwrap();
+        ])
+    });
+    let req = input::Command::new(access_policy, transfer_10, "transfer");
+    let encrypted_req =
+        EciesCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
-    erc20_api::state::post::Request {
-        function: "transfer".to_string(),
-        sig: [
-            227, 77, 52, 167, 149, 64, 24, 23, 103, 227, 13, 120, 90, 186, 1, 62, 110, 60, 186,
-            247, 143, 247, 19, 71, 85, 191, 224, 5, 38, 219, 96, 44, 196, 154, 181, 50, 99, 58, 20,
-            125, 244, 172, 212, 166, 234, 203, 208, 77, 9, 232, 77, 248, 152, 81, 106, 49, 120, 34,
-            212, 89, 92, 100, 221, 14,
-        ],
-        pubkey: [
-            164, 189, 195, 42, 48, 163, 27, 74, 84, 147, 25, 254, 16, 14, 206, 134, 153, 148, 33,
-            189, 55, 149, 7, 15, 11, 101, 106, 28, 48, 130, 133, 143,
-        ],
-        challenge: [
-            157, 61, 16, 189, 40, 124, 88, 101, 19, 36, 155, 229, 245, 123, 189, 124, 222, 114,
-            215, 186, 25, 30, 135, 114, 237, 169, 138, 122, 81, 61, 43, 183,
-        ],
-        encrypted_command: enc_cmd,
-    }
+    erc20_api::state::post::Request { encrypted_req }
 }
 
 // from me to other
 fn transfer_110_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
-    let transfer_110 = transfer {
-        amount: U64::from_raw(110),
-        recipient: AccountId([
+    let sig = [
+        227, 77, 52, 167, 149, 64, 24, 23, 103, 227, 13, 120, 90, 186, 1, 62, 110, 60, 186, 247,
+        143, 247, 19, 71, 85, 191, 224, 5, 38, 219, 96, 44, 196, 154, 181, 50, 99, 58, 20, 125,
+        244, 172, 212, 166, 234, 203, 208, 77, 9, 232, 77, 248, 152, 81, 106, 49, 120, 34, 212, 89,
+        92, 100, 221, 14,
+    ];
+    let pubkey = [
+        164, 189, 195, 42, 48, 163, 27, 74, 84, 147, 25, 254, 16, 14, 206, 134, 153, 148, 33, 189,
+        55, 149, 7, 15, 11, 101, 106, 28, 48, 130, 133, 143,
+    ];
+    let challenge = [
+        157, 61, 16, 189, 40, 124, 88, 101, 19, 36, 155, 229, 245, 123, 189, 124, 222, 114, 215,
+        186, 25, 30, 135, 114, 237, 169, 138, 122, 81, 61, 43, 183,
+    ];
+    let access_policy = Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge);
+    let transfer_10 = json!({
+        "amount": U64::from_raw(110),
+        "recipient": AccountId([
             236, 126, 92, 200, 50, 125, 9, 112, 74, 58, 35, 60, 181, 105, 198, 107, 62, 111, 168,
             118,
-        ]),
-    };
-    let enc_cmd = EciesCiphertext::encrypt(&enc_key, transfer_110.encode()).unwrap();
+        ])
+    });
+    let req = input::Command::new(access_policy, transfer_10, "transfer");
+    let encrypted_req =
+        EciesCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
-    erc20_api::state::post::Request {
-        function: "transfer".to_string(),
-        sig: [
-            227, 77, 52, 167, 149, 64, 24, 23, 103, 227, 13, 120, 90, 186, 1, 62, 110, 60, 186,
-            247, 143, 247, 19, 71, 85, 191, 224, 5, 38, 219, 96, 44, 196, 154, 181, 50, 99, 58, 20,
-            125, 244, 172, 212, 166, 234, 203, 208, 77, 9, 232, 77, 248, 152, 81, 106, 49, 120, 34,
-            212, 89, 92, 100, 221, 14,
-        ],
-        pubkey: [
-            164, 189, 195, 42, 48, 163, 27, 74, 84, 147, 25, 254, 16, 14, 206, 134, 153, 148, 33,
-            189, 55, 149, 7, 15, 11, 101, 106, 28, 48, 130, 133, 143,
-        ],
-        challenge: [
-            157, 61, 16, 189, 40, 124, 88, 101, 19, 36, 155, 229, 245, 123, 189, 124, 222, 114,
-            215, 186, 25, 30, 135, 114, 237, 169, 138, 122, 81, 61, 43, 183,
-        ],
-        encrypted_command: enc_cmd,
-    }
+    erc20_api::state::post::Request { encrypted_req }
 }
 
 // me

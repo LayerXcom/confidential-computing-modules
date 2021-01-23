@@ -1,10 +1,9 @@
 #[macro_use]
 extern crate lazy_static;
+use anonify_ecall_types::input;
 use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
 use codec::{Decode, Encode};
-use erc20_state_transition::{
-    approve, burn, cmd::*, construct, mint, transfer, transfer_from, CallName,
-};
+use erc20_state_transition::{approve, burn, cmd::*, construct, mint, transfer, transfer_from};
 use ethabi::Contract as ContractABI;
 use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
@@ -13,6 +12,7 @@ use frame_common::{
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
 use frame_treekem::{DhPubKey, EciesCiphertext};
+use serde_json::json;
 use sgx_types::*;
 use std::{collections::BTreeMap, env, fs::File, io::BufReader, str::FromStr};
 use web3::{
@@ -105,13 +105,15 @@ async fn test_integration_eth_construct() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -129,13 +131,13 @@ async fn test_integration_eth_construct() {
 
     // Get state from enclave
     let owner_account_id = dispatcher
-        .get_state::<AccountId, _, CallName>(COMMON_ACCESS_POLICY.clone(), "owner", GET_STATE_CMD)
+        .get_state::<AccountId, _>(COMMON_ACCESS_POLICY.clone(), "owner", GET_STATE_CMD)
         .unwrap();
     let my_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let actual_total_supply = dispatcher
-        .get_state::<U64, _, CallName>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
+        .get_state::<U64, _>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
         .unwrap();
     assert_eq!(owner_account_id, my_access_policy.into_account_id());
     assert_eq!(my_balance, total_supply);
@@ -187,13 +189,16 @@ async fn test_auto_notification() {
     // Init state
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let total_supply = U64::from_raw(100);
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -221,17 +226,15 @@ async fn test_auto_notification() {
     // Send a transaction to contract
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
-    let transfer_cmd = transfer { amount, recipient };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_cmd.encode()).unwrap();
+    let transfer_cmd = json!({
+        "amount": amount,
+        "recipient": recipient,
+    });
+    let req = input::Command::new(my_access_policy.clone(), transfer_cmd, "transfer");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
-            encrypted_command,
-            "transfer",
-            deployer_addr,
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
@@ -297,13 +300,16 @@ async fn test_integration_eth_transfer() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -321,13 +327,13 @@ async fn test_integration_eth_transfer() {
 
     // Get state from enclave
     let my_state = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, U64::zero());
@@ -336,17 +342,15 @@ async fn test_integration_eth_transfer() {
     // Send a transaction to contract
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
-    let transfer_cmd = transfer { amount, recipient };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_cmd.encode()).unwrap();
+    let transfer_cmd = json!({
+        "amount": amount,
+        "recipient": recipient,
+    });
+    let req = input::Command::new(my_access_policy.clone(), transfer_cmd, "transfer");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
-            encrypted_command,
-            "transfer",
-            deployer_addr,
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
@@ -359,13 +363,13 @@ async fn test_integration_eth_transfer() {
 
     // Check the updated states
     let my_updated_state = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_updated_state = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_updated_state = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(third_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
 
     assert_eq!(my_updated_state, U64::from_raw(70));
@@ -431,13 +435,15 @@ async fn test_key_rotation() {
     // init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -454,13 +460,13 @@ async fn test_key_rotation() {
 
     // Get state from enclave
     let my_state = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(third_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, U64::zero());
@@ -511,13 +517,15 @@ async fn test_integration_eth_approve() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -535,10 +543,10 @@ async fn test_integration_eth_approve() {
 
     // Get state from enclave
     let my_state = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(my_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let other_state = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(other_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state, Approved::default());
     assert_eq!(other_state, Approved::default());
@@ -546,17 +554,15 @@ async fn test_integration_eth_approve() {
     // Send a transaction to contract
     let amount = U64::from_raw(30);
     let spender = other_access_policy.into_account_id();
-    let approve_state = approve { amount, spender };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, approve_state.encode()).unwrap();
+    let approve_cmd = json!({
+        "amount": amount,
+        "spender": spender,
+    });
+    let req = input::Command::new(my_access_policy.clone(), approve_cmd, "approve");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
-            encrypted_command,
-            "approve",
-            deployer_addr,
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
@@ -569,10 +575,10 @@ async fn test_integration_eth_approve() {
 
     // Check the updated states
     let my_state = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy, "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(my_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let other_state = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy, "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(other_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let want_my_state = Approved::new({
         let mut bt = BTreeMap::new();
@@ -628,13 +634,15 @@ async fn test_integration_eth_transfer_from() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -652,26 +660,26 @@ async fn test_integration_eth_transfer_from() {
 
     // Get initial state from enclave
     let my_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state_balance, U64::from_raw(100));
     assert_eq!(other_state_balance, U64::zero());
     assert_eq!(third_state_balance, U64::zero());
 
     let my_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(my_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let other_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(other_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let third_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(third_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(third_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state_approved, Approved::default());
     assert_eq!(other_state_approved, Approved::default());
@@ -680,13 +688,16 @@ async fn test_integration_eth_transfer_from() {
     // Send a transaction to contract
     let amount = U64::from_raw(30);
     let spender = other_access_policy.into_account_id();
-    let approve_state = approve { amount, spender };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, approve_state.encode()).unwrap();
+    let approve_cmd = json!({
+        "amount": amount,
+        "spender": spender,
+    });
+    let req = input::Command::new(my_access_policy.clone(), approve_cmd, "approve");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "approve",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -703,26 +714,26 @@ async fn test_integration_eth_transfer_from() {
 
     // Check the updated states
     let my_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state_balance, U64::from_raw(100));
     assert_eq!(other_state_balance, U64::zero());
     assert_eq!(third_state_balance, U64::zero());
 
     let my_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(my_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let other_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(other_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let third_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(third_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(third_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let want_my_state = Approved::new({
         let mut bt = BTreeMap::new();
@@ -737,21 +748,20 @@ async fn test_integration_eth_transfer_from() {
     let amount = U64::from_raw(20);
     let owner = my_access_policy.into_account_id();
     let recipient = third_access_policy.into_account_id();
-    let transfer_from_cmd = transfer_from {
-        owner,
-        recipient,
-        amount,
-    };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_from_cmd.encode()).unwrap();
+    let transfer_from_cmd = json!({
+        "owner": owner,
+        "recipient": recipient,
+        "amount": amount,
+    });
+    let req = input::Command::new(
+        other_access_policy.clone(),
+        transfer_from_cmd,
+        "transfer_from",
+    );
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            other_access_policy.clone(),
-            encrypted_command,
-            "transfer_from",
-            deployer_addr,
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
@@ -764,26 +774,26 @@ async fn test_integration_eth_transfer_from() {
 
     // Check the final states
     let my_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state_balance, U64::from_raw(80));
     assert_eq!(other_state_balance, U64::zero());
     assert_eq!(third_state_balance, U64::from_raw(20));
 
     let my_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy, "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(my_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let other_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy, "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(other_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let third_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(third_access_policy, "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(third_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let want_my_state = Approved::new({
         let mut bt = BTreeMap::new();
@@ -839,13 +849,15 @@ async fn test_integration_eth_mint() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -864,17 +876,15 @@ async fn test_integration_eth_mint() {
     // transit state
     let amount = U64::from_raw(50);
     let recipient = other_access_policy.into_account_id();
-    let minting_state = mint { amount, recipient };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, minting_state.encode()).unwrap();
+    let mint_cmd = json!({
+        "amount": amount,
+        "recipient": recipient,
+    });
+    let req = input::Command::new(my_access_policy.clone(), mint_cmd, "mint");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
-            encrypted_command,
-            "mint",
-            deployer_addr,
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
         .unwrap();
 
@@ -888,13 +898,13 @@ async fn test_integration_eth_mint() {
 
     // Check the final states
     let actual_total_supply = dispatcher
-        .get_state::<U64, _, CallName>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
+        .get_state::<U64, _>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
         .unwrap();
     let owner_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(actual_total_supply, U64::from_raw(150));
     assert_eq!(owner_balance, U64::from_raw(100));
@@ -945,13 +955,15 @@ async fn test_integration_eth_burn() {
     // Init state
     let total_supply = U64::from_raw(100);
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
-    let init_cmd = construct { total_supply };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, init_cmd.encode()).unwrap();
+    let init_cmd = json!({
+        "total_supply": total_supply,
+    });
+    let req = input::Command::new(my_access_policy.clone(), init_cmd, "construct");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "construct",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -970,13 +982,16 @@ async fn test_integration_eth_burn() {
     // Send a transaction to contract
     let amount = U64::from_raw(30);
     let recipient = other_access_policy.into_account_id();
-    let transfer_cmd = transfer { amount, recipient };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, transfer_cmd.encode()).unwrap();
+    let transfer_cmd = json!({
+        "amount": amount,
+        "recipient": recipient,
+    });
+    let req = input::Command::new(my_access_policy.clone(), transfer_cmd, "transfer");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            my_access_policy.clone(),
+        .send_command(
             encrypted_command,
-            "transfer",
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -993,17 +1008,14 @@ async fn test_integration_eth_burn() {
 
     // Send a transaction to contract
     let amount = U64::from_raw(20);
-    let burn_state = burn { amount };
-    let encrypted_command = EciesCiphertext::encrypt(&pubkey, burn_state.encode()).unwrap();
+    let burn_cmd = json!({
+        "amount": amount,
+    });
+    let req = input::Command::new(other_access_policy.clone(), burn_cmd, "burn");
+    let encrypted_command =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command::<CallName, _>(
-            other_access_policy.clone(),
-            encrypted_command,
-            "burn",
-            deployer_addr,
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
@@ -1016,13 +1028,13 @@ async fn test_integration_eth_burn() {
 
     // Check the final states
     let actual_total_supply = dispatcher
-        .get_state::<U64, _, CallName>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
+        .get_state::<U64, _>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
         .unwrap();
     let owner_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(actual_total_supply, U64::from_raw(80)); // 100 - 20(burn)
     assert_eq!(owner_balance, U64::from_raw(70)); // 100 - 30(transfer)

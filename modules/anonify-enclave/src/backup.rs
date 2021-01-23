@@ -12,18 +12,14 @@ use frame_treekem::PathSecret;
 use std::vec::Vec;
 
 /// A PathSecret Backupper
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PathSecretBackupper;
 
 impl EnclaveEngine for PathSecretBackupper {
     type EI = input::BackupPathSecretAll;
     type EO = output::Empty;
 
-    fn handle<R, C>(
-        _ecall_input: Self::EI,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> Result<Self::EO>
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
@@ -50,18 +46,14 @@ impl EnclaveEngine for PathSecretBackupper {
 }
 
 /// A PathSecret Recoverer
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PathSecretRecoverer;
 
 impl EnclaveEngine for PathSecretRecoverer {
     type EI = input::RecoverPathSecretAll;
     type EO = output::Empty;
 
-    fn handle<R, C>(
-        _ecall_input: Self::EI,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> Result<Self::EO>
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,

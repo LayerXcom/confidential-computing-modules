@@ -3,7 +3,7 @@ use crate::Server;
 use actix_web::{web, HttpResponse};
 use anonify_eth_driver::traits::*;
 use anyhow::anyhow;
-use erc20_state_transition::{cmd::*, CallName};
+use erc20_state_transition::cmd::*;
 use frame_runtime::primitives::{Approved, U64};
 use std::{sync::Arc, time};
 use tracing::{debug, error, info};
@@ -117,16 +117,11 @@ where
         .get_account(server.account_index, &server.password)
         .await
         .map_err(|e| ServerError::from(e))?;
-    let access_right = req
-        .into_access_right()
-        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
 
     let tx_hash = server
         .dispatcher
-        .send_command::<CallName, _>(
-            access_right,
-            req.encrypted_command.clone(),
-            &req.function,
+        .send_command(
+            req.encrypted_req.clone(),
             sender_address,
             DEFAULT_GAS,
             SEND_COMMAND_CMD,
@@ -180,7 +175,7 @@ where
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     let owner_approved = server
         .dispatcher
-        .get_state::<Approved, _, CallName>(access_right, "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(access_right, "approved", GET_STATE_CMD)
         .map_err(|e| ServerError::from(e))?;
     let approved_amount = owner_approved.allowance(&req.spender).unwrap();
     // TODO: stop using unwrap when switching from failure to anyhow.
@@ -211,7 +206,7 @@ where
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     let state = server
         .dispatcher
-        .get_state::<U64, _, CallName>(access_right, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(access_right, "balance_of", GET_STATE_CMD)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state.as_raw())))

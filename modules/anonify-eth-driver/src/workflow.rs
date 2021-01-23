@@ -1,4 +1,3 @@
-use crate::utils::CommandInfo;
 use anonify_ecall_types::*;
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
@@ -11,14 +10,11 @@ use web3::types::Address;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
 
-pub struct CommandWorkflow<C: CallNameConverter, AP: AccessPolicy> {
-    c: PhantomData<C>,
-    ap: PhantomData<AP>,
-}
+pub struct CommandWorkflow;
 
-impl<C: CallNameConverter, AP: AccessPolicy> HostEngine for CommandWorkflow<C, AP> {
-    type HI = host_input::Command<C, AP>;
-    type EI = input::Command<AP>;
+impl HostEngine for CommandWorkflow {
+    type HI = host_input::Command;
+    type EI = EciesCiphertext;
     type EO = output::Command;
     type HO = host_output::Command;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -131,47 +127,37 @@ impl HostEngine for RecoverPathSecretAllWorkflow {
 pub mod host_input {
     use super::*;
 
-    pub struct Command<C: CallNameConverter, AP: AccessPolicy> {
-        encrypted_command: EciesCiphertext,
-        call_name: String,
-        access_policy: AP,
+    pub struct Command {
+        encrypted_req: EciesCiphertext,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
-        phantom: PhantomData<C>,
     }
 
-    impl<C: CallNameConverter, AP: AccessPolicy> Command<C, AP> {
+    impl Command {
         pub fn new(
-            encrypted_command: EciesCiphertext,
-            call_name: String,
-            access_policy: AP,
+            encrypted_req: EciesCiphertext,
             signer: Address,
             gas: u64,
             ecall_cmd: u32,
         ) -> Self {
             Command {
-                encrypted_command,
-                call_name,
-                access_policy,
+                encrypted_req,
                 signer,
                 gas,
                 ecall_cmd,
-                phantom: PhantomData,
             }
         }
     }
 
-    impl<C: CallNameConverter, AP: AccessPolicy> HostInput for Command<C, AP> {
-        type EcallInput = input::Command<AP>;
+    impl HostInput for Command {
+        type EcallInput = EciesCiphertext;
         type HostOutput = host_output::Command;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let command_info = CommandInfo::<C>::new(self.encrypted_command, &self.call_name);
-            let ecall_input = command_info.crate_input(self.access_policy);
             let host_output = host_output::Command::new(self.signer, self.gas);
 
-            Ok((ecall_input, host_output))
+            Ok((self.encrypted_req, host_output))
         }
 
         fn ecall_cmd(&self) -> u32 {
@@ -303,15 +289,15 @@ pub mod host_input {
 
     pub struct GetState<AP: AccessPolicy> {
         access_policy: AP,
-        call_id: u32,
+        fn_name: String,
         ecall_cmd: u32,
     }
 
     impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, call_id: u32, ecall_cmd: u32) -> Self {
+        pub fn new(access_policy: AP, fn_name: String, ecall_cmd: u32) -> Self {
             GetState {
                 access_policy,
-                call_id,
+                fn_name,
                 ecall_cmd,
             }
         }
@@ -322,7 +308,7 @@ pub mod host_input {
         type HostOutput = host_output::GetState;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let ecall_input = Self::EcallInput::new(self.access_policy, self.call_id);
+            let ecall_input = Self::EcallInput::new(self.access_policy, self.fn_name);
 
             Ok((ecall_input, Self::HostOutput::new()))
         }

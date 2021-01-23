@@ -3,17 +3,17 @@ use crate::{
     error::Result,
     term::Term,
 };
+use anonify_ecall_types::input;
 use anonify_wallet::{DirOperations, KeyFile, KeystoreDirectory, WalletDirectory};
 use anyhow::anyhow;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
-use codec::Encode;
 use ed25519_dalek::Keypair;
-use erc20_state_transition::{approve, burn, construct, mint, transfer, transfer_from};
-use frame_common::crypto::AccountId;
+use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
 use frame_runtime::primitives::U64;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use rand::Rng;
 use reqwest::Client;
+use serde_json::json;
 use std::path::PathBuf;
 
 pub(crate) fn deploy(anonify_url: String) -> Result<()> {
@@ -81,17 +81,18 @@ pub(crate) fn init_state<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let init_state = construct {
-        total_supply: U64::from_raw(total_supply),
-    };
-    let encrypted_total_supply = EciesCiphertext::encrypt(&encrypting_key, init_state.encode())
-        .map_err(|e| anyhow!("{:?}", e))?;
+    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let init_state = json!({
+        "total_supply": U64::from_raw(total_supply),
+    });
+    let req = input::Command::new(access_policy, init_state, "construct");
+    let encrypted_req =
+        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+            .map_err(|e| anyhow!("{:?}", e))?;
 
-    let req =
-        erc20_api::state::post::Request::new("construct", &keypair, encrypted_total_supply, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&req)
+        .json(&erc20_api::state::post::Request::new(encrypted_req))
         .send()?
         .text()?;
 
@@ -111,18 +112,21 @@ pub(crate) fn transfer<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let transfer_cmd = transfer {
-        amount: U64::from_raw(amount),
-        recipient,
-    };
-    let encrypted_transfer_cmd = EciesCiphertext::encrypt(&encrypting_key, transfer_cmd.encode())
-        .map_err(|e| anyhow!("{:?}", e))?;
+    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let transfer_cmd = json!({
+        "amount": U64::from_raw(amount),
+        "recipient": recipient,
+    });
+    let req = input::Command::new(access_policy, transfer_cmd, "transfer");
+    let encrypted_transfer_cmd =
+        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+            .map_err(|e| anyhow!("{:?}", e))?;
 
-    let req =
-        erc20_api::state::post::Request::new("transfer", &keypair, encrypted_transfer_cmd, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&req)
+        .json(&erc20_api::state::post::Request::new(
+            encrypted_transfer_cmd,
+        ))
         .send()?
         .text()?;
 
@@ -142,17 +146,19 @@ pub(crate) fn approve<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let approve_cmd = approve {
-        amount: U64::from_raw(amount),
-        spender,
-    };
-    let encrypted_approve_cmd = EciesCiphertext::encrypt(&encrypting_key, approve_cmd.encode())
-        .map_err(|e| anyhow!("{:?}", e))?;
+    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let approve_cmd = json!({
+        "amount": U64::from_raw(amount),
+        "spender": spender,
+    });
+    let req = input::Command::new(access_policy, approve_cmd, "approve");
+    let encrypted_approve_cmd =
+        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+            .map_err(|e| anyhow!("{:?}", e))?;
 
-    let req = erc20_api::state::post::Request::new("approve", &keypair, encrypted_approve_cmd, rng);
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&req)
+        .json(&erc20_api::state::post::Request::new(encrypted_approve_cmd))
         .send()?
         .text()?;
 
@@ -173,24 +179,23 @@ pub(crate) fn transfer_from<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let transfer_from_cmd = transfer_from {
-        amount: U64::from_raw(amount),
-        owner,
-        recipient,
-    };
+
+    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let transfer_from_cmd = json!({
+        "amount": U64::from_raw(amount),
+        "owner": owner,
+        "recipient": recipient,
+    });
+    let req = input::Command::new(access_policy, transfer_from_cmd, "transfer_from");
     let encrypted_transfer_from_cmd =
-        EciesCiphertext::encrypt(&encrypting_key, transfer_from_cmd.encode())
+        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
-    let req = erc20_api::state::post::Request::new(
-        "transfer_from",
-        &keypair,
-        encrypted_transfer_from_cmd,
-        rng,
-    );
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&req)
+        .json(&erc20_api::state::post::Request::new(
+            encrypted_transfer_from_cmd,
+        ))
         .send()?
         .text()?;
 
@@ -210,17 +215,20 @@ pub(crate) fn mint<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let mint_cmd = mint {
-        amount: U64::from_raw(amount),
-        recipient,
-    };
-    let encrypted_mint_cmd = EciesCiphertext::encrypt(&encrypting_key, mint_cmd.encode())
-        .map_err(|e| anyhow!("{:?}", e))?;
 
-    let req = erc20_api::state::post::Request::new("mint", &keypair, encrypted_mint_cmd, rng);
+    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let mint_cmd = json!({
+        "amount": U64::from_raw(amount),
+        "recipient": recipient,
+    });
+    let req = input::Command::new(access_policy, mint_cmd, "mint");
+    let encrypted_mint_cmd =
+        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+            .map_err(|e| anyhow!("{:?}", e))?;
+
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&req)
+        .json(&erc20_api::state::post::Request::new(encrypted_mint_cmd))
         .send()?
         .text()?;
 
@@ -239,16 +247,19 @@ pub(crate) fn burn<R: Rng>(
 ) -> Result<()> {
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let burn_cmd = burn {
-        amount: U64::from_raw(amount),
-    };
-    let encrypted_burn_cmd = EciesCiphertext::encrypt(&encrypting_key, burn_cmd.encode())
-        .map_err(|e| anyhow!("{:?}", e))?;
 
-    let req = erc20_api::state::post::Request::new("burn", &keypair, encrypted_burn_cmd, rng);
+    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let burn_cmd = json!({
+        "amount": U64::from_raw(amount),
+    });
+    let req = input::Command::new(access_policy, burn_cmd, "burn");
+    let encrypted_burn_cmd =
+        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+            .map_err(|e| anyhow!("{:?}", e))?;
+
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&req)
+        .json(&erc20_api::state::post::Request::new(encrypted_burn_cmd))
         .send()?
         .text()?;
 

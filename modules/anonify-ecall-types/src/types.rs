@@ -1,4 +1,10 @@
-use crate::localstd::{fmt, vec::Vec};
+use crate::localstd::{
+    fmt, str,
+    string::{String, ToString},
+    vec::Vec,
+};
+use crate::serde::{Deserialize, Serialize};
+use crate::serde_json;
 use codec::{self, Decode, Encode, Input};
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
@@ -6,31 +12,57 @@ use frame_common::{
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_treekem::DhPubKey;
 
 pub mod input {
     use super::*;
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Debug, Clone, Deserialize, Serialize)]
+    #[serde(crate = "crate::serde")]
     pub struct Command<AP: AccessPolicy> {
+        #[serde(deserialize_with = "AP::deserialize")]
         pub access_policy: AP,
-        pub encrypted_command: EciesCiphertext,
-        pub call_id: u32,
+        pub runtime_command: serde_json::Value,
+        pub fn_name: String,
     }
 
-    impl<AP: AccessPolicy> EcallInput for Command<AP> {}
+    impl<AP> Default for Command<AP>
+    where
+        AP: AccessPolicy,
+    {
+        fn default() -> Self {
+            Self {
+                access_policy: AP::default(),
+                runtime_command: serde_json::Value::Null,
+                fn_name: String::default(),
+            }
+        }
+    }
 
-    impl<AP: AccessPolicy> Command<AP> {
-        pub fn new(access_policy: AP, encrypted_command: EciesCiphertext, call_id: u32) -> Self {
+    impl<AP> EcallInput for Command<AP> where AP: AccessPolicy {}
+
+    impl<AP> Command<AP>
+    where
+        AP: AccessPolicy,
+    {
+        pub fn new(
+            access_policy: AP,
+            runtime_command: serde_json::Value,
+            fn_name: impl ToString,
+        ) -> Self {
             Command {
                 access_policy,
-                encrypted_command,
-                call_id,
+                runtime_command,
+                fn_name: fn_name.to_string(),
             }
         }
 
         pub fn access_policy(&self) -> &AP {
             &self.access_policy
+        }
+
+        pub fn fn_name(&self) -> &str {
+            &self.fn_name
         }
     }
 
@@ -54,7 +86,7 @@ pub mod input {
 
     impl EcallInput for CallRegisterReport {}
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct InsertCiphertext {
         ciphertext: Ciphertext,
     }
@@ -71,7 +103,7 @@ pub mod input {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct InsertHandshake {
         handshake: ExportHandshake,
     }
@@ -88,19 +120,19 @@ pub mod input {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct GetState<AP: AccessPolicy> {
         access_policy: AP,
-        call_id: u32,
+        pub fn_name: Vec<u8>, // codec does not support for `String`
     }
 
     impl<AP: AccessPolicy> EcallInput for GetState<AP> {}
 
     impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, call_id: u32) -> Self {
+        pub fn new(access_policy: AP, fn_name: String) -> Self {
             GetState {
                 access_policy,
-                call_id,
+                fn_name: fn_name.into_bytes(),
             }
         }
 
@@ -108,12 +140,12 @@ pub mod input {
             &self.access_policy
         }
 
-        pub fn call_id(&self) -> u32 {
-            self.call_id
+        pub fn fn_name(&self) -> &str {
+            str::from_utf8(&self.fn_name).unwrap()
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, Default)]
     pub struct RegisterNotification<AP: AccessPolicy> {
         access_policy: AP,
     }

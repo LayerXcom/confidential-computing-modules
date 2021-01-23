@@ -9,18 +9,14 @@ use frame_runtime::traits::*;
 use frame_treekem::handshake::HandshakeParams;
 
 /// A add handshake Sender
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct JoinGroupSender;
 
 impl EnclaveEngine for JoinGroupSender {
     type EI = input::CallJoinGroup;
     type EO = output::ReturnJoinGroup;
 
-    fn handle<R, C>(
-        _ecall_input: Self::EI,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> Result<Self::EO>
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
@@ -62,18 +58,14 @@ impl EnclaveEngine for JoinGroupSender {
 }
 
 /// A update handshake sender
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct HandshakeSender;
 
 impl EnclaveEngine for HandshakeSender {
     type EI = input::CallHandshake;
     type EO = output::ReturnHandshake;
 
-    fn handle<R, C>(
-        _ecall_input: Self::EI,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> Result<Self::EO>
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
@@ -115,24 +107,32 @@ impl EnclaveEngine for HandshakeSender {
 }
 
 /// A handshake receiver
-#[derive(Debug, Clone)]
-pub struct HandshakeReceiver;
+#[derive(Debug, Clone, Default)]
+pub struct HandshakeReceiver {
+    ecall_input: input::InsertHandshake,
+}
 
 impl EnclaveEngine for HandshakeReceiver {
     type EI = input::InsertHandshake;
     type EO = output::Empty;
 
-    fn handle<R, C>(
-        ecall_input: Self::EI,
-        enclave_context: &C,
-        _max_mem_size: usize,
-    ) -> Result<Self::EO>
+    fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    where
+        C: ContextOps<S = StateType> + Clone,
+    {
+        // TODO: decrypt
+        Ok(Self {
+            ecall_input: ciphertext,
+        })
+    }
+
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();
-        let handshake = HandshakeParams::decode(&mut &ecall_input.handshake().handshake()[..])
+        let handshake = HandshakeParams::decode(&mut &self.ecall_input.handshake().handshake()[..])
             .map_err(|_| anyhow!("HandshakeParams::decode Error"))?;
 
         group_key.process_handshake(
