@@ -3,9 +3,7 @@ extern crate lazy_static;
 use anonify_ecall_types::input;
 use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
 use codec::{Decode, Encode};
-use erc20_state_transition::{
-    approve, burn, cmd::*, construct, mint, transfer, transfer_from, CallName,
-};
+use erc20_state_transition::{approve, burn, cmd::*, construct, mint, transfer, transfer_from};
 use ethabi::Contract as ContractABI;
 use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
@@ -133,13 +131,13 @@ async fn test_integration_eth_construct() {
 
     // Get state from enclave
     let owner_account_id = dispatcher
-        .get_state::<AccountId, _, CallName>(COMMON_ACCESS_POLICY.clone(), "owner", GET_STATE_CMD)
+        .get_state::<AccountId, _>(COMMON_ACCESS_POLICY.clone(), "owner", GET_STATE_CMD)
         .unwrap();
     let my_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let actual_total_supply = dispatcher
-        .get_state::<U64, _, CallName>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
+        .get_state::<U64, _>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
         .unwrap();
     assert_eq!(owner_account_id, my_access_policy.into_account_id());
     assert_eq!(my_balance, total_supply);
@@ -329,13 +327,13 @@ async fn test_integration_eth_transfer() {
 
     // Get state from enclave
     let my_state = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, U64::zero());
@@ -365,13 +363,13 @@ async fn test_integration_eth_transfer() {
 
     // Check the updated states
     let my_updated_state = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_updated_state = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_updated_state = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(third_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
 
     assert_eq!(my_updated_state, U64::from_raw(70));
@@ -462,13 +460,13 @@ async fn test_key_rotation() {
 
     // Get state from enclave
     let my_state = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(third_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, U64::zero());
@@ -545,10 +543,10 @@ async fn test_integration_eth_approve() {
 
     // Get state from enclave
     let my_state = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(my_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let other_state = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(other_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state, Approved::default());
     assert_eq!(other_state, Approved::default());
@@ -577,10 +575,10 @@ async fn test_integration_eth_approve() {
 
     // Check the updated states
     let my_state = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy, "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(my_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let other_state = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy, "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(other_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let want_my_state = Approved::new({
         let mut bt = BTreeMap::new();
@@ -662,26 +660,26 @@ async fn test_integration_eth_transfer_from() {
 
     // Get initial state from enclave
     let my_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state_balance, U64::from_raw(100));
     assert_eq!(other_state_balance, U64::zero());
     assert_eq!(third_state_balance, U64::zero());
 
     let my_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(my_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let other_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(other_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let third_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(third_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(third_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state_approved, Approved::default());
     assert_eq!(other_state_approved, Approved::default());
@@ -716,26 +714,26 @@ async fn test_integration_eth_transfer_from() {
 
     // Check the updated states
     let my_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state_balance, U64::from_raw(100));
     assert_eq!(other_state_balance, U64::zero());
     assert_eq!(third_state_balance, U64::zero());
 
     let my_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(my_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let other_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(other_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let third_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(third_access_policy.clone(), "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(third_access_policy.clone(), "approved", GET_STATE_CMD)
         .unwrap();
     let want_my_state = Approved::new({
         let mut bt = BTreeMap::new();
@@ -776,26 +774,26 @@ async fn test_integration_eth_transfer_from() {
 
     // Check the final states
     let my_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     let third_state_balance = dispatcher
-        .get_state::<U64, _, CallName>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(third_access_policy.clone(), "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(my_state_balance, U64::from_raw(80));
     assert_eq!(other_state_balance, U64::zero());
     assert_eq!(third_state_balance, U64::from_raw(20));
 
     let my_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(my_access_policy, "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(my_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let other_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(other_access_policy, "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(other_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let third_state_approved = dispatcher
-        .get_state::<Approved, _, CallName>(third_access_policy, "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(third_access_policy, "approved", GET_STATE_CMD)
         .unwrap();
     let want_my_state = Approved::new({
         let mut bt = BTreeMap::new();
@@ -900,13 +898,13 @@ async fn test_integration_eth_mint() {
 
     // Check the final states
     let actual_total_supply = dispatcher
-        .get_state::<U64, _, CallName>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
+        .get_state::<U64, _>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
         .unwrap();
     let owner_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(actual_total_supply, U64::from_raw(150));
     assert_eq!(owner_balance, U64::from_raw(100));
@@ -1030,13 +1028,13 @@ async fn test_integration_eth_burn() {
 
     // Check the final states
     let actual_total_supply = dispatcher
-        .get_state::<U64, _, CallName>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
+        .get_state::<U64, _>(COMMON_ACCESS_POLICY.clone(), "total_supply", GET_STATE_CMD)
         .unwrap();
     let owner_balance = dispatcher
-        .get_state::<U64, _, CallName>(my_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(my_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     let other_balance = dispatcher
-        .get_state::<U64, _, CallName>(other_access_policy, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(other_access_policy, "balance_of", GET_STATE_CMD)
         .unwrap();
     assert_eq!(actual_total_supply, U64::from_raw(80)); // 100 - 20(burn)
     assert_eq!(owner_balance, U64::from_raw(70)); // 100 - 30(transfer)

@@ -143,7 +143,7 @@ where
     AP: AccessPolicy,
 {
     pub fn new(my_account_id: AccountId, ecall_input: input::Command<AP>) -> Result<Self> {
-        let call_kind = R::C::new(ecall_input.fn_name().to_string(), ecall_input.runtime_command)?;
+        let call_kind = R::C::new(ecall_input.fn_name(), ecall_input.runtime_command.clone())?;
 
         Ok(Commands {
             my_account_id,
@@ -194,7 +194,7 @@ where
     }
 
     fn stf_call(self, ctx: CTX) -> Result<Vec<UpdatedState<StateType>>> {
-        let res = R::new(ctx).execute(self.call_kind, self.my_account_id)?; 
+        let res = R::new(ctx).execute(self.call_kind, self.my_account_id)?;
 
         match res {
             ReturnState::Updated(updates) => Ok(updates),

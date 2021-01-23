@@ -3,7 +3,7 @@ use crate::Server;
 use actix_web::{web, HttpResponse};
 use anonify_eth_driver::traits::*;
 use anyhow::anyhow;
-use erc20_state_transition::{cmd::*, CallName};
+use erc20_state_transition::cmd::*;
 use frame_runtime::primitives::{Approved, U64};
 use std::{sync::Arc, time};
 use tracing::{debug, error, info};
@@ -175,7 +175,7 @@ where
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     let owner_approved = server
         .dispatcher
-        .get_state::<Approved, _, CallName>(access_right, "approved", GET_STATE_CMD)
+        .get_state::<Approved, _>(access_right, "approved", GET_STATE_CMD)
         .map_err(|e| ServerError::from(e))?;
     let approved_amount = owner_approved.allowance(&req.spender).unwrap();
     // TODO: stop using unwrap when switching from failure to anyhow.
@@ -206,7 +206,7 @@ where
         .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     let state = server
         .dispatcher
-        .get_state::<U64, _, CallName>(access_right, "balance_of", GET_STATE_CMD)
+        .get_state::<U64, _>(access_right, "balance_of", GET_STATE_CMD)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state.as_raw())))

@@ -31,7 +31,7 @@ pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clo
     type R: RuntimeExecutor<G>;
     type S: State;
 
-    fn new(cmd_name: String, cmd: serde_json::Value) -> Result<Self>;
+    fn new(cmd_name: &str, cmd: serde_json::Value) -> Result<Self>;
     fn execute(self, runtime: Self::R, my_account_id: AccountId) -> Result<ReturnState<Self::S>>;
 }
 
@@ -84,7 +84,7 @@ pub trait StateOps {
 
     /// Get state using call id.
     /// this is called in user-defined state getting functions.
-    fn get_state_by_call_id<U, R, CTX>(ctx: CTX, fn_name: &str, account_id: U) -> Result<Self::S>
+    fn get_state_by_cmd_name<U, R, CTX>(ctx: CTX, cmd_name: &str, account_id: U) -> Result<Self::S>
     where
         U: Into<AccountId>,
         R: RuntimeExecutor<CTX, S = Self::S>,

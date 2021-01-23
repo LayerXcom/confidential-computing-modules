@@ -80,18 +80,6 @@ macro_rules! __impl_inner_runtime {
             impl RuntimeCommand for $fn_name {}
         )*
 
-        #[derive(Debug, Clone)]
-        pub struct CallName;
-
-        impl CallNameConverter for CallName {
-            fn as_id(name: &str) -> u32 {
-                match name {
-                    $( stringify!($fn_name) => $fn_id, )*
-                    _ => panic!("invalid call name"),
-                }
-            }
-        }
-
         #[cfg(feature = "sgx")]
         #[derive(Debug, Clone, Encode, Decode)]
         pub enum CallKind {
@@ -109,8 +97,8 @@ macro_rules! __impl_inner_runtime {
             type R = Runtime<G>;
             type S = StateType;
 
-            fn new(cmd_name: String, cmd: serde_json::Value) -> Result<Self> {
-                match &cmd_name[..] {
+            fn new(cmd_name: &str, cmd: serde_json::Value) -> Result<Self> {
+                match cmd_name {
                     $( stringify!($fn_name) => {
                         if cmd.is_null() {
                             Ok(CallKind::$fn_name($fn_name::default()))

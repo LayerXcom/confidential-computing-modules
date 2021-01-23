@@ -51,11 +51,6 @@ pub trait MemNameConverter: Debug {
     fn as_id(name: &str) -> MemId;
 }
 
-/// A converter from call name to call id
-pub trait CallNameConverter: Debug {
-    fn as_id(name: &str) -> u32;
-}
-
 pub trait IntoVec {
     fn into_vec(&self) -> Vec<u8>;
 }
