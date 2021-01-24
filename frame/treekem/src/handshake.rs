@@ -1,4 +1,6 @@
 use crate::application::AppKeyChain;
+use crate::bincode;
+use crate::serde_bytes;
 use crate::crypto::{
     dh::DhPubKey, ecies::EciesCiphertext, hash::hash_encodable, secrets::PathSecret, CryptoRng,
 };
@@ -9,8 +11,8 @@ use crate::localstd::sync::RwLock;
 #[cfg(feature = "sgx")]
 use crate::localstd::sync::SgxRwLock as RwLock;
 use crate::localstd::{collections::HashMap, string::String, sync::Arc, vec::Vec};
+use crate::serde::{Deserialize, Serialize};
 use crate::StorePathSecrets;
-use codec::{Decode, Encode};
 use frame_common::crypto::{ExportHandshake, ExportPathSecret};
 
 /// A handshake operates sharing a group key to each member.
@@ -33,7 +35,8 @@ pub trait Handshake: Sized {
 
 // TODO: Does need signature over the group's history?
 /// This `Handshake` is sent to global ledger.
-#[derive(Clone, Debug, Encode, Decode)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub struct HandshakeParams {
     /// This is equal to the epoch of the current groupstate
     /// at the time of receicing and applying the handshake.
@@ -56,7 +59,11 @@ impl HandshakeParams {
     }
 
     pub fn into_export(self) -> ExportHandshake {
-        ExportHandshake::new(self.prior_epoch, self.roster_idx, self.encode())
+        ExportHandshake::new(
+            self.prior_epoch,
+            self.roster_idx,
+            bincode::serialize(&self).unwrap(),
+        )
     }
 
     pub fn from_export(export: ExportHandshake) -> Result<Self> {
@@ -77,7 +84,8 @@ impl HandshakeParams {
 }
 
 /// Encrypted direct path
-#[derive(Debug, Clone, Encode, Decode)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub struct DirectPathMsg {
     pub node_msgs: Vec<DirectPathNodeMsg>,
 }
@@ -89,7 +97,8 @@ impl DirectPathMsg {
 }
 
 /// Containes a direct path node's public key and encrypted secrets
-#[derive(Debug, Clone, Encode, Decode)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub struct DirectPathNodeMsg {
     pub public_key: DhPubKey,
     pub node_secrets: Vec<EciesCiphertext>,
@@ -116,7 +125,7 @@ pub enum PathSecretSource {
 #[derive(Debug, Clone)]
 pub struct PathSecretKVS(HashMap<AccessKey, PathSecret>);
 
-#[derive(Encode, Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(Serialize, Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub struct AccessKey {
     roster_idx: u32,
     epoch: u32,

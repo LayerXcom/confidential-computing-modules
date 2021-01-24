@@ -15,7 +15,6 @@ use super::{
 use crate::handshake::AccessKey;
 use crate::local_anyhow::{anyhow, Result};
 use crate::localstd::{fmt, vec::Vec};
-use codec::{Decode, Encode, Input};
 use frame_common::crypto::rand_assign;
 use frame_common::crypto::{ExportPathSecret, EXPORT_ID_SIZE, SEALED_DATA_SIZE};
 #[cfg(feature = "sgx")]

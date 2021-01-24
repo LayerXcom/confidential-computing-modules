@@ -563,6 +563,7 @@ impl ExportPathSecret {
 pub struct ExportHandshake {
     prior_epoch: u32,
     roster_idx: u32,
+    #[serde(with = "serde_bytes")]
     handshake: Vec<u8>,
 }
 

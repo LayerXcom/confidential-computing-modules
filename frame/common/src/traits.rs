@@ -1,7 +1,7 @@
 use crate::bincode;
 use crate::crypto::AccountId;
 use crate::local_anyhow::Result;
-use crate::localstd::{fmt::Debug, vec::Vec};
+use crate::localstd::{fmt::Debug, mem::size_of, vec::Vec};
 use crate::serde::{de::DeserializeOwned, Serialize};
 use crate::state_types::MemId;
 use ed25519_dalek::PublicKey;
@@ -19,13 +19,21 @@ pub trait EcallOutput {}
 
 /// Trait of each user's state.
 pub trait State: Sized + Default + Clone + Debug + DeserializeOwned + Serialize {
+    fn encode_s(&self) -> Vec<u8> {
+        bincode::serialize(&self).unwrap() // must not fail
+    }
+
+    fn decode_s(bytes: &[u8]) -> Result<Self> {
+        bincode::deserialize(&bytes[..]).map_err(Into::into)
+    }
+
     fn from_state(state: &impl State) -> Result<Self> {
         let state = bincode::serialize(state)?;
         bincode::deserialize(&state[..]).map_err(Into::into)
     }
 
     fn size(&self) -> usize {
-        bincode::serialized_size(&self).unwrap() as usize // must not fail
+        size_of::<Self>()
     }
 }
 

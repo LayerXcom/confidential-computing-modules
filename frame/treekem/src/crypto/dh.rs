@@ -1,10 +1,12 @@
 use super::{hkdf, hmac::HmacKey};
 use crate::local_anyhow::{anyhow, Result};
 use crate::local_secp256k1::{PublicKey, SecretKey};
-use crate::localstd::vec::Vec;
+use crate::localstd::{fmt, vec::Vec};
 #[cfg(feature = "std")]
-use crate::serde::{Deserialize, Serialize};
-use codec::{Decode, Encode, Error, Input};
+use crate::serde::{
+    de::{self, SeqAccess, Visitor},
+    Deserialize, Deserializer, Serialize, Serializer,
+};
 use frame_common::crypto::rand_assign;
 
 const SECRET_KEY_SIZE: usize = 32;
@@ -12,24 +14,6 @@ const COMPRESSED_PUBLIC_KEY_SIZE: usize = 33;
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct DhPrivateKey(SecretKey);
-
-impl Encode for DhPrivateKey {
-    fn using_encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {
-        self.0.serialize().using_encoded(f)
-    }
-
-    fn size_hint(&self) -> usize {
-        SECRET_KEY_SIZE
-    }
-}
-
-impl Decode for DhPrivateKey {
-    fn decode<I: Input>(value: &mut I) -> Result<Self, Error> {
-        let buf = <[u8; 32]>::decode(value)?;
-        let privkey = SecretKey::parse(&buf).unwrap();
-        Ok(DhPrivateKey(privkey))
-    }
-}
 
 impl DhPrivateKey {
     pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
@@ -52,6 +36,55 @@ impl DhPrivateKey {
     }
 }
 
+impl Serialize for DhPrivateKey {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_newtype_struct("DhPrivateKey", &self.0.serialize()[..])
+    }
+}
+
+impl<'de> de::Deserialize<'de> for DhPrivateKey {
+    fn deserialize<D>(de: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Copy, Clone, Debug)]
+        struct PubKeyVisitor;
+
+        impl<'de> Visitor<'de> for PubKeyVisitor {
+            type Value = DhPrivateKey;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                f.write_str("bytes of deserializable DhPrivateKey")
+            }
+
+            fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
+            where
+                V: SeqAccess<'de>,
+            {
+                let mut vec: Vec<u8> = Vec::new();
+                while let Some(elem) = visitor.next_element()? {
+                    vec.push(elem);
+                }
+
+                let pk = SecretKey::parse_slice(&vec[..]).map_err(|e| de::Error::custom(e))?;
+                Ok(DhPrivateKey(pk))
+            }
+
+            fn visit_newtype_struct<D>(self, de: D) -> Result<Self::Value, D::Error>
+            where
+                D: Deserializer<'de>,
+            {
+                de.deserialize_bytes(PubKeyVisitor)
+            }
+        }
+
+        de.deserialize_newtype_struct("DhPrivateKey", PubKeyVisitor)
+    }
+}
+
 #[cfg(feature = "std")]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
@@ -65,24 +98,6 @@ impl Default for DhPubKey {
     fn default() -> Self {
         let secret_key = SecretKey::default();
         DhPubKey(PublicKey::from_secret_key(&secret_key))
-    }
-}
-
-impl Encode for DhPubKey {
-    fn using_encoded<R, F: FnOnce(&[u8]) -> R>(&self, f: F) -> R {
-        self.0.serialize_compressed().using_encoded(f)
-    }
-
-    fn size_hint(&self) -> usize {
-        COMPRESSED_PUBLIC_KEY_SIZE
-    }
-}
-
-impl Decode for DhPubKey {
-    fn decode<I: Input>(value: &mut I) -> Result<Self, Error> {
-        let buf = <[u8; 33]>::decode(value)?;
-        let pubkey = PublicKey::parse_compressed(&buf).unwrap();
-        Ok(DhPubKey(pubkey))
     }
 }
 
