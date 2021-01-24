@@ -11,16 +11,18 @@ use super::{
     hmac::HmacKey,
     CryptoRng, SHA256_OUTPUT_LEN,
 };
+use crate::bincode;
 #[cfg(feature = "sgx")]
 use crate::handshake::AccessKey;
 use crate::local_anyhow::{anyhow, Result};
 use crate::localstd::{fmt, vec::Vec};
+use codec::{Decode, Encode, Input};
 use frame_common::crypto::rand_assign;
 use frame_common::crypto::{ExportPathSecret, EXPORT_ID_SIZE, SEALED_DATA_SIZE};
 #[cfg(feature = "sgx")]
 use sgx_tseal::SgxSealedData;
 #[cfg(feature = "sgx")]
-use sgx_types::sgx_sealed_data_t;
+use sgx_types::sgx_sealed_data_t; // TODO: for encoding SealedPathSecret
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);
@@ -189,7 +191,12 @@ impl PathSecret {
     pub fn derive_next(self, access_key: AccessKey) -> Result<PathSecret> {
         let prk = HmacKey::from(self);
         let mut path_secret_buf = vec![0u8; SHA256_OUTPUT_LEN];
-        hkdf::expand_label(&prk, b"next", &access_key.encode(), &mut path_secret_buf)?;
+        hkdf::expand_label(
+            &prk,
+            b"next",
+            &bincode::serialize(&access_key)?,
+            &mut path_secret_buf,
+        )?;
 
         Ok(PathSecret::from(path_secret_buf))
     }

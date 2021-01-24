@@ -13,6 +13,10 @@ extern crate core as localstd;
 #[cfg(feature = "std")]
 use anyhow as local_anyhow;
 #[cfg(all(feature = "sgx", not(feature = "std")))]
+use base64_sgx as base64;
+#[cfg(feature = "std")]
+use base64_std as base64;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
 use bincode_sgx as bincode;
 #[cfg(feature = "std")]
 use bincode_std as bincode;

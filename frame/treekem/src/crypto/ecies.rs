@@ -11,7 +11,6 @@ use crate::localstd::vec::Vec;
 use crate::serde::{Deserialize, Serialize};
 use crate::serde_bytes;
 
-#[cfg(feature = "std")]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(crate = "crate::serde")]
 pub struct EciesCiphertext {

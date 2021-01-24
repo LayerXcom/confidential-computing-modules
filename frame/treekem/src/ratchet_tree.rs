@@ -9,9 +9,10 @@ use crate::{
     handshake::{DirectPathMsg, DirectPathNodeMsg},
     tree_math,
 };
-use codec::Encode;
+use crate::serde::Serialize;
 
-#[derive(Clone, Debug, Encode)]
+#[derive(Clone, Debug, Serialize)]
+#[serde(crate = "crate::serde")]
 pub struct RatchetTree {
     nodes: Vec<RatchetTreeNode>,
 }
@@ -298,12 +299,13 @@ impl RatchetTree {
 
 /// A node in RatchetTree. Every node must have a DH public key.
 /// It may also optionally contain the corresponding private key.
-#[derive(Debug, Clone, Encode)]
+#[derive(Debug, Clone, Serialize)]
+#[serde(crate = "crate::serde")]
 pub enum RatchetTreeNode {
     Blank,
     Filled {
         public_key: DhPubKey,
-        #[codec(skip)]
+        #[serde(skip)]
         private_key: Option<DhPrivateKey>,
     },
 }

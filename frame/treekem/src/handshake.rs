@@ -1,6 +1,5 @@
 use crate::application::AppKeyChain;
 use crate::bincode;
-use crate::serde_bytes;
 use crate::crypto::{
     dh::DhPubKey, ecies::EciesCiphertext, hash::hash_encodable, secrets::PathSecret, CryptoRng,
 };
@@ -12,6 +11,7 @@ use crate::localstd::sync::RwLock;
 use crate::localstd::sync::SgxRwLock as RwLock;
 use crate::localstd::{collections::HashMap, string::String, sync::Arc, vec::Vec};
 use crate::serde::{Deserialize, Serialize};
+use crate::serde_bytes;
 use crate::StorePathSecrets;
 use frame_common::crypto::{ExportHandshake, ExportPathSecret};
 
@@ -67,7 +67,7 @@ impl HandshakeParams {
     }
 
     pub fn from_export(export: ExportHandshake) -> Result<Self> {
-        HandshakeParams::decode(&mut &export.handshake()[..]).map_err(|e| anyhow!("{:?}", e))
+        bincode::deserialize(&export.handshake()[..]).map_err(Into::into)
     }
 
     pub fn prior_epoch(&self) -> u32 {
@@ -126,6 +126,7 @@ pub enum PathSecretSource {
 pub struct PathSecretKVS(HashMap<AccessKey, PathSecret>);
 
 #[derive(Serialize, Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[serde(crate = "crate::serde")]
 pub struct AccessKey {
     roster_idx: u32,
     epoch: u32,

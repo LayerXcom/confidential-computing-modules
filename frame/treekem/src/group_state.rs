@@ -4,27 +4,28 @@ use crate::handshake::{AccessKey, Handshake, HandshakeParams, PathSecretSource};
 use crate::local_anyhow::{anyhow, ensure, Result};
 use crate::localstd::{env, vec::Vec};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
+use crate::serde::Serialize;
 use crate::store_path_secrets::StorePathSecrets;
 use crate::tree_math;
-use codec::Encode;
 use frame_common::crypto::{
     ExportPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverRequest, RecoveredPathSecret,
 };
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 
-#[derive(Clone, Debug, Encode)]
+#[derive(Clone, Debug, Serialize)]
+#[serde(crate = "crate::serde")]
 pub struct GroupState {
     /// The current version of the group key
     epoch: u32,
     /// Only if a member has a leaf node contained DhPrivKey, this indicates the roster index.
     /// Otherwise, this field is None.
-    #[codec(skip)]
+    #[serde(skip)]
     my_roster_idx: u32,
     /// RatchetTree contains blank nodes or filled nodes which consist of DhPubkey and DhPrivKey.
     tree: RatchetTree,
     /// The initial secret used to derive app_secret.
     /// It works as a salt of HKDF.
-    #[codec(skip)]
+    #[serde(skip)]
     init_secret: HmacKey,
 }
 

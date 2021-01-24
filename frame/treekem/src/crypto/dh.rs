@@ -1,8 +1,8 @@
 use super::{hkdf, hmac::HmacKey};
+use crate::base64;
 use crate::local_anyhow::{anyhow, Result};
-use crate::local_secp256k1::{PublicKey, SecretKey};
+use crate::local_secp256k1::{Error, PublicKey, PublicKeyFormat, SecretKey};
 use crate::localstd::{fmt, vec::Vec};
-#[cfg(feature = "std")]
 use crate::serde::{
     de::{self, SeqAccess, Visitor},
     Deserialize, Deserializer, Serialize, Serializer,
@@ -41,58 +41,104 @@ impl Serialize for DhPrivateKey {
     where
         S: Serializer,
     {
-        serializer.serialize_newtype_struct("DhPrivateKey", &self.0.serialize()[..])
-    }
-}
-
-impl<'de> de::Deserialize<'de> for DhPrivateKey {
-    fn deserialize<D>(de: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        #[derive(Copy, Clone, Debug)]
-        struct PubKeyVisitor;
-
-        impl<'de> Visitor<'de> for PubKeyVisitor {
-            type Value = DhPrivateKey;
-
-            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                f.write_str("bytes of deserializable DhPrivateKey")
-            }
-
-            fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
-            where
-                V: SeqAccess<'de>,
-            {
-                let mut vec: Vec<u8> = Vec::new();
-                while let Some(elem) = visitor.next_element()? {
-                    vec.push(elem);
-                }
-
-                let pk = SecretKey::parse_slice(&vec[..]).map_err(|e| de::Error::custom(e))?;
-                Ok(DhPrivateKey(pk))
-            }
-
-            fn visit_newtype_struct<D>(self, de: D) -> Result<Self::Value, D::Error>
-            where
-                D: Deserializer<'de>,
-            {
-                de.deserialize_bytes(PubKeyVisitor)
-            }
+        if serializer.is_human_readable() {
+            serializer.serialize_str(&base64::encode(&self.0.serialize()[..]))
+        } else {
+            serializer.serialize_bytes(&self.0.serialize())
         }
-
-        de.deserialize_newtype_struct("DhPrivateKey", PubKeyVisitor)
     }
 }
 
-#[cfg(feature = "std")]
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(crate = "crate::serde")]
-pub struct DhPubKey(PublicKey);
+struct DhPrivateKeyVisitor;
 
-#[cfg(feature = "sgx")]
+impl<'de> de::Visitor<'de> for DhPrivateKeyVisitor {
+    type Value = DhPrivateKey;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter
+            .write_str("a bytestring of either 33 (compressed), 64 (raw), or 65 bytes in length")
+    }
+
+    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        let value: &[u8] = &base64::decode(value).unwrap();
+        let pk = SecretKey::parse_slice(value).map_err(|_e| E::custom(Error::InvalidSecretKey))?;
+
+        Ok(DhPrivateKey(pk))
+    }
+}
+
+impl<'de> Deserialize<'de> for DhPrivateKey {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        if deserializer.is_human_readable() {
+            deserializer.deserialize_str(DhPrivateKeyVisitor)
+        } else {
+            deserializer.deserialize_bytes(DhPrivateKeyVisitor)
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DhPubKey(PublicKey);
+
+impl Serialize for DhPubKey {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        if serializer.is_human_readable() {
+            serializer.serialize_str(&base64::encode(&self.0.serialize()[..]))
+        } else {
+            serializer.serialize_bytes(&self.0.serialize())
+        }
+    }
+}
+
+struct DhPubKeyVisitor;
+
+impl<'de> de::Visitor<'de> for DhPubKeyVisitor {
+    type Value = DhPubKey;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter
+            .write_str("a bytestring of either 33 (compressed), 64 (raw), or 65 bytes in length")
+    }
+
+    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        let value: &[u8] = &base64::decode(value).unwrap();
+        let key_format = match value.len() {
+            33 => PublicKeyFormat::Compressed,
+            64 => PublicKeyFormat::Raw,
+            65 => PublicKeyFormat::Full,
+            _ => return Err(E::custom(Error::InvalidInputLength)),
+        };
+        let pk = PublicKey::parse_slice(value, Some(key_format))
+            .map_err(|_e| E::custom(Error::InvalidPublicKey))?;
+
+        Ok(DhPubKey(pk))
+    }
+}
+
+impl<'de> Deserialize<'de> for DhPubKey {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        if deserializer.is_human_readable() {
+            deserializer.deserialize_str(DhPubKeyVisitor)
+        } else {
+            deserializer.deserialize_bytes(DhPubKeyVisitor)
+        }
+    }
+}
 
 impl Default for DhPubKey {
     fn default() -> Self {
