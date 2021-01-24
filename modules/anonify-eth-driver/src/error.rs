@@ -24,8 +24,6 @@ pub enum HostError {
     Web3ContractDeployError(#[from] web3::contract::deploy::Error),
     #[error("Ethabi error: {0}")]
     EthabiError(#[from] ethabi::Error),
-    #[error("Codec error: {0}")]
-    CodecError(#[from] codec::Error),
     #[error("Frame host error: {0}")]
     FrameHostError(#[from] frame_host::Error),
 }

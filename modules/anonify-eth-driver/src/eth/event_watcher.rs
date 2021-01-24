@@ -8,7 +8,6 @@ use crate::{
 };
 use anyhow::anyhow;
 use async_trait::async_trait;
-use codec::Decode;
 use ethabi::{decode, Event, EventParam, Hash, ParamType};
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
@@ -169,7 +168,7 @@ impl Web3Logs {
                 );
                 payloads.push(payload);
             } else if log.0.topics[0] == self.events.handshake_signature() {
-                let res = match ExportHandshake::decode(&mut &data[..]) {
+                let res = match ExportHandshake::decode(&data[..]) {
                     Ok(c) => c,
                     Err(e) => {
                         error!("{}", e);

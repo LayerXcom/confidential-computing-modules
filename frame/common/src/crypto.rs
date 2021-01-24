@@ -597,6 +597,10 @@ impl ExportHandshake {
     pub fn encode(&self) -> Vec<u8> {
         bincode::serialize(&self).unwrap() // must not fail
     }
+
+    pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>>{
+        bincode::deserialize(bytes)
+    }
 }
 
 /// PathSecret to backup to key-vault server

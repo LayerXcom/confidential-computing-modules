@@ -15,15 +15,13 @@ macro_rules! register_ecall {
             }
         }
 
-        fn inner_ecall_handler<EE>(input_payload: &mut [u8]) -> anyhow::Result<Vec<u8>>
+        fn inner_ecall_handler<EE>(input_payload: &[u8]) -> anyhow::Result<Vec<u8>>
         where
             EE: EnclaveEngine,
-            EE::EI: EcallInput + codec::Decode,
-            EE::EO: EcallOutput + codec::Encode,
         {
             #[cfg(feature = "runtime_enabled")]
             let res = {
-                let ciphertext = EE::EI::decode(&mut &input_payload[..])
+                let ciphertext = bincode::deserialize(&input_payload[..])
                     .map_err(|e| anyhow!("{:?}", e))?;
                 let input = EE::decrypt::<$ctx_ops>(ciphertext, $ctx)?;
                 EE::eval_policy(&input)?;
@@ -33,7 +31,7 @@ macro_rules! register_ecall {
             #[cfg(not(feature = "runtime_enabled"))]
             let res = EE::handle_without_runtime::<$ctx_ops>($ctx)?;
 
-            Ok(res.encode())
+            bincode::serialize(&res).map_err(Into::into)
         }
 
         #[no_mangle]
