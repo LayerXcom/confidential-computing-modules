@@ -1455,7 +1455,6 @@ dependencies = [
  "frame-treekem",
  "hex",
  "integration-tests",
- "parity-scale-codec",
  "serde_json 1.0.59",
  "sgx_types 1.1.1",
  "thiserror 1.0.22",
