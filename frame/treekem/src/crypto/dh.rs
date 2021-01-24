@@ -84,7 +84,7 @@ impl Serialize for DhPubKey {
     where
         S: Serializer,
     {
-        serializer.serialize_bytes(&self.0.serialize())
+        serializer.serialize_bytes(&self.0.serialize_compressed())
     }
 }
 
@@ -108,13 +108,9 @@ impl<'de> Deserialize<'de> for DhPubKey {
             where
                 E: de::Error,
             {
-                let key_format = match value.len() {
-                    33 => PublicKeyFormat::Compressed,
-                    64 => PublicKeyFormat::Raw,
-                    65 => PublicKeyFormat::Full,
-                    _ => return Err(E::custom(Error::InvalidInputLength)),
-                };
-                let pk = PublicKey::parse_slice(value, Some(key_format))
+                let mut buf = [0u8; COMPRESSED_PUBLIC_KEY_SIZE];
+                buf.copy_from_slice(&value);
+                let pk = PublicKey::parse_compressed(&buf)
                     .map_err(|_e| E::custom(Error::InvalidPublicKey))?;
 
                 Ok(DhPubKey(pk))
