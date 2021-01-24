@@ -3,9 +3,12 @@ use crate::localstd::{
     string::{String, ToString},
     vec::Vec,
 };
-use crate::serde::{Deserialize, Serialize};
+use crate::serde::{
+    de::{self, SeqAccess},
+    Deserialize, Serialize, Serializer,
+};
+use crate::serde_bytes;
 use crate::serde_json;
-use codec::{self, Decode, Encode, Input};
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
     state_types::{StateType, UpdatedState},
@@ -66,27 +69,32 @@ pub mod input {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct GetEncryptingKey;
 
     impl EcallInput for GetEncryptingKey {}
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct CallHandshake;
 
     impl EcallInput for CallHandshake {}
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct CallJoinGroup;
 
     impl EcallInput for CallJoinGroup {}
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct CallRegisterReport;
 
     impl EcallInput for CallRegisterReport {}
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct InsertCiphertext {
         ciphertext: Ciphertext,
     }
@@ -103,7 +111,8 @@ pub mod input {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct InsertHandshake {
         handshake: ExportHandshake,
     }
@@ -120,10 +129,12 @@ pub mod input {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct GetState<AP: AccessPolicy> {
+        #[serde(deserialize_with = "AP::deserialize")]
         access_policy: AP,
-        pub cmd_name: Vec<u8>, // codec does not support for `String`
+        cmd_name: String,
     }
 
     impl<AP: AccessPolicy> EcallInput for GetState<AP> {}
@@ -141,12 +152,14 @@ pub mod input {
         }
 
         pub fn cmd_name(&self) -> &str {
-            str::from_utf8(&self.cmd_name).unwrap()
+            &self.cmd_name
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct RegisterNotification<AP: AccessPolicy> {
+        #[serde(deserialize_with = "AP::deserialize")]
         access_policy: AP,
     }
 
@@ -162,12 +175,14 @@ pub mod input {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct BackupPathSecretAll;
 
     impl EcallInput for BackupPathSecretAll {}
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct RecoverPathSecretAll;
 
     impl EcallInput for RecoverPathSecretAll {}
@@ -197,40 +212,56 @@ pub mod output {
 
     impl EcallOutput for Command {}
 
-    impl Encode for Command {
-        fn encode(&self) -> Vec<u8> {
-            let mut acc = vec![];
-            acc.extend_from_slice(&self.encode_enclave_sig());
-            acc.push(self.encode_recovery_id());
-            acc.extend_from_slice(&self.encode_ciphertext());
-
-            acc
+    impl Serialize for Command {
+        // not for human readable, used for binary encoding
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            let mut seq = serializer.serialize_seq(Some(3))?;
+            seq.serialize_element(self.encode_enclave_sig())?;
+            seq.serialize_element(self.encode_recovery_id())?;
+            seq.serialize_element(self.encode_ciphertext())?;
+            seq.end()
         }
     }
 
-    impl Decode for Command {
-        fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
-            let mut enclave_sig_buf = [0u8; 64];
-            value.read(&mut enclave_sig_buf)?;
+    impl<'de> Deserialize<'de> for Command {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: de::Deserializer<'de>,
+        {
+            struct CommandVisitor;
 
-            let recovery_id_buf = value.read_byte()?;
+            impl<'de> de::Visitor<'de> for CommandVisitor {
+                type Value = Command;
 
-            let ciphertext_len = value
-                .remaining_len()?
-                .ok_or(codec::Error::from("Ciphertext length should not be zero"))?;
-            let mut ciphertext_buf = vec![0u8; ciphertext_len];
-            value.read(&mut ciphertext_buf)?;
+                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    formatter.write_str("ecall output command")
+                }
 
-            let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
-            let ciphertext = Ciphertext::decode(&mut &ciphertext_buf[..])?;
-            let recovery_id = secp256k1::RecoveryId::parse(recovery_id_buf)
-                .map_err(|_| codec::Error::from("Failed to parse recovery_id"))?;
+                fn visit_seq<V>(self, mut seq: V) -> Result<Command, V::Error>
+                where
+                    V: SeqAccess<'de>,
+                {
+                    let enclave_sig_v = seq
+                        .next_element()?
+                        .ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                    let recovery_id_v = seq
+                        .next_element()?
+                        .ok_or_else(|| de::Error::invalid_length(1, &self))?;
+                    let ciphertext_v = seq
+                        .next_element()?
+                        .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
-            Ok(Command {
-                enclave_sig,
-                ciphertext,
-                recovery_id,
-            })
+                    let enclave_sig = secp256k1::Signature::parse(enclave_sig_v);
+                    let recovery_id = secp256k1::RecoveryId::parse(recovery_id_v)
+                        .map_err(|_e| V::Error::custom(secp256k1::Error::InvalidRecoveryId))?;
+                    let ciphertext = bincode::deserialize(&ciphertext_v[..])?;
+
+                    Ok(Command::new(ciphertext, enclave_sig, recovery_id))
+                }
+            }
         }
     }
 
@@ -264,7 +295,8 @@ pub mod output {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Serialize, Deserialize, Debug, Clone)]
+    #[serde(crate = "crate::serde")]
     pub struct ReturnUpdatedState {
         pub updated_state: Option<UpdatedState<StateType>>,
     }
@@ -289,7 +321,8 @@ pub mod output {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct ReturnEncryptingKey {
         encrypting_key: DhPubKey,
     }
@@ -306,12 +339,14 @@ pub mod output {
         }
     }
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct Empty;
 
     impl EcallOutput for Empty {}
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct ReturnState {
         state: StateType,
     }
@@ -332,10 +367,14 @@ pub mod output {
         }
     }
 
-    #[derive(Encode, Decode, Clone, Default)]
+    #[derive(Serialize, Deserialize, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct ReturnJoinGroup {
+        #[serde(with = "serde_bytes")]
         report: Vec<u8>,
+        #[serde(with = "serde_bytes")]
         report_sig: Vec<u8>,
+        #[serde(with = "serde_bytes")]
         handshake: Vec<u8>,
         mrenclave_ver: u32,
         roster_idx: u32,
@@ -395,9 +434,12 @@ pub mod output {
         }
     }
 
-    #[derive(Encode, Decode, Clone, Default)]
+    #[derive(Serialize, Deserialize, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct ReturnRegisterReport {
+        #[serde(with = "serde_bytes")]
         report: Vec<u8>,
+        #[serde(with = "serde_bytes")]
         report_sig: Vec<u8>,
         mrenclave_ver: u32,
         roster_idx: u32,

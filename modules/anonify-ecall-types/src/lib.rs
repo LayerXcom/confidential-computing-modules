@@ -7,6 +7,10 @@ use std as localstd;
 #[cfg(all(not(feature = "std"), not(feature = "sgx")))]
 extern crate core as localstd;
 #[cfg(all(feature = "sgx", not(feature = "std")))]
+use serde_bytes_sgx as serde_bytes;
+#[cfg(feature = "std")]
+use serde_bytes_std as serde_bytes;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
 use serde_json_sgx as serde_json;
 #[cfg(feature = "std")]
 use serde_json_std as serde_json;
