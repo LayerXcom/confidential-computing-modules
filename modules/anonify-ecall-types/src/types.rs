@@ -1,10 +1,12 @@
+use crate::bincode;
 use crate::localstd::{
     fmt, str,
     string::{String, ToString},
     vec::Vec,
 };
 use crate::serde::{
-    de::{self, SeqAccess},
+    de::{self, Error, SeqAccess},
+    ser::SerializeSeq,
     Deserialize, Serialize, Serializer,
 };
 use crate::serde_bytes;
@@ -143,7 +145,7 @@ pub mod input {
         pub fn new(access_policy: AP, cmd_name: String) -> Self {
             GetState {
                 access_policy,
-                cmd_name: cmd_name.into_bytes(),
+                cmd_name,
             }
         }
 
@@ -219,9 +221,9 @@ pub mod output {
             S: Serializer,
         {
             let mut seq = serializer.serialize_seq(Some(3))?;
-            seq.serialize_element(self.encode_enclave_sig())?;
-            seq.serialize_element(self.encode_recovery_id())?;
-            seq.serialize_element(self.encode_ciphertext())?;
+            seq.serialize_element(&self.encode_enclave_sig()[..])?;
+            seq.serialize_element(&self.encode_recovery_id())?;
+            seq.serialize_element(&self.encode_ciphertext())?;
             seq.end()
         }
     }
@@ -244,24 +246,28 @@ pub mod output {
                 where
                     V: SeqAccess<'de>,
                 {
-                    let enclave_sig_v = seq
+                    let enclave_sig_v: &[u8] = seq
                         .next_element()?
                         .ok_or_else(|| de::Error::invalid_length(0, &self))?;
                     let recovery_id_v = seq
                         .next_element()?
                         .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                    let ciphertext_v = seq
+                    let ciphertext_v: Vec<u8> = seq
                         .next_element()?
                         .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
-                    let enclave_sig = secp256k1::Signature::parse(enclave_sig_v);
+                    let enclave_sig = secp256k1::Signature::parse_slice(&enclave_sig_v[..])
+                        .map_err(|_e| V::Error::custom("InvalidSignature"))?;
                     let recovery_id = secp256k1::RecoveryId::parse(recovery_id_v)
-                        .map_err(|_e| V::Error::custom(secp256k1::Error::InvalidRecoveryId))?;
-                    let ciphertext = bincode::deserialize(&ciphertext_v[..])?;
+                        .map_err(|_e| V::Error::custom("InvalidRecoveryId"))?;
+                    let ciphertext = bincode::deserialize(&ciphertext_v[..])
+                        .map_err(|_e| V::Error::custom("InvalidCiphertext"))?;
 
                     Ok(Command::new(ciphertext, enclave_sig, recovery_id))
                 }
             }
+
+            deserializer.deserialize_seq(CommandVisitor)
         }
     }
 
@@ -283,7 +289,7 @@ pub mod output {
         }
 
         pub fn encode_ciphertext(&self) -> Vec<u8> {
-            self.ciphertext.encode()
+            bincode::serialize(&self.ciphertext).unwrap() // must not fail
         }
 
         pub fn encode_recovery_id(&self) -> u8 {
@@ -515,37 +521,70 @@ pub mod output {
 
     impl EcallOutput for ReturnHandshake {}
 
-    impl Encode for ReturnHandshake {
-        fn encode(&self) -> Vec<u8> {
-            let mut acc = vec![];
-            acc.extend_from_slice(&self.encode_enclave_sig());
-            acc.push(self.encode_recovery_id());
-            acc.extend_from_slice(&self.roster_idx().encode());
-            acc.extend_from_slice(&self.encode_handshake());
-
-            acc
+    impl Serialize for ReturnHandshake {
+        // not for human readable, used for binary encoding
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            let mut seq = serializer.serialize_seq(Some(3))?;
+            seq.serialize_element(&self.encode_enclave_sig()[..])?;
+            seq.serialize_element(&self.encode_recovery_id())?;
+            seq.serialize_element(&self.roster_idx())?;
+            seq.serialize_element(&self.encode_handshake())?;
+            seq.end()
         }
     }
 
-    impl Decode for ReturnHandshake {
-        fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
-            let mut enclave_sig_buf = [0u8; 64];
-            value.read(&mut enclave_sig_buf)?;
-            let enclave_sig = secp256k1::Signature::parse(&enclave_sig_buf);
+    impl<'de> Deserialize<'de> for ReturnHandshake {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: de::Deserializer<'de>,
+        {
+            struct ReturnHandshakeVisitor;
 
-            let recovery_id_buf = value.read_byte()?;
-            let recovery_id = secp256k1::RecoveryId::parse(recovery_id_buf)
-                .map_err(|_| codec::Error::from("Failed to parse recovery_id"))?;
+            impl<'de> de::Visitor<'de> for ReturnHandshakeVisitor {
+                type Value = ReturnHandshake;
 
-            let roster_idx = u32::decode(value)?;
-            let handshake = ExportHandshake::decode(value)?;
+                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    formatter.write_str("ecall output ReturnHandshake")
+                }
 
-            Ok(ReturnHandshake {
-                enclave_sig,
-                recovery_id,
-                roster_idx,
-                handshake,
-            })
+                fn visit_seq<V>(self, mut seq: V) -> Result<ReturnHandshake, V::Error>
+                where
+                    V: SeqAccess<'de>,
+                {
+                    let enclave_sig_v: &[u8] = seq
+                        .next_element()?
+                        .ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                    let recovery_id_v = seq
+                        .next_element()?
+                        .ok_or_else(|| de::Error::invalid_length(1, &self))?;
+                    let roster_idx = seq
+                        .next_element()?
+                        .ok_or_else(|| de::Error::invalid_length(2, &self))?;
+                    let handshake_v: Vec<u8> = seq
+                        .next_element()?
+                        .ok_or_else(|| de::Error::invalid_length(3, &self))?;
+
+                    let enclave_sig = secp256k1::Signature::parse_slice(&enclave_sig_v[..])
+                        .map_err(|_e| V::Error::custom("InvalidSignature"))?;
+                    let recovery_id = secp256k1::RecoveryId::parse(recovery_id_v)
+                        .map_err(|_e| V::Error::custom("InvalidRecoverId"))?;
+                    // let roster_idx = bincode::deserialize(&ciphertext_v[..])?;
+                    let handshake = bincode::deserialize(&handshake_v[..])
+                        .map_err(|_e| V::Error::custom("InvalidHandshake"))?;
+
+                    Ok(ReturnHandshake::new(
+                        handshake,
+                        enclave_sig,
+                        recovery_id,
+                        roster_idx,
+                    ))
+                }
+            }
+
+            deserializer.deserialize_seq(ReturnHandshakeVisitor)
         }
     }
 
@@ -569,7 +608,7 @@ pub mod output {
         }
 
         pub fn encode_handshake(&self) -> Vec<u8> {
-            self.handshake.encode()
+            bincode::serialize(&self.handshake).unwrap() // must not fail
         }
 
         pub fn encode_recovery_id(&self) -> u8 {
