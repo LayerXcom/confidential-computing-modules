@@ -1,7 +1,6 @@
 use crate::error::Result;
 use anonify_ecall_types::*;
 use anyhow::anyhow;
-use codec::{Decode, Encode};
 use frame_common::{
     crypto::{AccountId, Ciphertext, Sha256},
     state_types::{ReturnState, StateType, UpdatedState},
@@ -11,6 +10,7 @@ use frame_common::{
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::EciesCiphertext;
+use serde::{Deserialize, Serialize};
 use std::{marker::PhantomData, vec::Vec};
 
 /// A message sender that encrypts commands
@@ -64,7 +64,7 @@ where
 }
 
 /// A message receiver that decrypt commands and make state transition
-#[derive(Encode, Decode, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct MsgReceiver<AP> {
     ecall_input: input::InsertCiphertext,
     ap: PhantomData<AP>,
@@ -127,9 +127,10 @@ where
 }
 
 /// Command data which make state update
-#[derive(Debug, Clone, Encode, Decode)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps<S = StateType>, AP> {
     my_account_id: AccountId,
+    #[serde(deserialize_with = "R::C::deserialize")]
     call_kind: R::C,
     phantom: PhantomData<CTX>,
     ap: PhantomData<AP>,
@@ -162,9 +163,13 @@ where
             buf.extend_from_slice(&padding);
         }
 
-        let mut buf = self.encode();
+        let mut buf = bincode::serialize(&self).unwrap(); // must not fail
         append_padding(&mut buf, max_mem_size);
         key.encrypt(buf).map_err(Into::into)
+    }
+
+    pub fn decode(bytes: &[u8]) -> Result<Self> {
+        bincode::deserialize(bytes).map_err(Into::into)
     }
 
     /// Only if the TEE belongs to the group, you can receive ciphertext and decrypt it,
@@ -185,9 +190,7 @@ where
 
     fn decrypt<GK: GroupKeyOps>(ciphertext: &Ciphertext, key: &mut GK) -> Result<Option<Self>> {
         match key.decrypt(ciphertext)? {
-            Some(plaintext) => Commands::decode(&mut &plaintext[..])
-                .map(Some)
-                .map_err(Into::into),
+            Some(plaintext) => Commands::decode(&plaintext[..]).map(Some),
             None => Ok(None),
         }
     }

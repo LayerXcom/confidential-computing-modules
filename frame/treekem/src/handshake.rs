@@ -9,7 +9,7 @@ use crate::local_ring::digest::Digest;
 use crate::localstd::sync::RwLock;
 #[cfg(feature = "sgx")]
 use crate::localstd::sync::SgxRwLock as RwLock;
-use crate::localstd::{collections::HashMap, string::String, sync::Arc, vec::Vec};
+use crate::localstd::{boxed::Box, collections::HashMap, string::String, sync::Arc, vec::Vec};
 use crate::serde::{Deserialize, Serialize};
 use crate::serde_bytes;
 use crate::StorePathSecrets;
@@ -68,6 +68,14 @@ impl HandshakeParams {
 
     pub fn from_export(export: ExportHandshake) -> Result<Self> {
         bincode::deserialize(&export.handshake()[..]).map_err(Into::into)
+    }
+
+    pub fn encode(&self) -> Vec<u8> {
+        bincode::serialize(&self).unwrap() // must not fail
+    }
+
+    pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
+        bincode::deserialize(bytes)
     }
 
     pub fn prior_epoch(&self) -> u32 {

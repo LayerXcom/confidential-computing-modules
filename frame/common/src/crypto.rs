@@ -2,6 +2,7 @@ use crate::bincode;
 use crate::local_anyhow::{anyhow, Error};
 use crate::local_once_cell::sync::Lazy;
 use crate::localstd::{
+    boxed::Box,
     cmp::Ordering,
     fmt,
     io::{self, Read, Write},
@@ -484,12 +485,11 @@ impl Ciphertext {
         }
     }
 
-    pub fn from_bytes(bytes: &[u8], len: usize) -> Self {
-        assert_eq!(bytes.len(), len);
-        bincode::deserialize(&bytes[..]).unwrap()
+    pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
+        bincode::deserialize(&bytes[..])
     }
 
-    pub fn as_vec(&self) -> Vec<u8> {
+    pub fn encode(&self) -> Vec<u8> {
         bincode::serialize(&self).unwrap() // must not fail
     }
 
@@ -507,12 +507,6 @@ impl Ciphertext {
 
     pub fn encrypted_state_ref(&self) -> &[u8] {
         &self.encrypted_state
-    }
-}
-
-impl IntoVec for Ciphertext {
-    fn into_vec(&self) -> Vec<u8> {
-        self.as_vec()
     }
 }
 
@@ -598,6 +592,10 @@ impl ExportHandshake {
 
     pub fn handshake(&self) -> &[u8] {
         &self.handshake[..]
+    }
+
+    pub fn encode(&self) -> Vec<u8> {
+        bincode::serialize(&self).unwrap() // must not fail
     }
 }
 

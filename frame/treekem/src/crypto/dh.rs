@@ -1,5 +1,6 @@
 use super::{hkdf, hmac::HmacKey};
 use crate::base64;
+use crate::bincode;
 use crate::local_anyhow::{anyhow, Result};
 use crate::local_secp256k1::{Error, PublicKey, PublicKeyFormat, SecretKey};
 use crate::localstd::{fmt, vec::Vec};
@@ -134,6 +135,10 @@ impl Default for DhPubKey {
 impl DhPubKey {
     pub fn from_private_key(private_key: &DhPrivateKey) -> Self {
         DhPubKey(PublicKey::from_secret_key(&private_key.0))
+    }
+
+    pub fn encode(&self) -> Vec<u8> {
+        bincode::serialize(&self).unwrap() // must not fail
     }
 }
 

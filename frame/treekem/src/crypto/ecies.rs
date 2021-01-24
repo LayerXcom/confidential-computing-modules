@@ -3,6 +3,7 @@ use super::{
     hkdf,
     hmac::HmacKey,
 };
+use crate::bincode;
 use crate::local_anyhow::{anyhow, Result};
 use crate::local_ring::aead::{
     Aad, BoundKey, Nonce, NonceSequence, OpeningKey, SealingKey, UnboundKey, AES_256_GCM,
@@ -52,6 +53,10 @@ impl EciesCiphertext {
             .map_err(|e| anyhow!("{:?}", e))?;
 
         Ok(plaintext.to_vec())
+    }
+
+    pub fn encode(&self) -> Vec<u8> {
+        bincode::serialize(&self).unwrap() // must not fail
     }
 }
 

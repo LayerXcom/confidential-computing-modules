@@ -2,7 +2,6 @@
 
 use crate::error::Result;
 use anonify_ecall_types::*;
-use codec::Encode;
 use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
