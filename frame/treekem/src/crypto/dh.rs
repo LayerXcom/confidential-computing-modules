@@ -3,7 +3,7 @@ use crate::base64;
 use crate::bincode;
 use crate::local_anyhow::{anyhow, Result};
 use crate::local_secp256k1::{Error, PublicKey, PublicKeyFormat, SecretKey};
-use crate::localstd::{fmt, vec::Vec};
+use crate::localstd::{boxed::Box, fmt, vec::Vec};
 use crate::serde::{
     de::{self, SeqAccess, Visitor},
     Deserialize, Deserializer, Serialize, Serializer,
@@ -139,6 +139,10 @@ impl DhPubKey {
 
     pub fn encode(&self) -> Vec<u8> {
         bincode::serialize(&self).unwrap() // must not fail
+    }
+
+    pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
+        bincode::deserialize(bytes)
     }
 }
 
