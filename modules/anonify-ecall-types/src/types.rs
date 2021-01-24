@@ -328,24 +328,16 @@ pub mod output {
 
     impl EcallOutput for Empty {}
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Debug, Clone, Default, Serialize)]
     pub struct ReturnState {
-        state: StateType,
+        state: serde_json::Value,
     }
 
     impl EcallOutput for ReturnState {}
 
     impl ReturnState {
-        pub fn new(state: StateType) -> Self {
+        pub fn new(state: serde_json::Value) -> Self {
             ReturnState { state }
-        }
-
-        pub fn into_vec(self) -> Vec<u8> {
-            self.state.into_vec()
-        }
-
-        pub fn as_mut_bytes(&mut self) -> &mut [u8] {
-            self.state.as_mut_bytes()
         }
     }
 

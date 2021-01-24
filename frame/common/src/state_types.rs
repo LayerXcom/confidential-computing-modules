@@ -49,7 +49,7 @@ impl From<AccountId> for StateType {
 #[derive(Debug, Clone, Encode, Decode)]
 pub enum ReturnState<S: State> {
     Updated(Vec<UpdatedState<S>>),
-    Get(S),
+    Get(serde_json::Value),
 }
 
 #[derive(Debug, Clone, Default, Encode, Decode)]

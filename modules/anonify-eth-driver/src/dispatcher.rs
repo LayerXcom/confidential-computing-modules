@@ -207,6 +207,7 @@ where
         fn json_convert(state: impl StateDecoder) -> serde_json::Value {
 
         }
+        use codec::Decode;
 
         let eid = self.inner.read().deployer.get_enclave_id();
         let input = host_input::GetState::new(encrypted_req, ecall_cmd);
@@ -216,7 +217,7 @@ where
             .ok_or_else(|| HostError::EcallOutputNotSet)?
             .into_vec(); // into Vec<u8> in StateType
 
-        let state = Box<dyn StateDecoder>::decode_vec(vec)?;
+        let state = <impl Decode as Decode>::decode_vec(vec)?;
         serde_json::to_value(state).map_err(Into::into)
     }
 

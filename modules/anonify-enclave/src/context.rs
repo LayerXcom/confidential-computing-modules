@@ -94,7 +94,7 @@ impl StateOps for AnonifyEnclaveContext {
         cmd_name: &str,
         account_id: U,
         runtime_cmd: serde_json::Value,
-    ) -> anyhow::Result<Self::S>
+    ) -> anyhow::Result<serde_json::Value>
     where
         U: Into<AccountId>,
         R: RuntimeExecutor<CTX, S = Self::S>,
