@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate lazy_static;
 use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
-use codec::{Decode, Encode};
 use erc20_state_transition::cmd::*;
 use ethabi::Contract as ContractABI;
 use frame_common::{
