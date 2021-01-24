@@ -154,64 +154,7 @@ where
     Ok(HttpResponse::Ok().json(erc20_api::key_rotation::post::Response(tx_hash)))
 }
 
-/// Fetch events from blockchain nodes manually, and then get the balance of the address approved by the owner from enclave.
-pub async fn handle_allowance<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
-    req: web::Json<erc20_api::allowance::get::Request>,
-) -> Result<HttpResponse>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher,
-{
-    server
-        .dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
-    let access_right = req
-        .into_access_right()
-        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let owner_approved = server
-        .dispatcher
-        .get_state::<Approved, _>(access_right, "approved", GET_STATE_CMD)
-        .map_err(|e| ServerError::from(e))?;
-    let approved_amount = owner_approved.allowance(&req.spender).unwrap();
-
-    Ok(HttpResponse::Ok().json(erc20_api::allowance::get::Response(
-        (*approved_amount).as_raw(),
-    )))
-}
-
-/// Fetch events from blockchain nodes manually, and then get balance of the address from enclave.
-pub async fn handle_balance_of<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
-    req: web::Json<erc20_api::state::get::Request>,
-) -> Result<HttpResponse>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher,
-{
-    server
-        .dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
-    let access_right = req
-        .into_access_right()
-        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
-    let state = server
-        .dispatcher
-        .get_state::<U64, _>(access_right, "balance_of", GET_STATE_CMD)
-        .map_err(|e| ServerError::from(e))?;
-
-    Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state.as_raw())))
-}
-
-/// Fetch events from blockchain nodes manually, and then get balance of the address from enclave.
+/// Fetch events from blockchain nodes manually, and then get the state data from enclave.
 pub async fn handle_get_state<D, S, W>(
     server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<erc20_api::state::get::Request>,
@@ -229,10 +172,10 @@ where
 
     let state = server
         .dispatcher
-        .get_state::<U64, _>(req.encrypted_req, GET_STATE_CMD)
+        .get_state::<_, _>(req.encrypted_req, GET_STATE_CMD)
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state.as_raw())))
+    Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state)))
 }
 
 pub async fn handle_encrypting_key<D, S, W>(

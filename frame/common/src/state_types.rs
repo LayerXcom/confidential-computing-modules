@@ -1,6 +1,7 @@
 use crate::crypto::AccountId;
 use crate::local_anyhow::{anyhow, Result};
 use crate::localstd::vec::Vec;
+use crate::serde::Serialize;
 use crate::traits::State;
 use codec::{Decode, Encode};
 
@@ -13,7 +14,8 @@ pub trait RawState: Encode + Decode + Clone + Default {}
 //         StateType::new(state.encode_s())
 //     }
 // }
-#[derive(Clone, Debug, Default, Decode, Encode)]
+#[derive(Clone, Debug, Default, Decode, Encode, Serialize)]
+#[serde(crate = "crate::serde")]
 pub struct StateType(Vec<u8>);
 
 impl StateType {

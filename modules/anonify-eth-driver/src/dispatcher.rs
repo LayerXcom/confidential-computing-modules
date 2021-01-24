@@ -199,11 +199,15 @@ where
         &self,
         encrypted_req: EciesCiphertext,
         ecall_cmd: u32,
-    ) -> Result<ST>
+    ) -> Result<serde_json::Value>
     where
         ST: State + StateDecoder,
         AP: AccessPolicy,
     {
+        fn json_convert(state: impl StateDecoder) -> serde_json::Value {
+
+        }
+
         let eid = self.inner.read().deployer.get_enclave_id();
         let input = host_input::GetState::new(encrypted_req, ecall_cmd);
 
@@ -212,7 +216,8 @@ where
             .ok_or_else(|| HostError::EcallOutputNotSet)?
             .into_vec(); // into Vec<u8> in StateType
 
-        ST::decode_vec(vec).map_err(Into::into)
+        let state = Box<dyn StateDecoder>::decode_vec(vec)?;
+        serde_json::to_value(state).map_err(Into::into)
     }
 
     pub async fn handshake(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {

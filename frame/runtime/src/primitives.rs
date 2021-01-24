@@ -125,7 +125,8 @@ impl_uint!(U16, u16);
 impl_uint!(U32, u32);
 impl_uint!(U64, u64);
 
-#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize)]
+#[serde(crate = "crate::serde")]
 pub struct Bytes(Vec<u8>);
 
 impl From<Vec<u8>> for Bytes {
@@ -171,7 +172,8 @@ impl From<Bytes> for StateType {
     }
 }
 
-#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize)]
+#[serde(crate = "crate::serde")]
 pub struct Approved(BTreeMap<AccountId, U64>);
 
 impl Approved {

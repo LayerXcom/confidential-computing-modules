@@ -20,7 +20,7 @@ pub trait EcallInput {}
 pub trait EcallOutput {}
 
 /// Trait of each user's state.
-pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
+pub trait State: Sized + Default + Clone + Encode + Decode + Debug + Serialize {
     fn encode_s(&self) -> Vec<u8> {
         self.encode()
     }
@@ -39,7 +39,7 @@ pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
     }
 }
 
-impl<T: Sized + Default + Clone + Encode + Decode + Debug> State for T {}
+impl<T: Sized + Default + Clone + Encode + Decode + Debug + Serialize> State for T {}
 
 /// A decoder traits for the types implemented state trait
 pub trait StateDecoder: State {
