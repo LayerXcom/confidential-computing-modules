@@ -1,3 +1,4 @@
+use crate::bincode;
 use crate::local_anyhow::{anyhow, Error};
 use crate::local_once_cell::sync::Lazy;
 use crate::localstd::{
@@ -9,8 +10,8 @@ use crate::localstd::{
 };
 use crate::serde::{de::DeserializeOwned, Deserialize, Serialize};
 use crate::serde_big_array::big_array;
+use crate::serde_bytes;
 use crate::traits::{AccessPolicy, Hash256, IntoVec, StateDecoder};
-use codec::{self, Decode, Encode};
 use ed25519_dalek::{
     Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
     SIGNATURE_LENGTH,
@@ -51,19 +52,7 @@ pub static OWNER_ACCOUNT_ID: Lazy<AccountId> = Lazy::new(|| COMMON_ACCESS_POLICY
 /// User account_id represents last 20 bytes of digest of user's public key.
 /// A signature verification must return true to generate a user account_id.
 #[derive(
-    Encode,
-    Decode,
-    Clone,
-    Copy,
-    Debug,
-    Default,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    Serialize,
-    Deserialize,
+    Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
 )]
 #[serde(crate = "crate::serde")]
 pub struct AccountId(pub [u8; ACCOUNT_ID_SIZE]);
@@ -255,7 +244,7 @@ impl Sha256 {
 const CHALLENGE_SIZE: usize = 32;
 
 /// No authentication when evaluating an access policy.
-#[derive(Debug, Clone, Encode, Decode, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(crate = "crate::serde")]
 pub struct NoAuth {
     account_id: AccountId,
@@ -284,7 +273,7 @@ impl NoAuth {
 big_array! { BigArray; }
 
 /// A challenge and response authentication parameter to read and write to anonify's enclave mem db.
-#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
 pub struct Ed25519ChallengeResponse {
     #[serde(with = "BigArray")]
@@ -432,11 +421,13 @@ impl<T: IntoVec> IntoVec for &[T] {
 }
 
 /// Application message broadcasted to other members.
-#[derive(Clone, Encode, Decode, Eq, Ord, Hash, Default)]
+#[derive(Clone, Serialize, Deserialize, Eq, Ord, Hash, Default)]
+#[serde(crate = "crate::serde")]
 pub struct Ciphertext {
     generation: u32,
     epoch: u32,
     roster_idx: u32,
+    #[serde(with = "serde_bytes")]
     encrypted_state: Vec<u8>,
 }
 
@@ -493,13 +484,13 @@ impl Ciphertext {
         }
     }
 
-    pub fn from_bytes(bytes: &mut [u8], len: usize) -> Self {
+    pub fn from_bytes(bytes: &[u8], len: usize) -> Self {
         assert_eq!(bytes.len(), len);
-        Ciphertext::decode(&mut &bytes[..]).unwrap()
+        bincode::deserialize(&bytes[..]).unwrap()
     }
 
     pub fn as_vec(&self) -> Vec<u8> {
-        self.encode()
+        bincode::serialize(&self).unwrap() // must not fail
     }
 
     pub fn generation(&self) -> u32 {
@@ -521,7 +512,7 @@ impl Ciphertext {
 
 impl IntoVec for Ciphertext {
     fn into_vec(&self) -> Vec<u8> {
-        self.encode()
+        self.as_vec()
     }
 }
 
@@ -530,9 +521,10 @@ pub const SEALED_DATA_SIZE: usize = 592;
 pub const EXPORT_ID_SIZE: usize = 32;
 pub const EXPORT_PATH_SECRET_SIZE: usize = SEALED_DATA_SIZE + 4 + EXPORT_ID_SIZE + 2; // added 2 bytes by encoding
 
-#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(crate = "crate::serde")]
 pub struct ExportPathSecret {
+    #[serde(with = "serde_bytes")]
     encoded_sealed: Vec<u8>,
     epoch: u32,
     id: [u8; EXPORT_ID_SIZE], // Unique identifier of path secret
@@ -566,7 +558,8 @@ impl ExportPathSecret {
 }
 
 /// Handshake parameter for exporting outside enclave
-#[derive(Clone, Encode, Decode, Hash, Default)]
+#[derive(Clone, Serialize, Deserialize, Hash, Default)]
+#[serde(crate = "crate::serde")]
 pub struct ExportHandshake {
     prior_epoch: u32,
     roster_idx: u32,
@@ -608,12 +601,14 @@ impl ExportHandshake {
 }
 
 /// PathSecret to backup to key-vault server
-#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(crate = "crate::serde")]
 pub struct BackupPathSecret {
+    #[serde(with = "serde_bytes")]
     path_secret: Vec<u8>,
     epoch: u32,
     roster_idx: u32,
+    #[serde(with = "serde_bytes")]
     id: Vec<u8>,
 }
 
@@ -645,11 +640,13 @@ impl BackupPathSecret {
 }
 
 /// PathSecret recovered from key-vault server
-#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(crate = "crate::serde")]
 pub struct RecoveredPathSecret {
+    #[serde(with = "serde_bytes")]
     path_secret: Vec<u8>,
     epoch: u32,
+    #[serde(with = "serde_bytes")]
     id: Vec<u8>,
 }
 
@@ -676,10 +673,11 @@ impl RecoveredPathSecret {
 }
 
 /// A Request to recover a PathSecret specified by roster_idx and id from key-vault server
-#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(crate = "crate::serde")]
 pub struct RecoverRequest {
     roster_idx: u32,
+    #[serde(with = "serde_bytes")]
     id: Vec<u8>,
 }
 
@@ -698,7 +696,7 @@ impl RecoverRequest {
 }
 
 /// A Request to recover all PathSecrets specified by roster_idx from key-vault server
-#[derive(Debug, Clone, Serialize, Deserialize, Encode, Decode, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(crate = "crate::serde")]
 pub struct RecoverAllRequest {
     roster_idx: u32,
