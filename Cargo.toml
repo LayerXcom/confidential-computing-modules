@@ -3,6 +3,7 @@ members = [
     "frame/enclave",
     "frame/host",
     "frame/common",
+    "frame/ecies",
     "frame/types",
     "frame/treekem",
     "frame/runtime",
