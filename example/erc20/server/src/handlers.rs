@@ -4,7 +4,7 @@ use actix_web::{web, HttpResponse};
 use anonify_eth_driver::traits::*;
 use anyhow::anyhow;
 use erc20_state_transition::cmd::*;
-use frame_runtime::primitives::{Approved, U64};
+use frame_runtime::primitives::U64;
 use std::{sync::Arc, time};
 use tracing::{debug, error, info};
 
@@ -172,7 +172,7 @@ where
 
     let state = server
         .dispatcher
-        .get_state::<_, _>(req.encrypted_req, GET_STATE_CMD)
+        .get_state(req.encrypted_req.clone(), GET_STATE_CMD)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state)))

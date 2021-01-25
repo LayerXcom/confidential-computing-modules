@@ -195,14 +195,11 @@ where
         }
     }
 
-    pub fn get_state<AP>(
+    pub fn get_state(
         &self,
         encrypted_req: EciesCiphertext,
         ecall_cmd: u32,
-    ) -> Result<serde_json::Value>
-    where
-        AP: AccessPolicy,
-    {
+    ) -> Result<serde_json::Value> {
         let eid = self.inner.read().deployer.get_enclave_id();
         let input = host_input::GetState::new(encrypted_req, ecall_cmd);
         let state = GetStateWorkflow::exec(input, eid)?
