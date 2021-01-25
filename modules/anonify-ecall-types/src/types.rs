@@ -527,7 +527,7 @@ pub mod output {
         where
             S: Serializer,
         {
-            let mut seq = serializer.serialize_seq(Some(3))?;
+            let mut seq = serializer.serialize_seq(Some(4))?;
             seq.serialize_element(&self.encode_enclave_sig()[..])?;
             seq.serialize_element(&self.encode_recovery_id())?;
             seq.serialize_element(&self.roster_idx())?;
