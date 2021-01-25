@@ -5,11 +5,11 @@ use crate::crypto::{
 };
 use crate::local_anyhow::{anyhow, ensure, Result};
 use crate::localstd::vec::Vec;
+use crate::serde::Serialize;
 use crate::{
     handshake::{DirectPathMsg, DirectPathNodeMsg},
     tree_math,
 };
-use crate::serde::Serialize;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(crate = "crate::serde")]

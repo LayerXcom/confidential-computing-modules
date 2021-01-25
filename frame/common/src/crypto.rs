@@ -598,7 +598,7 @@ impl ExportHandshake {
         bincode::serialize(&self).unwrap() // must not fail
     }
 
-    pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>>{
+    pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
         bincode::deserialize(bytes)
     }
 }

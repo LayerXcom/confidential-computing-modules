@@ -1,5 +1,5 @@
+use crate::serde::{Deserialize, Serialize};
 use frame_common::{EcallInput, EcallOutput};
-use crate::serde::{Serialize, Deserialize};
 
 pub mod input {
     use super::*;
