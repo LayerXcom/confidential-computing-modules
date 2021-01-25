@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["cipepser <respepic@gmail.com>"]
 edition = "2018"
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 frame-common = { path = "../common", default-features = false }
 test-utils = { path = "../../tests/utils", optional = true }
@@ -26,6 +29,11 @@ serde_bytes_std = { package = "serde_bytes", version = "0.11", optional = true }
 serde_bytes_sgx = { package = "serde_bytes", git = "https://github.com/mesalock-linux/serde-bytes-sgx", optional = true }
 base64-sgx = { package = "base64", rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rust-base64-sgx", optional = true }
 base64-std = { package = "base64", version = "0.11", optional = true }
+js-sys = { version = "0.3.46", optional = true }
+wasm-bindgen = { version = "0.2.69", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.19"
 
 [features]
 default = ["std"]
@@ -41,6 +49,8 @@ std = [
     "bincode-std",
     "serde_bytes_std",
     "base64-std",
+    "js-sys",
+    "wasm-bindgen",
 ]
 sgx = [
     "frame-common/sgx",

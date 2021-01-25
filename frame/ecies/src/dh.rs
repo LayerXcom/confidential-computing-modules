@@ -11,8 +11,9 @@ use crate::serde::{
 };
 use frame_common::crypto::rand_assign;
 
-const SECRET_KEY_SIZE: usize = 32;
-const COMPRESSED_PUBLIC_KEY_SIZE: usize = 33;
+pub(crate) const SECRET_KEY_SIZE: usize = 32;
+pub(crate) const COMPRESSED_PUBLIC_KEY_SIZE: usize = 33;
+pub(crate) const FULL_PUBLIC_KEY_SIZE: usize = 65;
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct DhPrivateKey(SecretKey);
@@ -36,12 +37,16 @@ impl DhPrivateKey {
 
         Ok(DhPrivateKey(secret))
     }
+
+    pub fn serialize_bytes(&self) -> [u8; SECRET_KEY_SIZE] {
+        self.0.serialize()
+    }
 }
 
 impl Serialize for DhPrivateKey {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         let mut tup = serializer.serialize_tuple(SECRET_KEY_SIZE)?;
         for byte in self.0.serialize().iter() {
@@ -53,8 +58,8 @@ impl Serialize for DhPrivateKey {
 
 impl<'de> Deserialize<'de> for DhPrivateKey {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: de::Deserializer<'de>,
+    where
+        D: de::Deserializer<'de>,
     {
         struct DhPrivateKeyVisitor;
 
@@ -66,8 +71,8 @@ impl<'de> Deserialize<'de> for DhPrivateKey {
             }
 
             fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
-                where
-                    E: de::Error,
+            where
+                E: de::Error,
             {
                 let pk = SecretKey::parse_slice(value)
                     .map_err(|_e| E::custom(Error::InvalidSecretKey))?;
@@ -76,8 +81,8 @@ impl<'de> Deserialize<'de> for DhPrivateKey {
             }
 
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-                where
-                    A: SeqAccess<'de>,
+            where
+                A: SeqAccess<'de>,
             {
                 let mut bytes = [0u8; SECRET_KEY_SIZE];
                 for i in 0..SECRET_KEY_SIZE {
@@ -105,8 +110,8 @@ pub struct DhPubKey(PublicKey);
 
 impl Serialize for DhPubKey {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         let mut tup = serializer.serialize_tuple(COMPRESSED_PUBLIC_KEY_SIZE)?;
         for byte in self.0.serialize_compressed().iter() {
@@ -118,8 +123,8 @@ impl Serialize for DhPubKey {
 
 impl<'de> Deserialize<'de> for DhPubKey {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: de::Deserializer<'de>,
+    where
+        D: de::Deserializer<'de>,
     {
         struct DhPubKeyVisitor;
 
@@ -133,8 +138,8 @@ impl<'de> Deserialize<'de> for DhPubKey {
             }
 
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-                where
-                    A: SeqAccess<'de>,
+            where
+                A: SeqAccess<'de>,
             {
                 let mut bytes = [0u8; COMPRESSED_PUBLIC_KEY_SIZE];
                 for i in 0..COMPRESSED_PUBLIC_KEY_SIZE {
@@ -167,6 +172,26 @@ impl Default for DhPubKey {
 impl DhPubKey {
     pub fn from_private_key(private_key: &DhPrivateKey) -> Self {
         DhPubKey(PublicKey::from_secret_key(&private_key.0))
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
+        if bytes.len() != FULL_PUBLIC_KEY_SIZE {
+            return Err(anyhow!(
+                "DhPubKey's length must be {}, got: {}",
+                FULL_PUBLIC_KEY_SIZE,
+                bytes.len()
+            ));
+        }
+        let mut buf = [0u8; FULL_PUBLIC_KEY_SIZE];
+        buf.copy_from_slice(&bytes[..FULL_PUBLIC_KEY_SIZE]);
+        let public_key =
+            PublicKey::parse(&buf).map_err(|e| anyhow!("Failed to parse DhPubKey: {:?}", e))?;
+
+        Ok(DhPubKey(public_key))
+    }
+
+    pub fn serialize_bytes(&self) -> [u8; FULL_PUBLIC_KEY_SIZE] {
+        self.0.serialize()
     }
 
     pub fn encode(&self) -> Vec<u8> {

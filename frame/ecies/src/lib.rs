@@ -55,6 +55,9 @@ pub mod ecies;
 pub mod hkdf;
 pub mod hmac;
 
+#[cfg(feature = "std")]
+pub mod wasm;
+
 pub const SHA256_OUTPUT_LEN: usize = 256 / 8;
 
 pub trait CryptoRng: crate::local_rand::RngCore + crate::local_rand::CryptoRng {}

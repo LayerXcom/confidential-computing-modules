@@ -4,6 +4,7 @@ use super::{
     hmac::HmacKey,
 };
 use crate::bincode;
+use crate::dh::FULL_PUBLIC_KEY_SIZE;
 use crate::local_anyhow::{anyhow, Result};
 use crate::local_ring::aead::{
     Aad, BoundKey, Nonce, NonceSequence, OpeningKey, SealingKey, UnboundKey, AES_256_GCM,
@@ -57,6 +58,32 @@ impl EciesCiphertext {
 
     pub fn encode(&self) -> Vec<u8> {
         bincode::serialize(&self).unwrap() // must not fail
+    }
+
+    pub fn serialize_bytes(&self) -> Vec<u8> {
+        let mut res = vec![];
+        res.append(&mut self.ephemeral_public_key.serialize_bytes().to_vec());
+        res.append(&mut self.ciphertext.as_slice().to_vec());
+        res
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
+        if bytes.len() <= FULL_PUBLIC_KEY_SIZE {
+            return Err(anyhow!(
+                "EciesCiphertext's length must be greater than {}, got: {}",
+                FULL_PUBLIC_KEY_SIZE,
+                bytes.len()
+            ));
+        }
+        let ephemeral_public_key = DhPubKey::from_bytes(&bytes[..FULL_PUBLIC_KEY_SIZE])
+            .map_err(|e| anyhow!("Failed to parse DhPubKey: {:?}", e))?;
+
+        let ciphertext = bytes[FULL_PUBLIC_KEY_SIZE..].to_vec();
+
+        Ok(EciesCiphertext {
+            ephemeral_public_key,
+            ciphertext,
+        })
     }
 }
 
