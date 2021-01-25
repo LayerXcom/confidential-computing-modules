@@ -20,7 +20,6 @@ std_rand_core = { package = "rand_core", version = "0.3", optional = true }
 sgx_rand_core = { package = "rand_core", rev = "v0.7.3_sgx1.1.3", git = "https://github.com/mesalock-linux/rand-sgx", optional = true }
 std-ring = { package = "ring", version = "0.16.15", optional = true }
 sgx-ring = { package = "ring", git = "https://github.com/mesalock-linux/ring-sgx", tag = "v0.16.5", optional = true }
-codec = { package = "parity-scale-codec", version = "1.1", default-features = false }
 tracing = { version = "0.1", default-features = false }
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net", "backtrace"], optional = true }
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
@@ -28,6 +27,13 @@ sgx_tseal = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.
 serde-std = { package = "serde", version = "1", default-features = false, optional = true }
 serde-sgx = { package = "serde", git = "https://github.com/mesalock-linux/serde-sgx.git", default-features = false, optional = true, features = ["derive"] }
 serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx", optional = true }
+bincode-std = { package = "bincode", version = "1.3", optional = true }
+bincode-sgx = { package = "bincode", git = "https://github.com/mesalock-linux/bincode-sgx", optional = true }
+serde_bytes_std = { package = "serde_bytes", version = "0.11", optional = true }
+serde_bytes_sgx = { package = "serde_bytes", git = "https://github.com/mesalock-linux/serde-bytes-sgx", optional = true }
+codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
+base64-sgx = { package = "base64", rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rust-base64-sgx", optional = true }
+base64-std = { package = "base64", version = "0.11", optional = true }
 
 [features]
 default = ["std"]
@@ -41,6 +47,9 @@ std = [
     "std-ring",
     "serde-std/std",
     "serde-std/derive",
+    "bincode-std",
+    "serde_bytes_std",
+    "base64-std",
 ]
 sgx = [
     "frame-mra-tls",
@@ -58,4 +67,7 @@ sgx = [
     "serde-sgx",
     "serde-sgx/derive",
     "serde_json",
+    "bincode-sgx",
+    "serde_bytes_sgx",
+    "base64-sgx",
 ]

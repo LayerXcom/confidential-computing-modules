@@ -6,13 +6,16 @@ edition = "2018"
 
 [dependencies]
 frame-common = { path = "../../frame/common", default-features = false }
-codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
+serde-std = { package = "serde", version = "1", default-features = false, optional = true }
+serde-sgx = { package = "serde", git = "https://github.com/mesalock-linux/serde-sgx.git", default-features = false, optional = true, features = ["derive"] }
 
 [features]
 default = ["std"]
 std = [
     "frame-common/std",
+    "serde-std",
 ]
 sgx = [
     "frame-common/sgx",
+    "serde-sgx",
 ]

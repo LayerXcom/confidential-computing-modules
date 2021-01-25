@@ -4,7 +4,7 @@ use crate::localstd::{
     sync::{SgxRwLockReadGuard, SgxRwLockWriteGuard},
     vec::Vec,
 };
-use codec::{Decode, Encode};
+use crate::serde::{de::DeserializeOwned, Serialize};
 use frame_common::{
     crypto::{AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest, RecoveredPathSecret},
     state_types::{MemId, ReturnState, UpdatedState},
@@ -25,7 +25,9 @@ pub trait RuntimeExecutor<G: ContextOps>: Sized {
 }
 
 /// Execute state transition functions from call kind
-pub trait CallKindExecutor<G: ContextOps>: Sized + Encode + Decode + Debug + Clone {
+pub trait CallKindExecutor<G: ContextOps>:
+    Sized + Serialize + DeserializeOwned + Debug + Clone
+{
     type R: RuntimeExecutor<G>;
     type S: State;
 

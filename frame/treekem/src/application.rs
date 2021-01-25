@@ -1,3 +1,4 @@
+use crate::bincode;
 use crate::crypto::{
     ecies::{OneNonceSequence, AES_256_GCM_KEY_SIZE, AES_256_GCM_NONCE_SIZE},
     hkdf,
@@ -12,7 +13,7 @@ use crate::local_ring::aead::{
 };
 use crate::localstd::{convert::TryFrom, prelude::v1::*};
 use crate::ratchet_tree::RatchetTreeNode;
-use codec::Encode;
+use crate::serde::Serialize;
 use frame_common::crypto::Ciphertext;
 use tracing::warn;
 
@@ -95,7 +96,7 @@ impl AppKeyChain {
         let member_secrets_and_gens = (0..roster_len)
             .map(|roster_idx: u32| {
                 let mut buf = vec![0u8; SHA256_OUTPUT_LEN];
-                let encoded_roster_idx = roster_idx.encode();
+                let encoded_roster_idx = bincode::serialize(&roster_idx).unwrap();
                 hkdf::expand_label(&prk, b"app sender", &encoded_roster_idx, buf.as_mut_slice())
                     .expect("Failed hkdf expand.");
                 let app_member_secret = AppMemberSecret::from(buf);
@@ -124,7 +125,7 @@ impl AppKeyChain {
         hkdf::expand_label(
             &current_secret.into(),
             b"app sender",
-            &roster_idx.encode(),
+            &bincode::serialize(&roster_idx)?,
             member_secret.as_mut_bytes(),
         )?;
 

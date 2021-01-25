@@ -1,3 +1,4 @@
+use crate::bincode;
 use crate::local_anyhow::{anyhow, Error, Result};
 use crate::localstd::{
     collections::BTreeMap,
@@ -7,7 +8,7 @@ use crate::localstd::{
     vec::Vec,
 };
 use crate::serde::{Deserialize, Serialize};
-use codec::{Decode, Encode};
+use crate::serde_bytes;
 use frame_common::{
     crypto::AccountId,
     state_types::StateType,
@@ -17,8 +18,6 @@ use frame_common::{
 macro_rules! impl_uint {
     ($name:ident, $raw:ident) => {
         #[derive(
-            Encode,
-            Decode,
             Clone,
             Copy,
             Debug,
@@ -36,7 +35,7 @@ macro_rules! impl_uint {
 
         impl From<$name> for StateType {
             fn from(u: $name) -> Self {
-                StateType::new(u.encode_s())
+                StateType::new(bincode::serialize(&u).unwrap()) // must not fail
             }
         }
 
@@ -125,8 +124,9 @@ impl_uint!(U16, u16);
 impl_uint!(U32, u32);
 impl_uint!(U64, u64);
 
-#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct Bytes(Vec<u8>);
+#[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
+pub struct Bytes(#[serde(with = "serde_bytes")] Vec<u8>);
 
 impl From<Vec<u8>> for Bytes {
     fn from(v: Vec<u8>) -> Self {
@@ -171,7 +171,8 @@ impl From<Bytes> for StateType {
     }
 }
 
-#[derive(Encode, Decode, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub struct Approved(BTreeMap<AccountId, U64>);
 
 impl Approved {

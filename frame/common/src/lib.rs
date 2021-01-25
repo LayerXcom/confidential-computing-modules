@@ -8,6 +8,10 @@ use std as localstd;
 extern crate core as localstd;
 #[cfg(feature = "std")]
 use anyhow as local_anyhow;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
+use bincode_sgx as bincode;
+#[cfg(feature = "std")]
+use bincode_std as bincode;
 #[cfg(feature = "sgx")]
 use once_cell_sgx as local_once_cell;
 #[cfg(feature = "std")]
@@ -16,6 +20,10 @@ use once_cell_std as local_once_cell;
 use serde_big_array_sgx as serde_big_array;
 #[cfg(feature = "std")]
 use serde_big_array_std as serde_big_array;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
+use serde_bytes_sgx as serde_bytes;
+#[cfg(feature = "std")]
+use serde_bytes_std as serde_bytes;
 #[cfg(all(feature = "sgx", not(feature = "std")))]
 use serde_sgx as serde;
 #[cfg(feature = "std")]

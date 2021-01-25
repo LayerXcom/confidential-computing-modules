@@ -3,27 +3,20 @@ use super::{
     hkdf,
     hmac::HmacKey,
 };
+use crate::bincode;
 use crate::local_anyhow::{anyhow, Result};
 use crate::local_ring::aead::{
     Aad, BoundKey, Nonce, NonceSequence, OpeningKey, SealingKey, UnboundKey, AES_256_GCM,
 };
 use crate::localstd::vec::Vec;
-#[cfg(feature = "std")]
 use crate::serde::{Deserialize, Serialize};
-use codec::{Decode, Encode};
+use crate::serde_bytes;
 
-#[cfg(feature = "std")]
-#[derive(Debug, Clone, Encode, Decode, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(crate = "crate::serde")]
 pub struct EciesCiphertext {
     ephemeral_public_key: DhPubKey,
-    ciphertext: Vec<u8>,
-}
-
-#[cfg(feature = "sgx")]
-#[derive(Debug, Clone, Encode, Decode, Default)]
-pub struct EciesCiphertext {
-    ephemeral_public_key: DhPubKey,
+    #[serde(with = "serde_bytes")]
     ciphertext: Vec<u8>,
 }
 
@@ -61,11 +54,17 @@ impl EciesCiphertext {
 
         Ok(plaintext.to_vec())
     }
+
+    pub fn encode(&self) -> Vec<u8> {
+        bincode::serialize(&self).unwrap() // must not fail
+    }
 }
 
-#[derive(Debug, Encode)]
+#[derive(Debug, Serialize)]
+#[serde(crate = "crate::serde")]
 struct EciesLabel {
     length: u16,
+    #[serde(with = "serde_bytes")]
     label: Vec<u8>,
 }
 

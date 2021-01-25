@@ -1,10 +1,10 @@
-use codec::{Decode, Encode};
 use frame_common::{state_types::StateType, EcallInput, EcallOutput};
 use frame_runtime::{ConfigGetter, ContextOps, RuntimeExecutor};
+use serde::{de::DeserializeOwned, Serialize};
 
 pub trait EnclaveEngine: Sized + Default {
-    type EI: EcallInput + Decode + Default;
-    type EO: EcallOutput + Encode + Default;
+    type EI: EcallInput + DeserializeOwned + Default;
+    type EO: EcallOutput + Serialize + Default;
 
     fn decrypt<C>(_ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where

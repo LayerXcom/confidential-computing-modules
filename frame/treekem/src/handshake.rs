@@ -1,4 +1,5 @@
 use crate::application::AppKeyChain;
+use crate::bincode;
 use crate::crypto::{
     dh::DhPubKey, ecies::EciesCiphertext, hash::hash_encodable, secrets::PathSecret, CryptoRng,
 };
@@ -8,9 +9,10 @@ use crate::local_ring::digest::Digest;
 use crate::localstd::sync::RwLock;
 #[cfg(feature = "sgx")]
 use crate::localstd::sync::SgxRwLock as RwLock;
-use crate::localstd::{collections::HashMap, string::String, sync::Arc, vec::Vec};
+use crate::localstd::{boxed::Box, collections::HashMap, string::String, sync::Arc, vec::Vec};
+use crate::serde::{Deserialize, Serialize};
+use crate::serde_bytes;
 use crate::StorePathSecrets;
-use codec::{Decode, Encode};
 use frame_common::crypto::{ExportHandshake, ExportPathSecret};
 
 /// A handshake operates sharing a group key to each member.
@@ -33,7 +35,8 @@ pub trait Handshake: Sized {
 
 // TODO: Does need signature over the group's history?
 /// This `Handshake` is sent to global ledger.
-#[derive(Clone, Debug, Encode, Decode)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub struct HandshakeParams {
     /// This is equal to the epoch of the current groupstate
     /// at the time of receicing and applying the handshake.
@@ -56,11 +59,23 @@ impl HandshakeParams {
     }
 
     pub fn into_export(self) -> ExportHandshake {
-        ExportHandshake::new(self.prior_epoch, self.roster_idx, self.encode())
+        ExportHandshake::new(
+            self.prior_epoch,
+            self.roster_idx,
+            bincode::serialize(&self).unwrap(),
+        )
     }
 
     pub fn from_export(export: ExportHandshake) -> Result<Self> {
-        HandshakeParams::decode(&mut &export.handshake()[..]).map_err(|e| anyhow!("{:?}", e))
+        bincode::deserialize(&export.handshake()[..]).map_err(Into::into)
+    }
+
+    pub fn encode(&self) -> Vec<u8> {
+        bincode::serialize(&self).unwrap() // must not fail
+    }
+
+    pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
+        bincode::deserialize(bytes)
     }
 
     pub fn prior_epoch(&self) -> u32 {
@@ -77,7 +92,8 @@ impl HandshakeParams {
 }
 
 /// Encrypted direct path
-#[derive(Debug, Clone, Encode, Decode)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub struct DirectPathMsg {
     pub node_msgs: Vec<DirectPathNodeMsg>,
 }
@@ -89,7 +105,8 @@ impl DirectPathMsg {
 }
 
 /// Containes a direct path node's public key and encrypted secrets
-#[derive(Debug, Clone, Encode, Decode)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub struct DirectPathNodeMsg {
     pub public_key: DhPubKey,
     pub node_secrets: Vec<EciesCiphertext>,
@@ -116,7 +133,8 @@ pub enum PathSecretSource {
 #[derive(Debug, Clone)]
 pub struct PathSecretKVS(HashMap<AccessKey, PathSecret>);
 
-#[derive(Encode, Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[derive(Serialize, Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
+#[serde(crate = "crate::serde")]
 pub struct AccessKey {
     roster_idx: u32,
     epoch: u32,

@@ -1,16 +1,14 @@
+use crate::bincode;
 use crate::crypto::AccountId;
-use crate::local_anyhow::{anyhow, Result};
+use crate::local_anyhow::Result;
 use crate::localstd::{fmt::Debug, mem::size_of, vec::Vec};
 use crate::serde::{de::DeserializeOwned, Serialize};
 use crate::state_types::MemId;
-use codec::{Decode, Encode};
 use ed25519_dalek::PublicKey;
 use tiny_keccak::Keccak;
 
 /// A trait to verify policy to access resources in the enclave
-pub trait AccessPolicy:
-    Encode + Decode + Clone + Debug + DeserializeOwned + Serialize + Default
-{
+pub trait AccessPolicy: Clone + Debug + DeserializeOwned + Serialize + Default {
     fn verify(&self) -> Result<()>;
 
     fn into_account_id(&self) -> AccountId;
@@ -20,18 +18,18 @@ pub trait EcallInput {}
 pub trait EcallOutput {}
 
 /// Trait of each user's state.
-pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
+pub trait State: Sized + Default + Clone + Debug + DeserializeOwned + Serialize {
     fn encode_s(&self) -> Vec<u8> {
-        self.encode()
+        bincode::serialize(&self).unwrap() // must not fail
     }
 
-    fn decode_s(bytes: &mut [u8]) -> Result<Self> {
-        Self::decode(&mut &bytes[..]).map_err(|e| anyhow!("{:?}", e))
+    fn decode_s(bytes: &[u8]) -> Result<Self> {
+        bincode::deserialize(&bytes[..]).map_err(Into::into)
     }
 
     fn from_state(state: &impl State) -> Result<Self> {
-        let mut state = state.encode();
-        Self::decode_s(&mut state)
+        let state = bincode::serialize(state)?;
+        bincode::deserialize(&state[..]).map_err(Into::into)
     }
 
     fn size(&self) -> usize {
@@ -39,7 +37,7 @@ pub trait State: Sized + Default + Clone + Encode + Decode + Debug {
     }
 }
 
-impl<T: Sized + Default + Clone + Encode + Decode + Debug> State for T {}
+impl<T: Sized + Default + Clone + Debug + DeserializeOwned + Serialize> State for T {}
 
 /// A decoder traits for the types implemented state trait
 pub trait StateDecoder: State {

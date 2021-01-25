@@ -12,6 +12,14 @@ use std as localstd;
 #[cfg(all(not(feature = "std"), not(feature = "sgx")))]
 extern crate core as localstd;
 #[cfg(all(feature = "sgx", not(feature = "std")))]
+use bincode_sgx as bincode;
+#[cfg(feature = "std")]
+use bincode_std as bincode;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
+use serde_bytes_sgx as serde_bytes;
+#[cfg(feature = "std")]
+use serde_bytes_std as serde_bytes;
+#[cfg(all(feature = "sgx", not(feature = "std")))]
 use serde_sgx as serde;
 #[cfg(feature = "std")]
 use serde_std as serde;
