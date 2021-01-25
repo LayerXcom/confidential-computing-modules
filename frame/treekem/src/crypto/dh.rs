@@ -5,7 +5,8 @@ use crate::local_anyhow::{anyhow, Result};
 use crate::local_secp256k1::{Error, PublicKey, PublicKeyFormat, SecretKey};
 use crate::localstd::{boxed::Box, fmt, vec::Vec};
 use crate::serde::{
-    de::{self, SeqAccess, Visitor},
+    de::{self, SeqAccess, Unexpected, Visitor},
+    ser::SerializeTuple,
     Deserialize, Deserializer, Serialize, Serializer,
 };
 use frame_common::crypto::rand_assign;
@@ -42,8 +43,11 @@ impl Serialize for DhPrivateKey {
     where
         S: Serializer,
     {
-        // only used bincode so it's not human readable
-        serializer.serialize_bytes(&self.0.serialize())
+        let mut tup = serializer.serialize_tuple(SECRET_KEY_SIZE)?;
+        for byte in self.0.serialize().iter() {
+            tup.serialize_element(byte)?;
+        }
+        tup.end()
     }
 }
 
@@ -70,9 +74,29 @@ impl<'de> Deserialize<'de> for DhPrivateKey {
 
                 Ok(DhPrivateKey(pk))
             }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let mut bytes = [0u8; SECRET_KEY_SIZE];
+                for i in 0..SECRET_KEY_SIZE {
+                    bytes[i] = seq
+                        .next_element()?
+                        .ok_or(de::Error::invalid_length(i, &"expected 32 bytes"))?;
+                }
+                let sk = SecretKey::parse(&bytes).map_err(|_e| {
+                    de::Error::invalid_value(
+                        Unexpected::Bytes(&bytes[..]),
+                        &"Fail SecretKey::parse",
+                    )
+                })?;
+
+                Ok(DhPrivateKey(sk))
+            }
         }
 
-        deserializer.deserialize_bytes(DhPrivateKeyVisitor)
+        deserializer.deserialize_tuple(SECRET_KEY_SIZE, DhPrivateKeyVisitor)
     }
 }
 
@@ -84,7 +108,11 @@ impl Serialize for DhPubKey {
     where
         S: Serializer,
     {
-        serializer.serialize_bytes(&self.0.serialize_compressed())
+        let mut tup = serializer.serialize_tuple(COMPRESSED_PUBLIC_KEY_SIZE)?;
+        for byte in self.0.serialize_compressed().iter() {
+            tup.serialize_element(byte)?;
+        }
+        tup.end()
     }
 }
 
@@ -104,20 +132,28 @@ impl<'de> Deserialize<'de> for DhPubKey {
                 )
             }
 
-            fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
             where
-                E: de::Error,
+                A: SeqAccess<'de>,
             {
-                let mut buf = [0u8; COMPRESSED_PUBLIC_KEY_SIZE];
-                buf.copy_from_slice(&value);
-                let pk = PublicKey::parse_compressed(&buf)
-                    .map_err(|_e| E::custom(Error::InvalidPublicKey))?;
+                let mut bytes = [0u8; COMPRESSED_PUBLIC_KEY_SIZE];
+                for i in 0..COMPRESSED_PUBLIC_KEY_SIZE {
+                    bytes[i] = seq
+                        .next_element()?
+                        .ok_or(de::Error::invalid_length(i, &"expected 33 bytes"))?;
+                }
+                let pk = PublicKey::parse_compressed(&bytes).map_err(|_e| {
+                    de::Error::invalid_value(
+                        Unexpected::Bytes(&bytes[..]),
+                        &"Fail PublicKey::parse_compressed",
+                    )
+                })?;
 
                 Ok(DhPubKey(pk))
             }
         }
 
-        deserializer.deserialize_bytes(DhPubKeyVisitor)
+        deserializer.deserialize_tuple(COMPRESSED_PUBLIC_KEY_SIZE, DhPubKeyVisitor)
     }
 }
 
