@@ -13,12 +13,13 @@ use frame_common::{
     AccessPolicy,
 };
 use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DIR};
+use frame_ecies::{DhPubKey, EciesCiphertext};
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
-    init_path_secret_kvs, DhPubKey, EciesCiphertext, PathSecret, StorePathSecrets,
+    init_path_secret_kvs, PathSecret, StorePathSecrets,
 };
 use remote_attestation::{EncodedQuote, QuoteTarget};
 use std::{

@@ -4,7 +4,7 @@ use frame_common::{
     traits::*,
 };
 use frame_host::engine::*;
-use frame_treekem::EciesCiphertext;
+use frame_ecies::EciesCiphertext;
 use std::marker::PhantomData;
 use web3::types::Address;
 

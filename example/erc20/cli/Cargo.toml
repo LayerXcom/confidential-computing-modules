@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 erc20-api = { path = "../api" }
 frame-common = { path = "../../../frame/common" }
-frame-treekem = { path = "../../../frame/treekem" }
+frame-ecies = { path = "../../../frame/ecies" }
 anonify-wallet = { path = "../../../wallet" }
 reqwest = "0.9"
 clap = "~2.32"

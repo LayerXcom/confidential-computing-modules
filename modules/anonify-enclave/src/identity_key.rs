@@ -5,7 +5,7 @@ use anonify_ecall_types::*;
 use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_treekem::{DhPrivateKey, DhPubKey, EciesCiphertext};
+use frame_ecies::{DhPrivateKey, DhPubKey, EciesCiphertext};
 use secp256k1::{
     self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
 };

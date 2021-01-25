@@ -10,9 +10,8 @@ use frame_common::{
     state_types::{MemId, ReturnState, UpdatedState},
     traits::*,
 };
-use frame_treekem::{
-    handshake::HandshakeParams, DhPubKey, EciesCiphertext, PathSecret, StorePathSecrets,
-};
+use frame_ecies::{DhPubKey, EciesCiphertext};
+use frame_treekem::{handshake::HandshakeParams, PathSecret, StorePathSecrets};
 use remote_attestation::EncodedQuote;
 
 /// Execute state transition functions from runtime

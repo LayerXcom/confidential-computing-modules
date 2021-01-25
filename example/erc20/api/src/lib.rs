@@ -5,7 +5,7 @@ use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse},
     traits::State,
 };
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_ecies::{DhPubKey, EciesCiphertext};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_big_array::big_array;

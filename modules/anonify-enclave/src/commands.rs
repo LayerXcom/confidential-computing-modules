@@ -7,9 +7,9 @@ use frame_common::{
     traits::Hash256,
     AccessPolicy,
 };
+use frame_ecies::EciesCiphertext;
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_treekem::EciesCiphertext;
 use serde::{Deserialize, Serialize};
 use std::{marker::PhantomData, vec::Vec};
 

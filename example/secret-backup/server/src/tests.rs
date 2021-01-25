@@ -6,9 +6,9 @@ use erc20_server::{handlers::*, Server as ERC20Server};
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_config::PJ_ROOT_DIR;
+use frame_ecies::{DhPubKey, EciesCiphertext};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
-use frame_treekem::{DhPubKey, EciesCiphertext};
 use once_cell::sync::Lazy;
 use serde_json::json;
 use std::{

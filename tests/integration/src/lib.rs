@@ -7,9 +7,9 @@ use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
     traits::*,
 };
+use frame_ecies::{DhPubKey, EciesCiphertext};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
-use frame_treekem::{DhPubKey, EciesCiphertext};
 use serde_json::json;
 use sgx_types::*;
 use std::{collections::BTreeMap, env, fs::File, io::BufReader, str::FromStr};

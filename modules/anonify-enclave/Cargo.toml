@@ -8,6 +8,7 @@ edition = "2018"
 frame-types = { path = "../../frame/types" }
 frame-enclave = { path = "../../frame/enclave" }
 frame-config = { path = "../../frame/config", default-features = false, features = ["sgx"] }
+frame-ecies = { path = "../../frame/ecies", default-features = false, features = ["sgx"] }
 frame-runtime = { path = "../../frame/runtime", default-features = false, features = ["sgx"] }
 frame-treekem = { path = "../../frame/treekem", default-features = false, features = ["sgx"] }
 frame-common = { path = "../../frame/common", default-features = false, features = ["sgx"] }

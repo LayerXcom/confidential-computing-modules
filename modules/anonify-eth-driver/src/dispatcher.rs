@@ -9,8 +9,8 @@ use crate::{
     workflow::host_input,
 };
 use frame_common::{state_types::UpdatedState, traits::*};
+use frame_ecies::{DhPubKey, EciesCiphertext};
 use frame_host::engine::HostEngine;
-use frame_treekem::{DhPubKey, EciesCiphertext};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{fmt::Debug, marker::Send, path::Path};

@@ -17,7 +17,7 @@ use frame_common::{
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
-use frame_treekem::DhPubKey;
+use frame_ecies::DhPubKey;
 
 pub mod input {
     use super::*;

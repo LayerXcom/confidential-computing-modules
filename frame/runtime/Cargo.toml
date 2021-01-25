@@ -9,6 +9,7 @@ frame-common = { path = "../common", default-features = false }
 remote-attestation = { path = "../remote-attestation", optional = true }
 frame-types = { path = "../types" }
 frame-treekem = { path = "../treekem", default-features = false, optional = true }
+frame-ecies = { path = "../ecies", default-features = false, optional = true }
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 anyhow-std = { version = "1.0", package = "anyhow", optional = true }
 anyhow-sgx = { rev = "sgx_1.1.3", package = "anyhow", git = "https://github.com/mesalock-linux/anyhow-sgx.git", optional = true }
@@ -36,6 +37,7 @@ sgx = [
     "sgx_tstd",
     "anyhow-sgx",
     "frame-treekem/sgx",
+    "frame-ecies/sgx",
     "serde-sgx",
     "serde-sgx/derive",
     "remote-attestation",

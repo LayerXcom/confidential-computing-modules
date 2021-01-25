@@ -4,7 +4,7 @@ extern crate clap;
 use crate::config::*;
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use frame_common::crypto::AccountId;
-use frame_treekem::DhPubKey;
+use frame_ecies::DhPubKey;
 use rand::{rngs::OsRng, Rng};
 use std::{env, path::PathBuf};
 use term::Term;

@@ -8,7 +8,7 @@ use anyhow::anyhow;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use ed25519_dalek::Keypair;
 use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_ecies::{DhPubKey, EciesCiphertext};
 use rand::Rng;
 use reqwest::Client;
 use serde_json::json;
