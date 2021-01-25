@@ -152,7 +152,11 @@ pub mod input {
     }
 
     impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, runtime_command: serde_json::Value, state_name: String) -> Self {
+        pub fn new(
+            access_policy: AP,
+            runtime_command: serde_json::Value,
+            state_name: String,
+        ) -> Self {
             GetState {
                 access_policy,
                 runtime_command,
