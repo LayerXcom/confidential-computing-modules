@@ -18,5 +18,4 @@ tracing-subscriber = "0.2"
 lazy_static = "1.4"
 web3 = "0.14"
 ethabi = "12.0.0"
-codec = { package = "parity-scale-codec", version = "1.1" }
 serde_json = "1.0"

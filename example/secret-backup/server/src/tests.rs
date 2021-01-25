@@ -2,7 +2,6 @@ use crate::{api, handlers::*, Server as KeyVaultServer};
 use actix_web::{test, web, App};
 use anonify_ecall_types::input;
 use anonify_eth_driver::eth::{EthDeployer, EthSender, EventWatcher};
-use codec::{Decode, Encode};
 use erc20_server::{handlers::*, Server as ERC20Server};
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;

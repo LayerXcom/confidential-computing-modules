@@ -1,8 +1,9 @@
+use crate::bincode;
 use crate::local_ring::digest::{Context, Digest, SHA256};
-use codec::Encode;
+use crate::serde::Serialize;
 
-pub fn hash_encodable<E: Encode>(msg: &E) -> Digest {
-    let buf = msg.encode();
+pub fn hash_encodable<E: Serialize>(msg: &E) -> Digest {
+    let buf = bincode::serialize(&msg).unwrap(); // must not fail
     let mut ctx = Context::new(&SHA256);
     ctx.update(&buf);
     ctx.finish()

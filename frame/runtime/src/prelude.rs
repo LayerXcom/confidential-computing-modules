@@ -8,7 +8,6 @@ pub use crate::{
     __impl_inner_memory, __impl_inner_runtime, get_state, impl_memory, impl_runtime, return_update,
     update,
 };
-pub use codec::{Decode, Encode};
 pub use frame_common::{
     crypto::{AccountId, OWNER_ACCOUNT_ID},
     state_types::*,

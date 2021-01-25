@@ -2,7 +2,6 @@ use crate::{handlers::*, Server};
 use actix_web::{test, web, App};
 use anonify_ecall_types::input;
 use anonify_eth_driver::eth::*;
-use codec::{Decode, Encode};
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
 use frame_host::EnclaveDir;

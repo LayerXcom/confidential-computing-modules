@@ -1,13 +1,13 @@
 use crate::ecalls::EnclaveConnector;
-use codec::{Decode, Encode};
 use frame_common::{EcallInput, EcallOutput};
+use serde::{de::DeserializeOwned, Serialize};
 
 use sgx_types::sgx_enclave_id_t;
 
 pub trait HostEngine {
     type HI: HostInput<EcallInput = Self::EI, HostOutput = Self::HO>;
-    type EI: EcallInput + Encode;
-    type EO: EcallOutput + Decode;
+    type EI: EcallInput + Serialize;
+    type EO: EcallOutput + DeserializeOwned;
     type HO: HostOutput<EcallOutput = Self::EO>;
     const OUTPUT_MAX_LEN: usize;
 

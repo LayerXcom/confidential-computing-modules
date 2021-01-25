@@ -160,7 +160,7 @@ pub mod allowance {
         }
 
         #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response<S: State>(pub S);
+        pub struct Response<S: State>(#[serde(deserialize_with = "S::deserialize")] pub S);
     }
 }
 

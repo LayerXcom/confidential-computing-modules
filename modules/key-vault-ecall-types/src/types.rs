@@ -1,15 +1,17 @@
-use codec::{Decode, Encode};
+use crate::serde::{Deserialize, Serialize};
 use frame_common::{EcallInput, EcallOutput};
 
 pub mod input {
     use super::*;
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct CallServerStarter;
 
     impl EcallInput for CallServerStarter {}
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct CallServerStopper;
 
     impl EcallInput for CallServerStopper {}
@@ -18,7 +20,8 @@ pub mod input {
 pub mod output {
     use super::*;
 
-    #[derive(Encode, Decode, Debug, Clone, Default)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
     pub struct Empty;
 
     impl EcallOutput for Empty {}

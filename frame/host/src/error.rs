@@ -20,10 +20,10 @@ pub enum FrameHostError {
         function: &'static str,
         cmd: u32,
     },
-    #[error("Codec error: {0}")]
-    CodecError(#[from] codec::Error),
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
+    #[error("Bincode error: {0}")]
+    BincodeError(#[from] bincode::Error),
     #[error("Utf8Error error: {0}")]
     Utf8Error(#[from] std::str::Utf8Error),
     #[error("SerdeJsonError error: {0}")]

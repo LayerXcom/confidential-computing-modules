@@ -1,6 +1,5 @@
 use anonify_ecall_types::*;
 use anyhow::{anyhow, Result};
-use codec::{Decode, Encode};
 #[cfg(feature = "backup-enable")]
 use frame_common::crypto::BackupPathSecret;
 use frame_common::{crypto::Sha256, state_types::StateType};
@@ -131,7 +130,7 @@ impl EnclaveEngine for HandshakeReceiver {
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();
-        let handshake = HandshakeParams::decode(&mut &self.ecall_input.handshake().handshake()[..])
+        let handshake = HandshakeParams::decode(&self.ecall_input.handshake().handshake()[..])
             .map_err(|_| anyhow!("HandshakeParams::decode Error"))?;
 
         group_key.process_handshake(

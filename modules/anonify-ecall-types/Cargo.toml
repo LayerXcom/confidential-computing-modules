@@ -9,13 +9,16 @@ frame-common = { path = "../../frame/common", default-features = false }
 frame-runtime = { path = "../../frame/runtime", default-features = false }
 frame-treekem = { path = "../../frame/treekem", default-features = false }
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
-codec = { package = "parity-scale-codec", version = "1.1", default-features = false, features = ["derive"] }
 libsecp256k1 = { version = "0.2", default-features = false }
 hex = { version = "0.4", default-features = false }
 serde-std = { package = "serde", version = "1", default-features = false, optional = true }
 serde-sgx = { package = "serde", git = "https://github.com/mesalock-linux/serde-sgx.git", default-features = false, optional = true, features = ["derive"] }
 serde_json_sgx = { package = "serde_json", rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx", optional = true }
 serde_json_std = { package = "serde_json", version = "1", optional = true }
+serde_bytes_std = { package = "serde_bytes", version = "0.11", optional = true }
+serde_bytes_sgx = { package = "serde_bytes", git = "https://github.com/mesalock-linux/serde-bytes-sgx", optional = true }
+bincode-std = { package = "bincode", version = "1.3", optional = true }
+bincode-sgx = { package = "bincode", git = "https://github.com/mesalock-linux/bincode-sgx", optional = true }
 
 [features]
 default = ["std"]
@@ -25,6 +28,8 @@ std = [
     "frame-treekem/std",
     "serde-std",
     "serde_json_std",
+    "serde_bytes_std",
+    "bincode-std",
 ]
 sgx = [
     "frame-common/sgx",
@@ -33,4 +38,6 @@ sgx = [
     "sgx_tstd",
     "serde-sgx",
     "serde_json_sgx",
+    "serde_bytes_sgx",
+    "bincode-sgx",
 ]

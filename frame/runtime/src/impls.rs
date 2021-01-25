@@ -69,7 +69,7 @@ macro_rules! __impl_inner_runtime {
         )*
     ) => {
         $(
-            #[derive(Serialize, Deserialize, Encode, Decode, Debug, Clone, Default)]
+            #[derive(Serialize, Deserialize, Debug, Clone, Default)]
             #[serde(crate = "crate::serde")]
             #[allow(non_camel_case_types)]
             pub struct $cmd_name {
@@ -79,7 +79,8 @@ macro_rules! __impl_inner_runtime {
         )*
 
         #[cfg(feature = "sgx")]
-        #[derive(Debug, Clone, Encode, Decode)]
+        #[derive(Debug, Clone, Serialize, Deserialize)]
+        #[serde(crate = "crate::serde")]
         pub enum CallKind {
             $(
                 #[allow(non_camel_case_types)]

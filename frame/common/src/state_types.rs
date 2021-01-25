@@ -1,11 +1,12 @@
+use crate::bincode;
 use crate::crypto::AccountId;
-use crate::local_anyhow::{anyhow, Result};
+use crate::local_anyhow::Result;
 use crate::localstd::vec::Vec;
-use crate::serde::Serialize;
+use crate::serde::{Deserialize, Serialize};
+use crate::serde_bytes;
 use crate::traits::State;
-use codec::{Decode, Encode};
 
-pub trait RawState: Encode + Decode + Clone + Default {}
+pub trait RawState: Clone + Default {}
 
 // TODO: Remove Encode trait bound cause StateType has already be encoded.
 // then, implement
@@ -14,9 +15,9 @@ pub trait RawState: Encode + Decode + Clone + Default {}
 //         StateType::new(state.encode_s())
 //     }
 // }
-#[derive(Clone, Debug, Default, Decode, Encode, Serialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
-pub struct StateType(Vec<u8>);
+pub struct StateType(#[serde(with = "serde_bytes")] Vec<u8>);
 
 impl StateType {
     pub fn new(v: Vec<u8>) -> Self {
@@ -42,20 +43,23 @@ impl StateType {
 
 impl From<AccountId> for StateType {
     fn from(account_id: AccountId) -> Self {
-        Self(account_id.encode_s())
+        Self(bincode::serialize(&account_id).unwrap())
     }
 }
 
-#[derive(Debug, Clone, Encode, Decode)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub enum ReturnState<S: State> {
-    Updated(Vec<UpdatedState<S>>),
+    Updated(#[serde(bound(deserialize = "S: State"))] Vec<UpdatedState<S>>),
     Get(serde_json::Value),
 }
 
-#[derive(Debug, Clone, Default, Encode, Decode)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub struct UpdatedState<S: State> {
     pub account_id: AccountId,
     pub mem_id: MemId,
+    #[serde(deserialize_with = "S::deserialize")]
     pub state: S,
 }
 
@@ -73,7 +77,7 @@ impl<S: State> UpdatedState<S> {
     }
 
     pub fn from_state_type(update: UpdatedState<StateType>) -> Result<Self> {
-        let state = S::decode(&mut &update.state.as_bytes()[..]).map_err(|e| anyhow!("{:?}", e))?;
+        let state = bincode::deserialize(&update.state.as_bytes()[..])?;
 
         Ok(UpdatedState {
             account_id: update.account_id,
@@ -84,7 +88,10 @@ impl<S: State> UpdatedState<S> {
 }
 
 /// State identifier stored in memory.
-#[derive(Encode, Decode, Debug, Clone, Copy, PartialOrd, PartialEq, Default, Eq, Ord, Hash)]
+#[derive(
+    Serialize, Deserialize, Debug, Clone, Copy, PartialOrd, PartialEq, Default, Eq, Ord, Hash,
+)]
+#[serde(crate = "crate::serde")]
 pub struct MemId(u32);
 
 impl MemId {

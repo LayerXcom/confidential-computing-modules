@@ -1,7 +1,7 @@
 use crate::error::{FrameHostError, Result};
-use codec::{Decode, Encode};
 use frame_common::{EcallInput, EcallOutput};
 use frame_types::EnclaveStatus;
+use serde::{de::DeserializeOwned, Serialize};
 use sgx_types::{sgx_enclave_id_t, sgx_status_t};
 
 extern "C" {
@@ -32,14 +32,12 @@ impl EnclaveConnector {
 
     pub fn invoke_ecall<E, D>(&self, cmd: u32, input: E) -> Result<D>
     where
-        E: Encode + EcallInput,
-        D: Decode + EcallOutput,
+        E: Serialize + EcallInput,
+        D: DeserializeOwned + EcallOutput,
     {
-        let input_payload = input.encode();
+        let input_payload = bincode::serialize(&input)?;
         let result = self.inner_invoke_ecall(cmd, input_payload)?;
-        let response = D::decode(&mut &result[..])?;
-
-        Ok(response)
+        bincode::deserialize(&result[..]).map_err(Into::into)
     }
 
     fn inner_invoke_ecall(&self, cmd: u32, mut input: Vec<u8>) -> Result<Vec<u8>> {

@@ -4,17 +4,22 @@ use super::{
     hmac::HmacKey,
     SHA256_OUTPUT_LEN,
 };
+use crate::bincode;
 use crate::local_anyhow::{anyhow, Result};
 use crate::local_ring::{self, hkdf::KeyType};
 use crate::localstd;
-use codec::Encode;
+use crate::serde::{Deserialize, Serialize};
+use crate::serde_bytes;
 
 const ANONIFY_PREFIX: &[u8] = b"anonify";
 
-#[derive(Debug, Encode)]
+#[derive(Debug, Serialize)]
+#[serde(crate = "crate::serde")]
 struct HkdfLabel<'a> {
     length: u16,
+    #[serde(with = "serde_bytes")]
     label: &'a [u8],
+    #[serde(with = "serde_bytes")]
     context: &'a [u8],
 }
 
@@ -49,13 +54,13 @@ pub fn expand_label(
     expand(secret, &label, out_buf, local_ring::hkdf::HKDF_SHA256)
 }
 
-pub fn expand<E: Encode, L: KeyType>(
+pub fn expand<E: Serialize, L: KeyType>(
     salt: &HmacKey,
     info: &E,
     out_buf: &mut [u8],
     key_type: L,
 ) -> Result<()> {
-    let encoded_info = info.encode();
+    let encoded_info = bincode::serialize(&info)?;
 
     local_ring::hkdf::Prk::new_less_safe(local_ring::hkdf::HKDF_SHA256, &salt.as_bytes())
         .expand(&[&encoded_info], key_type)
@@ -66,7 +71,7 @@ pub fn expand<E: Encode, L: KeyType>(
 
 /// Derive-Secret(Secret, Label, Context) =
 ///  HKDF-Expand-Label(Secret, Label, Hash(Context), Hash.length)
-pub fn derive_secret<E: Encode>(
+pub fn derive_secret<E: Serialize>(
     secret: &HmacKey,
     label_info: &[u8],
     context: &E,
