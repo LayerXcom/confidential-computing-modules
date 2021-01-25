@@ -51,7 +51,7 @@ impl From<AccountId> for StateType {
 #[serde(crate = "crate::serde")]
 pub enum ReturnState<S: State> {
     Updated(#[serde(bound(deserialize = "S: State"))] Vec<UpdatedState<S>>),
-    Get(serde_json::Value),
+    Get(#[serde(bound(deserialize = "S: State"))] S),
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

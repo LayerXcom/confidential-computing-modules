@@ -195,29 +195,20 @@ where
         }
     }
 
-    pub fn get_state<ST, AP>(
+    pub fn get_state<AP>(
         &self,
         encrypted_req: EciesCiphertext,
         ecall_cmd: u32,
     ) -> Result<serde_json::Value>
     where
-        ST: State + StateDecoder,
         AP: AccessPolicy,
     {
-        fn json_convert(state: impl StateDecoder) -> serde_json::Value {
-
-        }
-        use codec::Decode;
-
         let eid = self.inner.read().deployer.get_enclave_id();
         let input = host_input::GetState::new(encrypted_req, ecall_cmd);
-
-        let vec = GetStateWorkflow::exec(input, eid)?
+        let state = GetStateWorkflow::exec(input, eid)?
             .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?
-            .into_vec(); // into Vec<u8> in StateType
+            .ok_or_else(|| HostError::EcallOutputNotSet)?;
 
-        let state = <impl Decode as Decode>::decode_vec(vec)?;
         serde_json::to_value(state).map_err(Into::into)
     }
 

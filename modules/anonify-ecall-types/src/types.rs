@@ -370,16 +370,16 @@ pub mod output {
 
     impl EcallOutput for Empty {}
 
-    #[derive(Serialize, Deserialize, Debug, Clone)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
     pub struct ReturnState {
-        state: serde_json::Value,
+        state: StateType,
     }
 
     impl EcallOutput for ReturnState {}
 
     impl ReturnState {
-        pub fn new(state: serde_json::Value) -> Self {
+        pub fn new(state: StateType) -> Self {
             ReturnState { state }
         }
     }
