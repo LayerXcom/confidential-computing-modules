@@ -175,7 +175,7 @@ where
         .get_state(req.encrypted_req.clone(), GET_STATE_CMD)
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(erc20_api::state::get::Response(state)))
+    Ok(HttpResponse::Ok().json(erc20_api::state::get::Response { state }))
 }
 
 pub async fn handle_encrypting_key<D, S, W>(

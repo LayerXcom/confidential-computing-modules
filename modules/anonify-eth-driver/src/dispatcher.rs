@@ -12,7 +12,6 @@ use frame_common::{state_types::UpdatedState, traits::*};
 use frame_host::engine::HostEngine;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use parking_lot::RwLock;
-use serde_json::json;
 use sgx_types::sgx_enclave_id_t;
 use std::{fmt::Debug, marker::Send, path::Path};
 use web3::types::{Address, H256};
@@ -207,12 +206,8 @@ where
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
 
-        let state_json: serde_json::Value = bincode::deserialize(&state.state.as_bytes())?;
-        let res = json!({
-            "state": state_json,
-        });
-
-        serde_json::to_value(res).map_err(Into::into)
+        let bytes: Vec<u8> = bincode::deserialize(&state.state.as_bytes())?;
+        serde_json::from_slice(&bytes[..]).map_err(Into::into)
     }
 
     pub async fn handshake(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {

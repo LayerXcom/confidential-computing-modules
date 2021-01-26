@@ -50,7 +50,9 @@ pub mod state {
         }
 
         #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
-        pub struct Response(pub serde_json::Value);
+        pub struct Response {
+            pub state: serde_json::Value,
+        }
     }
 }
 
