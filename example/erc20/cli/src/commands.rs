@@ -315,7 +315,7 @@ pub(crate) fn allowance<R: Rng>(
         EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
-        .get(&format!("{}/api/v1/allowance", &anonify_url))
+        .get(&format!("{}/api/v1/state", &anonify_url))
         .json(&erc20_api::state::get::Request::new(encrypted_req))
         .send()?
         .text()?;
@@ -345,7 +345,7 @@ pub(crate) fn balance_of<R: Rng>(
         EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
-        .get(&format!("{}/api/v1/balance_of", &anonify_url))
+        .get(&format!("{}/api/v1/state", &anonify_url))
         .json(&erc20_api::state::get::Request::new(encrypted_req))
         .send()?
         .text()?;
