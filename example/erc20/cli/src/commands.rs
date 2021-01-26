@@ -297,6 +297,7 @@ pub(crate) fn allowance<R: Rng>(
     anonify_url: String,
     index: usize,
     spender: AccountId,
+    encrypting_key: &DhPubKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
@@ -328,6 +329,7 @@ pub(crate) fn balance_of<R: Rng>(
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
+    encrypting_key: &DhPubKey,
     rng: &mut R,
 ) -> Result<()> {
     let password = prompt_password(term)?;
