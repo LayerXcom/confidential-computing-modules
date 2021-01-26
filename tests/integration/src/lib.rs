@@ -230,7 +230,9 @@ async fn test_auto_notification() {
         .await
         .unwrap();
 
-    println!("init state receipt: {:?}", receipt);
+    dispatcher
+        .register_notification(my_access_policy.clone(), REGISTER_NOTIFICATION_CMD)
+        .unwrap();
 
     // Get logs from contract and update state inside enclave.
     let updated_state = dispatcher
@@ -1332,7 +1334,6 @@ lazy_static! {
 
 pub fn set_env_vars() {
     lazy_static::initialize(&ENV_LOGGER_INIT);
-    env::set_var("RUST_LOG", "DEBUG");
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("MAX_ROSTER_IDX", "2");
     env::set_var(
