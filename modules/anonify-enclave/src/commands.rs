@@ -57,8 +57,6 @@ where
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
         let command_output = output::Command::new(ciphertext, enclave_sig.0, enclave_sig.1);
 
-        enclave_context.set_notification(my_account_id);
-
         Ok(command_output)
     }
 }
