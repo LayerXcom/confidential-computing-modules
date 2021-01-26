@@ -101,7 +101,7 @@ async fn test_multiple_messages() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.0.to_string(), r#"{ "state": 0 }"#);
+    assert_eq!(balance.state, 0);
 
     let init_100_req = init_100_req(&enc_key);
     let req = test::TestRequest::post()
@@ -118,7 +118,7 @@ async fn test_multiple_messages() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.0, 100);
+    assert_eq!(balance.state, 100);
 
     let transfer_10_req = transfer_10_req(&enc_key);
     // Sending five messages before receiving any messages
@@ -138,7 +138,7 @@ async fn test_multiple_messages() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.0, 50);
+    assert_eq!(balance.state, 50);
 }
 
 #[actix_rt::test]
@@ -216,7 +216,7 @@ async fn test_skip_invalid_event() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.0, 100);
+    assert_eq!(balance.state, 100);
 
     let transfer_110_req = transfer_110_req(&enc_key);
     let req = test::TestRequest::post()
@@ -233,7 +233,7 @@ async fn test_skip_invalid_event() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.0, 100);
+    assert_eq!(balance.state, 100);
 
     let transfer_10_req = transfer_10_req(&enc_key);
     let req = test::TestRequest::post()
@@ -250,7 +250,7 @@ async fn test_skip_invalid_event() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.0, 90);
+    assert_eq!(balance.state, 90);
 }
 
 #[actix_rt::test]
@@ -367,7 +367,7 @@ async fn test_node_recovery() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.0, 100);
+    assert_eq!(balance.state, 100);
 
     let transfer_10_req_ = transfer_10_req(&enc_key);
     let req = test::TestRequest::post()
@@ -384,7 +384,7 @@ async fn test_node_recovery() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.0, 90);
+    assert_eq!(balance.state, 90);
 
     // Assume the TEE node is down, and then recovered.
 
@@ -409,15 +409,6 @@ async fn test_node_recovery() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
-        .to_request();
-    let resp = test::call_service(&mut recovered_app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.0, 90);
-
-    let req = test::TestRequest::get()
         .uri("/api/v1/encrypting_key")
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
@@ -425,6 +416,15 @@ async fn test_node_recovery() {
     let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
     let enc_key =
         verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/state")
+        .set_json(&balance_of_req(&enc_key))
+        .to_request();
+    let resp = test::call_service(&mut recovered_app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
+    assert_eq!(balance.state, 90);
 
     let transfer_10_req = transfer_10_req(&enc_key);
     let req = test::TestRequest::post()
@@ -441,7 +441,7 @@ async fn test_node_recovery() {
     let resp = test::call_service(&mut recovered_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.0, 80);
+    assert_eq!(balance.state, 80);
 }
 
 #[actix_rt::test]
@@ -580,7 +580,7 @@ async fn test_join_group_then_handshake() {
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.0, 100);
+    assert_eq!(balance.state, 100);
 
     let req = test::TestRequest::post()
         .uri("/api/v1/key_rotation")
@@ -604,7 +604,7 @@ async fn test_join_group_then_handshake() {
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.0, 90);
+    assert_eq!(balance.state, 90);
 }
 
 fn set_server_env_vars() {
