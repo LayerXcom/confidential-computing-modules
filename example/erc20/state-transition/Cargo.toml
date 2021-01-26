@@ -7,21 +7,13 @@ edition = "2018"
 [dependencies]
 frame-runtime = { path = "../../../frame/runtime", default-features = false }
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
-serde-std = { package = "serde", version = "1", default-features = false, optional = true }
-serde-sgx = { package = "serde", git = "https://github.com/mesalock-linux/serde-sgx.git", default-features = false, optional = true, features = ["derive"] }
-serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx", optional = true }
 
 [features]
 default = ["std"]
 std = [
     "frame-runtime/std",
-    "serde-std/std",
-    "serde-std/derive",
 ]
 sgx = [
     "frame-runtime/sgx",
     "sgx_tstd",
-    "serde-sgx",
-    "serde-sgx/derive",
-    "serde_json",
 ]

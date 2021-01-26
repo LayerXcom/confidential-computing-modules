@@ -206,7 +206,9 @@ where
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
 
-        serde_json::to_value(state).map_err(Into::into)
+        let json = bincode::deserialize(&state.state.as_bytes()).unwrap();
+
+        serde_json::to_value(json).map_err(Into::into)
     }
 
     pub async fn handshake(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {

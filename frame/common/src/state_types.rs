@@ -8,13 +8,6 @@ use crate::traits::State;
 
 pub trait RawState: Clone + Default {}
 
-// TODO: Remove Encode trait bound cause StateType has already be encoded.
-// then, implement
-// impl<S: State> From<S> for StateType {
-//     fn from(state: S) -> Self {
-//         StateType::new(state.encode_s())
-//     }
-// }
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
 pub struct StateType(#[serde(with = "serde_bytes")] Vec<u8>);

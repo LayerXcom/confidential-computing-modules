@@ -2,13 +2,8 @@
 #[cfg(feature = "sgx")]
 #[macro_use]
 extern crate sgx_tstd as localstd;
-#[cfg(all(feature = "sgx", not(feature = "std")))]
-use serde_sgx as serde;
-#[cfg(feature = "std")]
-use serde_std as serde;
 
 use frame_runtime::prelude::*;
-use serde::{Deserialize, Serialize};
 
 pub mod cmd;
 

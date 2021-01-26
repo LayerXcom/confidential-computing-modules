@@ -95,7 +95,7 @@ async fn test_multiple_messages() {
         verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
+        .uri("/api/v1/state")
         .set_json(&balance_of_req(&enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -112,7 +112,7 @@ async fn test_multiple_messages() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
+        .uri("/api/v1/state")
         .set_json(&balance_of_req(&enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -132,7 +132,7 @@ async fn test_multiple_messages() {
     }
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
+        .uri("/api/v1/state")
         .set_json(&balance_of_req(&enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -210,7 +210,7 @@ async fn test_skip_invalid_event() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
+        .uri("/api/v1/state")
         .set_json(&balance_of_req(&enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -227,7 +227,7 @@ async fn test_skip_invalid_event() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
+        .uri("/api/v1/state")
         .set_json(&balance_of_req(&enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -244,7 +244,7 @@ async fn test_skip_invalid_event() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
+        .uri("/api/v1/state")
         .set_json(&balance_of_req(&enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -361,7 +361,7 @@ async fn test_node_recovery() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
+        .uri("/api/v1/state")
         .set_json(&balance_of_req(&enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -378,7 +378,7 @@ async fn test_node_recovery() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
+        .uri("/api/v1/state")
         .set_json(&balance_of_req(&enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -409,7 +409,7 @@ async fn test_node_recovery() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
+        .uri("/api/v1/state")
         .set_json(&balance_of_req(&enc_key))
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
@@ -435,7 +435,7 @@ async fn test_node_recovery() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
+        .uri("/api/v1/state")
         .set_json(&balance_of_req(&enc_key))
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
@@ -574,7 +574,7 @@ async fn test_join_group_then_handshake() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
+        .uri("/api/v1/state")
         .set_json(&balance_of_req(&enc_key))
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
@@ -598,7 +598,7 @@ async fn test_join_group_then_handshake() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/balance_of")
+        .uri("/api/v1/state")
         .set_json(&balance_of_req(&enc_key))
         .to_request();
     let resp = test::call_service(&mut app2, req).await;

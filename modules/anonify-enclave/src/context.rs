@@ -322,9 +322,8 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
             access_policy.into_account_id(),
             runtime_command,
         )?;
-        let json = serde_json::from_slice(&user_state.as_bytes)?;
 
-        Ok(output::ReturnState::new(serde_json::to_value(json)))
+        Ok(output::ReturnState::new(user_state))
     }
 }
 
