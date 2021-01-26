@@ -27,5 +27,7 @@ pub enum HostError {
     #[error("Frame host error: {0}")]
     FrameHostError(#[from] frame_host::Error),
     #[error("Serde json error: {0}")]
-    SerdeJsontError(#[from] serde_json::Error),
+    SerdeJsonError(#[from] serde_json::Error),
+    #[error("Bincode error: {0}")]
+    BincodeError(#[from] bincode::Error),
 }
