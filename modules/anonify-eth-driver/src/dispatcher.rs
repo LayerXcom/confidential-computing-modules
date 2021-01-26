@@ -8,8 +8,8 @@ use crate::{
     utils::*,
     workflow::host_input,
 };
-use frame_common::{state_types::UpdatedState, traits::*};
-use frame_ecies::{DhPubKey, EciesCiphertext};
+use frame_common::{crypto::ClientCiphertext, state_types::UpdatedState, traits::*};
+use frame_ecies::DhPubKey;
 use frame_host::engine::HostEngine;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
@@ -179,7 +179,7 @@ where
 
     pub async fn send_command(
         &self,
-        encrypted_req: EciesCiphertext,
+        encrypted_req: ClientCiphertext,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,

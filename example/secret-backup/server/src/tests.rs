@@ -4,9 +4,9 @@ use anonify_ecall_types::input;
 use anonify_eth_driver::eth::{EthDeployer, EthSender, EventWatcher};
 use erc20_server::{handlers::*, Server as ERC20Server};
 use ethabi::Contract as ContractABI;
-use frame_common::crypto::Ed25519ChallengeResponse;
+use frame_common::crypto::{Ed25519ChallengeResponse, ClientCiphertext};
 use frame_config::PJ_ROOT_DIR;
-use frame_ecies::{DhPubKey, EciesCiphertext};
+use frame_ecies::DhPubKey;
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use once_cell::sync::Lazy;
@@ -802,7 +802,7 @@ fn init_100_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
     });
     let req = input::Command::new(access_policy, init_100, "construct");
     let encrypted_req =
-        EciesCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
     erc20_api::state::post::Request { encrypted_req }
 }

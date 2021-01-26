@@ -2,10 +2,10 @@ use ed25519_dalek::{
     Keypair, PublicKey, Signature, SignatureError, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH,
 };
 use frame_common::{
-    crypto::{AccountId, Ed25519ChallengeResponse},
+    crypto::{AccountId, Ed25519ChallengeResponse, ClientCiphertext},
     traits::State,
 };
-use frame_ecies::{DhPubKey, EciesCiphertext};
+use frame_ecies::DhPubKey;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_big_array::big_array;
@@ -22,11 +22,11 @@ pub mod state {
 
         #[derive(Debug, Clone, Deserialize, Serialize)]
         pub struct Request {
-            pub encrypted_req: EciesCiphertext,
+            pub encrypted_req: ClientCiphertext,
         }
 
         impl Request {
-            pub fn new(encrypted_req: EciesCiphertext) -> Self {
+            pub fn new(encrypted_req: ClientCiphertext) -> Self {
                 Request { encrypted_req }
             }
         }

@@ -2,12 +2,11 @@ use crate::error::Result;
 use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{
-    crypto::{AccountId, Ciphertext, Sha256},
+    crypto::{AccountId, Ciphertext, Sha256, ClientCiphertext},
     state_types::{ReturnState, StateType, UpdatedState},
     traits::Hash256,
     AccessPolicy,
 };
-use frame_ecies::EciesCiphertext;
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use serde::{Deserialize, Serialize};
@@ -23,7 +22,7 @@ impl<AP> EnclaveEngine for MsgSender<AP>
 where
     AP: AccessPolicy,
 {
-    type EI = EciesCiphertext;
+    type EI = ClientCiphertext;
     type EO = output::Command;
 
     fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>

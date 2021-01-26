@@ -4,10 +4,10 @@ use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
 use erc20_state_transition::cmd::*;
 use ethabi::Contract as ContractABI;
 use frame_common::{
-    crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
+    crypto::{AccountId, ClientCiphertext, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
     traits::*,
 };
-use frame_ecies::{DhPubKey, EciesCiphertext};
+use frame_ecies::DhPubKey;
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
 use serde_json::json;
@@ -111,7 +111,7 @@ async fn test_integration_eth_construct() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -198,7 +198,7 @@ async fn test_auto_notification() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -238,7 +238,7 @@ async fn test_auto_notification() {
         "cmd_name": "transfer",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
@@ -315,7 +315,7 @@ async fn test_integration_eth_transfer() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -360,7 +360,7 @@ async fn test_integration_eth_transfer() {
         "cmd_name": "transfer",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
@@ -455,7 +455,7 @@ async fn test_key_rotation() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -540,7 +540,7 @@ async fn test_integration_eth_approve() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -581,7 +581,7 @@ async fn test_integration_eth_approve() {
         "cmd_name": "approve",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
@@ -663,7 +663,7 @@ async fn test_integration_eth_transfer_from() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -721,7 +721,7 @@ async fn test_integration_eth_transfer_from() {
         "cmd_name": "approve",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -785,7 +785,7 @@ async fn test_integration_eth_transfer_from() {
         "cmd_name": "transfer_from",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
@@ -883,7 +883,7 @@ async fn test_integration_eth_mint() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -914,7 +914,7 @@ async fn test_integration_eth_mint() {
         "cmd_name": "mint",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
@@ -995,7 +995,7 @@ async fn test_integration_eth_burn() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -1026,7 +1026,7 @@ async fn test_integration_eth_burn() {
         "cmd_name": "transfer",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -1054,7 +1054,7 @@ async fn test_integration_eth_burn() {
         "cmd_name": "burn",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await

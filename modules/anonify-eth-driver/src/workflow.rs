@@ -1,10 +1,9 @@
 use anonify_ecall_types::*;
 use frame_common::{
-    crypto::{Ciphertext, ExportHandshake},
+    crypto::{Ciphertext, ExportHandshake, ClientCiphertext},
     traits::*,
 };
 use frame_host::engine::*;
-use frame_ecies::EciesCiphertext;
 use std::marker::PhantomData;
 use web3::types::Address;
 
@@ -14,7 +13,7 @@ pub struct CommandWorkflow;
 
 impl HostEngine for CommandWorkflow {
     type HI = host_input::Command;
-    type EI = EciesCiphertext;
+    type EI = ClientCiphertext;
     type EO = output::Command;
     type HO = host_output::Command;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -128,7 +127,7 @@ pub mod host_input {
     use super::*;
 
     pub struct Command {
-        encrypted_req: EciesCiphertext,
+        encrypted_req: ClientCiphertext,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
@@ -136,7 +135,7 @@ pub mod host_input {
 
     impl Command {
         pub fn new(
-            encrypted_req: EciesCiphertext,
+            encrypted_req: ClientCiphertext,
             signer: Address,
             gas: u64,
             ecall_cmd: u32,
@@ -151,7 +150,7 @@ pub mod host_input {
     }
 
     impl HostInput for Command {
-        type EcallInput = EciesCiphertext;
+        type EcallInput = ClientCiphertext;
         type HostOutput = host_output::Command;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {

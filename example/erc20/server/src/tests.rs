@@ -3,8 +3,8 @@ use actix_web::{test, web, App};
 use anonify_ecall_types::input;
 use anonify_eth_driver::eth::*;
 use ethabi::Contract as ContractABI;
-use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
-use frame_ecies::{DhPubKey, EciesCiphertext};
+use frame_common::crypto::{AccountId, Ed25519ChallengeResponse, ClientCiphertext};
+use frame_ecies::DhPubKey;
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use integration_tests::set_env_vars;
@@ -684,7 +684,7 @@ fn init_100_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
     });
     let req = input::Command::new(access_policy, init_100, "construct");
     let encrypted_req =
-        EciesCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
     erc20_api::state::post::Request { encrypted_req }
 }
@@ -715,7 +715,7 @@ fn transfer_10_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
     });
     let req = input::Command::new(access_policy, transfer_10, "transfer");
     let encrypted_req =
-        EciesCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
     erc20_api::state::post::Request { encrypted_req }
 }
@@ -746,7 +746,7 @@ fn transfer_110_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
     });
     let req = input::Command::new(access_policy, transfer_10, "transfer");
     let encrypted_req =
-        EciesCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        ClientCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
     erc20_api::state::post::Request { encrypted_req }
 }

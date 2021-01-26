@@ -2,6 +2,10 @@ use super::{hkdf, hmac::HmacKey};
 use crate::base64;
 use crate::bincode;
 use crate::local_anyhow::{anyhow, Result};
+#[cfg(feature = "std")]
+use crate::local_rand::Rng;
+#[cfg(feature = "std")]
+use crate::local_rand_core::{CryptoRng, RngCore};
 use crate::local_secp256k1::{Error, PublicKey, PublicKeyFormat, SecretKey};
 use crate::localstd::{boxed::Box, fmt, vec::Vec};
 use crate::serde::{
@@ -9,7 +13,8 @@ use crate::serde::{
     ser::SerializeTuple,
     Deserialize, Deserializer, Serialize, Serializer,
 };
-use frame_common::crypto::rand_assign;
+#[cfg(feature = "std")]
+use rand_os::OsRng;
 
 pub(crate) const SECRET_KEY_SIZE: usize = 32;
 pub(crate) const COMPRESSED_PUBLIC_KEY_SIZE: usize = 33;
@@ -239,4 +244,19 @@ fn gen_out_buf(pubkey: &PublicKey, shared_point: &DhPubKey) -> Result<[u8; 32]> 
         hkdf::Aes256GcmKey,
     )?;
     Ok(out_buf)
+}
+
+/// Generating a random number inside the enclave.
+#[cfg(feature = "sgx")]
+pub fn rand_assign(rand: &mut [u8]) -> Result<()> {
+    use sgx_trts::trts::rsgx_read_rand;
+    rsgx_read_rand(rand).map_err(|e| anyhow!("error rsgx_read_rand: {:?}", e))?;
+    Ok(())
+}
+
+#[cfg(feature = "std")]
+pub fn rand_assign(rand: &mut [u8]) -> Result<()> {
+    let mut csprng: OsRng = OsRng::new()?;
+    csprng.fill_bytes(rand);
+    Ok(())
 }

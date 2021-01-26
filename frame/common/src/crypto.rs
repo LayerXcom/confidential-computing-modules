@@ -1,5 +1,5 @@
 use crate::bincode;
-use crate::local_anyhow::{anyhow, Error};
+use crate::local_anyhow::{self, anyhow, Error};
 use crate::local_once_cell::sync::Lazy;
 use crate::localstd::{
     boxed::Box,
@@ -13,10 +13,12 @@ use crate::serde::{de::DeserializeOwned, Deserialize, Serialize};
 use crate::serde_big_array::big_array;
 use crate::serde_bytes;
 use crate::traits::{AccessPolicy, Hash256, IntoVec, StateDecoder};
+use crate::EcallInput;
 use ed25519_dalek::{
     Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
     SIGNATURE_LENGTH,
 };
+use frame_ecies::{DhPrivateKey, DhPubKey, EciesCiphertext};
 #[cfg(feature = "std")]
 use rand::Rng;
 #[cfg(feature = "std")]
@@ -734,5 +736,22 @@ pub struct KeyVaultRequest<DE: DeserializeOwned> {
 impl<DE: DeserializeOwned> KeyVaultRequest<DE> {
     pub fn new(cmd: KeyVaultCmd, body: DE) -> KeyVaultRequest<DE> {
         KeyVaultRequest { cmd, body }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(crate = "crate::serde")]
+pub struct ClientCiphertext(EciesCiphertext);
+
+impl EcallInput for ClientCiphertext {}
+
+impl ClientCiphertext {
+    pub fn encrypt(others_pub_key: &DhPubKey, plaintext: Vec<u8>) -> local_anyhow::Result<Self> {
+        let inner = EciesCiphertext::encrypt(others_pub_key, plaintext)?;
+        Ok(ClientCiphertext(inner))
+    }
+
+    pub fn decrypt(self, my_priv_key: &DhPrivateKey) -> local_anyhow::Result<Vec<u8>> {
+        self.0.decrypt(my_priv_key)
     }
 }

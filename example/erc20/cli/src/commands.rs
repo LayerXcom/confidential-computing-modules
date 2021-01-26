@@ -7,8 +7,8 @@ use anonify_wallet::{DirOperations, KeyFile, KeystoreDirectory, WalletDirectory}
 use anyhow::anyhow;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use ed25519_dalek::Keypair;
-use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
-use frame_ecies::{DhPubKey, EciesCiphertext};
+use frame_common::crypto::{AccountId, Ed25519ChallengeResponse, ClientCiphertext};
+use frame_ecies::DhPubKey;
 use rand::Rng;
 use reqwest::Client;
 use serde_json::json;
@@ -88,7 +88,7 @@ pub(crate) fn init_state<R: Rng>(
         "cmd_name": "construct",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        ClientCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -123,7 +123,7 @@ pub(crate) fn transfer<R: Rng>(
         "cmd_name": "transfer",
     });
     let encrypted_transfer_cmd =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        ClientCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -160,7 +160,7 @@ pub(crate) fn approve<R: Rng>(
         "cmd_name": "approve",
     });
     let encrypted_approve_cmd =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        ClientCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -197,7 +197,7 @@ pub(crate) fn transfer_from<R: Rng>(
         "cmd_name": "transfer_from",
     });
     let encrypted_transfer_from_cmd =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        ClientCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -234,7 +234,7 @@ pub(crate) fn mint<R: Rng>(
         "cmd_name": "mint",
     });
     let encrypted_mint_cmd =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        ClientCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -267,7 +267,7 @@ pub(crate) fn burn<R: Rng>(
         "cmd_name": "burn",
     });
     let encrypted_burn_cmd =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        ClientCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()

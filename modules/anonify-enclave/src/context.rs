@@ -6,14 +6,14 @@ use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{
     crypto::{
-        AccountId, BackupPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverAllRequest,
-        RecoverRequest, RecoveredPathSecret,
+        AccountId, BackupPathSecret, ClientCiphertext, KeyVaultCmd, KeyVaultRequest,
+        RecoverAllRequest, RecoverRequest, RecoveredPathSecret,
     },
     state_types::{MemId, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
 use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DIR};
-use frame_ecies::{DhPubKey, EciesCiphertext};
+use frame_ecies::DhPubKey;
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
@@ -154,7 +154,7 @@ impl IdentityKeyOps for AnonifyEnclaveContext {
         self.identity_key.sign(msg).map_err(Into::into)
     }
 
-    fn decrypt(&self, ciphertext: EciesCiphertext) -> anyhow::Result<Vec<u8>> {
+    fn decrypt(&self, ciphertext: ClientCiphertext) -> anyhow::Result<Vec<u8>> {
         self.identity_key.decrypt(ciphertext).map_err(Into::into)
     }
 

@@ -2,10 +2,10 @@
 
 use crate::error::Result;
 use anonify_ecall_types::*;
-use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
+use frame_common::{crypto::{rand_assign, ClientCiphertext}, state_types::StateType, traits::Keccak256};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_ecies::{DhPrivateKey, DhPubKey, EciesCiphertext};
+use frame_ecies::{DhPrivateKey, DhPubKey};
 use secp256k1::{
     self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
 };
@@ -67,7 +67,7 @@ impl EnclaveIdentityKey {
         Ok(sig)
     }
 
-    pub fn decrypt(&self, ciphertext: EciesCiphertext) -> Result<Vec<u8>> {
+    pub fn decrypt(&self, ciphertext: ClientCiphertext) -> Result<Vec<u8>> {
         ciphertext
             .decrypt(&self.decrypting_privkey)
             .map_err(Into::into)

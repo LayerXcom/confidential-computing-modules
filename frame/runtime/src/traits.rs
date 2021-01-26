@@ -6,11 +6,14 @@ use crate::localstd::{
 };
 use crate::serde::{de::DeserializeOwned, Serialize};
 use frame_common::{
-    crypto::{AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest, RecoveredPathSecret},
+    crypto::{
+        AccountId, BackupPathSecret, Ciphertext, ClientCiphertext, RecoverAllRequest,
+        RecoveredPathSecret,
+    },
     state_types::{MemId, ReturnState, UpdatedState},
     traits::*,
 };
-use frame_ecies::{DhPubKey, EciesCiphertext};
+use frame_ecies::DhPubKey;
 use frame_treekem::{handshake::HandshakeParams, PathSecret, StorePathSecrets};
 use remote_attestation::EncodedQuote;
 
@@ -113,7 +116,7 @@ pub trait NotificationOps {
 pub trait IdentityKeyOps {
     fn sign(&self, msg: &[u8]) -> Result<(secp256k1::Signature, secp256k1::RecoveryId)>;
 
-    fn decrypt(&self, ciphertext: EciesCiphertext) -> Result<Vec<u8>>;
+    fn decrypt(&self, ciphertext: ClientCiphertext) -> Result<Vec<u8>>;
 
     fn encrypting_key(&self) -> DhPubKey;
 }
