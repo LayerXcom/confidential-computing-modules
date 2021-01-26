@@ -89,17 +89,18 @@ impl StateOps for AnonifyEnclaveContext {
         self.db.get(key.into(), mem_id)
     }
 
-    fn get_state_by_cmd_name<U, R, CTX>(
+    fn get_state_by_state_name<U, R, CTX>(
         ctx: CTX,
         cmd_name: &str,
         account_id: U,
+        runtime_cmd: serde_json::Value,
     ) -> anyhow::Result<Self::S>
     where
         U: Into<AccountId>,
         R: RuntimeExecutor<CTX, S = Self::S>,
         CTX: ContextOps<S = Self::S>,
     {
-        let call_kind = R::C::new(cmd_name, serde_json::Value::Null)?;
+        let call_kind = R::C::new(cmd_name, runtime_cmd)?;
         let res = R::new(ctx).execute(call_kind, account_id.into())?;
 
         match res {
@@ -288,17 +289,17 @@ pub struct GetState<AP: AccessPolicy> {
 }
 
 impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
-    type EI = input::GetState<AP>;
+    type EI = EciesCiphertext;
     type EO = output::ReturnState;
 
-    fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        // TODO: decrypt
-        Ok(Self {
-            ecall_input: ciphertext,
-        })
+        let buf = enclave_context.decrypt(ciphertext)?;
+        let ecall_input = serde_json::from_slice(&buf[..])?;
+
+        Ok(Self { ecall_input })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
@@ -310,11 +311,16 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let account_id = self.ecall_input.access_policy().into_account_id();
-        let user_state = C::get_state_by_cmd_name::<_, R, _>(
+        let input::GetState {
+            access_policy,
+            runtime_command,
+            state_name,
+        } = self.ecall_input;
+        let user_state = C::get_state_by_state_name::<_, R, _>(
             enclave_context.clone(),
-            self.ecall_input.cmd_name(),
-            account_id,
+            &state_name,
+            access_policy.into_account_id(),
+            runtime_command,
         )?;
 
         Ok(output::ReturnState::new(user_state))

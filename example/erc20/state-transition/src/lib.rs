@@ -2,13 +2,8 @@
 #[cfg(feature = "sgx")]
 #[macro_use]
 extern crate sgx_tstd as localstd;
-#[cfg(all(feature = "sgx", not(feature = "std")))]
-use serde_sgx as serde;
-#[cfg(feature = "std")]
-use serde_std as serde;
 
 use frame_runtime::prelude::*;
-use serde::{Deserialize, Serialize};
 
 pub mod cmd;
 
@@ -146,10 +141,11 @@ impl_runtime! {
 
     pub fn approved(
         self,
-        caller: AccountId
+        caller: AccountId,
+        spender: AccountId
     ) {
         let approved = self.get_map::<Approved>(caller, "Approved")?;
-        get_state![approved]
+        get_state![approved.get(spender)]
     }
 
     pub fn total_supply(

@@ -62,13 +62,11 @@ impl<AP: AccessPolicy> HostEngine for RegisterNotificationWorkflow<AP> {
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
 }
 
-pub struct GetStateWorkflow<AP: AccessPolicy> {
-    ap: PhantomData<AP>,
-}
+pub struct GetStateWorkflow;
 
-impl<AP: AccessPolicy> HostEngine for GetStateWorkflow<AP> {
-    type HI = host_input::GetState<AP>;
-    type EI = input::GetState<AP>;
+impl HostEngine for GetStateWorkflow {
+    type HI = host_input::GetState;
+    type EI = EciesCiphertext;
     type EO = output::ReturnState;
     type HO = host_output::GetState;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -287,30 +285,26 @@ pub mod host_input {
         }
     }
 
-    pub struct GetState<AP: AccessPolicy> {
-        access_policy: AP,
-        cmd_name: String,
+    pub struct GetState {
+        encrypted_req: EciesCiphertext,
         ecall_cmd: u32,
     }
 
-    impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, cmd_name: String, ecall_cmd: u32) -> Self {
+    impl GetState {
+        pub fn new(encrypted_req: EciesCiphertext, ecall_cmd: u32) -> Self {
             GetState {
-                access_policy,
-                cmd_name,
+                encrypted_req,
                 ecall_cmd,
             }
         }
     }
 
-    impl<AP: AccessPolicy> HostInput for GetState<AP> {
-        type EcallInput = input::GetState<AP>;
+    impl HostInput for GetState {
+        type EcallInput = EciesCiphertext;
         type HostOutput = host_output::GetState;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let ecall_input = Self::EcallInput::new(self.access_policy, self.cmd_name);
-
-            Ok((ecall_input, Self::HostOutput::new()))
+            Ok((self.encrypted_req, Self::HostOutput::new()))
         }
 
         fn ecall_cmd(&self) -> u32 {

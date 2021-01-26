@@ -26,4 +26,8 @@ pub enum HostError {
     EthabiError(#[from] ethabi::Error),
     #[error("Frame host error: {0}")]
     FrameHostError(#[from] frame_host::Error),
+    #[error("Serde json error: {0}")]
+    SerdeJsonError(#[from] serde_json::Error),
+    #[error("Bincode error: {0}")]
+    BincodeError(#[from] bincode::Error),
 }

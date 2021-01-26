@@ -44,8 +44,6 @@ pub mod input {
         }
     }
 
-    impl<AP> EcallInput for Command<AP> where AP: AccessPolicy {}
-
     impl<AP> Command<AP>
     where
         AP: AccessPolicy,
@@ -131,21 +129,38 @@ pub mod input {
         }
     }
 
-    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[derive(Debug, Clone, Deserialize, Serialize)]
     #[serde(crate = "crate::serde")]
     pub struct GetState<AP: AccessPolicy> {
         #[serde(deserialize_with = "AP::deserialize")]
-        access_policy: AP,
-        cmd_name: String,
+        pub access_policy: AP,
+        pub runtime_command: serde_json::Value,
+        pub state_name: String,
     }
 
-    impl<AP: AccessPolicy> EcallInput for GetState<AP> {}
+    impl<AP> Default for GetState<AP>
+    where
+        AP: AccessPolicy,
+    {
+        fn default() -> Self {
+            Self {
+                access_policy: AP::default(),
+                runtime_command: serde_json::Value::Null,
+                state_name: String::default(),
+            }
+        }
+    }
 
     impl<AP: AccessPolicy> GetState<AP> {
-        pub fn new(access_policy: AP, cmd_name: String) -> Self {
+        pub fn new(
+            access_policy: AP,
+            runtime_command: serde_json::Value,
+            state_name: String,
+        ) -> Self {
             GetState {
                 access_policy,
-                cmd_name,
+                runtime_command,
+                state_name,
             }
         }
 
@@ -153,8 +168,12 @@ pub mod input {
             &self.access_policy
         }
 
-        pub fn cmd_name(&self) -> &str {
-            &self.cmd_name
+        pub fn runtime_command(&self) -> &serde_json::Value {
+            &self.runtime_command
+        }
+
+        pub fn state_name(&self) -> &str {
+            &self.state_name
         }
     }
 
@@ -354,7 +373,7 @@ pub mod output {
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
     pub struct ReturnState {
-        state: StateType,
+        pub state: StateType,
     }
 
     impl EcallOutput for ReturnState {}
@@ -362,14 +381,6 @@ pub mod output {
     impl ReturnState {
         pub fn new(state: StateType) -> Self {
             ReturnState { state }
-        }
-
-        pub fn into_vec(self) -> Vec<u8> {
-            self.state.into_vec()
-        }
-
-        pub fn as_mut_bytes(&mut self) -> &mut [u8] {
-            self.state.as_mut_bytes()
         }
     }
 

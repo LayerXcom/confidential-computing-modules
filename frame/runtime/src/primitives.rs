@@ -184,6 +184,10 @@ impl Approved {
         self.0.iter().fold(U64(0), |acc, (_, &amount)| acc + amount)
     }
 
+    pub fn get(&self, account_id: AccountId) -> U64 {
+        self.0.get(&account_id).map(|e| *e).unwrap_or_default()
+    }
+
     pub fn approve(&mut self, account_id: AccountId, amount: U64) {
         match self.allowance(&account_id) {
             Some(&existing_amount) => {

@@ -84,7 +84,12 @@ pub trait StateOps {
 
     /// Get state using call id.
     /// this is called in user-defined state getting functions.
-    fn get_state_by_cmd_name<U, R, CTX>(ctx: CTX, cmd_name: &str, account_id: U) -> Result<Self::S>
+    fn get_state_by_state_name<U, R, CTX>(
+        ctx: CTX,
+        cmd_name: &str,
+        account_id: U,
+        runtime_cmd: serde_json::Value,
+    ) -> Result<Self::S>
     where
         U: Into<AccountId>,
         R: RuntimeExecutor<CTX, S = Self::S>,

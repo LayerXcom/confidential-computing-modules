@@ -195,25 +195,19 @@ where
         }
     }
 
-    pub fn get_state<ST, AP>(
+    pub fn get_state(
         &self,
-        access_policy: AP,
-        call_name: &str,
+        encrypted_req: EciesCiphertext,
         ecall_cmd: u32,
-    ) -> Result<ST>
-    where
-        ST: State + StateDecoder,
-        AP: AccessPolicy,
-    {
+    ) -> Result<serde_json::Value> {
         let eid = self.inner.read().deployer.get_enclave_id();
-        let input = host_input::GetState::new(access_policy, call_name.to_string(), ecall_cmd);
-
-        let vec = GetStateWorkflow::exec(input, eid)?
+        let input = host_input::GetState::new(encrypted_req, ecall_cmd);
+        let state = GetStateWorkflow::exec(input, eid)?
             .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?
-            .into_vec(); // into Vec<u8> in StateType
+            .ok_or_else(|| HostError::EcallOutputNotSet)?;
 
-        ST::decode_vec(vec).map_err(Into::into)
+        let bytes: Vec<u8> = bincode::deserialize(&state.state.as_bytes())?;
+        serde_json::from_slice(&bytes[..]).map_err(Into::into)
     }
 
     pub async fn handshake(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {

@@ -277,6 +277,7 @@ fn subcommand_anonify<R: Rng>(
                 anonify_url,
                 keyfile_index,
                 spender_addr,
+                encrypting_key,
                 rng,
             )
             .expect("Failed allowance command");
@@ -288,7 +289,7 @@ fn subcommand_anonify<R: Rng>(
                 .parse()
                 .expect("Failed to parse keyfile-index");
 
-            commands::balance_of(&mut term, root_dir, anonify_url, keyfile_index, rng)
+            commands::balance_of(&mut term, root_dir, anonify_url, keyfile_index, encrypting_key, rng)
                 .expect("Failed balance_of command");
         }
         ("start_sync_bc", Some(_)) => {
