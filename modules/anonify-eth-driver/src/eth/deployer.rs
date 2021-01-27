@@ -55,7 +55,14 @@ impl Deployer for EthDeployer {
     }
 
     async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
-        self.web3_conn.get_account(index, password).await
+        Retry::new(
+            "get_account",
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
+        )
+        .set_condition(deployer_retry_condition)
+        .spawn_async(|| async { self.web3_conn.get_account(index, password).await })
+        .await
     }
 
     async fn deploy<P>(
@@ -69,7 +76,7 @@ impl Deployer for EthDeployer {
         P: AsRef<Path> + Send + Sync + Copy,
     {
         let contract_addr = Retry::new(
-            "get_account",
+            "deploy",
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
