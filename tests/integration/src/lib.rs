@@ -105,7 +105,7 @@ async fn test_integration_eth_construct() {
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
@@ -132,7 +132,7 @@ async fn test_integration_eth_construct() {
 
     let req = json!({
         "access_policy": COMMON_ACCESS_POLICY.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "owner",
     });
     let encrypted_req =
@@ -142,7 +142,7 @@ async fn test_integration_eth_construct() {
 
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -151,7 +151,7 @@ async fn test_integration_eth_construct() {
 
     let req = json!({
         "access_policy": COMMON_ACCESS_POLICY.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "total_supply",
     });
     let encrypted_req =
@@ -213,7 +213,7 @@ async fn test_auto_notification() {
     let total_supply: u64 = 100;
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
@@ -259,7 +259,7 @@ async fn test_auto_notification() {
     let recipient = other_access_policy.into_account_id();
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "amount": amount,
             "recipient": recipient,
         },
@@ -337,7 +337,7 @@ async fn test_integration_eth_transfer() {
 
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
@@ -365,7 +365,7 @@ async fn test_integration_eth_transfer() {
     // Get state from enclave
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -374,7 +374,7 @@ async fn test_integration_eth_transfer() {
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -383,7 +383,7 @@ async fn test_integration_eth_transfer() {
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -398,7 +398,7 @@ async fn test_integration_eth_transfer() {
     let recipient = other_access_policy.into_account_id();
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "amount": amount,
             "recipient": recipient,
         },
@@ -421,7 +421,7 @@ async fn test_integration_eth_transfer() {
     // Check the updated states
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -430,7 +430,7 @@ async fn test_integration_eth_transfer() {
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -439,7 +439,7 @@ async fn test_integration_eth_transfer() {
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -511,7 +511,7 @@ async fn test_key_rotation() {
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
@@ -538,7 +538,7 @@ async fn test_key_rotation() {
     // Get state from enclave
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -547,7 +547,7 @@ async fn test_key_rotation() {
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -556,7 +556,7 @@ async fn test_key_rotation() {
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -613,7 +613,7 @@ async fn test_integration_eth_approve() {
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
@@ -642,7 +642,7 @@ async fn test_integration_eth_approve() {
     // Get state from enclave
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender
         },
         "state_name": "approved",
@@ -653,7 +653,7 @@ async fn test_integration_eth_approve() {
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender
         },
         "state_name": "approved",
@@ -668,7 +668,7 @@ async fn test_integration_eth_approve() {
     let amount: u64 = 30;
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "amount": amount,
             "spender": spender,
         },
@@ -691,7 +691,7 @@ async fn test_integration_eth_approve() {
     // Check the updated states
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender
         },
         "state_name": "approved",
@@ -702,7 +702,7 @@ async fn test_integration_eth_approve() {
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender
         },
         "state_name": "approved",
@@ -762,7 +762,7 @@ async fn test_integration_eth_transfer_from() {
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
@@ -790,7 +790,7 @@ async fn test_integration_eth_transfer_from() {
     // Get initial state from enclave
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -799,7 +799,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -808,7 +808,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -821,7 +821,7 @@ async fn test_integration_eth_transfer_from() {
     let spender = other_access_policy.into_account_id();
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender
         },
         "state_name": "approved",
@@ -832,7 +832,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender
         },
         "state_name": "approved",
@@ -843,7 +843,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender
         },
         "state_name": "approved",
@@ -859,7 +859,7 @@ async fn test_integration_eth_transfer_from() {
     let amount: u64 = 30;
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "amount": amount,
             "spender": spender,
         },
@@ -887,7 +887,7 @@ async fn test_integration_eth_transfer_from() {
     // Check the updated states
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -896,7 +896,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -905,7 +905,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -917,7 +917,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender
         },
         "state_name": "approved",
@@ -928,7 +928,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender
         },
         "state_name": "approved",
@@ -939,7 +939,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender
         },
         "state_name": "approved",
@@ -958,7 +958,7 @@ async fn test_integration_eth_transfer_from() {
     let recipient = third_access_policy.into_account_id();
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "owner": owner,
             "recipient": recipient,
             "amount": amount,
@@ -982,7 +982,7 @@ async fn test_integration_eth_transfer_from() {
     // Check the final states
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -991,7 +991,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -1000,7 +1000,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -1012,7 +1012,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender
         },
         "state_name": "approved",
@@ -1023,7 +1023,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender
         },
         "state_name": "approved",
@@ -1034,7 +1034,7 @@ async fn test_integration_eth_transfer_from() {
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender
         },
         "state_name": "approved",
@@ -1094,7 +1094,7 @@ async fn test_integration_eth_mint() {
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
@@ -1124,7 +1124,7 @@ async fn test_integration_eth_mint() {
     let recipient = other_access_policy.into_account_id();
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "amount": amount,
             "recipient": recipient,
         },
@@ -1147,7 +1147,7 @@ async fn test_integration_eth_mint() {
 
     let req = json!({
         "access_policy": COMMON_ACCESS_POLICY.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "total_supply",
     });
     let encrypted_req =
@@ -1157,7 +1157,7 @@ async fn test_integration_eth_mint() {
 
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -1166,7 +1166,7 @@ async fn test_integration_eth_mint() {
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -1223,7 +1223,7 @@ async fn test_integration_eth_burn() {
     let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
@@ -1253,7 +1253,7 @@ async fn test_integration_eth_burn() {
     let recipient = other_access_policy.into_account_id();
     let req = json!({
         "access_policy": my_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "amount": amount,
             "recipient": recipient,
         },
@@ -1282,7 +1282,7 @@ async fn test_integration_eth_burn() {
     let amount = 20;
     let req = json!({
         "access_policy": other_access_policy.clone(),
-        "runtime_command": {
+        "runtime_params": {
             "amount": amount,
         },
         "cmd_name": "burn",
@@ -1303,7 +1303,7 @@ async fn test_integration_eth_burn() {
 
     let req = json!({
         "access_policy": COMMON_ACCESS_POLICY.clone(),
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "total_supply",
     });
     let encrypted_req =
@@ -1313,7 +1313,7 @@ async fn test_integration_eth_burn() {
 
     let req = json!({
         "access_policy": my_access_policy,
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
@@ -1322,7 +1322,7 @@ async fn test_integration_eth_burn() {
 
     let req = json!({
         "access_policy": other_access_policy,
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =

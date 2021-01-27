@@ -88,7 +88,7 @@ pub trait StateOps {
         ctx: CTX,
         cmd_name: &str,
         account_id: U,
-        runtime_cmd: serde_json::Value,
+        runtime_params: serde_json::Value,
     ) -> Result<Self::S>
     where
         U: Into<AccountId>,
