@@ -332,7 +332,7 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
 pub struct ReportRegistration;
 
 impl EnclaveEngine for ReportRegistration {
-    type EI = input::CallRegisterReport;
+    type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
 
     fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>

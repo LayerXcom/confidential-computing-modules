@@ -16,7 +16,7 @@ use std::vec::Vec;
 pub struct PathSecretBackupper;
 
 impl EnclaveEngine for PathSecretBackupper {
-    type EI = input::BackupPathSecretAll;
+    type EI = input::Empty;
     type EO = output::Empty;
 
     fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
@@ -50,7 +50,7 @@ impl EnclaveEngine for PathSecretBackupper {
 pub struct PathSecretRecoverer;
 
 impl EnclaveEngine for PathSecretRecoverer {
-    type EI = input::RecoverPathSecretAll;
+    type EI = input::Empty;
     type EO = output::Empty;
 
     fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
