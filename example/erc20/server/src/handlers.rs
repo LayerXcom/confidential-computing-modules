@@ -2,7 +2,6 @@ use crate::error::{Result, ServerError};
 use crate::Server;
 use actix_web::{web, HttpResponse};
 use anonify_eth_driver::traits::*;
-use anyhow::anyhow;
 use erc20_state_transition::cmd::*;
 use frame_runtime::primitives::U64;
 use std::{sync::Arc, time};
@@ -251,12 +250,9 @@ where
     S: Sender,
     W: Watcher,
 {
-    let access_right = req
-        .into_access_right()
-        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     server
         .dispatcher
-        .register_notification(access_right, REGISTER_NOTIFICATION_CMD)
+        .register_notification(req.encrypted_req.clone(), REGISTER_NOTIFICATION_CMD)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().finish())

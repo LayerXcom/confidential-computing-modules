@@ -2,6 +2,7 @@ use anonify_ecall_types::*;
 use frame_common::{crypto::AccountId, state_types::StateType, AccessPolicy};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
+use frame_treekem::EciesCiphertext;
 use std::{
     collections::HashSet,
     sync::{Arc, SgxRwLock},
@@ -36,17 +37,16 @@ pub struct RegisterNotification<AP: AccessPolicy> {
 }
 
 impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
-    type EI = input::RegisterNotification<AP>;
+    type EI = EciesCiphertext;
     type EO = output::Empty;
 
-    fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        // TODO: decrypt
-        Ok(Self {
-            ecall_input: ciphertext,
-        })
+        let buf = enclave_context.decrypt(ciphertext)?;
+        let ecall_input = serde_json::from_slice(&buf[..])?;
+        Ok(Self { ecall_input })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {

@@ -289,8 +289,15 @@ fn subcommand_anonify<R: Rng>(
                 .parse()
                 .expect("Failed to parse keyfile-index");
 
-            commands::balance_of(&mut term, root_dir, anonify_url, keyfile_index, encrypting_key, rng)
-                .expect("Failed balance_of command");
+            commands::balance_of(
+                &mut term,
+                root_dir,
+                anonify_url,
+                keyfile_index,
+                encrypting_key,
+                rng,
+            )
+            .expect("Failed balance_of command");
         }
         ("start_sync_bc", Some(_)) => {
             commands::start_sync_bc(anonify_url).expect("Failed to start_sync_bc command");

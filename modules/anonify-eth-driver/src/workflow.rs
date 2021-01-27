@@ -1,11 +1,7 @@
 use anonify_ecall_types::*;
-use frame_common::{
-    crypto::{Ciphertext, ExportHandshake},
-    traits::*,
-};
+use frame_common::crypto::{Ciphertext, ExportHandshake};
 use frame_host::engine::*;
 use frame_treekem::EciesCiphertext;
-use std::marker::PhantomData;
 use web3::types::Address;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
@@ -50,13 +46,11 @@ impl HostEngine for HandshakeWorkflow {
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
 }
 
-pub struct RegisterNotificationWorkflow<AP: AccessPolicy> {
-    ap: PhantomData<AP>,
-}
+pub struct RegisterNotificationWorkflow;
 
-impl<AP: AccessPolicy> HostEngine for RegisterNotificationWorkflow<AP> {
-    type HI = host_input::RegisterNotification<AP>;
-    type EI = input::RegisterNotification<AP>;
+impl HostEngine for RegisterNotificationWorkflow {
+    type HI = host_input::RegisterNotification;
+    type EI = EciesCiphertext;
     type EO = output::Empty;
     type HO = host_output::RegisterNotification;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -256,28 +250,26 @@ pub mod host_input {
         }
     }
 
-    pub struct RegisterNotification<AP: AccessPolicy> {
-        access_policy: AP,
+    pub struct RegisterNotification {
+        encrypted_req: EciesCiphertext,
         ecall_cmd: u32,
     }
 
-    impl<AP: AccessPolicy> RegisterNotification<AP> {
-        pub fn new(access_policy: AP, ecall_cmd: u32) -> Self {
+    impl RegisterNotification {
+        pub fn new(encrypted_req: EciesCiphertext, ecall_cmd: u32) -> Self {
             RegisterNotification {
-                access_policy,
+                encrypted_req,
                 ecall_cmd,
             }
         }
     }
 
-    impl<AP: AccessPolicy> HostInput for RegisterNotification<AP> {
-        type EcallInput = input::RegisterNotification<AP>;
+    impl HostInput for RegisterNotification {
+        type EcallInput = EciesCiphertext;
         type HostOutput = host_output::RegisterNotification;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let ecall_input = Self::EcallInput::new(self.access_policy);
-
-            Ok((ecall_input, Self::HostOutput::default()))
+            Ok((self.encrypted_req, Self::HostOutput::default()))
         }
 
         fn ecall_cmd(&self) -> u32 {
