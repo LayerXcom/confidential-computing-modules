@@ -1389,7 +1389,6 @@ dependencies = [
  "frame-treekem",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.117",
- "serde-big-array 0.2.0",
  "serde_json 1.0.59",
  "web3",
 ]

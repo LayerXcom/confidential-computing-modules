@@ -251,12 +251,9 @@ where
     S: Sender,
     W: Watcher,
 {
-    let access_right = req
-        .into_access_right()
-        .map_err(|e| ServerError::from(anyhow!("{:?}", e)))?;
     server
         .dispatcher
-        .register_notification(access_right, REGISTER_NOTIFICATION_CMD)
+        .register_notification(req.encrypted_req.clone(), REGISTER_NOTIFICATION_CMD)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().finish())

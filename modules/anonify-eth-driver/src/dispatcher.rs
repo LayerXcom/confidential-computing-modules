@@ -263,12 +263,13 @@ where
             .encrypting_key())
     }
 
-    pub fn register_notification<AP>(&self, access_policy: AP, ecall_cmd: u32) -> Result<()>
-    where
-        AP: AccessPolicy,
-    {
+    pub fn register_notification(
+        &self,
+        encrypted_req: EciesCiphertext,
+        ecall_cmd: u32,
+    ) -> Result<()> {
         let inner = self.inner.read();
-        let input = host_input::RegisterNotification::new(access_policy, ecall_cmd);
+        let input = host_input::RegisterNotification::new(encrypted_req, ecall_cmd);
         let eid = inner.deployer.get_enclave_id();
         let _host_output = RegisterNotificationWorkflow::exec(input, eid)?;
 
