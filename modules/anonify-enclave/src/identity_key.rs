@@ -21,7 +21,7 @@ const REPORT_DATA_SIZE: usize = 64;
 pub struct EncryptingKeyGetter;
 
 impl EnclaveEngine for EncryptingKeyGetter {
-    type EI = input::GetEncryptingKey;
+    type EI = input::Empty;
     type EO = output::ReturnEncryptingKey;
 
     fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>

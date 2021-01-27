@@ -20,7 +20,7 @@ pub struct JoinGroupWorkflow;
 
 impl HostEngine for JoinGroupWorkflow {
     type HI = host_input::JoinGroup;
-    type EI = input::CallJoinGroup;
+    type EI = input::Empty;
     type EO = output::ReturnJoinGroup;
     type HO = host_output::JoinGroup;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -30,7 +30,7 @@ pub struct RegisterReportWorkflow;
 
 impl HostEngine for RegisterReportWorkflow {
     type HI = host_input::RegisterReport;
-    type EI = input::CallRegisterReport;
+    type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
     type HO = host_output::RegisterReport;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -40,7 +40,7 @@ pub struct HandshakeWorkflow;
 
 impl HostEngine for HandshakeWorkflow {
     type HI = host_input::Handshake;
-    type EI = input::CallHandshake;
+    type EI = input::Empty;
     type EO = output::ReturnHandshake;
     type HO = host_output::Handshake;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -90,7 +90,7 @@ pub struct GetEncryptingKeyWorkflow;
 
 impl HostEngine for GetEncryptingKeyWorkflow {
     type HI = host_input::GetEncryptingKey;
-    type EI = input::GetEncryptingKey;
+    type EI = input::Empty;
     type EO = output::ReturnEncryptingKey;
     type HO = host_output::ReturnEncryptingKey;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -100,7 +100,7 @@ pub struct BackupPathSecretAllWorkflow;
 
 impl HostEngine for BackupPathSecretAllWorkflow {
     type HI = host_input::BackupPathSecretAll;
-    type EI = input::BackupPathSecretAll;
+    type EI = input::Empty;
     type EO = output::Empty;
     type HO = host_output::BackupPathSecretAll;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -110,7 +110,7 @@ pub struct RecoverPathSecretAllWorkflow;
 
 impl HostEngine for RecoverPathSecretAllWorkflow {
     type HI = host_input::RecoverPathSecretAll;
-    type EI = input::RecoverPathSecretAll;
+    type EI = input::Empty;
     type EO = output::Empty;
     type HO = host_output::RecoverPathSecretAll;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -174,7 +174,7 @@ pub mod host_input {
     }
 
     impl HostInput for JoinGroup {
-        type EcallInput = input::CallJoinGroup;
+        type EcallInput = input::Empty;
         type HostOutput = host_output::JoinGroup;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
@@ -205,7 +205,7 @@ pub mod host_input {
     }
 
     impl HostInput for RegisterReport {
-        type EcallInput = input::CallRegisterReport;
+        type EcallInput = input::Empty;
         type HostOutput = host_output::RegisterReport;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
@@ -236,7 +236,7 @@ pub mod host_input {
     }
 
     impl HostInput for Handshake {
-        type EcallInput = input::CallHandshake;
+        type EcallInput = input::Empty;
         type HostOutput = host_output::Handshake;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
@@ -373,7 +373,7 @@ pub mod host_input {
     }
 
     impl HostInput for GetEncryptingKey {
-        type EcallInput = input::GetEncryptingKey;
+        type EcallInput = input::Empty;
         type HostOutput = host_output::ReturnEncryptingKey;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
@@ -396,7 +396,7 @@ pub mod host_input {
     }
 
     impl HostInput for BackupPathSecretAll {
-        type EcallInput = input::BackupPathSecretAll;
+        type EcallInput = input::Empty;
         type HostOutput = host_output::BackupPathSecretAll;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
@@ -419,7 +419,7 @@ pub mod host_input {
     }
 
     impl HostInput for RecoverPathSecretAll {
-        type EcallInput = input::RecoverPathSecretAll;
+        type EcallInput = input::Empty;
         type HostOutput = host_output::RecoverPathSecretAll;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {

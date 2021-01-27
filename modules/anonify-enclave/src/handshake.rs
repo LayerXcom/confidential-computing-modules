@@ -12,7 +12,7 @@ use frame_treekem::handshake::HandshakeParams;
 pub struct JoinGroupSender;
 
 impl EnclaveEngine for JoinGroupSender {
-    type EI = input::CallJoinGroup;
+    type EI = input::Empty;
     type EO = output::ReturnJoinGroup;
 
     fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
@@ -61,7 +61,7 @@ impl EnclaveEngine for JoinGroupSender {
 pub struct HandshakeSender;
 
 impl EnclaveEngine for HandshakeSender {
-    type EI = input::CallHandshake;
+    type EI = input::Empty;
     type EO = output::ReturnHandshake;
 
     fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>

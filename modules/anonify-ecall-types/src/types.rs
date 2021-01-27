@@ -71,30 +71,6 @@ pub mod input {
 
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
-    pub struct GetEncryptingKey;
-
-    impl EcallInput for GetEncryptingKey {}
-
-    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-    #[serde(crate = "crate::serde")]
-    pub struct CallHandshake;
-
-    impl EcallInput for CallHandshake {}
-
-    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-    #[serde(crate = "crate::serde")]
-    pub struct CallJoinGroup;
-
-    impl EcallInput for CallJoinGroup {}
-
-    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-    #[serde(crate = "crate::serde")]
-    pub struct CallRegisterReport;
-
-    impl EcallInput for CallRegisterReport {}
-
-    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-    #[serde(crate = "crate::serde")]
     pub struct InsertCiphertext {
         ciphertext: Ciphertext,
     }
@@ -198,15 +174,9 @@ pub mod input {
 
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
-    pub struct BackupPathSecretAll;
+    pub struct Empty;
 
-    impl EcallInput for BackupPathSecretAll {}
-
-    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-    #[serde(crate = "crate::serde")]
-    pub struct RecoverPathSecretAll;
-
-    impl EcallInput for RecoverPathSecretAll {}
+    impl EcallInput for Empty {}
 }
 
 pub mod output {
