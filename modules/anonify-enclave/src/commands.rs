@@ -141,7 +141,7 @@ where
     AP: AccessPolicy,
 {
     pub fn new(my_account_id: AccountId, ecall_input: input::Command<AP>) -> Result<Self> {
-        let call_kind = R::C::new(ecall_input.cmd_name(), ecall_input.runtime_command.clone())?;
+        let call_kind = R::C::new(ecall_input.cmd_name(), ecall_input.runtime_params.clone())?;
 
         Ok(Commands {
             my_account_id,

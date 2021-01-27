@@ -27,7 +27,7 @@ pub mod input {
     pub struct Command<AP: AccessPolicy> {
         #[serde(deserialize_with = "AP::deserialize")]
         pub access_policy: AP,
-        pub runtime_command: serde_json::Value,
+        pub runtime_params: serde_json::Value,
         pub cmd_name: String,
     }
 
@@ -38,7 +38,7 @@ pub mod input {
         fn default() -> Self {
             Self {
                 access_policy: AP::default(),
-                runtime_command: serde_json::Value::Null,
+                runtime_params: serde_json::Value::Null,
                 cmd_name: String::default(),
             }
         }
@@ -50,12 +50,12 @@ pub mod input {
     {
         pub fn new(
             access_policy: AP,
-            runtime_command: serde_json::Value,
+            runtime_params: serde_json::Value,
             cmd_name: impl ToString,
         ) -> Self {
             Command {
                 access_policy,
-                runtime_command,
+                runtime_params,
                 cmd_name: cmd_name.to_string(),
             }
         }
@@ -134,7 +134,7 @@ pub mod input {
     pub struct GetState<AP: AccessPolicy> {
         #[serde(deserialize_with = "AP::deserialize")]
         pub access_policy: AP,
-        pub runtime_command: serde_json::Value,
+        pub runtime_params: serde_json::Value,
         pub state_name: String,
     }
 
@@ -145,7 +145,7 @@ pub mod input {
         fn default() -> Self {
             Self {
                 access_policy: AP::default(),
-                runtime_command: serde_json::Value::Null,
+                runtime_params: serde_json::Value::Null,
                 state_name: String::default(),
             }
         }
@@ -154,12 +154,12 @@ pub mod input {
     impl<AP: AccessPolicy> GetState<AP> {
         pub fn new(
             access_policy: AP,
-            runtime_command: serde_json::Value,
+            runtime_params: serde_json::Value,
             state_name: String,
         ) -> Self {
             GetState {
                 access_policy,
-                runtime_command,
+                runtime_params,
                 state_name,
             }
         }
@@ -168,8 +168,8 @@ pub mod input {
             &self.access_policy
         }
 
-        pub fn runtime_command(&self) -> &serde_json::Value {
-            &self.runtime_command
+        pub fn runtime_params(&self) -> &serde_json::Value {
+            &self.runtime_params
         }
 
         pub fn state_name(&self) -> &str {

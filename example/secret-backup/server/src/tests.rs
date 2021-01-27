@@ -825,7 +825,7 @@ fn balance_of_req(enc_key: &DhPubKey) -> erc20_api::state::get::Request {
     let access_policy = Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge);
     let req = json!({
         "access_policy": access_policy,
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =

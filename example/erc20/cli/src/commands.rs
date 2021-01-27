@@ -82,7 +82,7 @@ pub(crate) fn init_state<R: Rng>(
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
     let req = json!({
         "access_policy": access_policy,
-        "runtime_command": {
+        "runtime_params": {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
@@ -116,7 +116,7 @@ pub(crate) fn transfer<R: Rng>(
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
     let req = json!({
         "access_policy": access_policy,
-        "runtime_command": {
+        "runtime_params": {
             "amount": amount,
             "recipient": recipient,
         },
@@ -153,7 +153,7 @@ pub(crate) fn approve<R: Rng>(
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
     let req = json!({
         "access_policy": access_policy,
-        "runtime_command": {
+        "runtime_params": {
             "amount": amount,
             "spender": spender,
         },
@@ -189,7 +189,7 @@ pub(crate) fn transfer_from<R: Rng>(
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
     let req = json!({
         "access_policy": access_policy,
-        "runtime_command": {
+        "runtime_params": {
             "amount": amount,
             "owner": owner,
             "recipient": recipient,
@@ -227,7 +227,7 @@ pub(crate) fn mint<R: Rng>(
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
     let req = json!({
         "access_policy": access_policy,
-        "runtime_command": {
+        "runtime_params": {
             "amount": amount,
             "recipient": recipient,
         },
@@ -261,7 +261,7 @@ pub(crate) fn burn<R: Rng>(
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
     let req = json!({
         "access_policy": access_policy,
-        "runtime_command": {
+        "runtime_params": {
             "amount": amount,
         },
         "cmd_name": "burn",
@@ -306,7 +306,7 @@ pub(crate) fn allowance<R: Rng>(
 
     let req = json!({
         "access_policy": access_policy,
-        "runtime_command": {
+        "runtime_params": {
             "spender": spender,
         },
         "state_name": "allowance",
@@ -338,7 +338,7 @@ pub(crate) fn balance_of<R: Rng>(
 
     let req = json!({
         "access_policy": access_policy,
-        "runtime_command": {},
+        "runtime_params": {},
         "state_name": "balance_of",
     });
     let encrypted_req =
