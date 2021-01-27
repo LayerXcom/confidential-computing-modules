@@ -230,8 +230,13 @@ async fn test_auto_notification() {
         .await
         .unwrap();
 
+    let req = json!({
+        "access_policy": my_access_policy.clone(),
+    });
+    let encrypted_req =
+        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     dispatcher
-        .register_notification(my_access_policy.clone(), REGISTER_NOTIFICATION_CMD)
+        .register_notification(encrypted_req, REGISTER_NOTIFICATION_CMD)
         .unwrap();
 
     // Get logs from contract and update state inside enclave.
