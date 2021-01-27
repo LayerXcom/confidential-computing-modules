@@ -1,14 +1,5 @@
-use ed25519_dalek::{
-    Keypair, PublicKey, Signature, SignatureError, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH,
-};
-use frame_common::{
-    crypto::{AccountId, Ed25519ChallengeResponse},
-    traits::State,
-};
 use frame_treekem::{DhPubKey, EciesCiphertext};
-use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::fmt;
 use web3::types::H256;
 
 // ----------------------

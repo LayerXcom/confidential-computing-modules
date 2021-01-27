@@ -1,11 +1,7 @@
 use anonify_ecall_types::*;
-use frame_common::{
-    crypto::{Ciphertext, ExportHandshake},
-    traits::*,
-};
+use frame_common::crypto::{Ciphertext, ExportHandshake};
 use frame_host::engine::*;
 use frame_treekem::EciesCiphertext;
-use std::marker::PhantomData;
 use web3::types::Address;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;

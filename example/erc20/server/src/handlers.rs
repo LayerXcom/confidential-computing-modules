@@ -2,7 +2,6 @@ use crate::error::{Result, ServerError};
 use crate::Server;
 use actix_web::{web, HttpResponse};
 use anonify_eth_driver::traits::*;
-use anyhow::anyhow;
 use erc20_state_transition::cmd::*;
 use frame_runtime::primitives::U64;
 use std::{sync::Arc, time};
