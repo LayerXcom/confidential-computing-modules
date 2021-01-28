@@ -1876,6 +1876,7 @@ dependencies = [
  "sgx_trts",
  "sgx_tstd",
  "sgx_types 1.1.3",
+ "test-utils",
  "xsalsa20poly1305 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "xsalsa20poly1305 0.6.0 (git+https://github.com/cipepser/AEADs.git?branch=feature/no-default-feature-in-rand-core)",
 ]
@@ -5526,6 +5527,7 @@ dependencies = [
  "anonify-enclave",
  "frame-config",
  "frame-mra-tls",
+ "frame-sodium",
  "frame-treekem",
  "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
  "sgx_tstd",

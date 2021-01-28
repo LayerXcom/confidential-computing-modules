@@ -22,6 +22,7 @@ serde-std = { package = "serde", version = "1", default-features = false, option
 serde-sgx = { package = "serde", git = "https://github.com/mesalock-linux/serde-sgx.git", default-features = false, optional = true, features = ["derive"] }
 serde_bytes_std = { package = "serde_bytes", version = "0.11", optional = true }
 serde_bytes_sgx = { package = "serde_bytes", git = "https://github.com/mesalock-linux/serde-bytes-sgx", optional = true }
+test-utils = { path = "../../tests/utils", optional = true }
 
 [features]
 default = ["std"]
@@ -47,4 +48,5 @@ sgx = [
     "serde-sgx/derive",
     "serde_bytes_sgx",
     "bincode-sgx",
+    "test-utils",
 ]

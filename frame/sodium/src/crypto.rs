@@ -340,3 +340,26 @@ impl SodiumCiphertext {
         bincode::serialize(&self).unwrap() // must not fail
     }
 }
+
+#[cfg(feature = "sgx")]
+#[cfg(debug_assertions)]
+pub(crate) mod tests {
+    use super::*;
+    use crate::localstd::string::String;
+    use test_utils::*;
+
+    pub(crate) fn run_tests() -> bool {
+        run_tests!(test_sodium,)
+    }
+
+    fn test_sodium() {
+        let sk_server = SodiumPrivateKey::from_random().unwrap();
+        let pk_server = sk_server.public_key();
+
+        let msg = b"This is a test message";
+        let ciphertext = SodiumCiphertext::encrypt(&pk_server, msg.to_vec()).unwrap();
+
+        let plaintext = ciphertext.decrypt(&sk_server).unwrap();
+        assert_eq!(plaintext, &msg[..]);
+    }
+}

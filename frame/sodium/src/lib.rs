@@ -34,3 +34,17 @@ use sgx_xsalsa20poly1305 as xsalsa20poly1305;
 #[cfg(feature = "sgx")]
 mod rng;
 mod crypto;
+
+#[cfg(feature = "sgx")]
+#[cfg(debug_assertions)]
+pub mod tests {
+    use super::*;
+    use crate::localstd::prelude::v1::*;
+    use test_utils::*;
+
+    pub fn run_tests() -> bool {
+        check_all_passed!(
+            crypto::tests::run_tests(),
+        )
+    }
+}
