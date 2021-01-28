@@ -2,6 +2,7 @@ pub mod dh;
 pub mod ecies;
 pub mod hkdf;
 pub mod hmac;
+pub mod wasm;
 
 pub const SHA256_OUTPUT_LEN: usize = 256 / 8;
 
