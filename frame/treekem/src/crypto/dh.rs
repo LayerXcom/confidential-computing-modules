@@ -69,10 +69,10 @@ impl<'de> Deserialize<'de> for DhPrivateKey {
             where
                 E: de::Error,
             {
-                let pk = SecretKey::parse_slice(value)
+                let sk = SecretKey::parse_slice(value)
                     .map_err(|_e| E::custom(Error::InvalidSecretKey))?;
 
-                Ok(DhPrivateKey(pk))
+                Ok(DhPrivateKey(sk))
             }
 
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
