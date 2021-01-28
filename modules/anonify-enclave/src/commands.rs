@@ -3,7 +3,7 @@ use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{
     crypto::{AccountId, Ciphertext, Sha256},
-    state_types::{ReturnState, StateType, UpdatedState},
+    state_types::{NotifyState, ReturnState, StateType, UpdatedState},
     traits::Hash256,
     AccessPolicy,
 };
@@ -114,9 +114,11 @@ where
         )?;
         let mut output = output::ReturnUpdatedState::default();
 
-        if let Some(updated_state_iter) = iter_op {
-            if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
-                output.update(updated_state);
+        if let Some(state_iter) = iter_op {
+            if let Some(notify_state) = enclave_context.update_state(state_iter.0, state_iter.1) {
+                let json = serde_json::to_vec(&notify_state)?;
+                let bytes = bincode::serialize(&json[..])?;
+                output.update(bytes);
             }
         }
 
@@ -176,11 +178,18 @@ where
         ctx: CTX,
         ciphertext: &Ciphertext,
         group_key: &mut GK,
-    ) -> Result<Option<impl Iterator<Item = UpdatedState<StateType>> + Clone>> {
+    ) -> Result<
+        Option<(
+            impl Iterator<Item = UpdatedState<StateType>>,
+            impl Iterator<Item = NotifyState>,
+        )>,
+    > {
         if let Some(commands) = Commands::<R, CTX, AP>::decrypt(ciphertext, group_key)? {
-            let state_iter = commands.stf_call(ctx)?.into_iter();
+            let stf_res = commands.stf_call(ctx)?;
+            let updated_state_iter = stf_res.0.into_iter();
+            let notify_stste_iter = stf_res.1.into_iter();
 
-            return Ok(Some(state_iter));
+            return Ok(Some((updated_state_iter, notify_stste_iter)));
         }
 
         Ok(None)
@@ -193,7 +202,7 @@ where
         }
     }
 
-    fn stf_call(self, ctx: CTX) -> Result<Vec<UpdatedState<StateType>>> {
+    fn stf_call(self, ctx: CTX) -> Result<(Vec<UpdatedState<StateType>>, Vec<NotifyState>)> {
         let res = R::new(ctx).execute(self.call_kind, self.my_account_id)?;
 
         match res {

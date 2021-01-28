@@ -9,11 +9,11 @@ use crate::serde::{
     ser::SerializeSeq,
     Deserialize, Serialize, Serializer,
 };
-use crate::serde_bytes;
+use crate::serde_bytes::{self, ByteBuf};
 use crate::serde_json;
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
-    state_types::{StateType, UpdatedState},
+    state_types::StateType,
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
@@ -293,7 +293,7 @@ pub mod output {
     #[derive(Serialize, Deserialize, Debug, Clone)]
     #[serde(crate = "crate::serde")]
     pub struct ReturnUpdatedState {
-        pub updated_state: Option<UpdatedState<StateType>>,
+        pub updated_state: Option<ByteBuf>,
     }
 
     impl EcallOutput for ReturnUpdatedState {}
@@ -307,12 +307,8 @@ pub mod output {
     }
 
     impl ReturnUpdatedState {
-        pub fn new(updated_state: Option<UpdatedState<StateType>>) -> Self {
-            ReturnUpdatedState { updated_state }
-        }
-
-        pub fn update(&mut self, updated_state: UpdatedState<StateType>) {
-            self.updated_state = Some(updated_state)
+        pub fn update(&mut self, updated_state: Vec<u8>) {
+            self.updated_state = Some(ByteBuf::from(updated_state))
         }
     }
 

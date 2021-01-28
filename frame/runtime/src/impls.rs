@@ -184,19 +184,24 @@ macro_rules! __impl_inner_runtime {
 
 #[macro_export]
 macro_rules! update {
-    ($account_id:expr, $mem_name:expr, $value:expr) => {
-        UpdatedState::new($account_id, MemName::as_id($mem_name), $value)?
-    };
-
-    ($mem_name:expr, $value:expr) => {
-        UpdatedState::new($mem_name, MemName::as_id($mem_name), $value)?
+    ($account_id:expr, $mem_name:expr, $value:expr, $state_type:ty) => {
+        (
+            UpdatedState::new($account_id, MemName::as_id($mem_name), $value.clone())?,
+            NotifyState::new(
+                $account_id,
+                MemName::as_id($mem_name),
+                serde_json::to_value::<$state_type>($value)?,
+            ),
+        )
     };
 }
 
 #[macro_export]
 macro_rules! return_update {
     ( $($update:expr),* ) => {
-        Ok(ReturnState::Updated(vec![$( $update),* ]))
+        Ok(
+            ReturnState::<StateType>::Updated((vec![$( $update.0),* ], vec![$( $update.1 ),* ]))
+        )
     };
 }
 
