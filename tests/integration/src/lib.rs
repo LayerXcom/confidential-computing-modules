@@ -5,6 +5,7 @@ use erc20_state_transition::cmd::*;
 use ethabi::Contract as ContractABI;
 use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
+    state_types::NotifyState,
     traits::*,
 };
 use frame_host::EnclaveDir;
@@ -96,7 +97,7 @@ async fn test_integration_eth_construct() {
 
     // Get handshake from contract
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -126,7 +127,7 @@ async fn test_integration_eth_construct() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -204,7 +205,7 @@ async fn test_auto_notification() {
 
     // Get handshake from contract
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -241,18 +242,25 @@ async fn test_auto_notification() {
 
     // Get logs from contract and update state inside enclave.
     let updated_state = dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap()
         .unwrap();
+    let notified_state: Vec<NotifyState> = updated_state
+        .into_iter()
+        .map(|e| serde_json::from_value(e).unwrap())
+        .collect();
 
-    assert_eq!(updated_state.len(), 1);
+    assert_eq!(notified_state.len(), 1);
     assert_eq!(
-        updated_state[0].account_id,
+        notified_state[0].account_id,
         my_access_policy.into_account_id()
     );
-    assert_eq!(updated_state[0].mem_id.as_raw(), 0);
-    assert_eq!(updated_state[0].state, U64::from_raw(total_supply));
+    assert_eq!(notified_state[0].mem_id.as_raw(), 0);
+    assert_eq!(
+        serde_json::from_value::<U64>(notified_state[0].state.clone()).unwrap(),
+        U64::from_raw(total_supply)
+    );
 
     // Send a transaction to contract
     let amount: u64 = 30;
@@ -275,18 +283,25 @@ async fn test_auto_notification() {
 
     // Update state inside enclave
     let updated_state = dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap()
         .unwrap();
+    let notified_state: Vec<NotifyState> = updated_state
+        .into_iter()
+        .map(|e| serde_json::from_value(e).unwrap())
+        .collect();
 
-    assert_eq!(updated_state.len(), 1);
+    assert_eq!(notified_state.len(), 1);
     assert_eq!(
-        updated_state[0].account_id,
+        notified_state[0].account_id,
         my_access_policy.into_account_id()
     );
-    assert_eq!(updated_state[0].mem_id.as_raw(), 0);
-    assert_eq!(updated_state[0].state, U64::from_raw(70));
+    assert_eq!(notified_state[0].mem_id.as_raw(), 0);
+    assert_eq!(
+        serde_json::from_value::<U64>(notified_state[0].state.clone()).unwrap(),
+        U64::from_raw(70)
+    );
 }
 
 #[actix_rt::test]
@@ -327,7 +342,7 @@ async fn test_integration_eth_transfer() {
 
     // Get handshake from contract
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -358,7 +373,7 @@ async fn test_integration_eth_transfer() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -414,7 +429,7 @@ async fn test_integration_eth_transfer() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -489,7 +504,7 @@ async fn test_key_rotation() {
 
     // Get handshake from contract
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -502,7 +517,7 @@ async fn test_key_rotation() {
 
     // Get handshake from contract
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -531,7 +546,7 @@ async fn test_key_rotation() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -604,7 +619,7 @@ async fn test_integration_eth_approve() {
 
     // Get handshake from contract
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -634,7 +649,7 @@ async fn test_integration_eth_approve() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -684,7 +699,7 @@ async fn test_integration_eth_approve() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -753,7 +768,7 @@ async fn test_integration_eth_transfer_from() {
 
     // Get handshake from contract
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -783,7 +798,7 @@ async fn test_integration_eth_transfer_from() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -880,7 +895,7 @@ async fn test_integration_eth_transfer_from() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -975,7 +990,7 @@ async fn test_integration_eth_transfer_from() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -1085,7 +1100,7 @@ async fn test_integration_eth_mint() {
 
     // Get handshake from contract
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -1115,7 +1130,7 @@ async fn test_integration_eth_mint() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -1141,7 +1156,7 @@ async fn test_integration_eth_mint() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -1214,7 +1229,7 @@ async fn test_integration_eth_burn() {
 
     // Get handshake from contract
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -1244,7 +1259,7 @@ async fn test_integration_eth_burn() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -1274,7 +1289,7 @@ async fn test_integration_eth_burn() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
@@ -1297,7 +1312,7 @@ async fn test_integration_eth_burn() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .unwrap();
 
