@@ -9,7 +9,7 @@ use crate::serde::{
     ser::SerializeSeq,
     Deserialize, Serialize, Serializer,
 };
-use crate::serde_bytes::{self, ByteBuf};
+use crate::serde_bytes;
 use crate::serde_json;
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
@@ -293,22 +293,20 @@ pub mod output {
     #[derive(Serialize, Deserialize, Debug, Clone)]
     #[serde(crate = "crate::serde")]
     pub struct ReturnNotifyState {
-        pub state: Option<ByteBuf>,
+        pub state: Option<serde_bytes::ByteBuf>,
     }
 
     impl EcallOutput for ReturnNotifyState {}
 
     impl Default for ReturnNotifyState {
         fn default() -> Self {
-            ReturnNotifyState {
-                state: None,
-            }
+            ReturnNotifyState { state: None }
         }
     }
 
     impl ReturnNotifyState {
         pub fn update(&mut self, state: Vec<u8>) {
-            self.state = Some(ByteBuf::from(state))
+            self.state = Some(serde_bytes::ByteBuf::from(state))
         }
     }
 

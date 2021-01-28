@@ -69,16 +69,6 @@ impl<S: State> UpdatedState<S> {
             state: state.into(),
         })
     }
-
-    pub fn from_state_type(update: UpdatedState<StateType>) -> Result<Self> {
-        let state = bincode::deserialize(&update.state.as_bytes()[..])?;
-
-        Ok(UpdatedState {
-            account_id: update.account_id,
-            mem_id: update.mem_id,
-            state,
-        })
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

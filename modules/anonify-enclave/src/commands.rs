@@ -15,11 +15,11 @@ use std::{marker::PhantomData, vec::Vec};
 
 /// A message sender that encrypts commands
 #[derive(Debug, Clone, Default)]
-pub struct MsgSender<AP: AccessPolicy> {
+pub struct CmdSender<AP: AccessPolicy> {
     ecall_input: input::Command<AP>,
 }
 
-impl<AP> EnclaveEngine for MsgSender<AP>
+impl<AP> EnclaveEngine for CmdSender<AP>
 where
     AP: AccessPolicy,
 {
@@ -63,12 +63,12 @@ where
 
 /// A message receiver that decrypt commands and make state transition
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct MsgReceiver<AP> {
+pub struct CmdReceiver<AP> {
     ecall_input: input::InsertCiphertext,
     ap: PhantomData<AP>,
 }
 
-impl<AP> EnclaveEngine for MsgReceiver<AP>
+impl<AP> EnclaveEngine for CmdReceiver<AP>
 where
     AP: AccessPolicy,
 {

@@ -12,9 +12,9 @@ register_ecall!(
     MAX_MEM_SIZE,
     Runtime<AnonifyEnclaveContext>,
     AnonifyEnclaveContext,
-    (SEND_COMMAND_CMD, MsgSender<Ed25519ChallengeResponse>),
+    (SEND_COMMAND_CMD, CmdSender<Ed25519ChallengeResponse>),
     // Fetch a ciphertext in event logs from blockchain nodes into enclave's memory database.
-    (FETCH_CIPHERTEXT_CMD, MsgReceiver<Ed25519ChallengeResponse>),
+    (FETCH_CIPHERTEXT_CMD, CmdReceiver<Ed25519ChallengeResponse>),
     // Fetch handshake received from blockchain nodes into enclave.
     (FETCH_HANDSHAKE_CMD, HandshakeReceiver),
     // Get current state of the user represented the given public key from enclave memory database.
@@ -35,9 +35,9 @@ register_ecall!(
     MAX_MEM_SIZE,
     Runtime<AnonifyEnclaveContext>,
     AnonifyEnclaveContext,
-    (SEND_COMMAND_CMD, MsgSender<Ed25519ChallengeResponse>),
+    (SEND_COMMAND_CMD, CmdSender<Ed25519ChallengeResponse>),
     // Fetch a ciphertext in event logs from blockchain nodes into enclave's memory database.
-    (FETCH_CIPHERTEXT_CMD, MsgReceiver<Ed25519ChallengeResponse>),
+    (FETCH_CIPHERTEXT_CMD, CmdReceiver<Ed25519ChallengeResponse>),
     // Fetch handshake received from blockchain nodes into enclave.
     (FETCH_HANDSHAKE_CMD, HandshakeReceiver),
     // Get current state of the user represented the given public key from enclave memory database.
