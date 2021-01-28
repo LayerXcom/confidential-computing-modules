@@ -8,7 +8,6 @@ use crate::{
     utils::*,
     workflow::host_input,
 };
-use frame_common::{state_types::UpdatedState, traits::*};
 use frame_host::engine::HostEngine;
 use frame_treekem::{DhPubKey, EciesCiphertext};
 use parking_lot::RwLock;
@@ -226,14 +225,11 @@ where
         Ok(tx_hash)
     }
 
-    pub async fn fetch_events<St>(
+    pub async fn fetch_events(
         &self,
         fetch_ciphertext_cmd: u32,
         fetch_handshake_cmd: u32,
-    ) -> Result<Option<Vec<UpdatedState<St>>>>
-    where
-        St: State,
-    {
+    ) -> Result<Option<Vec<serde_json::Value>>> {
         let inner = self.inner.read();
         let eid = inner.deployer.get_enclave_id();
         inner

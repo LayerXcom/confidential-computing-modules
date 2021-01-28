@@ -292,23 +292,23 @@ pub mod output {
 
     #[derive(Serialize, Deserialize, Debug, Clone)]
     #[serde(crate = "crate::serde")]
-    pub struct ReturnUpdatedState {
-        pub updated_state: Option<ByteBuf>,
+    pub struct ReturnNotifyState {
+        pub state: Option<ByteBuf>,
     }
 
-    impl EcallOutput for ReturnUpdatedState {}
+    impl EcallOutput for ReturnNotifyState {}
 
-    impl Default for ReturnUpdatedState {
+    impl Default for ReturnNotifyState {
         fn default() -> Self {
-            ReturnUpdatedState {
-                updated_state: None,
+            ReturnNotifyState {
+                state: None,
             }
         }
     }
 
-    impl ReturnUpdatedState {
-        pub fn update(&mut self, updated_state: Vec<u8>) {
-            self.updated_state = Some(ByteBuf::from(updated_state))
+    impl ReturnNotifyState {
+        pub fn update(&mut self, state: Vec<u8>) {
+            self.state = Some(ByteBuf::from(state))
         }
     }
 

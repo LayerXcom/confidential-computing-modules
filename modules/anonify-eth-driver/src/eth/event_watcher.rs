@@ -9,11 +9,7 @@ use crate::{
 use anyhow::anyhow;
 use async_trait::async_trait;
 use ethabi::{decode, Event, EventParam, Hash, ParamType};
-use frame_common::{
-    crypto::{Ciphertext, ExportHandshake},
-    state_types::UpdatedState,
-    traits::*,
-};
+use frame_common::crypto::{Ciphertext, ExportHandshake};
 use frame_host::engine::HostEngine;
 use sgx_types::sgx_enclave_id_t;
 use std::{cmp::Ordering, fmt, path::Path};
@@ -44,12 +40,12 @@ impl Watcher for EventWatcher {
     /// If an error occurs in the process of updating the status due to the fetched events,
     /// that events will be skipped. (No retry process)
     /// If an error occurs on all TEE nodes due to an invalid event etc., skip processing is okay.
-    async fn fetch_events<S: State>(
+    async fn fetch_events(
         &self,
         eid: sgx_enclave_id_t,
         fetch_ciphertext_cmd: u32,
         fetch_handshake_cmd: u32,
-    ) -> Result<Option<Vec<UpdatedState<S>>>> {
+    ) -> Result<Option<Vec<serde_json::Value>>> {
         let enclave_updated_state = self
             .contract
             .get_event(self.cache.clone(), self.contract.address())
@@ -58,7 +54,7 @@ impl Watcher for EventWatcher {
             .insert_enclave(eid, fetch_ciphertext_cmd, fetch_handshake_cmd)
             .save_cache(self.contract.address());
 
-        Ok(enclave_updated_state.updated_states())
+        Ok(enclave_updated_state.notify_states())
     }
 
     fn get_contract(self) -> ContractKind {
@@ -229,27 +225,27 @@ struct EnclaveLog {
 impl EnclaveLog {
     /// Store logs into enclave in-memory.
     /// This returns a latest block number specified by fetched logs.
-    fn insert_enclave<S: State>(
+    fn insert_enclave(
         self,
         eid: sgx_enclave_id_t,
         fetch_ciphertext_cmd: u32,
         fetch_handshake_cmd: u32,
-    ) -> EnclaveUpdatedState<S> {
+    ) -> EnclaveUpdatedState {
         match self.inner {
             Some(log) => {
                 let next_blc_num = log.latest_blc_num + 1;
-                let updated_states =
+                let notify_states =
                     log.invoke_ecall(eid, fetch_ciphertext_cmd, fetch_handshake_cmd);
 
                 EnclaveUpdatedState {
                     block_num: Some(next_blc_num),
-                    updated_states,
+                    notify_states,
                     cache: self.cache,
                 }
             }
             None => EnclaveUpdatedState {
                 block_num: None,
-                updated_states: None,
+                notify_states: None,
                 cache: self.cache,
             },
         }
@@ -266,12 +262,12 @@ struct InnerEnclaveLog {
 }
 
 impl InnerEnclaveLog {
-    fn invoke_ecall<S: State>(
+    fn invoke_ecall(
         self,
         eid: sgx_enclave_id_t,
         fetch_ciphertext_cmd: u32,
         fetch_handshake_cmd: u32,
-    ) -> Option<Vec<UpdatedState<S>>> {
+    ) -> Option<Vec<serde_json::Value>> {
         if self.payloads.is_empty() {
             debug!("No logs to insert into the enclave.");
             None
@@ -297,13 +293,14 @@ impl InnerEnclaveLog {
                             .and_then(|e| {
                                 e.ecall_output.ok_or_else(|| HostError::EcallOutputNotSet)
                             }) {
-                            Ok(update) => {
-                                if let Some(upd_type) = update.updated_state {
-                                    match UpdatedState::<S>::from_state_type(upd_type) {
-                                        Ok(upd_trait) => acc.push(upd_trait),
+                            Ok(notify) => {
+                                if let Some(notify_state) = notify.state {
+                                    match bincode::deserialize::<serde_json::Value>(
+                                        &notify_state.into_vec()[..],
+                                    ) {
+                                        Ok(s) => acc.push(s),
                                         Err(err) => {
-                                            error!("{:?}", err);
-                                            continue;
+                                            error!("Error in bincode::deserialize: {:?}", err)
                                         }
                                     }
                                 }
@@ -387,13 +384,13 @@ impl InnerEnclaveLog {
 }
 
 #[derive(Debug)]
-pub struct EnclaveUpdatedState<S: State> {
+pub struct EnclaveUpdatedState {
     block_num: Option<u64>,
-    updated_states: Option<Vec<UpdatedState<S>>>,
+    notify_states: Option<Vec<serde_json::Value>>,
     cache: EventCache,
 }
 
-impl<S: State> EnclaveUpdatedState<S> {
+impl EnclaveUpdatedState {
     /// Only if EnclaveUpdatedState has new block number to log,
     /// it's set next block number to event cache.
     pub fn save_cache(self, contract_addr: Address) -> Self {
@@ -408,8 +405,8 @@ impl<S: State> EnclaveUpdatedState<S> {
         self
     }
 
-    pub fn updated_states(self) -> Option<Vec<UpdatedState<S>>> {
-        self.updated_states
+    pub fn notify_states(self) -> Option<Vec<serde_json::Value>> {
+        self.notify_states
     }
 }
 

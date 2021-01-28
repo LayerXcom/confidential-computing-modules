@@ -73,7 +73,7 @@ where
     AP: AccessPolicy,
 {
     type EI = input::InsertCiphertext;
-    type EO = output::ReturnUpdatedState;
+    type EO = output::ReturnNotifyState;
 
     fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
@@ -112,7 +112,7 @@ where
             self.ecall_input.ciphertext(),
             group_key,
         )?;
-        let mut output = output::ReturnUpdatedState::default();
+        let mut output = output::ReturnNotifyState::default();
 
         if let Some(state_iter) = iter_op {
             if let Some(notify_state) = enclave_context.update_state(state_iter.0, state_iter.1) {
