@@ -1,7 +1,6 @@
 #![cfg(feature = "sgx")]
-
 use crate::localstd::{io, mem};
-use rand_core::{CryptoRng, RngCore};
+use crate::rand_core::{self, CryptoRng, RngCore};
 use sgx_trts::trts::rsgx_read_rand;
 use sgx_types::*;
 
@@ -9,6 +8,7 @@ pub struct SgxRng;
 
 impl SgxRng {
     /// Create a new `SgxRng`.
+    #[allow(dead_code)]
     pub fn new() -> io::Result<SgxRng> {
         Ok(SgxRng)
     }
@@ -56,9 +56,4 @@ fn try_getrandom_fill_bytes(v: &mut [u8]) -> Result<(), rand_core::Error> {
         Ok(_) => Ok(()),
         Err(ret) => Err(rand_core::Error::new(ret.from_key())),
     }
-}
-
-#[allow(dead_code)]
-fn is_getrandom_available() -> bool {
-    true
 }

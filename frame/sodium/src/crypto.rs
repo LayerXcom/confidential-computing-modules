@@ -1,11 +1,9 @@
 #![allow(dead_code)]
-
 use crate::bincode;
 use crate::crypto_box::{self, aead::Aead, Box as CryptoBox, PublicKey, SecretKey, KEY_SIZE};
 use crate::local_anyhow::{anyhow, Result};
 use crate::localstd::{boxed::Box, fmt, vec::Vec};
-#[cfg(feature = "sgx")]
-use crate::rng::SgxRng;
+use crate::rand_core::{CryptoRng, RngCore};
 use crate::serde::{
     de::{self, SeqAccess, Unexpected},
     ser::{self, SerializeTuple},
@@ -88,20 +86,12 @@ impl SodiumNonce {
         self.0.as_slice()
     }
 
-    pub fn from_random() -> Result<Self> {
-        #[cfg(feature = "std")]
-        {
-            let mut rng = rand::thread_rng();
-            let inner = crypto_box::generate_nonce(&mut rng);
-            Ok(SodiumNonce(inner))
-        }
-
-        #[cfg(feature = "sgx")]
-        {
-            let mut rng = SgxRng::new()?;
-            let inner = crypto_box::generate_nonce(&mut rng);
-            Ok(SodiumNonce(inner))
-        }
+    pub fn from_random<T>(csprng: &mut T) -> Result<Self>
+    where
+        T: RngCore + CryptoRng,
+    {
+        let inner = crypto_box::generate_nonce(csprng);
+        Ok(SodiumNonce(inner))
     }
 }
 
@@ -191,20 +181,12 @@ impl SodiumPrivateKey {
         Ok(SodiumPrivateKey(inner))
     }
 
-    pub fn from_random() -> Result<Self> {
-        #[cfg(feature = "std")]
-        {
-            let mut rng = rand::thread_rng();
-            let inner = SecretKey::generate(&mut rng);
-            Ok(SodiumPrivateKey(inner))
-        }
-
-        #[cfg(feature = "sgx")]
-        {
-            let mut rng = SgxRng::new()?;
-            let inner = SecretKey::generate(&mut rng);
-            Ok(SodiumPrivateKey(inner))
-        }
+    pub fn from_random<T>(csprng: &mut T) -> Result<Self>
+    where
+        T: RngCore + CryptoRng,
+    {
+        let inner = SecretKey::generate(csprng);
+        Ok(SodiumPrivateKey(inner))
     }
 
     pub fn public_key(&self) -> SodiumPubKey {
@@ -312,10 +294,18 @@ pub struct SodiumCiphertext {
 }
 
 impl SodiumCiphertext {
-    pub fn encrypt(others_pub_key: &SodiumPubKey, plaintext: Vec<u8>) -> Result<Self> {
-        let my_ephemeral_secret = SodiumPrivateKey::from_random()?;
+    #[cfg(feature = "std")]
+    pub fn encrypt<T>(
+        csprng: &mut T,
+        others_pub_key: &SodiumPubKey,
+        plaintext: Vec<u8>,
+    ) -> Result<Self>
+    where
+        T: RngCore + CryptoRng,
+    {
+        let my_ephemeral_secret = SodiumPrivateKey::from_random(csprng)?;
         let my_ephemeral_pub_key = my_ephemeral_secret.public_key();
-        let nonce = SodiumNonce::from_random()?;
+        let nonce = SodiumNonce::from_random(csprng)?;
 
         let cbox = CryptoBox::new(&others_pub_key.0, &my_ephemeral_secret.0);
         let ciphertext = cbox
@@ -329,6 +319,7 @@ impl SodiumCiphertext {
         })
     }
 
+    #[cfg(any(all(feature = "std", test), feature = "sgx"))]
     pub fn decrypt(self, my_priv_key: &SodiumPrivateKey) -> Result<Vec<u8>> {
         let cbox = CryptoBox::new(&self.ephemeral_public_key.0, &my_priv_key.0);
         let plaintext = cbox.decrypt(&self.nonce.0, &self.ciphertext[..]).unwrap();
@@ -341,23 +332,20 @@ impl SodiumCiphertext {
     }
 }
 
-#[cfg(feature = "sgx")]
 #[cfg(debug_assertions)]
 pub(crate) mod tests {
+    #[cfg(test)]
     use super::*;
-    use crate::localstd::string::String;
-    use test_utils::*;
 
-    pub(crate) fn run_tests() -> bool {
-        run_tests!(test_sodium,)
-    }
-
+    #[test]
     fn test_sodium() {
-        let sk_server = SodiumPrivateKey::from_random().unwrap();
+        let mut rng = rand::thread_rng();
+
+        let sk_server = SodiumPrivateKey::from_random(&mut rng).unwrap();
         let pk_server = sk_server.public_key();
 
         let msg = b"This is a test message";
-        let ciphertext = SodiumCiphertext::encrypt(&pk_server, msg.to_vec()).unwrap();
+        let ciphertext = SodiumCiphertext::encrypt(&mut rng, &pk_server, msg.to_vec()).unwrap();
 
         let plaintext = ciphertext.decrypt(&sk_server).unwrap();
         assert_eq!(plaintext, &msg[..]);
