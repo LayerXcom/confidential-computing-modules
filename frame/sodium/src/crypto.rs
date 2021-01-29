@@ -332,9 +332,9 @@ impl SodiumCiphertext {
     }
 }
 
+#[cfg(test)]
 #[cfg(debug_assertions)]
 pub(crate) mod tests {
-    #[cfg(test)]
     use super::*;
 
     #[test]
