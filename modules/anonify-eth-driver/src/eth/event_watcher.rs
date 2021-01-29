@@ -295,10 +295,16 @@ impl InnerEnclaveLog {
                             }) {
                             Ok(notify) => {
                                 if let Some(notify_state) = notify.state {
-                                    match bincode::deserialize::<serde_json::Value>(
+                                    match bincode::deserialize::<Vec<u8>>(
                                         &notify_state.into_vec()[..],
                                     ) {
-                                        Ok(s) => acc.push(s),
+                                        Ok(bytes) => match serde_json::from_slice(&bytes[..]) {
+                                            Ok(json) => acc.push(json),
+                                            Err(err) => error!(
+                                                "Error in serde_json::from_slice(&bytes[..]): {:?}",
+                                                err
+                                            ),
+                                        },
                                         Err(err) => {
                                             error!("Error in bincode::deserialize: {:?}", err)
                                         }
