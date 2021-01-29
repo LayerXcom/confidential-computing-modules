@@ -39,4 +39,4 @@ mod crypto;
 #[cfg(feature = "sgx")]
 pub mod rng;
 
-pub use crypto::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey};
+pub use crypto::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE};

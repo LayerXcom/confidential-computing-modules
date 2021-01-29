@@ -13,7 +13,7 @@ use crate::xsalsa20poly1305::{Nonce, NONCE_SIZE};
 
 // PublicKey in crypto_box is defined in x25519-dalek, which have 32 bytes length.
 // see: https://github.com/dalek-cryptography/x25519-dalek/blob/0985e1babf0ba03d151b864ee28baee564662a8d/src/x25519.rs#L35
-const PUBLIC_KEY_SIZE: usize = 32;
+pub const SODIUM_PUBLIC_KEY_SIZE: usize = 32;
 
 #[derive(Debug, Clone, Default)]
 pub struct SodiumNonce(Nonce);
@@ -221,7 +221,7 @@ impl Serialize for SodiumPubKey {
     where
         S: Serializer,
     {
-        let mut tup = serializer.serialize_tuple(PUBLIC_KEY_SIZE)?;
+        let mut tup = serializer.serialize_tuple(SODIUM_PUBLIC_KEY_SIZE)?;
         for byte in self.to_bytes().iter() {
             tup.serialize_element(byte)?;
         }
@@ -247,8 +247,8 @@ impl<'de> Deserialize<'de> for SodiumPubKey {
             where
                 A: SeqAccess<'de>,
             {
-                let mut bytes = [0u8; PUBLIC_KEY_SIZE];
-                for i in 0..PUBLIC_KEY_SIZE {
+                let mut bytes = [0u8; SODIUM_PUBLIC_KEY_SIZE];
+                for i in 0..SODIUM_PUBLIC_KEY_SIZE {
                     bytes[i] = seq
                         .next_element()?
                         .ok_or(de::Error::invalid_length(i, &"expected 32 bytes"))?;
@@ -264,26 +264,26 @@ impl<'de> Deserialize<'de> for SodiumPubKey {
             }
         }
 
-        deserializer.deserialize_tuple(PUBLIC_KEY_SIZE, SodiumPubKeyVisitor)
+        deserializer.deserialize_tuple(SODIUM_PUBLIC_KEY_SIZE, SodiumPubKeyVisitor)
     }
 }
 
 impl SodiumPubKey {
     pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
-        if bytes.len() != PUBLIC_KEY_SIZE {
+        if bytes.len() != SODIUM_PUBLIC_KEY_SIZE {
             return Err(anyhow!(
                 "SodiumPubKey's length must be {}, got {}",
-                PUBLIC_KEY_SIZE,
+                SODIUM_PUBLIC_KEY_SIZE,
                 bytes.len()
             ));
         }
-        let mut buf = [0u8; PUBLIC_KEY_SIZE];
-        buf.copy_from_slice(&bytes[..PUBLIC_KEY_SIZE]);
+        let mut buf = [0u8; SODIUM_PUBLIC_KEY_SIZE];
+        buf.copy_from_slice(&bytes[..SODIUM_PUBLIC_KEY_SIZE]);
         let inner = PublicKey::from(buf);
         Ok(SodiumPubKey(inner))
     }
 
-    pub fn to_bytes(&self) -> [u8; PUBLIC_KEY_SIZE] {
+    pub fn to_bytes(&self) -> [u8; SODIUM_PUBLIC_KEY_SIZE] {
         self.0.to_bytes()
     }
 

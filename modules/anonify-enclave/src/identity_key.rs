@@ -5,7 +5,7 @@ use anonify_ecall_types::*;
 use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey};
+use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE};
 use rand_core::{CryptoRng, RngCore};
 use secp256k1::{
     self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
@@ -14,7 +14,7 @@ use sgx_types::sgx_report_data_t;
 use std::prelude::v1::Vec;
 
 const HASHED_PUBKEY_SIZE: usize = 20;
-const ENCRYPTING_KEY_SIZE: usize = 33;
+const ENCRYPTING_KEY_SIZE: usize = SODIUM_PUBLIC_KEY_SIZE;
 const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCRYPTING_KEY_SIZE;
 const REPORT_DATA_SIZE: usize = 64;
 
