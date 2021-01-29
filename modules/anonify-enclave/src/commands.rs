@@ -3,7 +3,7 @@ use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{
     crypto::{AccountId, Ciphertext, Sha256},
-    state_types::{ReturnState, StateType, UpdatedState},
+    state_types::{NotifyState, ReturnState, StateType, UpdatedState},
     traits::Hash256,
     AccessPolicy,
 };
@@ -15,11 +15,11 @@ use std::{marker::PhantomData, vec::Vec};
 
 /// A message sender that encrypts commands
 #[derive(Debug, Clone, Default)]
-pub struct MsgSender<AP: AccessPolicy> {
+pub struct CmdSender<AP: AccessPolicy> {
     ecall_input: input::Command<AP>,
 }
 
-impl<AP> EnclaveEngine for MsgSender<AP>
+impl<AP> EnclaveEngine for CmdSender<AP>
 where
     AP: AccessPolicy,
 {
@@ -63,17 +63,17 @@ where
 
 /// A message receiver that decrypt commands and make state transition
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct MsgReceiver<AP> {
+pub struct CmdReceiver<AP> {
     ecall_input: input::InsertCiphertext,
     ap: PhantomData<AP>,
 }
 
-impl<AP> EnclaveEngine for MsgReceiver<AP>
+impl<AP> EnclaveEngine for CmdReceiver<AP>
 where
     AP: AccessPolicy,
 {
     type EI = input::InsertCiphertext;
-    type EO = output::ReturnUpdatedState;
+    type EO = output::ReturnNotifyState;
 
     fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
@@ -112,11 +112,13 @@ where
             self.ecall_input.ciphertext(),
             group_key,
         )?;
-        let mut output = output::ReturnUpdatedState::default();
+        let mut output = output::ReturnNotifyState::default();
 
-        if let Some(updated_state_iter) = iter_op {
-            if let Some(updated_state) = enclave_context.update_state(updated_state_iter) {
-                output.update(updated_state);
+        if let Some(state_iter) = iter_op {
+            if let Some(notify_state) = enclave_context.update_state(state_iter.0, state_iter.1) {
+                let json = serde_json::to_vec(&notify_state)?;
+                let bytes = bincode::serialize(&json[..])?;
+                output.update(bytes);
             }
         }
 
@@ -176,11 +178,18 @@ where
         ctx: CTX,
         ciphertext: &Ciphertext,
         group_key: &mut GK,
-    ) -> Result<Option<impl Iterator<Item = UpdatedState<StateType>> + Clone>> {
+    ) -> Result<
+        Option<(
+            impl Iterator<Item = UpdatedState<StateType>>,
+            impl Iterator<Item = Option<NotifyState>>,
+        )>,
+    > {
         if let Some(commands) = Commands::<R, CTX, AP>::decrypt(ciphertext, group_key)? {
-            let state_iter = commands.stf_call(ctx)?.into_iter();
+            let stf_res = commands.stf_call(ctx)?;
+            let updated_state_iter = stf_res.0.into_iter();
+            let notify_stste_iter = stf_res.1.into_iter();
 
-            return Ok(Some(state_iter));
+            return Ok(Some((updated_state_iter, notify_stste_iter)));
         }
 
         Ok(None)
@@ -193,7 +202,10 @@ where
         }
     }
 
-    fn stf_call(self, ctx: CTX) -> Result<Vec<UpdatedState<StateType>>> {
+    fn stf_call(
+        self,
+        ctx: CTX,
+    ) -> Result<(Vec<UpdatedState<StateType>>, Vec<Option<NotifyState>>)> {
         let res = R::new(ctx).execute(self.call_kind, self.my_account_id)?;
 
         match res {

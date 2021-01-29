@@ -4,6 +4,7 @@ use crate::local_anyhow::Result;
 use crate::localstd::vec::Vec;
 use crate::serde::{Deserialize, Serialize};
 use crate::serde_bytes;
+use crate::serde_json;
 use crate::traits::State;
 
 pub trait RawState: Clone + Default {}
@@ -43,7 +44,7 @@ impl From<AccountId> for StateType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
 pub enum ReturnState<S: State> {
-    Updated(#[serde(bound(deserialize = "S: State"))] Vec<UpdatedState<S>>),
+    Updated(#[serde(bound(deserialize = "S: State"))] (Vec<UpdatedState<S>>, Vec<Option<NotifyState>>)),
     Get(#[serde(bound(deserialize = "S: State"))] S),
 }
 
@@ -68,15 +69,23 @@ impl<S: State> UpdatedState<S> {
             state: state.into(),
         })
     }
+}
 
-    pub fn from_state_type(update: UpdatedState<StateType>) -> Result<Self> {
-        let state = bincode::deserialize(&update.state.as_bytes()[..])?;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
+pub struct NotifyState {
+    pub account_id: AccountId,
+    pub mem_id: MemId,
+    pub state: serde_json::Value,
+}
 
-        Ok(UpdatedState {
-            account_id: update.account_id,
-            mem_id: update.mem_id,
+impl NotifyState {
+    pub fn new(account_id: AccountId, mem_id: MemId, state: serde_json::Value) -> Self {
+        Self {
+            account_id,
+            mem_id,
             state,
-        })
+        }
     }
 }
 

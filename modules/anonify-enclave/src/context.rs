@@ -9,7 +9,7 @@ use frame_common::{
         AccountId, BackupPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverAllRequest,
         RecoverRequest, RecoveredPathSecret,
     },
-    state_types::{MemId, ReturnState, StateType, UpdatedState},
+    state_types::{MemId, NotifyState, ReturnState, StateType, UpdatedState},
     AccessPolicy,
 };
 use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DIR};
@@ -115,12 +115,20 @@ impl StateOps for AnonifyEnclaveContext {
     // TODO: Enables to return multiple updated states.
     fn update_state(
         &self,
-        mut state_iter: impl Iterator<Item = UpdatedState<Self::S>> + Clone,
-    ) -> Option<UpdatedState<Self::S>> {
-        state_iter
-            .clone()
-            .for_each(|s| self.db.insert_by_updated_state(s));
-        state_iter.find(|s| self.is_notified(&s.account_id))
+        updated_state_iter: impl Iterator<Item = UpdatedState<Self::S>>,
+        mut notify_state_iter: impl Iterator<Item = Option<NotifyState>>,
+    ) -> Option<NotifyState> {
+        updated_state_iter.for_each(|s| self.db.insert_by_updated_state(s));
+        notify_state_iter
+            .find(|state| {
+                if let Some(s) = state {
+                    self.is_notified(&s.account_id)
+                } else {
+                    // if the type of NotifyState is `Approved`
+                    false
+                }
+            })
+            .and_then(|e| e)
     }
 }
 
