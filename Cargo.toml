@@ -5,6 +5,7 @@ members = [
     "frame/common",
     "frame/types",
     "frame/treekem",
+    "frame/sodium",
     "frame/runtime",
     "frame/remote-attestation",
     "frame/mra-tls",
