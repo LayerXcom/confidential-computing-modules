@@ -185,14 +185,21 @@ macro_rules! __impl_inner_runtime {
 #[macro_export]
 macro_rules! update {
     ($account_id:expr, $mem_name:expr, $value:expr, $state_type:ty) => {
-        (
-            UpdatedState::new($account_id, MemName::as_id($mem_name), $value.clone())?,
-            NotifyState::new(
-                $account_id,
-                MemName::as_id($mem_name),
-                serde_json::to_value::<$state_type>($value)?,
-            ),
-        )
+        if stringify!($state_type) == "Approved" {
+            (
+                UpdatedState::new($account_id, MemName::as_id($mem_name), $value.clone())?,
+                None,
+            )
+        } else {
+            (
+                UpdatedState::new($account_id, MemName::as_id($mem_name), $value.clone())?,
+                Some(NotifyState::new(
+                    $account_id,
+                    MemName::as_id($mem_name),
+                    serde_json::to_value::<$state_type>($value)?,
+                )),
+            )
+        }
     };
 }
 

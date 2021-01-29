@@ -7,7 +7,7 @@ use crate::localstd::{
 use crate::serde::{de::DeserializeOwned, Serialize};
 use frame_common::{
     crypto::{AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest, RecoveredPathSecret},
-    state_types::{MemId, ReturnState, UpdatedState, NotifyState},
+    state_types::{MemId, NotifyState, ReturnState, UpdatedState},
     traits::*,
 };
 use frame_treekem::{
@@ -99,7 +99,7 @@ pub trait StateOps {
     fn update_state(
         &self,
         updated_state_iter: impl Iterator<Item = UpdatedState<Self::S>>,
-        notify_state_iter: impl Iterator<Item = NotifyState>,
+        notify_state_iter: impl Iterator<Item = Option<NotifyState>>,
     ) -> Option<NotifyState>;
 }
 

@@ -44,7 +44,7 @@ impl From<AccountId> for StateType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
 pub enum ReturnState<S: State> {
-    Updated(#[serde(bound(deserialize = "S: State"))] (Vec<UpdatedState<S>>, Vec<NotifyState>)),
+    Updated(#[serde(bound(deserialize = "S: State"))] (Vec<UpdatedState<S>>, Vec<Option<NotifyState>>)),
     Get(#[serde(bound(deserialize = "S: State"))] S),
 }
 

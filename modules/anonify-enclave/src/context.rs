@@ -116,10 +116,19 @@ impl StateOps for AnonifyEnclaveContext {
     fn update_state(
         &self,
         updated_state_iter: impl Iterator<Item = UpdatedState<Self::S>>,
-        mut notify_state_iter: impl Iterator<Item = NotifyState>,
+        mut notify_state_iter: impl Iterator<Item = Option<NotifyState>>,
     ) -> Option<NotifyState> {
         updated_state_iter.for_each(|s| self.db.insert_by_updated_state(s));
-        notify_state_iter.find(|s| self.is_notified(&s.account_id))
+        notify_state_iter
+            .find(|state| {
+                if let Some(s) = state {
+                    self.is_notified(&s.account_id)
+                } else {
+                    // if the type of NotifyState is `Approved`
+                    false
+                }
+            })
+            .and_then(|e| e)
     }
 }
 

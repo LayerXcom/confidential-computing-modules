@@ -181,7 +181,7 @@ where
     ) -> Result<
         Option<(
             impl Iterator<Item = UpdatedState<StateType>>,
-            impl Iterator<Item = NotifyState>,
+            impl Iterator<Item = Option<NotifyState>>,
         )>,
     > {
         if let Some(commands) = Commands::<R, CTX, AP>::decrypt(ciphertext, group_key)? {
@@ -202,7 +202,10 @@ where
         }
     }
 
-    fn stf_call(self, ctx: CTX) -> Result<(Vec<UpdatedState<StateType>>, Vec<NotifyState>)> {
+    fn stf_call(
+        self,
+        ctx: CTX,
+    ) -> Result<(Vec<UpdatedState<StateType>>, Vec<Option<NotifyState>>)> {
         let res = R::new(ctx).execute(self.call_kind, self.my_account_id)?;
 
         match res {
