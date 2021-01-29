@@ -25,6 +25,9 @@ serde-sgx = { package = "serde", git = "https://github.com/mesalock-linux/serde-
 serde_bytes_std = { package = "serde_bytes", version = "0.11", optional = true }
 serde_bytes_sgx = { package = "serde_bytes", git = "https://github.com/mesalock-linux/serde-bytes-sgx", optional = true }
 
+[dev-dependencies]
+serde_json = "1.0"
+
 [features]
 default = ["std"]
 std = [

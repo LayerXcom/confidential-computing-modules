@@ -18,6 +18,12 @@ pub const SODIUM_PUBLIC_KEY_SIZE: usize = 32;
 #[derive(Debug, Clone, Default)]
 pub struct SodiumNonce(Nonce);
 
+impl PartialEq for SodiumNonce {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_slice() == other.as_slice()
+    }
+}
+
 impl Serialize for SodiumNonce {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -63,11 +69,11 @@ impl<'de> Deserialize<'de> for SodiumNonce {
             where
                 A: SeqAccess<'de>,
             {
-                let mut bytes = [0u8; KEY_SIZE];
-                for i in 0..KEY_SIZE {
+                let mut bytes = [0u8; NONCE_SIZE];
+                for i in 0..NONCE_SIZE {
                     bytes[i] = seq
                         .next_element()?
-                        .ok_or(de::Error::invalid_length(i, &"expected 24 bytes"))?;
+                        .ok_or(de::Error::invalid_length(i, &"24"))?;
                 }
                 Ok(SodiumNonce::from_bytes(&bytes))
             }
@@ -155,7 +161,7 @@ impl<'de> Deserialize<'de> for SodiumPrivateKey {
                 for i in 0..KEY_SIZE {
                     bytes[i] = seq
                         .next_element()?
-                        .ok_or(de::Error::invalid_length(i, &"expected 32 bytes"))?;
+                        .ok_or(de::Error::invalid_length(i, &"32"))?;
                 }
                 let sk = SodiumPrivateKey::from_bytes(&bytes).map_err(|_e| {
                     de::Error::invalid_value(
@@ -251,7 +257,7 @@ impl<'de> Deserialize<'de> for SodiumPubKey {
                 for i in 0..SODIUM_PUBLIC_KEY_SIZE {
                     bytes[i] = seq
                         .next_element()?
-                        .ok_or(de::Error::invalid_length(i, &"expected 32 bytes"))?;
+                        .ok_or(de::Error::invalid_length(i, &"32"))?;
                 }
                 let pk = SodiumPubKey::from_bytes(&bytes).map_err(|_e| {
                     de::Error::invalid_value(
@@ -363,5 +369,37 @@ pub(crate) mod tests {
 
         let plaintext = ciphertext.decrypt(&sk_server).unwrap();
         assert_eq!(plaintext, &msg[..]);
+    }
+
+    #[test]
+    fn test_nonce_serde() {
+        let mut rng = rand::thread_rng();
+        let nonce = SodiumNonce::from_random(&mut rng).unwrap();
+
+        let v = serde_json::to_vec(&nonce).unwrap();
+        let recovered: SodiumNonce = serde_json::from_slice(&v[..]).unwrap();
+        assert_eq!(recovered, nonce);
+    }
+
+    #[test]
+    fn test_private_key_serde() {
+        let mut rng = rand::thread_rng();
+        let sk = SodiumPrivateKey::from_random(&mut rng).unwrap();
+
+        let v = serde_json::to_vec(&sk).unwrap();
+        let recovered: SodiumPrivateKey = serde_json::from_slice(&v[..]).unwrap();
+        assert_eq!(recovered, sk);
+    }
+
+    #[test]
+    fn test_pubkey_serde() {
+        let mut rng = rand::thread_rng();
+
+        let sk = SodiumPrivateKey::from_random(&mut rng).unwrap();
+        let pk = sk.public_key();
+
+        let v = serde_json::to_vec(&pk).unwrap();
+        let recovered: SodiumPubKey = serde_json::from_slice(&v[..]).unwrap();
+        assert_eq!(recovered, pk);
     }
 }
