@@ -10,7 +10,7 @@ use crate::{
 };
 use frame_common::{state_types::UpdatedState, traits::*};
 use frame_host::engine::HostEngine;
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{fmt::Debug, marker::Send, path::Path};
@@ -179,7 +179,7 @@ where
 
     pub async fn send_command(
         &self,
-        encrypted_req: EciesCiphertext,
+        encrypted_req: SodiumCiphertext,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
@@ -197,7 +197,7 @@ where
 
     pub fn get_state(
         &self,
-        encrypted_req: EciesCiphertext,
+        encrypted_req: SodiumCiphertext,
         ecall_cmd: u32,
     ) -> Result<serde_json::Value> {
         let eid = self.inner.read().deployer.get_enclave_id();
@@ -252,7 +252,7 @@ where
             .await
     }
 
-    pub fn get_encrypting_key(&self, ecall_cmd: u32) -> Result<DhPubKey> {
+    pub fn get_encrypting_key(&self, ecall_cmd: u32) -> Result<SodiumPubKey> {
         let input = host_input::GetEncryptingKey::new(ecall_cmd);
         let eid = self.inner.read().deployer.get_enclave_id();
         let encrypting_key = GetEncryptingKeyWorkflow::exec(input, eid)?;
@@ -265,7 +265,7 @@ where
 
     pub fn register_notification(
         &self,
-        encrypted_req: EciesCiphertext,
+        encrypted_req: SodiumCiphertext,
         ecall_cmd: u32,
     ) -> Result<()> {
         let inner = self.inner.read();

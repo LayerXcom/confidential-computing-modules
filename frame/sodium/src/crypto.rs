@@ -105,6 +105,12 @@ impl Default for SodiumPrivateKey {
     }
 }
 
+impl PartialEq for SodiumPrivateKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.to_bytes() == other.0.to_bytes()
+    }
+}
+
 impl Serialize for SodiumPrivateKey {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -204,6 +210,12 @@ impl Default for SodiumPubKey {
     }
 }
 
+impl PartialEq for SodiumPubKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.to_bytes() == other.to_bytes()
+    }
+}
+
 impl Serialize for SodiumPubKey {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -292,6 +304,8 @@ pub struct SodiumCiphertext {
     #[serde(with = "crate::serde_bytes")]
     ciphertext: Vec<u8>,
 }
+
+impl frame_common::EcallInput for SodiumCiphertext {}
 
 impl SodiumCiphertext {
     #[cfg(feature = "std")]

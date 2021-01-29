@@ -10,9 +10,8 @@ use frame_common::{
     state_types::{MemId, ReturnState, UpdatedState},
     traits::*,
 };
-use frame_treekem::{
-    handshake::HandshakeParams, DhPubKey, EciesCiphertext, PathSecret, StorePathSecrets,
-};
+use frame_sodium::{SodiumCiphertext, SodiumPubKey};
+use frame_treekem::{handshake::HandshakeParams, PathSecret, StorePathSecrets};
 use remote_attestation::EncodedQuote;
 
 /// Execute state transition functions from runtime
@@ -119,9 +118,9 @@ pub trait NotificationOps {
 pub trait IdentityKeyOps {
     fn sign(&self, msg: &[u8]) -> Result<(secp256k1::Signature, secp256k1::RecoveryId)>;
 
-    fn decrypt(&self, ciphertext: EciesCiphertext) -> Result<Vec<u8>>;
+    fn decrypt(&self, ciphertext: SodiumCiphertext) -> Result<Vec<u8>>;
 
-    fn encrypting_key(&self) -> DhPubKey;
+    fn encrypting_key(&self) -> SodiumPubKey;
 }
 
 pub trait GroupKeyOps: Sized {

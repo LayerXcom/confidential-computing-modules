@@ -1,7 +1,7 @@
 use anonify_ecall_types::*;
 use frame_common::crypto::{Ciphertext, ExportHandshake};
 use frame_host::engine::*;
-use frame_treekem::EciesCiphertext;
+use frame_sodium::SodiumCiphertext;
 use web3::types::Address;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
@@ -10,7 +10,7 @@ pub struct CommandWorkflow;
 
 impl HostEngine for CommandWorkflow {
     type HI = host_input::Command;
-    type EI = EciesCiphertext;
+    type EI = SodiumCiphertext;
     type EO = output::Command;
     type HO = host_output::Command;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -50,7 +50,7 @@ pub struct RegisterNotificationWorkflow;
 
 impl HostEngine for RegisterNotificationWorkflow {
     type HI = host_input::RegisterNotification;
-    type EI = EciesCiphertext;
+    type EI = SodiumCiphertext;
     type EO = output::Empty;
     type HO = host_output::RegisterNotification;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -60,7 +60,7 @@ pub struct GetStateWorkflow;
 
 impl HostEngine for GetStateWorkflow {
     type HI = host_input::GetState;
-    type EI = EciesCiphertext;
+    type EI = SodiumCiphertext;
     type EO = output::ReturnState;
     type HO = host_output::GetState;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -120,7 +120,7 @@ pub mod host_input {
     use super::*;
 
     pub struct Command {
-        encrypted_req: EciesCiphertext,
+        encrypted_req: SodiumCiphertext,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
@@ -128,7 +128,7 @@ pub mod host_input {
 
     impl Command {
         pub fn new(
-            encrypted_req: EciesCiphertext,
+            encrypted_req: SodiumCiphertext,
             signer: Address,
             gas: u64,
             ecall_cmd: u32,
@@ -143,7 +143,7 @@ pub mod host_input {
     }
 
     impl HostInput for Command {
-        type EcallInput = EciesCiphertext;
+        type EcallInput = SodiumCiphertext;
         type HostOutput = host_output::Command;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
@@ -251,12 +251,12 @@ pub mod host_input {
     }
 
     pub struct RegisterNotification {
-        encrypted_req: EciesCiphertext,
+        encrypted_req: SodiumCiphertext,
         ecall_cmd: u32,
     }
 
     impl RegisterNotification {
-        pub fn new(encrypted_req: EciesCiphertext, ecall_cmd: u32) -> Self {
+        pub fn new(encrypted_req: SodiumCiphertext, ecall_cmd: u32) -> Self {
             RegisterNotification {
                 encrypted_req,
                 ecall_cmd,
@@ -265,7 +265,7 @@ pub mod host_input {
     }
 
     impl HostInput for RegisterNotification {
-        type EcallInput = EciesCiphertext;
+        type EcallInput = SodiumCiphertext;
         type HostOutput = host_output::RegisterNotification;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
@@ -278,12 +278,12 @@ pub mod host_input {
     }
 
     pub struct GetState {
-        encrypted_req: EciesCiphertext,
+        encrypted_req: SodiumCiphertext,
         ecall_cmd: u32,
     }
 
     impl GetState {
-        pub fn new(encrypted_req: EciesCiphertext, ecall_cmd: u32) -> Self {
+        pub fn new(encrypted_req: SodiumCiphertext, ecall_cmd: u32) -> Self {
             GetState {
                 encrypted_req,
                 ecall_cmd,
@@ -292,7 +292,7 @@ pub mod host_input {
     }
 
     impl HostInput for GetState {
-        type EcallInput = EciesCiphertext;
+        type EcallInput = SodiumCiphertext;
         type HostOutput = host_output::GetState;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {

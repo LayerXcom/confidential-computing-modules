@@ -5,7 +5,8 @@ use anonify_ecall_types::*;
 use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_treekem::{DhPrivateKey, DhPubKey, EciesCiphertext};
+use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey};
+use rand_core::{CryptoRng, RngCore};
 use secp256k1::{
     self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
 };
@@ -39,11 +40,14 @@ impl EnclaveEngine for EncryptingKeyGetter {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct EnclaveIdentityKey {
     signing_privkey: SecretKey,
-    decrypting_privkey: DhPrivateKey,
+    decrypting_privkey: SodiumPrivateKey,
 }
 
 impl EnclaveIdentityKey {
-    pub fn new() -> Result<Self> {
+    pub fn new<RC>(csprng: &mut RC) -> Result<Self>
+    where
+        RC: RngCore + CryptoRng,
+    {
         let signing_privkey = loop {
             let mut ret = [0u8; SECRET_KEY_SIZE];
             rand_assign(&mut ret)?;
@@ -53,7 +57,7 @@ impl EnclaveIdentityKey {
             }
         };
 
-        let decrypting_privkey = DhPrivateKey::from_random()?;
+        let decrypting_privkey = SodiumPrivateKey::from_random(csprng)?;
 
         Ok(EnclaveIdentityKey {
             signing_privkey,
@@ -67,7 +71,7 @@ impl EnclaveIdentityKey {
         Ok(sig)
     }
 
-    pub fn decrypt(&self, ciphertext: EciesCiphertext) -> Result<Vec<u8>> {
+    pub fn decrypt(&self, ciphertext: SodiumCiphertext) -> Result<Vec<u8>> {
         ciphertext
             .decrypt(&self.decrypting_privkey)
             .map_err(Into::into)
@@ -77,8 +81,8 @@ impl EnclaveIdentityKey {
         PublicKey::from_secret_key(&self.signing_privkey)
     }
 
-    pub fn encrypting_key(&self) -> DhPubKey {
-        DhPubKey::from_private_key(&self.decrypting_privkey)
+    pub fn encrypting_key(&self) -> SodiumPubKey {
+        self.decrypting_privkey.public_key()
     }
 
     /// Generate a value of REPORTDATA field in REPORT struct.

@@ -1,4 +1,4 @@
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use serde::{Deserialize, Serialize};
 use web3::types::H256;
 
@@ -12,11 +12,11 @@ pub mod state {
 
         #[derive(Debug, Clone, Deserialize, Serialize)]
         pub struct Request {
-            pub encrypted_req: EciesCiphertext,
+            pub encrypted_req: SodiumCiphertext,
         }
 
         impl Request {
-            pub fn new(encrypted_req: EciesCiphertext) -> Self {
+            pub fn new(encrypted_req: SodiumCiphertext) -> Self {
                 Request { encrypted_req }
             }
         }
@@ -30,11 +30,11 @@ pub mod state {
 
         #[derive(Debug, Clone, Deserialize, Serialize)]
         pub struct Request {
-            pub encrypted_req: EciesCiphertext,
+            pub encrypted_req: SodiumCiphertext,
         }
 
         impl Request {
-            pub fn new(encrypted_req: EciesCiphertext) -> Self {
+            pub fn new(encrypted_req: SodiumCiphertext) -> Self {
                 Request { encrypted_req }
             }
         }
@@ -88,7 +88,7 @@ pub mod encrypting_key {
         use super::super::*;
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub DhPubKey);
+        pub struct Response(pub SodiumPubKey);
     }
 }
 
@@ -124,11 +124,11 @@ pub mod register_notification {
 
         #[derive(Debug, Clone, Deserialize, Serialize)]
         pub struct Request {
-            pub encrypted_req: EciesCiphertext,
+            pub encrypted_req: SodiumCiphertext,
         }
 
         impl Request {
-            pub fn new(encrypted_req: EciesCiphertext) -> Self {
+            pub fn new(encrypted_req: SodiumCiphertext) -> Self {
                 Request { encrypted_req }
             }
         }

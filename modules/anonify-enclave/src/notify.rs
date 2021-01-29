@@ -2,7 +2,7 @@ use anonify_ecall_types::*;
 use frame_common::{crypto::AccountId, state_types::StateType, AccessPolicy};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_treekem::EciesCiphertext;
+use frame_sodium::SodiumCiphertext;
 use std::{
     collections::HashSet,
     sync::{Arc, SgxRwLock},
@@ -37,7 +37,7 @@ pub struct RegisterNotification<AP: AccessPolicy> {
 }
 
 impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
-    type EI = EciesCiphertext;
+    type EI = SodiumCiphertext;
     type EO = output::Empty;
 
     fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>

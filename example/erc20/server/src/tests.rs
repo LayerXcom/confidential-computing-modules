@@ -6,8 +6,9 @@ use ethabi::Contract as ContractABI;
 use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use integration_tests::set_env_vars;
+use rand_core::{CryptoRng, RngCore};
 use serde_json::json;
 use std::{env, fs::File, io::BufReader, path::Path, str::FromStr, sync::Arc, time};
 use web3::{
@@ -56,6 +57,7 @@ async fn test_multiple_messages() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
+    let mut csprng = rand::thread_rng();
     let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
         App::new()
@@ -96,14 +98,14 @@ async fn test_multiple_messages() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 0);
 
-    let init_100_req = init_100_req(&enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -113,14 +115,14 @@ async fn test_multiple_messages() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    let transfer_10_req = transfer_10_req(&enc_key);
+    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key);
     // Sending five messages before receiving any messages
     for _ in 0..5 {
         let req = test::TestRequest::post()
@@ -133,7 +135,7 @@ async fn test_multiple_messages() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -153,6 +155,7 @@ async fn test_skip_invalid_event() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
+    let mut csprng = rand::thread_rng();
     let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
         App::new()
@@ -201,7 +204,7 @@ async fn test_skip_invalid_event() {
     let enc_key =
         verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
 
-    let init_100_req = init_100_req(&enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -211,14 +214,14 @@ async fn test_skip_invalid_event() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    let transfer_110_req = transfer_110_req(&enc_key);
+    let transfer_110_req = transfer_110_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_110_req)
@@ -228,14 +231,14 @@ async fn test_skip_invalid_event() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    let transfer_10_req = transfer_10_req(&enc_key);
+    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req)
@@ -245,7 +248,7 @@ async fn test_skip_invalid_event() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -266,6 +269,7 @@ async fn test_node_recovery() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
+    let mut csprng = rand::thread_rng();
     let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
         App::new()
@@ -352,7 +356,7 @@ async fn test_node_recovery() {
     let enc_key =
         verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
 
-    let init_100_req = init_100_req(&enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -362,14 +366,14 @@ async fn test_node_recovery() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    let transfer_10_req_ = transfer_10_req(&enc_key);
+    let transfer_10_req_ = transfer_10_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req_)
@@ -379,7 +383,7 @@ async fn test_node_recovery() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -419,14 +423,14 @@ async fn test_node_recovery() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90);
 
-    let transfer_10_req = transfer_10_req(&enc_key);
+    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req)
@@ -436,7 +440,7 @@ async fn test_node_recovery() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -457,6 +461,7 @@ async fn test_join_group_then_handshake() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid1 = enclave1.geteid();
+    let mut csprng = rand::thread_rng();
     let server1 = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid1));
 
     let mut app1 = test::init_service(
@@ -565,7 +570,7 @@ async fn test_join_group_then_handshake() {
     let enc_key =
         verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
 
-    let init_100_req = init_100_req(&enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -575,7 +580,7 @@ async fn test_join_group_then_handshake() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -589,7 +594,7 @@ async fn test_join_group_then_handshake() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
-    let transfer_10_req = transfer_10_req(&enc_key);
+    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req)
@@ -599,7 +604,7 @@ async fn test_join_group_then_handshake() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -630,11 +635,11 @@ fn other_turn() {
 }
 
 async fn verify_encrypting_key<P: AsRef<Path>>(
-    encrypting_key: DhPubKey,
+    encrypting_key: SodiumPubKey,
     abi_path: P,
     eth_url: &str,
     contract_addr: &str,
-) -> DhPubKey {
+) -> SodiumPubKey {
     let transport = Http::new(eth_url).unwrap();
     let web3 = Web3::new(transport);
     let web3_conn = web3.eth();
@@ -656,14 +661,17 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
 
     assert_eq!(
         encrypting_key,
-        DhPubKey::decode(&mut &query_encrypting_key[..]).unwrap()
+        SodiumPubKey::decode(&mut &query_encrypting_key[..]).unwrap()
     );
 
     encrypting_key
 }
 
 // to me
-fn init_100_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
+fn init_100_req<RC>(csprng: &mut CR, enc_key: &SodiumPubKey) -> erc20_api::state::post::Request
+where
+    RC: RngCore + CryptoRng,
+{
     let sig = [
         236, 103, 17, 252, 166, 199, 9, 46, 200, 107, 188, 0, 37, 111, 83, 105, 175, 81, 231, 14,
         81, 100, 221, 89, 102, 172, 30, 96, 15, 128, 117, 146, 181, 221, 149, 206, 163, 208, 113,
@@ -684,13 +692,16 @@ fn init_100_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
     });
     let req = input::Command::new(access_policy, init_100, "construct");
     let encrypted_req =
-        EciesCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
     erc20_api::state::post::Request { encrypted_req }
 }
 
 // from me to other
-fn transfer_10_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
+fn transfer_10_req<RC>(csprng: &mut CR, enc_key: &SodiumPubKey) -> erc20_api::state::post::Request
+where
+    RC: RngCore + CryptoRng,
+{
     let sig = [
         227, 77, 52, 167, 149, 64, 24, 23, 103, 227, 13, 120, 90, 186, 1, 62, 110, 60, 186, 247,
         143, 247, 19, 71, 85, 191, 224, 5, 38, 219, 96, 44, 196, 154, 181, 50, 99, 58, 20, 125,
@@ -715,13 +726,16 @@ fn transfer_10_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
     });
     let req = input::Command::new(access_policy, transfer_10, "transfer");
     let encrypted_req =
-        EciesCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
     erc20_api::state::post::Request { encrypted_req }
 }
 
 // from me to other
-fn transfer_110_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
+fn transfer_110_req<RC>(csprng: &mut CR, enc_key: &SodiumPubKey) -> erc20_api::state::post::Request
+where
+    RC: RngCore + CryptoRng,
+{
     let sig = [
         227, 77, 52, 167, 149, 64, 24, 23, 103, 227, 13, 120, 90, 186, 1, 62, 110, 60, 186, 247,
         143, 247, 19, 71, 85, 191, 224, 5, 38, 219, 96, 44, 196, 154, 181, 50, 99, 58, 20, 125,
@@ -746,12 +760,15 @@ fn transfer_110_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
     });
     let req = input::Command::new(access_policy, transfer_10, "transfer");
     let encrypted_req =
-        EciesCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
     erc20_api::state::post::Request { encrypted_req }
 }
 
-fn balance_of_req(enc_key: &DhPubKey) -> erc20_api::state::get::Request {
+fn balance_of_req<RC>(csprng: &mut CR, enc_key: &SodiumPubKey) -> erc20_api::state::get::Request
+where
+    RC: RngCore + CryptoRng,
+{
     let sig = [
         21, 54, 136, 84, 150, 59, 196, 71, 164, 136, 222, 128, 100, 84, 208, 219, 84, 7, 61, 11,
         230, 220, 25, 138, 67, 247, 95, 97, 30, 76, 120, 160, 73, 48, 110, 43, 94, 79, 192, 195,
@@ -773,7 +790,7 @@ fn balance_of_req(enc_key: &DhPubKey) -> erc20_api::state::get::Request {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
     erc20_api::state::get::Request { encrypted_req }
 }

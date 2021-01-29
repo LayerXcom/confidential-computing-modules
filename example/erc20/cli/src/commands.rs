@@ -8,8 +8,9 @@ use anyhow::anyhow;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use ed25519_dalek::Keypair;
 use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use rand::Rng;
+use rand_core::{CryptoRng, RngCore};
 use reqwest::Client;
 use serde_json::json;
 use std::path::PathBuf;
@@ -60,7 +61,7 @@ pub(crate) fn update_mrenclave(anonify_url: String, contract_addr: String) -> Re
     Ok(())
 }
 
-pub(crate) fn get_encrypting_key(anonify_url: String) -> Result<DhPubKey> {
+pub(crate) fn get_encrypting_key(anonify_url: String) -> Result<SodiumPubKey> {
     Client::new()
         .get(&format!("{}/api/v1/encrypting_key", &anonify_url))
         .send()?
@@ -68,15 +69,20 @@ pub(crate) fn get_encrypting_key(anonify_url: String) -> Result<DhPubKey> {
         .map_err(Into::into)
 }
 
-pub(crate) fn init_state<R: Rng>(
+pub(crate) fn init_state<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
     total_supply: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPubKey,
     rng: &mut R,
-) -> Result<()> {
+    csprng: &mut CR,
+) -> Result<()>
+where
+    R: Rng,
+    CR: RngCore + CryptoRng,
+{
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
@@ -88,7 +94,7 @@ pub(crate) fn init_state<R: Rng>(
         "cmd_name": "construct",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -101,16 +107,21 @@ pub(crate) fn init_state<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn transfer<R: Rng>(
+pub(crate) fn transfer<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
     recipient: AccountId,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPubKey,
     rng: &mut R,
-) -> Result<()> {
+    csprng: &mut CR,
+) -> Result<()>
+where
+    R: Rng,
+    CR: RngCore + CryptoRng,
+{
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
@@ -123,7 +134,7 @@ pub(crate) fn transfer<R: Rng>(
         "cmd_name": "transfer",
     });
     let encrypted_transfer_cmd =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -138,16 +149,21 @@ pub(crate) fn transfer<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn approve<R: Rng>(
+pub(crate) fn approve<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
     spender: AccountId,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPubKey,
     rng: &mut R,
-) -> Result<()> {
+    csprng: &mut CR,
+) -> Result<()>
+where
+    R: Rng,
+    CR: RngCore + CryptoRng,
+{
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
@@ -160,7 +176,7 @@ pub(crate) fn approve<R: Rng>(
         "cmd_name": "approve",
     });
     let encrypted_approve_cmd =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -173,7 +189,7 @@ pub(crate) fn approve<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn transfer_from<R: Rng>(
+pub(crate) fn transfer_from<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
     anonify_url: String,
@@ -181,9 +197,14 @@ pub(crate) fn transfer_from<R: Rng>(
     owner: AccountId,
     recipient: AccountId,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPubKey,
     rng: &mut R,
-) -> Result<()> {
+    csprng: &mut CR,
+) -> Result<()>
+where
+    R: Rng,
+    CR: RngCore + CryptoRng,
+{
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
@@ -197,7 +218,7 @@ pub(crate) fn transfer_from<R: Rng>(
         "cmd_name": "transfer_from",
     });
     let encrypted_transfer_from_cmd =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -212,16 +233,21 @@ pub(crate) fn transfer_from<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn mint<R: Rng>(
+pub(crate) fn mint<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
     recipient: AccountId,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPubKey,
     rng: &mut R,
-) -> Result<()> {
+    csprng: &mut CR,
+) -> Result<()>
+where
+    R: Rng,
+    CR: RngCore + CryptoRng,
+{
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
@@ -234,7 +260,7 @@ pub(crate) fn mint<R: Rng>(
         "cmd_name": "mint",
     });
     let encrypted_mint_cmd =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -247,15 +273,20 @@ pub(crate) fn mint<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn burn<R: Rng>(
+pub(crate) fn burn<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
     amount: u64,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPubKey,
     rng: &mut R,
-) -> Result<()> {
+    csprng: &mut CR,
+) -> Result<()>
+where
+    R: Rng,
+    CR: RngCore + CryptoRng,
+{
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
@@ -267,7 +298,7 @@ pub(crate) fn burn<R: Rng>(
         "cmd_name": "burn",
     });
     let encrypted_burn_cmd =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -291,15 +322,20 @@ pub(crate) fn key_rotation(anonify_url: String) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn allowance<R: Rng>(
+pub(crate) fn allowance<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
     spender: AccountId,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPubKey,
     rng: &mut R,
-) -> Result<()> {
+    csprng: &mut CR,
+) -> Result<()>
+where
+    R: Rng,
+    CR: RngCore + CryptoRng,
+{
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
@@ -312,7 +348,7 @@ pub(crate) fn allowance<R: Rng>(
         "state_name": "allowance",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
         .get(&format!("{}/api/v1/state", &anonify_url))
@@ -324,14 +360,19 @@ pub(crate) fn allowance<R: Rng>(
     Ok(())
 }
 
-pub(crate) fn balance_of<R: Rng>(
+pub(crate) fn balance_of<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPubKey,
     rng: &mut R,
-) -> Result<()> {
+    csprng: &mut CR,
+) -> Result<()>
+where
+    R: Rng,
+    CR: RngCore + CryptoRng,
+{
     let password = prompt_password(term)?;
     let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
     let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
@@ -342,7 +383,7 @@ pub(crate) fn balance_of<R: Rng>(
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
         .get(&format!("{}/api/v1/state", &anonify_url))
