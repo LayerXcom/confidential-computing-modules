@@ -86,12 +86,12 @@ impl EnclaveIdentityKey {
     }
 
     /// Generate a value of REPORTDATA field in REPORT struct.
-    /// REPORTDATA consists of a hashed sining public key and a encrypting public key.
-    /// The hashed sining public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
+    /// REPORTDATA consists of a hashed signing public key and a encrypting public key.
+    /// The hashed signing public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
     /// because this enclave identity key is binding to enclave's code.
     /// The encrypting public key is used for secure communication between clients and TEE.
-    /// 20 bytes: hashed sining public key
-    /// 33 bytes: encrypting public key
+    /// 20 bytes: hashed signing public key
+    /// 32 bytes: encrypting public key
     /// 11 bytes: zero padding
     pub fn report_data(&self) -> Result<sgx_report_data_t> {
         let mut report_data = [0u8; REPORT_DATA_SIZE];
