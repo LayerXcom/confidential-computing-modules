@@ -57,6 +57,7 @@ async fn test_multiple_messages() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
+    // just for testing
     let mut csprng = rand::thread_rng();
     let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
@@ -155,6 +156,7 @@ async fn test_skip_invalid_event() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
+    // just for testing
     let mut csprng = rand::thread_rng();
     let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
@@ -269,6 +271,7 @@ async fn test_node_recovery() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
+    // just for testing
     let mut csprng = rand::thread_rng();
     let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
@@ -461,6 +464,7 @@ async fn test_join_group_then_handshake() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid1 = enclave1.geteid();
+    // just for testing
     let mut csprng = rand::thread_rng();
     let server1 = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid1));
 
