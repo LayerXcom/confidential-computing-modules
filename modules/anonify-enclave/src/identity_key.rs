@@ -44,9 +44,9 @@ pub struct EnclaveIdentityKey {
 }
 
 impl EnclaveIdentityKey {
-    pub fn new<RC>(csprng: &mut RC) -> Result<Self>
+    pub fn new<CR>(csprng: &mut CR) -> Result<Self>
     where
-        RC: RngCore + CryptoRng,
+        CR: RngCore + CryptoRng,
     {
         let signing_privkey = loop {
             let mut ret = [0u8; SECRET_KEY_SIZE];

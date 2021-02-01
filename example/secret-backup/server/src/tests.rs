@@ -786,9 +786,9 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
     encrypting_key
 }
 
-fn init_100_req<RC>(csprng: &mut CR, enc_key: &SodiumPubKey) -> erc20_api::state::post::Request
+fn init_100_req<CR>(csprng: &mut CR, enc_key: &SodiumPubKey) -> erc20_api::state::post::Request
 where
-    RC: RngCore + CryptoRng,
+    CR: RngCore + CryptoRng,
 {
     let sig = [
         236, 103, 17, 252, 166, 199, 9, 46, 200, 107, 188, 0, 37, 111, 83, 105, 175, 81, 231, 14,
@@ -815,9 +815,9 @@ where
     erc20_api::state::post::Request { encrypted_req }
 }
 
-fn balance_of_req<RC>(csprng: &mut CR, enc_key: &SodiumPubKey) -> erc20_api::state::get::Request
+fn balance_of_req<CR>(csprng: &mut CR, enc_key: &SodiumPubKey) -> erc20_api::state::get::Request
 where
-    RC: RngCore + CryptoRng,
+    CR: RngCore + CryptoRng,
 {
     let sig = [
         21, 54, 136, 84, 150, 59, 196, 71, 164, 136, 222, 128, 100, 84, 208, 219, 84, 7, 61, 11,
