@@ -651,7 +651,7 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
     let query_encrypting_key: Vec<u8> = Contract::new(web3_conn, address, abi)
         .query(
             "getEncryptingKey",
-            encrypting_key.encode(),
+            encrypting_key.to_bytes(),
             None,
             Options::default(),
             None,
@@ -661,7 +661,7 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
 
     assert_eq!(
         encrypting_key,
-        SodiumPubKey::decode(&mut &query_encrypting_key[..]).unwrap()
+        SodiumPubKey::from_bytes(&query_encrypting_key).unwrap()
     );
 
     encrypting_key

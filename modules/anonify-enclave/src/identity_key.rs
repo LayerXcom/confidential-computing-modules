@@ -97,7 +97,7 @@ impl EnclaveIdentityKey {
         let mut report_data = [0u8; REPORT_DATA_SIZE];
         report_data[..HASHED_PUBKEY_SIZE].copy_from_slice(&self.verifying_key_into_array()[..]);
         report_data[HASHED_PUBKEY_SIZE..FILLED_REPORT_DATA_SIZE]
-            .copy_from_slice(&&self.encode_encrypting_key()[..]);
+            .copy_from_slice(&self.encode_encrypting_key()[..]);
 
         Ok(sgx_report_data_t { d: report_data })
     }
@@ -111,9 +111,7 @@ impl EnclaveIdentityKey {
         res
     }
 
-    fn encode_encrypting_key(&self) -> Vec<u8> {
-        let res = self.encrypting_key().encode();
-        assert_eq!(res.len(), ENCRYPTING_KEY_SIZE);
-        res
+    fn encode_encrypting_key(&self) -> [u8; ENCRYPTING_KEY_SIZE] {
+        self.encrypting_key().to_bytes()
     }
 }

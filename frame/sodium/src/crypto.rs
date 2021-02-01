@@ -292,14 +292,6 @@ impl SodiumPubKey {
     pub fn to_bytes(&self) -> [u8; SODIUM_PUBLIC_KEY_SIZE] {
         self.0.to_bytes()
     }
-
-    pub fn encode(&self) -> Vec<u8> {
-        bincode::serialize(&self).unwrap() // must not fail
-    }
-
-    pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
-        bincode::deserialize(bytes)
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
