@@ -67,7 +67,7 @@ contract ReportHandle {
 
     // Get the registered encrypting key
     function getEncryptingKey(bytes32 inpEncryptingKey) public view returns (bytes32) {
-        require(encryptingKeyMapping[inpEncryptingKey].length != 0, "The encrypting key has not been registered.");
+        require(encryptingKeyMapping[inpEncryptingKey] != 0x0000000000000000000000000000000000000000000000000000000000000000, "The encrypting key has not been registered.");
         return encryptingKeyMapping[inpEncryptingKey];
     }
 
@@ -79,7 +79,7 @@ contract ReportHandle {
         address inpVerifyingKey = BytesUtils.toAddress(extractElement(quote, 368, 20), 0);
         bytes32 inpEncryptingKey = BytesUtils.toBytes32(extractElement(quote, 388, 32), 0);
         require(verifyingKeyMapping[inpVerifyingKey] == address(0), "The verifying key has already been registered.");
-        require(encryptingKeyMapping[inpEncryptingKey].length == 0, "The encrypting key has already been registered.");
+        require(encryptingKeyMapping[inpEncryptingKey] == 0x0000000000000000000000000000000000000000000000000000000000000000, "The encrypting key has already been registered.");
 
         return (inpMrEnclave, inpVerifyingKey, inpEncryptingKey);
     }
