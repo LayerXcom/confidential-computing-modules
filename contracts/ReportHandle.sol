@@ -16,8 +16,8 @@ contract ReportHandle {
     mapping(address => address) public verifyingKeyMapping;
     address[] public verifyingKeyArray; // for deleting mapping
     // Public keys for encrypting clients messages to TEEs, which is included `reportdata`
-    mapping(bytes => bytes) public encryptingKeyMapping;
-    bytes[] public encryptingKeyArray; // for deleting mapping
+    mapping(bytes32 => bytes32) public encryptingKeyMapping;
+    bytes32[] public encryptingKeyArray; // for deleting mapping
 
     // This is the modulus and the exponent of intel's certificate, you can extract it using:
     // `openssl x509 -noout -modulus -in AttestationReportSigningCert.pem` and `openssl x509 -in AttestationReportSigningCert.pem -text`.
@@ -27,7 +27,7 @@ contract ReportHandle {
 
     // Set new mrenclave value and enclave address
     constructor(bytes memory _report, bytes memory _reportSig) internal {
-        (bytes32 inpMrEnclave, address inpVerifyingKey, bytes memory inpEncryptingKey) = extractFromReport(_report, _reportSig);
+        (bytes32 inpMrEnclave, address inpVerifyingKey, bytes32 inpEncryptingKey) = extractFromReport(_report, _reportSig);
         require(mrEnclave == 0, "mrenclave included in the report is not correct.");
 
         setKeys(inpVerifyingKey, inpEncryptingKey);
@@ -36,14 +36,14 @@ contract ReportHandle {
 
     // Check mrenclave value and report signature and then set new enclave address.
     function handleReport(bytes memory _report, bytes memory _reportSig) internal {
-        (bytes32 inpMrEnclave, address inpVerifyingKey, bytes memory inpEncryptingKey) = extractFromReport(_report, _reportSig);
+        (bytes32 inpMrEnclave, address inpVerifyingKey, bytes32 inpEncryptingKey) = extractFromReport(_report, _reportSig);
         require(mrEnclave == inpMrEnclave, "mrenclave included in the report is not correct.");
 
         setKeys(inpVerifyingKey, inpEncryptingKey);
     }
 
     function updateMrenclaveInner(bytes memory _report, bytes memory _reportSig) internal {
-        (bytes32 inpMrEnclave, address inpVerifyingKey, bytes memory inpEncryptingKey) = extractFromReport(_report, _reportSig);
+        (bytes32 inpMrEnclave, address inpVerifyingKey, bytes32 inpEncryptingKey) = extractFromReport(_report, _reportSig);
         require(mrEnclave != inpMrEnclave, "mrenclave must be different one");
 
         // delete all keys
@@ -58,7 +58,7 @@ contract ReportHandle {
         mrEnclave = inpMrEnclave;
     }
 
-    function setKeys(address inpVerifyingKey, bytes memory inpEncryptingKey) private {
+    function setKeys(address inpVerifyingKey, bytes32 inpEncryptingKey) private {
         verifyingKeyMapping[inpVerifyingKey] = inpVerifyingKey;
         encryptingKeyMapping[inpEncryptingKey] = inpEncryptingKey;
         verifyingKeyArray.push(inpVerifyingKey);
@@ -66,20 +66,20 @@ contract ReportHandle {
     }
 
     // Get the registered encrypting key
-    function getEncryptingKey(bytes memory inpEncryptingKey) public view returns (bytes memory) {
-        require(encryptingKeyMapping[inpEncryptingKey].length != 0, "The encrypting key has not been registered.");
+    function getEncryptingKey(bytes32 inpEncryptingKey) public view returns (bytes32) {
+        require(encryptingKeyMapping[inpEncryptingKey] != bytes32(0), "The encrypting key has not been registered.");
         return encryptingKeyMapping[inpEncryptingKey];
     }
 
-    function extractFromReport(bytes memory _report, bytes memory _reportSig) internal view returns (bytes32, address, bytes memory) {
+    function extractFromReport(bytes memory _report, bytes memory _reportSig) internal view returns (bytes32, address, bytes32) {
         require(verifyReportSig(_report, _reportSig) == 0, "Invalid report's signature");
         bytes memory quote = extractQuote(_report);
         // See https://api.trustedservices.intel.com/documents/sgx-attestation-api-spec.pdf, P.23.
         bytes32 inpMrEnclave = BytesUtils.toBytes32(extractElement(quote, 112, 32), 0);
         address inpVerifyingKey = BytesUtils.toAddress(extractElement(quote, 368, 20), 0);
-        bytes memory inpEncryptingKey = extractElement(quote, 388, 33);
+        bytes32 inpEncryptingKey = BytesUtils.toBytes32(extractElement(quote, 388, 32), 0);
         require(verifyingKeyMapping[inpVerifyingKey] == address(0), "The verifying key has already been registered.");
-        require(encryptingKeyMapping[inpEncryptingKey].length == 0, "The encrypting key has already been registered.");
+        require(encryptingKeyMapping[inpEncryptingKey] == bytes32(0), "The encrypting key has already been registered.");
 
         return (inpMrEnclave, inpVerifyingKey, inpEncryptingKey);
     }

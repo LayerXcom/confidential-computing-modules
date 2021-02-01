@@ -8,8 +8,9 @@ use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_config::PJ_ROOT_DIR;
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use once_cell::sync::Lazy;
+use rand_core::{CryptoRng, RngCore};
 use serde_json::json;
 use std::{
     env,
@@ -64,6 +65,8 @@ async fn test_backup_path_secret() {
         .init_enclave(true)
         .expect("Failed to initialize client enclave.");
     let app_eid = app_enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
 
     let erc20_server = Arc::new(ERC20Server::<EthDeployer, EthSender, EventWatcher>::new(
         app_eid,
@@ -116,7 +119,7 @@ async fn test_backup_path_secret() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -134,7 +137,7 @@ async fn test_backup_path_secret() {
         .exists());
 
     // Init state
-    let init_100_req = init_100_req(&enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -144,7 +147,7 @@ async fn test_backup_path_secret() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -168,7 +171,7 @@ async fn test_backup_path_secret() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -214,6 +217,8 @@ async fn test_recover_without_key_vault() {
         .init_enclave(true)
         .expect("Failed to initialize client enclave.");
     let app_eid = app_enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
 
     let erc20_server = Arc::new(ERC20Server::<EthDeployer, EthSender, EventWatcher>::new(
         app_eid,
@@ -266,7 +271,7 @@ async fn test_recover_without_key_vault() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -284,7 +289,7 @@ async fn test_recover_without_key_vault() {
         .exists());
 
     // Init state
-    let init_100_req = init_100_req(&enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -294,7 +299,7 @@ async fn test_recover_without_key_vault() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -312,7 +317,7 @@ async fn test_recover_without_key_vault() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -358,6 +363,8 @@ async fn test_manually_backup_all() {
         .init_enclave(true)
         .expect("Failed to initialize client enclave.");
     let app_eid = app_enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
 
     let erc20_server = Arc::new(ERC20Server::<EthDeployer, EthSender, EventWatcher>::new(
         app_eid,
@@ -414,7 +421,7 @@ async fn test_manually_backup_all() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -422,7 +429,7 @@ async fn test_manually_backup_all() {
     assert_eq!(balance.state, 0);
 
     // Init state
-    let init_100_req = init_100_req(&enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -432,7 +439,7 @@ async fn test_manually_backup_all() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -447,7 +454,7 @@ async fn test_manually_backup_all() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -518,6 +525,8 @@ async fn test_manually_recover_all() {
         .init_enclave(true)
         .expect("Failed to initialize client enclave.");
     let app_eid = app_enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
 
     let erc20_server = Arc::new(ERC20Server::<EthDeployer, EthSender, EventWatcher>::new(
         app_eid,
@@ -571,7 +580,7 @@ async fn test_manually_recover_all() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -579,7 +588,7 @@ async fn test_manually_recover_all() {
     assert_eq!(balance.state, 0);
 
     // Init state
-    let init_100_req = init_100_req(&enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -589,7 +598,7 @@ async fn test_manually_recover_all() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -604,7 +613,7 @@ async fn test_manually_recover_all() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&enc_key))
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -749,11 +758,11 @@ fn get_remote_ids(roster_idx: String) -> Vec<String> {
 }
 
 async fn verify_encrypting_key<P: AsRef<Path>>(
-    encrypting_key: DhPubKey,
+    encrypting_key: SodiumPubKey,
     abi_path: P,
     eth_url: &str,
     contract_addr: &str,
-) -> DhPubKey {
+) -> SodiumPubKey {
     let transport = Http::new(eth_url).unwrap();
     let web3 = Web3::new(transport);
     let web3_conn = web3.eth();
@@ -765,7 +774,7 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
     let query_encrypting_key: Vec<u8> = Contract::new(web3_conn, address, abi)
         .query(
             "getEncryptingKey",
-            encrypting_key.encode(),
+            encrypting_key.to_bytes(),
             None,
             Options::default(),
             None,
@@ -775,13 +784,16 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
 
     assert_eq!(
         encrypting_key,
-        DhPubKey::decode(&mut &query_encrypting_key[..]).unwrap()
+        SodiumPubKey::from_bytes(&query_encrypting_key).unwrap()
     );
 
     encrypting_key
 }
 
-fn init_100_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
+fn init_100_req<CR>(csprng: &mut CR, enc_key: &SodiumPubKey) -> erc20_api::state::post::Request
+where
+    CR: RngCore + CryptoRng,
+{
     let sig = [
         236, 103, 17, 252, 166, 199, 9, 46, 200, 107, 188, 0, 37, 111, 83, 105, 175, 81, 231, 14,
         81, 100, 221, 89, 102, 172, 30, 96, 15, 128, 117, 146, 181, 221, 149, 206, 163, 208, 113,
@@ -802,12 +814,15 @@ fn init_100_req(enc_key: &DhPubKey) -> erc20_api::state::post::Request {
     });
     let req = input::Command::new(access_policy, init_100, "construct");
     let encrypted_req =
-        EciesCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
     erc20_api::state::post::Request { encrypted_req }
 }
 
-fn balance_of_req(enc_key: &DhPubKey) -> erc20_api::state::get::Request {
+fn balance_of_req<CR>(csprng: &mut CR, enc_key: &SodiumPubKey) -> erc20_api::state::get::Request
+where
+    CR: RngCore + CryptoRng,
+{
     let sig = [
         21, 54, 136, 84, 150, 59, 196, 71, 164, 136, 222, 128, 100, 84, 208, 219, 84, 7, 61, 11,
         230, 220, 25, 138, 67, 247, 95, 97, 30, 76, 120, 160, 73, 48, 110, 43, 94, 79, 192, 195,
@@ -829,7 +844,7 @@ fn balance_of_req(enc_key: &DhPubKey) -> erc20_api::state::get::Request {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
     erc20_api::state::get::Request { encrypted_req }
 }

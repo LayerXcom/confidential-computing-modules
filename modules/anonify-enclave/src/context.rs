@@ -16,9 +16,10 @@ use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DI
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
+use frame_sodium::{SodiumCiphertext, SodiumPubKey, rng::SgxRng};
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
-    init_path_secret_kvs, DhPubKey, EciesCiphertext, PathSecret, StorePathSecrets,
+    init_path_secret_kvs, PathSecret, StorePathSecrets,
 };
 use remote_attestation::{EncodedQuote, QuoteTarget};
 use std::{
@@ -162,11 +163,11 @@ impl IdentityKeyOps for AnonifyEnclaveContext {
         self.identity_key.sign(msg).map_err(Into::into)
     }
 
-    fn decrypt(&self, ciphertext: EciesCiphertext) -> anyhow::Result<Vec<u8>> {
+    fn decrypt(&self, ciphertext: SodiumCiphertext) -> anyhow::Result<Vec<u8>> {
         self.identity_key.decrypt(ciphertext).map_err(Into::into)
     }
 
-    fn encrypting_key(&self) -> DhPubKey {
+    fn encrypting_key(&self) -> SodiumPubKey {
         self.identity_key.encrypting_key()
     }
 }
@@ -228,7 +229,9 @@ impl KeyVaultOps for AnonifyEnclaveContext {
 // TODO: Consider SGX_ERROR_BUSY.
 impl AnonifyEnclaveContext {
     pub fn new(version: usize) -> Result<Self> {
-        let identity_key = EnclaveIdentityKey::new()?;
+        let mut rng = SgxRng::new()?;
+
+        let identity_key = EnclaveIdentityKey::new(&mut rng)?;
         let db = EnclaveDB::new();
 
         let source = match env::var("AUDITOR_ENDPOINT") {
@@ -297,7 +300,7 @@ pub struct GetState<AP: AccessPolicy> {
 }
 
 impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
-    type EI = EciesCiphertext;
+    type EI = SodiumCiphertext;
     type EO = output::ReturnState;
 
     fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>

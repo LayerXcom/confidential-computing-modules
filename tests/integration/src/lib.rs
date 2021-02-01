@@ -10,7 +10,7 @@ use frame_common::{
 };
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
-use frame_treekem::{DhPubKey, EciesCiphertext};
+use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use serde_json::json;
 use sgx_types::*;
 use std::{collections::BTreeMap, env, fs::File, io::BufReader, str::FromStr};
@@ -31,7 +31,7 @@ const PASSWORD: &str = "anonify0101";
 pub async fn get_encrypting_key(
     contract_addr: &str,
     dispatcher: &Dispatcher<EthDeployer, EthSender, EventWatcher>,
-) -> DhPubKey {
+) -> SodiumPubKey {
     let encrypting_key = dispatcher
         .get_encrypting_key(GET_ENCRYPTING_KEY_CMD)
         .unwrap();
@@ -46,7 +46,7 @@ pub async fn get_encrypting_key(
     let query_encrypting_key: Vec<u8> = Contract::new(web3_conn, address, abi)
         .query(
             "getEncryptingKey",
-            encrypting_key.encode(),
+            encrypting_key.to_bytes(),
             None,
             Options::default(),
             None,
@@ -56,7 +56,7 @@ pub async fn get_encrypting_key(
 
     assert_eq!(
         encrypting_key,
-        DhPubKey::decode(&mut &query_encrypting_key[..]).unwrap()
+        SodiumPubKey::from_bytes(&query_encrypting_key).unwrap()
     );
     encrypting_key
 }
@@ -66,6 +66,8 @@ async fn test_integration_eth_construct() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
@@ -112,7 +114,7 @@ async fn test_integration_eth_construct() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -137,7 +139,7 @@ async fn test_integration_eth_construct() {
         "state_name": "owner",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     // Get state from enclave
     let owner_account_id = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
@@ -147,7 +149,7 @@ async fn test_integration_eth_construct() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let my_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -156,7 +158,7 @@ async fn test_integration_eth_construct() {
         "state_name": "total_supply",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let actual_total_supply = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
     println!("owner_account_id: {:?}", owner_account_id);
     assert_eq!(
@@ -172,9 +174,10 @@ async fn test_auto_notification() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -220,7 +223,7 @@ async fn test_auto_notification() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -235,7 +238,7 @@ async fn test_auto_notification() {
         "access_policy": my_access_policy.clone(),
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     dispatcher
         .register_notification(encrypted_req, REGISTER_NOTIFICATION_CMD)
         .unwrap();
@@ -274,7 +277,7 @@ async fn test_auto_notification() {
         "cmd_name": "transfer",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
@@ -309,6 +312,8 @@ async fn test_integration_eth_transfer() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -358,7 +363,7 @@ async fn test_integration_eth_transfer() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -384,7 +389,7 @@ async fn test_integration_eth_transfer() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let my_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -393,7 +398,7 @@ async fn test_integration_eth_transfer() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let other_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -402,7 +407,7 @@ async fn test_integration_eth_transfer() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let third_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, 0);
@@ -420,7 +425,7 @@ async fn test_integration_eth_transfer() {
         "cmd_name": "transfer",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
@@ -440,7 +445,7 @@ async fn test_integration_eth_transfer() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let my_updated_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -449,7 +454,7 @@ async fn test_integration_eth_transfer() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let other_updated_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -458,7 +463,7 @@ async fn test_integration_eth_transfer() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let third_updated_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     assert_eq!(my_updated_state, 70);
@@ -471,6 +476,8 @@ async fn test_key_rotation() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -532,7 +539,7 @@ async fn test_key_rotation() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -557,7 +564,7 @@ async fn test_key_rotation() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let my_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -566,7 +573,7 @@ async fn test_key_rotation() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let other_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -575,7 +582,7 @@ async fn test_key_rotation() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let third_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, 0);
@@ -587,6 +594,8 @@ async fn test_integration_eth_approve() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
@@ -634,7 +643,7 @@ async fn test_integration_eth_approve() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -663,7 +672,7 @@ async fn test_integration_eth_approve() {
         "state_name": "approved",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let my_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -674,7 +683,7 @@ async fn test_integration_eth_approve() {
         "state_name": "approved",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let other_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
     assert_eq!(my_state, 0);
     assert_eq!(other_state, 0);
@@ -690,7 +699,7 @@ async fn test_integration_eth_approve() {
         "cmd_name": "approve",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
@@ -712,7 +721,7 @@ async fn test_integration_eth_approve() {
         "state_name": "approved",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let my_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -723,7 +732,7 @@ async fn test_integration_eth_approve() {
         "state_name": "approved",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let other_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     assert_eq!(my_state, amount);
@@ -735,6 +744,8 @@ async fn test_integration_eth_transfer_from() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -783,7 +794,7 @@ async fn test_integration_eth_transfer_from() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -809,7 +820,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let my_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -818,7 +829,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let other_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -827,7 +838,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let third_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
     assert_eq!(my_state_balance, 100);
     assert_eq!(other_state_balance, 0);
@@ -842,7 +853,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let my_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -853,7 +864,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let other_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -864,7 +875,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let third_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
     assert_eq!(my_state_approved, 0);
     assert_eq!(other_state_approved, 0);
@@ -881,7 +892,7 @@ async fn test_integration_eth_transfer_from() {
         "cmd_name": "approve",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -906,7 +917,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let my_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -915,7 +926,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let other_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -924,7 +935,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let third_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
     assert_eq!(my_state_balance, 100);
     assert_eq!(other_state_balance, 0);
@@ -938,7 +949,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let my_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -949,7 +960,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let other_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -960,7 +971,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let third_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     assert_eq!(my_state_approved, amount);
@@ -981,7 +992,7 @@ async fn test_integration_eth_transfer_from() {
         "cmd_name": "transfer_from",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
@@ -1001,7 +1012,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let my_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -1010,7 +1021,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let other_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -1019,7 +1030,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let third_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
     assert_eq!(my_state_balance, 80);
     assert_eq!(other_state_balance, 0);
@@ -1033,7 +1044,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let my_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -1044,7 +1055,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let other_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -1055,7 +1066,7 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let third_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     assert_eq!(my_state_approved, 10);
@@ -1068,6 +1079,8 @@ async fn test_integration_eth_mint() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
@@ -1115,7 +1128,7 @@ async fn test_integration_eth_mint() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -1146,7 +1159,7 @@ async fn test_integration_eth_mint() {
         "cmd_name": "mint",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
@@ -1166,7 +1179,7 @@ async fn test_integration_eth_mint() {
         "state_name": "total_supply",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     // Check the final states
     let actual_total_supply = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
@@ -1176,7 +1189,7 @@ async fn test_integration_eth_mint() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let owner_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -1185,7 +1198,7 @@ async fn test_integration_eth_mint() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let other_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
     assert_eq!(actual_total_supply, 150);
     assert_eq!(owner_balance, 100);
@@ -1197,6 +1210,8 @@ async fn test_integration_eth_burn() {
     set_env_vars();
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
@@ -1244,7 +1259,7 @@ async fn test_integration_eth_burn() {
         "cmd_name": "construct",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -1275,7 +1290,7 @@ async fn test_integration_eth_burn() {
         "cmd_name": "transfer",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
@@ -1303,7 +1318,7 @@ async fn test_integration_eth_burn() {
         "cmd_name": "burn",
     });
     let encrypted_command =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
         .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
         .await
@@ -1322,7 +1337,7 @@ async fn test_integration_eth_burn() {
         "state_name": "total_supply",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     // Check the final states
     let actual_total_supply = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
@@ -1332,7 +1347,7 @@ async fn test_integration_eth_burn() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let owner_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
 
     let req = json!({
@@ -1341,7 +1356,7 @@ async fn test_integration_eth_burn() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        EciesCiphertext::encrypt(&pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let other_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
     assert_eq!(actual_total_supply.as_u64().unwrap(), 80); // 100 - 20(burn)
     assert_eq!(owner_balance, 70); // 100 - 30(transfer)

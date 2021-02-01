@@ -9,7 +9,7 @@ use frame_common::{
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_treekem::EciesCiphertext;
+use frame_sodium::SodiumCiphertext;
 use serde::{Deserialize, Serialize};
 use std::{marker::PhantomData, vec::Vec};
 
@@ -23,7 +23,7 @@ impl<AP> EnclaveEngine for CmdSender<AP>
 where
     AP: AccessPolicy,
 {
-    type EI = EciesCiphertext;
+    type EI = SodiumCiphertext;
     type EO = output::Command;
 
     fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>

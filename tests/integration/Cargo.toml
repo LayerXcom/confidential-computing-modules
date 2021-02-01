@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 sgx_types = "1.1.1"
-frame-treekem = { path = "../../frame/treekem" }
+frame-sodium = { path = "../../frame/sodium" }
 frame-common = { path = "../../frame/common" }
 frame-runtime = { path = "../../frame/runtime" }
 frame-host = { path = "../../frame/host" }
@@ -19,3 +19,4 @@ lazy_static = "1.4"
 web3 = "0.14"
 ethabi = "12.0.0"
 serde_json = "1.0"
+rand = "0.7"
