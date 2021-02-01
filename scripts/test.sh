@@ -21,7 +21,7 @@ echo "Integration testing..."
 cd ${ANONIFY_ROOT}/scripts
 unset BACKUP
 export ENCLAVE_PKG_NAME=secret_backup
-make DEBUG=1 ENCLAVE_DIR=example/secret-backup/enclave
+make DEBUG=1 ENCLAVE_DIR=nodes/secret-backup/enclave
 export BACKUP=disable
 export ENCLAVE_PKG_NAME=erc20
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
@@ -55,7 +55,7 @@ unset BACKUP
 export ENCLAVE_PKG_NAME=erc20
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
-cd ${ANONIFY_ROOT}/example/secret-backup/server
+cd ${ANONIFY_ROOT}/nodes/secret-backup/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocapture
 sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_lost_path_secret -- --nocapture

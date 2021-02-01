@@ -25,10 +25,10 @@ frame-config = { path = "../../../frame/config" }
 frame-common = { path = "../../../frame/common" }
 frame-runtime = { path = "../../../frame/runtime" }
 frame-treekem = { path = "../../../frame/treekem" }
-erc20-server = { path = "../../erc20/server" }
-erc20-api = { path = "../../erc20/api" }
 anonify-eth-driver = { path = "../../../modules/anonify-eth-driver" }
 anonify-ecall-types = { path = "../../../modules/anonify-ecall-types"}
+erc20-server = { path = "../../../example/erc20/server" }
+erc20-api = { path = "../../../example/erc20/api" }
 web3 = "0.14"
 ethabi = "12.0.0"
 sgx_urts = "1.1.1"
