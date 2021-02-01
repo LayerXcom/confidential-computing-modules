@@ -13,10 +13,16 @@ use crate::xsalsa20poly1305::{Nonce, NONCE_SIZE};
 
 // PublicKey in crypto_box is defined in x25519-dalek, which have 32 bytes length.
 // see: https://github.com/dalek-cryptography/x25519-dalek/blob/0985e1babf0ba03d151b864ee28baee564662a8d/src/x25519.rs#L35
-const PUBLIC_KEY_SIZE: usize = 32;
+pub const SODIUM_PUBLIC_KEY_SIZE: usize = 32;
 
 #[derive(Debug, Clone, Default)]
 pub struct SodiumNonce(Nonce);
+
+impl PartialEq for SodiumNonce {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_slice() == other.as_slice()
+    }
+}
 
 impl Serialize for SodiumNonce {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -63,11 +69,11 @@ impl<'de> Deserialize<'de> for SodiumNonce {
             where
                 A: SeqAccess<'de>,
             {
-                let mut bytes = [0u8; KEY_SIZE];
-                for i in 0..KEY_SIZE {
+                let mut bytes = [0u8; NONCE_SIZE];
+                for i in 0..NONCE_SIZE {
                     bytes[i] = seq
                         .next_element()?
-                        .ok_or(de::Error::invalid_length(i, &"expected 24 bytes"))?;
+                        .ok_or(de::Error::invalid_length(i, &"24"))?;
                 }
                 Ok(SodiumNonce::from_bytes(&bytes))
             }
@@ -102,6 +108,12 @@ impl Default for SodiumPrivateKey {
     fn default() -> Self {
         let inner = SecretKey::from([0u8; KEY_SIZE]);
         SodiumPrivateKey(inner)
+    }
+}
+
+impl PartialEq for SodiumPrivateKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.to_bytes() == other.0.to_bytes()
     }
 }
 
@@ -149,7 +161,7 @@ impl<'de> Deserialize<'de> for SodiumPrivateKey {
                 for i in 0..KEY_SIZE {
                     bytes[i] = seq
                         .next_element()?
-                        .ok_or(de::Error::invalid_length(i, &"expected 32 bytes"))?;
+                        .ok_or(de::Error::invalid_length(i, &"32"))?;
                 }
                 let sk = SodiumPrivateKey::from_bytes(&bytes).map_err(|_e| {
                     de::Error::invalid_value(
@@ -204,12 +216,18 @@ impl Default for SodiumPubKey {
     }
 }
 
+impl PartialEq for SodiumPubKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.to_bytes() == other.to_bytes()
+    }
+}
+
 impl Serialize for SodiumPubKey {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let mut tup = serializer.serialize_tuple(PUBLIC_KEY_SIZE)?;
+        let mut tup = serializer.serialize_tuple(SODIUM_PUBLIC_KEY_SIZE)?;
         for byte in self.to_bytes().iter() {
             tup.serialize_element(byte)?;
         }
@@ -235,11 +253,11 @@ impl<'de> Deserialize<'de> for SodiumPubKey {
             where
                 A: SeqAccess<'de>,
             {
-                let mut bytes = [0u8; PUBLIC_KEY_SIZE];
-                for i in 0..PUBLIC_KEY_SIZE {
+                let mut bytes = [0u8; SODIUM_PUBLIC_KEY_SIZE];
+                for i in 0..SODIUM_PUBLIC_KEY_SIZE {
                     bytes[i] = seq
                         .next_element()?
-                        .ok_or(de::Error::invalid_length(i, &"expected 32 bytes"))?;
+                        .ok_or(de::Error::invalid_length(i, &"32"))?;
                 }
                 let pk = SodiumPubKey::from_bytes(&bytes).map_err(|_e| {
                     de::Error::invalid_value(
@@ -252,35 +270,27 @@ impl<'de> Deserialize<'de> for SodiumPubKey {
             }
         }
 
-        deserializer.deserialize_tuple(PUBLIC_KEY_SIZE, SodiumPubKeyVisitor)
+        deserializer.deserialize_tuple(SODIUM_PUBLIC_KEY_SIZE, SodiumPubKeyVisitor)
     }
 }
 
 impl SodiumPubKey {
     pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
-        if bytes.len() != PUBLIC_KEY_SIZE {
+        if bytes.len() != SODIUM_PUBLIC_KEY_SIZE {
             return Err(anyhow!(
                 "SodiumPubKey's length must be {}, got {}",
-                PUBLIC_KEY_SIZE,
+                SODIUM_PUBLIC_KEY_SIZE,
                 bytes.len()
             ));
         }
-        let mut buf = [0u8; PUBLIC_KEY_SIZE];
-        buf.copy_from_slice(&bytes[..PUBLIC_KEY_SIZE]);
+        let mut buf = [0u8; SODIUM_PUBLIC_KEY_SIZE];
+        buf.copy_from_slice(&bytes[..SODIUM_PUBLIC_KEY_SIZE]);
         let inner = PublicKey::from(buf);
         Ok(SodiumPubKey(inner))
     }
 
-    pub fn to_bytes(&self) -> [u8; PUBLIC_KEY_SIZE] {
+    pub fn to_bytes(&self) -> [u8; SODIUM_PUBLIC_KEY_SIZE] {
         self.0.to_bytes()
-    }
-
-    pub fn encode(&self) -> Vec<u8> {
-        bincode::serialize(&self).unwrap() // must not fail
-    }
-
-    pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
-        bincode::deserialize(bytes)
     }
 }
 
@@ -292,6 +302,8 @@ pub struct SodiumCiphertext {
     #[serde(with = "crate::serde_bytes")]
     ciphertext: Vec<u8>,
 }
+
+impl frame_common::EcallInput for SodiumCiphertext {}
 
 impl SodiumCiphertext {
     #[cfg(feature = "std")]
@@ -349,5 +361,37 @@ pub(crate) mod tests {
 
         let plaintext = ciphertext.decrypt(&sk_server).unwrap();
         assert_eq!(plaintext, &msg[..]);
+    }
+
+    #[test]
+    fn test_nonce_serde() {
+        let mut rng = rand::thread_rng();
+        let nonce = SodiumNonce::from_random(&mut rng).unwrap();
+
+        let v = serde_json::to_vec(&nonce).unwrap();
+        let recovered: SodiumNonce = serde_json::from_slice(&v[..]).unwrap();
+        assert_eq!(recovered, nonce);
+    }
+
+    #[test]
+    fn test_private_key_serde() {
+        let mut rng = rand::thread_rng();
+        let sk = SodiumPrivateKey::from_random(&mut rng).unwrap();
+
+        let v = serde_json::to_vec(&sk).unwrap();
+        let recovered: SodiumPrivateKey = serde_json::from_slice(&v[..]).unwrap();
+        assert_eq!(recovered, sk);
+    }
+
+    #[test]
+    fn test_pubkey_serde() {
+        let mut rng = rand::thread_rng();
+
+        let sk = SodiumPrivateKey::from_random(&mut rng).unwrap();
+        let pk = sk.public_key();
+
+        let v = serde_json::to_vec(&pk).unwrap();
+        let recovered: SodiumPubKey = serde_json::from_slice(&v[..]).unwrap();
+        assert_eq!(recovered, pk);
     }
 }

@@ -4,8 +4,9 @@ extern crate clap;
 use crate::config::*;
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use frame_common::crypto::AccountId;
-use frame_treekem::DhPubKey;
+use frame_sodium::SodiumPubKey;
 use rand::{rngs::OsRng, Rng};
+use rand_core::{CryptoRng, RngCore};
 use std::{env, path::PathBuf};
 use term::Term;
 
@@ -33,6 +34,8 @@ fn main() {
     let mut term = term::Term::new(config_terminal(&matches));
     let root_dir = global_rootdir_match(&default_root_dir, &matches);
     let rng = &mut OsRng;
+    // just for testing
+    let mut csprng = rand::thread_rng();
 
     let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
     let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set");
@@ -48,6 +51,7 @@ fn main() {
             anonify_url,
             matches,
             rng,
+            &mut csprng,
         ),
         (WALLET_COMMAND, Some(matches)) => subcommand_wallet(term, root_dir, matches, rng),
         _ => {
@@ -67,15 +71,19 @@ const DEFAULT_AMOUNT: &str = "10";
 const DEFAULT_BALANCE: &str = "100";
 const DEFAULT_TARGET: &str = "7H5cyDJ9CXBKOiM8tWnGaz5vqHY=";
 
-fn subcommand_anonify<R: Rng>(
+fn subcommand_anonify<R, CR>(
     mut term: Term,
     root_dir: PathBuf,
     default_contract_addr: String,
-    encrypting_key: &DhPubKey,
+    encrypting_key: &SodiumPubKey,
     anonify_url: String,
     matches: &ArgMatches,
     rng: &mut R,
-) {
+    csprng: &mut CR,
+) where
+    R: Rng,
+    CR: RngCore + CryptoRng,
+{
     match matches.subcommand() {
         ("deploy", Some(_)) => {
             commands::deploy(anonify_url).expect("Failed to deploy command");
@@ -126,6 +134,7 @@ fn subcommand_anonify<R: Rng>(
                 total_supply,
                 encrypting_key,
                 rng,
+                csprng,
             )
             .expect("Failed to init_state command");
         }
@@ -152,6 +161,7 @@ fn subcommand_anonify<R: Rng>(
                 amount,
                 encrypting_key,
                 rng,
+                csprng,
             )
             .expect("Failed to transfer command");
         }
@@ -178,6 +188,7 @@ fn subcommand_anonify<R: Rng>(
                 amount,
                 encrypting_key,
                 rng,
+                csprng,
             )
             .expect("Failed to approve command");
         }
@@ -207,6 +218,7 @@ fn subcommand_anonify<R: Rng>(
                 amount,
                 encrypting_key,
                 rng,
+                csprng,
             )
             .expect("Failed to transfer_from command");
         }
@@ -233,6 +245,7 @@ fn subcommand_anonify<R: Rng>(
                 amount,
                 encrypting_key,
                 rng,
+                csprng,
             )
             .expect("Failed to mint command");
         }
@@ -256,6 +269,7 @@ fn subcommand_anonify<R: Rng>(
                 amount,
                 encrypting_key,
                 rng,
+                csprng,
             )
             .expect("Failed to burn command");
         }
@@ -279,6 +293,7 @@ fn subcommand_anonify<R: Rng>(
                 spender_addr,
                 encrypting_key,
                 rng,
+                csprng,
             )
             .expect("Failed allowance command");
         }
@@ -296,6 +311,7 @@ fn subcommand_anonify<R: Rng>(
                 keyfile_index,
                 encrypting_key,
                 rng,
+                csprng,
             )
             .expect("Failed balance_of command");
         }

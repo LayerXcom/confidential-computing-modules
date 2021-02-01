@@ -17,7 +17,7 @@ use frame_common::{
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
-use frame_treekem::DhPubKey;
+use frame_sodium::SodiumPubKey;
 
 pub mod input {
     use super::*;
@@ -313,17 +313,17 @@ pub mod output {
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
     pub struct ReturnEncryptingKey {
-        encrypting_key: DhPubKey,
+        encrypting_key: SodiumPubKey,
     }
 
     impl EcallOutput for ReturnEncryptingKey {}
 
     impl ReturnEncryptingKey {
-        pub fn new(encrypting_key: DhPubKey) -> Self {
+        pub fn new(encrypting_key: SodiumPubKey) -> Self {
             ReturnEncryptingKey { encrypting_key }
         }
 
-        pub fn encrypting_key(self) -> DhPubKey {
+        pub fn encrypting_key(self) -> SodiumPubKey {
             self.encrypting_key
         }
     }
