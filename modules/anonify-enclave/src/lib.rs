@@ -19,7 +19,7 @@ mod notify;
 pub mod workflow {
     #[cfg(feature = "backup-enable")]
     pub use crate::backup::{PathSecretBackupper, PathSecretRecoverer};
-    pub use crate::commands::{MsgReceiver, MsgSender};
+    pub use crate::commands::{CmdReceiver, CmdSender};
     pub use crate::context::{GetState, ReportRegistration};
     pub use crate::handshake::{HandshakeReceiver, HandshakeSender, JoinGroupSender};
     pub use crate::identity_key::EncryptingKeyGetter;

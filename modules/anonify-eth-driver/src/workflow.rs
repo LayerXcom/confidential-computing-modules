@@ -71,7 +71,7 @@ pub struct InsertCiphertextWorkflow;
 impl HostEngine for InsertCiphertextWorkflow {
     type HI = host_input::InsertCiphertext;
     type EI = input::InsertCiphertext;
-    type EO = output::ReturnUpdatedState;
+    type EO = output::ReturnNotifyState;
     type HO = host_output::InsertCiphertext;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
 }
@@ -571,11 +571,11 @@ pub mod host_output {
     }
 
     pub struct InsertCiphertext {
-        pub ecall_output: Option<output::ReturnUpdatedState>,
+        pub ecall_output: Option<output::ReturnNotifyState>,
     }
 
     impl HostOutput for InsertCiphertext {
-        type EcallOutput = output::ReturnUpdatedState;
+        type EcallOutput = output::ReturnNotifyState;
 
         fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
             self.ecall_output = Some(output);

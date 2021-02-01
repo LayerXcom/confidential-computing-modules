@@ -3,7 +3,6 @@
 use crate::{cache::EventCache, error::Result, utils::*, workflow::*};
 
 use async_trait::async_trait;
-use frame_common::{state_types::UpdatedState, traits::*};
 use sgx_types::sgx_enclave_id_t;
 use std::{marker::Send, path::Path};
 use web3::types::{Address, H256};
@@ -73,12 +72,12 @@ pub trait Watcher: Sized {
     ) -> Result<Self>;
 
     /// Blocking event fetch from blockchain nodes.
-    async fn fetch_events<S: State>(
+    async fn fetch_events(
         &self,
         eid: sgx_enclave_id_t,
         fetch_ciphertext_cmd: u32,
         fetch_handshake_cmd: u32,
-    ) -> Result<Option<Vec<UpdatedState<S>>>>;
+    ) -> Result<Option<Vec<serde_json::Value>>>;
 
     fn get_contract(self) -> ContractKind;
 }

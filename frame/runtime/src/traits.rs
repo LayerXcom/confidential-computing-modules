@@ -7,7 +7,7 @@ use crate::localstd::{
 use crate::serde::{de::DeserializeOwned, Serialize};
 use frame_common::{
     crypto::{AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest, RecoveredPathSecret},
-    state_types::{MemId, ReturnState, UpdatedState},
+    state_types::{MemId, NotifyState, ReturnState, UpdatedState},
     traits::*,
 };
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
@@ -97,8 +97,9 @@ pub trait StateOps {
     /// Returns a updated state of registered account_id in notification.
     fn update_state(
         &self,
-        state_iter: impl Iterator<Item = UpdatedState<Self::S>> + Clone,
-    ) -> Option<UpdatedState<Self::S>>;
+        updated_state_iter: impl Iterator<Item = UpdatedState<Self::S>>,
+        notify_state_iter: impl Iterator<Item = Option<NotifyState>>,
+    ) -> Option<NotifyState>;
 }
 
 pub trait GroupKeyGetter {

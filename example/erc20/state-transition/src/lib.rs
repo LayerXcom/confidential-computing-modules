@@ -23,9 +23,9 @@ impl_runtime! {
         sender: AccountId,
         total_supply: U64
     ) {
-        let owner_account_id = update!(*OWNER_ACCOUNT_ID, "Owner", sender);
-        let sender_balance = update!(sender, "Balance", total_supply);
-        let total_supply = update!(*OWNER_ACCOUNT_ID, "TotalSupply", total_supply);
+        let owner_account_id = update!(*OWNER_ACCOUNT_ID, "Owner", sender, AccountId);
+        let sender_balance = update!(sender, "Balance", total_supply, U64);
+        let total_supply = update!(*OWNER_ACCOUNT_ID, "TotalSupply", total_supply, U64);
 
         return_update![owner_account_id, sender_balance, total_supply]
     }
@@ -41,8 +41,8 @@ impl_runtime! {
 
         ensure!(sender_balance > amount, "transfer amount ({:?}) exceeds balance ({:?}).", amount, sender_balance);
 
-        let sender_update = update!(sender, "Balance", sender_balance - amount);
-        let recipient_update = update!(recipient, "Balance", recipient_balance + amount);
+        let sender_update = update!(sender, "Balance", sender_balance - amount, U64);
+        let recipient_update = update!(recipient, "Balance", recipient_balance + amount, U64);
 
         return_update![sender_update, recipient_update]
     }
@@ -62,7 +62,7 @@ impl_runtime! {
         );
 
         owner_approved.approve(spender, amount);
-        let owner_approved_update = update!(owner, "Approved", owner_approved);
+        let owner_approved_update = update!(owner, "Approved", owner_approved, Approved);
         return_update![owner_approved_update]
     }
 
@@ -88,12 +88,12 @@ impl_runtime! {
         );
 
         owner_approved.consume(sender, amount)?;
-        let owner_approved_update = update!(owner, "Approved", owner_approved);
+        let owner_approved_update = update!(owner, "Approved", owner_approved, Approved);
 
         let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
 
-        let owner_balance_update = update!(owner, "Balance", owner_balance - amount);
-        let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount);
+        let owner_balance_update = update!(owner, "Balance", owner_balance - amount, U64);
+        let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount, U64);
 
         return_update![owner_approved_update, owner_balance_update, recipient_balance_update]
     }
@@ -108,10 +108,10 @@ impl_runtime! {
         ensure!(executer == owner_account_id, "only owner can mint");
 
         let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
-        let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount);
+        let recipient_balance_update = update!(recipient, "Balance", recipient_balance + amount, U64);
 
         let total_supply = self.get_map::<U64>(*OWNER_ACCOUNT_ID, "TotalSupply")?;
-        let total_supply_update = update!(*OWNER_ACCOUNT_ID, "TotalSupply", total_supply + amount);
+        let total_supply_update = update!(*OWNER_ACCOUNT_ID, "TotalSupply", total_supply + amount, U64);
 
         return_update![recipient_balance_update, total_supply_update]
     }
@@ -123,10 +123,10 @@ impl_runtime! {
     ) {
         let balance = self.get_map::<U64>(sender, "Balance")?;
         ensure!(balance >= amount, "not enough balance to burn");
-        let balance_update = update!(sender, "Balance", balance - amount);
+        let balance_update = update!(sender, "Balance", balance - amount, U64);
 
         let total_supply = self.get_map::<U64>(*OWNER_ACCOUNT_ID, "TotalSupply")?;
-        let total_supply_update = update!(*OWNER_ACCOUNT_ID, "TotalSupply", total_supply - amount);
+        let total_supply_update = update!(*OWNER_ACCOUNT_ID, "TotalSupply", total_supply - amount, U64);
 
         return_update![balance_update, total_supply_update]
     }

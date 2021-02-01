@@ -9,7 +9,6 @@ erc20-api = { path = "../api" }
 erc20-state-transition = { path = "../state-transition" }
 anonify-eth-driver = { path = "../../../modules/anonify-eth-driver" }
 frame-host = { path = "../../../frame/host" }
-frame-runtime = { path = "../../../frame/runtime" }
 frame-common = { path = "../../../frame/common" }
 sgx_types = "1.1.1"
 actix-web = "3"

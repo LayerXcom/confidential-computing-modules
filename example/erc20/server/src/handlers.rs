@@ -3,7 +3,6 @@ use crate::Server;
 use actix_web::{web, HttpResponse};
 use anonify_eth_driver::traits::*;
 use erc20_state_transition::cmd::*;
-use frame_runtime::primitives::U64;
 use std::{sync::Arc, time};
 use tracing::{debug, error, info};
 
@@ -165,7 +164,7 @@ where
 {
     server
         .dispatcher
-        .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
         .await
         .map_err(|e| ServerError::from(e))?;
 
@@ -207,7 +206,7 @@ where
             loop {
                 match server
                     .dispatcher
-                    .fetch_events::<U64>(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+                    .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
                     .await
                 {
                     Ok(updated_states) => info!("State updated: {:?}", updated_states),
