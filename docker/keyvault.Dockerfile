@@ -21,7 +21,7 @@ RUN source /opt/sgxsdk/environment && \
     export SGX_MODE=HW && \
     export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
     cd scripts && \
-    make ENCLAVE_DIR=nodes/key-vault/enclave ENCLAVE_PKG_NAME=secret_backup CARGO_FLAGS=--release && \
+    make ENCLAVE_DIR=nodes/key-vault/enclave ENCLAVE_PKG_NAME=key_vault CARGO_FLAGS=--release && \
     cd ../nodes/key-vault/server && \
     RUST_BACKTRACE=1 RUST_LOG=debug /root/.cargo/bin/cargo build --release
 
@@ -32,7 +32,7 @@ LABEL maintainer="osuke.sudo@layerx.co.jp"
 WORKDIR /root/anonify
 
 RUN cd /root/anonify
-COPY --from=builder /root/anonify/.anonify/secret_backup.signed.so ./.anonify/secret_backup.signed.so
+COPY --from=builder /root/anonify/.anonify/key_vault.signed.so ./.anonify/key_vault.signed.so
 COPY --from=builder /root/anonify/target/release/key-vault-node-server ./target/release/
 
 CMD ["./target/release/key-vault-node-server"]

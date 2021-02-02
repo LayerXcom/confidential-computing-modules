@@ -662,7 +662,7 @@ fn set_env_vars() {
         "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report",
     );
     env::set_var("KEY_VAULT_ENDPOINT", "localhost:12345");
-    env::set_var("ENCLAVE_PKG_NAME", "secret_backup");
+    env::set_var("ENCLAVE_PKG_NAME", "key_vault");
     env::set_var("PATH_SECRETS_DIR", ".anonify/test_pathsecrets");
 }
 
