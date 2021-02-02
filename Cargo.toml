@@ -18,7 +18,6 @@ members = [
     "modules/key-vault-host",
     "modules/key-vault-ecall-types",
     "nodes/secret-backup/server",
-    "nodes/secret-backup/commands",
     "nodes/secret-backup/enclave",
     "nodes/anonify/api",
     "nodes/anonify/server",

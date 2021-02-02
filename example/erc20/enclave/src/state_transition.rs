@@ -1,7 +1,6 @@
 use frame_runtime::prelude::*;
 
 pub const MAX_MEM_SIZE: usize = 100;
-pub const CIPHERTEXT_SIZE: usize = MAX_MEM_SIZE + 30;
 
 impl_memory! {
     (0, "Balance", U64),

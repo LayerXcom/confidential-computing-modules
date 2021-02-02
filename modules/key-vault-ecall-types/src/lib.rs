@@ -1,5 +1,6 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 
+pub mod cmd;
 pub mod types;
 pub use crate::types::*;
 

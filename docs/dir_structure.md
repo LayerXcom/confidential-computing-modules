@@ -18,16 +18,10 @@ frame --> modules --> example の依存関係があります。
 │   └── Anonify_test.edl: テスト用のEDLファイル
 ├── example
 │   ├── erc20
-│   │   ├── api: (host) リクエスト・レスポンス型の定義
 │   │   ├── cli: (host)　デモ・動作確認用クライアント
-│   │   ├── enclave: (enclave) ecall関数の定義
-│   │   ├── server: (host) REST APIエンドポイント定義サーバー
-│   │   └── state-transition: (enclave/host) 状態遷移ロジックの記述
-│   └── secret-backup
-│       ├── api: (host)
-│       ├── enclave: (enclave)
-│       ├── server: (host)
-│       └── state-transition: (enclave/host)
+│   │   ├── enclave: (enclave) ecall関数の定義、状態遷移ロジックの記述
+│   │   └── server: (host) REST APIエンドポイント定義サーバー
+│   └── wallet: （デモ・デバグ用）CLIで用いる署名秘密鍵の管理
 ├── frame:
 │   ├── common: (enclave/host) 共通的に使われる暗号プリミティブ系など
 │   ├── enclave: (enclave) ecallロジックを簡単に記述できるようマクロ
@@ -44,7 +38,16 @@ frame --> modules --> example の依存関係があります。
 │   ├── key-vault-enclave: (enclave) 鍵バックアップEnclaveのロジック
 │   ├── key-vault-host: (host)
 │   └── key-vault-ecall-types: (enclave/host) key-vaultモジュールのenclave<->host間でやりとりする型定義
+├── nodes:
+│   ├── anonify
+│   │   ├── api: (host) リクエスト・レスポンス型の定義
+│   │   └── server: (host) REST APIエンドポイント定義サーバー
+│   └── secret-backup
+│       ├── api: (host)
+│       ├── enclave: (enclave)
+│       ├── server: (host)
+│       └── state-transition: (enclave/host)
 ├── scripts
 ├── tests: 結合テスト・Enclave内のユニットテストなど
-└── wallet: （デモ・デバグ用）CLIで用いる署名秘密鍵の管理
+└──
 ```

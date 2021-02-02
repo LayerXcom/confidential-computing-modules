@@ -4,11 +4,11 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
-use once_cell::sync::Lazy;
 mod ecalls;
 mod state_transition;
 
 use anonify_enclave::context::AnonifyEnclaveContext;
+use once_cell::sync::Lazy;
 use std::backtrace;
 
 const ANONIFY_MRENCLAVE_VERSION: usize = 0;

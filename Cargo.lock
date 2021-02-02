@@ -1565,6 +1565,7 @@ dependencies = [
 name = "erc20-enclave"
 version = "0.1.0"
 dependencies = [
+ "anonify-ecall-types",
  "anonify-enclave",
  "anyhow 1.0.28",
  "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx?rev=sgx_1.1.3)",
@@ -2684,10 +2685,6 @@ dependencies = [
  "winapi 0.2.8",
  "winapi-build",
 ]
-
-[[package]]
-name = "key-vault-commands"
-version = "0.1.0"
 
 [[package]]
 name = "key-vault-ecall-types"
@@ -4188,7 +4185,7 @@ dependencies = [
  "frame-config",
  "frame-enclave",
  "frame-types",
- "key-vault-commands",
+ "key-vault-ecall-types",
  "key-vault-enclave",
  "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
  "sgx_tstd",
@@ -4211,7 +4208,7 @@ dependencies = [
  "frame-host",
  "frame-runtime",
  "frame-sodium",
- "key-vault-commands",
+ "key-vault-ecall-types",
  "key-vault-host",
  "once_cell 1.5.2",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",

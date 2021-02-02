@@ -6,6 +6,7 @@ pub use crate::primitives::*;
 pub use crate::serde::{self, de::DeserializeOwned, Deserialize, Serialize};
 #[cfg(feature = "sgx")]
 pub use crate::traits::*;
+#[cfg(feature = "sgx")]
 pub use crate::{
     __impl_inner_memory, __impl_inner_runtime, get_state, impl_memory, impl_runtime, return_update,
     update,

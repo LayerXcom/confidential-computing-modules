@@ -1,6 +1,6 @@
 use crate::ENCLAVE_CONTEXT;
 use frame_enclave::{register_ecall, EnclaveEngine};
-use key_vault_commands::*;
+use key_vault_ecall_types::cmd::*;
 use key_vault_enclave::{context::KeyVaultEnclaveContext, workflow::*};
 use std::{ptr, vec::Vec};
 
