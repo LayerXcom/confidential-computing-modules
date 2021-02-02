@@ -423,6 +423,44 @@ dependencies = [
 ]
 
 [[package]]
+name = "anonify-node-api"
+version = "0.1.0"
+dependencies = [
+ "frame-sodium",
+ "serde 1.0.117",
+ "serde_json 1.0.59",
+ "web3",
+]
+
+[[package]]
+name = "anonify-node-server"
+version = "0.1.0"
+dependencies = [
+ "actix-rt",
+ "actix-web",
+ "anonify-ecall-types",
+ "anonify-eth-driver",
+ "anonify-node-api",
+ "anyhow 1.0.34",
+ "ethabi",
+ "failure",
+ "frame-common",
+ "frame-host",
+ "frame-runtime",
+ "frame-sodium",
+ "hex",
+ "integration-tests",
+ "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand_core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 1.0.59",
+ "sgx_types 1.1.1",
+ "thiserror 1.0.22",
+ "tracing",
+ "tracing-subscriber",
+ "web3",
+]
+
+[[package]]
 name = "anonify-wallet"
 version = "0.1.0"
 dependencies = [
@@ -435,7 +473,7 @@ dependencies = [
  "serde 1.0.117",
  "serde_bytes 0.11.5",
  "serde_json 1.0.59",
- "smallvec 0.6.13",
+ "smallvec 0.6.14",
  "thiserror 1.0.22",
 ]
 
@@ -1056,9 +1094,9 @@ dependencies = [
 
 [[package]]
 name = "console"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a50aab2529019abfabfa93f1e6c41ef392f91fbf179b347a7e96abb524884a08"
+checksum = "7cc80946b3480f421c2f17ed1cb841753a371c7c5104f51d507e13f532c856aa"
 dependencies = [
  "encode_unicode",
  "lazy_static",
@@ -1067,7 +1105,6 @@ dependencies = [
  "terminal_size",
  "unicode-width",
  "winapi 0.3.9",
- "winapi-util",
 ]
 
 [[package]]
@@ -1364,7 +1401,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "116f66c4e7b19af0d52857aa4ff710cc3b4781d9c16616e31540bc55ec57ba8c"
 dependencies = [
- "console 0.13.0",
+ "console 0.14.0",
  "lazy_static",
  "tempfile",
 ]
@@ -1499,19 +1536,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "erc20-api"
-version = "0.1.0"
-dependencies = [
- "frame-sodium",
- "serde 1.0.117",
- "serde_json 1.0.59",
- "web3",
-]
-
-[[package]]
 name = "erc20-cli"
 version = "0.1.0"
 dependencies = [
+ "anonify-node-api",
  "anonify-wallet",
  "anyhow 1.0.34",
  "clap",
@@ -1520,7 +1548,6 @@ dependencies = [
  "dirs",
  "ed25519-dalek",
  "env_logger",
- "erc20-api",
  "ethabi",
  "frame-common",
  "frame-sodium",
@@ -1558,21 +1585,14 @@ version = "0.1.0"
 dependencies = [
  "actix-rt",
  "actix-web",
- "anonify-ecall-types",
  "anonify-eth-driver",
+ "anonify-node-server",
  "anyhow 1.0.34",
- "erc20-api",
  "erc20-state-transition",
- "ethabi",
  "failure",
  "frame-common",
  "frame-host",
- "frame-runtime",
- "frame-sodium",
  "hex",
- "integration-tests",
- "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand_core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.59",
  "sgx_types 1.1.1",
  "thiserror 1.0.22",
@@ -3301,7 +3321,7 @@ dependencies = [
  "libc",
  "rand 0.6.5",
  "rustc_version",
- "smallvec 0.6.13",
+ "smallvec 0.6.14",
  "winapi 0.3.9",
 ]
 
@@ -3316,7 +3336,7 @@ dependencies = [
  "libc",
  "redox_syscall",
  "rustc_version",
- "smallvec 0.6.13",
+ "smallvec 0.6.14",
  "winapi 0.3.9",
 ]
 
@@ -4200,9 +4220,9 @@ dependencies = [
  "actix-web",
  "anonify-ecall-types",
  "anonify-eth-driver",
+ "anonify-node-api",
+ "anonify-node-server",
  "anyhow 1.0.34",
- "erc20-api",
- "erc20-server",
  "ethabi",
  "frame-common",
  "frame-config",
@@ -4622,9 +4642,9 @@ checksum = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
 
 [[package]]
 name = "smallvec"
-version = "0.6.13"
+version = "0.6.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7b0758c52e15a8b5e3691eae6cc559f08eee9406e548a4477ba4e67770a82b6"
+checksum = "b97fcaeba89edba30f044a10c6a3cc39df9c3f17d7cd829dd1446cab35f890e0"
 dependencies = [
  "maybe-uninit",
 ]
@@ -4846,18 +4866,18 @@ dependencies = [
 
 [[package]]
 name = "termcolor"
-version = "1.1.0"
+version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb6bfa289a4d7c5766392812c0a1f4c1ba45afa1ad47803c11e1f407d846d75f"
+checksum = "2dfed899f0eb03f32ee8c6a0aabdb8a7949659e3466561fc0adf54e26d88c5f4"
 dependencies = [
  "winapi-util",
 ]
 
 [[package]]
 name = "terminal_size"
-version = "0.1.13"
+version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a14cd9f8c72704232f0bfc8455c0e861f0ad4eb60cc9ec8a170e231414c1e13"
+checksum = "86ca8ced750734db02076f44132d802af0b33b09942331f4459dde8636fd2406"
 dependencies = [
  "libc",
  "winapi 0.3.9",

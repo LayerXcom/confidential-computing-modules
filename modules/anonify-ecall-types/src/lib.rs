@@ -24,4 +24,5 @@ use serde_sgx as serde;
 use serde_std as serde;
 
 pub mod types;
+pub mod cmd;
 pub use crate::types::*;

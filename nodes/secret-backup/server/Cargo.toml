@@ -27,8 +27,8 @@ frame-runtime = { path = "../../../frame/runtime" }
 frame-sodium = { path = "../../../frame/sodium" }
 anonify-eth-driver = { path = "../../../modules/anonify-eth-driver" }
 anonify-ecall-types = { path = "../../../modules/anonify-ecall-types"}
-erc20-server = { path = "../../../example/erc20/server" }
-erc20-api = { path = "../../../example/erc20/api" }
+anonify-node-server = { path = "../../../nodes/anonify/server" }
+anonify-node-api = { path = "../../../nodes/anonify/api" }
 web3 = "0.14"
 ethabi = "12.0.0"
 sgx_urts = "1.1.1"
