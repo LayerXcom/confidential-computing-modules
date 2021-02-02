@@ -21,7 +21,7 @@ frame --> modules --> example の依存関係があります。
 │   │   ├── cli: (host)　デモ・動作確認用クライアント
 │   │   ├── enclave: (enclave) ecall関数の定義、状態遷移ロジックの記述
 │   │   └── server: (host) REST APIエンドポイント定義サーバー (bin)
-│   └── wallet: （デモ・デバグ用）CLIで用いる署名秘密鍵の管理
+│   └── wallet: （デモ・動作確認用）CLIで用いる署名秘密鍵の管理
 ├── frame:
 │   ├── common: (enclave/host) 共通的に使われる暗号プリミティブ系など
 │   ├── config: (enclave/host) 共通的に使われる環境変数による定義など
