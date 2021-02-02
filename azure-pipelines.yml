@@ -34,7 +34,7 @@ stages:
         containerRegistry: anonifydevdocker
         repository: anonifydev
         tags: latest
-        dockerfile: ./docker/server.Dockerfile
+        dockerfile: ./docker/erc20.Dockerfile
         buildContext: .
     - task: Docker@2
       displayName: Build and Push key-vault image
