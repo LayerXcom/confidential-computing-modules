@@ -1,6 +1,6 @@
 use actix_web::{web, App, HttpServer};
 use frame_host::EnclaveDir;
-use secret_backup_server::{handlers::*, Server};
+use key_vault_node_server::{handlers::*, Server};
 use std::{env, io, sync::Arc};
 
 #[actix_web::main]

@@ -5,10 +5,10 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-erc20-api = { path = "../api" }
+state-runtime-node-api = { path = "../../../nodes/state-runtime/api" }
 frame-common = { path = "../../../frame/common" }
 frame-sodium = { path = "../../../frame/sodium" }
-anonify-wallet = { path = "../../../wallet" }
+anonify-wallet = { path = "../../wallet" }
 reqwest = "0.9"
 clap = "~2.32"
 rand = "0.7"

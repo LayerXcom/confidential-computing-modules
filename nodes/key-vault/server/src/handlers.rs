@@ -2,7 +2,7 @@ use crate::api;
 use crate::error::{Result, ServerError};
 use crate::Server;
 use actix_web::{web, HttpResponse};
-use key_vault_commands::*;
+use key_vault_ecall_types::cmd::*;
 use std::sync::Arc;
 
 const SUCCESS: &'static str = r#"{

@@ -1,8 +1,7 @@
 use actix_web::{web, App, HttpServer};
 use anonify_eth_driver::eth::*;
-use erc20_server::handlers::*;
-use erc20_server::Server;
 use frame_host::EnclaveDir;
+use state_runtime_node_server::{handlers::*, Server};
 use std::{env, io, sync::Arc};
 
 #[actix_web::main]

@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate lazy_static;
 use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
-use erc20_state_transition::cmd::*;
+use anonify_ecall_types::cmd::*;
 use ethabi::Contract as ContractABI;
 use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},

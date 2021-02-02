@@ -1,7 +1,8 @@
+use crate::state_transition::{Runtime, MAX_MEM_SIZE};
 use crate::ENCLAVE_CONTEXT;
+use anonify_ecall_types::cmd::*;
 use anonify_enclave::{context::AnonifyEnclaveContext, workflow::*};
 use anyhow::anyhow;
-use erc20_state_transition::{cmd::*, Runtime, MAX_MEM_SIZE};
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_enclave::{register_ecall, EnclaveEngine};
 use std::{ptr, vec::Vec};

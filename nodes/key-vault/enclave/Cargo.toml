@@ -1,5 +1,5 @@
 [package]
-name = "secret-backup-enclave"
+name = "key-vault-node-enclave"
 version = "0.1.0"
 authors = ["cipepser <respepic@gmail.com>"]
 edition = "2018"
@@ -9,11 +9,11 @@ name = "anonifyenclave"
 crate-type = ["staticlib"]
 
 [dependencies]
-key-vault-commands = { path = "../commands", default-features = false, features = ["sgx"]}
-frame-config = { path = "../../../frame/config", default-features = false, features = ["sgx"]}
+frame-config = { path = "../../../frame/config", default-features = false, features = ["sgx"] }
 frame-enclave = { path = "../../../frame/enclave" }
 frame-types = { path = "../../../frame/types" }
 key-vault-enclave = { path = "../../../modules/key-vault-enclave" }
+key-vault-ecall-types = { path = "../../../modules/key-vault-ecall-types", default-features = false, features = ["sgx"] }
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git"}
 anyhow = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
 once_cell = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/once_cell-sgx" }

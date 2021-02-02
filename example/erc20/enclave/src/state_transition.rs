@@ -1,14 +1,6 @@
-#![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
-#[cfg(feature = "sgx")]
-#[macro_use]
-extern crate sgx_tstd as localstd;
-
 use frame_runtime::prelude::*;
 
-pub mod cmd;
-
 pub const MAX_MEM_SIZE: usize = 100;
-pub const CIPHERTEXT_SIZE: usize = MAX_MEM_SIZE + 30;
 
 impl_memory! {
     (0, "Balance", U64),

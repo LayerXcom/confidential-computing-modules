@@ -70,7 +70,7 @@ macro_rules! __impl_inner_runtime {
     ) => {
         $(
             #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-            #[serde(crate = "crate::serde")]
+            #[serde(crate = "frame_runtime::serde")]
             #[allow(non_camel_case_types)]
             pub struct $cmd_name {
                 $( pub $param_name: $param, )*
@@ -78,9 +78,8 @@ macro_rules! __impl_inner_runtime {
 
         )*
 
-        #[cfg(feature = "sgx")]
         #[derive(Debug, Clone, Serialize, Deserialize)]
-        #[serde(crate = "crate::serde")]
+        #[serde(crate = "frame_runtime::serde")]
         pub enum CallKind {
             $(
                 #[allow(non_camel_case_types)]
@@ -88,7 +87,6 @@ macro_rules! __impl_inner_runtime {
             )*
         }
 
-        #[cfg(feature = "sgx")]
         impl<G> CallKindExecutor<G> for CallKind
         where
             G: ContextOps<S=StateType>,
@@ -122,12 +120,10 @@ macro_rules! __impl_inner_runtime {
             }
         }
 
-        #[cfg(feature = "sgx")]
         pub struct Runtime<G: ContextOps<S=StateType>> {
             db: G,
         }
 
-        #[cfg(feature = "sgx")]
         impl<G> RuntimeExecutor<G> for Runtime<G>
         where
             G: ContextOps<S=StateType>,
@@ -146,7 +142,6 @@ macro_rules! __impl_inner_runtime {
             }
         }
 
-        #[cfg(feature = "sgx")]
         impl<G> Runtime<G>
         where
             G: ContextOps<S=StateType>,

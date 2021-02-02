@@ -2,7 +2,7 @@
 use crate::bincode;
 use crate::crypto_box::{self, aead::Aead, Box as CryptoBox, PublicKey, SecretKey, KEY_SIZE};
 use crate::local_anyhow::{anyhow, Result};
-use crate::localstd::{boxed::Box, fmt, vec::Vec};
+use crate::localstd::{fmt, vec::Vec};
 use crate::rand_core::{CryptoRng, RngCore};
 use crate::serde::{
     de::{self, SeqAccess, Unexpected},

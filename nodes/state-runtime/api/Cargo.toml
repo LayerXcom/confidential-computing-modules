@@ -1,5 +1,5 @@
 [package]
-name = "erc20-api"
+name = "state-runtime-node-api"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"

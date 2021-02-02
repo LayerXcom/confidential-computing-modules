@@ -24,6 +24,7 @@ pub use serde_sgx as serde;
 #[cfg(feature = "std")]
 pub use serde_std as serde;
 
+#[cfg(feature = "sgx")]
 pub mod impls;
 pub mod prelude;
 pub mod primitives;
