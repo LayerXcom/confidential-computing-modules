@@ -42,10 +42,10 @@ frame --> modules --> example の依存関係があります。
 │   ├── key-vault-host: (host)
 │   └── key-vault-ecall-types: (enclave/host) key-vaultモジュールのenclave<->host間でやりとりする型定義
 ├── nodes:
-│   ├── anonify
+│   ├── state-runtime
 │   │   ├── api: (host) リクエスト・レスポンス型の定義
 │   │   └── server: (host) APIサーバーのハンドラ実装 (lib)
-│   └── secret-backup
+│   └── key-vault
 │       ├── enclave: (enclave) ecall関数の定義
 │       └── server: (host) REST APIエンドポイント定義サーバー (bin)
 ├── scripts

@@ -1,5 +1,5 @@
 [package]
-name = "secret-backup-enclave"
+name = "key-vault-node-enclave"
 version = "0.1.0"
 authors = ["cipepser <respepic@gmail.com>"]
 edition = "2018"

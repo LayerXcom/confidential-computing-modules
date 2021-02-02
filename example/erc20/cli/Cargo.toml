@@ -5,7 +5,7 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anonify-node-api = { path = "../../../nodes/anonify/api" }
+state-runtime-node-api = { path = "../../../nodes/state-runtime/api" }
 frame-common = { path = "../../../frame/common" }
 frame-sodium = { path = "../../../frame/sodium" }
 anonify-wallet = { path = "../../wallet" }

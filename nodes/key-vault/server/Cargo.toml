@@ -1,5 +1,5 @@
 [package]
-name = "secret-backup-server"
+name = "key-vault-node-server"
 version = "0.1.0"
 authors = ["cipepser <respepic@gmail.com>"]
 edition = "2018"
@@ -27,8 +27,8 @@ frame-runtime = { path = "../../../frame/runtime" }
 frame-sodium = { path = "../../../frame/sodium" }
 anonify-eth-driver = { path = "../../../modules/anonify-eth-driver" }
 anonify-ecall-types = { path = "../../../modules/anonify-ecall-types"}
-anonify-node-server = { path = "../../../nodes/anonify/server" }
-anonify-node-api = { path = "../../../nodes/anonify/api" }
+state-runtime-node-server = { path = "../../../nodes/state-runtime/server" }
+state-runtime-node-api = { path = "../../../nodes/state-runtime/api" }
 web3 = "0.14"
 ethabi = "12.0.0"
 sgx_urts = "1.1.1"

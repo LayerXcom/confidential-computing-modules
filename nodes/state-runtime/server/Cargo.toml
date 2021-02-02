@@ -1,11 +1,11 @@
 [package]
-name = "anonify-node-server"
+name = "state-runtime-node-server"
 version = "0.1.0"
 authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anonify-node-api = { path = "../api" }
+state-runtime-node-api = { path = "../api" }
 anonify-ecall-types = { path = "../../../modules/anonify-ecall-types"}
 anonify-eth-driver = { path = "../../../modules/anonify-eth-driver", default-features = false }
 frame-host = { path = "../../../frame/host" }
