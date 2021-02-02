@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 anonify-node-api = { path = "../api" }
 anonify-ecall-types = { path = "../../../modules/anonify-ecall-types"}
-anonify-eth-driver = { path = "../../../modules/anonify-eth-driver" }
+anonify-eth-driver = { path = "../../../modules/anonify-eth-driver", default-features = false }
 frame-host = { path = "../../../frame/host" }
 frame-common = { path = "../../../frame/common" }
 sgx_types = "1.1.1"
@@ -33,4 +33,6 @@ rand = "0.7"
 
 [features]
 default = ["backup-enable"]
-backup-enable = []
+backup-enable = [
+    "anonify-eth-driver/backup-enable",
+]

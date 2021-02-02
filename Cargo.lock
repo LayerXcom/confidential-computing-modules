@@ -1583,22 +1583,12 @@ dependencies = [
 name = "erc20-server"
 version = "0.1.0"
 dependencies = [
- "actix-rt",
  "actix-web",
  "anonify-eth-driver",
  "anonify-node-server",
- "anyhow 1.0.34",
- "erc20-state-transition",
  "failure",
- "frame-common",
  "frame-host",
- "hex",
- "serde_json 1.0.59",
- "sgx_types 1.1.1",
- "thiserror 1.0.22",
- "tracing",
  "tracing-subscriber",
- "web3",
 ]
 
 [[package]]
