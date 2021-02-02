@@ -49,6 +49,5 @@ frame --> modules --> example の依存関係があります。
 │       ├── enclave: (enclave) ecall関数の定義
 │       └── server: (host) REST APIエンドポイント定義サーバー (bin)
 ├── scripts
-├── tests: 結合テスト・Enclave内のユニットテストなど
-└──
+└── tests: 結合テスト・Enclave内のユニットテストなど
 ```

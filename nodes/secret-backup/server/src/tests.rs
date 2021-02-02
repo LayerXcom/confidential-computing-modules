@@ -2,7 +2,7 @@ use crate::{api, handlers::*, Server as KeyVaultServer};
 use actix_web::{test, web, App};
 use anonify_ecall_types::input;
 use anonify_eth_driver::eth::{EthDeployer, EthSender, EventWatcher};
-use erc20_server::{handlers::*, Server as ERC20Server};
+use anonify_node_server::{handlers::*, Server as ERC20Server};
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_config::PJ_ROOT_DIR;
@@ -104,7 +104,7 @@ async fn test_backup_path_secret() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: erc20_api::deploy::post::Response = test::read_body_json(resp).await;
+    let contract_addr: anonofy_node_api::deploy::post::Response = test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_addr.0);
 
     let req = test::TestRequest::get()
@@ -113,7 +113,8 @@ async fn test_backup_path_secret() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
-    let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
+    let enc_key_resp: anonofy_node_api::encrypting_key::get::Response =
+        test::read_body_json(resp).await;
     let enc_key =
         verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
 
@@ -123,7 +124,7 @@ async fn test_backup_path_secret() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
+    let balance: anonofy_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 0);
 
     // check storing path_secret
@@ -151,7 +152,7 @@ async fn test_backup_path_secret() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
+    let balance: anonofy_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
     let req = test::TestRequest::post()
@@ -175,7 +176,7 @@ async fn test_backup_path_secret() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
+    let balance: anonofy_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 }
 
@@ -256,7 +257,7 @@ async fn test_recover_without_key_vault() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: erc20_api::deploy::post::Response = test::read_body_json(resp).await;
+    let contract_addr: anonofy_node_api::deploy::post::Response = test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_addr.0);
 
     let req = test::TestRequest::get()
@@ -265,7 +266,8 @@ async fn test_recover_without_key_vault() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
-    let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
+    let enc_key_resp: anonofy_node_api::encrypting_key::get::Response =
+        test::read_body_json(resp).await;
     let enc_key =
         verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
 
@@ -275,7 +277,7 @@ async fn test_recover_without_key_vault() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
+    let balance: anonofy_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 0);
 
     // check storing path_secret
@@ -303,7 +305,7 @@ async fn test_recover_without_key_vault() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
+    let balance: anonofy_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
     let req = test::TestRequest::post()
@@ -321,7 +323,7 @@ async fn test_recover_without_key_vault() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
+    let balance: anonofy_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 }
 
@@ -406,7 +408,7 @@ async fn test_manually_backup_all() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: erc20_api::deploy::post::Response = test::read_body_json(resp).await;
+    let contract_addr: anonofy_node_api::deploy::post::Response = test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_addr.0);
 
     let req = test::TestRequest::get()
@@ -415,7 +417,8 @@ async fn test_manually_backup_all() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
-    let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
+    let enc_key_resp: anonofy_node_api::encrypting_key::get::Response =
+        test::read_body_json(resp).await;
     let enc_key =
         verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
 
@@ -425,7 +428,7 @@ async fn test_manually_backup_all() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
+    let balance: anonofy_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 0);
 
     // Init state
@@ -443,7 +446,7 @@ async fn test_manually_backup_all() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
+    let balance: anonofy_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
     let req = test::TestRequest::post()
@@ -458,7 +461,7 @@ async fn test_manually_backup_all() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
+    let balance: anonofy_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
     // check storing path_secret
@@ -565,7 +568,7 @@ async fn test_manually_recover_all() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: erc20_api::deploy::post::Response = test::read_body_json(resp).await;
+    let contract_addr: anonofy_node_api::deploy::post::Response = test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_addr.0);
 
     let req = test::TestRequest::get()
@@ -574,7 +577,8 @@ async fn test_manually_recover_all() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
-    let enc_key_resp: erc20_api::encrypting_key::get::Response = test::read_body_json(resp).await;
+    let enc_key_resp: anonofy_node_api::encrypting_key::get::Response =
+        test::read_body_json(resp).await;
     let enc_key =
         verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
 
@@ -584,7 +588,7 @@ async fn test_manually_recover_all() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
+    let balance: anonofy_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 0);
 
     // Init state
@@ -602,7 +606,7 @@ async fn test_manually_recover_all() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
+    let balance: anonofy_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
     let req = test::TestRequest::post()
@@ -617,7 +621,7 @@ async fn test_manually_recover_all() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: erc20_api::state::get::Response = test::read_body_json(resp).await;
+    let balance: anonofy_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
     // check storing path_secret
@@ -790,7 +794,10 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
     encrypting_key
 }
 
-fn init_100_req<CR>(csprng: &mut CR, enc_key: &SodiumPubKey) -> erc20_api::state::post::Request
+fn init_100_req<CR>(
+    csprng: &mut CR,
+    enc_key: &SodiumPubKey,
+) -> anonofy_node_api::state::post::Request
 where
     CR: RngCore + CryptoRng,
 {
@@ -816,10 +823,13 @@ where
     let encrypted_req =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
-    erc20_api::state::post::Request { encrypted_req }
+    anonofy_node_api::state::post::Request { encrypted_req }
 }
 
-fn balance_of_req<CR>(csprng: &mut CR, enc_key: &SodiumPubKey) -> erc20_api::state::get::Request
+fn balance_of_req<CR>(
+    csprng: &mut CR,
+    enc_key: &SodiumPubKey,
+) -> anonofy_node_api::state::get::Request
 where
     CR: RngCore + CryptoRng,
 {
@@ -846,5 +856,5 @@ where
     let encrypted_req =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
-    erc20_api::state::get::Request { encrypted_req }
+    anonofy_node_api::state::get::Request { encrypted_req }
 }
