@@ -1,11 +1,13 @@
 # Anonify docker files
 
 In the project root directory, you can build docker files by following commands.
-`server.Dockerfile` can be built in a SGX-enabled environment because it builds in HW mode.
-Before building `cached.Dockerfile`, make sure you ran `./scripts/build_server.sh`.
+`erc20.Dockerfile` and `keyvault.Dockerfile` can be built in a SGX-enabled environment because it builds in HW mode.
 
 ```
-$ docker build -t anonify -f docker/dev.Dockerfile ./
-$ docker build -t osuketh/anonify-server:latest -f docker/server.Dockerfile ./
-$ docker build -t osuketh/anonify-server:latest -f docker/cached.server.Dockerfile ./
+// For develop environment in SW or HW mode
+$ docker build -t anonify-dev -f docker/dev.Dockerfile ./
+
+// For node containers
+$ docker build -t osuketh/anonify-erc20:latest -f docker/erc20.Dockerfile ./
+$ docker build -t osuketh/anonify-key-vault:latest -f docker/keyvault.server.Dockerfile ./
 ```
