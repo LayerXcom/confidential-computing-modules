@@ -26,7 +26,7 @@ pub(crate) fn deploy(anonify_url: String) -> Result<()> {
 }
 
 pub(crate) fn join_group(anonify_url: String, contract_addr: String) -> Result<()> {
-    let req = anonify_node_api::join_group::post::Request { contract_addr };
+    let req = state_runtime_node_api::join_group::post::Request { contract_addr };
     let res = Client::new()
         .post(&format!("{}/api/v1/join_group", &anonify_url))
         .json(&req)
@@ -38,7 +38,7 @@ pub(crate) fn join_group(anonify_url: String, contract_addr: String) -> Result<(
 }
 
 pub(crate) fn register_report(anonify_url: String, contract_addr: String) -> Result<()> {
-    let req = anonify_node_api::register_report::post::Request { contract_addr };
+    let req = state_runtime_node_api::register_report::post::Request { contract_addr };
     let res = Client::new()
         .post(&format!("{}/api/v1/register_report", &anonify_url))
         .json(&req)
@@ -50,7 +50,7 @@ pub(crate) fn register_report(anonify_url: String, contract_addr: String) -> Res
 }
 
 pub(crate) fn update_mrenclave(anonify_url: String, contract_addr: String) -> Result<()> {
-    let req = anonify_node_api::update_mrenclave::post::Request { contract_addr };
+    let req = state_runtime_node_api::update_mrenclave::post::Request { contract_addr };
     let res = Client::new()
         .post(&format!("{}/api/v1/update_mrenclave", &anonify_url))
         .json(&req)
@@ -99,7 +99,7 @@ where
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&anonify_node_api::state::post::Request::new(encrypted_req))
+        .json(&state_runtime_node_api::state::post::Request::new(encrypted_req))
         .send()?
         .text()?;
 
@@ -139,7 +139,7 @@ where
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&anonify_node_api::state::post::Request::new(
+        .json(&state_runtime_node_api::state::post::Request::new(
             encrypted_transfer_cmd,
         ))
         .send()?
@@ -181,7 +181,7 @@ where
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&anonify_node_api::state::post::Request::new(encrypted_approve_cmd))
+        .json(&state_runtime_node_api::state::post::Request::new(encrypted_approve_cmd))
         .send()?
         .text()?;
 
@@ -223,7 +223,7 @@ where
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&anonify_node_api::state::post::Request::new(
+        .json(&state_runtime_node_api::state::post::Request::new(
             encrypted_transfer_from_cmd,
         ))
         .send()?
@@ -265,7 +265,7 @@ where
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&anonify_node_api::state::post::Request::new(encrypted_mint_cmd))
+        .json(&state_runtime_node_api::state::post::Request::new(encrypted_mint_cmd))
         .send()?
         .text()?;
 
@@ -303,7 +303,7 @@ where
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&anonify_node_api::state::post::Request::new(encrypted_burn_cmd))
+        .json(&state_runtime_node_api::state::post::Request::new(encrypted_burn_cmd))
         .send()?
         .text()?;
 
@@ -352,7 +352,7 @@ where
             .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
         .get(&format!("{}/api/v1/state", &anonify_url))
-        .json(&anonify_node_api::state::get::Request::new(encrypted_req))
+        .json(&state_runtime_node_api::state::get::Request::new(encrypted_req))
         .send()?
         .text()?;
 
@@ -387,7 +387,7 @@ where
             .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
         .get(&format!("{}/api/v1/state", &anonify_url))
-        .json(&anonify_node_api::state::get::Request::new(encrypted_req))
+        .json(&state_runtime_node_api::state::get::Request::new(encrypted_req))
         .send()?
         .text()?;
 
@@ -405,7 +405,7 @@ pub(crate) fn start_sync_bc(anonify_url: String) -> Result<()> {
 }
 
 pub(crate) fn set_contract_addr(anonify_url: String, contract_addr: String) -> Result<()> {
-    let req = anonify_node_api::contract_addr::post::Request::new(contract_addr);
+    let req = state_runtime_node_api::contract_addr::post::Request::new(contract_addr);
     Client::new()
         .get(&format!("{}/api/v1/set_contract_addr", &anonify_url))
         .json(&req)
