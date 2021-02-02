@@ -1569,10 +1569,10 @@ dependencies = [
  "anyhow 1.0.28",
  "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx?rev=sgx_1.1.3)",
  "ed25519-dalek",
- "erc20-state-transition",
  "frame-common",
  "frame-config",
  "frame-enclave",
+ "frame-runtime",
  "frame-types",
  "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
  "sgx_tstd",
@@ -1589,14 +1589,6 @@ dependencies = [
  "failure",
  "frame-host",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "erc20-state-transition"
-version = "0.1.0"
-dependencies = [
- "frame-runtime",
- "sgx_tstd",
 ]
 
 [[package]]
@@ -2589,8 +2581,8 @@ name = "integration-tests"
 version = "0.1.0"
 dependencies = [
  "actix-rt",
+ "anonify-ecall-types",
  "anonify-eth-driver",
- "erc20-state-transition",
  "ethabi",
  "frame-common",
  "frame-host",

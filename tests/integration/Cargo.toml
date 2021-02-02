@@ -11,7 +11,7 @@ frame-common = { path = "../../frame/common" }
 frame-runtime = { path = "../../frame/runtime" }
 frame-host = { path = "../../frame/host" }
 anonify-eth-driver = { path = "../../modules/anonify-eth-driver" }
-erc20-state-transition = { path = "../../example/erc20/state-transition" }
+anonify-ecall-types = { path = "../../modules/anonify-ecall-types" }
 actix-rt = "1.1"
 tracing = "0.1"
 tracing-subscriber = "0.2"

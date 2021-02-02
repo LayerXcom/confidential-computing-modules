@@ -9,12 +9,12 @@ name = "anonifyenclave"
 crate-type = ["staticlib"]
 
 [dependencies]
-frame-config = { path = "../../../frame/config", default-features = false, features = ["sgx"]}
+frame-runtime = { path = "../../../frame/runtime", default-features = false, features = ["sgx"] }
+frame-config = { path = "../../../frame/config", default-features = false, features = ["sgx"] }
 frame-enclave = { path = "../../../frame/enclave" }
 frame-types = { path = "../../../frame/types" }
 frame-common = { path = "../../../frame/common", default-features = false, features = ["sgx"] }
 anonify-enclave = { path = "../../../modules/anonify-enclave", default-features = false }
-erc20-state-transition = { path = "../state-transition", default-features = false, features = ["sgx"] }
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git"}
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }

@@ -6,6 +6,7 @@ extern crate sgx_tstd as std;
 
 use once_cell::sync::Lazy;
 mod ecalls;
+mod state_transition;
 
 use anonify_enclave::context::AnonifyEnclaveContext;
 use std::backtrace;
