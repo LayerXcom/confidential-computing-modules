@@ -12,17 +12,19 @@ pub mod state {
 
         #[derive(Debug, Clone, Deserialize, Serialize)]
         pub struct Request {
-            pub encrypted_req: SodiumCiphertext,
+            pub ciphertext: SodiumCiphertext,
         }
 
         impl Request {
-            pub fn new(encrypted_req: SodiumCiphertext) -> Self {
-                Request { encrypted_req }
+            pub fn new(ciphertext: SodiumCiphertext) -> Self {
+                Request { ciphertext }
             }
         }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub H256);
+        pub struct Response {
+            pub tx_hash: H256,
+        }
     }
 
     pub mod get {
@@ -30,12 +32,12 @@ pub mod state {
 
         #[derive(Debug, Clone, Deserialize, Serialize)]
         pub struct Request {
-            pub encrypted_req: SodiumCiphertext,
+            pub ciphertext: SodiumCiphertext,
         }
 
         impl Request {
-            pub fn new(encrypted_req: SodiumCiphertext) -> Self {
-                Request { encrypted_req }
+            pub fn new(ciphertext: SodiumCiphertext) -> Self {
+                Request { ciphertext }
             }
         }
 
@@ -51,7 +53,9 @@ pub mod deploy {
         use super::super::*;
 
         #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response(pub String);
+        pub struct Response {
+            pub contract_address: H256,
+        }
     }
 }
 
@@ -61,11 +65,13 @@ pub mod join_group {
 
         #[derive(Clone, Deserialize, Serialize, Debug)]
         pub struct Request {
-            pub contract_addr: String,
+            pub contract_address: String,
         }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub H256);
+        pub struct Response {
+            pub tx_hash: H256,
+        }
     }
 }
 
@@ -75,11 +81,13 @@ pub mod update_mrenclave {
 
         #[derive(Clone, Deserialize, Serialize, Debug)]
         pub struct Request {
-            pub contract_addr: String,
+            pub contract_address: String,
         }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub H256);
+        pub struct Response {
+            pub tx_hash: H256,
+        }
     }
 }
 
@@ -88,7 +96,9 @@ pub mod encrypting_key {
         use super::super::*;
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub SodiumPubKey);
+        pub struct Response {
+            pub enclave_encrypting_key: SodiumPubKey,
+        }
     }
 }
 
@@ -97,7 +107,9 @@ pub mod key_rotation {
         use super::super::*;
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub H256);
+        pub struct Response {
+            pub tx_hash: H256,
+        }
     }
 }
 
@@ -107,12 +119,12 @@ pub mod contract_addr {
 
         #[derive(Clone, Deserialize, Serialize, Debug)]
         pub struct Request {
-            pub contract_addr: String,
+            pub contract_address: String,
         }
 
         impl Request {
-            pub fn new(contract_addr: String) -> Self {
-                Request { contract_addr }
+            pub fn new(contract_address: String) -> Self {
+                Request { contract_address }
             }
         }
     }
@@ -124,12 +136,12 @@ pub mod register_notification {
 
         #[derive(Debug, Clone, Deserialize, Serialize)]
         pub struct Request {
-            pub encrypted_req: SodiumCiphertext,
+            pub ciphertext: SodiumCiphertext,
         }
 
         impl Request {
-            pub fn new(encrypted_req: SodiumCiphertext) -> Self {
-                Request { encrypted_req }
+            pub fn new(ciphertext: SodiumCiphertext) -> Self {
+                Request { ciphertext }
             }
         }
     }
@@ -141,10 +153,12 @@ pub mod register_report {
 
         #[derive(Clone, Debug, Deserialize, Serialize)]
         pub struct Request {
-            pub contract_addr: String,
+            pub contract_address: String,
         }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response(pub H256);
+        pub struct Response {
+            pub tx_hash: H256,
+        }
     }
 }
