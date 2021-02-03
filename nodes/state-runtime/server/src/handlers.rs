@@ -40,10 +40,8 @@ where
         .set_contract_address(&contract_address, &server.abi_path)
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(
-        HttpResponse::Ok()
-            .json(state_runtime_node_api::deploy::post::Response { contract_address }),
-    )
+    Ok(HttpResponse::Accepted()
+        .json(state_runtime_node_api::deploy::post::Response { contract_address }))
 }
 
 pub async fn handle_join_group<D, S, W>(
@@ -72,7 +70,8 @@ where
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(state_runtime_node_api::join_group::post::Response { tx_hash }))
+    Ok(HttpResponse::Accepted()
+        .json(state_runtime_node_api::join_group::post::Response { tx_hash }))
 }
 
 pub async fn handle_update_mrenclave<D, S, W>(
@@ -101,7 +100,7 @@ where
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok()
+    Ok(HttpResponse::Accepted()
         .json(state_runtime_node_api::update_mrenclave::post::Response { tx_hash }))
 }
 
@@ -131,7 +130,7 @@ where
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(state_runtime_node_api::state::post::Response { tx_hash }))
+    Ok(HttpResponse::Accepted().json(state_runtime_node_api::state::post::Response { tx_hash }))
 }
 
 pub async fn handle_key_rotation<D, S, W>(
@@ -153,7 +152,8 @@ where
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(state_runtime_node_api::key_rotation::post::Response { tx_hash }))
+    Ok(HttpResponse::Accepted()
+        .json(state_runtime_node_api::key_rotation::post::Response { tx_hash }))
 }
 
 /// Fetch events from blockchain nodes manually, and then get the state data from enclave.
@@ -291,10 +291,8 @@ where
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(
-        HttpResponse::Ok()
-            .json(state_runtime_node_api::register_report::post::Response { tx_hash }),
-    )
+    Ok(HttpResponse::Accepted()
+        .json(state_runtime_node_api::register_report::post::Response { tx_hash }))
 }
 
 #[cfg(feature = "backup-enable")]
