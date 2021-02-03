@@ -1,8 +1,7 @@
-use crate::{api, handlers::*, Server as KeyVaultServer};
+use crate::{handlers::*, Server as KeyVaultServer};
 use actix_web::{test, web, App};
 use anonify_ecall_types::input;
 use anonify_eth_driver::eth::{EthDeployer, EthSender, EventWatcher};
-use state_runtime_node_server::{handlers::*, Server as ERC20Server};
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_config::PJ_ROOT_DIR;
@@ -12,6 +11,7 @@ use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use once_cell::sync::Lazy;
 use rand_core::{CryptoRng, RngCore};
 use serde_json::json;
+use state_runtime_node_server::{handlers::*, Server as ERC20Server};
 use std::{
     env,
     fs::{self, File},
@@ -54,8 +54,6 @@ async fn test_backup_path_secret() {
     let req = test::TestRequest::post().uri("/api/v1/start").to_request();
     let resp = test::call_service(&mut key_vault_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let start_response: api::start::post::Response = test::read_body_json(resp).await;
-    assert_eq!(start_response.status, "success".to_string());
 
     std::thread::sleep(std::time::Duration::from_secs(1));
 
@@ -104,8 +102,9 @@ async fn test_backup_path_secret() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response = test::read_body_json(resp).await;
-    println!("contract address: {:?}", contract_addr.0);
+    let contract_addr: state_runtime_node_api::deploy::post::Response =
+        test::read_body_json(resp).await;
+    println!("contract address: {:?}", contract_addr.contract_address);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/encrypting_key")
@@ -115,8 +114,13 @@ async fn test_backup_path_secret() {
 
     let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key =
-        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+    let enc_key = verify_encrypting_key(
+        enc_key_resp.enclave_encryption_key,
+        &abi_path,
+        &eth_url,
+        &contract_addr.contract_address,
+    )
+    .await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -207,8 +211,6 @@ async fn test_recover_without_key_vault() {
     let req = test::TestRequest::post().uri("/api/v1/start").to_request();
     let resp = test::call_service(&mut key_vault_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let start_response: api::start::post::Response = test::read_body_json(resp).await;
-    assert_eq!(start_response.status, "success".to_string());
 
     std::thread::sleep(std::time::Duration::from_secs(1));
 
@@ -257,8 +259,9 @@ async fn test_recover_without_key_vault() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response = test::read_body_json(resp).await;
-    println!("contract address: {:?}", contract_addr.0);
+    let contract_addr: state_runtime_node_api::deploy::post::Response =
+        test::read_body_json(resp).await;
+    println!("contract address: {:?}", contract_addr.contract_address);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/encrypting_key")
@@ -268,8 +271,13 @@ async fn test_recover_without_key_vault() {
 
     let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key =
-        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+    let enc_key = verify_encrypting_key(
+        enc_key_resp.enclave_encryption_key,
+        &abi_path,
+        &eth_url,
+        &contract_addr.contract_address,
+    )
+    .await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -354,8 +362,6 @@ async fn test_manually_backup_all() {
     let req = test::TestRequest::post().uri("/api/v1/start").to_request();
     let resp = test::call_service(&mut key_vault_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let start_response: api::start::post::Response = test::read_body_json(resp).await;
-    assert_eq!(start_response.status, "success".to_string());
 
     std::thread::sleep(std::time::Duration::from_secs(1));
 
@@ -408,8 +414,9 @@ async fn test_manually_backup_all() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response = test::read_body_json(resp).await;
-    println!("contract address: {:?}", contract_addr.0);
+    let contract_addr: state_runtime_node_api::deploy::post::Response =
+        test::read_body_json(resp).await;
+    println!("contract address: {:?}", contract_addr.contract_address);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/encrypting_key")
@@ -419,8 +426,13 @@ async fn test_manually_backup_all() {
 
     let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key =
-        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+    let enc_key = verify_encrypting_key(
+        enc_key_resp.enclave_encryption_key,
+        &abi_path,
+        &eth_url,
+        &contract_addr.contract_address,
+    )
+    .await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -517,8 +529,6 @@ async fn test_manually_recover_all() {
     let req = test::TestRequest::post().uri("/api/v1/start").to_request();
     let resp = test::call_service(&mut key_vault_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let start_response: api::start::post::Response = test::read_body_json(resp).await;
-    assert_eq!(start_response.status, "success".to_string());
 
     std::thread::sleep(std::time::Duration::from_secs(1));
 
@@ -568,8 +578,9 @@ async fn test_manually_recover_all() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response = test::read_body_json(resp).await;
-    println!("contract address: {:?}", contract_addr.0);
+    let contract_addr: state_runtime_node_api::deploy::post::Response =
+        test::read_body_json(resp).await;
+    println!("contract address: {:?}", contract_addr.contract_address);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/encrypting_key")
@@ -579,8 +590,13 @@ async fn test_manually_recover_all() {
 
     let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key =
-        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+    let enc_key = verify_encrypting_key(
+        enc_key_resp.enclave_encryption_key,
+        &abi_path,
+        &eth_url,
+        &contract_addr.contract_address,
+    )
+    .await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
