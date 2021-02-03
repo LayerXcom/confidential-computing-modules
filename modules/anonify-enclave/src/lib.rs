@@ -12,7 +12,7 @@ pub mod context;
 mod error;
 mod group_key;
 mod handshake;
-mod identity_key;
+mod enclave_key;
 mod kvs;
 mod notify;
 
@@ -22,7 +22,7 @@ pub mod workflow {
     pub use crate::commands::{CmdReceiver, CmdSender};
     pub use crate::context::{GetState, ReportRegistration};
     pub use crate::handshake::{HandshakeReceiver, HandshakeSender, JoinGroupSender};
-    pub use crate::identity_key::EncryptingKeyGetter;
+    pub use crate::enclave_key::EncryptingKeyGetter;
     pub use crate::notify::RegisterNotification;
 }
 

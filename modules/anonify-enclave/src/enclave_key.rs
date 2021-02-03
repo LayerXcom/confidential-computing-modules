@@ -36,14 +36,14 @@ impl EnclaveEngine for EncryptingKeyGetter {
     }
 }
 
-/// Enclave Identity Key
+/// Enclave Key
 #[derive(Debug, Clone, Default, PartialEq)]
-pub struct EnclaveIdentityKey {
+pub struct EnclaveKey {
     signing_privkey: SecretKey,
     decrypting_privkey: SodiumPrivateKey,
 }
 
-impl EnclaveIdentityKey {
+impl EnclaveKey {
     pub fn new<CR>(csprng: &mut CR) -> Result<Self>
     where
         CR: RngCore + CryptoRng,
@@ -59,7 +59,7 @@ impl EnclaveIdentityKey {
 
         let decrypting_privkey = SodiumPrivateKey::from_random(csprng)?;
 
-        Ok(EnclaveIdentityKey {
+        Ok(EnclaveKey {
             signing_privkey,
             decrypting_privkey,
         })
@@ -88,7 +88,7 @@ impl EnclaveIdentityKey {
     /// Generate a value of REPORTDATA field in REPORT struct.
     /// REPORTDATA consists of a hashed signing public key and a encrypting public key.
     /// The hashed signing public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
-    /// because this enclave identity key is binding to enclave's code.
+    /// because this enclave key is binding to enclave's code.
     /// The encrypting public key is used for secure communication between clients and TEE.
     /// 20 bytes: hashed signing public key
     /// 32 bytes: encrypting public key
