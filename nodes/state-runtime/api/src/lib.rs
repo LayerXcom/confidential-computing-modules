@@ -54,7 +54,7 @@ pub mod deploy {
 
         #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
         pub struct Response {
-            pub contract_address: H256,
+            pub contract_address: String,
         }
     }
 }
@@ -91,13 +91,13 @@ pub mod update_mrenclave {
     }
 }
 
-pub mod encrypting_key {
+pub mod encryption_key {
     pub mod get {
         use super::super::*;
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
         pub struct Response {
-            pub enclave_encrypting_key: SodiumPubKey,
+            pub enclave_encryption_key: SodiumPubKey,
         }
     }
 }

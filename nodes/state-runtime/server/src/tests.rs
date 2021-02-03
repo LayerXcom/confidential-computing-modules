@@ -703,10 +703,10 @@ where
         "total_supply": U64::from_raw(100),
     });
     let req = input::Command::new(access_policy, init_100, "construct");
-    let encrypted_req =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
-    state_runtime_node_api::state::post::Request { encrypted_req }
+    state_runtime_node_api::state::post::Request { ciphertext }
 }
 
 // from me to other
@@ -740,10 +740,10 @@ where
         ])
     });
     let req = input::Command::new(access_policy, transfer_10, "transfer");
-    let encrypted_req =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
-    state_runtime_node_api::state::post::Request { encrypted_req }
+    state_runtime_node_api::state::post::Request { ciphertext }
 }
 
 // from me to other
@@ -777,10 +777,10 @@ where
         ])
     });
     let req = input::Command::new(access_policy, transfer_10, "transfer");
-    let encrypted_req =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
-    state_runtime_node_api::state::post::Request { encrypted_req }
+    state_runtime_node_api::state::post::Request { ciphertext }
 }
 
 fn balance_of_req<CR>(
@@ -810,8 +810,8 @@ where
         "runtime_params": {},
         "state_name": "balance_of",
     });
-    let encrypted_req =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
-    state_runtime_node_api::state::get::Request { encrypted_req }
+    state_runtime_node_api::state::get::Request { ciphertext }
 }

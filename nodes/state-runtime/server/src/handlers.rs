@@ -1,8 +1,8 @@
 use crate::error::{Result, ServerError};
 use crate::Server;
 use actix_web::{web, HttpResponse};
-use anonify_eth_driver::traits::*;
 use anonify_ecall_types::cmd::*;
+use anonify_eth_driver::traits::*;
 use std::{sync::Arc, time};
 use tracing::{debug, error, info};
 
@@ -21,7 +21,7 @@ where
         .get_account(server.account_index, &server.password)
         .await
         .map_err(|e| ServerError::from(e))?;
-    let contract_addr = server
+    let contract_address = server
         .dispatcher
         .deploy(
             sender_address,
@@ -34,13 +34,16 @@ where
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    debug!("Contract address: {:?}", &contract_addr);
+    debug!("Contract address: {:?}", &contract_address);
     server
         .dispatcher
-        .set_contract_addr(&contract_addr, &server.abi_path)
+        .set_contract_addr(&contract_address, &server.abi_path)
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(state_runtime_node_api::deploy::post::Response(contract_addr)))
+    Ok(
+        HttpResponse::Ok()
+            .json(state_runtime_node_api::deploy::post::Response { contract_address }),
+    )
 }
 
 pub async fn handle_join_group<D, S, W>(
@@ -62,14 +65,14 @@ where
         .join_group(
             sender_address,
             DEFAULT_GAS,
-            &req.contract_addr,
+            &req.contract_address,
             &server.abi_path,
             JOIN_GROUP_CMD,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(state_runtime_node_api::join_group::post::Response(tx_hash)))
+    Ok(HttpResponse::Ok().json(state_runtime_node_api::join_group::post::Response { tx_hash }))
 }
 
 pub async fn handle_update_mrenclave<D, S, W>(
@@ -91,14 +94,15 @@ where
         .update_mrenclave(
             sender_address,
             DEFAULT_GAS,
-            &req.contract_addr,
+            &req.contract_address,
             &server.abi_path,
             JOIN_GROUP_CMD,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(state_runtime_node_api::update_mrenclave::post::Response(tx_hash)))
+    Ok(HttpResponse::Ok()
+        .json(state_runtime_node_api::update_mrenclave::post::Response { tx_hash }))
 }
 
 pub async fn handle_send_command<D, S, W>(
@@ -119,7 +123,7 @@ where
     let tx_hash = server
         .dispatcher
         .send_command(
-            req.encrypted_req.clone(),
+            req.ciphertext.clone(),
             sender_address,
             DEFAULT_GAS,
             SEND_COMMAND_CMD,
@@ -127,7 +131,7 @@ where
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(state_runtime_node_api::state::post::Response(tx_hash)))
+    Ok(HttpResponse::Ok().json(state_runtime_node_api::state::post::Response { tx_hash }))
 }
 
 pub async fn handle_key_rotation<D, S, W>(
@@ -149,7 +153,7 @@ where
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(state_runtime_node_api::key_rotation::post::Response(tx_hash)))
+    Ok(HttpResponse::Ok().json(state_runtime_node_api::key_rotation::post::Response { tx_hash }))
 }
 
 /// Fetch events from blockchain nodes manually, and then get the state data from enclave.
@@ -170,7 +174,7 @@ where
 
     let state = server
         .dispatcher
-        .get_state(req.encrypted_req.clone(), GET_STATE_CMD)
+        .get_state(req.ciphertext.clone(), GET_STATE_CMD)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().json(state_runtime_node_api::state::get::Response { state }))
@@ -184,12 +188,16 @@ where
     S: Sender,
     W: Watcher,
 {
-    let pub_key = server
+    let enclave_encryption_key = server
         .dispatcher
         .get_encrypting_key(GET_ENCRYPTING_KEY_CMD)
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(state_runtime_node_api::encrypting_key::get::Response(pub_key)))
+    Ok(
+        HttpResponse::Ok().json(state_runtime_node_api::encryption_key::get::Response {
+            enclave_encryption_key,
+        }),
+    )
 }
 
 pub async fn handle_start_sync_bc<D, S, W>(
@@ -231,10 +239,10 @@ where
 {
     debug!("Starting set a contract address...");
 
-    debug!("Contract address: {:?}", &req.contract_addr);
+    debug!("Contract address: {:?}", &req.contract_address);
     server
         .dispatcher
-        .set_contract_addr(&req.contract_addr, &server.abi_path)
+        .set_contract_addr(&req.contract_address, &server.abi_path)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().finish())
@@ -251,7 +259,7 @@ where
 {
     server
         .dispatcher
-        .register_notification(req.encrypted_req.clone(), REGISTER_NOTIFICATION_CMD)
+        .register_notification(req.ciphertext.clone(), REGISTER_NOTIFICATION_CMD)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().finish())
@@ -276,14 +284,17 @@ where
         .register_report(
             sender_address,
             DEFAULT_GAS,
-            &req.contract_addr,
+            &req.contract_address,
             &server.abi_path,
             SEND_REGISTER_REPORT_CMD,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(HttpResponse::Ok().json(state_runtime_node_api::register_report::post::Response(tx_hash)))
+    Ok(
+        HttpResponse::Ok()
+            .json(state_runtime_node_api::register_report::post::Response { tx_hash }),
+    )
 }
 
 #[cfg(feature = "backup-enable")]
