@@ -41,7 +41,8 @@ async fn test_deploy_post() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response = test::read_body_json(resp).await;
+    let contract_addr: state_runtime_node_api::deploy::post::Response =
+        test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_addr);
 }
 
@@ -85,8 +86,9 @@ async fn test_multiple_messages() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response = test::read_body_json(resp).await;
-    println!("contract address: {:?}", contract_addr.0);
+    let contract_addr: state_runtime_node_api::deploy::post::Response =
+        test::read_body_json(resp).await;
+    println!("contract address: {:?}", contract_addr.contract_address);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/encrypting_key")
@@ -95,8 +97,13 @@ async fn test_multiple_messages() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key =
-        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+    let enc_key = verify_encrypting_key(
+        enc_key_resp.enclave_encryption_key,
+        &abi_path,
+        &eth_url,
+        &contract_addr.contract_address,
+    )
+    .await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -189,8 +196,9 @@ async fn test_skip_invalid_event() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response = test::read_body_json(resp).await;
-    println!("contract address: {:?}", contract_addr.0);
+    let contract_addr: state_runtime_node_api::deploy::post::Response =
+        test::read_body_json(resp).await;
+    println!("contract address: {:?}", contract_addr.contract_address);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/start_sync_bc")
@@ -205,8 +213,13 @@ async fn test_skip_invalid_event() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key =
-        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+    let enc_key = verify_encrypting_key(
+        enc_key_resp.enclave_encryption_key,
+        &abi_path,
+        &eth_url,
+        &contract_addr.contract_address,
+    )
+    .await;
 
     let init_100_req = init_100_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
@@ -343,8 +356,9 @@ async fn test_node_recovery() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response = test::read_body_json(resp).await;
-    println!("contract address: {:?}", contract_addr.0);
+    let contract_addr: state_runtime_node_api::deploy::post::Response =
+        test::read_body_json(resp).await;
+    println!("contract address: {:?}", contract_addr.contract_address);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/start_sync_bc")
@@ -359,8 +373,13 @@ async fn test_node_recovery() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key =
-        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+    let enc_key = verify_encrypting_key(
+        enc_key_resp.enclave_encryption_key,
+        &abi_path,
+        &eth_url,
+        &contract_addr.contract_address,
+    )
+    .await;
 
     let init_100_req = init_100_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()
@@ -403,7 +422,7 @@ async fn test_node_recovery() {
     let req = test::TestRequest::get()
         .uri("/api/v1/set_contract_address")
         .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_addr: contract_addr.0.clone(),
+            contract_address: contract_addr.contract_address.clone(),
         })
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
@@ -412,7 +431,7 @@ async fn test_node_recovery() {
     let req = test::TestRequest::post()
         .uri("/api/v1/register_report")
         .set_json(&state_runtime_node_api::register_report::post::Request {
-            contract_addr: contract_addr.0.clone(),
+            contract_address: contract_addr.contract_address.clone(),
         })
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
@@ -425,8 +444,13 @@ async fn test_node_recovery() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key =
-        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+    let enc_key = verify_encrypting_key(
+        enc_key_resp.enclave_encryption_key,
+        &abi_path,
+        &eth_url,
+        &contract_addr.contract_address,
+    )
+    .await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -531,8 +555,9 @@ async fn test_join_group_then_handshake() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app1, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response = test::read_body_json(resp).await;
-    println!("contract address: {:?}", contract_addr.0);
+    let contract_addr: state_runtime_node_api::deploy::post::Response =
+        test::read_body_json(resp).await;
+    println!("contract address: {:?}", contract_addr.contract_address);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/start_sync_bc")
@@ -547,7 +572,7 @@ async fn test_join_group_then_handshake() {
     let req = test::TestRequest::get()
         .uri("/api/v1/set_contract_address")
         .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_addr: contract_addr.0.clone(),
+            contract_address: contract_addr.contract_address.clone(),
         })
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
@@ -562,7 +587,7 @@ async fn test_join_group_then_handshake() {
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
         .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_addr: contract_addr.0.clone(),
+            contract_address: contract_addr.contract_address.clone(),
         })
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
@@ -576,8 +601,13 @@ async fn test_join_group_then_handshake() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key =
-        verify_encrypting_key(enc_key_resp.0, &abi_path, &eth_url, &contract_addr.0).await;
+    let enc_key = verify_encrypting_key(
+        enc_key_resp.enclave_encryption_key,
+        &abi_path,
+        &eth_url,
+        &contract_addr.contract_address,
+    )
+    .await;
 
     let init_100_req = init_100_req(&mut csprng, &enc_key);
     let req = test::TestRequest::post()

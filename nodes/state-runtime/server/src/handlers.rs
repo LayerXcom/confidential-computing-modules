@@ -194,7 +194,7 @@ where
         .map_err(|e| ServerError::from(e))?;
 
     Ok(
-        HttpResponse::Ok().json(state_runtime_node_api::encryption_key::get::Response {
+        HttpResponse::Ok().json(state_runtime_node_api::encrypting_key::get::Response {
             enclave_encryption_key,
         }),
     )
