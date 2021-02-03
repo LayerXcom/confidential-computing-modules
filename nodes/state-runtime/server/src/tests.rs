@@ -322,8 +322,8 @@ async fn test_node_recovery() {
                 web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/set_contract_addr",
-                web::get().to(handle_set_contract_addr::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/set_contract_address",
+                web::get().to(handle_set_contract_address::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
@@ -401,7 +401,7 @@ async fn test_node_recovery() {
     my_turn();
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_addr")
+        .uri("/api/v1/set_contract_address")
         .set_json(&state_runtime_node_api::contract_addr::post::Request {
             contract_addr: contract_addr.0.clone(),
         })
@@ -512,8 +512,8 @@ async fn test_join_group_then_handshake() {
                 web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/set_contract_addr",
-                web::get().to(handle_set_contract_addr::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/set_contract_address",
+                web::get().to(handle_set_contract_address::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/key_rotation",
@@ -545,7 +545,7 @@ async fn test_join_group_then_handshake() {
     other_turn();
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_addr")
+        .uri("/api/v1/set_contract_address")
         .set_json(&state_runtime_node_api::contract_addr::post::Request {
             contract_addr: contract_addr.0.clone(),
         })

@@ -92,7 +92,7 @@ async fn test_integration_eth_construct() {
         .await
         .unwrap();
     dispatcher
-        .set_contract_addr(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -201,7 +201,7 @@ async fn test_auto_notification() {
         .await
         .unwrap();
     dispatcher
-        .set_contract_addr(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -340,7 +340,7 @@ async fn test_integration_eth_transfer() {
         .await
         .unwrap();
     dispatcher
-        .set_contract_addr(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -504,7 +504,7 @@ async fn test_key_rotation() {
         .await
         .unwrap();
     dispatcher
-        .set_contract_addr(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -621,7 +621,7 @@ async fn test_integration_eth_approve() {
         .await
         .unwrap();
     dispatcher
-        .set_contract_addr(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -772,7 +772,7 @@ async fn test_integration_eth_transfer_from() {
         .await
         .unwrap();
     dispatcher
-        .set_contract_addr(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -1106,7 +1106,7 @@ async fn test_integration_eth_mint() {
         .await
         .unwrap();
     dispatcher
-        .set_contract_addr(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -1237,7 +1237,7 @@ async fn test_integration_eth_burn() {
         .await
         .unwrap();
     dispatcher
-        .set_contract_addr(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);

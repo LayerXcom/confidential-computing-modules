@@ -37,7 +37,7 @@ where
     debug!("Contract address: {:?}", &contract_address);
     server
         .dispatcher
-        .set_contract_addr(&contract_address, &server.abi_path)
+        .set_contract_address(&contract_address, &server.abi_path)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(
@@ -228,7 +228,7 @@ where
     Ok(HttpResponse::Ok().finish())
 }
 
-pub async fn handle_set_contract_addr<D, S, W>(
+pub async fn handle_set_contract_address<D, S, W>(
     server: web::Data<Arc<Server<D, S, W>>>,
     req: web::Json<state_runtime_node_api::contract_addr::post::Request>,
 ) -> Result<HttpResponse>
@@ -242,7 +242,7 @@ where
     debug!("Contract address: {:?}", &req.contract_address);
     server
         .dispatcher
-        .set_contract_addr(&req.contract_address, &server.abi_path)
+        .set_contract_address(&req.contract_address, &server.abi_path)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Ok().finish())

@@ -51,7 +51,7 @@ where
         Ok(Dispatcher { inner })
     }
 
-    pub fn set_contract_addr<P: AsRef<Path> + Copy>(
+    pub fn set_contract_address<P: AsRef<Path> + Copy>(
         &self,
         contract_addr: &str,
         abi_path: P,
@@ -114,7 +114,7 @@ where
         abi_path: P,
         ecall_cmd: u32,
     ) -> Result<H256> {
-        self.set_contract_addr(contract_addr, abi_path)?;
+        self.set_contract_address(contract_addr, abi_path)?;
 
         let inner = self.inner.read();
         let eid = inner.deployer.get_enclave_id();
@@ -159,7 +159,7 @@ where
         ecall_cmd: u32,
         method: &str,
     ) -> Result<H256> {
-        self.set_contract_addr(contract_addr, abi_path)?;
+        self.set_contract_address(contract_addr, abi_path)?;
 
         let inner = self.inner.read();
         let eid = inner.deployer.get_enclave_id();

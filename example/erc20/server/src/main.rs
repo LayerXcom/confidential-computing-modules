@@ -52,8 +52,8 @@ async fn main() -> io::Result<()> {
                 web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/set_contract_addr",
-                web::get().to(handle_set_contract_addr::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/set_contract_address",
+                web::get().to(handle_set_contract_address::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/register_notification",
