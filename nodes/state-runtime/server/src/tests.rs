@@ -41,9 +41,9 @@ async fn test_deploy_post() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response =
+    let contract_address: state_runtime_node_api::deploy::post::Response =
         test::read_body_json(resp).await;
-    println!("contract address: {:?}", contract_addr);
+    println!("contract address: {:?}", contract_address);
 }
 
 #[actix_rt::test]
@@ -86,9 +86,9 @@ async fn test_multiple_messages() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response =
+    let contract_address: state_runtime_node_api::deploy::post::Response =
         test::read_body_json(resp).await;
-    println!("contract address: {:?}", contract_addr.contract_address);
+    println!("contract address: {:?}", contract_address.contract_address);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/encrypting_key")
@@ -101,7 +101,7 @@ async fn test_multiple_messages() {
         enc_key_resp.enclave_encryption_key,
         &abi_path,
         &eth_url,
-        &contract_addr.contract_address,
+        &contract_address.contract_address,
     )
     .await;
 
@@ -196,9 +196,9 @@ async fn test_skip_invalid_event() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response =
+    let contract_address: state_runtime_node_api::deploy::post::Response =
         test::read_body_json(resp).await;
-    println!("contract address: {:?}", contract_addr.contract_address);
+    println!("contract address: {:?}", contract_address.contract_address);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/start_sync_bc")
@@ -217,7 +217,7 @@ async fn test_skip_invalid_event() {
         enc_key_resp.enclave_encryption_key,
         &abi_path,
         &eth_url,
-        &contract_addr.contract_address,
+        &contract_address.contract_address,
     )
     .await;
 
@@ -356,9 +356,9 @@ async fn test_node_recovery() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response =
+    let contract_address: state_runtime_node_api::deploy::post::Response =
         test::read_body_json(resp).await;
-    println!("contract address: {:?}", contract_addr.contract_address);
+    println!("contract address: {:?}", contract_address.contract_address);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/start_sync_bc")
@@ -377,7 +377,7 @@ async fn test_node_recovery() {
         enc_key_resp.enclave_encryption_key,
         &abi_path,
         &eth_url,
-        &contract_addr.contract_address,
+        &contract_address.contract_address,
     )
     .await;
 
@@ -422,7 +422,7 @@ async fn test_node_recovery() {
     let req = test::TestRequest::get()
         .uri("/api/v1/set_contract_address")
         .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_addr.contract_address.clone(),
+            contract_address: contract_address.contract_address.clone(),
         })
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
@@ -431,7 +431,7 @@ async fn test_node_recovery() {
     let req = test::TestRequest::post()
         .uri("/api/v1/register_report")
         .set_json(&state_runtime_node_api::register_report::post::Request {
-            contract_address: contract_addr.contract_address.clone(),
+            contract_address: contract_address.contract_address.clone(),
         })
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
@@ -448,7 +448,7 @@ async fn test_node_recovery() {
         enc_key_resp.enclave_encryption_key,
         &abi_path,
         &eth_url,
-        &contract_addr.contract_address,
+        &contract_address.contract_address,
     )
     .await;
 
@@ -555,9 +555,9 @@ async fn test_join_group_then_handshake() {
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app1, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let contract_addr: state_runtime_node_api::deploy::post::Response =
+    let contract_address: state_runtime_node_api::deploy::post::Response =
         test::read_body_json(resp).await;
-    println!("contract address: {:?}", contract_addr.contract_address);
+    println!("contract address: {:?}", contract_address.contract_address);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/start_sync_bc")
@@ -572,7 +572,7 @@ async fn test_join_group_then_handshake() {
     let req = test::TestRequest::get()
         .uri("/api/v1/set_contract_address")
         .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_addr.contract_address.clone(),
+            contract_address: contract_address.contract_address.clone(),
         })
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
@@ -587,7 +587,7 @@ async fn test_join_group_then_handshake() {
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
         .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_address: contract_addr.contract_address.clone(),
+            contract_address: contract_address.contract_address.clone(),
         })
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
@@ -605,7 +605,7 @@ async fn test_join_group_then_handshake() {
         enc_key_resp.enclave_encryption_key,
         &abi_path,
         &eth_url,
-        &contract_addr.contract_address,
+        &contract_address.contract_address,
     )
     .await;
 
@@ -677,13 +677,13 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
     encrypting_key: SodiumPubKey,
     abi_path: P,
     eth_url: &str,
-    contract_addr: &str,
+    contract_address: &str,
 ) -> SodiumPubKey {
     let transport = Http::new(eth_url).unwrap();
     let web3 = Web3::new(transport);
     let web3_conn = web3.eth();
 
-    let address = Address::from_str(contract_addr).unwrap();
+    let address = Address::from_str(contract_address).unwrap();
     let f = File::open(abi_path).unwrap();
     let abi = ContractABI::load(BufReader::new(f)).unwrap();
 

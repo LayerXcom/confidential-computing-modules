@@ -135,14 +135,14 @@ where
         },
         "cmd_name": "transfer",
     });
-    let encrypted_transfer_cmd =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&state_runtime_node_api::state::post::Request::new(
-            encrypted_transfer_cmd,
+            ciphertext,
         ))
         .send()?
         .text()?;
@@ -177,14 +177,14 @@ where
         },
         "cmd_name": "approve",
     });
-    let encrypted_approve_cmd =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&state_runtime_node_api::state::post::Request::new(
-            encrypted_approve_cmd,
+            ciphertext,
         ))
         .send()?
         .text()?;
@@ -221,14 +221,14 @@ where
         },
         "cmd_name": "transfer_from",
     });
-    let encrypted_transfer_from_cmd =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&state_runtime_node_api::state::post::Request::new(
-            encrypted_transfer_from_cmd,
+            ciphertext,
         ))
         .send()?
         .text()?;
@@ -263,14 +263,14 @@ where
         },
         "cmd_name": "mint",
     });
-    let encrypted_mint_cmd =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&state_runtime_node_api::state::post::Request::new(
-            encrypted_mint_cmd,
+            ciphertext,
         ))
         .send()?
         .text()?;
@@ -303,14 +303,14 @@ where
         },
         "cmd_name": "burn",
     });
-    let encrypted_burn_cmd =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&state_runtime_node_api::state::post::Request::new(
-            encrypted_burn_cmd,
+            ciphertext,
         ))
         .send()?
         .text()?;
