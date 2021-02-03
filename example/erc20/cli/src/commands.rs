@@ -25,8 +25,8 @@ pub(crate) fn deploy(anonify_url: String) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn join_group(anonify_url: String, contract_addr: String) -> Result<()> {
-    let req = state_runtime_node_api::join_group::post::Request { contract_addr };
+pub(crate) fn join_group(anonify_url: String, contract_address: String) -> Result<()> {
+    let req = state_runtime_node_api::join_group::post::Request { contract_address };
     let res = Client::new()
         .post(&format!("{}/api/v1/join_group", &anonify_url))
         .json(&req)
@@ -37,8 +37,8 @@ pub(crate) fn join_group(anonify_url: String, contract_addr: String) -> Result<(
     Ok(())
 }
 
-pub(crate) fn register_report(anonify_url: String, contract_addr: String) -> Result<()> {
-    let req = state_runtime_node_api::register_report::post::Request { contract_addr };
+pub(crate) fn register_report(anonify_url: String, contract_address: String) -> Result<()> {
+    let req = state_runtime_node_api::register_report::post::Request { contract_address };
     let res = Client::new()
         .post(&format!("{}/api/v1/register_report", &anonify_url))
         .json(&req)
@@ -49,8 +49,8 @@ pub(crate) fn register_report(anonify_url: String, contract_addr: String) -> Res
     Ok(())
 }
 
-pub(crate) fn update_mrenclave(anonify_url: String, contract_addr: String) -> Result<()> {
-    let req = state_runtime_node_api::update_mrenclave::post::Request { contract_addr };
+pub(crate) fn update_mrenclave(anonify_url: String, contract_address: String) -> Result<()> {
+    let req = state_runtime_node_api::update_mrenclave::post::Request { contract_address };
     let res = Client::new()
         .post(&format!("{}/api/v1/update_mrenclave", &anonify_url))
         .json(&req)
@@ -93,13 +93,15 @@ where
         },
         "cmd_name": "construct",
     });
-    let encrypted_req =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&state_runtime_node_api::state::post::Request::new(encrypted_req))
+        .json(&state_runtime_node_api::state::post::Request::new(
+            ciphertext,
+        ))
         .send()?
         .text()?;
 
@@ -133,14 +135,14 @@ where
         },
         "cmd_name": "transfer",
     });
-    let encrypted_transfer_cmd =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&state_runtime_node_api::state::post::Request::new(
-            encrypted_transfer_cmd,
+            ciphertext,
         ))
         .send()?
         .text()?;
@@ -175,13 +177,15 @@ where
         },
         "cmd_name": "approve",
     });
-    let encrypted_approve_cmd =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&state_runtime_node_api::state::post::Request::new(encrypted_approve_cmd))
+        .json(&state_runtime_node_api::state::post::Request::new(
+            ciphertext,
+        ))
         .send()?
         .text()?;
 
@@ -217,14 +221,14 @@ where
         },
         "cmd_name": "transfer_from",
     });
-    let encrypted_transfer_from_cmd =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&state_runtime_node_api::state::post::Request::new(
-            encrypted_transfer_from_cmd,
+            ciphertext,
         ))
         .send()?
         .text()?;
@@ -259,13 +263,15 @@ where
         },
         "cmd_name": "mint",
     });
-    let encrypted_mint_cmd =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&state_runtime_node_api::state::post::Request::new(encrypted_mint_cmd))
+        .json(&state_runtime_node_api::state::post::Request::new(
+            ciphertext,
+        ))
         .send()?
         .text()?;
 
@@ -297,13 +303,15 @@ where
         },
         "cmd_name": "burn",
     });
-    let encrypted_burn_cmd =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&state_runtime_node_api::state::post::Request::new(encrypted_burn_cmd))
+        .json(&state_runtime_node_api::state::post::Request::new(
+            ciphertext,
+        ))
         .send()?
         .text()?;
 
@@ -347,12 +355,14 @@ where
         },
         "state_name": "allowance",
     });
-    let encrypted_req =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
         .get(&format!("{}/api/v1/state", &anonify_url))
-        .json(&state_runtime_node_api::state::get::Request::new(encrypted_req))
+        .json(&state_runtime_node_api::state::get::Request::new(
+            ciphertext,
+        ))
         .send()?
         .text()?;
 
@@ -382,12 +392,14 @@ where
         "runtime_params": {},
         "state_name": "balance_of",
     });
-    let encrypted_req =
+    let ciphertext =
         SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
         .get(&format!("{}/api/v1/state", &anonify_url))
-        .json(&state_runtime_node_api::state::get::Request::new(encrypted_req))
+        .json(&state_runtime_node_api::state::get::Request::new(
+            ciphertext,
+        ))
         .send()?
         .text()?;
 
@@ -404,10 +416,10 @@ pub(crate) fn start_sync_bc(anonify_url: String) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn set_contract_addr(anonify_url: String, contract_addr: String) -> Result<()> {
-    let req = state_runtime_node_api::contract_addr::post::Request::new(contract_addr);
+pub(crate) fn set_contract_address(anonify_url: String, contract_address: String) -> Result<()> {
+    let req = state_runtime_node_api::contract_addr::post::Request::new(contract_address);
     Client::new()
-        .get(&format!("{}/api/v1/set_contract_addr", &anonify_url))
+        .get(&format!("{}/api/v1/set_contract_address", &anonify_url))
         .json(&req)
         .send()?
         .text()?;

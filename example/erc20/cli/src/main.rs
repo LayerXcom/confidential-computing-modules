@@ -318,14 +318,14 @@ fn subcommand_anonify<R, CR>(
         ("start_sync_bc", Some(_)) => {
             commands::start_sync_bc(anonify_url).expect("Failed to start_sync_bc command");
         }
-        ("set_contract_addr", Some(matches)) => {
+        ("set_contract_address", Some(matches)) => {
             let contract_addr = match matches.value_of("contract-addr") {
                 Some(addr) => addr.to_string(),
                 None => default_contract_addr,
             };
 
-            commands::set_contract_addr(anonify_url, contract_addr)
-                .expect("Failed to set_contract_addr command");
+            commands::set_contract_address(anonify_url, contract_addr)
+                .expect("Failed to set_contract_address command");
         }
         _ => {
             term.error(matches.usage()).unwrap();
@@ -533,7 +533,7 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name("start_sync_bc").about("Get state from anonify services."),
         )
         .subcommand(
-            SubCommand::with_name("set_contract_addr")
+            SubCommand::with_name("set_contract_address")
                 .about("Get state from anonify services.")
                 .arg(Arg::with_name("contract-addr").short("c").takes_value(true)),
         )

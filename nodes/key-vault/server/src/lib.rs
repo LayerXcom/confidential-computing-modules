@@ -1,7 +1,6 @@
 use key_vault_host::Dispatcher;
 use sgx_types::sgx_enclave_id_t;
 
-mod api;
 mod error;
 pub mod handlers;
 

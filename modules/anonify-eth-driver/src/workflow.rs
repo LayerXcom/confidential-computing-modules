@@ -120,7 +120,7 @@ pub mod host_input {
     use super::*;
 
     pub struct Command {
-        encrypted_req: SodiumCiphertext,
+        ciphertext: SodiumCiphertext,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
@@ -128,13 +128,13 @@ pub mod host_input {
 
     impl Command {
         pub fn new(
-            encrypted_req: SodiumCiphertext,
+            ciphertext: SodiumCiphertext,
             signer: Address,
             gas: u64,
             ecall_cmd: u32,
         ) -> Self {
             Command {
-                encrypted_req,
+                ciphertext,
                 signer,
                 gas,
                 ecall_cmd,
@@ -149,7 +149,7 @@ pub mod host_input {
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             let host_output = host_output::Command::new(self.signer, self.gas);
 
-            Ok((self.encrypted_req, host_output))
+            Ok((self.ciphertext, host_output))
         }
 
         fn ecall_cmd(&self) -> u32 {
@@ -251,14 +251,14 @@ pub mod host_input {
     }
 
     pub struct RegisterNotification {
-        encrypted_req: SodiumCiphertext,
+        ciphertext: SodiumCiphertext,
         ecall_cmd: u32,
     }
 
     impl RegisterNotification {
-        pub fn new(encrypted_req: SodiumCiphertext, ecall_cmd: u32) -> Self {
+        pub fn new(ciphertext: SodiumCiphertext, ecall_cmd: u32) -> Self {
             RegisterNotification {
-                encrypted_req,
+                ciphertext,
                 ecall_cmd,
             }
         }
@@ -269,7 +269,7 @@ pub mod host_input {
         type HostOutput = host_output::RegisterNotification;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            Ok((self.encrypted_req, Self::HostOutput::default()))
+            Ok((self.ciphertext, Self::HostOutput::default()))
         }
 
         fn ecall_cmd(&self) -> u32 {
@@ -278,14 +278,14 @@ pub mod host_input {
     }
 
     pub struct GetState {
-        encrypted_req: SodiumCiphertext,
+        ciphertext: SodiumCiphertext,
         ecall_cmd: u32,
     }
 
     impl GetState {
-        pub fn new(encrypted_req: SodiumCiphertext, ecall_cmd: u32) -> Self {
+        pub fn new(ciphertext: SodiumCiphertext, ecall_cmd: u32) -> Self {
             GetState {
-                encrypted_req,
+                ciphertext,
                 ecall_cmd,
             }
         }
@@ -296,7 +296,7 @@ pub mod host_input {
         type HostOutput = host_output::GetState;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            Ok((self.encrypted_req, Self::HostOutput::new()))
+            Ok((self.ciphertext, Self::HostOutput::new()))
         }
 
         fn ecall_cmd(&self) -> u32 {

@@ -51,7 +51,7 @@ where
         Ok(Dispatcher { inner })
     }
 
-    pub fn set_contract_addr<P: AsRef<Path> + Copy>(
+    pub fn set_contract_address<P: AsRef<Path> + Copy>(
         &self,
         contract_addr: &str,
         abi_path: P,
@@ -114,7 +114,7 @@ where
         abi_path: P,
         ecall_cmd: u32,
     ) -> Result<H256> {
-        self.set_contract_addr(contract_addr, abi_path)?;
+        self.set_contract_address(contract_addr, abi_path)?;
 
         let inner = self.inner.read();
         let eid = inner.deployer.get_enclave_id();
@@ -159,7 +159,7 @@ where
         ecall_cmd: u32,
         method: &str,
     ) -> Result<H256> {
-        self.set_contract_addr(contract_addr, abi_path)?;
+        self.set_contract_address(contract_addr, abi_path)?;
 
         let inner = self.inner.read();
         let eid = inner.deployer.get_enclave_id();
@@ -178,13 +178,13 @@ where
 
     pub async fn send_command(
         &self,
-        encrypted_req: SodiumCiphertext,
+        ciphertext: SodiumCiphertext,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
     ) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Command::new(encrypted_req, signer, gas, ecall_cmd);
+        let input = host_input::Command::new(ciphertext, signer, gas, ecall_cmd);
         let eid = inner.deployer.get_enclave_id();
         let host_output = CommandWorkflow::exec(input, eid)?;
 
@@ -196,11 +196,11 @@ where
 
     pub fn get_state(
         &self,
-        encrypted_req: SodiumCiphertext,
+        ciphertext: SodiumCiphertext,
         ecall_cmd: u32,
     ) -> Result<serde_json::Value> {
         let eid = self.inner.read().deployer.get_enclave_id();
-        let input = host_input::GetState::new(encrypted_req, ecall_cmd);
+        let input = host_input::GetState::new(ciphertext, ecall_cmd);
         let state = GetStateWorkflow::exec(input, eid)?
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
@@ -261,11 +261,11 @@ where
 
     pub fn register_notification(
         &self,
-        encrypted_req: SodiumCiphertext,
+        ciphertext: SodiumCiphertext,
         ecall_cmd: u32,
     ) -> Result<()> {
         let inner = self.inner.read();
-        let input = host_input::RegisterNotification::new(encrypted_req, ecall_cmd);
+        let input = host_input::RegisterNotification::new(ciphertext, ecall_cmd);
         let eid = inner.deployer.get_enclave_id();
         let _host_output = RegisterNotificationWorkflow::exec(input, eid)?;
 
