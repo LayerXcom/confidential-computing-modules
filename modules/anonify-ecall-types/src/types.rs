@@ -312,19 +312,19 @@ pub mod output {
 
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
-    pub struct ReturnEncryptingKey {
-        encrypting_key: SodiumPubKey,
+    pub struct ReturnEncryptionKey {
+        enclave_encryption_key: SodiumPubKey,
     }
 
-    impl EcallOutput for ReturnEncryptingKey {}
+    impl EcallOutput for ReturnEncryptionKey {}
 
-    impl ReturnEncryptingKey {
-        pub fn new(encrypting_key: SodiumPubKey) -> Self {
-            ReturnEncryptingKey { encrypting_key }
+    impl ReturnEncryptionKey {
+        pub fn new(enclave_encryption_key: SodiumPubKey) -> Self {
+            ReturnEncryptionKey { enclave_encryption_key }
         }
 
-        pub fn encrypting_key(self) -> SodiumPubKey {
-            self.encrypting_key
+        pub fn enclave_encryption_key(self) -> SodiumPubKey {
+            self.enclave_encryption_key
         }
     }
 

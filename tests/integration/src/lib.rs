@@ -28,12 +28,12 @@ const CONFIRMATIONS: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
 
-pub async fn get_encrypting_key(
+pub async fn get_enclave_encryption_key(
     contract_addr: &str,
     dispatcher: &Dispatcher<EthDeployer, EthSender, EventWatcher>,
 ) -> SodiumPubKey {
-    let encrypting_key = dispatcher
-        .get_encrypting_key(GET_ENCRYPTING_KEY_CMD)
+    let enclave_encryption_key = dispatcher
+        .get_enclave_encryption_key(GET_ENCLAVE_ENCRYPTION_KEY_CMD)
         .unwrap();
     let transport = Http::new(ETH_URL).unwrap();
     let web3 = Web3::new(transport);
@@ -43,10 +43,10 @@ pub async fn get_encrypting_key(
     let f = File::open(ABI_PATH).unwrap();
     let abi = ContractABI::load(BufReader::new(f)).unwrap();
 
-    let query_encrypting_key: Vec<u8> = Contract::new(web3_conn, address, abi)
+    let query_enclave_encryption_key: Vec<u8> = Contract::new(web3_conn, address, abi)
         .query(
-            "getEncryptingKey",
-            encrypting_key.to_bytes(),
+            "getEncryptionKey",
+            enclave_encryption_key.to_bytes(),
             None,
             Options::default(),
             None,
@@ -55,10 +55,10 @@ pub async fn get_encrypting_key(
         .unwrap();
 
     assert_eq!(
-        encrypting_key,
-        SodiumPubKey::from_bytes(&query_encrypting_key).unwrap()
+        enclave_encryption_key,
+        SodiumPubKey::from_bytes(&query_enclave_encryption_key).unwrap()
     );
-    encrypting_key
+    enclave_encryption_key
 }
 
 #[actix_rt::test]
@@ -105,7 +105,7 @@ async fn test_integration_eth_construct() {
 
     // Init state
     let total_supply: u64 = 100;
-    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -213,7 +213,7 @@ async fn test_auto_notification() {
         .unwrap();
 
     // Init state
-    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
     let total_supply: u64 = 100;
     let req = json!({
         "access_policy": my_access_policy.clone(),
@@ -353,7 +353,7 @@ async fn test_integration_eth_transfer() {
 
     // Init state
     let total_supply: u64 = 100;
-    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
 
     let req = json!({
         "access_policy": my_access_policy.clone(),
@@ -530,7 +530,7 @@ async fn test_key_rotation() {
 
     // init state
     let total_supply: u64 = 100;
-    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -634,7 +634,7 @@ async fn test_integration_eth_approve() {
 
     // Init state
     let total_supply = 100;
-    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -785,7 +785,7 @@ async fn test_integration_eth_transfer_from() {
 
     // Init state
     let total_supply: u64 = 100;
-    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -1119,7 +1119,7 @@ async fn test_integration_eth_mint() {
 
     // Init state
     let total_supply = 100;
-    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -1250,7 +1250,7 @@ async fn test_integration_eth_burn() {
 
     // Init state
     let total_supply = 100;
-    let pubkey = get_encrypting_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {

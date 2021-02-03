@@ -1,5 +1,5 @@
 use crate::{
-    error::Result, group_key::GroupKey, identity_key::EnclaveIdentityKey, kvs::EnclaveDB,
+    error::Result, group_key::GroupKey, enclave_key::EnclaveKey, kvs::EnclaveDB,
     notify::Notifier,
 };
 use anonify_ecall_types::*;
@@ -37,7 +37,7 @@ pub struct AnonifyEnclaveContext {
     sub_key: String,
     key_vault_endpoint: String,
     spid: String,
-    identity_key: EnclaveIdentityKey,
+    enclave_key: EnclaveKey,
     db: EnclaveDB,
     notifier: Notifier,
     group_key: Arc<SgxRwLock<GroupKey>>,
@@ -155,26 +155,26 @@ impl NotificationOps for AnonifyEnclaveContext {
     }
 }
 
-impl IdentityKeyOps for AnonifyEnclaveContext {
-    /// Generate a signature using enclave's identity key.
+impl EnclaveKeyOps for AnonifyEnclaveContext {
+    /// Generate a signature using enclave signing key.
     /// This signature is used to verify enclave's program dependencies and
     /// should be verified in the public available place such as smart contract on blockchain.
     fn sign(&self, msg: &[u8]) -> anyhow::Result<(secp256k1::Signature, secp256k1::RecoveryId)> {
-        self.identity_key.sign(msg).map_err(Into::into)
+        self.enclave_key.sign(msg).map_err(Into::into)
     }
 
     fn decrypt(&self, ciphertext: SodiumCiphertext) -> anyhow::Result<Vec<u8>> {
-        self.identity_key.decrypt(ciphertext).map_err(Into::into)
+        self.enclave_key.decrypt(ciphertext).map_err(Into::into)
     }
 
-    fn encrypting_key(&self) -> SodiumPubKey {
-        self.identity_key.encrypting_key()
+    fn enclave_encryption_key(&self) -> SodiumPubKey {
+        self.enclave_key.enclave_encryption_key()
     }
 }
 
 impl QuoteGetter for AnonifyEnclaveContext {
     fn quote(&self) -> anyhow::Result<EncodedQuote> {
-        let report_data = &self.identity_key.report_data()?;
+        let report_data = &self.enclave_key.report_data()?;
         QuoteTarget::new()?
             .set_enclave_report(&report_data)?
             .create_quote(&self.spid)
@@ -231,7 +231,7 @@ impl AnonifyEnclaveContext {
     pub fn new(version: usize) -> Result<Self> {
         let mut rng = SgxRng::new()?;
 
-        let identity_key = EnclaveIdentityKey::new(&mut rng)?;
+        let enclave_key = EnclaveKey::new(&mut rng)?;
         let db = EnclaveDB::new();
 
         let source = match env::var("AUDITOR_ENDPOINT") {
@@ -279,7 +279,7 @@ impl AnonifyEnclaveContext {
 
         Ok(AnonifyEnclaveContext {
             spid,
-            identity_key,
+            enclave_key,
             db,
             notifier,
             group_key,

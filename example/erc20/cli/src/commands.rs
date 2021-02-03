@@ -61,9 +61,9 @@ pub(crate) fn update_mrenclave(anonify_url: String, contract_address: String) ->
     Ok(())
 }
 
-pub(crate) fn get_encrypting_key(anonify_url: String) -> Result<SodiumPubKey> {
+pub(crate) fn get_enclave_encryption_key(anonify_url: String) -> Result<SodiumPubKey> {
     Client::new()
-        .get(&format!("{}/api/v1/encrypting_key", &anonify_url))
+        .get(&format!("{}/api/v1/enclave_encryption_key", &anonify_url))
         .send()?
         .json()
         .map_err(Into::into)
@@ -75,7 +75,7 @@ pub(crate) fn init_state<R, CR>(
     anonify_url: String,
     index: usize,
     total_supply: u64,
-    encrypting_key: &SodiumPubKey,
+    enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
@@ -94,7 +94,7 @@ where
         "cmd_name": "construct",
     });
     let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -116,7 +116,7 @@ pub(crate) fn transfer<R, CR>(
     index: usize,
     recipient: AccountId,
     amount: u64,
-    encrypting_key: &SodiumPubKey,
+    enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
@@ -136,7 +136,7 @@ where
         "cmd_name": "transfer",
     });
     let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -158,7 +158,7 @@ pub(crate) fn approve<R, CR>(
     index: usize,
     spender: AccountId,
     amount: u64,
-    encrypting_key: &SodiumPubKey,
+    enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
@@ -178,7 +178,7 @@ where
         "cmd_name": "approve",
     });
     let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -201,7 +201,7 @@ pub(crate) fn transfer_from<R, CR>(
     owner: AccountId,
     recipient: AccountId,
     amount: u64,
-    encrypting_key: &SodiumPubKey,
+    enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
@@ -222,7 +222,7 @@ where
         "cmd_name": "transfer_from",
     });
     let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -244,7 +244,7 @@ pub(crate) fn mint<R, CR>(
     index: usize,
     recipient: AccountId,
     amount: u64,
-    encrypting_key: &SodiumPubKey,
+    enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
@@ -264,7 +264,7 @@ where
         "cmd_name": "mint",
     });
     let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -285,7 +285,7 @@ pub(crate) fn burn<R, CR>(
     anonify_url: String,
     index: usize,
     amount: u64,
-    encrypting_key: &SodiumPubKey,
+    enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
@@ -304,7 +304,7 @@ where
         "cmd_name": "burn",
     });
     let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
@@ -336,7 +336,7 @@ pub(crate) fn allowance<R, CR>(
     anonify_url: String,
     index: usize,
     spender: AccountId,
-    encrypting_key: &SodiumPubKey,
+    enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
@@ -356,7 +356,7 @@ where
         "state_name": "allowance",
     });
     let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
         .get(&format!("{}/api/v1/state", &anonify_url))
@@ -375,7 +375,7 @@ pub(crate) fn balance_of<R, CR>(
     root_dir: PathBuf,
     anonify_url: String,
     index: usize,
-    encrypting_key: &SodiumPubKey,
+    enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
@@ -393,7 +393,7 @@ where
         "state_name": "balance_of",
     });
     let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &encrypting_key, serde_json::to_vec(&req).unwrap())
+        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
             .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
         .get(&format!("{}/api/v1/state", &anonify_url))

@@ -91,7 +91,7 @@ pub mod update_mrenclave {
     }
 }
 
-pub mod encrypting_key {
+pub mod enclave_encryption_key {
     pub mod get {
         use super::super::*;
 

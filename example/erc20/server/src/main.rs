@@ -61,8 +61,8 @@ async fn main() -> io::Result<()> {
                     .to(handle_register_notification::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/encrypting_key",
-                web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/enclave_encryption_key",
+                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/register_report",

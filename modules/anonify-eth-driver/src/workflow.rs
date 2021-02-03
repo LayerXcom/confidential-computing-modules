@@ -86,13 +86,13 @@ impl HostEngine for InsertHandshakeWorkflow {
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
 }
 
-pub struct GetEncryptingKeyWorkflow;
+pub struct GetEncryptionKeyWorkflow;
 
-impl HostEngine for GetEncryptingKeyWorkflow {
-    type HI = host_input::GetEncryptingKey;
+impl HostEngine for GetEncryptionKeyWorkflow {
+    type HI = host_input::GetEncryptionKey;
     type EI = input::Empty;
-    type EO = output::ReturnEncryptingKey;
-    type HO = host_output::ReturnEncryptingKey;
+    type EO = output::ReturnEncryptionKey;
+    type HO = host_output::ReturnEncryptionKey;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
 }
 
@@ -362,19 +362,19 @@ pub mod host_input {
         }
     }
 
-    pub struct GetEncryptingKey {
+    pub struct GetEncryptionKey {
         ecall_cmd: u32,
     }
 
-    impl GetEncryptingKey {
+    impl GetEncryptionKey {
         pub fn new(ecall_cmd: u32) -> Self {
-            GetEncryptingKey { ecall_cmd }
+            GetEncryptionKey { ecall_cmd }
         }
     }
 
-    impl HostInput for GetEncryptingKey {
+    impl HostInput for GetEncryptionKey {
         type EcallInput = input::Empty;
-        type HostOutput = host_output::ReturnEncryptingKey;
+        type HostOutput = host_output::ReturnEncryptionKey;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             Ok((Self::EcallInput::default(), Self::HostOutput::new()))
@@ -597,12 +597,12 @@ pub mod host_output {
         type EcallOutput = output::Empty;
     }
 
-    pub struct ReturnEncryptingKey {
-        pub ecall_output: Option<output::ReturnEncryptingKey>,
+    pub struct ReturnEncryptionKey {
+        pub ecall_output: Option<output::ReturnEncryptionKey>,
     }
 
-    impl HostOutput for ReturnEncryptingKey {
-        type EcallOutput = output::ReturnEncryptingKey;
+    impl HostOutput for ReturnEncryptionKey {
+        type EcallOutput = output::ReturnEncryptionKey;
 
         fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
             self.ecall_output = Some(output);
@@ -611,9 +611,9 @@ pub mod host_output {
         }
     }
 
-    impl ReturnEncryptingKey {
+    impl ReturnEncryptionKey {
         pub fn new() -> Self {
-            ReturnEncryptingKey { ecall_output: None }
+            ReturnEncryptionKey { ecall_output: None }
         }
     }
 

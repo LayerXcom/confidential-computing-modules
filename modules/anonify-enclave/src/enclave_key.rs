@@ -14,36 +14,36 @@ use sgx_types::sgx_report_data_t;
 use std::prelude::v1::Vec;
 
 const HASHED_PUBKEY_SIZE: usize = 20;
-const ENCRYPTING_KEY_SIZE: usize = SODIUM_PUBLIC_KEY_SIZE;
-const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCRYPTING_KEY_SIZE;
+const ENCLAVE_ENCRYPTION_KEY_SIZE: usize = SODIUM_PUBLIC_KEY_SIZE;
+const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCLAVE_ENCRYPTION_KEY_SIZE;
 const REPORT_DATA_SIZE: usize = 64;
 
 #[derive(Debug, Clone, Default)]
-pub struct EncryptingKeyGetter;
+pub struct EncryptionKeyGetter;
 
-impl EnclaveEngine for EncryptingKeyGetter {
+impl EnclaveEngine for EncryptionKeyGetter {
     type EI = input::Empty;
-    type EO = output::ReturnEncryptingKey;
+    type EO = output::ReturnEncryptionKey;
 
     fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let encrypting_key = enclave_context.encrypting_key();
+        let enclave_encryption_key = enclave_context.enclave_encryption_key();
 
-        Ok(output::ReturnEncryptingKey::new(encrypting_key))
+        Ok(output::ReturnEncryptionKey::new(enclave_encryption_key))
     }
 }
 
-/// Enclave Identity Key
+/// Enclave Key
 #[derive(Debug, Clone, Default, PartialEq)]
-pub struct EnclaveIdentityKey {
+pub struct EnclaveKey {
     signing_privkey: SecretKey,
-    decrypting_privkey: SodiumPrivateKey,
+    decryption_privkey: SodiumPrivateKey,
 }
 
-impl EnclaveIdentityKey {
+impl EnclaveKey {
     pub fn new<CR>(csprng: &mut CR) -> Result<Self>
     where
         CR: RngCore + CryptoRng,
@@ -57,11 +57,11 @@ impl EnclaveIdentityKey {
             }
         };
 
-        let decrypting_privkey = SodiumPrivateKey::from_random(csprng)?;
+        let decryption_privkey = SodiumPrivateKey::from_random(csprng)?;
 
-        Ok(EnclaveIdentityKey {
+        Ok(EnclaveKey {
             signing_privkey,
-            decrypting_privkey,
+            decryption_privkey,
         })
     }
 
@@ -73,7 +73,7 @@ impl EnclaveIdentityKey {
 
     pub fn decrypt(&self, ciphertext: SodiumCiphertext) -> Result<Vec<u8>> {
         ciphertext
-            .decrypt(&self.decrypting_privkey)
+            .decrypt(&self.decryption_privkey)
             .map_err(Into::into)
     }
 
@@ -81,23 +81,23 @@ impl EnclaveIdentityKey {
         PublicKey::from_secret_key(&self.signing_privkey)
     }
 
-    pub fn encrypting_key(&self) -> SodiumPubKey {
-        self.decrypting_privkey.public_key()
+    pub fn enclave_encryption_key(&self) -> SodiumPubKey {
+        self.decryption_privkey.public_key()
     }
 
     /// Generate a value of REPORTDATA field in REPORT struct.
-    /// REPORTDATA consists of a hashed signing public key and a encrypting public key.
+    /// REPORTDATA consists of a hashed signing public key and a encryption public key.
     /// The hashed signing public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
-    /// because this enclave identity key is binding to enclave's code.
-    /// The encrypting public key is used for secure communication between clients and TEE.
+    /// because this enclave key is binding to enclave's code.
+    /// The encryption public key is used for secure communication between clients and TEE.
     /// 20 bytes: hashed signing public key
-    /// 32 bytes: encrypting public key
+    /// 32 bytes: encryption public key
     /// 11 bytes: zero padding
     pub fn report_data(&self) -> Result<sgx_report_data_t> {
         let mut report_data = [0u8; REPORT_DATA_SIZE];
         report_data[..HASHED_PUBKEY_SIZE].copy_from_slice(&self.verifying_key_into_array()[..]);
         report_data[HASHED_PUBKEY_SIZE..FILLED_REPORT_DATA_SIZE]
-            .copy_from_slice(&self.encode_encrypting_key()[..]);
+            .copy_from_slice(&self.encode_enclave_encryption_key()[..]);
 
         Ok(sgx_report_data_t { d: report_data })
     }
@@ -111,7 +111,7 @@ impl EnclaveIdentityKey {
         res
     }
 
-    fn encode_encrypting_key(&self) -> [u8; ENCRYPTING_KEY_SIZE] {
-        self.encrypting_key().to_bytes()
+    fn encode_enclave_encryption_key(&self) -> [u8; ENCLAVE_ENCRYPTION_KEY_SIZE] {
+        self.enclave_encryption_key().to_bytes()
     }
 }
