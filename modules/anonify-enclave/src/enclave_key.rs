@@ -40,7 +40,7 @@ impl EnclaveEngine for EncryptingKeyGetter {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct EnclaveKey {
     signing_privkey: SecretKey,
-    decrypting_privkey: SodiumPrivateKey,
+    decryption_privkey: SodiumPrivateKey,
 }
 
 impl EnclaveKey {
@@ -57,11 +57,11 @@ impl EnclaveKey {
             }
         };
 
-        let decrypting_privkey = SodiumPrivateKey::from_random(csprng)?;
+        let decryption_privkey = SodiumPrivateKey::from_random(csprng)?;
 
         Ok(EnclaveKey {
             signing_privkey,
-            decrypting_privkey,
+            decryption_privkey,
         })
     }
 
@@ -73,7 +73,7 @@ impl EnclaveKey {
 
     pub fn decrypt(&self, ciphertext: SodiumCiphertext) -> Result<Vec<u8>> {
         ciphertext
-            .decrypt(&self.decrypting_privkey)
+            .decrypt(&self.decryption_privkey)
             .map_err(Into::into)
     }
 
@@ -82,7 +82,7 @@ impl EnclaveKey {
     }
 
     pub fn enclave_encryption_key(&self) -> SodiumPubKey {
-        self.decrypting_privkey.public_key()
+        self.decryption_privkey.public_key()
     }
 
     /// Generate a value of REPORTDATA field in REPORT struct.
