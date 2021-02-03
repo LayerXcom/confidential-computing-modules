@@ -155,7 +155,7 @@ impl NotificationOps for AnonifyEnclaveContext {
     }
 }
 
-impl IdentityKeyOps for AnonifyEnclaveContext {
+impl EnclaveKeyOps for AnonifyEnclaveContext {
     /// Generate a signature using enclave's identity key.
     /// This signature is used to verify enclave's program dependencies and
     /// should be verified in the public available place such as smart contract on blockchain.

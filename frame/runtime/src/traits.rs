@@ -39,7 +39,7 @@ pub trait ContextOps:
     StateOps
     + GroupKeyGetter
     + NotificationOps
-    + IdentityKeyOps
+    + EnclaveKeyOps
     + QuoteGetter
     + KeyVaultOps
     + ConfigGetter
@@ -50,7 +50,7 @@ impl<
         T: StateOps
             + GroupKeyGetter
             + NotificationOps
-            + IdentityKeyOps
+            + EnclaveKeyOps
             + QuoteGetter
             + KeyVaultOps
             + ConfigGetter,
@@ -116,7 +116,7 @@ pub trait NotificationOps {
     fn is_notified(&self, account_id: &AccountId) -> bool;
 }
 
-pub trait IdentityKeyOps {
+pub trait EnclaveKeyOps {
     fn sign(&self, msg: &[u8]) -> Result<(secp256k1::Signature, secp256k1::RecoveryId)>;
 
     fn decrypt(&self, ciphertext: SodiumCiphertext) -> Result<Vec<u8>>;
