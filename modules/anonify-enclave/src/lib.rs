@@ -22,7 +22,7 @@ pub mod workflow {
     pub use crate::commands::{CmdReceiver, CmdSender};
     pub use crate::context::{GetState, ReportRegistration};
     pub use crate::handshake::{HandshakeReceiver, HandshakeSender, JoinGroupSender};
-    pub use crate::enclave_key::EncryptingKeyGetter;
+    pub use crate::enclave_key::EncryptionKeyGetter;
     pub use crate::notify::RegisterNotification;
 }
 

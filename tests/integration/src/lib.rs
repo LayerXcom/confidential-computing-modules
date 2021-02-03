@@ -45,7 +45,7 @@ pub async fn get_enclave_encryption_key(
 
     let query_enclave_encryption_key: Vec<u8> = Contract::new(web3_conn, address, abi)
         .query(
-            "getEncryptingKey",
+            "getEncryptionKey",
             enclave_encryption_key.to_bytes(),
             None,
             Options::default(),

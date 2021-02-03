@@ -19,11 +19,11 @@ const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCLAVE_ENCRYPTION_K
 const REPORT_DATA_SIZE: usize = 64;
 
 #[derive(Debug, Clone, Default)]
-pub struct EncryptingKeyGetter;
+pub struct EncryptionKeyGetter;
 
-impl EnclaveEngine for EncryptingKeyGetter {
+impl EnclaveEngine for EncryptionKeyGetter {
     type EI = input::Empty;
-    type EO = output::ReturnEncryptingKey;
+    type EO = output::ReturnEncryptionKey;
 
     fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
@@ -32,7 +32,7 @@ impl EnclaveEngine for EncryptingKeyGetter {
     {
         let enclave_encryption_key = enclave_context.enclave_encryption_key();
 
-        Ok(output::ReturnEncryptingKey::new(enclave_encryption_key))
+        Ok(output::ReturnEncryptionKey::new(enclave_encryption_key))
     }
 }
 
@@ -86,12 +86,12 @@ impl EnclaveKey {
     }
 
     /// Generate a value of REPORTDATA field in REPORT struct.
-    /// REPORTDATA consists of a hashed signing public key and a encrypting public key.
+    /// REPORTDATA consists of a hashed signing public key and a encryption public key.
     /// The hashed signing public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,
     /// because this enclave key is binding to enclave's code.
-    /// The encrypting public key is used for secure communication between clients and TEE.
+    /// The encryption public key is used for secure communication between clients and TEE.
     /// 20 bytes: hashed signing public key
-    /// 32 bytes: encrypting public key
+    /// 32 bytes: encryption public key
     /// 11 bytes: zero padding
     pub fn report_data(&self) -> Result<sgx_report_data_t> {
         let mut report_data = [0u8; REPORT_DATA_SIZE];

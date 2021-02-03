@@ -249,9 +249,9 @@ where
     }
 
     pub fn get_enclave_encryption_key(&self, ecall_cmd: u32) -> Result<SodiumPubKey> {
-        let input = host_input::GetEncryptingKey::new(ecall_cmd);
+        let input = host_input::GetEncryptionKey::new(ecall_cmd);
         let eid = self.inner.read().deployer.get_enclave_id();
-        let enclave_encryption_key = GetEncryptingKeyWorkflow::exec(input, eid)?;
+        let enclave_encryption_key = GetEncryptionKeyWorkflow::exec(input, eid)?;
 
         Ok(enclave_encryption_key
             .ecall_output

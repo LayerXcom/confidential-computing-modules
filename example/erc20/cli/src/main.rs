@@ -40,7 +40,7 @@ fn main() {
     let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
     let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set");
     let enclave_encryption_key =
-        commands::get_enclave_encryption_key(anonify_url.clone()).expect("Failed getting encrypting key");
+        commands::get_enclave_encryption_key(anonify_url.clone()).expect("Failed getting encryption key");
 
     match matches.subcommand() {
         (ANONIFY_COMMAND, Some(matches)) => subcommand_anonify(
