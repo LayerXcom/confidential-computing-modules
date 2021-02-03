@@ -167,8 +167,8 @@ impl IdentityKeyOps for AnonifyEnclaveContext {
         self.identity_key.decrypt(ciphertext).map_err(Into::into)
     }
 
-    fn encrypting_key(&self) -> SodiumPubKey {
-        self.identity_key.encrypting_key()
+    fn enclave_encryption_key(&self) -> SodiumPubKey {
+        self.identity_key.enclave_encryption_key()
     }
 }
 

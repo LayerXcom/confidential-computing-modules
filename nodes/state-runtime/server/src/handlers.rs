@@ -180,7 +180,7 @@ where
     Ok(HttpResponse::Ok().json(state_runtime_node_api::state::get::Response { state }))
 }
 
-pub async fn handle_encrypting_key<D, S, W>(
+pub async fn handle_enclave_encryption_key<D, S, W>(
     server: web::Data<Arc<Server<D, S, W>>>,
 ) -> Result<HttpResponse>
 where
@@ -190,11 +190,11 @@ where
 {
     let enclave_encryption_key = server
         .dispatcher
-        .get_encrypting_key(GET_ENCRYPTING_KEY_CMD)
+        .get_enclave_encryption_key(GET_ENCLAVE_ENCRYPTION_KEY_CMD)
         .map_err(|e| ServerError::from(e))?;
 
     Ok(
-        HttpResponse::Ok().json(state_runtime_node_api::encrypting_key::get::Response {
+        HttpResponse::Ok().json(state_runtime_node_api::enclave_encryption_key::get::Response {
             enclave_encryption_key,
         }),
     )

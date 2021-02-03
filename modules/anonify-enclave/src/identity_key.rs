@@ -14,8 +14,8 @@ use sgx_types::sgx_report_data_t;
 use std::prelude::v1::Vec;
 
 const HASHED_PUBKEY_SIZE: usize = 20;
-const ENCRYPTING_KEY_SIZE: usize = SODIUM_PUBLIC_KEY_SIZE;
-const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCRYPTING_KEY_SIZE;
+const ENCLAVE_ENCRYPTION_KEY_SIZE: usize = SODIUM_PUBLIC_KEY_SIZE;
+const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCLAVE_ENCRYPTION_KEY_SIZE;
 const REPORT_DATA_SIZE: usize = 64;
 
 #[derive(Debug, Clone, Default)]
@@ -30,9 +30,9 @@ impl EnclaveEngine for EncryptingKeyGetter {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let encrypting_key = enclave_context.encrypting_key();
+        let enclave_encryption_key = enclave_context.enclave_encryption_key();
 
-        Ok(output::ReturnEncryptingKey::new(encrypting_key))
+        Ok(output::ReturnEncryptingKey::new(enclave_encryption_key))
     }
 }
 
@@ -81,7 +81,7 @@ impl EnclaveIdentityKey {
         PublicKey::from_secret_key(&self.signing_privkey)
     }
 
-    pub fn encrypting_key(&self) -> SodiumPubKey {
+    pub fn enclave_encryption_key(&self) -> SodiumPubKey {
         self.decrypting_privkey.public_key()
     }
 
@@ -97,7 +97,7 @@ impl EnclaveIdentityKey {
         let mut report_data = [0u8; REPORT_DATA_SIZE];
         report_data[..HASHED_PUBKEY_SIZE].copy_from_slice(&self.verifying_key_into_array()[..]);
         report_data[HASHED_PUBKEY_SIZE..FILLED_REPORT_DATA_SIZE]
-            .copy_from_slice(&self.encode_encrypting_key()[..]);
+            .copy_from_slice(&self.encode_enclave_encryption_key()[..]);
 
         Ok(sgx_report_data_t { d: report_data })
     }
@@ -111,7 +111,7 @@ impl EnclaveIdentityKey {
         res
     }
 
-    fn encode_encrypting_key(&self) -> [u8; ENCRYPTING_KEY_SIZE] {
-        self.encrypting_key().to_bytes()
+    fn encode_enclave_encryption_key(&self) -> [u8; ENCLAVE_ENCRYPTION_KEY_SIZE] {
+        self.enclave_encryption_key().to_bytes()
     }
 }

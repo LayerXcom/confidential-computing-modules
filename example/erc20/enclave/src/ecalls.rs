@@ -26,7 +26,7 @@ register_ecall!(
         REGISTER_NOTIFICATION_CMD,
         RegisterNotification<Ed25519ChallengeResponse>
     ),
-    (GET_ENCRYPTING_KEY_CMD, EncryptingKeyGetter),
+    (GET_ENCLAVE_ENCRYPTION_KEY_CMD, EncryptingKeyGetter),
     (SEND_REGISTER_REPORT_CMD, ReportRegistration),
 );
 
@@ -49,7 +49,7 @@ register_ecall!(
         REGISTER_NOTIFICATION_CMD,
         RegisterNotification<Ed25519ChallengeResponse>
     ),
-    (GET_ENCRYPTING_KEY_CMD, EncryptingKeyGetter),
+    (GET_ENCLAVE_ENCRYPTION_KEY_CMD, EncryptingKeyGetter),
     (SEND_REGISTER_REPORT_CMD, ReportRegistration),
     (BACKUP_PATH_SECRET_ALL_CMD, PathSecretBackupper),
     (RECOVER_PATH_SECRET_ALL_CMD, PathSecretRecoverer),

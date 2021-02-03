@@ -39,15 +39,15 @@ fn main() {
 
     let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
     let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set");
-    let encrypting_key =
-        commands::get_encrypting_key(anonify_url.clone()).expect("Failed getting encrypting key");
+    let enclave_encryption_key =
+        commands::get_enclave_encryption_key(anonify_url.clone()).expect("Failed getting encrypting key");
 
     match matches.subcommand() {
         (ANONIFY_COMMAND, Some(matches)) => subcommand_anonify(
             term,
             root_dir,
             contract_addr,
-            &encrypting_key,
+            &enclave_encryption_key,
             anonify_url,
             matches,
             rng,
@@ -75,7 +75,7 @@ fn subcommand_anonify<R, CR>(
     mut term: Term,
     root_dir: PathBuf,
     default_contract_addr: String,
-    encrypting_key: &SodiumPubKey,
+    enclave_encryption_key: &SodiumPubKey,
     anonify_url: String,
     matches: &ArgMatches,
     rng: &mut R,
@@ -132,7 +132,7 @@ fn subcommand_anonify<R, CR>(
                 anonify_url,
                 keyfile_index,
                 total_supply,
-                encrypting_key,
+                enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -159,7 +159,7 @@ fn subcommand_anonify<R, CR>(
                 keyfile_index,
                 target_addr,
                 amount,
-                encrypting_key,
+                enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -186,7 +186,7 @@ fn subcommand_anonify<R, CR>(
                 keyfile_index,
                 target_addr,
                 amount,
-                encrypting_key,
+                enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -216,7 +216,7 @@ fn subcommand_anonify<R, CR>(
                 owner_addr,
                 target_addr,
                 amount,
-                encrypting_key,
+                enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -243,7 +243,7 @@ fn subcommand_anonify<R, CR>(
                 keyfile_index,
                 target_addr,
                 amount,
-                encrypting_key,
+                enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -267,7 +267,7 @@ fn subcommand_anonify<R, CR>(
                 anonify_url,
                 keyfile_index,
                 amount,
-                encrypting_key,
+                enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -291,7 +291,7 @@ fn subcommand_anonify<R, CR>(
                 anonify_url,
                 keyfile_index,
                 spender_addr,
-                encrypting_key,
+                enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -309,7 +309,7 @@ fn subcommand_anonify<R, CR>(
                 root_dir,
                 anonify_url,
                 keyfile_index,
-                encrypting_key,
+                enclave_encryption_key,
                 rng,
                 csprng,
             )

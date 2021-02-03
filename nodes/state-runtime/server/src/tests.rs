@@ -77,8 +77,8 @@ async fn test_multiple_messages() {
                 web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/encrypting_key",
-                web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/enclave_encryption_key",
+                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -91,13 +91,13 @@ async fn test_multiple_messages() {
     println!("contract address: {:?}", contract_address.contract_address);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/encrypting_key")
+        .uri("/api/v1/enclave_encryption_key")
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
+    let enc_key_resp: state_runtime_node_api::enclave_encryption_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key = verify_encrypting_key(
+    let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
         &abi_path,
         &eth_url,
@@ -187,8 +187,8 @@ async fn test_skip_invalid_event() {
                 web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/encrypting_key",
-                web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/enclave_encryption_key",
+                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -207,13 +207,13 @@ async fn test_skip_invalid_event() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/encrypting_key")
+        .uri("/api/v1/enclave_encryption_key")
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
+    let enc_key_resp: state_runtime_node_api::enclave_encryption_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key = verify_encrypting_key(
+    let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
         &abi_path,
         &eth_url,
@@ -309,8 +309,8 @@ async fn test_node_recovery() {
                 web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/encrypting_key",
-                web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/enclave_encryption_key",
+                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -343,8 +343,8 @@ async fn test_node_recovery() {
                 web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/encrypting_key",
-                web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/enclave_encryption_key",
+                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/register_report",
@@ -367,13 +367,13 @@ async fn test_node_recovery() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/encrypting_key")
+        .uri("/api/v1/enclave_encryption_key")
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
+    let enc_key_resp: state_runtime_node_api::enclave_encryption_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key = verify_encrypting_key(
+    let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
         &abi_path,
         &eth_url,
@@ -438,13 +438,13 @@ async fn test_node_recovery() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/encrypting_key")
+        .uri("/api/v1/enclave_encryption_key")
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
+    let enc_key_resp: state_runtime_node_api::enclave_encryption_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key = verify_encrypting_key(
+    let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
         &abi_path,
         &eth_url,
@@ -544,8 +544,8 @@ async fn test_join_group_then_handshake() {
                 web::post().to(handle_key_rotation::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/encrypting_key",
-                web::get().to(handle_encrypting_key::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/enclave_encryption_key",
+                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -595,13 +595,13 @@ async fn test_join_group_then_handshake() {
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
-        .uri("/api/v1/encrypting_key")
+        .uri("/api/v1/enclave_encryption_key")
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let enc_key_resp: state_runtime_node_api::encrypting_key::get::Response =
+    let enc_key_resp: state_runtime_node_api::enclave_encryption_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key = verify_encrypting_key(
+    let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
         &abi_path,
         &eth_url,
@@ -673,8 +673,8 @@ fn other_turn() {
     env::set_var("ACCOUNT_INDEX", "1");
 }
 
-async fn verify_encrypting_key<P: AsRef<Path>>(
-    encrypting_key: SodiumPubKey,
+async fn verify_enclave_encryption_key<P: AsRef<Path>>(
+    enclave_encryption_key: SodiumPubKey,
     abi_path: P,
     eth_url: &str,
     contract_address: &str,
@@ -687,10 +687,10 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
     let f = File::open(abi_path).unwrap();
     let abi = ContractABI::load(BufReader::new(f)).unwrap();
 
-    let query_encrypting_key: Vec<u8> = Contract::new(web3_conn, address, abi)
+    let query_enclave_encryption_key: Vec<u8> = Contract::new(web3_conn, address, abi)
         .query(
             "getEncryptingKey",
-            encrypting_key.to_bytes(),
+            enclave_encryption_key.to_bytes(),
             None,
             Options::default(),
             None,
@@ -699,11 +699,11 @@ async fn verify_encrypting_key<P: AsRef<Path>>(
         .unwrap();
 
     assert_eq!(
-        encrypting_key,
-        SodiumPubKey::from_bytes(&query_encrypting_key).unwrap()
+        enclave_encryption_key,
+        SodiumPubKey::from_bytes(&query_enclave_encryption_key).unwrap()
     );
 
-    encrypting_key
+    enclave_encryption_key
 }
 
 // to me

@@ -248,15 +248,15 @@ where
             .await
     }
 
-    pub fn get_encrypting_key(&self, ecall_cmd: u32) -> Result<SodiumPubKey> {
+    pub fn get_enclave_encryption_key(&self, ecall_cmd: u32) -> Result<SodiumPubKey> {
         let input = host_input::GetEncryptingKey::new(ecall_cmd);
         let eid = self.inner.read().deployer.get_enclave_id();
-        let encrypting_key = GetEncryptingKeyWorkflow::exec(input, eid)?;
+        let enclave_encryption_key = GetEncryptingKeyWorkflow::exec(input, eid)?;
 
-        Ok(encrypting_key
+        Ok(enclave_encryption_key
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?
-            .encrypting_key())
+            .enclave_encryption_key())
     }
 
     pub fn register_notification(
