@@ -99,7 +99,9 @@ where
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&state_runtime_node_api::state::post::Request::new(ciphertext))
+        .json(&state_runtime_node_api::state::post::Request::new(
+            ciphertext,
+        ))
         .send()?
         .text()?;
 
@@ -181,7 +183,9 @@ where
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&state_runtime_node_api::state::post::Request::new(encrypted_approve_cmd))
+        .json(&state_runtime_node_api::state::post::Request::new(
+            encrypted_approve_cmd,
+        ))
         .send()?
         .text()?;
 
@@ -265,7 +269,9 @@ where
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&state_runtime_node_api::state::post::Request::new(encrypted_mint_cmd))
+        .json(&state_runtime_node_api::state::post::Request::new(
+            encrypted_mint_cmd,
+        ))
         .send()?
         .text()?;
 
@@ -303,7 +309,9 @@ where
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
-        .json(&state_runtime_node_api::state::post::Request::new(encrypted_burn_cmd))
+        .json(&state_runtime_node_api::state::post::Request::new(
+            encrypted_burn_cmd,
+        ))
         .send()?
         .text()?;
 
@@ -352,7 +360,9 @@ where
             .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
         .get(&format!("{}/api/v1/state", &anonify_url))
-        .json(&state_runtime_node_api::state::get::Request::new(ciphertext))
+        .json(&state_runtime_node_api::state::get::Request::new(
+            ciphertext,
+        ))
         .send()?
         .text()?;
 
@@ -387,7 +397,9 @@ where
             .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
         .get(&format!("{}/api/v1/state", &anonify_url))
-        .json(&state_runtime_node_api::state::get::Request::new(ciphertext))
+        .json(&state_runtime_node_api::state::get::Request::new(
+            ciphertext,
+        ))
         .send()?
         .text()?;
 
@@ -405,7 +417,7 @@ pub(crate) fn start_sync_bc(anonify_url: String) -> Result<()> {
 }
 
 pub(crate) fn set_contract_address(anonify_url: String, contract_address: String) -> Result<()> {
-    let req = state_runtime_node_api::contract_address::post::Request::new(contract_address);
+    let req = state_runtime_node_api::contract_addr::post::Request::new(contract_address);
     Client::new()
         .get(&format!("{}/api/v1/set_contract_address", &anonify_url))
         .json(&req)
