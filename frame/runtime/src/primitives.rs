@@ -146,6 +146,11 @@ impl Bytes {
     pub fn into_raw(self) -> Vec<u8> {
         self.0
     }
+
+    pub fn extend(&mut self, other: Self) {
+        self.0.extend(&other.0);
+        self.0.shrink_to_fit();
+    }
 }
 
 impl StateDecoder for Bytes {

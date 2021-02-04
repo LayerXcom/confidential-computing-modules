@@ -6,7 +6,8 @@ impl_memory! {
     (0, "Balance", U64),
     (1, "Approved", Approved),
     (2, "TotalSupply", U64),
-    (3, "Owner", AccountId)
+    (3, "Owner", AccountId),
+    (4, "Blob", Bytes)
 }
 
 impl_runtime! {
@@ -18,8 +19,21 @@ impl_runtime! {
         let owner_account_id = update!(*OWNER_ACCOUNT_ID, "Owner", sender, AccountId);
         let sender_balance = update!(sender, "Balance", total_supply, U64);
         let total_supply = update!(*OWNER_ACCOUNT_ID, "TotalSupply", total_supply, U64);
+        let blob = update!(sender, "Blob", Bytes::new(vec![]), Bytes);
 
-        return_update![owner_account_id, sender_balance, total_supply]
+        return_update![owner_account_id, sender_balance, total_supply, blob]
+    }
+
+    pub fn append_blob(
+        self,
+        sender: AccountId,
+        other: Bytes
+    ) {
+        let mut existing_blob = self.get_map::<Bytes>(sender, "Blob")?;
+        existing_blob.extend(other);
+
+        let new_blob = update!(sender, "Blob", existing_blob, Bytes);
+        return_update![new_blob]
     }
 
     pub fn transfer(
