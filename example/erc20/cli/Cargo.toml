@@ -8,6 +8,7 @@ edition = "2018"
 state-runtime-node-api = { path = "../../../nodes/state-runtime/api" }
 frame-common = { path = "../../../frame/common" }
 frame-sodium = { path = "../../../frame/sodium" }
+frame-runtime = { path = "../../../frame/runtime" }
 anonify-wallet = { path = "../../wallet" }
 reqwest = "0.9"
 clap = "~2.32"

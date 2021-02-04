@@ -4,10 +4,12 @@ extern crate clap;
 use crate::config::*;
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use frame_common::crypto::AccountId;
+use frame_runtime::primitives::Bytes;
 use frame_sodium::SodiumPubKey;
 use rand::{rngs::OsRng, Rng};
 use rand_core::{CryptoRng, RngCore};
-use std::{env, path::PathBuf};
+use std::io::Read;
+use std::{env, fs::File, path::PathBuf};
 use term::Term;
 
 mod commands;
@@ -39,8 +41,8 @@ fn main() {
 
     let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
     let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set");
-    let enclave_encryption_key =
-        commands::get_enclave_encryption_key(anonify_url.clone()).expect("Failed getting encryption key");
+    let enclave_encryption_key = commands::get_enclave_encryption_key(anonify_url.clone())
+        .expect("Failed getting encryption key");
 
     match matches.subcommand() {
         (ANONIFY_COMMAND, Some(matches)) => subcommand_anonify(
@@ -327,6 +329,31 @@ fn subcommand_anonify<R, CR>(
             commands::set_contract_address(anonify_url, contract_addr)
                 .expect("Failed to set_contract_address command");
         }
+        ("append_blob", Some(matches)) => {
+            let keyfile_index: usize = matches
+                .value_of("keyfile-index")
+                .expect("Not found keyfile-index.")
+                .parse()
+                .expect("Failed to parse keyfile-index");
+            let blob_path = matches.value_of("blob").expect("Not found spender");
+
+            let mut buf = vec![];
+            let mut f = File::open(blob_path).unwrap();
+            f.read_to_end(&mut buf).unwrap();
+            let blob = Bytes::new(buf);
+
+            commands::append_blob(
+                &mut term,
+                root_dir,
+                anonify_url,
+                keyfile_index,
+                blob,
+                enclave_encryption_key,
+                rng,
+                csprng,
+            )
+            .expect("Failed to burn command");
+        }
         _ => {
             term.error(matches.usage()).unwrap();
             std::process::exit(1);
@@ -536,6 +563,23 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name("set_contract_address")
                 .about("Get state from anonify services.")
                 .arg(Arg::with_name("contract-addr").short("c").takes_value(true)),
+        )
+        .subcommand(
+            SubCommand::with_name("append_blob")
+                .about("append bytes to Bytes in enclave for performance measurement")
+                .arg(
+                    Arg::with_name("keyfile-index")
+                        .short("i")
+                        .takes_value(true)
+                        .required(false)
+                        .default_value(DEFAULT_KEYFILE_INDEX),
+                )
+                .arg(
+                    Arg::with_name("blob")
+                        .short("b")
+                        .takes_value(true)
+                        .required(true),
+                ),
         )
 }
 

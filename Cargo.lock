@@ -1511,6 +1511,7 @@ dependencies = [
  "env_logger",
  "ethabi",
  "frame-common",
+ "frame-runtime",
  "frame-sodium",
  "log 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
