@@ -119,4 +119,16 @@ impl StateCounter {
     pub fn new(counter: u32) -> Self {
         Self(counter)
     }
+
+    pub fn increment(self) -> Self {
+        StateCounter(self.0 + 1) // overflow should be ignored
+    }
+
+    pub fn is_increment(self, other: StateCounter) -> bool {
+        if self.increment() == other {
+            true
+        } else {
+            false
+        }
+    }
 }
