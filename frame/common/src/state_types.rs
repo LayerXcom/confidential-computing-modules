@@ -125,10 +125,6 @@ impl StateCounter {
     }
 
     pub fn is_increment(self, other: StateCounter) -> bool {
-        if self.increment() == other {
-            true
-        } else {
-            false
-        }
+        self.increment() == other
     }
 }
