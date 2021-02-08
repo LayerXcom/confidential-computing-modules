@@ -17,11 +17,8 @@ contract Anonify is ReportHandle {
     // Mapping of a sender and roster index
     mapping(address => uint32) private _senderToRosterIdx;
 
-    event StoreCiphertext(
-        bytes indexed ciphertext,
-        uint256 indexed stateCounter
-    );
-    event StoreHandshake(bytes indexed handshake, uint256 indexed stateCounter);
+    event StoreCiphertext(bytes ciphertext, uint256 stateCounter);
+    event StoreHandshake(bytes handshake, uint256 stateCounter);
     event UpdateMrenclaveVer(uint32 newVersion);
 
     constructor(
