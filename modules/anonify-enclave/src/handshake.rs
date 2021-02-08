@@ -133,7 +133,8 @@ impl EnclaveEngine for HandshakeReceiver {
         let handshake = HandshakeParams::decode(&self.ecall_input.handshake().handshake()[..])
             .map_err(|_| anyhow!("HandshakeParams::decode Error"))?;
 
-        
+        // Even if `process_handshake` fails, state_counter must be incremented so it doesn't get stuck.
+        enclave_context.verify_state_counter_increment(self.ecall_input.state_counter())?;
         group_key.process_handshake(
             enclave_context.store_path_secrets(),
             &handshake,
