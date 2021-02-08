@@ -111,8 +111,9 @@ contract Anonify is ReportHandle {
             "Invalid enclave signature."
         );
 
-        _stateCounter.add(1);
-        emit StoreCiphertext(_newCiphertext, _stateCounter);
+        uint256 incremented_state_counter = _stateCounter.add(1);
+        _stateCounter = incremented_state_counter;
+        emit StoreCiphertext(_newCiphertext, incremented_state_counter);
     }
 
     function handshake(
@@ -142,7 +143,8 @@ contract Anonify is ReportHandle {
     }
 
     function storeHandshake(bytes memory _handshake) private {
-        _stateCounter.add(1);
-        emit StoreHandshake(_handshake, _stateCounter);
+        uint256 incremented_state_counter = _stateCounter.add(1);
+        _stateCounter = incremented_state_counter;
+        emit StoreHandshake(_handshake, incremented_state_counter);
     }
 }
