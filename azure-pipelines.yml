@@ -7,7 +7,7 @@ stages:
   jobs:
   - job: CI
     pool:
-      name: 'Anonify'
+      name: 'AnonifyDev'
     steps:
     - script: |
         cp .env.sample .env
@@ -25,7 +25,7 @@ stages:
   jobs:
   - job: Docker
     pool:
-      name: 'Anonify'
+      name: 'AnonifyDev'
     steps:
     - task: Docker@2
       displayName: Build and Push anonify image
