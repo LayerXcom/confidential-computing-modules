@@ -29,7 +29,7 @@ const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
 
 pub static ETH_URL: Lazy<String> =
-    Lazy::new(|| env::var("PATH_SECRETS_DIR").unwrap_or(".anonify/pathsecrets".to_string()));
+    Lazy::new(|| env::var("ETH_URL").unwrap_or(".anonify/pathsecrets".to_string()));
 
 pub async fn get_enclave_encryption_key(
     contract_addr: &str,
