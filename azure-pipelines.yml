@@ -13,8 +13,6 @@ stages:
         cp .env.sample .env
         export SPID=$(SPID)
         export SUB_KEY=$(SUB_KEY)
-        export ETH_HOST_PORT=$(ETH_HOST_PORT)
-        export COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME)
         docker-compose up -d
         docker-compose exec -T sgx_machine bash -c "cd anonify && ./scripts/test.sh"
       displayName: 'Run tests'
