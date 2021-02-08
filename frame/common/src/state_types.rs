@@ -44,7 +44,9 @@ impl From<AccountId> for StateType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
 pub enum ReturnState<S: State> {
-    Updated(#[serde(bound(deserialize = "S: State"))] (Vec<UpdatedState<S>>, Vec<Option<NotifyState>>)),
+    Updated(
+        #[serde(bound(deserialize = "S: State"))] (Vec<UpdatedState<S>>, Vec<Option<NotifyState>>),
+    ),
     Get(#[serde(bound(deserialize = "S: State"))] S),
 }
 
@@ -103,5 +105,26 @@ impl MemId {
 
     pub fn from_raw(u: u32) -> Self {
         MemId(u)
+    }
+}
+
+/// Counter for enforcing the order of state transitions
+#[derive(
+    Serialize, Deserialize, Debug, Clone, Copy, PartialOrd, PartialEq, Default, Eq, Ord, Hash,
+)]
+#[serde(crate = "crate::serde")]
+pub struct StateCounter(u32);
+
+impl StateCounter {
+    pub fn new(counter: u32) -> Self {
+        Self(counter)
+    }
+
+    pub fn increment(self) -> Self {
+        StateCounter(self.0 + 1) // overflow should be ignored
+    }
+
+    pub fn is_increment(self, other: StateCounter) -> bool {
+        self.increment() == other
     }
 }

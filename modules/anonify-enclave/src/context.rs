@@ -1,22 +1,21 @@
 use crate::{
-    error::Result, group_key::GroupKey, enclave_key::EnclaveKey, kvs::EnclaveDB,
-    notify::Notifier,
+    enclave_key::EnclaveKey, error::Result, group_key::GroupKey, kvs::EnclaveDB, notify::Notifier,
 };
 use anonify_ecall_types::*;
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
 use frame_common::{
     crypto::{
         AccountId, BackupPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverAllRequest,
         RecoverRequest, RecoveredPathSecret,
     },
-    state_types::{MemId, NotifyState, ReturnState, StateType, UpdatedState},
+    state_types::{MemId, NotifyState, ReturnState, StateCounter, StateType, UpdatedState},
     AccessPolicy,
 };
 use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DIR};
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
-use frame_sodium::{SodiumCiphertext, SodiumPubKey, rng::SgxRng};
+use frame_sodium::{rng::SgxRng, SodiumCiphertext, SodiumPubKey};
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, PathSecret, StorePathSecrets,
@@ -44,6 +43,7 @@ pub struct AnonifyEnclaveContext {
     client_config: ClientConfig,
     store_path_secrets: StorePathSecrets,
     ias_root_cert: Vec<u8>,
+    state_counter: Arc<SgxRwLock<StateCounter>>,
 }
 
 impl ConfigGetter for AnonifyEnclaveContext {
@@ -130,6 +130,23 @@ impl StateOps for AnonifyEnclaveContext {
                 }
             })
             .and_then(|e| e)
+    }
+
+    fn verify_state_counter_increment(
+        &self,
+        received_state_counter: StateCounter,
+    ) -> anyhow::Result<()> {
+        let mut curr_state_counter = self.state_counter.write().unwrap();
+        if !curr_state_counter.is_increment(received_state_counter) {
+            bail!(
+                "Incremented stored state counter ({:?}) is not equal to a received state counter ({:?})",
+                curr_state_counter.increment(),
+                received_state_counter,
+            );
+        }
+        *curr_state_counter = curr_state_counter.increment();
+
+        Ok(())
     }
 }
 
@@ -276,6 +293,7 @@ impl AnonifyEnclaveContext {
                 *KEY_VAULT_ENCLAVE_MEASUREMENT,
             );
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
+        let state_counter = Arc::new(SgxRwLock::new(StateCounter::default()));
 
         Ok(AnonifyEnclaveContext {
             spid,
@@ -290,6 +308,7 @@ impl AnonifyEnclaveContext {
             client_config,
             store_path_secrets,
             ias_root_cert: (&*IAS_ROOT_CERT).to_vec(),
+            state_counter,
         })
     }
 }

@@ -14,6 +14,10 @@ pub enum HostError {
     EcallOutputNotSet,
     #[error("Failed unlock the account")]
     UnlockError,
+    #[error("Decoded EthLogToken to invalid TokenType")]
+    InvalidEthLogToken,
+    #[error("The number of EthLogTokens should be {0}")]
+    InvalidNumberOfEthLogToken(usize),
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
     #[error("Web3 error: {0}")]
