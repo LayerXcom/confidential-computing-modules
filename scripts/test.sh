@@ -80,5 +80,4 @@ RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \
 
 # Compile Checks
 
-export ANONIFY_URL=http://172.28.1.1:8080
 ./scripts/build-cli.sh
