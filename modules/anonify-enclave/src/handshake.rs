@@ -133,6 +133,7 @@ impl EnclaveEngine for HandshakeReceiver {
         let handshake = HandshakeParams::decode(&self.ecall_input.handshake().handshake()[..])
             .map_err(|_| anyhow!("HandshakeParams::decode Error"))?;
 
+        
         group_key.process_handshake(
             enclave_context.store_path_secrets(),
             &handshake,
