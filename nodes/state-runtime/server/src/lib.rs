@@ -38,7 +38,7 @@ where
         let confirmations: usize = env::var("CONFIRMATIONS")
             .expect("CONFIRMATIONS is not set")
             .parse()
-            .expect("Failed to parse ACCOUNT_INDEX to usize");
+            .expect("Failed to parse CONFIRMATIONS to usize");
         let sync_time: u64 = env::var("SYNC_BC_TIME")
             .unwrap_or_else(|_| "1000".to_string())
             .parse()
