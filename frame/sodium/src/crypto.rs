@@ -334,7 +334,9 @@ impl SodiumCiphertext {
     #[cfg(any(all(feature = "std", test), feature = "sgx"))]
     pub fn decrypt(self, my_priv_key: &SodiumPrivateKey) -> Result<Vec<u8>> {
         let cbox = CryptoBox::new(&self.ephemeral_public_key.0, &my_priv_key.0);
-        let plaintext = cbox.decrypt(&self.nonce.0, &self.ciphertext[..]).unwrap();
+        let plaintext = cbox
+            .decrypt(&self.nonce.0, &self.ciphertext[..])
+            .map_err(|e| anyhow!("Failed to decrypt SodiumCiphertext: {:?}", e))?;
 
         Ok(plaintext)
     }
