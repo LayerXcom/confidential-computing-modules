@@ -13,7 +13,7 @@ use crate::serde_bytes;
 use crate::serde_json;
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
-    state_types::StateType,
+    state_types::{StateCounter, StateType},
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
@@ -73,17 +73,25 @@ pub mod input {
     #[serde(crate = "crate::serde")]
     pub struct InsertCiphertext {
         ciphertext: Ciphertext,
+        state_counter: StateCounter,
     }
 
     impl EcallInput for InsertCiphertext {}
 
     impl InsertCiphertext {
-        pub fn new(ciphertext: Ciphertext) -> Self {
-            InsertCiphertext { ciphertext }
+        pub fn new(ciphertext: Ciphertext, state_counter: StateCounter) -> Self {
+            InsertCiphertext {
+                ciphertext,
+                state_counter,
+            }
         }
 
         pub fn ciphertext(&self) -> &Ciphertext {
             &self.ciphertext
+        }
+
+        pub fn state_counter(&self) -> StateCounter {
+            self.state_counter
         }
     }
 
@@ -91,17 +99,25 @@ pub mod input {
     #[serde(crate = "crate::serde")]
     pub struct InsertHandshake {
         handshake: ExportHandshake,
+        state_counter: StateCounter,
     }
 
     impl EcallInput for InsertHandshake {}
 
     impl InsertHandshake {
-        pub fn new(handshake: ExportHandshake) -> Self {
-            InsertHandshake { handshake }
+        pub fn new(handshake: ExportHandshake, state_counter: StateCounter) -> Self {
+            InsertHandshake {
+                handshake,
+                state_counter,
+            }
         }
 
         pub fn handshake(&self) -> &ExportHandshake {
             &self.handshake
+        }
+
+        pub fn state_counter(&self) -> StateCounter {
+            self.state_counter
         }
     }
 
@@ -320,7 +336,9 @@ pub mod output {
 
     impl ReturnEncryptionKey {
         pub fn new(enclave_encryption_key: SodiumPubKey) -> Self {
-            ReturnEncryptionKey { enclave_encryption_key }
+            ReturnEncryptionKey {
+                enclave_encryption_key,
+            }
         }
 
         pub fn enclave_encryption_key(self) -> SodiumPubKey {

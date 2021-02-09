@@ -12,11 +12,13 @@ contract Anonify is ReportHandle {
 
     // An counter of registered roster index
     uint32 private _rosterIdxCounter;
+    // Counter for enforcing the order of state transitions
+    uint256 private _stateCounter;
     // Mapping of a sender and roster index
     mapping(address => uint32) private _senderToRosterIdx;
 
-    event StoreCiphertext(bytes ciphertext);
-    event StoreHandshake(bytes handshake);
+    event StoreCiphertext(bytes ciphertext, uint256 stateCounter);
+    event StoreHandshake(bytes handshake, uint256 stateCounter);
     event UpdateMrenclaveVer(uint32 newVersion);
 
     constructor(
@@ -33,7 +35,7 @@ contract Anonify is ReportHandle {
         _mrenclaveVer = mrenclaveVer;
         _senderToRosterIdx[msg.sender] = rosterIdx;
         _rosterIdxCounter = rosterIdx;
-        handshake_wo_sig(_handshake);
+        storeHandshake(_handshake);
     }
 
     modifier onlyOwner() {
@@ -62,7 +64,7 @@ contract Anonify is ReportHandle {
         handleReport(_report, _reportSig);
         _senderToRosterIdx[msg.sender] = _rosterIdx;
         _rosterIdxCounter = _rosterIdx;
-        handshake_wo_sig(_handshake);
+        storeHandshake(_handshake);
     }
 
     // a recovered TEE node registers the report
@@ -89,8 +91,8 @@ contract Anonify is ReportHandle {
         require(_rosterIdx == 0, "Only owner can update mrenclave");
 
         updateMrenclaveInner(_report, _reportSig);
-        handshake_wo_sig(_handshake);
         _mrenclaveVer = _newVersion;
+        storeHandshake(_handshake);
         emit UpdateMrenclaveVer(_newVersion);
     }
 
@@ -98,10 +100,8 @@ contract Anonify is ReportHandle {
     function storeCommand(bytes memory _newCiphertext, bytes memory _enclaveSig)
         public
     {
-        address verifyingKey = Secp256k1.recover(
-            sha256(_newCiphertext),
-            _enclaveSig
-        );
+        address verifyingKey =
+            Secp256k1.recover(sha256(_newCiphertext), _enclaveSig);
         require(
             verifyingKey != address(0),
             "recovered verifyingKey was address(0)"
@@ -111,7 +111,9 @@ contract Anonify is ReportHandle {
             "Invalid enclave signature."
         );
 
-        emit StoreCiphertext(_newCiphertext);
+        uint256 incremented_state_counter = _stateCounter.add(1);
+        _stateCounter = incremented_state_counter;
+        emit StoreCiphertext(_newCiphertext, incremented_state_counter);
     }
 
     function handshake(
@@ -123,10 +125,11 @@ contract Anonify is ReportHandle {
             _senderToRosterIdx[msg.sender] == _rosterIdx,
             "The roster index must be same as the registered one"
         );
-        address verifyingKey = Secp256k1.recover(
-            sha256(abi.encodePacked(_handshake, _rosterIdx)),
-            _enclaveSig
-        );
+        address verifyingKey =
+            Secp256k1.recover(
+                sha256(abi.encodePacked(_handshake, _rosterIdx)),
+                _enclaveSig
+            );
         require(
             verifyingKey != address(0),
             "recovered verifyingKey was address(0)"
@@ -136,10 +139,12 @@ contract Anonify is ReportHandle {
             "Invalid enclave signature."
         );
 
-        emit StoreHandshake(_handshake);
+        storeHandshake(_handshake);
     }
 
-    function handshake_wo_sig(bytes memory _handshake) private {
-        emit StoreHandshake(_handshake);
+    function storeHandshake(bytes memory _handshake) private {
+        uint256 incremented_state_counter = _stateCounter.add(1);
+        _stateCounter = incremented_state_counter;
+        emit StoreHandshake(_handshake, incremented_state_counter);
     }
 }

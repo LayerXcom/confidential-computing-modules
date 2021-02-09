@@ -94,6 +94,9 @@ where
         let roster_idx = self.ecall_input.ciphertext().roster_idx() as usize;
         let msg_gen = self.ecall_input.ciphertext().generation();
 
+        // Even if group_key's ratchet operations and state transitions fail, state_counter must be incremented so it doesn't get stuck.
+        enclave_context.verify_state_counter_increment(self.ecall_input.state_counter())?;
+
         // Since the sender's keychain has already ratcheted,
         // even if an error occurs in the state transition, the receiver's keychain also ratchet.
         // `receiver_ratchet` fails if

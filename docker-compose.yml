@@ -22,8 +22,8 @@ services:
       ANONIFY_ENCLAVE_PKG_NAME: ${ANONIFY_ENCLAVE_PKG_NAME}
       KEY_VAULT_ENCLAVE_PKG_NAME: ${KEY_VAULT_ENCLAVE_PKG_NAME}
       BACKUP: ${BACKUP}
-      ETH_URL: ${ETH_URL}
-      ANONIFY_URL: ${ANONIFY_URL}
+      ETH_URL: "http://${ETH_ADDRESS}:${ETH_PORT}"
+      ANONIFY_URL: "${ANONIFY_ADDRESS}:${ANONOFY_PORT}"
       ABI_PATH: ${ABI_PATH}
       BIN_PATH: ${BIN_PATH}
       CONFIRMATIONS: ${CONFIRMATIONS}
@@ -39,21 +39,21 @@ services:
     tty: true
     networks:
       testing_net:
-        ipv4_address: 172.28.1.1
+        ipv4_address: ${ANONIFY_ADDRESS}
 
   ganache:
       image: trufflesuite/ganache-cli:latest
       ports:
-        - "8545:8545"
+        - "${ETH_HOST_PORT}:${ETH_PORT}"
       volumes:
         - ./ganache_data:/ganache_data
       networks:
         testing_net:
-          ipv4_address: 172.28.0.2
+          ipv4_address: ${ETH_ADDRESS}
 
 networks:
   testing_net:
     ipam:
       driver: default
       config:
-        - subnet: 172.28.0.0/16
+        - subnet: ${COMPOSE_NETWORK_SUBNET}

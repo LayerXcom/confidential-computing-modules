@@ -257,20 +257,21 @@ impl InnerEventCache {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use frame_common::state_types::StateCounter;
 
     #[test]
     fn test_correct_order_diff_roster_idx() {
         let dummy_payloads1 = vec![
-            PayloadType::new(0, 0, 1, Default::default()),
-            PayloadType::new(0, 0, 2, Default::default()),
-            PayloadType::new(1, 0, 1, Default::default()),
-            PayloadType::new(1, 0, 2, Default::default()),
-            PayloadType::new(1, 0, 3, Default::default()),
+            PayloadType::new(0, 0, 1, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 0, 2, Default::default(), StateCounter::default()),
+            PayloadType::new(1, 0, 1, Default::default(), StateCounter::default()),
+            PayloadType::new(1, 0, 2, Default::default(), StateCounter::default()),
+            PayloadType::new(1, 0, 3, Default::default(), StateCounter::default()),
         ];
 
         let dummy_payloads2 = vec![
-            PayloadType::new(1, 0, 4, Default::default()),
-            PayloadType::new(2, 0, 1, Default::default()),
+            PayloadType::new(1, 0, 4, Default::default(), StateCounter::default()),
+            PayloadType::new(2, 0, 1, Default::default(), StateCounter::default()),
         ];
 
         let mut cache = InnerEventCache::default();
@@ -279,11 +280,11 @@ mod tests {
         assert_eq!(
             res1,
             vec![
-                PayloadType::new(0, 0, 1, Default::default()),
-                PayloadType::new(0, 0, 2, Default::default()),
-                PayloadType::new(1, 0, 1, Default::default()),
-                PayloadType::new(1, 0, 2, Default::default()),
-                PayloadType::new(1, 0, 3, Default::default()),
+                PayloadType::new(0, 0, 1, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 0, 2, Default::default(), StateCounter::default()),
+                PayloadType::new(1, 0, 1, Default::default(), StateCounter::default()),
+                PayloadType::new(1, 0, 2, Default::default(), StateCounter::default()),
+                PayloadType::new(1, 0, 3, Default::default(), StateCounter::default()),
             ]
         );
 
@@ -292,8 +293,8 @@ mod tests {
         assert_eq!(
             res2,
             vec![
-                PayloadType::new(1, 0, 4, Default::default()),
-                PayloadType::new(2, 0, 1, Default::default()),
+                PayloadType::new(1, 0, 4, Default::default(), StateCounter::default()),
+                PayloadType::new(2, 0, 1, Default::default(), StateCounter::default()),
             ]
         );
     }
@@ -301,16 +302,16 @@ mod tests {
     #[test]
     fn test_fix_reorder_using_cache() {
         let dummy_payloads1 = vec![
-            PayloadType::new(0, 0, 1, Default::default()),
-            PayloadType::new(0, 0, 2, Default::default()),
-            PayloadType::new(0, 0, 4, Default::default()),
-            PayloadType::new(0, 0, 5, Default::default()),
+            PayloadType::new(0, 0, 1, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 0, 2, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 0, 4, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 0, 5, Default::default(), StateCounter::default()),
         ];
 
         let dummy_payloads2 = vec![
-            PayloadType::new(0, 0, 3, Default::default()),
-            PayloadType::new(0, 0, 6, Default::default()),
-            PayloadType::new(0, 0, 7, Default::default()),
+            PayloadType::new(0, 0, 3, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 0, 6, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 0, 7, Default::default(), StateCounter::default()),
         ];
 
         let mut cache = InnerEventCache::default();
@@ -319,8 +320,8 @@ mod tests {
         assert_eq!(
             res1,
             vec![
-                PayloadType::new(0, 0, 1, Default::default()),
-                PayloadType::new(0, 0, 2, Default::default()),
+                PayloadType::new(0, 0, 1, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 0, 2, Default::default(), StateCounter::default()),
             ]
         );
 
@@ -329,11 +330,11 @@ mod tests {
         assert_eq!(
             res2,
             vec![
-                PayloadType::new(0, 0, 3, Default::default()),
-                PayloadType::new(0, 0, 4, Default::default()),
-                PayloadType::new(0, 0, 5, Default::default()),
-                PayloadType::new(0, 0, 6, Default::default()),
-                PayloadType::new(0, 0, 7, Default::default()),
+                PayloadType::new(0, 0, 3, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 0, 4, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 0, 5, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 0, 6, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 0, 7, Default::default(), StateCounter::default()),
             ]
         );
     }
@@ -341,16 +342,16 @@ mod tests {
     #[test]
     fn test_fix_order_handshake() {
         let dummy_payloads1 = vec![
-            PayloadType::new(0, 0, 1, Default::default()),
-            PayloadType::new(0, 0, 2, Default::default()),
-            PayloadType::new(0, 1, 1, Default::default()),
-            PayloadType::new(0, 0, u32::MAX, Default::default()),
+            PayloadType::new(0, 0, 1, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 0, 2, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 1, 1, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 0, u32::MAX, Default::default(), StateCounter::default()),
         ];
 
         let dummy_payloads2 = vec![
-            PayloadType::new(0, 1, 2, Default::default()),
-            PayloadType::new(0, 1, 3, Default::default()),
-            PayloadType::new(0, 1, 4, Default::default()),
+            PayloadType::new(0, 1, 2, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 1, 3, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 1, 4, Default::default(), StateCounter::default()),
         ];
 
         let mut cache = InnerEventCache::default();
@@ -359,10 +360,10 @@ mod tests {
         assert_eq!(
             res1,
             vec![
-                PayloadType::new(0, 0, 1, Default::default()),
-                PayloadType::new(0, 0, 2, Default::default()),
-                PayloadType::new(0, 1, 1, Default::default()),
-                PayloadType::new(0, 0, u32::MAX, Default::default()),
+                PayloadType::new(0, 0, 1, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 0, 2, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 1, 1, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 0, u32::MAX, Default::default(), StateCounter::default()),
             ]
         );
 
@@ -371,9 +372,9 @@ mod tests {
         assert_eq!(
             res2,
             vec![
-                PayloadType::new(0, 1, 2, Default::default()),
-                PayloadType::new(0, 1, 3, Default::default()),
-                PayloadType::new(0, 1, 4, Default::default()),
+                PayloadType::new(0, 1, 2, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 1, 3, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 1, 4, Default::default(), StateCounter::default()),
             ]
         );
     }
@@ -381,16 +382,16 @@ mod tests {
     #[test]
     fn test_over_max_trials_num() {
         let dummy_payloads1 = vec![
-            PayloadType::new(0, 0, 1, Default::default()),
-            PayloadType::new(0, 0, 2, Default::default()),
-            PayloadType::new(0, 0, 4, Default::default()),
-            PayloadType::new(0, 0, 5, Default::default()),
+            PayloadType::new(0, 0, 1, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 0, 2, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 0, 4, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 0, 5, Default::default(), StateCounter::default()),
         ];
 
         let dummy_payloads2 = vec![
-            PayloadType::new(0, 0, 3, Default::default()),
-            PayloadType::new(0, 0, 6, Default::default()),
-            PayloadType::new(0, 0, 7, Default::default()),
+            PayloadType::new(0, 0, 3, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 0, 6, Default::default(), StateCounter::default()),
+            PayloadType::new(0, 0, 7, Default::default(), StateCounter::default()),
         ];
 
         let mut cache = InnerEventCache::default();
@@ -398,10 +399,10 @@ mod tests {
         assert_eq!(
             res1,
             vec![
-                PayloadType::new(0, 0, 1, Default::default()),
-                PayloadType::new(0, 0, 2, Default::default()),
-                PayloadType::new(0, 0, 5, Default::default()),
-                PayloadType::new(0, 0, 4, Default::default()),
+                PayloadType::new(0, 0, 1, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 0, 2, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 0, 5, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 0, 4, Default::default(), StateCounter::default()),
             ]
         );
 
@@ -409,9 +410,9 @@ mod tests {
         assert_eq!(
             res2,
             vec![
-                PayloadType::new(0, 0, 3, Default::default()),
-                PayloadType::new(0, 0, 6, Default::default()),
-                PayloadType::new(0, 0, 7, Default::default()),
+                PayloadType::new(0, 0, 3, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 0, 6, Default::default(), StateCounter::default()),
+                PayloadType::new(0, 0, 7, Default::default(), StateCounter::default()),
             ]
         );
     }
