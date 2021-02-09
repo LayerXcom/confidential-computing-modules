@@ -1,5 +1,8 @@
 use anonify_ecall_types::*;
-use frame_common::crypto::{Ciphertext, ExportHandshake};
+use frame_common::{
+    crypto::{Ciphertext, ExportHandshake},
+    state_types::StateCounter,
+};
 use frame_host::engine::*;
 use frame_sodium::SodiumCiphertext;
 use web3::types::Address;
@@ -306,13 +309,15 @@ pub mod host_input {
 
     pub struct InsertCiphertext {
         ciphertext: Ciphertext,
+        state_counter: StateCounter,
         ecall_cmd: u32,
     }
 
     impl InsertCiphertext {
-        pub fn new(ciphertext: Ciphertext, ecall_cmd: u32) -> Self {
+        pub fn new(ciphertext: Ciphertext, state_counter: StateCounter, ecall_cmd: u32) -> Self {
             InsertCiphertext {
                 ciphertext,
+                state_counter,
                 ecall_cmd,
             }
         }
@@ -323,7 +328,7 @@ pub mod host_input {
         type HostOutput = host_output::InsertCiphertext;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let ecall_input = Self::EcallInput::new(self.ciphertext);
+            let ecall_input = Self::EcallInput::new(self.ciphertext, self.state_counter);
 
             Ok((ecall_input, Self::HostOutput::new()))
         }
@@ -335,13 +340,15 @@ pub mod host_input {
 
     pub struct InsertHandshake {
         handshake: ExportHandshake,
+        state_counter: StateCounter,
         ecall_cmd: u32,
     }
 
     impl InsertHandshake {
-        pub fn new(handshake: ExportHandshake, ecall_cmd: u32) -> Self {
+        pub fn new(handshake: ExportHandshake, state_counter: StateCounter, ecall_cmd: u32) -> Self {
             InsertHandshake {
                 handshake,
+                state_counter,
                 ecall_cmd,
             }
         }
@@ -352,7 +359,7 @@ pub mod host_input {
         type HostOutput = host_output::InsertHandshake;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let ecall_input = Self::EcallInput::new(self.handshake);
+            let ecall_input = Self::EcallInput::new(self.handshake, self.state_counter);
 
             Ok((ecall_input, Self::HostOutput::default()))
         }

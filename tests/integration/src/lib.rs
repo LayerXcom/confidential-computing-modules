@@ -20,13 +20,16 @@ use web3::{
     types::Address,
     Web3,
 };
+use once_cell::sync::Lazy;
 
-const ETH_URL: &str = "http://172.28.0.2:8545";
 const ABI_PATH: &str = "../../contract-build/Anonify.abi";
 const BIN_PATH: &str = "../../contract-build/Anonify.bin";
 const CONFIRMATIONS: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
+
+pub static ETH_URL: Lazy<String> =
+    Lazy::new(|| env::var("ETH_URL").unwrap_or("http://172.28.0.2:8545".to_string()));
 
 pub async fn get_enclave_encryption_key(
     contract_addr: &str,
@@ -35,7 +38,7 @@ pub async fn get_enclave_encryption_key(
     let enclave_encryption_key = dispatcher
         .get_enclave_encryption_key(GET_ENCLAVE_ENCRYPTION_KEY_CMD)
         .unwrap();
-    let transport = Http::new(ETH_URL).unwrap();
+    let transport = Http::new(&*ETH_URL).unwrap();
     let web3 = Web3::new(transport);
     let web3_conn = web3.eth();
 
@@ -73,7 +76,7 @@ async fn test_integration_eth_construct() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -182,7 +185,7 @@ async fn test_auto_notification() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -321,7 +324,7 @@ async fn test_integration_eth_transfer() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -485,7 +488,7 @@ async fn test_key_rotation() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -602,7 +605,7 @@ async fn test_integration_eth_approve() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -753,7 +756,7 @@ async fn test_integration_eth_transfer_from() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -1087,7 +1090,7 @@ async fn test_integration_eth_mint() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher
@@ -1218,7 +1221,7 @@ async fn test_integration_eth_burn() {
     let gas = 5_000_000;
     let cache = EventCache::default();
     let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, ETH_URL, cache).unwrap();
+        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer_addr = dispatcher

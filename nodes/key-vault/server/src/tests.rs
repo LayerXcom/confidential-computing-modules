@@ -683,7 +683,6 @@ fn set_env_vars() {
 }
 
 fn set_server_env_vars() {
-    env::set_var("ETH_URL", "http://172.28.0.2:8545");
     env::set_var("ABI_PATH", "../../../contract-build/Anonify.abi");
     env::set_var("BIN_PATH", "../../../contract-build/Anonify.bin");
     env::set_var("CONFIRMATIONS", "0");

@@ -6,10 +6,12 @@ use crate::{
     utils::*,
     workflow::*,
 };
-use anyhow::anyhow;
 use async_trait::async_trait;
 use ethabi::{decode, Event, EventParam, Hash, ParamType};
-use frame_common::crypto::{Ciphertext, ExportHandshake};
+use frame_common::{
+    crypto::{Ciphertext, ExportHandshake},
+    state_types::StateCounter,
+};
 use frame_host::engine::HostEngine;
 use sgx_types::sgx_enclave_id_t;
 use std::{cmp::Ordering, fmt, path::Path};
@@ -139,7 +141,7 @@ impl Web3Logs {
                 continue;
             }
 
-            let data = match decode_data(&log) {
+            let (bytes, state_counter) = match decode_data(&log) {
                 Ok(d) => d,
                 Err(e) => {
                     error!("{}", e);
@@ -149,7 +151,7 @@ impl Web3Logs {
 
             // Processing conditions by ciphertext or handshake event
             if log.0.topics[0] == self.events.ciphertext_signature() {
-                let res = match Ciphertext::decode(&mut &data[..]) {
+                let res = match Ciphertext::decode(&mut &bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
                         error!("{}", e);
@@ -161,10 +163,11 @@ impl Web3Logs {
                     res.epoch(),
                     res.generation(),
                     Payload::Ciphertext(res),
+                    state_counter,
                 );
                 payloads.push(payload);
             } else if log.0.topics[0] == self.events.handshake_signature() {
-                let res = match ExportHandshake::decode(&data[..]) {
+                let res = match ExportHandshake::decode(&bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
                         error!("{}", e);
@@ -176,6 +179,7 @@ impl Web3Logs {
                     res.prior_epoch(),
                     u32::MAX, // handshake is the last of the generation
                     Payload::Handshake(res),
+                    state_counter,
                 );
                 payloads.push(payload);
             } else {
@@ -276,7 +280,7 @@ impl InnerEnclaveLog {
 
             for e in self.payloads {
                 match e.payload {
-                    Payload::Ciphertext(ciphertext) => {
+                    Payload::Ciphertext(ref ciphertext) => {
                         info!(
                             "Fetch a ciphertext: roster_idx: {}, epoch: {}, generation: {}",
                             ciphertext.roster_idx(),
@@ -286,6 +290,7 @@ impl InnerEnclaveLog {
 
                         let inp = host_input::InsertCiphertext::new(
                             ciphertext.clone(),
+                            e.state_counter(),
                             fetch_ciphertext_cmd,
                         );
                         match InsertCiphertextWorkflow::exec(inp, eid)
@@ -323,8 +328,8 @@ impl InnerEnclaveLog {
                                 match (&self.logs)
                                     .into_iter()
                                     .find(|log| match decode_data(&log) {
-                                        Ok(data) => match Ciphertext::decode(&mut &data[..]) {
-                                            Ok(res) => res == ciphertext,
+                                        Ok((bytes, _state_counter)) => match Ciphertext::decode(&mut &bytes[..]) {
+                                            Ok(ref res) => res == ciphertext,
                                             Err(error) => {
                                                 error!("Ciphertext::decode error: {:?}", error);
                                                 false
@@ -353,15 +358,19 @@ impl InnerEnclaveLog {
                             }
                         };
                     }
-                    Payload::Handshake(handshake) => {
+                    Payload::Handshake(ref handshake) => {
                         info!(
                             "Fetch a handshake: roster_idx: {}, epoch: {}",
                             handshake.roster_idx(),
                             handshake.prior_epoch(),
                         );
 
-                        if let Err(e) = Self::insert_handshake(eid, handshake, fetch_handshake_cmd)
-                        {
+                        if let Err(e) = Self::insert_handshake(
+                            eid,
+                            handshake.clone(),
+                            e.state_counter(),
+                            fetch_handshake_cmd,
+                        ) {
                             error!("Error in enclave (InsertHandshakeWorkflow::exec): {:?}", e);
                             continue;
                         }
@@ -380,9 +389,10 @@ impl InnerEnclaveLog {
     fn insert_handshake(
         eid: sgx_enclave_id_t,
         handshake: ExportHandshake,
+        state_counter: StateCounter,
         fetch_handshake_cmd: u32,
     ) -> Result<()> {
-        let input = host_input::InsertHandshake::new(handshake, fetch_handshake_cmd);
+        let input = host_input::InsertHandshake::new(handshake, state_counter, fetch_handshake_cmd);
         InsertHandshakeWorkflow::exec(input, eid)?;
 
         Ok(())
@@ -422,15 +432,23 @@ pub struct PayloadType {
     epoch: u32,
     generation: u32,
     payload: Payload,
+    state_counter: StateCounter,
 }
 
 impl PayloadType {
-    pub(crate) fn new(roster_idx: u32, epoch: u32, generation: u32, payload: Payload) -> Self {
+    pub(crate) fn new(
+        roster_idx: u32,
+        epoch: u32,
+        generation: u32,
+        payload: Payload,
+        state_counter: StateCounter,
+    ) -> Self {
         PayloadType {
             roster_idx,
             epoch,
             generation,
             payload,
+            state_counter,
         }
     }
 
@@ -452,6 +470,10 @@ impl PayloadType {
 
     pub fn generation(&self) -> u32 {
         self.generation
+    }
+
+    pub fn state_counter(&self) -> StateCounter {
+        self.state_counter
     }
 }
 
@@ -517,20 +539,34 @@ impl EthEvent {
         let events = vec![
             Event {
                 name: "StoreCiphertext".to_owned(),
-                inputs: vec![EventParam {
-                    name: "ciphertext".to_owned(),
-                    kind: ParamType::Bytes,
-                    indexed: false,
-                }],
+                inputs: vec![
+                    EventParam {
+                        name: "ciphertext".to_owned(),
+                        kind: ParamType::Bytes,
+                        indexed: true,
+                    },
+                    EventParam {
+                        name: "stateCounter".to_owned(),
+                        kind: ParamType::Uint(256),
+                        indexed: true,
+                    },
+                ],
                 anonymous: false,
             },
             Event {
                 name: "StoreHandshake".to_owned(),
-                inputs: vec![EventParam {
-                    name: "handshake".to_owned(),
-                    kind: ParamType::Bytes,
-                    indexed: false,
-                }],
+                inputs: vec![
+                    EventParam {
+                        name: "handshake".to_owned(),
+                        kind: ParamType::Bytes,
+                        indexed: true,
+                    },
+                    EventParam {
+                        name: "stateCounter".to_owned(),
+                        kind: ParamType::Uint(256),
+                        indexed: true,
+                    },
+                ],
                 anonymous: false,
             },
         ];
@@ -547,17 +583,19 @@ impl EthEvent {
     }
 }
 
-fn decode_data(log: &EthLog) -> Result<Vec<u8>> {
-    let tokens = decode(&[ParamType::Bytes], &log.0.data.0)?;
-    let mut res = vec![];
-
-    for token in tokens {
-        res.extend_from_slice(
-            &token
-                .to_bytes()
-                .ok_or_else(|| anyhow!("Failed token.to_bytes() when decoding data"))?,
-        );
+fn decode_data(log: &EthLog) -> Result<(Vec<u8>, StateCounter)> {
+    let tokens = decode(&[ParamType::Bytes, ParamType::Uint(256)], &log.0.data.0)?;
+    if tokens.len() != 2 {
+        return Err(HostError::InvalidNumberOfEthLogToken(2));
     }
+    let bytes = tokens[0]
+        .clone()
+        .to_bytes()
+        .ok_or_else(|| HostError::InvalidEthLogToken)?;
+    let state_counter = tokens[1]
+        .clone()
+        .to_uint()
+        .ok_or_else(|| HostError::InvalidEthLogToken)?;
 
-    Ok(res)
+    Ok((bytes, StateCounter::new(state_counter.as_u32())))
 }
