@@ -353,7 +353,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_sodium() {
-        let mut rng = rand::thread_rng();
+        let mut rng = &mut rand::rngs::OsRng;
 
         let sk_server = SodiumPrivateKey::from_random(&mut rng).unwrap();
         let pk_server = sk_server.public_key();
@@ -367,7 +367,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_nonce_serde() {
-        let mut rng = rand::thread_rng();
+        let mut rng = &mut rand::rngs::OsRng;
         let nonce = SodiumNonce::from_random(&mut rng).unwrap();
 
         let v = serde_json::to_vec(&nonce).unwrap();
@@ -377,7 +377,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_private_key_serde() {
-        let mut rng = rand::thread_rng();
+        let mut rng = &mut rand::rngs::OsRng;
         let sk = SodiumPrivateKey::from_random(&mut rng).unwrap();
 
         let v = serde_json::to_vec(&sk).unwrap();
@@ -387,7 +387,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_pubkey_serde() {
-        let mut rng = rand::thread_rng();
+        let mut rng = &mut rand::rngs::OsRng;
 
         let sk = SodiumPrivateKey::from_random(&mut rng).unwrap();
         let pk = sk.public_key();

@@ -352,8 +352,8 @@ dependencies = [
 name = "anonify-ecall-types"
 version = "0.1.0"
 dependencies = [
- "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx)",
  "bincode 1.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx)",
  "frame-common",
  "frame-runtime",
  "frame-sodium",
@@ -586,9 +586,10 @@ dependencies = [
 [[package]]
 name = "base64"
 version = "0.10.1"
-source = "git+https://github.com/mesalock-linux/rust-base64-sgx#368a1db999e3005bb1bf2278dbe31f0906441f8c"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b25d992356d2eb0ed82172f5248873db5560c4721f564b13cb5193bda5e668e"
 dependencies = [
- "sgx_tstd",
+ "byteorder 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -602,10 +603,9 @@ dependencies = [
 [[package]]
 name = "base64"
 version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b25d992356d2eb0ed82172f5248873db5560c4721f564b13cb5193bda5e668e"
+source = "git+https://github.com/mesalock-linux/rust-base64-sgx#368a1db999e3005bb1bf2278dbe31f0906441f8c"
 dependencies = [
- "byteorder 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sgx_tstd",
 ]
 
 [[package]]
@@ -629,11 +629,11 @@ checksum = "904dfeac50f3cdaba28fc6f57fdcddb75f49ed61346676a78c4ffe55877802fd"
 [[package]]
 name = "bincode"
 version = "1.3.1"
-source = "git+https://github.com/mesalock-linux/bincode-sgx#58b004eb5bd7ab8e974a02b70344afcd9724bb2d"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f30d3a39baa26f9651f17b375061f3233dde33424a8b72b0dbe93a68a0bc896d"
 dependencies = [
- "byteorder 1.3.4 (git+https://github.com/mesalock-linux/byteorder-sgx)",
- "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
- "sgx_tstd",
+ "byteorder 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.117",
 ]
 
 [[package]]
@@ -649,11 +649,11 @@ dependencies = [
 [[package]]
 name = "bincode"
 version = "1.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f30d3a39baa26f9651f17b375061f3233dde33424a8b72b0dbe93a68a0bc896d"
+source = "git+https://github.com/mesalock-linux/bincode-sgx#58b004eb5bd7ab8e974a02b70344afcd9724bb2d"
 dependencies = [
- "byteorder 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.117",
+ "byteorder 1.3.4 (git+https://github.com/mesalock-linux/byteorder-sgx)",
+ "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
+ "sgx_tstd",
 ]
 
 [[package]]
@@ -702,23 +702,23 @@ dependencies = [
 [[package]]
 name = "block-buffer"
 version = "0.7.3"
-source = "git+https://github.com/mesalock-linux/rustcrypto-utils-sgx#07ebf780554e018037f750186d61ea9bdc031148"
-dependencies = [
- "block-padding 0.1.4",
- "byte-tools 0.3.1 (git+https://github.com/mesalock-linux/rustcrypto-utils-sgx)",
- "byteorder 1.3.4 (git+https://github.com/mesalock-linux/byteorder-sgx)",
- "generic-array 0.12.3",
-]
-
-[[package]]
-name = "block-buffer"
-version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0940dc441f31689269e10ac70eb1002a3a1d3ad1390e030043662eb7fe4688b"
 dependencies = [
  "block-padding 0.1.5",
  "byte-tools 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "generic-array 0.12.3",
+]
+
+[[package]]
+name = "block-buffer"
+version = "0.7.3"
+source = "git+https://github.com/mesalock-linux/rustcrypto-utils-sgx#07ebf780554e018037f750186d61ea9bdc031148"
+dependencies = [
+ "block-padding 0.1.4",
+ "byte-tools 0.3.1 (git+https://github.com/mesalock-linux/rustcrypto-utils-sgx)",
+ "byteorder 1.3.4 (git+https://github.com/mesalock-linux/byteorder-sgx)",
  "generic-array 0.12.3",
 ]
 
@@ -808,13 +808,19 @@ checksum = "560c32574a12a89ecd91f5e742165893f86e3ab98d21f8ea548658eb9eef5f40"
 [[package]]
 name = "byte-tools"
 version = "0.3.1"
-source = "git+https://github.com/mesalock-linux/rustcrypto-utils-sgx#07ebf780554e018037f750186d61ea9bdc031148"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 
 [[package]]
 name = "byte-tools"
 version = "0.3.1"
+source = "git+https://github.com/mesalock-linux/rustcrypto-utils-sgx#07ebf780554e018037f750186d61ea9bdc031148"
+
+[[package]]
+name = "byteorder"
+version = "1.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
+checksum = "08c48aae112d48ed9f069b33538ea9e3e90aa263cfa3d1c24309612b1f7472de"
 
 [[package]]
 name = "byteorder"
@@ -823,12 +829,6 @@ source = "git+https://github.com/mesalock-linux/byteorder-sgx#325f392dcd294109eb
 dependencies = [
  "sgx_tstd",
 ]
-
-[[package]]
-name = "byteorder"
-version = "1.3.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08c48aae112d48ed9f069b33538ea9e3e90aa263cfa3d1c24309612b1f7472de"
 
 [[package]]
 name = "bytes"
@@ -1151,13 +1151,13 @@ checksum = "8aebca1129a03dc6dc2b127edd729435bbc4a37e1d5f4d7513165089ceb02634"
 [[package]]
 name = "cpuid-bool"
 version = "0.2.0"
-source = "git+https://github.com/cipepser/utils?branch=sgx#b68163b0515e3a63de4095ade35946ec7166286d"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcb25d077389e53838a8158c8e99174c5a9d902dee4904320db714f3c653ffba"
 
 [[package]]
 name = "cpuid-bool"
 version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcb25d077389e53838a8158c8e99174c5a9d902dee4904320db714f3c653ffba"
+source = "git+https://github.com/cipepser/utils?branch=sgx#b68163b0515e3a63de4095ade35946ec7166286d"
 
 [[package]]
 name = "crc32fast"
@@ -1245,15 +1245,6 @@ dependencies = [
 [[package]]
 name = "crypto-mac"
 version = "0.8.0"
-source = "git+https://github.com/mesalock-linux/rustcrypto-traits-sgx#7a5cb154f438c2401b3d8e37de96dd0acf8f493e"
-dependencies = [
- "generic-array 0.12.3",
- "subtle 2.2.2",
-]
-
-[[package]]
-name = "crypto-mac"
-version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b584a330336237c1eecd3e94266efb216c56ed91225d634cb2991c5f3fd1aeab"
 dependencies = [
@@ -1262,16 +1253,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "crypto_box"
-version = "0.5.0"
-source = "git+https://github.com/cipepser/AEADs.git?branch=feature/no-default-feature-in-rand-core#1c35142b1f204cd5b59527767736b7cdc2e93420"
+name = "crypto-mac"
+version = "0.8.0"
+source = "git+https://github.com/mesalock-linux/rustcrypto-traits-sgx#7a5cb154f438c2401b3d8e37de96dd0acf8f493e"
 dependencies = [
- "chacha20poly1305 0.7.0",
- "rand_core 0.5.1 (git+https://github.com/cipepser/rand?branch=feature/only-trait)",
- "salsa20",
- "x25519-dalek 1.1.0 (git+https://github.com/cipepser/x25519-dalek?branch=feature/my-rand_core)",
- "xsalsa20poly1305 0.6.0 (git+https://github.com/cipepser/AEADs.git?branch=feature/no-default-feature-in-rand-core)",
- "zeroize 1.2.0",
+ "generic-array 0.12.3",
+ "subtle 2.2.2",
 ]
 
 [[package]]
@@ -1285,6 +1272,19 @@ dependencies = [
  "salsa20",
  "x25519-dalek 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "xsalsa20poly1305 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "zeroize 1.2.0",
+]
+
+[[package]]
+name = "crypto_box"
+version = "0.5.0"
+source = "git+https://github.com/cipepser/AEADs.git?branch=feature/no-default-feature-in-rand-core#1c35142b1f204cd5b59527767736b7cdc2e93420"
+dependencies = [
+ "chacha20poly1305 0.7.0",
+ "rand_core 0.5.1 (git+https://github.com/cipepser/rand?branch=feature/only-trait)",
+ "salsa20",
+ "x25519-dalek 1.1.0 (git+https://github.com/cipepser/x25519-dalek?branch=feature/my-rand_core)",
+ "xsalsa20poly1305 0.6.0 (git+https://github.com/cipepser/AEADs.git?branch=feature/no-default-feature-in-rand-core)",
  "zeroize 1.2.0",
 ]
 
@@ -1380,19 +1380,19 @@ dependencies = [
 [[package]]
 name = "digest"
 version = "0.8.1"
-source = "git+https://github.com/mesalock-linux/rustcrypto-traits-sgx#7a5cb154f438c2401b3d8e37de96dd0acf8f493e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3d0c8c8752312f9713efd397ff63acb9f85585afbf179282e720e7704954dd5"
 dependencies = [
  "generic-array 0.12.3",
- "sgx_tstd",
 ]
 
 [[package]]
 name = "digest"
 version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3d0c8c8752312f9713efd397ff63acb9f85585afbf179282e720e7704954dd5"
+source = "git+https://github.com/mesalock-linux/rustcrypto-traits-sgx#7a5cb154f438c2401b3d8e37de96dd0acf8f493e"
 dependencies = [
  "generic-array 0.12.3",
+ "sgx_tstd",
 ]
 
 [[package]]
@@ -1704,8 +1704,8 @@ dependencies = [
  "anyhow 1.0.28",
  "anyhow 1.0.34",
  "base64 0.11.0",
- "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx)",
  "bincode 1.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx)",
  "ed25519-dalek",
  "hex",
  "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
@@ -1816,8 +1816,8 @@ version = "0.1.0"
 dependencies = [
  "anyhow 1.0.28",
  "anyhow 1.0.34",
- "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx)",
  "bincode 1.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx)",
  "frame-common",
  "frame-sodium",
  "frame-treekem",
@@ -1838,14 +1838,14 @@ version = "0.1.0"
 dependencies = [
  "anyhow 1.0.28",
  "anyhow 1.0.34",
- "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx)",
  "bincode 1.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "crypto_box 0.5.0 (git+https://github.com/cipepser/AEADs.git?branch=feature/no-default-feature-in-rand-core)",
+ "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx)",
  "crypto_box 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "crypto_box 0.5.0 (git+https://github.com/cipepser/AEADs.git?branch=feature/no-default-feature-in-rand-core)",
  "frame-common",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand_core 0.5.1 (git+https://github.com/cipepser/rand?branch=feature/only-trait)",
  "rand_core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand_core 0.5.1 (git+https://github.com/cipepser/rand?branch=feature/only-trait)",
  "serde 1.0.117",
  "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
  "serde_bytes 0.11.3",
@@ -1854,8 +1854,8 @@ dependencies = [
  "sgx_trts",
  "sgx_tstd",
  "sgx_types 1.1.3",
- "xsalsa20poly1305 0.6.0 (git+https://github.com/cipepser/AEADs.git?branch=feature/no-default-feature-in-rand-core)",
  "xsalsa20poly1305 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "xsalsa20poly1305 0.6.0 (git+https://github.com/cipepser/AEADs.git?branch=feature/no-default-feature-in-rand-core)",
 ]
 
 [[package]]
@@ -1866,8 +1866,8 @@ dependencies = [
  "anyhow 1.0.34",
  "base64 0.10.1 (git+https://github.com/mesalock-linux/rust-base64-sgx?rev=sgx_1.1.3)",
  "base64 0.11.0",
- "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx)",
  "bincode 1.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx)",
  "frame-common",
  "frame-config",
  "frame-mra-tls",
@@ -2219,20 +2219,20 @@ dependencies = [
 [[package]]
 name = "hmac"
 version = "0.7.1"
-source = "git+https://github.com/mesalock-linux/rustcrypto-MACs-sgx#e8e1410b9c82d2e59da42fa8b0d8ed38e80a203c"
-dependencies = [
- "crypto-mac 0.8.0 (git+https://github.com/mesalock-linux/rustcrypto-traits-sgx)",
- "digest 0.8.1 (git+https://github.com/mesalock-linux/rustcrypto-traits-sgx)",
-]
-
-[[package]]
-name = "hmac"
-version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5dcb5e64cda4c23119ab41ba960d1e170a774c8e4b9d9e6a9bc18aabf5e59695"
 dependencies = [
  "crypto-mac 0.7.0",
  "digest 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "hmac"
+version = "0.7.1"
+source = "git+https://github.com/mesalock-linux/rustcrypto-MACs-sgx#e8e1410b9c82d2e59da42fa8b0d8ed38e80a203c"
+dependencies = [
+ "crypto-mac 0.8.0 (git+https://github.com/mesalock-linux/rustcrypto-traits-sgx)",
+ "digest 0.8.1 (git+https://github.com/mesalock-linux/rustcrypto-traits-sgx)",
 ]
 
 [[package]]
@@ -2248,21 +2248,21 @@ dependencies = [
 [[package]]
 name = "hmac-drbg"
 version = "0.1.2"
-source = "git+https://github.com/mesalock-linux/hmac-drbg-rs-sgx#89d6b0113157599417af867a8d2b4afd5c6f1946"
-dependencies = [
- "generic-array 0.12.3",
- "hmac 0.7.1 (git+https://github.com/mesalock-linux/rustcrypto-MACs-sgx)",
-]
-
-[[package]]
-name = "hmac-drbg"
-version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4fe727d41d2eec0a6574d887914347e5ff96a3b87177817e2a9820c5c87fecc2"
 dependencies = [
  "digest 0.6.2",
  "generic-array 0.8.3",
  "hmac 0.4.2",
+]
+
+[[package]]
+name = "hmac-drbg"
+version = "0.1.2"
+source = "git+https://github.com/mesalock-linux/hmac-drbg-rs-sgx#89d6b0113157599417af867a8d2b4afd5c6f1946"
+dependencies = [
+ "generic-array 0.12.3",
+ "hmac 0.7.1 (git+https://github.com/mesalock-linux/rustcrypto-MACs-sgx)",
 ]
 
 [[package]]
@@ -2301,23 +2301,23 @@ dependencies = [
 [[package]]
 name = "http"
 version = "0.2.1"
-source = "git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.3#62544a1833f98f1810a44877c5f1efe45f5327c0"
-dependencies = [
- "bytes 0.5.4",
- "fnv 1.0.6",
- "itoa 0.4.5",
- "sgx_tstd",
-]
-
-[[package]]
-name = "http"
-version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28d569972648b2c512421b5f2a405ad6ac9666547189d0c5477a3f200f3e02f9"
 dependencies = [
  "bytes 0.5.6",
  "fnv 1.0.7",
  "itoa 0.4.6",
+]
+
+[[package]]
+name = "http"
+version = "0.2.1"
+source = "git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.3#62544a1833f98f1810a44877c5f1efe45f5327c0"
+dependencies = [
+ "bytes 0.5.4",
+ "fnv 1.0.6",
+ "itoa 0.4.5",
+ "sgx_tstd",
 ]
 
 [[package]]
@@ -2873,19 +2873,19 @@ dependencies = [
 [[package]]
 name = "log"
 version = "0.4.11"
-source = "git+https://github.com/mesalock-linux/log-sgx#5a057d237cf96e9137de08387eb70105d5705648"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fabed175da42fed1fa0746b0ea71f412aa9d35e76e95e59b192c64b9dc2bf8b"
 dependencies = [
  "cfg-if 0.1.10",
- "sgx_tstd",
 ]
 
 [[package]]
 name = "log"
 version = "0.4.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fabed175da42fed1fa0746b0ea71f412aa9d35e76e95e59b192c64b9dc2bf8b"
+source = "git+https://github.com/mesalock-linux/log-sgx#5a057d237cf96e9137de08387eb70105d5705648"
 dependencies = [
  "cfg-if 0.1.10",
+ "sgx_tstd",
 ]
 
 [[package]]
@@ -3151,7 +3151,7 @@ dependencies = [
 [[package]]
 name = "once_cell"
 version = "1.4.0"
-source = "git+https://github.com/mesalock-linux/once_cell-sgx#cefcaa03fed4d85276b3235d875f1b45d399cc3c"
+source = "git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3#cefcaa03fed4d85276b3235d875f1b45d399cc3c"
 dependencies = [
  "sgx_tstd",
 ]
@@ -3159,7 +3159,7 @@ dependencies = [
 [[package]]
 name = "once_cell"
 version = "1.4.0"
-source = "git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3#cefcaa03fed4d85276b3235d875f1b45d399cc3c"
+source = "git+https://github.com/mesalock-linux/once_cell-sgx#cefcaa03fed4d85276b3235d875f1b45d399cc3c"
 dependencies = [
  "sgx_tstd",
 ]
@@ -3636,6 +3636,19 @@ dependencies = [
 [[package]]
 name = "rand"
 version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a6b1679d49b24bbfe0c803429aa1874472f50d9b363131f0e89fc356b544d03"
+dependencies = [
+ "getrandom 0.1.15",
+ "libc",
+ "rand_chacha 0.2.2",
+ "rand_core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand_hc 0.2.0",
+]
+
+[[package]]
+name = "rand"
+version = "0.7.3"
 source = "git+https://github.com/mesalock-linux/rand-sgx?tag=v0.7.3_sgx1.1.3#55697c5a4007d13e8d5f37be7216be1b18fb8ebf"
 dependencies = [
  "getrandom 0.1.14",
@@ -3653,19 +3666,6 @@ dependencies = [
  "rand_chacha 0.2.1 (git+https://github.com/mesalock-linux/rand-sgx?rev=v0.7.3_sgx1.1.3)",
  "rand_core 0.5.1 (git+https://github.com/mesalock-linux/rand-sgx?rev=v0.7.3_sgx1.1.3)",
  "sgx_tstd",
-]
-
-[[package]]
-name = "rand"
-version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a6b1679d49b24bbfe0c803429aa1874472f50d9b363131f0e89fc356b544d03"
-dependencies = [
- "getrandom 0.1.15",
- "libc",
- "rand_chacha 0.2.2",
- "rand_core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "rand_hc 0.2.0",
 ]
 
 [[package]]
@@ -3726,16 +3726,20 @@ checksum = "9c33a3c44ca05fa6f1807d8e6743f3824e8509beca625669633be0acbdf509dc"
 [[package]]
 name = "rand_core"
 version = "0.5.1"
-source = "git+https://github.com/mesalock-linux/rand-sgx?tag=v0.7.3_sgx1.1.3#55697c5a4007d13e8d5f37be7216be1b18fb8ebf"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90bde5296fc891b0cef12a6d03ddccc162ce7b2aff54160af9338f8d40df6d19"
 dependencies = [
- "getrandom 0.1.14",
- "sgx_tstd",
+ "getrandom 0.1.15",
 ]
 
 [[package]]
 name = "rand_core"
 version = "0.5.1"
-source = "git+https://github.com/cipepser/rand?branch=feature/only-trait#170c438bb13f94fb64f6b0190a156093ec0bc855"
+source = "git+https://github.com/mesalock-linux/rand-sgx?tag=v0.7.3_sgx1.1.3#55697c5a4007d13e8d5f37be7216be1b18fb8ebf"
+dependencies = [
+ "getrandom 0.1.14",
+ "sgx_tstd",
+]
 
 [[package]]
 name = "rand_core"
@@ -3749,11 +3753,7 @@ dependencies = [
 [[package]]
 name = "rand_core"
 version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90bde5296fc891b0cef12a6d03ddccc162ce7b2aff54160af9338f8d40df6d19"
-dependencies = [
- "getrandom 0.1.15",
-]
+source = "git+https://github.com/cipepser/rand?branch=feature/only-trait#170c438bb13f94fb64f6b0190a156093ec0bc855"
 
 [[package]]
 name = "rand_hc"
@@ -4071,19 +4071,6 @@ dependencies = [
 [[package]]
 name = "rustls"
 version = "0.19.0"
-source = "git+https://github.com/mesalock-linux/rustls?branch=mesalock_sgx#95b5e79dc24b02f3ce424437eb9698509d0baf58"
-dependencies = [
- "base64 0.10.1 (git+https://github.com/mesalock-linux/rust-base64-sgx)",
- "log 0.4.11 (git+https://github.com/mesalock-linux/log-sgx)",
- "ring 0.16.19",
- "sct 0.6.0 (git+https://github.com/mesalock-linux/sct.rs?branch=mesalock_sgx)",
- "sgx_tstd",
- "webpki 0.21.4",
-]
-
-[[package]]
-name = "rustls"
-version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "064fd21ff87c6e87ed4506e68beb42459caa4a0e2eb144932e6776768556980b"
 dependencies = [
@@ -4092,6 +4079,19 @@ dependencies = [
  "ring 0.16.15",
  "sct 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "webpki 0.21.3",
+]
+
+[[package]]
+name = "rustls"
+version = "0.19.0"
+source = "git+https://github.com/mesalock-linux/rustls?branch=mesalock_sgx#95b5e79dc24b02f3ce424437eb9698509d0baf58"
+dependencies = [
+ "base64 0.10.1 (git+https://github.com/mesalock-linux/rust-base64-sgx)",
+ "log 0.4.11 (git+https://github.com/mesalock-linux/log-sgx)",
+ "ring 0.16.19",
+ "sct 0.6.0 (git+https://github.com/mesalock-linux/sct.rs?branch=mesalock_sgx)",
+ "sgx_tstd",
+ "webpki 0.21.4",
 ]
 
 [[package]]
@@ -4154,20 +4154,20 @@ dependencies = [
 [[package]]
 name = "sct"
 version = "0.6.0"
-source = "git+https://github.com/mesalock-linux/sct.rs?branch=mesalock_sgx#c4d859cca232e6c9d88ca12048df3bc26e1ed4ad"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3042af939fca8c3453b7af0f1c66e533a15a86169e39de2657310ade8f98d3c"
 dependencies = [
- "ring 0.16.19",
- "sgx_tstd",
+ "ring 0.16.15",
  "untrusted",
 ]
 
 [[package]]
 name = "sct"
 version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3042af939fca8c3453b7af0f1c66e533a15a86169e39de2657310ade8f98d3c"
+source = "git+https://github.com/mesalock-linux/sct.rs?branch=mesalock_sgx#c4d859cca232e6c9d88ca12048df3bc26e1ed4ad"
 dependencies = [
- "ring 0.16.15",
+ "ring 0.16.19",
+ "sgx_tstd",
  "untrusted",
 ]
 
@@ -4239,18 +4239,18 @@ dependencies = [
 [[package]]
 name = "serde"
 version = "1.0.118"
-source = "git+https://github.com/mesalock-linux/serde-sgx.git#db0226f1d5d70fca6b96af2c285851502204e21c"
+source = "git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.3#db0226f1d5d70fca6b96af2c285851502204e21c"
 dependencies = [
- "serde_derive 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
+ "serde_derive 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.3)",
  "sgx_tstd",
 ]
 
 [[package]]
 name = "serde"
 version = "1.0.118"
-source = "git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.3#db0226f1d5d70fca6b96af2c285851502204e21c"
+source = "git+https://github.com/mesalock-linux/serde-sgx.git#db0226f1d5d70fca6b96af2c285851502204e21c"
 dependencies = [
- "serde_derive 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.3)",
+ "serde_derive 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
  "sgx_tstd",
 ]
 
@@ -4305,7 +4305,7 @@ dependencies = [
 [[package]]
 name = "serde_derive"
 version = "1.0.118"
-source = "git+https://github.com/mesalock-linux/serde-sgx.git#db0226f1d5d70fca6b96af2c285851502204e21c"
+source = "git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.3#db0226f1d5d70fca6b96af2c285851502204e21c"
 dependencies = [
  "proc-macro2 1.0.24",
  "quote 1.0.7",
@@ -4315,7 +4315,7 @@ dependencies = [
 [[package]]
 name = "serde_derive"
 version = "1.0.118"
-source = "git+https://github.com/mesalock-linux/serde-sgx.git?rev=sgx_1.1.3#db0226f1d5d70fca6b96af2c285851502204e21c"
+source = "git+https://github.com/mesalock-linux/serde-sgx.git#db0226f1d5d70fca6b96af2c285851502204e21c"
 dependencies = [
  "proc-macro2 1.0.24",
  "quote 1.0.7",
@@ -4737,7 +4737,8 @@ checksum = "213701ba3370744dcd1a12960caa4843b3d68b4d1c0a5d575e0d65b2ee9d16c0"
 [[package]]
 name = "stream-cipher"
 version = "0.3.2"
-source = "git+https://github.com/mesalock-linux/rustcrypto-traits-sgx#7a5cb154f438c2401b3d8e37de96dd0acf8f493e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8131256a5896cabcf5eb04f4d6dacbe1aefda854b0d9896e09cb58829ec5638c"
 dependencies = [
  "generic-array 0.12.3",
 ]
@@ -4745,8 +4746,7 @@ dependencies = [
 [[package]]
 name = "stream-cipher"
 version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8131256a5896cabcf5eb04f4d6dacbe1aefda854b0d9896e09cb58829ec5638c"
+source = "git+https://github.com/mesalock-linux/rustcrypto-traits-sgx#7a5cb154f438c2401b3d8e37de96dd0acf8f493e"
 dependencies = [
  "generic-array 0.12.3",
 ]
@@ -5478,18 +5478,18 @@ dependencies = [
 [[package]]
 name = "unicase"
 version = "2.6.0"
-source = "git+https://github.com/mesalock-linux/unicase-sgx#0b0519348572927118af47af3da4da9ffdca8ec6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50f37be617794602aabbeee0be4f259dc1778fabe05e2d67ee8f79326d5cb4f6"
 dependencies = [
- "sgx_tstd",
  "version_check",
 ]
 
 [[package]]
 name = "unicase"
 version = "2.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50f37be617794602aabbeee0be4f259dc1778fabe05e2d67ee8f79326d5cb4f6"
+source = "git+https://github.com/mesalock-linux/unicase-sgx#0b0519348572927118af47af3da4da9ffdca8ec6"
 dependencies = [
+ "sgx_tstd",
  "version_check",
 ]
 
@@ -5856,16 +5856,6 @@ dependencies = [
 [[package]]
 name = "x25519-dalek"
 version = "1.1.0"
-source = "git+https://github.com/cipepser/x25519-dalek?branch=feature/my-rand_core#448b56e5178ea0d4e755b2aaacdac8c9dba27e02"
-dependencies = [
- "curve25519-dalek 3.0.0",
- "rand_core 0.5.1 (git+https://github.com/cipepser/rand?branch=feature/only-trait)",
- "zeroize 1.2.0",
-]
-
-[[package]]
-name = "x25519-dalek"
-version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc614d95359fd7afc321b66d2107ede58b246b844cf5d8a0adcca413e439f088"
 dependencies = [
@@ -5875,15 +5865,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "xsalsa20poly1305"
-version = "0.6.0"
-source = "git+https://github.com/cipepser/AEADs.git?branch=feature/no-default-feature-in-rand-core#1c35142b1f204cd5b59527767736b7cdc2e93420"
+name = "x25519-dalek"
+version = "1.1.0"
+source = "git+https://github.com/cipepser/x25519-dalek?branch=feature/my-rand_core#448b56e5178ea0d4e755b2aaacdac8c9dba27e02"
 dependencies = [
- "aead",
- "poly1305 0.7.0-pre",
+ "curve25519-dalek 3.0.0",
  "rand_core 0.5.1 (git+https://github.com/cipepser/rand?branch=feature/only-trait)",
- "salsa20",
- "subtle 2.3.0",
  "zeroize 1.2.0",
 ]
 
@@ -5896,6 +5883,19 @@ dependencies = [
  "aead",
  "poly1305 0.6.2",
  "rand_core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "salsa20",
+ "subtle 2.3.0",
+ "zeroize 1.2.0",
+]
+
+[[package]]
+name = "xsalsa20poly1305"
+version = "0.6.0"
+source = "git+https://github.com/cipepser/AEADs.git?branch=feature/no-default-feature-in-rand-core#1c35142b1f204cd5b59527767736b7cdc2e93420"
+dependencies = [
+ "aead",
+ "poly1305 0.7.0-pre",
+ "rand_core 0.5.1 (git+https://github.com/cipepser/rand?branch=feature/only-trait)",
  "salsa20",
  "subtle 2.3.0",
  "zeroize 1.2.0",

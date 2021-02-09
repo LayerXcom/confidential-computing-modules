@@ -37,7 +37,7 @@ fn main() {
     let root_dir = global_rootdir_match(&default_root_dir, &matches);
     let rng = &mut OsRng;
     // just for testing
-    let mut csprng = rand::thread_rng();
+    let mut csprng = &mut OsRng;
 
     let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
     let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set");

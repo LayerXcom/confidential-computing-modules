@@ -316,7 +316,9 @@ impl Ed25519ChallengeResponse {
     #[cfg(feature = "std")]
     fn inner_new_from_rng<R: RngCore + CryptoRng>(rng: &mut R) -> Self {
         let keypair = Keypair::generate(rng);
-        let challenge = rand::thread_rng().gen::<[u8; 32]>();
+        let rng = &mut rand::rngs::OsRng;
+        let challenge = rng.gen::<[u8; 32]>();
+
         let sig = keypair.sign(&challenge);
 
         assert!(keypair.verify(&challenge, &sig).is_ok());

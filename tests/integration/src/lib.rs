@@ -70,7 +70,7 @@ async fn test_integration_eth_construct() {
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     // just for testing
-    let mut csprng = rand::thread_rng();
+    let mut csprng = &mut rand::rngs::OsRng;
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
@@ -178,7 +178,7 @@ async fn test_auto_notification() {
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     // just for testing
-    let mut csprng = rand::thread_rng();
+    let mut csprng = &mut rand::rngs::OsRng;
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
@@ -316,7 +316,7 @@ async fn test_integration_eth_transfer() {
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     // just for testing
-    let mut csprng = rand::thread_rng();
+    let mut csprng = &mut rand::rngs::OsRng;
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -480,7 +480,7 @@ async fn test_key_rotation() {
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     // just for testing
-    let mut csprng = rand::thread_rng();
+    let mut csprng = &mut rand::rngs::OsRng;
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -598,7 +598,7 @@ async fn test_integration_eth_approve() {
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     // just for testing
-    let mut csprng = rand::thread_rng();
+    let mut csprng = &mut rand::rngs::OsRng;
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
@@ -748,7 +748,7 @@ async fn test_integration_eth_transfer_from() {
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     // just for testing
-    let mut csprng = rand::thread_rng();
+    let mut csprng = &mut rand::rngs::OsRng;
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
@@ -1083,7 +1083,7 @@ async fn test_integration_eth_mint() {
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     // just for testing
-    let mut csprng = rand::thread_rng();
+    let mut csprng = &mut rand::rngs::OsRng;
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
@@ -1214,7 +1214,7 @@ async fn test_integration_eth_burn() {
     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
     let eid = enclave.geteid();
     // just for testing
-    let mut csprng = rand::thread_rng();
+    let mut csprng = &mut rand::rngs::OsRng;
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 

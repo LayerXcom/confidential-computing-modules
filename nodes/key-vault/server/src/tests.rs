@@ -64,7 +64,7 @@ async fn test_backup_path_secret() {
         .expect("Failed to initialize client enclave.");
     let app_eid = app_enclave.geteid();
     // just for testing
-    let mut csprng = rand::thread_rng();
+    let mut csprng = &mut rand::rngs::OsRng;
 
     let erc20_server = Arc::new(ERC20Server::<EthDeployer, EthSender, EventWatcher>::new(
         app_eid,
@@ -221,7 +221,7 @@ async fn test_recover_without_key_vault() {
         .expect("Failed to initialize client enclave.");
     let app_eid = app_enclave.geteid();
     // just for testing
-    let mut csprng = rand::thread_rng();
+    let mut csprng = &mut rand::rngs::OsRng;
 
     let erc20_server = Arc::new(ERC20Server::<EthDeployer, EthSender, EventWatcher>::new(
         app_eid,
@@ -372,7 +372,7 @@ async fn test_manually_backup_all() {
         .expect("Failed to initialize client enclave.");
     let app_eid = app_enclave.geteid();
     // just for testing
-    let mut csprng = rand::thread_rng();
+    let mut csprng = &mut rand::rngs::OsRng;
 
     let erc20_server = Arc::new(ERC20Server::<EthDeployer, EthSender, EventWatcher>::new(
         app_eid,
@@ -539,7 +539,7 @@ async fn test_manually_recover_all() {
         .expect("Failed to initialize client enclave.");
     let app_eid = app_enclave.geteid();
     // just for testing
-    let mut csprng = rand::thread_rng();
+    let mut csprng = &mut rand::rngs::OsRng;
 
     let erc20_server = Arc::new(ERC20Server::<EthDeployer, EthSender, EventWatcher>::new(
         app_eid,
