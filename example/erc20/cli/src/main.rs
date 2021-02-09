@@ -420,7 +420,7 @@ fn subcommand_anonify<R, CR>(
                 rng,
                 csprng,
             )
-            .expect("Failed to burn command");
+            .expect("Failed to append_blob command");
         }
         ("get_enclave_encryption_key", Some(_)) => {
             let enclave_encryption_key = commands::get_enclave_encryption_key(anonify_url.clone())
