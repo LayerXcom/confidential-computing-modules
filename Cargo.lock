@@ -1503,6 +1503,7 @@ version = "0.1.0"
 dependencies = [
  "anonify-wallet",
  "anyhow 1.0.34",
+ "base64 0.11.0",
  "clap",
  "console 0.7.7",
  "dialoguer",
