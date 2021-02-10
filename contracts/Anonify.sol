@@ -39,6 +39,7 @@ contract Anonify is ReportHandle {
     ) public ReportHandle(_report, _reportSig) {
         require(_rosterIdx == 0, "First roster_idx must be zero");
 
+        _groupKeyCounter[_rosterIdx] = GroupKeyCounter(0, 1);
         _owner = msg.sender;
         _mrenclaveVer = mrenclaveVer;
         _senderToRosterIdx[msg.sender] = _rosterIdx;
@@ -70,6 +71,7 @@ contract Anonify is ReportHandle {
         );
 
         handleReport(_report, _reportSig);
+        _groupKeyCounter[_rosterIdx] = GroupKeyCounter(0, 1);
         _senderToRosterIdx[msg.sender] = _rosterIdx;
         _rosterIdxCounter = _rosterIdx;
         storeHandshake(_handshake);
