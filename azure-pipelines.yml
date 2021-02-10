@@ -31,8 +31,8 @@ stages:
       displayName: Build and Push anonify image
       inputs:
         command: buildAndPush
-        containerRegistry: anonifydevdocker
-        repository: anonifydev
+        containerRegistry: anonify-ci-cd-acr
+        repository: erc20-state-runtime
         tags: latest
         dockerfile: ./docker/erc20.Dockerfile
         buildContext: .
@@ -40,7 +40,7 @@ stages:
       displayName: Build and Push key-vault image
       inputs:
         command: buildAndPush
-        containerRegistry: anonifydevdocker
+        containerRegistry: anonify-ci-cd-acr
         repository: key-vault
         tags: latest
         dockerfile: ./docker/keyvault.Dockerfile

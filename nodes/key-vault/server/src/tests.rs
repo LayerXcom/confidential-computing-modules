@@ -407,9 +407,6 @@ async fn test_manually_backup_all() {
     )
     .await;
 
-    let path_secrets_dir =
-        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
-
     // Deploy
     let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
     let resp = test::call_service(&mut app, req).await;
@@ -486,9 +483,10 @@ async fn test_manually_backup_all() {
 
     clear_remote_path_secrets(env::var("MY_ROSTER_IDX").unwrap().to_string());
     // ensure clearing remote path_secrets
-    assert!(!path_secrets_dir
-        .join(env::var("MY_ROSTER_IDX").unwrap().as_str())
-        .exists());
+    assert_eq!(
+        get_remote_ids(env::var("MY_ROSTER_IDX").unwrap().to_string()).len(),
+        0
+    );
 
     // backup all path_secrets to key-vault server
     let req = test::TestRequest::post()

@@ -8,8 +8,7 @@ use frame_runtime::primitives::Bytes;
 use frame_sodium::SodiumPubKey;
 use rand::{rngs::OsRng, Rng};
 use rand_core::{CryptoRng, RngCore};
-use std::io::Read;
-use std::{env, fs::File, path::PathBuf};
+use std::{env, fs::File, io::Read, path::PathBuf};
 use term::Term;
 
 mod commands;
