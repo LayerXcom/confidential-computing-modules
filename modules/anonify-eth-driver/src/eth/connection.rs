@@ -264,7 +264,13 @@ impl Web3Http {
             .confirmations(confirmations)
             .execute(
                 bin.as_str(),
-                (report, report_sig, handshake, ecall_output.mrenclave_ver()),
+                (
+                    report,
+                    report_sig,
+                    handshake,
+                    ecall_output.mrenclave_ver(),
+                    ecall_output.roster_idx(),
+                ),
                 output.signer,
             )
             .await?;

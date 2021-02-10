@@ -34,16 +34,15 @@ contract Anonify is ReportHandle {
         bytes memory _report,
         bytes memory _reportSig,
         bytes memory _handshake,
-        uint32 mrenclaveVer
+        uint32 mrenclaveVer,
+        uint32 _rosterIdx
     ) public ReportHandle(_report, _reportSig) {
-        // The offset of roster index is 4.
-        uint32 rosterIdx = BytesUtils.toUint32(_handshake, 4);
-        require(rosterIdx == 0, "First roster_idx must be zero");
+        require(_rosterIdx == 0, "First roster_idx must be zero");
 
         _owner = msg.sender;
         _mrenclaveVer = mrenclaveVer;
-        _senderToRosterIdx[msg.sender] = rosterIdx;
-        _rosterIdxCounter = rosterIdx;
+        _senderToRosterIdx[msg.sender] = _rosterIdx;
+        _rosterIdxCounter = _rosterIdx;
         storeHandshake(_handshake);
     }
 
