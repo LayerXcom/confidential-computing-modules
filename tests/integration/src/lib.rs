@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate lazy_static;
-use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
 use anonify_ecall_types::cmd::*;
+use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
 use ethabi::Contract as ContractABI;
 use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
@@ -11,6 +11,7 @@ use frame_common::{
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
+use once_cell::sync::Lazy;
 use serde_json::json;
 use sgx_types::*;
 use std::{collections::BTreeMap, env, fs::File, io::BufReader, str::FromStr};
@@ -20,7 +21,6 @@ use web3::{
     types::Address,
     Web3,
 };
-use once_cell::sync::Lazy;
 
 const ABI_PATH: &str = "../../contract-build/Anonify.abi";
 const BIN_PATH: &str = "../../contract-build/Anonify.bin";
