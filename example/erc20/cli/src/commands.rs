@@ -62,11 +62,12 @@ pub(crate) fn update_mrenclave(anonify_url: String, contract_address: String) ->
 }
 
 pub(crate) fn get_enclave_encryption_key(anonify_url: String) -> Result<SodiumPubKey> {
-    Client::new()
+    let resp: state_runtime_node_api::enclave_encryption_key::get::Response = Client::new()
         .get(&format!("{}/api/v1/enclave_encryption_key", &anonify_url))
         .send()?
-        .json()
-        .map_err(Into::into)
+        .json()?;
+
+    Ok(resp.enclave_encryption_key)
 }
 
 pub(crate) fn init_state<R, CR>(
@@ -93,9 +94,12 @@ where
         },
         "cmd_name": "construct",
     });
-    let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
-            .map_err(|e| anyhow!("{:?}", e))?;
+    let ciphertext = SodiumCiphertext::encrypt(
+        csprng,
+        &enclave_encryption_key,
+        serde_json::to_vec(&req).unwrap(),
+    )
+    .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
@@ -135,9 +139,12 @@ where
         },
         "cmd_name": "transfer",
     });
-    let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
-            .map_err(|e| anyhow!("{:?}", e))?;
+    let ciphertext = SodiumCiphertext::encrypt(
+        csprng,
+        &enclave_encryption_key,
+        serde_json::to_vec(&req).unwrap(),
+    )
+    .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
@@ -177,9 +184,12 @@ where
         },
         "cmd_name": "approve",
     });
-    let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
-            .map_err(|e| anyhow!("{:?}", e))?;
+    let ciphertext = SodiumCiphertext::encrypt(
+        csprng,
+        &enclave_encryption_key,
+        serde_json::to_vec(&req).unwrap(),
+    )
+    .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
@@ -221,9 +231,12 @@ where
         },
         "cmd_name": "transfer_from",
     });
-    let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
-            .map_err(|e| anyhow!("{:?}", e))?;
+    let ciphertext = SodiumCiphertext::encrypt(
+        csprng,
+        &enclave_encryption_key,
+        serde_json::to_vec(&req).unwrap(),
+    )
+    .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
@@ -263,9 +276,12 @@ where
         },
         "cmd_name": "mint",
     });
-    let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
-            .map_err(|e| anyhow!("{:?}", e))?;
+    let ciphertext = SodiumCiphertext::encrypt(
+        csprng,
+        &enclave_encryption_key,
+        serde_json::to_vec(&req).unwrap(),
+    )
+    .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
@@ -303,9 +319,12 @@ where
         },
         "cmd_name": "burn",
     });
-    let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
-            .map_err(|e| anyhow!("{:?}", e))?;
+    let ciphertext = SodiumCiphertext::encrypt(
+        csprng,
+        &enclave_encryption_key,
+        serde_json::to_vec(&req).unwrap(),
+    )
+    .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
         .post(&format!("{}/api/v1/state", &anonify_url))
@@ -355,9 +374,12 @@ where
         },
         "state_name": "allowance",
     });
-    let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
-            .map_err(|e| anyhow!("{:?}", e))?;
+    let ciphertext = SodiumCiphertext::encrypt(
+        csprng,
+        &enclave_encryption_key,
+        serde_json::to_vec(&req).unwrap(),
+    )
+    .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
         .get(&format!("{}/api/v1/state", &anonify_url))
         .json(&state_runtime_node_api::state::get::Request::new(
@@ -392,9 +414,12 @@ where
         "runtime_params": {},
         "state_name": "balance_of",
     });
-    let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &enclave_encryption_key, serde_json::to_vec(&req).unwrap())
-            .map_err(|e| anyhow!("{:?}", e))?;
+    let ciphertext = SodiumCiphertext::encrypt(
+        csprng,
+        &enclave_encryption_key,
+        serde_json::to_vec(&req).unwrap(),
+    )
+    .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
         .get(&format!("{}/api/v1/state", &anonify_url))
         .json(&state_runtime_node_api::state::get::Request::new(
