@@ -90,10 +90,9 @@ impl EnclaveEngine for HandshakeSender {
             enclave_context.backup_path_secret(backup_path_secret)?;
         }
 
-        let roster_idx = export_handshake.roster_idx();
         let msg = Sha256::hash_for_attested_tx(
             &export_handshake.encode(),
-            roster_idx,
+            handshake.roster_idx(),
             0,         // processing handshake reset generation
             epoch + 1, // handshaked next epoch should be counted
         );
@@ -105,7 +104,6 @@ impl EnclaveEngine for HandshakeSender {
             export_handshake,
             enclave_sig,
             recovery_id,
-            roster_idx,
         ))
     }
 }
