@@ -91,7 +91,12 @@ impl EnclaveEngine for HandshakeSender {
         }
 
         let roster_idx = export_handshake.roster_idx();
-        let msg = Sha256::hash_with_u32(&export_handshake.encode(), roster_idx);
+        let msg = Sha256::hash_for_attested_tx(
+            &export_handshake.encode(),
+            roster_idx,
+            0,         // processing handshake reset generation
+            epoch + 1, // handshaked next epoch should be counted
+        );
         let sig = enclave_context.sign(msg.as_bytes())?;
         let enclave_sig = sig.0;
         let recovery_id = sig.1;

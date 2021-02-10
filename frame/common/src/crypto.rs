@@ -219,10 +219,17 @@ impl Sha256 {
         Sha256(hash)
     }
 
-    pub fn hash_with_u32(inp: &[u8], num: u32) -> Self {
+    pub fn hash_for_attested_tx(
+        ciphertext: &[u8],
+        roster_idx: u32,
+        generation: u32,
+        epoch: u32,
+    ) -> Self {
         let mut hasher = sha2::Sha256::new();
-        hasher.input(inp);
-        hasher.input(num.to_be_bytes());
+        hasher.input(ciphertext);
+        hasher.input(roster_idx.to_be_bytes());
+        hasher.input(generation.to_be_bytes());
+        hasher.input(epoch.to_be_bytes());
 
         let mut res = Sha256::default();
         res.copy_from_slice(&hasher.result());
