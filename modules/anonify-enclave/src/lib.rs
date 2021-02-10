@@ -9,10 +9,10 @@ extern crate sgx_tstd as std;
 mod backup;
 mod commands;
 pub mod context;
+mod enclave_key;
 mod error;
 mod group_key;
 mod handshake;
-mod enclave_key;
 mod kvs;
 mod notify;
 
@@ -21,8 +21,8 @@ pub mod workflow {
     pub use crate::backup::{PathSecretBackupper, PathSecretRecoverer};
     pub use crate::commands::{CmdReceiver, CmdSender};
     pub use crate::context::{GetState, ReportRegistration};
-    pub use crate::handshake::{HandshakeReceiver, HandshakeSender, JoinGroupSender};
     pub use crate::enclave_key::EncryptionKeyGetter;
+    pub use crate::handshake::{HandshakeReceiver, HandshakeSender, JoinGroupSender};
     pub use crate::notify::RegisterNotification;
 }
 

@@ -4,7 +4,6 @@ use anyhow::anyhow;
 use frame_common::{
     crypto::{AccountId, Ciphertext, Sha256},
     state_types::{NotifyState, ReturnState, StateType, UpdatedState},
-    traits::Hash256,
     AccessPolicy,
 };
 use frame_enclave::EnclaveEngine;
@@ -45,15 +44,20 @@ where
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();
-        let roster_idx = group_key.my_roster_idx() as usize;
+        let roster_idx = group_key.my_roster_idx();
         // ratchet sender's app keychain per tx.
-        group_key.sender_ratchet(roster_idx)?;
+        group_key.sender_ratchet(roster_idx as usize)?;
 
         let my_account_id = self.ecall_input.access_policy().into_account_id();
         let ciphertext = Commands::<R, C, AP>::new(my_account_id, self.ecall_input)?
             .encrypt(group_key, max_mem_size)?;
 
-        let msg = Sha256::hash(&ciphertext.encode());
+        let msg = Sha256::hash_for_attested_tx(
+            &ciphertext.encode(),
+            roster_idx,
+            ciphertext.generation(),
+            ciphertext.epoch(),
+        );
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
         let command_output = output::Command::new(ciphertext, enclave_sig.0, enclave_sig.1);
 

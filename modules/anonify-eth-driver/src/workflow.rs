@@ -345,7 +345,11 @@ pub mod host_input {
     }
 
     impl InsertHandshake {
-        pub fn new(handshake: ExportHandshake, state_counter: StateCounter, ecall_cmd: u32) -> Self {
+        pub fn new(
+            handshake: ExportHandshake,
+            state_counter: StateCounter,
+            ecall_cmd: u32,
+        ) -> Self {
             InsertHandshake {
                 handshake,
                 state_counter,

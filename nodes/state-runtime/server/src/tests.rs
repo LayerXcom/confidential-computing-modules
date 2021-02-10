@@ -78,7 +78,8 @@ async fn test_multiple_messages() {
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -188,7 +189,8 @@ async fn test_skip_invalid_event() {
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -310,7 +312,8 @@ async fn test_node_recovery() {
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -344,7 +347,8 @@ async fn test_node_recovery() {
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/register_report",
@@ -545,7 +549,8 @@ async fn test_join_group_then_handshake() {
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;

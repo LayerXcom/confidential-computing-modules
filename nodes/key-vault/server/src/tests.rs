@@ -90,7 +90,8 @@ async fn test_backup_path_secret() {
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -247,7 +248,8 @@ async fn test_recover_without_key_vault() {
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -398,7 +400,8 @@ async fn test_manually_backup_all() {
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/all_backup_to",
@@ -563,7 +566,8 @@ async fn test_manually_recover_all() {
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/all_backup_from",
