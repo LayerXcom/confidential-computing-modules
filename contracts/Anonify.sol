@@ -39,6 +39,8 @@ contract Anonify is ReportHandle {
     ) public ReportHandle(_report, _reportSig) {
         require(_rosterIdx == 0, "First roster_idx must be zero");
 
+        // The node that joins first does not send command data,
+        // it sends handshake for the first time.
         _groupKeyCounter[_rosterIdx] = GroupKeyCounter(0, 1);
         _owner = msg.sender;
         _mrenclaveVer = mrenclaveVer;
@@ -71,7 +73,9 @@ contract Anonify is ReportHandle {
         );
 
         handleReport(_report, _reportSig);
-        _groupKeyCounter[_rosterIdx] = GroupKeyCounter(0, 1);
+        // It is assumed that the nodes participate in the order of roster index,
+        // and all the nodes finish participating before the state transition.
+        _groupKeyCounter[_rosterIdx] = GroupKeyCounter(0, _rosterIdx + 1);
         _senderToRosterIdx[msg.sender] = _rosterIdx;
         _rosterIdxCounter = _rosterIdx;
         storeHandshake(_handshake);
