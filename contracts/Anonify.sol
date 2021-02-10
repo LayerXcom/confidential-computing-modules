@@ -126,8 +126,14 @@ contract Anonify is ReportHandle {
             verifyingKeyMapping[verifyingKey] == verifyingKey,
             "Invalid enclave signature."
         );
-
-        // TODO: verify GroupKeyCounter
+        require(
+            _generation > _groupKeyCounter[_rosterIdx].generation,
+            "generation must be bigger than the counter"
+        );
+        require(
+            _epoch == _groupKeyCounter[_rosterIdx].epoch,
+            "epoch must be equal with the counter"
+        );
 
         uint256 incremented_state_counter = _stateCounter.add(1);
 
@@ -160,8 +166,14 @@ contract Anonify is ReportHandle {
             verifyingKeyMapping[verifyingKey] == verifyingKey,
             "Invalid enclave signature."
         );
-
-        // TODO: verify GroupKeyCounter
+        require(
+            _generation == 0,
+            "generation must be zero"
+        );
+        require(
+            _epoch > _groupKeyCounter[_rosterIdx].epoch,
+            "epoch must be bigger than the counter"
+        );
 
         _groupKeyCounter[_rosterIdx] = GroupKeyCounter(_generation, _epoch);
         storeHandshake(_handshake);
