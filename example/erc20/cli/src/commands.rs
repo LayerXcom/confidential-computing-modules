@@ -62,11 +62,12 @@ pub(crate) fn update_mrenclave(anonify_url: String, contract_address: String) ->
 }
 
 pub(crate) fn get_enclave_encryption_key(anonify_url: String) -> Result<SodiumPubKey> {
-    Client::new()
+    let resp: state_runtime_node_api::enclave_encryption_key::get::Response = Client::new()
         .get(&format!("{}/api/v1/enclave_encryption_key", &anonify_url))
         .send()?
-        .json()
-        .map_err(Into::into)
+        .json()?;
+
+    Ok(resp.enclave_encryption_key)
 }
 
 pub(crate) fn init_state<R, CR>(

@@ -39,15 +39,12 @@ fn main() {
 
     let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
     let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set");
-    let enclave_encryption_key = commands::get_enclave_encryption_key(anonify_url.clone())
-        .expect("Failed getting encryption key");
 
     match matches.subcommand() {
         (ANONIFY_COMMAND, Some(matches)) => subcommand_anonify(
             term,
             root_dir,
             contract_addr,
-            &enclave_encryption_key,
             anonify_url,
             matches,
             rng,
@@ -75,7 +72,6 @@ fn subcommand_anonify<R, CR>(
     mut term: Term,
     root_dir: PathBuf,
     default_contract_addr: String,
-    enclave_encryption_key: &SodiumPubKey,
     anonify_url: String,
     matches: &ArgMatches,
     rng: &mut R,
@@ -125,6 +121,14 @@ fn subcommand_anonify<R, CR>(
                 .expect("Not found total_supply.")
                 .parse()
                 .expect("Failed to parse total_supply");
+            let enclave_encryption_key_vec = base64::decode(
+                matches
+                    .value_of("enclave_encryption_key")
+                    .expect("Not found enclave_encryption_key"),
+            )
+            .expect("Failed to decode enclave_encryption_key as base64");
+            let enclave_encryption_key = SodiumPubKey::from_bytes(&enclave_encryption_key_vec)
+                .expect("Failed to convert SodiumPubKey");
 
             commands::init_state(
                 &mut term,
@@ -132,7 +136,7 @@ fn subcommand_anonify<R, CR>(
                 anonify_url,
                 keyfile_index,
                 total_supply,
-                enclave_encryption_key,
+                &enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -151,6 +155,14 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to parse amount");
             let target: &str = matches.value_of("target").expect("Not found target");
             let target_addr = AccountId::base64_decode(target);
+            let enclave_encryption_key_vec = base64::decode(
+                matches
+                    .value_of("enclave_encryption_key")
+                    .expect("Not found enclave_encryption_key"),
+            )
+            .expect("Failed to decode enclave_encryption_key as base64");
+            let enclave_encryption_key = SodiumPubKey::from_bytes(&enclave_encryption_key_vec)
+                .expect("Failed to convert SodiumPubKey");
 
             commands::transfer(
                 &mut term,
@@ -159,7 +171,7 @@ fn subcommand_anonify<R, CR>(
                 keyfile_index,
                 target_addr,
                 amount,
-                enclave_encryption_key,
+                &enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -178,6 +190,14 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to parse amount");
             let target: &str = matches.value_of("target").expect("Not found target");
             let target_addr = AccountId::base64_decode(target);
+            let enclave_encryption_key_vec = base64::decode(
+                matches
+                    .value_of("enclave_encryption_key")
+                    .expect("Not found enclave_encryption_key"),
+            )
+            .expect("Failed to decode enclave_encryption_key as base64");
+            let enclave_encryption_key = SodiumPubKey::from_bytes(&enclave_encryption_key_vec)
+                .expect("Failed to convert SodiumPubKey");
 
             commands::approve(
                 &mut term,
@@ -186,7 +206,7 @@ fn subcommand_anonify<R, CR>(
                 keyfile_index,
                 target_addr,
                 amount,
-                enclave_encryption_key,
+                &enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -207,6 +227,14 @@ fn subcommand_anonify<R, CR>(
             let owner_addr = AccountId::base64_decode(owner);
             let target: &str = matches.value_of("target").expect("Not found target");
             let target_addr = AccountId::base64_decode(target);
+            let enclave_encryption_key_vec = base64::decode(
+                matches
+                    .value_of("enclave_encryption_key")
+                    .expect("Not found enclave_encryption_key"),
+            )
+            .expect("Failed to decode enclave_encryption_key as base64");
+            let enclave_encryption_key = SodiumPubKey::from_bytes(&enclave_encryption_key_vec)
+                .expect("Failed to convert SodiumPubKey");
 
             commands::transfer_from(
                 &mut term,
@@ -216,7 +244,7 @@ fn subcommand_anonify<R, CR>(
                 owner_addr,
                 target_addr,
                 amount,
-                enclave_encryption_key,
+                &enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -235,6 +263,14 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to parse amount");
             let target: &str = matches.value_of("target").expect("Not found target");
             let target_addr = AccountId::base64_decode(target);
+            let enclave_encryption_key_vec = base64::decode(
+                matches
+                    .value_of("enclave_encryption_key")
+                    .expect("Not found enclave_encryption_key"),
+            )
+            .expect("Failed to decode enclave_encryption_key as base64");
+            let enclave_encryption_key = SodiumPubKey::from_bytes(&enclave_encryption_key_vec)
+                .expect("Failed to convert SodiumPubKey");
 
             commands::mint(
                 &mut term,
@@ -243,7 +279,7 @@ fn subcommand_anonify<R, CR>(
                 keyfile_index,
                 target_addr,
                 amount,
-                enclave_encryption_key,
+                &enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -260,6 +296,14 @@ fn subcommand_anonify<R, CR>(
                 .expect("Not found amount.")
                 .parse()
                 .expect("Failed to parse amount");
+            let enclave_encryption_key_vec = base64::decode(
+                matches
+                    .value_of("enclave_encryption_key")
+                    .expect("Not found enclave_encryption_key"),
+            )
+            .expect("Failed to decode enclave_encryption_key as base64");
+            let enclave_encryption_key = SodiumPubKey::from_bytes(&enclave_encryption_key_vec)
+                .expect("Failed to convert SodiumPubKey");
 
             commands::burn(
                 &mut term,
@@ -267,7 +311,7 @@ fn subcommand_anonify<R, CR>(
                 anonify_url,
                 keyfile_index,
                 amount,
-                enclave_encryption_key,
+                &enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -284,6 +328,14 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to parse keyfile-index");
             let spender = matches.value_of("spender").expect("Not found spender");
             let spender_addr = AccountId::base64_decode(spender);
+            let enclave_encryption_key_vec = base64::decode(
+                matches
+                    .value_of("enclave_encryption_key")
+                    .expect("Not found enclave_encryption_key"),
+            )
+            .expect("Failed to decode enclave_encryption_key as base64");
+            let enclave_encryption_key = SodiumPubKey::from_bytes(&enclave_encryption_key_vec)
+                .expect("Failed to convert SodiumPubKey");
 
             commands::allowance(
                 &mut term,
@@ -291,7 +343,7 @@ fn subcommand_anonify<R, CR>(
                 anonify_url,
                 keyfile_index,
                 spender_addr,
-                enclave_encryption_key,
+                &enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -303,13 +355,21 @@ fn subcommand_anonify<R, CR>(
                 .expect("Not found keyfile-index.")
                 .parse()
                 .expect("Failed to parse keyfile-index");
+            let enclave_encryption_key_vec = base64::decode(
+                matches
+                    .value_of("enclave_encryption_key")
+                    .expect("Not found enclave_encryption_key"),
+            )
+            .expect("Failed to decode enclave_encryption_key as base64");
+            let enclave_encryption_key = SodiumPubKey::from_bytes(&enclave_encryption_key_vec)
+                .expect("Failed to convert SodiumPubKey");
 
             commands::balance_of(
                 &mut term,
                 root_dir,
                 anonify_url,
                 keyfile_index,
-                enclave_encryption_key,
+                &enclave_encryption_key,
                 rng,
                 csprng,
             )
@@ -326,6 +386,12 @@ fn subcommand_anonify<R, CR>(
 
             commands::set_contract_address(anonify_url, contract_addr)
                 .expect("Failed to set_contract_address command");
+        }
+        ("get_enclave_encryption_key", Some(_)) => {
+            let enclave_encryption_key = commands::get_enclave_encryption_key(anonify_url.clone())
+                .expect("Failed getting encryption key");
+            let encoded = base64::encode(&enclave_encryption_key.to_bytes());
+            println!("{:?}", encoded);
         }
         _ => {
             term.error(matches.usage()).unwrap();
@@ -371,6 +437,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .takes_value(true)
                         .required(true)
                         .default_value(DEFAULT_BALANCE),
+                )
+                .arg(
+                    Arg::with_name("enclave_encryption_key")
+                        .short("k")
+                        .takes_value(true)
+                        .required(true),
                 ),
         )
         .subcommand(
@@ -396,6 +468,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .takes_value(true)
                         .required(true)
                         .default_value(DEFAULT_TARGET),
+                )
+                .arg(
+                    Arg::with_name("enclave_encryption_key")
+                        .short("k")
+                        .takes_value(true)
+                        .required(true),
                 ),
         )
         .subcommand(
@@ -421,6 +499,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .takes_value(true)
                         .required(true)
                         .default_value(DEFAULT_TARGET),
+                )
+                .arg(
+                    Arg::with_name("enclave_encryption_key")
+                        .short("k")
+                        .takes_value(true)
+                        .required(true),
                 ),
         )
         .subcommand(
@@ -452,6 +536,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .takes_value(true)
                         .required(true)
                         .default_value(DEFAULT_TARGET),
+                )
+                .arg(
+                    Arg::with_name("enclave_encryption_key")
+                        .short("k")
+                        .takes_value(true)
+                        .required(true),
                 ),
         )
         .subcommand(
@@ -477,6 +567,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .takes_value(true)
                         .required(true)
                         .default_value(DEFAULT_TARGET),
+                )
+                .arg(
+                    Arg::with_name("enclave_encryption_key")
+                        .short("k")
+                        .takes_value(true)
+                        .required(true),
                 ),
         )
         .subcommand(
@@ -495,6 +591,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .takes_value(true)
                         .required(true)
                         .default_value(DEFAULT_AMOUNT),
+                )
+                .arg(
+                    Arg::with_name("enclave_encryption_key")
+                        .short("k")
+                        .takes_value(true)
+                        .required(true),
                 ),
         )
         .subcommand(
@@ -516,6 +618,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .short("to")
                         .takes_value(true)
                         .required(true),
+                )
+                .arg(
+                    Arg::with_name("enclave_encryption_key")
+                        .short("k")
+                        .takes_value(true)
+                        .required(true),
                 ),
         )
         .subcommand(
@@ -527,6 +635,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .takes_value(true)
                         .required(false)
                         .default_value(DEFAULT_KEYFILE_INDEX),
+                )
+                .arg(
+                    Arg::with_name("enclave_encryption_key")
+                        .short("k")
+                        .takes_value(true)
+                        .required(true),
                 ),
         )
         .subcommand(
@@ -536,6 +650,10 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name("set_contract_address")
                 .about("Get state from anonify services.")
                 .arg(Arg::with_name("contract-addr").short("c").takes_value(true)),
+        )
+        .subcommand(
+            SubCommand::with_name("get_enclave_encryption_key")
+                .about("Get base64 encoded enclave_encryption_key"),
         )
 }
 

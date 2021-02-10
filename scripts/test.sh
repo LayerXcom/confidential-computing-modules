@@ -58,7 +58,11 @@ make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 cd ${ANONIFY_ROOT}/nodes/key-vault/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocapture
 sleep 1
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_lost_path_secret -- --nocapture
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_recover_without_key_vault -- --nocapture
+sleep 1
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_manually_backup_all -- --nocapture
+sleep 1
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_manually_recover_all -- --nocapture
 
 #
 # Unit Tests
