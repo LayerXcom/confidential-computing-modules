@@ -55,7 +55,7 @@ async fn test_backup_path_secret() {
     let resp = test::call_service(&mut key_vault_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
 
     // Setup ERC20 application
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
@@ -90,7 +90,8 @@ async fn test_backup_path_secret() {
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -247,7 +248,8 @@ async fn test_recover_without_key_vault() {
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -398,7 +400,8 @@ async fn test_manually_backup_all() {
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/all_backup_to",
@@ -563,7 +566,8 @@ async fn test_manually_recover_all() {
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/all_backup_from",

@@ -193,11 +193,11 @@ where
         .get_enclave_encryption_key(GET_ENCLAVE_ENCRYPTION_KEY_CMD)
         .map_err(|e| ServerError::from(e))?;
 
-    Ok(
-        HttpResponse::Ok().json(state_runtime_node_api::enclave_encryption_key::get::Response {
+    Ok(HttpResponse::Ok().json(
+        state_runtime_node_api::enclave_encryption_key::get::Response {
             enclave_encryption_key,
-        }),
-    )
+        },
+    ))
 }
 
 pub async fn handle_start_sync_bc<D, S, W>(

@@ -1,6 +1,6 @@
 use super::connection::{Web3Contract, Web3Http};
 use crate::{
-    cache::{EventCache, MAX_TRIALS_NUM},
+    cache::EventCache,
     error::{HostError, Result},
     traits::*,
     utils::*,
@@ -195,17 +195,6 @@ impl Web3Logs {
                 }
             }
         }
-
-        // Reordered by the priority in all fetched payloads
-        payloads.sort();
-        // Removes consecutive repeated message
-        payloads.dedup();
-        // Order guarantee
-        let immutable_payloads = payloads.clone();
-        let payloads = {
-            let mut mut_cache = self.cache.inner().write();
-            mut_cache.ensure_order_guarantee(payloads, immutable_payloads, MAX_TRIALS_NUM)
-        };
 
         EnclaveLog {
             inner: Some(InnerEnclaveLog {
