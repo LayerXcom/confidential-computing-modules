@@ -55,7 +55,7 @@ async fn test_backup_path_secret() {
     let resp = test::call_service(&mut key_vault_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
 
     // Setup ERC20 application
     env::set_var("ENCLAVE_PKG_NAME", "erc20");

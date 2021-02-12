@@ -5,7 +5,7 @@ use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Server, ServerConfig};
 use frame_runtime::traits::*;
 use key_vault_ecall_types::*;
-use std::{env, thread};
+use std::env;
 
 /// A server starter
 #[derive(Debug, Clone, Default)]
@@ -33,7 +33,7 @@ impl EnclaveEngine for ServerStarter {
         let mut server = Server::new(key_vault_address, server_config);
         let store_path_secrets = enclave_context.store_path_secrets();
         let handler = KeyVaultHandler::new(store_path_secrets.clone());
-        thread::spawn(move || server.run(handler).unwrap());
+        server.run(handler).unwrap();
 
         Ok(output::Empty::default())
     }

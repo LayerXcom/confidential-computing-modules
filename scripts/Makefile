@@ -28,6 +28,7 @@ ifeq ($(TEST), 1)
 	U_H_FILE := Anonify_test_u.h
 	U_C_FILE := Anonify_test_u.c
 	U_O_FILE := Anonify_test_u.o
+	Enclave_Config_File_Name := UnitTestEnclave.config.xml
 else
 	EDL_FILE := Anonify_common.edl
 	T_H_FILE := Anonify_common_t.h
@@ -36,6 +37,7 @@ else
 	U_H_FILE := Anonify_common_u.h
 	U_C_FILE := Anonify_common_u.c
 	U_O_FILE := Anonify_common_u.o
+	Enclave_Config_File_Name := Enclave.config.xml
 endif
 
 ifeq ($(shell getconf LONG_BIT), 32)
@@ -149,5 +151,5 @@ $(RustEnclave_Name): $(Rust_Enclave_Name) $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
 
 $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 	mkdir -p $(ANONIFY_BIN_DIR)
-	@$(SGX_ENCLAVE_SIGNER) sign -key $(CONFIG_DIR)/test_enclave_signing.pem -enclave $(RustEnclave_Name) -out $@ -config $(CONFIG_DIR)/Enclave.config.xml -dumpfile $(ANONIFY_BIN_DIR)/$(Measurement_File_Name)
+	@$(SGX_ENCLAVE_SIGNER) sign -key $(CONFIG_DIR)/test_enclave_signing.pem -enclave $(RustEnclave_Name) -out $@ -config $(CONFIG_DIR)/$(Enclave_Config_File_Name) -dumpfile $(ANONIFY_BIN_DIR)/$(Measurement_File_Name)
 	@echo "SIGN =>  $@"

@@ -20,7 +20,9 @@ impl Dispatcher {
         let inner = self.inner.read();
         let input = host_input::StartServer::new(ecall_cmd);
         let eid = inner.get_enclave_id();
-        let _host_output = StartServerWorkflow::exec(input, eid)?;
+        std::thread::spawn(move || {
+            let _host_output = StartServerWorkflow::exec(input, eid).unwrap();
+        });
 
         Ok(())
     }
