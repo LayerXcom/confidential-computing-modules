@@ -33,7 +33,7 @@ impl EnclaveEngine for ServerStarter {
         let mut server = Server::new(key_vault_address, server_config);
         let store_path_secrets = enclave_context.store_path_secrets();
         let handler = KeyVaultHandler::new(store_path_secrets.clone());
-        thread::spawn(move || server.run(handler).unwrap());
+        server.run(handler).unwrap();
 
         Ok(output::Empty::default())
     }
