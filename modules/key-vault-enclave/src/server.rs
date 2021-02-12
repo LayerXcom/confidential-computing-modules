@@ -5,7 +5,7 @@ use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Server, ServerConfig};
 use frame_runtime::traits::*;
 use key_vault_ecall_types::*;
-use std::{env, thread};
+use std::env;
 
 /// A server starter
 #[derive(Debug, Clone, Default)]
