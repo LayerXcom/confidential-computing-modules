@@ -23,6 +23,6 @@ use serde_sgx as serde;
 #[cfg(feature = "std")]
 use serde_std as serde;
 
-pub mod types;
 pub mod cmd;
+pub mod types;
 pub use crate::types::*;

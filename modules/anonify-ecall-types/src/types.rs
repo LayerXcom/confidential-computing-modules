@@ -495,7 +495,6 @@ pub mod output {
     pub struct ReturnHandshake {
         enclave_sig: secp256k1::Signature,
         recovery_id: secp256k1::RecoveryId,
-        roster_idx: u32,
         handshake: ExportHandshake,
     }
 
@@ -506,7 +505,6 @@ pub mod output {
             Self {
                 enclave_sig,
                 recovery_id,
-                roster_idx: u32::default(),
                 handshake: ExportHandshake::default(),
             }
         }
@@ -523,7 +521,6 @@ pub mod output {
             let mut seq = serializer.serialize_seq(Some(4))?;
             seq.serialize_element(&self.encode_enclave_sig()[..])?;
             seq.serialize_element(&self.encode_recovery_id())?;
-            seq.serialize_element(&self.roster_idx())?;
             seq.serialize_element(&self.encode_handshake())?;
             seq.end()
         }
@@ -553,9 +550,6 @@ pub mod output {
                     let recovery_id_v = seq
                         .next_element()?
                         .ok_or_else(|| de::Error::invalid_length(1, &self))?;
-                    let roster_idx = seq
-                        .next_element()?
-                        .ok_or_else(|| de::Error::invalid_length(2, &self))?;
                     let handshake_v: Vec<u8> = seq
                         .next_element()?
                         .ok_or_else(|| de::Error::invalid_length(3, &self))?;
@@ -564,16 +558,10 @@ pub mod output {
                         .map_err(|_e| V::Error::custom("InvalidSignature"))?;
                     let recovery_id = secp256k1::RecoveryId::parse(recovery_id_v)
                         .map_err(|_e| V::Error::custom("InvalidRecoverId"))?;
-                    // let roster_idx = bincode::deserialize(&ciphertext_v[..])?;
                     let handshake = bincode::deserialize(&handshake_v[..])
                         .map_err(|_e| V::Error::custom("InvalidHandshake"))?;
 
-                    Ok(ReturnHandshake::new(
-                        handshake,
-                        enclave_sig,
-                        recovery_id,
-                        roster_idx,
-                    ))
+                    Ok(ReturnHandshake::new(handshake, enclave_sig, recovery_id))
                 }
             }
 
@@ -586,13 +574,11 @@ pub mod output {
             handshake: ExportHandshake,
             enclave_sig: secp256k1::Signature,
             recovery_id: secp256k1::RecoveryId,
-            roster_idx: u32,
         ) -> Self {
             ReturnHandshake {
                 handshake,
                 enclave_sig,
                 recovery_id,
-                roster_idx,
             }
         }
 
@@ -610,10 +596,6 @@ pub mod output {
 
         pub fn encode_enclave_sig(&self) -> [u8; 64] {
             self.enclave_sig.serialize()
-        }
-
-        pub fn roster_idx(&self) -> u32 {
-            self.roster_idx
         }
     }
 }

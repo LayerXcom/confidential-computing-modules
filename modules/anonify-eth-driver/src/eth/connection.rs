@@ -107,7 +107,7 @@ impl Web3Contract {
         let ecall_output = output
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
-        let ciphertext = ecall_output.encode_ciphertext();
+        let ciphertext = ecall_output.ciphertext();
         let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
@@ -116,7 +116,13 @@ impl Web3Contract {
         self.contract
             .call(
                 "storeCommand",
-                (ciphertext, enclave_sig),
+                (
+                    ciphertext.encode(),
+                    enclave_sig,
+                    ciphertext.roster_idx(),
+                    ciphertext.generation(),
+                    ciphertext.epoch(),
+                ),
                 output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
             )
@@ -128,7 +134,7 @@ impl Web3Contract {
         let ecall_output = output
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
-        let handshake = ecall_output.encode_handshake();
+        let handshake = ecall_output.handshake();
         let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
@@ -137,7 +143,13 @@ impl Web3Contract {
         self.contract
             .call(
                 "handshake",
-                (handshake, enclave_sig, ecall_output.roster_idx()),
+                (
+                    handshake.encode(),
+                    enclave_sig,
+                    handshake.roster_idx(),
+                    0 as u32,
+                    handshake.prior_epoch() + 1,
+                ),
                 output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
             )
@@ -252,7 +264,13 @@ impl Web3Http {
             .confirmations(confirmations)
             .execute(
                 bin.as_str(),
-                (report, report_sig, handshake, ecall_output.mrenclave_ver()),
+                (
+                    report,
+                    report_sig,
+                    handshake,
+                    ecall_output.mrenclave_ver(),
+                    ecall_output.roster_idx(),
+                ),
                 output.signer,
             )
             .await?;
