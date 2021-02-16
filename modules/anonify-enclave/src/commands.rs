@@ -3,7 +3,7 @@ use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{
     crypto::{AccountId, Ciphertext, Sha256},
-    state_types::{NotifyState, ReturnState, StateType, UpdatedState},
+    state_types::{NotifyState, ReturnState, StateType, UpdatedState, UserCounter},
     AccessPolicy,
 };
 use frame_enclave::EnclaveEngine;
@@ -139,6 +139,7 @@ pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps<S = StateType>, AP>
     my_account_id: AccountId,
     #[serde(deserialize_with = "R::C::deserialize")]
     call_kind: R::C,
+    counter: UserCounter,
     phantom: PhantomData<CTX>,
     ap: PhantomData<AP>,
 }
@@ -155,6 +156,7 @@ where
         Ok(Commands {
             my_account_id,
             call_kind,
+            counter: ecall_input.counter(),
             phantom: PhantomData,
             ap: PhantomData,
         })

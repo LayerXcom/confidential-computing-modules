@@ -13,7 +13,7 @@ use crate::serde_bytes;
 use crate::serde_json;
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
-    state_types::{StateCounter, StateType},
+    state_types::{StateCounter, StateType, UserCounter},
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
@@ -29,6 +29,7 @@ pub mod input {
         pub access_policy: AP,
         pub runtime_params: serde_json::Value,
         pub cmd_name: String,
+        pub counter: UserCounter,
     }
 
     impl<AP> Default for Command<AP>
@@ -52,11 +53,13 @@ pub mod input {
             access_policy: AP,
             runtime_params: serde_json::Value,
             cmd_name: impl ToString,
+            counter: UserCounter,
         ) -> Self {
             Command {
                 access_policy,
                 runtime_params,
                 cmd_name: cmd_name.to_string(),
+                counter,
             }
         }
 
@@ -66,6 +69,10 @@ pub mod input {
 
         pub fn cmd_name(&self) -> &str {
             &self.cmd_name
+        }
+
+        pub fn counter(&self) -> UserCounter {
+            self.counter
         }
     }
 
