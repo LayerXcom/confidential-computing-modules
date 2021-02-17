@@ -89,6 +89,11 @@ where
         })
     }
 
+    /// NOTE: Since this operation is stateful, you need to be careful about the order of processing, considering the possibility of processing failure.
+    /// 1. Verify the order of transactions for each State Runtime node (verify_state_counter_increment)
+    /// 2. Ratchet keychains
+    /// 3. Verify the order of transactions for each user (verify_user_counter_increment)
+    /// 4. State transitions
     fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
@@ -119,7 +124,7 @@ where
         if let Some(cmds) = decrypted_cmds {
             // Since the command data is valid for the error at the time of state transition,
             // `user_counter` must be verified and incremented before the state transition.
-            enclave_context.increment_user_counter(cmds.my_account_id, cmds.counter)?;
+            enclave_context.verify_user_counter_increment(cmds.my_account_id, cmds.counter)?;
             // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
             let state_iter = cmds.state_transition(enclave_context.clone())?;
 

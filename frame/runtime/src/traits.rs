@@ -103,7 +103,7 @@ pub trait StateOps {
 
     fn verify_state_counter_increment(&self, received_state_counter: StateCounter) -> Result<()>;
 
-    fn increment_user_counter(&self, user: AccountId, received: UserCounter) -> Result<()>;
+    fn verify_user_counter_increment(&self, user: AccountId, received: UserCounter) -> Result<()>;
 }
 
 pub trait GroupKeyGetter {
