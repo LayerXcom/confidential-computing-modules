@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use frame_common::state_types::UserCounter;
 use std::io;
 use thiserror::Error;
 
@@ -18,6 +19,11 @@ pub enum EnclaveError {
     FrameMraTLSError(#[from] frame_mra_tls::MraTLSError),
     #[error("Bincode error: {0}")]
     BincodeError(#[from] bincode::Error),
+    #[error("Received UserCounter is {received:?}, but expected is {expected:?}")]
+    InvalidUserCounter {
+        received: UserCounter,
+        expected: UserCounter,
+    },
 }
 
 impl From<sgx_types::sgx_status_t> for EnclaveError {

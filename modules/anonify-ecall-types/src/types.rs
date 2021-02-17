@@ -41,6 +41,7 @@ pub mod input {
                 access_policy: AP::default(),
                 runtime_params: serde_json::Value::Null,
                 cmd_name: String::default(),
+                counter: UserCounter::default(),
             }
         }
     }
