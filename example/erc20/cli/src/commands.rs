@@ -16,6 +16,8 @@ use reqwest::Client;
 use serde_json::json;
 use std::path::PathBuf;
 
+const TIMEOUT: u64 = 120;
+
 pub(crate) fn deploy(anonify_url: String) -> Result<()> {
     let res = Client::new()
         .post(&format!("{}/api/v1/deploy", &anonify_url))
@@ -102,7 +104,9 @@ where
     )
     .map_err(|e| anyhow!("{:?}", e))?;
 
-    let res = Client::new()
+    let res = Client::builder()
+        .timeout(std::time::Duration::from_secs(TIMEOUT))
+        .build()?
         .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&state_runtime_node_api::state::post::Request::new(
             ciphertext,
@@ -484,7 +488,9 @@ where
     )
     .map_err(|e| anyhow!("{:?}", e))?;
 
-    let res = Client::new()
+    let res = Client::builder()
+        .timeout(std::time::Duration::from_secs(TIMEOUT))
+        .build()?
         .post(&format!("{}/api/v1/state", &anonify_url))
         .json(&state_runtime_node_api::state::post::Request::new(
             ciphertext,
