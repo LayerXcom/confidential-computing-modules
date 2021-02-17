@@ -144,7 +144,7 @@ impl UserCounter {
         self.increment() == other
     }
 
-    fn increment(self) -> Self {
+    pub fn increment(self) -> Self {
         UserCounter(self.0 + 1) // overflow should be ignored
     }
 }

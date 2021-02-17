@@ -22,7 +22,7 @@ impl UserCounterDB {
         if !curr_counter.is_increment(received) {
             return Err(EnclaveError::InvalidUserCounter {
                 received,
-                expected: curr_counter,
+                expected: curr_counter.increment(),
             });
         }
 
