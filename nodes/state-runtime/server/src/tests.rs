@@ -3,10 +3,7 @@ use actix_web::{test, web, App};
 use anonify_ecall_types::input;
 use anonify_eth_driver::eth::*;
 use ethabi::Contract as ContractABI;
-use frame_common::{
-    crypto::{AccountId, Ed25519ChallengeResponse},
-    state_types::UserCounter,
-};
+use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
@@ -243,6 +240,7 @@ async fn test_skip_invalid_event() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
+    // state transition should not be occured by this transaction.
     let transfer_110_req = transfer_110_req(&mut csprng, &enc_key, 2);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
@@ -657,6 +655,166 @@ async fn test_join_group_then_handshake() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90);
+}
+
+#[actix_rt::test]
+async fn test_duplicated_out_of_order_request_from_same_user() {
+    set_env_vars();
+    set_server_env_vars();
+
+    let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
+    let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
+
+    let enclave = EnclaveDir::new()
+        .init_enclave(true)
+        .expect("Failed to initialize enclave.");
+    let eid = enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
+    let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
+    let mut app = test::init_service(
+        App::new()
+            .data(server.clone())
+            .route(
+                "/api/v1/deploy",
+                web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/start_sync_bc",
+                web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/state",
+                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/state",
+                web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
+                "/api/v1/enclave_encryption_key",
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+            ),
+    )
+    .await;
+
+    let req = test::TestRequest::post().uri("/api/v1/deploy").to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let contract_address: state_runtime_node_api::deploy::post::Response =
+        test::read_body_json(resp).await;
+    println!("contract address: {:?}", contract_address.contract_address);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/start_sync_bc")
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/enclave_encryption_key")
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let enc_key_resp: state_runtime_node_api::enclave_encryption_key::get::Response =
+        test::read_body_json(resp).await;
+    let enc_key = verify_enclave_encryption_key(
+        enc_key_resp.enclave_encryption_key,
+        &abi_path,
+        &eth_url,
+        &contract_address.contract_address,
+    )
+    .await;
+
+    let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
+    let req = test::TestRequest::post()
+        .uri("/api/v1/state")
+        .set_json(&init_100_req)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/state")
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
+    assert_eq!(balance.state, 100);
+
+    // first request
+    let transfer_10 = transfer_10_req(&mut csprng, &enc_key, 2);
+    let req = test::TestRequest::post()
+        .uri("/api/v1/state")
+        .set_json(&transfer_10)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/state")
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
+    assert_eq!(balance.state, 90); // success
+
+    // try second duplicated request
+    let transfer_10 = transfer_10_req(&mut csprng, &enc_key, 2); // same counter
+    let req = test::TestRequest::post()
+        .uri("/api/v1/state")
+        .set_json(&transfer_10)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/state")
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
+    assert_eq!(balance.state, 90); // failed
+
+    // send out of order request
+    let transfer_10 = transfer_10_req(&mut csprng, &enc_key, 4); // should be 3
+    let req = test::TestRequest::post()
+        .uri("/api/v1/state")
+        .set_json(&transfer_10)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/state")
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
+    assert_eq!(balance.state, 90); // failed
+
+    // then, send correct request
+    let transfer_10 = transfer_10_req(&mut csprng, &enc_key, 3);
+    let req = test::TestRequest::post()
+        .uri("/api/v1/state")
+        .set_json(&transfer_10)
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/state")
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
+    assert_eq!(balance.state, 80); // success
 }
 
 fn set_server_env_vars() {

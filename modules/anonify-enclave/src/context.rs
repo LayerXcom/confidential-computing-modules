@@ -156,7 +156,11 @@ impl StateOps for AnonifyEnclaveContext {
         Ok(())
     }
 
-    fn verify_user_counter_increment(&self, user: AccountId, received: UserCounter) -> anyhow::Result<()> {
+    fn verify_user_counter_increment(
+        &self,
+        user: AccountId,
+        received: UserCounter,
+    ) -> anyhow::Result<()> {
         self.user_counter_db
             .increment(user, received)
             .map_err(|e| anyhow!("{:?}", e))
