@@ -1,6 +1,6 @@
 use frame_runtime::prelude::*;
 
-pub const MAX_MEM_SIZE: usize = 100_000;
+pub const MAX_MEM_SIZE: usize = 2_000_000;
 
 impl_memory! {
     (0, "Balance", U64),

@@ -6,7 +6,9 @@ use std::{env, io, sync::Arc};
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::WARN)
+        .finish();
     let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
     let num_workers: usize = env::var("NUM_WORKERS")
         .unwrap_or_else(|_| "16".to_string())
@@ -23,6 +25,8 @@ async fn main() -> io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(server.clone())
+            .data(web::PayloadConfig::new(1 << 25))
+            .data(web::JsonConfig::default().limit(1 << 25))
             .route(
                 "/api/v1/deploy",
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),

@@ -1544,6 +1544,7 @@ dependencies = [
  "failure",
  "frame-host",
  "state-runtime-node-server",
+ "tracing",
  "tracing-subscriber",
 ]
 

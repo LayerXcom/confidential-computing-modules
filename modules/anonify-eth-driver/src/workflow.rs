@@ -7,7 +7,7 @@ use frame_host::engine::*;
 use frame_sodium::SodiumCiphertext;
 use web3::types::Address;
 
-pub const OUTPUT_MAX_LEN: usize = 200_000;
+pub const OUTPUT_MAX_LEN: usize = 3_000_000;
 
 pub struct CommandWorkflow;
 

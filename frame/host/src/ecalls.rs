@@ -50,6 +50,7 @@ impl EnclaveConnector {
 
         let mut ret = EnclaveStatus::default();
 
+        dbg!(&input_len);
         let status = unsafe {
             ecall_entry_point(
                 self.eid,
