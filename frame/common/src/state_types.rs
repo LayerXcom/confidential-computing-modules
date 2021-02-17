@@ -108,7 +108,7 @@ impl MemId {
     }
 }
 
-/// Counter for enforcing the order of state transitions
+/// A Counter for enforcing the order of state transitions
 #[derive(
     Serialize, Deserialize, Debug, Clone, Copy, PartialOrd, PartialEq, Default, Eq, Ord, Hash,
 )]
@@ -126,5 +126,31 @@ impl StateCounter {
 
     pub fn is_increment(self, other: StateCounter) -> bool {
         self.increment() == other
+    }
+}
+
+/// A counter that guarantees idempotency and order of messages from users.
+/// Verifying that it is incremented by 1 at the time of state transitions.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Deserialize, Serialize)]
+#[serde(crate = "crate::serde")]
+pub struct UserCounter(u32);
+
+impl UserCounter {
+    pub fn new(counter: u32) -> Self {
+        UserCounter(counter)
+    }
+
+    pub fn is_increment(self, other: UserCounter) -> bool {
+        self.increment() == other
+    }
+
+    pub fn increment(self) -> Self {
+        UserCounter(self.0 + 1) // overflow should be ignored
+    }
+}
+
+impl From<u32> for UserCounter {
+    fn from(c: u32) -> Self {
+        UserCounter(c)
     }
 }

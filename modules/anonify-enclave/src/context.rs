@@ -1,5 +1,9 @@
 use crate::{
-    enclave_key::EnclaveKey, error::Result, group_key::GroupKey, kvs::EnclaveDB, notify::Notifier,
+    enclave_key::EnclaveKey,
+    error::Result,
+    group_key::GroupKey,
+    kvs::{UserCounterDB, UserStateDB},
+    notify::Notifier,
 };
 use anonify_ecall_types::*;
 use anyhow::{anyhow, bail};
@@ -8,7 +12,9 @@ use frame_common::{
         AccountId, BackupPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverAllRequest,
         RecoverRequest, RecoveredPathSecret,
     },
-    state_types::{MemId, NotifyState, ReturnState, StateCounter, StateType, UpdatedState},
+    state_types::{
+        MemId, NotifyState, ReturnState, StateCounter, StateType, UpdatedState, UserCounter,
+    },
     AccessPolicy,
 };
 use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DIR};
@@ -37,7 +43,8 @@ pub struct AnonifyEnclaveContext {
     key_vault_endpoint: String,
     spid: String,
     enclave_key: EnclaveKey,
-    db: EnclaveDB,
+    user_state_db: UserStateDB,
+    user_counter_db: UserCounterDB,
     notifier: Notifier,
     group_key: Arc<SgxRwLock<GroupKey>>,
     client_config: ClientConfig,
@@ -80,14 +87,14 @@ impl StateOps for AnonifyEnclaveContext {
     type S = StateType;
 
     fn values(self) -> Vec<Self::S> {
-        self.db.values()
+        self.user_state_db.values()
     }
 
     fn get_state_by_mem_id<U>(&self, key: U, mem_id: MemId) -> Self::S
     where
         U: Into<AccountId>,
     {
-        self.db.get(key.into(), mem_id)
+        self.user_state_db.get(key.into(), mem_id)
     }
 
     fn get_state_by_state_name<U, R, CTX>(
@@ -119,7 +126,7 @@ impl StateOps for AnonifyEnclaveContext {
         updated_state_iter: impl Iterator<Item = UpdatedState<Self::S>>,
         mut notify_state_iter: impl Iterator<Item = Option<NotifyState>>,
     ) -> Option<NotifyState> {
-        updated_state_iter.for_each(|s| self.db.insert_by_updated_state(s));
+        updated_state_iter.for_each(|s| self.user_state_db.insert_by_updated_state(s));
         notify_state_iter
             .find(|state| {
                 if let Some(s) = state {
@@ -147,6 +154,16 @@ impl StateOps for AnonifyEnclaveContext {
         *curr_state_counter = curr_state_counter.increment();
 
         Ok(())
+    }
+
+    fn verify_user_counter_increment(
+        &self,
+        user: AccountId,
+        received: UserCounter,
+    ) -> anyhow::Result<()> {
+        self.user_counter_db
+            .increment(user, received)
+            .map_err(|e| anyhow!("{:?}", e))
     }
 }
 
@@ -249,7 +266,8 @@ impl AnonifyEnclaveContext {
         let mut rng = SgxRng::new()?;
 
         let enclave_key = EnclaveKey::new(&mut rng)?;
-        let db = EnclaveDB::new();
+        let user_state_db = UserStateDB::new();
+        let user_counter_db = UserCounterDB::new();
 
         let source = match env::var("AUDITOR_ENDPOINT") {
             Err(_) => PathSecretSource::Local,
@@ -298,7 +316,8 @@ impl AnonifyEnclaveContext {
         Ok(AnonifyEnclaveContext {
             spid,
             enclave_key,
-            db,
+            user_state_db,
+            user_counter_db,
             notifier,
             group_key,
             version,

@@ -7,7 +7,7 @@ use crate::localstd::{
 use crate::serde::{de::DeserializeOwned, Serialize};
 use frame_common::{
     crypto::{AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest, RecoveredPathSecret},
-    state_types::{MemId, NotifyState, ReturnState, StateCounter, UpdatedState},
+    state_types::{MemId, NotifyState, ReturnState, StateCounter, UpdatedState, UserCounter},
     traits::*,
 };
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
@@ -102,6 +102,8 @@ pub trait StateOps {
     ) -> Option<NotifyState>;
 
     fn verify_state_counter_increment(&self, received_state_counter: StateCounter) -> Result<()>;
+
+    fn verify_user_counter_increment(&self, user: AccountId, received: UserCounter) -> Result<()>;
 }
 
 pub trait GroupKeyGetter {
