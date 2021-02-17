@@ -43,6 +43,7 @@ services:
 
   ganache:
       image: trufflesuite/ganache-cli:latest
+      command: ["ganache-cli", "--gasLimit", "6721975000"]
       ports:
         - "${ETH_HOST_PORT}:${ETH_PORT}"
       volumes:
