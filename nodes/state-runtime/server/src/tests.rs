@@ -135,9 +135,9 @@ async fn test_multiple_messages() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key, 2);
     // Sending five messages before receiving any messages
-    for _ in 0..5 {
+    for i in 0..5 {
+        let transfer_10_req = transfer_10_req(&mut csprng, &enc_key, 2 + i);
         let req = test::TestRequest::post()
             .uri("/api/v1/state")
             .set_json(&transfer_10_req)
