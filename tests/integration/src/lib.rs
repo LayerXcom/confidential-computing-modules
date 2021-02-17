@@ -115,6 +115,7 @@ async fn test_integration_eth_construct() {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
+        "counter": 1,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -224,6 +225,7 @@ async fn test_auto_notification() {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
+        "counter": 1,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -278,6 +280,7 @@ async fn test_auto_notification() {
             "recipient": recipient,
         },
         "cmd_name": "transfer",
+        "counter": 2,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -364,6 +367,7 @@ async fn test_integration_eth_transfer() {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
+        "counter": 1,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -426,6 +430,7 @@ async fn test_integration_eth_transfer() {
             "recipient": recipient,
         },
         "cmd_name": "transfer",
+        "counter": 2,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -540,6 +545,7 @@ async fn test_key_rotation() {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
+        "counter": 1,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -644,6 +650,7 @@ async fn test_integration_eth_approve() {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
+        "counter": 1,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -700,6 +707,7 @@ async fn test_integration_eth_approve() {
             "spender": spender,
         },
         "cmd_name": "approve",
+        "counter": 2,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -795,6 +803,7 @@ async fn test_integration_eth_transfer_from() {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
+        "counter": 1,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -893,6 +902,7 @@ async fn test_integration_eth_transfer_from() {
             "spender": spender,
         },
         "cmd_name": "approve",
+        "counter": 2,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -993,6 +1003,7 @@ async fn test_integration_eth_transfer_from() {
             "amount": amount,
         },
         "cmd_name": "transfer_from",
+        "counter": 1,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -1129,6 +1140,7 @@ async fn test_integration_eth_mint() {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
+        "counter": 1,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -1160,6 +1172,7 @@ async fn test_integration_eth_mint() {
             "recipient": recipient,
         },
         "cmd_name": "mint",
+        "counter": 2,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -1260,6 +1273,7 @@ async fn test_integration_eth_burn() {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
+        "counter": 1,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -1291,6 +1305,7 @@ async fn test_integration_eth_burn() {
             "recipient": recipient,
         },
         "cmd_name": "transfer",
+        "counter": 2,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
@@ -1319,6 +1334,7 @@ async fn test_integration_eth_burn() {
             "amount": amount,
         },
         "cmd_name": "burn",
+        "counter": 1,
     });
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();

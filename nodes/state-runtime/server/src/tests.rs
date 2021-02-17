@@ -3,7 +3,10 @@ use actix_web::{test, web, App};
 use anonify_ecall_types::input;
 use anonify_eth_driver::eth::*;
 use ethabi::Contract as ContractABI;
-use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
+use frame_common::{
+    crypto::{AccountId, Ed25519ChallengeResponse},
+    state_types::UserCounter,
+};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
@@ -115,7 +118,7 @@ async fn test_multiple_messages() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 0);
 
-    let init_100_req = init_100_req(&mut csprng, &enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -132,7 +135,7 @@ async fn test_multiple_messages() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key);
+    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key, 2);
     // Sending five messages before receiving any messages
     for _ in 0..5 {
         let req = test::TestRequest::post()
@@ -223,7 +226,7 @@ async fn test_skip_invalid_event() {
     )
     .await;
 
-    let init_100_req = init_100_req(&mut csprng, &enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -240,7 +243,7 @@ async fn test_skip_invalid_event() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    let transfer_110_req = transfer_110_req(&mut csprng, &enc_key);
+    let transfer_110_req = transfer_110_req(&mut csprng, &enc_key, 2);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_110_req)
@@ -257,7 +260,7 @@ async fn test_skip_invalid_event() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key);
+    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key, 3);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req)
@@ -385,7 +388,7 @@ async fn test_node_recovery() {
     )
     .await;
 
-    let init_100_req = init_100_req(&mut csprng, &enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -402,7 +405,7 @@ async fn test_node_recovery() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    let transfer_10_req_ = transfer_10_req(&mut csprng, &enc_key);
+    let transfer_10_req_ = transfer_10_req(&mut csprng, &enc_key, 2);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req_)
@@ -465,7 +468,7 @@ async fn test_node_recovery() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90);
 
-    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key);
+    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key, 3);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req)
@@ -614,7 +617,7 @@ async fn test_join_group_then_handshake() {
     )
     .await;
 
-    let init_100_req = init_100_req(&mut csprng, &enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -638,7 +641,7 @@ async fn test_join_group_then_handshake() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
-    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key);
+    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key, 2);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req)
@@ -715,6 +718,7 @@ async fn verify_enclave_encryption_key<P: AsRef<Path>>(
 fn init_100_req<CR>(
     csprng: &mut CR,
     enc_key: &SodiumPubKey,
+    counter: u32,
 ) -> state_runtime_node_api::state::post::Request
 where
     CR: RngCore + CryptoRng,
@@ -737,7 +741,7 @@ where
     let init_100 = json!({
         "total_supply": U64::from_raw(100),
     });
-    let req = input::Command::new(access_policy, init_100, "construct");
+    let req = input::Command::new(access_policy, init_100, "construct", counter.into());
     let ciphertext =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
@@ -748,6 +752,7 @@ where
 fn transfer_10_req<CR>(
     csprng: &mut CR,
     enc_key: &SodiumPubKey,
+    counter: u32,
 ) -> state_runtime_node_api::state::post::Request
 where
     CR: RngCore + CryptoRng,
@@ -774,7 +779,7 @@ where
             118,
         ])
     });
-    let req = input::Command::new(access_policy, transfer_10, "transfer");
+    let req = input::Command::new(access_policy, transfer_10, "transfer", counter.into());
     let ciphertext =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
@@ -785,6 +790,7 @@ where
 fn transfer_110_req<CR>(
     csprng: &mut CR,
     enc_key: &SodiumPubKey,
+    counter: u32,
 ) -> state_runtime_node_api::state::post::Request
 where
     CR: RngCore + CryptoRng,
@@ -811,7 +817,7 @@ where
             118,
         ])
     });
-    let req = input::Command::new(access_policy, transfer_10, "transfer");
+    let req = input::Command::new(access_policy, transfer_10, "transfer", counter.into());
     let ciphertext =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 

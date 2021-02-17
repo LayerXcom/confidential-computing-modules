@@ -136,11 +136,21 @@ impl StateCounter {
 pub struct UserCounter(u32);
 
 impl UserCounter {
+    pub fn new(counter: u32) -> Self {
+        UserCounter(counter)
+    }
+
     pub fn is_increment(self, other: UserCounter) -> bool {
         self.increment() == other
     }
 
     fn increment(self) -> Self {
         UserCounter(self.0 + 1) // overflow should be ignored
+    }
+}
+
+impl From<u32> for UserCounter {
+    fn from(c: u32) -> Self {
+        UserCounter(c)
     }
 }

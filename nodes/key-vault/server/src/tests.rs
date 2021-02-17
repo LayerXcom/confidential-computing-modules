@@ -143,7 +143,7 @@ async fn test_backup_path_secret() {
         .exists());
 
     // Init state
-    let init_100_req = init_100_req(&mut csprng, &enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -301,7 +301,7 @@ async fn test_recover_without_key_vault() {
         .exists());
 
     // Init state
-    let init_100_req = init_100_req(&mut csprng, &enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -444,7 +444,7 @@ async fn test_manually_backup_all() {
     assert_eq!(balance.state, 0);
 
     // Init state
-    let init_100_req = init_100_req(&mut csprng, &enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -610,7 +610,7 @@ async fn test_manually_recover_all() {
     assert_eq!(balance.state, 0);
 
     // Init state
-    let init_100_req = init_100_req(&mut csprng, &enc_key);
+    let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -814,6 +814,7 @@ async fn verify_enclave_encryption_key<P: AsRef<Path>>(
 fn init_100_req<CR>(
     csprng: &mut CR,
     enc_key: &SodiumPubKey,
+    counter: u32,
 ) -> state_runtime_node_api::state::post::Request
 where
     CR: RngCore + CryptoRng,
@@ -836,7 +837,7 @@ where
     let init_100 = json!({
         "total_supply": U64::from_raw(100),
     });
-    let req = input::Command::new(access_policy, init_100, "construct");
+    let req = input::Command::new(access_policy, init_100, "construct", counter.into());
     let ciphertext =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
