@@ -28,7 +28,10 @@ impl UserStateDB {
 
     pub fn get(&self, account_id: AccountId, mem_id: MemId) -> StateType {
         let key = DBKey::new(account_id, mem_id);
-        self.0.read().unwrap().get(&key).unwrap_or_default()
+        match self.0.read().unwrap().get(&key) {
+            Some(v) => v.clone(),
+            None => StateType::default(),
+        }
     }
 
     pub fn values(&self) -> Vec<StateType> {

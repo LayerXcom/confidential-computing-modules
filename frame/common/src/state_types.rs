@@ -131,16 +131,16 @@ impl StateCounter {
 
 /// A counter that guarantees idempotency and order of messages from users.
 /// Verifying that it is incremented by 1 at the time of state transitions.
-#[derive(Debug, Clone, Copy, Default, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Deserialize, Serialize)]
 #[serde(crate = "crate::serde")]
 pub struct UserCounter(u32);
 
 impl UserCounter {
-    pub fn is_increment(self, other: StateCounter) -> bool {
+    pub fn is_increment(self, other: UserCounter) -> bool {
         self.increment() == other
     }
 
     fn increment(self) -> Self {
-        StateCounter(self.0 + 1) // overflow should be ignored
+        UserCounter(self.0 + 1) // overflow should be ignored
     }
 }

@@ -18,12 +18,12 @@ impl UserCounterDB {
 
     pub fn increment(&self, user: AccountId, received: UserCounter) -> Result<()> {
         let mut db = self.0.write().unwrap();
-        let curr_counter = db.get(&user).unwrap_or_default();
+        let curr_counter = db.get(&user).map(|e| *e).unwrap_or_default();
         if !curr_counter.is_increment(received) {
-            return EnclaveError::InvalidUserCounter {
+            return Err(EnclaveError::InvalidUserCounter {
                 received,
                 expected: curr_counter,
-            };
+            });
         }
 
         db.insert(user, received);

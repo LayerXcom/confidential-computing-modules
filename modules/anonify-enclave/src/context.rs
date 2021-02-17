@@ -12,7 +12,9 @@ use frame_common::{
         AccountId, BackupPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverAllRequest,
         RecoverRequest, RecoveredPathSecret,
     },
-    state_types::{MemId, NotifyState, ReturnState, StateCounter, StateType, UpdatedState},
+    state_types::{
+        MemId, NotifyState, ReturnState, StateCounter, StateType, UpdatedState, UserCounter,
+    },
     AccessPolicy,
 };
 use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DIR};
@@ -154,9 +156,9 @@ impl StateOps for AnonifyEnclaveContext {
         Ok(())
     }
 
-    fn increment_user_counter(&self) -> anyhow::Result<()> {
+    fn increment_user_counter(&self, user: AccountId, received: UserCounter) -> anyhow::Result<()> {
         self.user_counter_db
-            .increment()
+            .increment(user, received)
             .map_err(|e| anyhow!("{:?}", e))
     }
 }

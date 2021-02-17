@@ -113,15 +113,16 @@ where
         group_key.sync_ratchet(roster_idx, msg_gen)?;
         group_key.receiver_ratchet(roster_idx)?;
 
-        // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
-        let iter_op = Commands::<R, C, AP>::state_transition(
-            enclave_context.clone(),
-            self.ecall_input.ciphertext(),
-            group_key,
-        )?;
         let mut output = output::ReturnNotifyState::default();
+        let decrypted_cmds =
+            Commands::<R, C, AP>::decrypt(self.ecall_input.ciphertext(), group_key)?;
+        if let Some(cmds) = decrypted_cmds {
+            // Since the command data is valid for the error at the time of state transition,
+            // `user_counter` must be verified and incremented before the state transition.
+            enclave_context.increment_user_counter(cmds.my_account_id, cmds.counter)?;
+            // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
+            let state_iter = cmds.state_transition(enclave_context.clone())?;
 
-        if let Some(state_iter) = iter_op {
             if let Some(notify_state) = enclave_context.update_state(state_iter.0, state_iter.1) {
                 let json = serde_json::to_vec(&notify_state)?;
                 let bytes = bincode::serialize(&json[..])?;
@@ -183,25 +184,15 @@ where
 
     /// Only if the TEE belongs to the group, you can receive ciphertext and decrypt it,
     /// otherwise do nothing.
-    pub fn state_transition<GK: GroupKeyOps>(
+    pub fn state_transition(
+        self,
         ctx: CTX,
-        ciphertext: &Ciphertext,
-        group_key: &mut GK,
-    ) -> Result<
-        Option<(
-            impl Iterator<Item = UpdatedState<StateType>>,
-            impl Iterator<Item = Option<NotifyState>>,
-        )>,
-    > {
-        if let Some(commands) = Commands::<R, CTX, AP>::decrypt(ciphertext, group_key)? {
-            let stf_res = commands.stf_call(ctx)?;
-            let updated_state_iter = stf_res.0.into_iter();
-            let notify_stste_iter = stf_res.1.into_iter();
-
-            return Ok(Some((updated_state_iter, notify_stste_iter)));
-        }
-
-        Ok(None)
+    ) -> Result<(
+        impl Iterator<Item = UpdatedState<StateType>>,
+        impl Iterator<Item = Option<NotifyState>>,
+    )> {
+        let stf_res = self.stf_call(ctx)?;
+        Ok((stf_res.0.into_iter(), stf_res.1.into_iter()))
     }
 
     fn decrypt<GK: GroupKeyOps>(ciphertext: &Ciphertext, key: &mut GK) -> Result<Option<Self>> {
