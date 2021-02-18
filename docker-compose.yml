@@ -40,6 +40,7 @@ services:
     networks:
       testing_net:
         ipv4_address: ${ANONIFY_ADDRESS}
+    entorypoint: ./tools/vegeta/install_vegeta.sh
 
   ganache:
       image: trufflesuite/ganache-cli:latest
