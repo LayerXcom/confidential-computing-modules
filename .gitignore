@@ -57,3 +57,10 @@ anonify-types.h
 /pathsecrets
 .env
 .anonify
+
+# benchmark
+blob.*.json
+encrypted_*.json
+init.json
+pubkey.json
+enc
