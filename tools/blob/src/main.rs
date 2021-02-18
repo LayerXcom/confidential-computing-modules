@@ -5,9 +5,14 @@ use std::io::Write;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Command {
-    pub access_policy: [u8; 20],
+    pub access_policy: NoAuth,
     pub runtime_params: Params,
     pub cmd_name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct NoAuth {
+    account_id: [u8; 20],
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -22,9 +27,11 @@ fn main() {
         other: [0u8; BLOB_SIZE].to_vec(),
     };
     let c = Command {
-        access_policy: [
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-        ],
+        access_policy: NoAuth {
+            account_id: [
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+            ],
+        },
         runtime_params: ps,
         cmd_name: "append_blob".to_string(),
     };
