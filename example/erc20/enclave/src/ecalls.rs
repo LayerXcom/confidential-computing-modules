@@ -3,7 +3,7 @@ use crate::ENCLAVE_CONTEXT;
 use anonify_ecall_types::cmd::*;
 use anonify_enclave::{context::AnonifyEnclaveContext, workflow::*};
 use anyhow::anyhow;
-use frame_common::crypto::Ed25519ChallengeResponse;
+use frame_common::crypto::NoAuth;
 use frame_enclave::{register_ecall, EnclaveEngine};
 use std::{ptr, vec::Vec};
 
@@ -13,18 +13,18 @@ register_ecall!(
     MAX_MEM_SIZE,
     Runtime<AnonifyEnclaveContext>,
     AnonifyEnclaveContext,
-    (SEND_COMMAND_CMD, CmdSender<Ed25519ChallengeResponse>),
+    (SEND_COMMAND_CMD, CmdSender<NoAuth>),
     // Fetch a ciphertext in event logs from blockchain nodes into enclave's memory database.
-    (FETCH_CIPHERTEXT_CMD, CmdReceiver<Ed25519ChallengeResponse>),
+    (FETCH_CIPHERTEXT_CMD, CmdReceiver<NoAuth>),
     // Fetch handshake received from blockchain nodes into enclave.
     (FETCH_HANDSHAKE_CMD, HandshakeReceiver),
     // Get current state of the user represented the given public key from enclave memory database.
-    (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
+    (GET_STATE_CMD, GetState<NoAuth>),
     (JOIN_GROUP_CMD, JoinGroupSender),
     (SEND_HANDSHAKE_CMD, HandshakeSender),
     (
         REGISTER_NOTIFICATION_CMD,
-        RegisterNotification<Ed25519ChallengeResponse>
+        RegisterNotification<NoAuth>
     ),
     (GET_ENCLAVE_ENCRYPTION_KEY_CMD, EncryptionKeyGetter),
     (SEND_REGISTER_REPORT_CMD, ReportRegistration),
@@ -36,18 +36,18 @@ register_ecall!(
     MAX_MEM_SIZE,
     Runtime<AnonifyEnclaveContext>,
     AnonifyEnclaveContext,
-    (SEND_COMMAND_CMD, CmdSender<Ed25519ChallengeResponse>),
+    (SEND_COMMAND_CMD, CmdSender<NoAuth>),
     // Fetch a ciphertext in event logs from blockchain nodes into enclave's memory database.
-    (FETCH_CIPHERTEXT_CMD, CmdReceiver<Ed25519ChallengeResponse>),
+    (FETCH_CIPHERTEXT_CMD, CmdReceiver<NoAuth>),
     // Fetch handshake received from blockchain nodes into enclave.
     (FETCH_HANDSHAKE_CMD, HandshakeReceiver),
     // Get current state of the user represented the given public key from enclave memory database.
-    (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
+    (GET_STATE_CMD, GetState<NoAuth>),
     (JOIN_GROUP_CMD, JoinGroupSender),
     (SEND_HANDSHAKE_CMD, HandshakeSender),
     (
         REGISTER_NOTIFICATION_CMD,
-        RegisterNotification<Ed25519ChallengeResponse>
+        RegisterNotification<NoAuth>
     ),
     (GET_ENCLAVE_ENCRYPTION_KEY_CMD, EncryptionKeyGetter),
     (SEND_REGISTER_REPORT_CMD, ReportRegistration),
