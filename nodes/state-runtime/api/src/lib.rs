@@ -6,6 +6,28 @@ use web3::types::H256;
 //  GET and POST types
 // ----------------------
 
+pub mod user_counter {
+    pub mod get {
+        use super::super::*;
+
+        #[derive(Debug, Clone, Deserialize, Serialize)]
+        pub struct Request {
+            pub ciphertext: SodiumCiphertext,
+        }
+
+        impl Request {
+            pub fn new(ciphertext: SodiumCiphertext) -> Self {
+                Request { ciphertext }
+            }
+        }
+
+        #[derive(Debug, Clone, Eq, PartialEq, Deserialize, Serialize)]
+        pub struct Response {
+            pub user_counter: serde_json::Value,
+        }
+    }
+}
+
 pub mod state {
     pub mod post {
         use super::super::*;

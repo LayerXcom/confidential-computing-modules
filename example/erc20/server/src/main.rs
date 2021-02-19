@@ -44,6 +44,10 @@ async fn main() -> io::Result<()> {
                 web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
+                "/api/v1/user_counter",
+                web::get().to(handle_get_user_counter::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
                 "/api/v1/key_rotation",
                 web::post().to(handle_key_rotation::<EthDeployer, EthSender, EventWatcher>),
             )
