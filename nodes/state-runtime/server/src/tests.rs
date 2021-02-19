@@ -371,6 +371,15 @@ async fn test_node_recovery() {
     )
     .await;
 
+    let req = test::TestRequest::get()
+        .uri("/api/v1/state")
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
+    assert_eq!(balance.state, 0);
+
     let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
