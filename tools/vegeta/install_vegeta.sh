@@ -2,7 +2,7 @@
 
 which go > /dev/null 2>&1
 if [ $? = 1 ]; then
-    ./install_go.sh
+    /root/anonify/tools/vegeta/install_go.sh
 else
     echo 'go is already installed, skipping installation'
 fi

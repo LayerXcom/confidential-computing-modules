@@ -8,7 +8,7 @@ which jq > /dev/null 2>&1
 if [ $? = 1 ]; then
     /root/anonify/tools/utils/install_jq.sh
 else
-    echo 'go is already installed, skipping installation'
+    echo 'jq is already installed, skipping installation'
 fi
 
 ## set up erc20 application
