@@ -692,6 +692,10 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
                 web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
+                "/api/v1/user_counter",
+                web::get().to(handle_get_user_counter::<EthDeployer, EthSender, EventWatcher>),
+            )
+            .route(
                 "/api/v1/enclave_encryption_key",
                 web::get()
                     .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
@@ -726,6 +730,15 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
         &contract_address.contract_address,
     )
     .await;
+
+    // let req = test::TestRequest::get()
+    //     .uri("/api/v1/user_counter")
+    //     .set_json(&user_counter_req(&mut csprng, &enc_key))
+    //     .to_request();
+    // let resp = test::call_service(&mut app, req).await;
+    // assert!(resp.status().is_success(), "response: {:?}", resp);
+    // let user_counter: state_runtime_node_api::user_counter::get::Response = test::read_body_json(resp).await;
+    // assert_eq!(user_counter.user_counter, 0);
 
     let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
     let req = test::TestRequest::post()
@@ -1013,4 +1026,35 @@ where
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
     state_runtime_node_api::state::get::Request { ciphertext }
+}
+
+fn user_counter_req<CR>(
+    csprng: &mut CR,
+    enc_key: &SodiumPubKey,
+) -> state_runtime_node_api::user_counter::get::Request
+where
+    CR: RngCore + CryptoRng,
+{
+    let sig = [
+        21, 54, 136, 84, 150, 59, 196, 71, 164, 136, 222, 128, 100, 84, 208, 219, 84, 7, 61, 11,
+        230, 220, 25, 138, 67, 247, 95, 97, 30, 76, 120, 160, 73, 48, 110, 43, 94, 79, 192, 195,
+        82, 199, 73, 80, 48, 148, 233, 143, 87, 237, 159, 97, 252, 226, 68, 160, 137, 127, 195,
+        116, 128, 181, 47, 2,
+    ];
+    let pubkey = [
+        164, 189, 195, 42, 48, 163, 27, 74, 84, 147, 25, 254, 16, 14, 206, 134, 153, 148, 33, 189,
+        55, 149, 7, 15, 11, 101, 106, 28, 48, 130, 133, 143,
+    ];
+    let challenge = [
+        119, 177, 182, 220, 100, 44, 96, 179, 173, 47, 220, 49, 105, 204, 132, 230, 211, 24, 166,
+        219, 82, 76, 27, 205, 211, 232, 142, 98, 66, 130, 150, 202,
+    ];
+    let access_policy = Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge);
+    let req = json!({
+        "access_policy": access_policy,
+    });
+    let ciphertext =
+        SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+
+    state_runtime_node_api::user_counter::get::Request { ciphertext }
 }
