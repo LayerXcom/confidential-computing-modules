@@ -404,15 +404,15 @@ pub mod output {
 
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
-    pub struct ReturnCounter {
-        pub counter: UserCounter,
+    pub struct ReturnUserCounter {
+        pub user_counter: UserCounter,
     }
 
-    impl EcallOutput for ReturnCounter {}
+    impl EcallOutput for ReturnUserCounter {}
 
-    impl ReturnCounter {
-        pub fn new(counter: UserCounter) -> Self {
-            ReturnCounter { counter }
+    impl ReturnUserCounter {
+        pub fn new(user_counter: UserCounter) -> Self {
+            ReturnUserCounter { user_counter }
         }
     }
 

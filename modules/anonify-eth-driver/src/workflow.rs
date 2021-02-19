@@ -119,6 +119,16 @@ impl HostEngine for RecoverPathSecretAllWorkflow {
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
 }
 
+pub struct GetUserCounterWorkflow;
+
+impl HostEngine for GetUserCounterWorkflow {
+    type HI = host_input::GetUserCounter;
+    type EI = SodiumCiphertext;
+    type EO = output::ReturnUserCounter;
+    type HO = host_output::GetUserCounter;
+    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+}
+
 pub mod host_input {
     use super::*;
 
@@ -297,6 +307,33 @@ pub mod host_input {
     impl HostInput for GetState {
         type EcallInput = SodiumCiphertext;
         type HostOutput = host_output::GetState;
+
+        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+            Ok((self.ciphertext, Self::HostOutput::new()))
+        }
+
+        fn ecall_cmd(&self) -> u32 {
+            self.ecall_cmd
+        }
+    }
+
+    pub struct GetUserCounter {
+        ciphertext: SodiumCiphertext,
+        ecall_cmd: u32,
+    }
+
+    impl GetUserCounter {
+        pub fn new(ciphertext: SodiumCiphertext, ecall_cmd: u32) -> Self {
+            GetUserCounter {
+                ciphertext,
+                ecall_cmd,
+            }
+        }
+    }
+
+    impl HostInput for GetUserCounter {
+        type EcallInput = SodiumCiphertext;
+        type HostOutput = host_output::GetUserCounter;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             Ok((self.ciphertext, Self::HostOutput::new()))
@@ -578,6 +615,26 @@ pub mod host_output {
     impl GetState {
         pub fn new() -> Self {
             GetState { ecall_output: None }
+        }
+    }
+
+    pub struct GetUserCounter {
+        pub ecall_output: Option<output::ReturnUserCounter>,
+    }
+
+    impl HostOutput for GetUserCounter {
+        type EcallOutput = output::ReturnUserCounter;
+
+        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+            self.ecall_output = Some(output);
+
+            Ok(self)
+        }
+    }
+
+    impl GetUserCounter {
+        pub fn new() -> Self {
+            GetUserCounter { ecall_output: None }
         }
     }
 

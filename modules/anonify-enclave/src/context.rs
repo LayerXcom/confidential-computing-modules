@@ -383,13 +383,13 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct GetCounter<AP: AccessPolicy> {
-    ecall_input: input::GetCounter<AP>,
+pub struct GetUserCounter<AP: AccessPolicy> {
+    ecall_input: input::GetUserCounter<AP>,
 }
 
-impl<AP: AccessPolicy> EnclaveEngine for GetCounter<AP> {
+impl<AP: AccessPolicy> EnclaveEngine for GetUserCounter<AP> {
     type EI = SodiumCiphertext;
-    type EO = output::ReturnCounter;
+    type EO = output::ReturnUserCounter;
 
     fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
@@ -413,7 +413,7 @@ impl<AP: AccessPolicy> EnclaveEngine for GetCounter<AP> {
         let account_id = self.ecall_input.access_policy().into_account_id();
         let user_counter = enclave_context.get_user_counter(account_id);
 
-        Ok(output::ReturnCounter::new(user_counter))
+        Ok(output::ReturnUserCounter::new(user_counter))
     }
 }
 
