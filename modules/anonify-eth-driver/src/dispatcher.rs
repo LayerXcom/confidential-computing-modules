@@ -220,7 +220,7 @@ where
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
 
-        serde_json::to_value(user_counter).map_err(Into::into)
+        serde_json::to_value(user_counter.user_counter).map_err(Into::into)
     }
 
     pub async fn handshake(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {

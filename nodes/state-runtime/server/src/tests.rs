@@ -731,14 +731,14 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     )
     .await;
 
-    // let req = test::TestRequest::get()
-    //     .uri("/api/v1/user_counter")
-    //     .set_json(&user_counter_req(&mut csprng, &enc_key))
-    //     .to_request();
-    // let resp = test::call_service(&mut app, req).await;
-    // assert!(resp.status().is_success(), "response: {:?}", resp);
-    // let user_counter: state_runtime_node_api::user_counter::get::Response = test::read_body_json(resp).await;
-    // assert_eq!(user_counter.user_counter, 0);
+    let req = test::TestRequest::get()
+        .uri("/api/v1/user_counter")
+        .set_json(&user_counter_req(&mut csprng, &enc_key))
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let user_counter: state_runtime_node_api::user_counter::get::Response = test::read_body_json(resp).await;
+    assert_eq!(user_counter.user_counter, 0);
 
     let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
     let req = test::TestRequest::post()
