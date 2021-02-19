@@ -680,10 +680,6 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/start_sync_bc",
-                web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
@@ -709,12 +705,6 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     let contract_address: state_runtime_node_api::deploy::post::Response =
         test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_address.contract_address);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/start_sync_bc")
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
