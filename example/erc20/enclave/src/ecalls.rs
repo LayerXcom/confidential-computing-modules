@@ -29,7 +29,7 @@ register_ecall!(
     (GET_ENCLAVE_ENCRYPTION_KEY_CMD, EncryptionKeyGetter),
     (SEND_REGISTER_REPORT_CMD, ReportRegistration),
     (
-        GET_USR_COUNTER_CMD,
+        GET_USER_COUNTER_CMD,
         GetUserCounter<Ed25519ChallengeResponse>
     ),
 );
@@ -58,7 +58,7 @@ register_ecall!(
     (BACKUP_PATH_SECRET_ALL_CMD, PathSecretBackupper),
     (RECOVER_PATH_SECRET_ALL_CMD, PathSecretRecoverer),
     (
-        GET_USR_COUNTER_CMD,
+        GET_USER_COUNTER_CMD,
         GetUserCounter<Ed25519ChallengeResponse>
     ),
 );
