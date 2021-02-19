@@ -176,10 +176,6 @@ async fn test_skip_invalid_event() {
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/start_sync_bc",
-                web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
@@ -201,12 +197,6 @@ async fn test_skip_invalid_event() {
     let contract_address: state_runtime_node_api::deploy::post::Response =
         test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_address.contract_address);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/start_sync_bc")
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -300,10 +290,6 @@ async fn test_node_recovery() {
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/start_sync_bc",
-                web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
             )
@@ -335,10 +321,6 @@ async fn test_node_recovery() {
                 web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/start_sync_bc",
-                web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/set_contract_address",
                 web::get().to(handle_set_contract_address::<EthDeployer, EthSender, EventWatcher>),
             )
@@ -364,12 +346,6 @@ async fn test_node_recovery() {
     let contract_address: state_runtime_node_api::deploy::post::Response =
         test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_address.contract_address);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/start_sync_bc")
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -509,8 +485,8 @@ async fn test_join_group_then_handshake() {
                 web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/start_sync_bc",
-                web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
+                "/api/v1/state",
+                web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -537,10 +513,6 @@ async fn test_join_group_then_handshake() {
                 web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/start_sync_bc",
-                web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/set_contract_address",
                 web::get().to(handle_set_contract_address::<EthDeployer, EthSender, EventWatcher>),
             )
@@ -565,12 +537,6 @@ async fn test_join_group_then_handshake() {
         test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_address.contract_address);
 
-    let req = test::TestRequest::get()
-        .uri("/api/v1/start_sync_bc")
-        .to_request();
-    let resp = test::call_service(&mut app1, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-
     // Party 2
 
     other_turn();
@@ -580,12 +546,6 @@ async fn test_join_group_then_handshake() {
         .set_json(&state_runtime_node_api::contract_addr::post::Request {
             contract_address: contract_address.contract_address.clone(),
         })
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/start_sync_bc")
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -615,6 +575,15 @@ async fn test_join_group_then_handshake() {
     )
     .await;
 
+    let req = test::TestRequest::get()
+        .uri("/api/v1/state")
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .to_request();
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
+    assert_eq!(balance.state, 0);
+
     let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
@@ -638,6 +607,15 @@ async fn test_join_group_then_handshake() {
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/state")
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .to_request();
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
+    assert_eq!(balance.state, 100);
 
     let transfer_10_req = transfer_10_req(&mut csprng, &enc_key, 2);
     let req = test::TestRequest::post()
@@ -727,7 +705,8 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
-    let user_counter: state_runtime_node_api::user_counter::get::Response = test::read_body_json(resp).await;
+    let user_counter: state_runtime_node_api::user_counter::get::Response =
+        test::read_body_json(resp).await;
     assert_eq!(user_counter.user_counter, 0);
 
     let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
