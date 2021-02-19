@@ -84,7 +84,7 @@ pub trait StateOps {
     /// Get state using call id.
     /// this is called in user-defined state getting functions.
     fn get_state_by_state_name<U, R, CTX>(
-        self,
+        ctx: CTX,
         cmd_name: &str,
         account_id: U,
         runtime_params: serde_json::Value,
@@ -94,7 +94,7 @@ pub trait StateOps {
         R: RuntimeExecutor<CTX, S = Self::S>,
         CTX: ContextOps<S = Self::S>;
 
-    fn get_user_counter<U>(self, account_id: U) -> UserCounter
+    fn get_user_counter<U>(&self, account_id: U) -> UserCounter
     where
         U: Into<AccountId>;
 

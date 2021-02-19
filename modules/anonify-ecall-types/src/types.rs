@@ -179,12 +179,12 @@ pub mod input {
 
     #[derive(Debug, Clone, Deserialize, Serialize)]
     #[serde(crate = "crate::serde")]
-    pub struct GetCounter<AP: AccessPolicy> {
+    pub struct GetUserCounter<AP: AccessPolicy> {
         #[serde(deserialize_with = "AP::deserialize")]
         pub access_policy: AP,
     }
 
-    impl<AP> Default for GetCounter<AP>
+    impl<AP> Default for GetUserCounter<AP>
     where
         AP: AccessPolicy,
     {
@@ -195,9 +195,9 @@ pub mod input {
         }
     }
 
-    impl<AP: AccessPolicy> GetCounter<AP> {
+    impl<AP: AccessPolicy> GetUserCounter<AP> {
         pub fn new(access_policy: AP) -> Self {
-            GetCounter { access_policy }
+            GetUserCounter { access_policy }
         }
 
         pub fn access_policy(&self) -> &AP {

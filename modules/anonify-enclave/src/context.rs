@@ -98,7 +98,7 @@ impl StateOps for AnonifyEnclaveContext {
     }
 
     fn get_state_by_state_name<U, R, CTX>(
-        self,
+        ctx: CTX,
         cmd_name: &str,
         account_id: U,
         runtime_params: serde_json::Value,
@@ -109,7 +109,7 @@ impl StateOps for AnonifyEnclaveContext {
         CTX: ContextOps<S = Self::S>,
     {
         let call_kind = R::C::new(cmd_name, runtime_params)?;
-        let res = R::new(self).execute(call_kind, account_id.into())?;
+        let res = R::new(ctx).execute(call_kind, account_id.into())?;
 
         match res {
             ReturnState::Updated(_) => Err(anyhow!(
@@ -372,7 +372,8 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
             runtime_params,
             state_name,
         } = self.ecall_input;
-        let user_state = enclave_context.clone().get_state_by_state_name::<_, R, _>(
+        let user_state = C::get_state_by_state_name::<_, R, _>(
+            enclave_context.clone(),
             &state_name,
             access_policy.into_account_id(),
             runtime_params,
