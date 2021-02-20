@@ -506,6 +506,11 @@ async fn test_join_group_then_handshake() {
                 "/api/v1/state",
                 web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
             ),
+            .route(
+                "/api/v1/enclave_encryption_key",
+                web::get()
+                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+            ),
     )
     .await;
 
@@ -555,6 +560,30 @@ async fn test_join_group_then_handshake() {
         test::read_body_json(resp).await;
     println!("contract address: {:?}", contract_address.contract_address);
 
+    let req = test::TestRequest::get()
+        .uri("/api/v1/state")
+        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .to_request();
+    let resp = test::call_service(&mut app1, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
+    assert_eq!(balance.state, 0);
+
+    let req = test::TestRequest::get()
+        .uri("/api/v1/enclave_encryption_key")
+        .to_request();
+    let resp = test::call_service(&mut app1, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let enc_key_resp: state_runtime_node_api::enclave_encryption_key::get::Response =
+        test::read_body_json(resp).await;
+    let enc_key1 = verify_enclave_encryption_key(
+        enc_key_resp.enclave_encryption_key,
+        &abi_path,
+        &eth_url,
+        &contract_address.contract_address,
+    )
+    .await;
+
     // Party 2
 
     other_turn();
@@ -567,6 +596,25 @@ async fn test_join_group_then_handshake() {
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    // using invalid enclave encryption key because app2 have to sync with bc, but app2's enclave encryption key cannot be set here
+    // so using app1's key
+    let req = test::TestRequest::get()
+        .uri("/api/v1/state")
+        .set_json(&balance_of_req(&mut csprng, &enc_key1))
+        .to_request();
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_server_error(), "response: {:?}", resp);
+
+    let req = test::TestRequest::post()
+        .uri("/api/v1/join_group")
+        .set_json(&state_runtime_node_api::join_group::post::Request {
+            contract_address: contract_address.contract_address.clone(),
+        })
+        .to_request();
+    let resp = test::call_service(&mut app2, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -582,25 +630,6 @@ async fn test_join_group_then_handshake() {
         &contract_address.contract_address,
     )
     .await;
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.state, 0);
-
-    let req = test::TestRequest::post()
-        .uri("/api/v1/join_group")
-        .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_address: contract_address.contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
