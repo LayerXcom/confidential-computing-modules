@@ -505,7 +505,7 @@ async fn test_join_group_then_handshake() {
             .route(
                 "/api/v1/state",
                 web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
-            ),
+            )
             .route(
                 "/api/v1/enclave_encryption_key",
                 web::get()
