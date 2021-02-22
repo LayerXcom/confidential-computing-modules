@@ -177,6 +177,34 @@ pub mod input {
         }
     }
 
+    #[derive(Debug, Clone, Deserialize, Serialize)]
+    #[serde(crate = "crate::serde")]
+    pub struct GetUserCounter<AP: AccessPolicy> {
+        #[serde(deserialize_with = "AP::deserialize")]
+        pub access_policy: AP,
+    }
+
+    impl<AP> Default for GetUserCounter<AP>
+    where
+        AP: AccessPolicy,
+    {
+        fn default() -> Self {
+            Self {
+                access_policy: AP::default(),
+            }
+        }
+    }
+
+    impl<AP: AccessPolicy> GetUserCounter<AP> {
+        pub fn new(access_policy: AP) -> Self {
+            GetUserCounter { access_policy }
+        }
+
+        pub fn access_policy(&self) -> &AP {
+            &self.access_policy
+        }
+    }
+
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
     pub struct RegisterNotification<AP: AccessPolicy> {
@@ -371,6 +399,20 @@ pub mod output {
     impl ReturnState {
         pub fn new(state: StateType) -> Self {
             ReturnState { state }
+        }
+    }
+
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+    #[serde(crate = "crate::serde")]
+    pub struct ReturnUserCounter {
+        pub user_counter: UserCounter,
+    }
+
+    impl EcallOutput for ReturnUserCounter {}
+
+    impl ReturnUserCounter {
+        pub fn new(user_counter: UserCounter) -> Self {
+            ReturnUserCounter { user_counter }
         }
     }
 

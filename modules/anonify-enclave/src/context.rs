@@ -119,6 +119,13 @@ impl StateOps for AnonifyEnclaveContext {
         }
     }
 
+    fn get_user_counter<U>(&self, account_id: U) -> UserCounter
+    where
+        U: Into<AccountId>,
+    {
+        self.user_counter_db.get(account_id.into())
+    }
+
     /// Returns a updated state of registerd account_id in notification.
     // TODO: Enables to return multiple updated states.
     fn update_state(
@@ -373,6 +380,41 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
         )?;
 
         Ok(output::ReturnState::new(user_state))
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct GetUserCounter<AP: AccessPolicy> {
+    ecall_input: input::GetUserCounter<AP>,
+}
+
+impl<AP: AccessPolicy> EnclaveEngine for GetUserCounter<AP> {
+    type EI = SodiumCiphertext;
+    type EO = output::ReturnUserCounter;
+
+    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    where
+        C: ContextOps<S = StateType> + Clone,
+    {
+        let buf = enclave_context.decrypt(ciphertext)?;
+        let ecall_input = serde_json::from_slice(&buf[..])?;
+
+        Ok(Self { ecall_input })
+    }
+
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        self.ecall_input.access_policy().verify()
+    }
+
+    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    where
+        R: RuntimeExecutor<C, S = StateType>,
+        C: ContextOps<S = StateType> + Clone,
+    {
+        let account_id = self.ecall_input.access_policy().into_account_id();
+        let user_counter = enclave_context.get_user_counter(account_id);
+
+        Ok(output::ReturnUserCounter::new(user_counter))
     }
 }
 

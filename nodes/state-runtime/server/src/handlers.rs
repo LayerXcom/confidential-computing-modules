@@ -180,6 +180,31 @@ where
     Ok(HttpResponse::Ok().json(state_runtime_node_api::state::get::Response { state }))
 }
 
+/// Fetch events from blockchain nodes manually, and then get the user counter from enclave.
+pub async fn handle_get_user_counter<D, S, W>(
+    server: web::Data<Arc<Server<D, S, W>>>,
+    req: web::Json<state_runtime_node_api::user_counter::get::Request>,
+) -> Result<HttpResponse>
+where
+    D: Deployer,
+    S: Sender,
+    W: Watcher,
+{
+    server
+        .dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+        .await
+        .map_err(|e| ServerError::from(e))?;
+
+    let user_counter = server
+        .dispatcher
+        .get_user_counter(req.ciphertext.clone(), GET_USER_COUNTER_CMD)
+        .map_err(|e| ServerError::from(e))?;
+
+    Ok(HttpResponse::Ok()
+        .json(state_runtime_node_api::user_counter::get::Response { user_counter }))
+}
+
 pub async fn handle_enclave_encryption_key<D, S, W>(
     server: web::Data<Arc<Server<D, S, W>>>,
 ) -> Result<HttpResponse>

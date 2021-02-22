@@ -29,4 +29,11 @@ impl UserCounterDB {
         db.insert(user, received);
         Ok(())
     }
+
+    pub fn get(&self, account_id: AccountId) -> UserCounter {
+        match self.0.read().unwrap().get(&account_id) {
+            Some(v) => *v,
+            None => UserCounter::default(),
+        }
+    }
 }

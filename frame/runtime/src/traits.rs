@@ -94,6 +94,10 @@ pub trait StateOps {
         R: RuntimeExecutor<CTX, S = Self::S>,
         CTX: ContextOps<S = Self::S>;
 
+    fn get_user_counter<U>(&self, account_id: U) -> UserCounter
+    where
+        U: Into<AccountId>;
+
     /// Returns a updated state of registered account_id in notification.
     fn update_state(
         &self,
