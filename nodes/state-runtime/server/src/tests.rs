@@ -765,7 +765,11 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
         test::read_body_json(resp).await;
     assert_eq!(user_counter.user_counter, 0);
 
-    let init_100_req = init_100_req(&mut csprng, &enc_key, 1);
+    let init_100_req = init_100_req(
+        &mut csprng,
+        &enc_key,
+        user_counter.user_counter.as_u64().unwrap() as u32 + 1,
+    );
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -782,8 +786,22 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
+    let req = test::TestRequest::get()
+        .uri("/api/v1/user_counter")
+        .set_json(&user_counter_req(&mut csprng, &enc_key))
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let user_counter: state_runtime_node_api::user_counter::get::Response =
+        test::read_body_json(resp).await;
+    assert_eq!(user_counter.user_counter, 1);
+
     // first request
-    let transfer_10 = transfer_10_req(&mut csprng, &enc_key, 2);
+    let transfer_10 = transfer_10_req(
+        &mut csprng,
+        &enc_key,
+        user_counter.user_counter.as_u64().unwrap() as u32 + 1,
+    );
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10)
@@ -800,8 +818,22 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90); // success
 
+    let req = test::TestRequest::get()
+        .uri("/api/v1/user_counter")
+        .set_json(&user_counter_req(&mut csprng, &enc_key))
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let user_counter: state_runtime_node_api::user_counter::get::Response =
+        test::read_body_json(resp).await;
+    assert_eq!(user_counter.user_counter, 2);
+
     // try second duplicated request
-    let transfer_10 = transfer_10_req(&mut csprng, &enc_key, 2); // same counter
+    let transfer_10 = transfer_10_req(
+        &mut csprng,
+        &enc_key,
+        user_counter.user_counter.as_u64().unwrap() as u32,
+    ); // same counter
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10)
@@ -819,7 +851,11 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     assert_eq!(balance.state, 90); // failed
 
     // send out of order request
-    let transfer_10 = transfer_10_req(&mut csprng, &enc_key, 4); // should be 3
+    let transfer_10 = transfer_10_req(
+        &mut csprng,
+        &enc_key,
+        user_counter.user_counter.as_u64().unwrap() as u32 + 2, // should be 3
+    );
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10)
@@ -837,7 +873,11 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     assert_eq!(balance.state, 90); // failed
 
     // then, send correct request
-    let transfer_10 = transfer_10_req(&mut csprng, &enc_key, 3);
+    let transfer_10 = transfer_10_req(
+        &mut csprng,
+        &enc_key,
+        user_counter.user_counter.as_u64().unwrap() as u32 + 1,
+    );
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10)
