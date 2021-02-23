@@ -74,7 +74,7 @@ curl ${ANONIFY_URL}/api/v1/state -k -s -X POST -H "Content-Type: application/jso
 sleep 2;
 
 echo 'enc blob'
-./enc ./pubkey.json ./fixtures/blob.10.json
+./enc ./pubkey.json ./fixtures/blob.100.json
 if [ $? = 1 ]; then
     echo 'failed to enc blob'
     exit 1
@@ -88,3 +88,4 @@ if [ $? = 1 ]; then
 fi
 # cd ${TOOLS_DIR}/vegeta
 
+echo 'finished setup erc20 application, you can send blob.'
