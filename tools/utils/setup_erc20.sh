@@ -81,7 +81,7 @@ if [ $? = 1 ]; then
 fi
 #curl ${ANONIFY_URL}/api/v1/state -k -s -X POST -H "Content-Type: application/json" -d @encrypted_blob.10.json
 
-cp encrypted_blob.10.json ${TOOLS_DIR}/vegeta/
+cp encrypted_blob.100.json ${TOOLS_DIR}/vegeta/
 if [ $? = 1 ]; then
     echo 'failed to copy blob to vegeta'
     exit 1
