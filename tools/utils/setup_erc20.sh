@@ -1,15 +1,34 @@
 #!/bin/bash
 
 export ANONIFY_URL=http://172.38.1.1:8080
+export TOOLS_DIR=/root/anonify/tools
 
 ## preparation
 
+### install jq
 which jq > /dev/null 2>&1
 if [ $? = 1 ]; then
-    /root/anonify/tools/utils/install_jq.sh
+    ${TOOLS_DIR}/utils/install_jq.sh
 else
     echo 'jq is already installed, skipping installation'
 fi
+
+### copy fixtures to tmp directory
+working_dir=${TOOLS_DIR}/utils/tmp
+
+if [ ! -d ${working_dir} ]; then
+    mkdir ${working_dir}
+fi
+
+cp -r ${TOOLS_DIR}/fixtures ${working_dir}
+
+### building enc
+
+cd ${TOOLS_DIR}/enc
+RUST_BACKTRACE=1 cargo build
+cp target/target/debug/enc ${working_dir}
+
+cd ${working_dir}
 
 ## set up erc20 application
 
@@ -25,10 +44,9 @@ curl ${ANONIFY_URL}/api/v1/start_sync_bc -k -s -X GET -H "Content-Type: applicat
 
 sleep 2;
 
-echo 'get enclave_encryption_key and save to ~/anonify/pubkey.json'
+echo 'get enclave_encryption_key and save is as pubkey.json'
 curl ${ANONIFY_URL}/api/v1/enclave_encryption_key -k -s -X GET -H "Content-Type: application/json" -d '' > ~/anonify/pubkey.json
 
-cd ~/anonify
 echo 'enc init.json'
 ./enc ./pubkey.json ./init.json
 
@@ -43,6 +61,6 @@ echo 'enc blob'
 ./enc ./pubkey.json ./blob.10.json
 #curl ${ANONIFY_URL}/api/v1/state -k -s -X POST -H "Content-Type: application/json" -d @encrypted_blob.10.json
 
-cp encrypted_blob.10.json /root/anonify/tools/vegeta/
-# cd /root/anonify/tools/vegeta
+cp encrypted_blob.10.json ${TOOLS_DIR}/vegeta/
+# cd ${TOOLS_DIR}/vegeta
 

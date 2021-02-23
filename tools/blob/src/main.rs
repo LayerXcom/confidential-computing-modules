@@ -20,7 +20,7 @@ pub struct Params {
     pub other: Vec<u8>,
 }
 
-const BLOB_SIZE: usize = 10;
+const BLOB_SIZE: usize = 1_000_000;
 
 fn main() {
     let ps = Params {
