@@ -34,7 +34,7 @@ if [ $? = 1 ]; then
     echo 'failed to build enc'
     exit 1
 fi
-cp target/target/debug/enc ${working_dir}
+cp ./target/debug/enc ${working_dir}
 if [ $? = 1 ]; then
     echo 'failed to copy enc'
     exit 1
