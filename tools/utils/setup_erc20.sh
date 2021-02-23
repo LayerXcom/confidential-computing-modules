@@ -60,7 +60,7 @@ echo 'get enclave_encryption_key and save is as pubkey.json'
 curl ${ANONIFY_URL}/api/v1/enclave_encryption_key -k -s -X GET -H "Content-Type: application/json" -d '' > ${working_dir}/pubkey.json
 
 echo 'enc init.json'
-./enc ./pubkey.json ./init.json
+./enc ./pubkey.json ./fixtures/init.json
 if [ $? = 1 ]; then
     echo 'failed to enc init.json'
     exit 1
@@ -74,7 +74,7 @@ curl ${ANONIFY_URL}/api/v1/state -k -s -X POST -H "Content-Type: application/jso
 sleep 2;
 
 echo 'enc blob'
-./enc ./pubkey.json ./blob.10.json
+./enc ./pubkey.json ./fixtures/blob.10.json
 if [ $? = 1 ]; then
     echo 'failed to enc blob'
     exit 1
