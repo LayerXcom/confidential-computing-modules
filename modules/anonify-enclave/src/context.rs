@@ -21,7 +21,7 @@ use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DI
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
-use frame_sodium::{rng::SgxRng, SodiumCiphertext, SodiumPubKey};
+use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, PathSecret, StorePathSecrets,
@@ -208,8 +208,10 @@ impl EnclaveKeyOps for AnonifyEnclaveContext {
         self.enclave_key.decrypt(ciphertext).map_err(Into::into)
     }
 
-    fn enclave_encryption_key(&self) -> SodiumPubKey {
-        self.enclave_key.enclave_encryption_key()
+    fn enclave_encryption_key(&self) -> anyhow::Result<SodiumPubKey> {
+        self.enclave_key
+            .enclave_encryption_key()
+            .map_err(|e| anyhow!("{:?}", e))
     }
 }
 
@@ -270,9 +272,6 @@ impl KeyVaultOps for AnonifyEnclaveContext {
 // TODO: Consider SGX_ERROR_BUSY.
 impl AnonifyEnclaveContext {
     pub fn new(version: usize) -> Result<Self> {
-        let mut rng = SgxRng::new()?;
-
-        let enclave_key = EnclaveKey::new(&mut rng)?;
         let user_state_db = UserStateDB::new();
         let user_counter_db = UserCounterDB::new();
 
@@ -319,6 +318,15 @@ impl AnonifyEnclaveContext {
             );
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
         let state_counter = Arc::new(SgxRwLock::new(StateCounter::default()));
+
+        let enclave_key = {
+            if my_roster_idx == 0 {
+                EnclaveKey::new()?.set_dec_key_by_owner()
+            } else {
+                EnclaveKey::new()?.set_dec_key_by_member()
+            }
+        }?;
+        enclave_key.store_dec_key()?;
 
         Ok(AnonifyEnclaveContext {
             spid,

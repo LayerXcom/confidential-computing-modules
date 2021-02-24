@@ -129,7 +129,7 @@ pub trait EnclaveKeyOps {
 
     fn decrypt(&self, ciphertext: SodiumCiphertext) -> Result<Vec<u8>>;
 
-    fn enclave_encryption_key(&self) -> SodiumPubKey;
+    fn enclave_encryption_key(&self) -> Result<SodiumPubKey>;
 }
 
 pub trait GroupKeyOps: Sized {
