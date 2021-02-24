@@ -2,10 +2,7 @@
 
 use anonify_ecall_types::*;
 use anyhow::Result;
-use frame_common::{
-    crypto::{BackupPathSecret, RecoverAllRequest},
-    state_types::StateType,
-};
+use frame_common::{crypto::BackupPathSecret, request::RecoverAllRequest, state_types::StateType};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::PathSecret;

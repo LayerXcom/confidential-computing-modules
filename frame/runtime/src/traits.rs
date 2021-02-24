@@ -6,7 +6,8 @@ use crate::localstd::{
 };
 use crate::serde::{de::DeserializeOwned, Serialize};
 use frame_common::{
-    crypto::{AccountId, BackupPathSecret, Ciphertext, RecoverAllRequest, RecoveredPathSecret},
+    crypto::{AccountId, BackupPathSecret, Ciphertext, RecoveredPathSecret},
+    request::RecoverAllRequest,
     state_types::{MemId, NotifyState, ReturnState, StateCounter, UpdatedState, UserCounter},
     traits::*,
 };

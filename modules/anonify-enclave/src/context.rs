@@ -8,10 +8,8 @@ use crate::{
 use anonify_ecall_types::*;
 use anyhow::{anyhow, bail};
 use frame_common::{
-    crypto::{
-        AccountId, BackupPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverAllRequest,
-        RecoverRequest, RecoveredPathSecret,
-    },
+    crypto::{AccountId, BackupPathSecret, RecoveredPathSecret},
+    request::{KeyVaultCmd, KeyVaultRequest, RecoverAllRequest, RecoverRequest},
     state_types::{
         MemId, NotifyState, ReturnState, StateCounter, StateType, UpdatedState, UserCounter,
     },
@@ -321,12 +319,12 @@ impl AnonifyEnclaveContext {
 
         let enclave_key = {
             if my_roster_idx == 0 {
-                EnclaveKey::new()?.set_dec_key_by_owner()
+                EnclaveKey::new()?.set_dec_key_by_owner(&client_config, &key_vault_endpoint)
             } else {
-                EnclaveKey::new()?.set_dec_key_by_member()
+                EnclaveKey::new()?.set_dec_key_by_member(&client_config, &key_vault_endpoint)
             }
         }?;
-        enclave_key.store_dec_key()?;
+        enclave_key.store_dec_key(&client_config, &key_vault_endpoint)?;
 
         Ok(AnonifyEnclaveContext {
             spid,

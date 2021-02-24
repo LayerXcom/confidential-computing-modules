@@ -38,5 +38,6 @@ use sgx_anyhow as local_anyhow;
 pub mod crypto;
 pub mod state_types;
 pub mod traits;
+pub mod request;
 
 pub use traits::*;

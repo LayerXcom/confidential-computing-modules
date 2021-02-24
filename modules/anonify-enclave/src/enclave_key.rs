@@ -4,6 +4,7 @@ use crate::error::{EnclaveError, Result};
 use anonify_ecall_types::*;
 use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
 use frame_enclave::EnclaveEngine;
+use frame_mra_tls::ClientConfig;
 use frame_runtime::traits::*;
 use frame_sodium::{
     rng::SgxRng, SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE,
@@ -63,8 +64,12 @@ impl EnclaveKey {
 
     /// If you can get the dec_key, it is the initialization at the time of recovery,
     /// otherwise, a new dec_key is generated.
-    pub fn set_dec_key_by_owner(mut self) -> Result<Self> {
-        let decryption_privkey = match Self::get_dec_key() {
+    pub fn set_dec_key_by_owner(
+        mut self,
+        client_config: &ClientConfig,
+        key_vault_endpoint: &str,
+    ) -> Result<Self> {
+        let decryption_privkey = match Self::get_dec_key(&client_config, &key_vault_endpoint) {
             Ok(dec_key) => dec_key,
             Err(_e) => {
                 let mut rng = SgxRng::new()?;
@@ -77,20 +82,31 @@ impl EnclaveKey {
     }
 
     /// Get dec_key from key-vault node in initialization when joining newly.
-    pub fn set_dec_key_by_member(mut self) -> Result<Self> {
-        let decryption_privkey = Self::get_dec_key()?;
+    pub fn set_dec_key_by_member(
+        mut self,
+        client_config: &ClientConfig,
+        key_vault_endpoint: &str,
+    ) -> Result<Self> {
+        let decryption_privkey = Self::get_dec_key(&client_config, &key_vault_endpoint)?;
 
         self.decryption_privkey = Some(decryption_privkey);
         Ok(self)
     }
 
     /// Sealing locally, make it persistent, and save it in the key-vault node as well
-    pub fn store_dec_key(&self) -> Result<()> {
+    pub fn store_dec_key(
+        &self,
+        client_config: &ClientConfig,
+        key_vault_endpoint: &str,
+    ) -> Result<()> {
         unimplemented!();
     }
 
     /// After trying to get the local sealed dec_key, get it to key-vault node
-    fn get_dec_key() -> Result<SodiumPrivateKey> {
+    fn get_dec_key(
+        client_config: &ClientConfig,
+        key_vault_endpoint: &str,
+    ) -> Result<SodiumPrivateKey> {
         unimplemented!();
     }
 
