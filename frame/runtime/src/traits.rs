@@ -6,8 +6,14 @@ use crate::localstd::{
 };
 use crate::serde::{de::DeserializeOwned, Serialize};
 use frame_common::{
-    crypto::{AccountId, BackupPathSecret, Ciphertext, RecoveredPathSecret},
-    request::RecoverAllRequest,
+    crypto::{AccountId, Ciphertext},
+    key_vault::{
+        request::{
+            BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody,
+            RecoverAllPathSecretsRequestbody,
+        },
+        response::RecoveredPathSecret,
+    },
     state_types::{MemId, NotifyState, ReturnState, StateCounter, UpdatedState, UserCounter},
     traits::*,
 };
@@ -169,17 +175,17 @@ pub trait QuoteGetter: Sized {
 }
 
 pub trait KeyVaultOps {
-    fn backup_path_secret(&self, backup_path_secret: BackupPathSecret) -> Result<()>;
+    fn backup_path_secret(&self, backup_path_secret: BackupPathSecretRequestBody) -> Result<()>;
 
     fn recover_path_secret(&self, ps_id: &[u8], roster_idx: u32) -> Result<PathSecret>;
 
     fn manually_backup_path_secrets_all(
         &self,
-        backup_path_secrets: Vec<BackupPathSecret>,
+        backup_path_secrets: BackupAllPathSecretsRequestBody,
     ) -> Result<()>;
 
     fn manually_recover_path_secrets_all(
         &self,
-        recover_path_secrets_all: RecoverAllRequest,
+        recover_path_secrets_all: RecoverAllPathSecretsRequestbody,
     ) -> Result<Vec<RecoveredPathSecret>>;
 }

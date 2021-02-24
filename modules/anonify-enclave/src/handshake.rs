@@ -1,7 +1,7 @@
 use anonify_ecall_types::*;
 use anyhow::{anyhow, Result};
 #[cfg(feature = "backup-enable")]
-use frame_common::crypto::BackupPathSecret;
+use frame_common::key_vault::request::BackupPathSecretRequestBody;
 use frame_common::{crypto::Sha256, state_types::StateType};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
@@ -37,7 +37,7 @@ impl EnclaveEngine for JoinGroupSender {
 
         #[cfg(feature = "backup-enable")]
         {
-            let backup_path_secret = BackupPathSecret::new(
+            let backup_path_secret = BackupPathSecretRequestBody::new(
                 path_secret.as_bytes().to_vec(),
                 epoch,
                 handshake.roster_idx(),
@@ -81,7 +81,7 @@ impl EnclaveEngine for HandshakeSender {
 
         #[cfg(feature = "backup-enable")]
         {
-            let backup_path_secret = BackupPathSecret::new(
+            let backup_path_secret = BackupPathSecretRequestBody::new(
                 path_secret.as_bytes().to_vec(),
                 epoch,
                 handshake.roster_idx(),

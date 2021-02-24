@@ -2,7 +2,13 @@
 
 use anonify_ecall_types::*;
 use anyhow::Result;
-use frame_common::{crypto::BackupPathSecret, request::RecoverAllRequest, state_types::StateType};
+use frame_common::{
+    key_vault::request::{
+        BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody,
+        RecoverAllPathSecretsRequestbody,
+    },
+    state_types::StateType,
+};
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_treekem::PathSecret;
@@ -27,16 +33,22 @@ impl EnclaveEngine for PathSecretBackupper {
         let roster_idx = (&*enclave_context.read_group_key()).my_roster_idx();
 
         // backup path_secrets to key-vault server
-        let mut backup_path_secrets: Vec<BackupPathSecret> = vec![];
+        let mut backup_path_secrets: Vec<BackupPathSecretRequestBody> = vec![];
         for id in ids {
             let eps = store_path_secrets.load_from_local_filesystem(&id)?;
             let ps = PathSecret::try_from_importing(eps.clone())?;
-            let backup_path_secret =
-                BackupPathSecret::new(ps.as_bytes().to_vec(), eps.epoch(), roster_idx, id);
+            let backup_path_secret = BackupPathSecretRequestBody::new(
+                ps.as_bytes().to_vec(),
+                eps.epoch(),
+                roster_idx,
+                id,
+            );
             backup_path_secrets.push(backup_path_secret);
         }
 
-        enclave_context.manually_backup_path_secrets_all(backup_path_secrets)?;
+        enclave_context.manually_backup_path_secrets_all(BackupAllPathSecretsRequestBody::new(
+            backup_path_secrets,
+        ))?;
 
         Ok(output::Empty::default())
     }
@@ -58,7 +70,7 @@ impl EnclaveEngine for PathSecretRecoverer {
         // fetch path_secrets from key-vault server
         let group_key = &*enclave_context.read_group_key();
         let roster_idx = group_key.my_roster_idx();
-        let recover_all_request = RecoverAllRequest::new(roster_idx);
+        let recover_all_request = RecoverAllPathSecretsRequestbody::new(roster_idx);
         let recovered_path_secrets =
             enclave_context.manually_recover_path_secrets_all(recover_all_request)?;
 

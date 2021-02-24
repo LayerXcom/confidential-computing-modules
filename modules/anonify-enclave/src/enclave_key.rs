@@ -2,9 +2,14 @@
 
 use crate::error::{EnclaveError, Result};
 use anonify_ecall_types::*;
-use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
+use frame_common::{
+    crypto::rand_assign,
+    key_vault::request::{KeyVaultCmd, KeyVaultRequest},
+    state_types::StateType,
+    traits::Keccak256,
+};
 use frame_enclave::EnclaveEngine;
-use frame_mra_tls::ClientConfig;
+use frame_mra_tls::{Client, ClientConfig};
 use frame_runtime::traits::*;
 use frame_sodium::{
     rng::SgxRng, SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE,
@@ -99,7 +104,11 @@ impl EnclaveKey {
         client_config: &ClientConfig,
         key_vault_endpoint: &str,
     ) -> Result<()> {
-        unimplemented!();
+        // let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
+        // let key_vault_request = KeyVaultRequest::new(KeyVaultCmd::StorePathSecret, backup_path_secret);
+        // let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
+
+        Ok(())
     }
 
     /// After trying to get the local sealed dec_key, get it to key-vault node
