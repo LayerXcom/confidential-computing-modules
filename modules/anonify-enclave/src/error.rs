@@ -24,7 +24,7 @@ pub enum EnclaveError {
         received: UserCounter,
         expected: UserCounter,
     },
-     #[error("Enclave Decryption Key is not set")]
+    #[error("Enclave Decryption Key is not set")]
     NotSetEnclaveDecKeyError,
 }
 

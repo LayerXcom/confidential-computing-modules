@@ -36,8 +36,8 @@ use serde_std as serde;
 use sgx_anyhow as local_anyhow;
 
 pub mod crypto;
+pub mod key_vault;
 pub mod state_types;
 pub mod traits;
-pub mod key_vault;
 
 pub use traits::*;
