@@ -25,10 +25,16 @@ impl RequestHandler for KeyVaultHandler {
             .ok_or_else(|| anyhow!("msg doesn't contain cmd"))?;
 
         match cmd {
-            "Store" => self.store_path_secret(decoded["body"].clone()),
-            "Recover" => self.recover_path_secret(decoded["body"].clone()),
-            "ManuallyStoreAll" => self.manually_store_path_secrets_all(decoded["body"].clone()),
-            "ManuallyRecoverAll" => self.manually_recover_path_secrets_all(decoded["body"].clone()),
+            "StorePathSecret" => self.store_path_secret(decoded["body"].clone()),
+            "RecoverPathSecret" => self.recover_path_secret(decoded["body"].clone()),
+            "ManuallyStoreAllPathSecrets" => {
+                self.manually_store_path_secrets_all(decoded["body"].clone())
+            }
+            "ManuallyRecoverAllPathSecrets" => {
+                self.manually_recover_path_secrets_all(decoded["body"].clone())
+            }
+            "StoreEnclaveDecryptionKey" => unimplemented!(),
+            "RecoverEnclaveDecrptionKey" => unimplemented!(),
             _ => unreachable!("got unknown command: {:?}", cmd),
         }
     }
