@@ -55,7 +55,7 @@ impl RequestBody for BackupPathSecretRequestBody {}
 /// A request body to backup all path secrets to key-vault server
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(crate = "crate::serde")]
-pub struct BackupAllPathSecretsRequestBody(Vec<BackupPathSecretRequestBody>);
+pub struct BackupAllPathSecretsRequestBody(pub Vec<BackupPathSecretRequestBody>);
 
 impl BackupAllPathSecretsRequestBody {
     pub fn new(body: Vec<BackupPathSecretRequestBody>) -> Self {
