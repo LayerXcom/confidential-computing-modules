@@ -14,6 +14,7 @@ use frame_runtime::traits::*;
 use frame_sodium::{
     rng::SgxRng, SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE,
 };
+use rand_core::{CryptoRng, RngCore};
 use secp256k1::{
     self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
 };
@@ -51,7 +52,10 @@ pub struct EnclaveKey {
 }
 
 impl EnclaveKey {
-    pub fn new() -> Result<Self> {
+    pub fn new<CR>(csprng: &mut CR) -> Result<Self>
+    where
+        CR: RngCore + CryptoRng,
+    {
         let signing_privkey = loop {
             let mut ret = [0u8; SECRET_KEY_SIZE];
             rand_assign(&mut ret)?;
@@ -60,12 +64,28 @@ impl EnclaveKey {
                 break key;
             }
         };
-
-        Ok(EnclaveKey {
+        let decryption_privkey = SodiumPrivateKey::from_random(csprng)?;
+        Ok(Self {
             signing_privkey,
-            decryption_privkey: None,
+            decryption_privkey: Some(decryption_privkey),
         })
     }
+    // TODO:
+    // pub fn new() -> Result<Self> {
+    //     let signing_privkey = loop {
+    //         let mut ret = [0u8; SECRET_KEY_SIZE];
+    //         rand_assign(&mut ret)?;
+
+    //         if let Ok(key) = SecretKey::parse(&ret) {
+    //             break key;
+    //         }
+    //     };
+
+    //     Ok(EnclaveKey {
+    //         signing_privkey,
+    //         decryption_privkey: None,
+    //     })
+    // }
 
     /// If you can get the dec_key, it is the initialization at the time of recovery,
     /// otherwise, a new dec_key is generated.

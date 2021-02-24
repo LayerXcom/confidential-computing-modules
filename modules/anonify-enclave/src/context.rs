@@ -25,7 +25,7 @@ use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DI
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
-use frame_sodium::{SodiumCiphertext, SodiumPubKey};
+use frame_sodium::{rng::SgxRng, SodiumCiphertext, SodiumPubKey};
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, PathSecret, StorePathSecrets,
@@ -331,14 +331,17 @@ impl AnonifyEnclaveContext {
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
         let state_counter = Arc::new(SgxRwLock::new(StateCounter::default()));
 
-        let enclave_key = {
-            if my_roster_idx == 0 {
-                EnclaveKey::new()?.set_dec_key_by_owner(&client_config, &key_vault_endpoint)
-            } else {
-                EnclaveKey::new()?.set_dec_key_by_member(&client_config, &key_vault_endpoint)
-            }
-        }?;
-        enclave_key.store_dec_key(&client_config, &key_vault_endpoint)?;
+        let mut rng = SgxRng::new()?;
+        let enclave_key = EnclaveKey::new(&mut rng)?;
+        // TODO:
+        // let enclave_key = {
+        //     if my_roster_idx == 0 {
+        //         EnclaveKey::new()?.set_dec_key_by_owner(&client_config, &key_vault_endpoint)
+        //     } else {
+        //         EnclaveKey::new()?.set_dec_key_by_member(&client_config, &key_vault_endpoint)
+        //     }
+        // }?;
+        // enclave_key.store_dec_key(&client_config, &key_vault_endpoint)?;
 
         Ok(AnonifyEnclaveContext {
             spid,
