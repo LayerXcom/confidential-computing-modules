@@ -1,6 +1,11 @@
 use anyhow::anyhow;
-use frame_common::crypto::{
-    BackupPathSecret, ExportPathSecret, RecoverAllRequest, RecoverRequest, RecoveredPathSecret,
+use frame_common::crypto::ExportPathSecret;
+use frame_common::key_vault::{
+    request::{
+        BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody,
+        RecoverAllPathSecretsRequestbody, RecoverPathSecretRequestBody,
+    },
+    response::RecoveredPathSecret,
 };
 use frame_mra_tls::RequestHandler;
 use frame_treekem::{PathSecret, StorePathSecrets};
@@ -20,10 +25,16 @@ impl RequestHandler for KeyVaultHandler {
             .ok_or_else(|| anyhow!("msg doesn't contain cmd"))?;
 
         match cmd {
-            "Store" => self.store_path_secret(decoded["body"].clone()),
-            "Recover" => self.recover_path_secret(decoded["body"].clone()),
-            "ManuallyStoreAll" => self.manually_store_path_secrets_all(decoded["body"].clone()),
-            "ManuallyRecoverAll" => self.manually_recover_path_secrets_all(decoded["body"].clone()),
+            "StorePathSecret" => self.store_path_secret(decoded["body"].clone()),
+            "RecoverPathSecret" => self.recover_path_secret(decoded["body"].clone()),
+            "ManuallyStoreAllPathSecrets" => {
+                self.manually_store_path_secrets_all(decoded["body"].clone())
+            }
+            "ManuallyRecoverAllPathSecrets" => {
+                self.manually_recover_path_secrets_all(decoded["body"].clone())
+            }
+            "StoreEnclaveDecryptionKey" => unimplemented!(),
+            "RecoverEnclaveDecrptionKey" => unimplemented!(),
             _ => unreachable!("got unknown command: {:?}", cmd),
         }
     }
@@ -35,7 +46,7 @@ impl KeyVaultHandler {
     }
 
     fn store_path_secret(&self, body: Value) -> anyhow::Result<Vec<u8>> {
-        let backup_path_secret: BackupPathSecret = serde_json::from_value(body)?;
+        let backup_path_secret: BackupPathSecretRequestBody = serde_json::from_value(body)?;
         let eps = PathSecret::from(backup_path_secret.path_secret())
             .try_into_exporting(backup_path_secret.epoch(), backup_path_secret.id())?;
         self.store_path_secrets
@@ -47,7 +58,7 @@ impl KeyVaultHandler {
     }
 
     fn recover_path_secret(&self, body: Value) -> anyhow::Result<Vec<u8>> {
-        let recover_path_secret: RecoverRequest = serde_json::from_value(body)?;
+        let recover_path_secret: RecoverPathSecretRequestBody = serde_json::from_value(body)?;
         let ps_id = recover_path_secret.id();
         let eps = self
             .store_path_secrets
@@ -63,9 +74,9 @@ impl KeyVaultHandler {
 
     fn manually_store_path_secrets_all(&self, body: Value) -> anyhow::Result<Vec<u8>> {
         let mut epss: Vec<ExportPathSecret> = vec![];
-        let backup_path_secrets: Vec<BackupPathSecret> = serde_json::from_value(body)?;
+        let backup_path_secrets: BackupAllPathSecretsRequestBody = serde_json::from_value(body)?;
 
-        for backup_path_secret in backup_path_secrets {
+        for backup_path_secret in backup_path_secrets.0 {
             let eps = PathSecret::from(backup_path_secret.path_secret())
                 .try_into_exporting(backup_path_secret.epoch(), backup_path_secret.id())?;
             let store_path_secrets = self
@@ -82,7 +93,7 @@ impl KeyVaultHandler {
     fn manually_recover_path_secrets_all(&self, body: Value) -> anyhow::Result<Vec<u8>> {
         let mut recovered_path_secrets: Vec<RecoveredPathSecret> = vec![];
 
-        let recover_path_secret: RecoverAllRequest = serde_json::from_value(body)?;
+        let recover_path_secret: RecoverAllPathSecretsRequestbody = serde_json::from_value(body)?;
         let store_path_secrets = self
             .store_path_secrets
             .clone()

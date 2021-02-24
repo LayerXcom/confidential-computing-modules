@@ -7,9 +7,7 @@ use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
 use crate::serde::Serialize;
 use crate::store_path_secrets::StorePathSecrets;
 use crate::tree_math;
-use frame_common::crypto::{
-    ExportPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverRequest, RecoveredPathSecret,
-};
+use frame_common::{crypto::ExportPathSecret, key_vault::response::RecoveredPathSecret};
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 
 #[derive(Clone, Debug, Serialize)]

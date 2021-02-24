@@ -8,9 +8,13 @@ use crate::{
 use anonify_ecall_types::*;
 use anyhow::{anyhow, bail};
 use frame_common::{
-    crypto::{
-        AccountId, BackupPathSecret, KeyVaultCmd, KeyVaultRequest, RecoverAllRequest,
-        RecoverRequest, RecoveredPathSecret,
+    crypto::AccountId,
+    key_vault::{
+        request::{
+            BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody, KeyVaultCmd,
+            KeyVaultRequest, RecoverAllPathSecretsRequestbody, RecoverPathSecretRequestBody,
+        },
+        response::RecoveredPathSecret,
     },
     state_types::{
         MemId, NotifyState, ReturnState, StateCounter, StateType, UpdatedState, UserCounter,
@@ -208,8 +212,10 @@ impl EnclaveKeyOps for AnonifyEnclaveContext {
         self.enclave_key.decrypt(ciphertext).map_err(Into::into)
     }
 
-    fn enclave_encryption_key(&self) -> SodiumPubKey {
-        self.enclave_key.enclave_encryption_key()
+    fn enclave_encryption_key(&self) -> anyhow::Result<SodiumPubKey> {
+        self.enclave_key
+            .enclave_encryption_key()
+            .map_err(|e| anyhow!("{:?}", e))
     }
 }
 
@@ -224,18 +230,22 @@ impl QuoteGetter for AnonifyEnclaveContext {
 }
 
 impl KeyVaultOps for AnonifyEnclaveContext {
-    fn backup_path_secret(&self, backup_path_secret: BackupPathSecret) -> anyhow::Result<()> {
+    fn backup_path_secret(
+        &self,
+        backup_path_secret: BackupPathSecretRequestBody,
+    ) -> anyhow::Result<()> {
         let mut mra_tls_client = Client::new(self.key_vault_endpoint(), &self.client_config)?;
-        let key_vault_request = KeyVaultRequest::new(KeyVaultCmd::Store, backup_path_secret);
+        let key_vault_request =
+            KeyVaultRequest::new(KeyVaultCmd::StorePathSecret, backup_path_secret);
         let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
 
         Ok(())
     }
 
     fn recover_path_secret(&self, ps_id: &[u8], roster_idx: u32) -> anyhow::Result<PathSecret> {
-        let recover_request = RecoverRequest::new(roster_idx, ps_id.to_vec());
+        let recover_request = RecoverPathSecretRequestBody::new(roster_idx, ps_id.to_vec());
         let mut mra_tls_client = Client::new(self.key_vault_endpoint(), &self.client_config)?;
-        let backup_request = KeyVaultRequest::new(KeyVaultCmd::Recover, recover_request);
+        let backup_request = KeyVaultRequest::new(KeyVaultCmd::RecoverPathSecret, recover_request);
         let recovered_path_secret: RecoveredPathSecret =
             mra_tls_client.send_json(backup_request)?;
 
@@ -244,11 +254,13 @@ impl KeyVaultOps for AnonifyEnclaveContext {
 
     fn manually_backup_path_secrets_all(
         &self,
-        backup_path_secrets: Vec<BackupPathSecret>,
+        backup_path_secrets: BackupAllPathSecretsRequestBody,
     ) -> anyhow::Result<()> {
         let mut mra_tls_client = Client::new(self.key_vault_endpoint(), &self.client_config)?;
-        let key_vault_request =
-            KeyVaultRequest::new(KeyVaultCmd::ManuallyStoreAll, backup_path_secrets);
+        let key_vault_request = KeyVaultRequest::new(
+            KeyVaultCmd::ManuallyStoreAllPathSecrets,
+            backup_path_secrets,
+        );
         let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
 
         Ok(())
@@ -256,11 +268,13 @@ impl KeyVaultOps for AnonifyEnclaveContext {
 
     fn manually_recover_path_secrets_all(
         &self,
-        recover_path_secrets_all: RecoverAllRequest,
+        recover_path_secrets_all: RecoverAllPathSecretsRequestbody,
     ) -> anyhow::Result<Vec<RecoveredPathSecret>> {
         let mut mra_tls_client = Client::new(self.key_vault_endpoint(), &self.client_config)?;
-        let key_vault_request =
-            KeyVaultRequest::new(KeyVaultCmd::ManuallyRecoverAll, recover_path_secrets_all);
+        let key_vault_request = KeyVaultRequest::new(
+            KeyVaultCmd::ManuallyRecoverAllPathSecrets,
+            recover_path_secrets_all,
+        );
         let path_secrets: Vec<RecoveredPathSecret> = mra_tls_client.send_json(key_vault_request)?;
 
         Ok(path_secrets)
@@ -270,9 +284,6 @@ impl KeyVaultOps for AnonifyEnclaveContext {
 // TODO: Consider SGX_ERROR_BUSY.
 impl AnonifyEnclaveContext {
     pub fn new(version: usize) -> Result<Self> {
-        let mut rng = SgxRng::new()?;
-
-        let enclave_key = EnclaveKey::new(&mut rng)?;
         let user_state_db = UserStateDB::new();
         let user_counter_db = UserCounterDB::new();
 
@@ -319,6 +330,18 @@ impl AnonifyEnclaveContext {
             );
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
         let state_counter = Arc::new(SgxRwLock::new(StateCounter::default()));
+
+        let mut rng = SgxRng::new()?;
+        let enclave_key = EnclaveKey::new(&mut rng)?;
+        // TODO:
+        // let enclave_key = {
+        //     if my_roster_idx == 0 {
+        //         EnclaveKey::new()?.set_dec_key_by_owner(&client_config, &key_vault_endpoint)
+        //     } else {
+        //         EnclaveKey::new()?.set_dec_key_by_member(&client_config, &key_vault_endpoint)
+        //     }
+        // }?;
+        // enclave_key.store_dec_key(&client_config, &key_vault_endpoint)?;
 
         Ok(AnonifyEnclaveContext {
             spid,

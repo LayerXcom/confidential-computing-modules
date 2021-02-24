@@ -1,11 +1,19 @@
 //! This module contains enclave specific cryptographic logics.
 
-use crate::error::Result;
+use crate::error::{EnclaveError, Result};
 use anonify_ecall_types::*;
-use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
+use frame_common::{
+    crypto::rand_assign,
+    key_vault::request::{KeyVaultCmd, KeyVaultRequest},
+    state_types::StateType,
+    traits::Keccak256,
+};
 use frame_enclave::EnclaveEngine;
+use frame_mra_tls::{Client, ClientConfig};
 use frame_runtime::traits::*;
-use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE};
+use frame_sodium::{
+    rng::SgxRng, SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE,
+};
 use rand_core::{CryptoRng, RngCore};
 use secp256k1::{
     self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
@@ -30,7 +38,7 @@ impl EnclaveEngine for EncryptionKeyGetter {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let enclave_encryption_key = enclave_context.enclave_encryption_key();
+        let enclave_encryption_key = enclave_context.enclave_encryption_key()?;
 
         Ok(output::ReturnEncryptionKey::new(enclave_encryption_key))
     }
@@ -40,7 +48,7 @@ impl EnclaveEngine for EncryptionKeyGetter {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct EnclaveKey {
     signing_privkey: SecretKey,
-    decryption_privkey: SodiumPrivateKey,
+    decryption_privkey: Option<SodiumPrivateKey>,
 }
 
 impl EnclaveKey {
@@ -56,13 +64,79 @@ impl EnclaveKey {
                 break key;
             }
         };
-
         let decryption_privkey = SodiumPrivateKey::from_random(csprng)?;
-
-        Ok(EnclaveKey {
+        Ok(Self {
             signing_privkey,
-            decryption_privkey,
+            decryption_privkey: Some(decryption_privkey),
         })
+    }
+    // TODO:
+    // pub fn new() -> Result<Self> {
+    //     let signing_privkey = loop {
+    //         let mut ret = [0u8; SECRET_KEY_SIZE];
+    //         rand_assign(&mut ret)?;
+
+    //         if let Ok(key) = SecretKey::parse(&ret) {
+    //             break key;
+    //         }
+    //     };
+
+    //     Ok(EnclaveKey {
+    //         signing_privkey,
+    //         decryption_privkey: None,
+    //     })
+    // }
+
+    /// If you can get the dec_key, it is the initialization at the time of recovery,
+    /// otherwise, a new dec_key is generated.
+    pub fn set_dec_key_by_owner(
+        mut self,
+        client_config: &ClientConfig,
+        key_vault_endpoint: &str,
+    ) -> Result<Self> {
+        let decryption_privkey = match Self::get_dec_key(&client_config, &key_vault_endpoint) {
+            Ok(dec_key) => dec_key,
+            Err(_e) => {
+                let mut rng = SgxRng::new()?;
+                SodiumPrivateKey::from_random(&mut rng)?
+            }
+        };
+
+        self.decryption_privkey = Some(decryption_privkey);
+        Ok(self)
+    }
+
+    /// Get dec_key from key-vault node in initialization when joining newly.
+    pub fn set_dec_key_by_member(
+        mut self,
+        client_config: &ClientConfig,
+        key_vault_endpoint: &str,
+    ) -> Result<Self> {
+        let decryption_privkey = Self::get_dec_key(&client_config, &key_vault_endpoint)?;
+
+        self.decryption_privkey = Some(decryption_privkey);
+        Ok(self)
+    }
+
+    /// Sealing locally, make it persistent, and save it in the key-vault node as well
+    pub fn store_dec_key(
+        &self,
+        client_config: &ClientConfig,
+        key_vault_endpoint: &str,
+    ) -> Result<()> {
+        // let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
+        // let key_vault_request = KeyVaultRequest::new(KeyVaultCmd::StorePathSecret, backup_path_secret);
+        // let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
+
+        Ok(())
+    }
+
+    /// After trying to get the local sealed dec_key, get it to key-vault node
+    fn get_dec_key(
+        client_config: &ClientConfig,
+        key_vault_endpoint: &str,
+    ) -> Result<SodiumPrivateKey> {
+        unimplemented!();
     }
 
     pub fn sign(&self, msg: &[u8]) -> Result<(Signature, RecoveryId)> {
@@ -72,17 +146,23 @@ impl EnclaveKey {
     }
 
     pub fn decrypt(&self, ciphertext: SodiumCiphertext) -> Result<Vec<u8>> {
-        ciphertext
-            .decrypt(&self.decryption_privkey)
-            .map_err(Into::into)
+        let dec_key = self
+            .decryption_privkey
+            .as_ref()
+            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?;
+        ciphertext.decrypt(&dec_key).map_err(Into::into)
     }
 
     pub fn verifying_key(&self) -> PublicKey {
         PublicKey::from_secret_key(&self.signing_privkey)
     }
 
-    pub fn enclave_encryption_key(&self) -> SodiumPubKey {
-        self.decryption_privkey.public_key()
+    pub fn enclave_encryption_key(&self) -> Result<SodiumPubKey> {
+        let enclave_dec_key = self
+            .decryption_privkey
+            .as_ref()
+            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?;
+        Ok(enclave_dec_key.public_key())
     }
 
     /// Generate a value of REPORTDATA field in REPORT struct.
@@ -97,7 +177,7 @@ impl EnclaveKey {
         let mut report_data = [0u8; REPORT_DATA_SIZE];
         report_data[..HASHED_PUBKEY_SIZE].copy_from_slice(&self.verifying_key_into_array()[..]);
         report_data[HASHED_PUBKEY_SIZE..FILLED_REPORT_DATA_SIZE]
-            .copy_from_slice(&self.encode_enclave_encryption_key()[..]);
+            .copy_from_slice(&self.encode_enclave_encryption_key()?[..]);
 
         Ok(sgx_report_data_t { d: report_data })
     }
@@ -111,7 +191,7 @@ impl EnclaveKey {
         res
     }
 
-    fn encode_enclave_encryption_key(&self) -> [u8; ENCLAVE_ENCRYPTION_KEY_SIZE] {
-        self.enclave_encryption_key().to_bytes()
+    fn encode_enclave_encryption_key(&self) -> Result<[u8; ENCLAVE_ENCRYPTION_KEY_SIZE]> {
+        Ok(self.enclave_encryption_key()?.to_bytes())
     }
 }

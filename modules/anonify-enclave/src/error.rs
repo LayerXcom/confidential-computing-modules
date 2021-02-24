@@ -24,6 +24,8 @@ pub enum EnclaveError {
         received: UserCounter,
         expected: UserCounter,
     },
+    #[error("Enclave Decryption Key is not set")]
+    NotSetEnclaveDecKeyError,
 }
 
 impl From<sgx_types::sgx_status_t> for EnclaveError {
