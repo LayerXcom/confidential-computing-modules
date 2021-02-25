@@ -128,7 +128,7 @@ impl EnclaveKey {
             .as_ref()
             .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?;
         let key_vault_request = KeyVaultRequest::new(
-            KeyVaultCmd::StorePathSecret,
+            KeyVaultCmd::StoreEnclaveDecryptionKey,
             StoreEnclaveDecryptionKeyRequestBody::new(dec_key.clone()),
         );
         let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
@@ -142,6 +142,12 @@ impl EnclaveKey {
         key_vault_endpoint: &str,
     ) -> Result<SodiumPrivateKey> {
         unimplemented!();
+        // let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
+        // let get_dec_key_request = KeyVaultRequest::new(KeyVaultCmd::RecoverEnclaveDecrptionKey, recover_request);
+        // let dec_key: SodiumPrivateKey =
+        //     mra_tls_client.send_json(get_dec_key_request)?;
+
+        // Ok(dec_key)
     }
 
     pub fn sign(&self, msg: &[u8]) -> Result<(Signature, RecoveryId)> {

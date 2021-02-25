@@ -1,3 +1,4 @@
+use frame_sodium::SodiumPrivateKey;
 #[cfg(feature = "std")]
 use rand::Rng;
 #[cfg(feature = "std")]
@@ -6,7 +7,6 @@ use rand_core::{CryptoRng, RngCore};
 use rand_os::OsRng;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{fmt::Debug, vec::Vec};
-use frame_sodium::SodiumPrivateKey;
 
 /// A marker trait for request body
 pub trait RequestBody: DeserializeOwned + Serialize + Debug + Clone {}
