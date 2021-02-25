@@ -2,14 +2,12 @@
 
 use crate::error::{EnclaveError, Result};
 use anonify_ecall_types::*;
-use frame_common::{
-    crypto::rand_assign,
-    key_vault::request::{KeyVaultCmd, KeyVaultRequest, StoreEnclaveDecryptionKeyRequestBody},
-    state_types::StateType,
-    traits::Keccak256,
-};
+use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
 use frame_enclave::EnclaveEngine;
-use frame_mra_tls::{Client, ClientConfig};
+use frame_mra_tls::{
+    key_vault::request::{KeyVaultCmd, KeyVaultRequest, StoreEnclaveDecryptionKeyRequestBody},
+    Client, ClientConfig,
+};
 use frame_runtime::traits::*;
 use frame_sodium::{
     rng::SgxRng, SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE,
@@ -127,10 +125,11 @@ impl EnclaveKey {
         let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
         let dec_key = self
             .decryption_privkey
+            .as_ref()
             .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?;
         let key_vault_request = KeyVaultRequest::new(
             KeyVaultCmd::StorePathSecret,
-            StoreEnclaveDecryptionKeyRequestBody::new(self.dec_key),
+            StoreEnclaveDecryptionKeyRequestBody::new(dec_key.clone()),
         );
         let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
 

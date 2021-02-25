@@ -9,13 +9,6 @@ use anonify_ecall_types::*;
 use anyhow::{anyhow, bail};
 use frame_common::{
     crypto::AccountId,
-    key_vault::{
-        request::{
-            BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody, KeyVaultCmd,
-            KeyVaultRequest, RecoverAllPathSecretsRequestbody, RecoverPathSecretRequestBody,
-        },
-        response::RecoveredPathSecret,
-    },
     state_types::{
         MemId, NotifyState, ReturnState, StateCounter, StateType, UpdatedState, UserCounter,
     },
@@ -23,6 +16,13 @@ use frame_common::{
 };
 use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DIR};
 use frame_enclave::EnclaveEngine;
+use frame_mra_tls::key_vault::{
+    request::{
+        BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody, KeyVaultCmd, KeyVaultRequest,
+        RecoverAllPathSecretsRequestbody, RecoverPathSecretRequestBody,
+    },
+    response::RecoveredPathSecret,
+};
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
 use frame_sodium::{rng::SgxRng, SodiumCiphertext, SodiumPubKey};
