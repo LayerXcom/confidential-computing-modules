@@ -2,7 +2,7 @@
 //! binary trees. For more info, see section 5.1 of the MLS spec.
 //! referemnce: https://github.com/trailofbits/molasses/blob/master/src/tree_math.rs
 
-use crate::localstd::{iter, usize, vec::Vec};
+use std::{iter, usize, vec::Vec};
 
 // Suppose usize is u64. If there are k := 2^(63)+1 leaves, then there are a total of 2(k-1) + 1 =
 // 2(2^(63))+1 = 2^(64)+1 nodes in the tree, which is outside the representable range. So our upper

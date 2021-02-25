@@ -7,15 +7,15 @@ use crate::localstd::{
 use crate::serde::{de::DeserializeOwned, Serialize};
 use frame_common::{
     crypto::{AccountId, Ciphertext},
-    key_vault::{
-        request::{
-            BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody,
-            RecoverAllPathSecretsRequestbody,
-        },
-        response::RecoveredPathSecret,
-    },
     state_types::{MemId, NotifyState, ReturnState, StateCounter, UpdatedState, UserCounter},
     traits::*,
+};
+use frame_mra_tls::key_vault::{
+    request::{
+        BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody,
+        RecoverAllPathSecretsRequestbody,
+    },
+    response::RecoveredPathSecret,
 };
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use frame_treekem::{handshake::HandshakeParams, PathSecret, StorePathSecrets};

@@ -1,15 +1,13 @@
 use super::{hkdf, hmac::HmacKey};
-use crate::base64;
-use crate::bincode;
-use crate::local_anyhow::{anyhow, Result};
-use crate::local_secp256k1::{Error, PublicKey, PublicKeyFormat, SecretKey};
-use crate::localstd::{boxed::Box, fmt, vec::Vec};
-use crate::serde::{
+use anyhow::{anyhow, Result};
+use frame_common::crypto::rand_assign;
+use secp256k1::{Error, PublicKey, PublicKeyFormat, SecretKey};
+use serde::{
     de::{self, SeqAccess, Unexpected, Visitor},
     ser::SerializeTuple,
     Deserialize, Deserializer, Serialize, Serializer,
 };
-use frame_common::crypto::rand_assign;
+use std::{boxed::Box, fmt, vec::Vec};
 
 const SECRET_KEY_SIZE: usize = 32;
 const COMPRESSED_PUBLIC_KEY_SIZE: usize = 33;
@@ -173,7 +171,7 @@ impl DhPubKey {
         bincode::serialize(&self).unwrap() // must not fail
     }
 
-    pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
+    pub fn decode(bytes: &[u8]) -> std::result::Result<Self, Box<bincode::ErrorKind>> {
         bincode::deserialize(bytes)
     }
 }

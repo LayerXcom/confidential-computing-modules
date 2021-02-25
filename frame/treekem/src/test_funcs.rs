@@ -1,15 +1,14 @@
 use crate::application::AppKeyChain;
 use crate::group_state::GroupState;
 use crate::handshake::{Handshake, PathSecretKVS, PathSecretSource};
-use crate::local_anyhow::anyhow;
-use crate::local_rand;
-use crate::local_rand_core::SeedableRng;
-use crate::localstd::env;
 use crate::{PathSecret, StorePathSecrets};
+use anyhow::anyhow;
 use frame_config::PATH_SECRETS_DIR;
+use rand_core::SeedableRng;
+use std::env;
 
 pub fn init_path_secret_kvs(kvs: &mut PathSecretKVS, until_roster_idx: usize, until_epoch: usize) {
-    let mut csprng = local_rand::rngs::StdRng::seed_from_u64(1);
+    let mut csprng = rand::rngs::StdRng::seed_from_u64(1);
     for r_i in 0..until_roster_idx {
         for e_i in 0..until_epoch {
             kvs.insert_random_path_secret(r_i as u32, e_i as u32, &mut csprng);
@@ -91,13 +90,15 @@ pub fn encrypt_decrypt_helper(
 fn recover_path_secret_from_key_vault_for_test(
     id: &[u8],
     roster_idx: u32,
-) -> crate::local_anyhow::Result<PathSecret> {
-    use frame_common::key_vault::{
-        request::{KeyVaultCmd, KeyVaultRequest, RecoverPathSecretRequestBody},
-        response::RecoveredPathSecret,
-    };
+) -> anyhow::Result<PathSecret> {
     use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT};
-    use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
+    use frame_mra_tls::{
+        key_vault::{
+            request::{KeyVaultCmd, KeyVaultRequest, RecoverPathSecretRequestBody},
+            response::RecoveredPathSecret,
+        },
+        AttestedTlsConfig, Client, ClientConfig,
+    };
 
     let recover_request_body = RecoverPathSecretRequestBody::new(roster_idx, id.to_vec());
     let ias_url = env::var("IAS_URL").expect("IAS_URL is not set");

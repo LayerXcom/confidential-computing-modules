@@ -7,5 +7,5 @@ pub mod secrets;
 
 pub const SHA256_OUTPUT_LEN: usize = 256 / 8;
 
-pub trait CryptoRng: crate::local_rand::RngCore + crate::local_rand::CryptoRng {}
-impl<T> CryptoRng for T where T: crate::local_rand::RngCore + crate::local_rand::CryptoRng {}
+pub trait CryptoRng: rand::RngCore + rand::CryptoRng {}
+impl<T> CryptoRng for T where T: rand::RngCore + rand::CryptoRng {}

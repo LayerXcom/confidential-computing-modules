@@ -7,7 +7,6 @@ edition = "2018"
 [dependencies]
 frame-types = { path = "../../frame/types" }
 frame-common = { path = "../../frame/common" }
-frame-treekem = { path = "../../frame/treekem" }
 frame-sodium = { path = "../../frame/sodium" }
 frame-runtime = { path = "../../frame/runtime" }
 frame-host = { path = "../../frame/host" }
