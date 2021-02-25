@@ -1,19 +1,18 @@
-use crate::localstd::{fmt::Debug, vec::Vec};
-use crate::serde::{de::DeserializeOwned, Deserialize, Serialize};
-use crate::serde_bytes;
+use frame_sodium::SodiumPrivateKey;
 #[cfg(feature = "std")]
 use rand::Rng;
 #[cfg(feature = "std")]
 use rand_core::{CryptoRng, RngCore};
 #[cfg(feature = "std")]
 use rand_os::OsRng;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use std::{fmt::Debug, vec::Vec};
 
 /// A marker trait for request body
 pub trait RequestBody: DeserializeOwned + Serialize + Debug + Clone {}
 
 /// A request body to backup path secret to key-vault server
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(crate = "crate::serde")]
 pub struct BackupPathSecretRequestBody {
     #[serde(with = "serde_bytes")]
     path_secret: Vec<u8>,
@@ -54,7 +53,6 @@ impl RequestBody for BackupPathSecretRequestBody {}
 
 /// A request body to backup all path secrets to key-vault server
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(crate = "crate::serde")]
 pub struct BackupAllPathSecretsRequestBody(pub Vec<BackupPathSecretRequestBody>);
 
 impl BackupAllPathSecretsRequestBody {
@@ -67,7 +65,6 @@ impl RequestBody for BackupAllPathSecretsRequestBody {}
 
 /// A Request body to recover a PathSecret specified by roster_idx and id from key-vault server
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(crate = "crate::serde")]
 pub struct RecoverPathSecretRequestBody {
     roster_idx: u32,
     #[serde(with = "serde_bytes")]
@@ -92,7 +89,6 @@ impl RequestBody for RecoverPathSecretRequestBody {}
 
 /// A Request body to recover all PathSecrets specified by roster_idx from key-vault server
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(crate = "crate::serde")]
 pub struct RecoverAllPathSecretsRequestbody {
     roster_idx: u32,
 }
@@ -109,8 +105,21 @@ impl RecoverAllPathSecretsRequestbody {
 
 impl RequestBody for RecoverAllPathSecretsRequestbody {}
 
+/// A Request body to store enclave decryption key to key-vault encalve
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct StoreEnclaveDecryptionKeyRequestBody {
+    dec_key: SodiumPrivateKey,
+}
+
+impl StoreEnclaveDecryptionKeyRequestBody {
+    pub fn new(dec_key: SodiumPrivateKey) -> Self {
+        Self { dec_key }
+    }
+}
+
+impl RequestBody for StoreEnclaveDecryptionKeyRequestBody {}
+
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
-#[serde(crate = "crate::serde")]
 pub enum KeyVaultCmd {
     StorePathSecret,
     RecoverPathSecret,
@@ -121,7 +130,6 @@ pub enum KeyVaultCmd {
 }
 
 #[derive(Debug, Clone, Serialize)]
-#[serde(crate = "crate::serde")]
 pub struct KeyVaultRequest<B: RequestBody> {
     cmd: KeyVaultCmd,
     body: B,

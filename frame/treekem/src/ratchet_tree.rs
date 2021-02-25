@@ -3,16 +3,15 @@ use crate::crypto::{
     ecies::EciesCiphertext,
     secrets::{NodeSecret, PathSecret},
 };
-use crate::local_anyhow::{anyhow, ensure, Result};
-use crate::localstd::vec::Vec;
-use crate::serde::Serialize;
 use crate::{
     handshake::{DirectPathMsg, DirectPathNodeMsg},
     tree_math,
 };
+use anyhow::{anyhow, ensure, Result};
+use serde::Serialize;
+use std::vec::Vec;
 
 #[derive(Clone, Debug, Serialize)]
-#[serde(crate = "crate::serde")]
 pub struct RatchetTree {
     nodes: Vec<RatchetTreeNode>,
 }
@@ -300,7 +299,6 @@ impl RatchetTree {
 /// A node in RatchetTree. Every node must have a DH public key.
 /// It may also optionally contain the corresponding private key.
 #[derive(Debug, Clone, Serialize)]
-#[serde(crate = "crate::serde")]
 pub enum RatchetTreeNode {
     Blank,
     Filled {

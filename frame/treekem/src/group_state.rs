@@ -1,17 +1,18 @@
 use crate::application::AppKeyChain;
 use crate::crypto::{hkdf, hmac::HmacKey, secrets::*};
 use crate::handshake::{AccessKey, Handshake, HandshakeParams, PathSecretSource};
-use crate::local_anyhow::{anyhow, ensure, Result};
-use crate::localstd::{env, vec::Vec};
 use crate::ratchet_tree::{RatchetTree, RatchetTreeNode};
-use crate::serde::Serialize;
 use crate::store_path_secrets::StorePathSecrets;
 use crate::tree_math;
-use frame_common::{crypto::ExportPathSecret, key_vault::response::RecoveredPathSecret};
-use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
+use anyhow::{anyhow, ensure, Result};
+use frame_common::crypto::ExportPathSecret;
+use frame_mra_tls::{
+    key_vault::response::RecoveredPathSecret, AttestedTlsConfig, Client, ClientConfig,
+};
+use serde::Serialize;
+use std::{env, vec::Vec};
 
 #[derive(Clone, Debug, Serialize)]
-#[serde(crate = "crate::serde")]
 pub struct GroupState {
     /// The current version of the group key
     epoch: u32,

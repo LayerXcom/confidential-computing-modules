@@ -2,14 +2,12 @@
 
 use crate::error::{EnclaveError, Result};
 use anonify_ecall_types::*;
-use frame_common::{
-    crypto::rand_assign,
-    key_vault::request::{KeyVaultCmd, KeyVaultRequest},
-    state_types::StateType,
-    traits::Keccak256,
-};
+use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
 use frame_enclave::EnclaveEngine;
-use frame_mra_tls::{Client, ClientConfig};
+use frame_mra_tls::{
+    key_vault::request::{KeyVaultCmd, KeyVaultRequest, StoreEnclaveDecryptionKeyRequestBody},
+    Client, ClientConfig,
+};
 use frame_runtime::traits::*;
 use frame_sodium::{
     rng::SgxRng, SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE,
@@ -70,7 +68,7 @@ impl EnclaveKey {
             decryption_privkey: Some(decryption_privkey),
         })
     }
-    // TODO:
+
     // pub fn new() -> Result<Self> {
     //     let signing_privkey = loop {
     //         let mut ret = [0u8; SECRET_KEY_SIZE];
@@ -124,9 +122,16 @@ impl EnclaveKey {
         client_config: &ClientConfig,
         key_vault_endpoint: &str,
     ) -> Result<()> {
-        // let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
-        // let key_vault_request = KeyVaultRequest::new(KeyVaultCmd::StorePathSecret, backup_path_secret);
-        // let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
+        let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
+        let dec_key = self
+            .decryption_privkey
+            .as_ref()
+            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?;
+        let key_vault_request = KeyVaultRequest::new(
+            KeyVaultCmd::StoreEnclaveDecryptionKey,
+            StoreEnclaveDecryptionKeyRequestBody::new(dec_key.clone()),
+        );
+        let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
 
         Ok(())
     }
@@ -137,6 +142,12 @@ impl EnclaveKey {
         key_vault_endpoint: &str,
     ) -> Result<SodiumPrivateKey> {
         unimplemented!();
+        // let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
+        // let get_dec_key_request = KeyVaultRequest::new(KeyVaultCmd::RecoverEnclaveDecrptionKey, recover_request);
+        // let dec_key: SodiumPrivateKey =
+        //     mra_tls_client.send_json(get_dec_key_request)?;
+
+        // Ok(dec_key)
     }
 
     pub fn sign(&self, msg: &[u8]) -> Result<(Signature, RecoveryId)> {

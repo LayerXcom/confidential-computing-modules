@@ -4,17 +4,13 @@ use super::{
     hmac::HmacKey,
     SHA256_OUTPUT_LEN,
 };
-use crate::bincode;
-use crate::local_anyhow::{anyhow, Result};
-use crate::local_ring::{self, hkdf::KeyType};
-use crate::localstd;
-use crate::serde::{Deserialize, Serialize};
-use crate::serde_bytes;
+use anyhow::{anyhow, Result};
+use ring::{self, hkdf::KeyType};
+use serde::{Deserialize, Serialize};
 
 const ANONIFY_PREFIX: &[u8] = b"anonify";
 
 #[derive(Debug, Serialize)]
-#[serde(crate = "crate::serde")]
 struct HkdfLabel<'a> {
     length: u16,
     #[serde(with = "serde_bytes")]
@@ -37,7 +33,7 @@ pub fn expand_label(
     out_buf: &mut [u8],
 ) -> Result<()> {
     assert!(label_info.len() <= 255 - ANONIFY_PREFIX.len());
-    assert!(out_buf.len() <= localstd::u16::MAX as usize);
+    assert!(out_buf.len() <= std::u16::MAX as usize);
 
     let mut full_label_info = [0u8; 255];
     full_label_info[0..ANONIFY_PREFIX.len()].copy_from_slice(ANONIFY_PREFIX);
@@ -51,7 +47,7 @@ pub fn expand_label(
         context,
     };
 
-    expand(secret, &label, out_buf, local_ring::hkdf::HKDF_SHA256)
+    expand(secret, &label, out_buf, ring::hkdf::HKDF_SHA256)
 }
 
 pub fn expand<E: Serialize, L: KeyType>(
@@ -62,7 +58,7 @@ pub fn expand<E: Serialize, L: KeyType>(
 ) -> Result<()> {
     let encoded_info = bincode::serialize(&info)?;
 
-    local_ring::hkdf::Prk::new_less_safe(local_ring::hkdf::HKDF_SHA256, &salt.as_bytes())
+    ring::hkdf::Prk::new_less_safe(ring::hkdf::HKDF_SHA256, &salt.as_bytes())
         .expand(&[&encoded_info], key_type)
         .map_err(|e| anyhow!("{:?}", e))?
         .fill(out_buf)

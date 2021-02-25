@@ -1,19 +1,14 @@
 use crate::application::AppKeyChain;
-use crate::bincode;
 use crate::crypto::{
     dh::DhPubKey, ecies::EciesCiphertext, hash::hash_encodable, secrets::PathSecret, CryptoRng,
 };
-use crate::local_anyhow::{anyhow, Result};
-use crate::local_ring::digest::Digest;
-#[cfg(feature = "std")]
-use crate::localstd::sync::RwLock;
-#[cfg(feature = "sgx")]
-use crate::localstd::sync::SgxRwLock as RwLock;
-use crate::localstd::{boxed::Box, collections::HashMap, string::String, sync::Arc, vec::Vec};
-use crate::serde::{Deserialize, Serialize};
-use crate::serde_bytes;
 use crate::StorePathSecrets;
+use anyhow::{anyhow, Result};
 use frame_common::crypto::{ExportHandshake, ExportPathSecret};
+use ring::digest::Digest;
+use serde::{Deserialize, Serialize};
+use std::sync::SgxRwLock as RwLock;
+use std::{boxed::Box, collections::HashMap, string::String, sync::Arc, vec::Vec};
 
 /// A handshake operates sharing a group key to each member.
 pub trait Handshake: Sized {
@@ -36,7 +31,6 @@ pub trait Handshake: Sized {
 // TODO: Does need signature over the group's history?
 /// This `Handshake` is sent to global ledger.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(crate = "crate::serde")]
 pub struct HandshakeParams {
     /// This is equal to the epoch of the current groupstate
     /// at the time of receicing and applying the handshake.
@@ -74,7 +68,7 @@ impl HandshakeParams {
         bincode::serialize(&self).unwrap() // must not fail
     }
 
-    pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
+    pub fn decode(bytes: &[u8]) -> std::result::Result<Self, Box<bincode::ErrorKind>> {
         bincode::deserialize(bytes)
     }
 
@@ -93,7 +87,6 @@ impl HandshakeParams {
 
 /// Encrypted direct path
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(crate = "crate::serde")]
 pub struct DirectPathMsg {
     pub node_msgs: Vec<DirectPathNodeMsg>,
 }
@@ -106,7 +99,6 @@ impl DirectPathMsg {
 
 /// Containes a direct path node's public key and encrypted secrets
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(crate = "crate::serde")]
 pub struct DirectPathNodeMsg {
     pub public_key: DhPubKey,
     pub node_secrets: Vec<EciesCiphertext>,
@@ -134,7 +126,6 @@ pub enum PathSecretSource {
 pub struct PathSecretKVS(HashMap<AccessKey, PathSecret>);
 
 #[derive(Serialize, Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
-#[serde(crate = "crate::serde")]
 pub struct AccessKey {
     roster_idx: u32,
     epoch: u32,

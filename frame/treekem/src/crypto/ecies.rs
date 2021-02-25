@@ -3,17 +3,14 @@ use super::{
     hkdf,
     hmac::HmacKey,
 };
-use crate::bincode;
-use crate::local_anyhow::{anyhow, Result};
-use crate::local_ring::aead::{
+use anyhow::{anyhow, Result};
+use ring::aead::{
     Aad, BoundKey, Nonce, NonceSequence, OpeningKey, SealingKey, UnboundKey, AES_256_GCM,
 };
-use crate::localstd::vec::Vec;
-use crate::serde::{Deserialize, Serialize};
-use crate::serde_bytes;
+use serde::{Deserialize, Serialize};
+use std::vec::Vec;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(crate = "crate::serde")]
 pub struct EciesCiphertext {
     ephemeral_public_key: DhPubKey,
     #[serde(with = "serde_bytes")]
@@ -59,7 +56,6 @@ impl EciesCiphertext {
 }
 
 #[derive(Debug, Serialize)]
-#[serde(crate = "crate::serde")]
 struct EciesLabel {
     length: u16,
     #[serde(with = "serde_bytes")]
@@ -107,18 +103,15 @@ impl OneNonceSequence {
 }
 
 impl NonceSequence for OneNonceSequence {
-    fn advance(
-        &mut self,
-    ) -> crate::localstd::result::Result<Nonce, crate::local_ring::error::Unspecified> {
-        self.0.take().ok_or(crate::local_ring::error::Unspecified)
+    fn advance(&mut self) -> std::result::Result<Nonce, ring::error::Unspecified> {
+        self.0.take().ok_or(ring::error::Unspecified)
     }
 }
 
-#[cfg(feature = "sgx")]
 #[cfg(debug_assertions)]
 pub(crate) mod tests {
     use super::*;
-    use crate::localstd::string::String;
+    use std::string::String;
     use test_utils::*;
 
     pub(crate) fn run_tests() -> bool {

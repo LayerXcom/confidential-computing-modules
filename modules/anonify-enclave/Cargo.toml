@@ -9,7 +9,7 @@ frame-types = { path = "../../frame/types" }
 frame-enclave = { path = "../../frame/enclave" }
 frame-config = { path = "../../frame/config", default-features = false, features = ["sgx"] }
 frame-runtime = { path = "../../frame/runtime", default-features = false, features = ["sgx"] }
-frame-treekem = { path = "../../frame/treekem", default-features = false, features = ["sgx"] }
+frame-treekem = { path = "../../frame/treekem" }
 frame-sodium = { path = "../../frame/sodium", default-features = false, features = ["sgx"] }
 frame-common = { path = "../../frame/common", default-features = false, features = ["sgx"] }
 frame-mra-tls = { path = "../../frame/mra-tls" }

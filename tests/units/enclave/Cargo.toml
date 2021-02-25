@@ -9,7 +9,7 @@ name = "anonifyenclave"
 crate-type = ["staticlib"]
 
 [dependencies]
-frame-treekem = { path = "../../../frame/treekem", default-features = false, features = ["sgx"] }
+frame-treekem = { path = "../../../frame/treekem" }
 frame-mra-tls = { path = "../../../frame/mra-tls" }
 frame-config = { path = "../../../frame/config", default-features = false, features = ["sgx"] }
 anonify-enclave = { path = "../../../modules/anonify-enclave", default-features = false }

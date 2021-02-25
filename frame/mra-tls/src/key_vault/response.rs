@@ -1,10 +1,8 @@
-use crate::localstd::{fmt::Debug, vec::Vec};
-use crate::serde::{Deserialize, Serialize};
-use crate::serde_bytes;
+use serde::{Deserialize, Serialize};
+use std::{fmt::Debug, vec::Vec};
 
 /// A request body to recover path secret from key-vault server
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(crate = "crate::serde")]
 pub struct RecoveredPathSecret {
     #[serde(with = "serde_bytes")]
     path_secret: Vec<u8>,
