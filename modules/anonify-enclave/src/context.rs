@@ -14,21 +14,28 @@ use frame_common::{
     },
     AccessPolicy,
 };
-use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DIR};
+#[cfg(feature = "backup-enable")]
+use frame_config::KEY_VAULT_ENCLAVE_MEASUREMENT;
+use frame_config::{IAS_ROOT_CERT, PATH_SECRETS_DIR};
 use frame_enclave::EnclaveEngine;
-use frame_mra_tls::key_vault::{
-    request::{
-        BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody, KeyVaultCmd, KeyVaultRequest,
-        RecoverAllPathSecretsRequestbody, RecoverPathSecretRequestBody,
+#[cfg(feature = "backup-enable")]
+use frame_mra_tls::{
+    key_vault::{
+        request::{
+            BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody, KeyVaultCmd,
+            KeyVaultRequest, RecoverAllPathSecretsRequestbody, RecoverPathSecretRequestBody,
+        },
+        response::RecoveredPathSecret,
     },
-    response::RecoveredPathSecret,
+    AttestedTlsConfig, Client, ClientConfig,
 };
-use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
 use frame_sodium::{rng::SgxRng, SodiumCiphertext, SodiumPubKey};
+#[cfg(feature = "backup-enable")]
+use frame_treekem::PathSecret;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
-    init_path_secret_kvs, PathSecret, StorePathSecrets,
+    init_path_secret_kvs, StorePathSecrets,
 };
 use remote_attestation::{EncodedQuote, QuoteTarget};
 use std::{
@@ -44,6 +51,7 @@ pub struct AnonifyEnclaveContext {
     version: usize,
     ias_url: String,
     sub_key: String,
+    #[cfg(feature = "backup-enable")]
     key_vault_endpoint: String,
     spid: String,
     enclave_key: EnclaveKey,
@@ -51,6 +59,7 @@ pub struct AnonifyEnclaveContext {
     user_counter_db: UserCounterDB,
     notifier: Notifier,
     group_key: Arc<SgxRwLock<GroupKey>>,
+    #[cfg(feature = "backup-enable")]
     client_config: ClientConfig,
     store_path_secrets: StorePathSecrets,
     ias_root_cert: Vec<u8>,
@@ -70,6 +79,7 @@ impl ConfigGetter for AnonifyEnclaveContext {
         &self.sub_key
     }
 
+    #[cfg(feature = "backup-enable")]
     fn key_vault_endpoint(&self) -> &str {
         &self.key_vault_endpoint
     }
@@ -229,6 +239,7 @@ impl QuoteGetter for AnonifyEnclaveContext {
     }
 }
 
+#[cfg(feature = "backup-enable")]
 impl KeyVaultOps for AnonifyEnclaveContext {
     fn backup_path_secret(
         &self,
@@ -318,16 +329,25 @@ impl AnonifyEnclaveContext {
 
         let ias_url = env::var("IAS_URL").expect("IAS_URL is not set");
         let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
+
+        #[cfg(feature = "backup-enable")]
         let key_vault_endpoint =
             env::var("KEY_VAULT_ENDPOINT").expect("KEY_VAULT_ENDPOINT is not set");
 
-        let attested_tls_config =
-            AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
+        #[cfg(feature = "backup-enable")]
+        let attested_tls_config = AttestedTlsConfig::new_by_ra(
+            &spid,
+            &ias_url.clone(),
+            &sub_key.clone(),
+            IAS_ROOT_CERT.to_vec(),
+        )?;
+        #[cfg(feature = "backup-enable")]
         let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
             .set_attestation_report_verifier(
                 IAS_ROOT_CERT.to_vec(),
                 *KEY_VAULT_ENCLAVE_MEASUREMENT,
             );
+
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
         let state_counter = Arc::new(SgxRwLock::new(StateCounter::default()));
 
@@ -353,7 +373,9 @@ impl AnonifyEnclaveContext {
             version,
             ias_url,
             sub_key,
+            #[cfg(feature = "backup-enable")]
             key_vault_endpoint,
+            #[cfg(feature = "backup-enable")]
             client_config,
             store_path_secrets,
             ias_root_cert: (&*IAS_ROOT_CERT).to_vec(),

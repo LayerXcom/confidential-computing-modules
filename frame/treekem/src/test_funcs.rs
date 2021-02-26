@@ -35,6 +35,7 @@ pub fn do_handshake_three_party(
             &handshake,
             source,
             max_roster_idx,
+            #[cfg(feature = "backup-enable")]
             recover_path_secret_from_key_vault_for_test,
         )
         .unwrap();
@@ -44,6 +45,7 @@ pub fn do_handshake_three_party(
             &handshake,
             source,
             max_roster_idx,
+            #[cfg(feature = "backup-enable")]
             recover_path_secret_from_key_vault_for_test,
         )
         .unwrap();
@@ -53,6 +55,7 @@ pub fn do_handshake_three_party(
             &handshake,
             source,
             max_roster_idx,
+            #[cfg(feature = "backup-enable")]
             recover_path_secret_from_key_vault_for_test,
         )
         .unwrap();
