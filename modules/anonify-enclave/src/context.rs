@@ -335,18 +335,19 @@ impl AnonifyEnclaveContext {
             env::var("KEY_VAULT_ENDPOINT").expect("KEY_VAULT_ENDPOINT is not set");
 
         #[cfg(feature = "backup-enable")]
-        let attested_tls_config = AttestedTlsConfig::new_by_ra(
-            &spid,
-            &ias_url.clone(),
-            &sub_key.clone(),
-            IAS_ROOT_CERT.to_vec(),
-        )?;
-        #[cfg(feature = "backup-enable")]
-        let client_config = ClientConfig::from_attested_tls_config(attested_tls_config)?
-            .set_attestation_report_verifier(
+        let client_config = {
+            let attested_tls_config = AttestedTlsConfig::new_by_ra(
+                &spid,
+                &ias_url.clone(),
+                &sub_key.clone(),
                 IAS_ROOT_CERT.to_vec(),
-                *KEY_VAULT_ENCLAVE_MEASUREMENT,
-            );
+            )?;
+            ClientConfig::from_attested_tls_config(attested_tls_config)?
+                .set_attestation_report_verifier(
+                    IAS_ROOT_CERT.to_vec(),
+                    *KEY_VAULT_ENCLAVE_MEASUREMENT,
+                )
+        };
 
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
         let state_counter = Arc::new(SgxRwLock::new(StateCounter::default()));
