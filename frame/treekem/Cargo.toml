@@ -24,3 +24,7 @@ serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde
 bincode = { git = "https://github.com/mesalock-linux/bincode-sgx" }
 serde_bytes = { git = "https://github.com/mesalock-linux/serde-bytes-sgx" }
 base64 = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rust-base64-sgx" }
+
+[features]
+default = ["backup-enable"]
+backup-enable = []

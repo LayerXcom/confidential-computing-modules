@@ -9,7 +9,7 @@ name = "anonifyenclave"
 crate-type = ["staticlib"]
 
 [dependencies]
-frame-treekem = { path = "../../../frame/treekem" }
+frame-treekem = { path = "../../../frame/treekem", default-features = false }
 frame-mra-tls = { path = "../../../frame/mra-tls" }
 frame-config = { path = "../../../frame/config", default-features = false, features = ["sgx"] }
 anonify-enclave = { path = "../../../modules/anonify-enclave", default-features = false }
@@ -19,5 +19,8 @@ test-utils = { path = "../../utils" }
 
 [features]
 default = ["backup-enable", "runtime_enabled"]
-backup-enable = ["anonify-enclave/backup-enable"]
+backup-enable = [
+    "anonify-enclave/backup-enable",
+    "frame-treekem/backup-enable",
+]
 runtime_enabled = []
