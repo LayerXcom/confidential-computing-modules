@@ -204,6 +204,10 @@ impl SodiumPrivateKey {
     pub fn public_key(&self) -> SodiumPubKey {
         SodiumPubKey(self.0.public_key())
     }
+
+    pub fn try_into_sealing(self) -> Result<Sealed> {
+        unimplemented!();
+    }
 }
 
 #[derive(Debug, Clone)]

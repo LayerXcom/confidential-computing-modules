@@ -7,7 +7,7 @@ use frame_enclave::EnclaveEngine;
 use frame_mra_tls::{
     key_vault::request::{
         KeyVaultCmd, KeyVaultRequest, RecoverEnclaveDecryptionKeyRequestBody,
-        StoreEnclaveDecryptionKeyRequestBody,
+        BackupEnclaveDecryptionKeyRequestBody,
     },
     Client, ClientConfig,
 };
@@ -113,7 +113,7 @@ impl EnclaveKey {
             .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?;
         let key_vault_request = KeyVaultRequest::new(
             KeyVaultCmd::StoreEnclaveDecryptionKey,
-            StoreEnclaveDecryptionKeyRequestBody::new(dec_key.clone()),
+            BackupEnclaveDecryptionKeyRequestBody::new(dec_key.clone()),
         );
         let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
 

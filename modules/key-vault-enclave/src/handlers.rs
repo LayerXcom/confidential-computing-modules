@@ -3,8 +3,9 @@ use frame_common::crypto::ExportPathSecret;
 use frame_mra_tls::{
     key_vault::{
         request::{
-            BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody,
-            RecoverAllPathSecretsRequestbody, RecoverPathSecretRequestBody,
+            BackupAllPathSecretsRequestBody, BackupEnclaveDecryptionKeyRequestBody,
+            BackupPathSecretRequestBody, RecoverAllPathSecretsRequestbody,
+            RecoverEnclaveDecryptionKeyRequestBody, RecoverPathSecretRequestBody,
         },
         response::RecoveredPathSecret,
     },
@@ -45,6 +46,19 @@ impl RequestHandler for KeyVaultHandler {
 impl KeyVaultHandler {
     pub fn new(store_path_secrets: StorePathSecrets) -> Self {
         Self { store_path_secrets }
+    }
+
+    fn store_enclave_decryption_key(&self, body: Value) -> anyhow::Result<Vec<u8>> {
+        let backup_path_secret: BackupEnclaveDecryptionKeyRequestBody = serde_json::from_value(body)?;
+        
+        let eps = PathSecret::from(backup_path_secret.path_secret())
+            .try_into_exporting(backup_path_secret.epoch(), backup_path_secret.id())?;
+        self.store_path_secrets
+            .clone()
+            .create_dir_all(backup_path_secret.roster_idx().to_string())?
+            .save_to_local_filesystem(&eps)?;
+
+        serde_json::to_vec(&eps).map_err(Into::into)
     }
 
     fn store_path_secret(&self, body: Value) -> anyhow::Result<Vec<u8>> {

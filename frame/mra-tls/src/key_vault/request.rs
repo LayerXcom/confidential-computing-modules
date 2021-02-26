@@ -107,17 +107,17 @@ impl RequestBody for RecoverAllPathSecretsRequestbody {}
 
 /// A Request body to store enclave decryption key to key-vault encalve
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct StoreEnclaveDecryptionKeyRequestBody {
+pub struct BackupEnclaveDecryptionKeyRequestBody {
     dec_key: SodiumPrivateKey,
 }
 
-impl StoreEnclaveDecryptionKeyRequestBody {
+impl BackupEnclaveDecryptionKeyRequestBody {
     pub fn new(dec_key: SodiumPrivateKey) -> Self {
         Self { dec_key }
     }
 }
 
-impl RequestBody for StoreEnclaveDecryptionKeyRequestBody {}
+impl RequestBody for BackupEnclaveDecryptionKeyRequestBody {}
 
 /// A Request body to recover enclave decryption key from key-vault encalve
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
