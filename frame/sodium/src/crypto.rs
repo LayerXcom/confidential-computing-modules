@@ -4,7 +4,7 @@ use crate::crypto_box::{self, aead::Aead, Box as CryptoBox, PublicKey, SecretKey
 use crate::local_anyhow::{anyhow, Result};
 use crate::localstd::{fmt, vec::Vec};
 use crate::rand_core::{CryptoRng, RngCore};
-use crate::sealing::SealedEnclaveDecryptionKey;
+use crate::sealing::UnsealedEnclaveDecryptionKey;
 use crate::serde::{
     de::{self, SeqAccess, Unexpected},
     ser::{self, SerializeTuple},
@@ -206,8 +206,8 @@ impl SodiumPrivateKey {
         SodiumPubKey(self.0.public_key())
     }
 
-    pub fn try_into_sealing<'a>(self) -> Result<SealedEnclaveDecryptionKey<'a>> {
-        unimplemented!();
+    pub fn try_into_sealing<'a>(self) -> Result<Vec<u8>> {
+        UnsealedEnclaveDecryptionKey::from_sodium_priv_key(self).encoded_sealing()
     }
 }
 

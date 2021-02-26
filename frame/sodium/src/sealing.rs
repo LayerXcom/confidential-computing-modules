@@ -13,7 +13,7 @@ use sgx_tseal::SgxSealedData;
 use sgx_types::sgx_sealed_data_t;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-struct UnsealedEnclaveDecryptionKey([u8; KEY_SIZE]);
+pub struct UnsealedEnclaveDecryptionKey([u8; KEY_SIZE]);
 
 impl UnsealedEnclaveDecryptionKey {
     pub fn from_sodium_priv_key(priv_key: SodiumPrivateKey) -> Self {
@@ -23,12 +23,12 @@ impl UnsealedEnclaveDecryptionKey {
         Self(res)
     }
 
-    pub fn sealing<'a>(selff: UnsealedEnclaveDecryptionKey) -> Result<SealedEnclaveDecryptionKey<'a>> {
+    pub fn encoded_sealing(self) -> Result<Vec<u8>> {
         let additional = [0u8; 0];
-        let sealed_data = SgxSealedData::<Self>::seal_data(&additional, &selff)
+        let sealed_data = SgxSealedData::<Self>::seal_data(&additional, &self)
             .map_err(|e| anyhow!("error: {:?}", e))?;
 
-        Ok(SealedEnclaveDecryptionKey::new(sealed_data))
+        Ok(SealedEnclaveDecryptionKey::new(sealed_data).encode())
     }
 }
 
