@@ -331,17 +331,14 @@ impl AnonifyEnclaveContext {
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
         let state_counter = Arc::new(SgxRwLock::new(StateCounter::default()));
 
-        let mut rng = SgxRng::new()?;
-        let enclave_key = EnclaveKey::new(&mut rng)?;
-        // TODO:
-        // let enclave_key = {
-        //     if my_roster_idx == 0 {
-        //         EnclaveKey::new()?.set_dec_key_by_owner(&client_config, &key_vault_endpoint)
-        //     } else {
-        //         EnclaveKey::new()?.set_dec_key_by_member(&client_config, &key_vault_endpoint)
-        //     }
-        // }?;
-        // enclave_key.store_dec_key(&client_config, &key_vault_endpoint)?;
+        let enclave_key = {
+            if my_roster_idx == 0 {
+                EnclaveKey::new()?.set_dec_key_by_owner(&client_config, &key_vault_endpoint)
+            } else {
+                EnclaveKey::new()?.set_dec_key_by_member(&client_config, &key_vault_endpoint)
+            }
+        }?;
+        enclave_key.store_dec_key(&client_config, &key_vault_endpoint)?;
 
         Ok(AnonifyEnclaveContext {
             spid,

@@ -119,6 +119,12 @@ impl StoreEnclaveDecryptionKeyRequestBody {
 
 impl RequestBody for StoreEnclaveDecryptionKeyRequestBody {}
 
+/// A Request body to recover enclave decryption key from key-vault encalve
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct RecoverEnclaveDecryptionKeyRequestBody;
+
+impl RequestBody for RecoverEnclaveDecryptionKeyRequestBody {}
+
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub enum KeyVaultCmd {
     StorePathSecret,
