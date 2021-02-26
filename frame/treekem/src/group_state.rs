@@ -99,7 +99,18 @@ impl Handshake for GroupState {
                         ) {
                             Ok(ps) => ps,
                             Err(_) => {
-                                panic!()
+                                #[cfg(feature = "backup-enable")]
+                                {
+                                    recover_path_secret_from_key_vault(
+                                        handshake.hash().as_ref(),
+                                        handshake.roster_idx(),
+                                    )
+                                    .expect(
+                                        "Failed to recover path_secret from both local and remote",
+                                    )
+                                }
+                                #[cfg(not(feature = "backup-enable"))]
+                                panic!("Failed to recover path_secret from local")
                             }
                         }
                     }
