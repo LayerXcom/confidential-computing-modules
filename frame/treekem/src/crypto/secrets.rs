@@ -13,12 +13,16 @@ use super::{
 };
 use crate::handshake::AccessKey;
 use anyhow::{anyhow, Result};
-use codec::{Decode, Encode, Input};
 use frame_common::crypto::rand_assign;
 use frame_common::crypto::{ExportPathSecret, EXPORT_ID_SIZE, SEALED_DATA_SIZE};
+use serde::{
+    de::{self, SeqAccess, Unexpected, Visitor},
+    ser::SerializeTuple,
+    Deserialize, Deserializer, Serialize, Serializer,
+};
 use sgx_tseal::SgxSealedData;
 use sgx_types::sgx_sealed_data_t;
-use std::{fmt, vec::Vec}; // TODO: for encoding SealedPathSecret
+use std::{boxed::Box, fmt, vec::Vec};
 
 #[derive(Debug, Clone)]
 pub struct GroupEpochSecret(Vec<u8>);
@@ -267,37 +271,98 @@ impl<'a> SealedPathSecret<'a> {
 
         Ok(*unsealed_data.get_decrypt_txt())
     }
+
+    pub fn encode(&self) -> Vec<u8> {
+        bincode::serialize(&self).unwrap() // must not fail
+    }
+
+    pub fn decode(bytes: &'a [u8]) -> std::result::Result<Self, Box<bincode::ErrorKind>> {
+        bincode::deserialize(bytes)
+    }
 }
 
-impl Encode for SealedPathSecret<'_> {
-    #[allow(clippy::cast_ptr_alignment)]
-    fn encode(&self) -> Vec<u8> {
-        let mut res = vec![0u8; SEALED_DATA_SIZE];
+impl Serialize for SealedPathSecret<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut bytes = vec![0u8; SEALED_DATA_SIZE];
         unsafe {
             self.0.to_raw_sealed_data_t(
-                res.as_mut_ptr() as *mut sgx_sealed_data_t,
+                bytes.as_mut_ptr() as *mut sgx_sealed_data_t,
                 SEALED_DATA_SIZE as u32,
             );
         }
 
-        res
+        let mut tup = serializer.serialize_tuple(SEALED_DATA_SIZE)?;
+        for byte in bytes.iter() {
+            tup.serialize_element(byte)?;
+        }
+        tup.end()
     }
 }
 
-impl Decode for SealedPathSecret<'_> {
-    #[allow(clippy::cast_ptr_alignment)]
-    fn decode<I: Input>(value: &mut I) -> Result<Self, codec::Error> {
-        let mut buf = [0u8; SEALED_DATA_SIZE];
-        value.read(&mut buf)?;
-        let sealed_data = unsafe {
-            SgxSealedData::<UnsealedPathSecret>::from_raw_sealed_data_t(
-                buf.as_mut_ptr() as *mut sgx_sealed_data_t,
-                SEALED_DATA_SIZE as u32,
-            )
-        }
-        .expect("Failed decoding to SgxSealedData");
+impl<'de> Deserialize<'de> for SealedPathSecret<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        struct SealedPathSecretVisitor;
 
-        Ok(SealedPathSecret::new(sealed_data))
+        impl<'de> de::Visitor<'de> for SealedPathSecretVisitor {
+            type Value = SealedPathSecret<'de>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("a SealedPathSecret must be 32 bytes length")
+            }
+
+            fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                let mut_v = &mut value.to_vec()[..];
+                let sealed_data = unsafe {
+                    SgxSealedData::<UnsealedPathSecret>::from_raw_sealed_data_t(
+                        mut_v.as_mut_ptr() as *mut sgx_sealed_data_t,
+                        SEALED_DATA_SIZE as u32,
+                    )
+                }
+                .ok_or_else(|| {
+                    E::custom(&"Fail SgxSealedData::<UnsealedPathSecret>::from_raw_sealed_data_t")
+                })?;
+
+                Ok(SealedPathSecret::new(sealed_data))
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let mut bytes = [0u8; SEALED_DATA_SIZE];
+                for i in 0..SEALED_DATA_SIZE {
+                    bytes[i] = seq
+                        .next_element()?
+                        .ok_or(de::Error::invalid_length(i, &"32"))?;
+                }
+
+                let sealed_data = unsafe {
+                    SgxSealedData::<UnsealedPathSecret>::from_raw_sealed_data_t(
+                        bytes.as_mut_ptr() as *mut sgx_sealed_data_t,
+                        SEALED_DATA_SIZE as u32,
+                    )
+                }
+                .ok_or_else(|| {
+                    de::Error::invalid_value(
+                        Unexpected::Bytes(&bytes[..]),
+                        &"Fail SgxSealedData::<UnsealedPathSecret>::from_raw_sealed_data_t",
+                    )
+                })?;
+
+                Ok(SealedPathSecret::new(sealed_data))
+            }
+        }
+
+        deserializer.deserialize_tuple(SEALED_DATA_SIZE, SealedPathSecretVisitor)
     }
 }
 
