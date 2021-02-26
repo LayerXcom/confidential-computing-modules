@@ -49,13 +49,6 @@ pub trait ContextOps:
 {
 }
 
-#[cfg(not(feature = "backup-enable"))]
-impl<
-        T: StateOps + GroupKeyGetter + NotificationOps + EnclaveKeyOps + QuoteGetter + ConfigGetter,
-    > ContextOps for T
-{
-}
-
 #[cfg(feature = "backup-enable")]
 pub trait ContextOps:
     StateOps
@@ -68,9 +61,9 @@ pub trait ContextOps:
 {
 }
 
-#[cfg(feature = "backup-enable")]
 impl<
-        T: StateOps
+        #[cfg(not(feature = "backup-enable"))] T: StateOps + GroupKeyGetter + NotificationOps + EnclaveKeyOps + QuoteGetter + ConfigGetter,
+        #[cfg(feature = "backup-enable")] T: StateOps
             + GroupKeyGetter
             + NotificationOps
             + EnclaveKeyOps
