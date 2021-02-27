@@ -10,6 +10,7 @@ use frame_common::{
     state_types::{MemId, NotifyState, ReturnState, StateCounter, UpdatedState, UserCounter},
     traits::*,
 };
+#[cfg(feature = "backup-enable")]
 use frame_mra_tls::key_vault::{
     request::{
         BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody,
@@ -42,6 +43,13 @@ pub trait CallKindExecutor<G: ContextOps>:
 }
 
 /// A trait for all context operations
+#[cfg(not(feature = "backup-enable"))]
+pub trait ContextOps:
+    StateOps + GroupKeyGetter + NotificationOps + EnclaveKeyOps + QuoteGetter + ConfigGetter
+{
+}
+
+#[cfg(feature = "backup-enable")]
 pub trait ContextOps:
     StateOps
     + GroupKeyGetter
@@ -54,7 +62,8 @@ pub trait ContextOps:
 }
 
 impl<
-        T: StateOps
+        #[cfg(not(feature = "backup-enable"))] T: StateOps + GroupKeyGetter + NotificationOps + EnclaveKeyOps + QuoteGetter + ConfigGetter,
+        #[cfg(feature = "backup-enable")] T: StateOps
             + GroupKeyGetter
             + NotificationOps
             + EnclaveKeyOps
@@ -71,6 +80,7 @@ pub trait ConfigGetter {
     fn ias_url(&self) -> &str;
     fn sub_key(&self) -> &str;
     fn spid(&self) -> &str;
+    #[cfg(feature = "backup-enable")]
     fn key_vault_endpoint(&self) -> &str;
     fn store_path_secrets(&self) -> &StorePathSecrets;
     fn store_enclave_dec_key(&self) -> &StoreEnclaveDecryptionKey;
@@ -143,14 +153,14 @@ pub trait EnclaveKeyOps {
 pub trait GroupKeyOps: Sized {
     fn create_handshake(&self) -> Result<(HandshakeParams, PathSecret)>;
 
-    fn process_handshake<F>(
+    fn process_handshake<
+        #[cfg(feature = "backup-enable")] F: FnOnce(&[u8], u32) -> Result<PathSecret>,
+    >(
         &mut self,
         store_path_secrets: &StorePathSecrets,
         handshake: &HandshakeParams,
-        recover_path_secret: F,
-    ) -> Result<()>
-    where
-        F: FnOnce(&[u8], u32) -> Result<PathSecret>;
+        #[cfg(feature = "backup-enable")] recover_path_secret: F,
+    ) -> Result<()>;
 
     fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext>;
 
@@ -175,6 +185,7 @@ pub trait QuoteGetter: Sized {
     fn quote(&self) -> Result<EncodedQuote>;
 }
 
+#[cfg(feature = "backup-enable")]
 pub trait KeyVaultOps {
     fn backup_path_secret(&self, backup_path_secret: BackupPathSecretRequestBody) -> Result<()>;
 

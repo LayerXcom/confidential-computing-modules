@@ -141,6 +141,7 @@ impl EnclaveEngine for HandshakeReceiver {
         group_key.process_handshake(
             enclave_context.store_path_secrets(),
             &handshake,
+            #[cfg(feature = "backup-enable")]
             |ps_id, roster_idx| C::recover_path_secret(enclave_context, ps_id, roster_idx),
         )?;
 

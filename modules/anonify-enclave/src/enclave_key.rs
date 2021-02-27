@@ -4,17 +4,18 @@ use crate::error::{EnclaveError, Result};
 use anonify_ecall_types::*;
 use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
 use frame_enclave::EnclaveEngine;
+#[cfg(feature = "backup-enable")]
 use frame_mra_tls::{
     key_vault::request::{
-        KeyVaultCmd, KeyVaultRequest, RecoverEnclaveDecryptionKeyRequestBody,
-        BackupEnclaveDecryptionKeyRequestBody,
+        BackupEnclaveDecryptionKeyRequestBody, KeyVaultCmd, KeyVaultRequest,
+        RecoverEnclaveDecryptionKeyRequestBody,
     },
     Client, ClientConfig,
 };
 use frame_runtime::traits::*;
-use frame_sodium::{
-    rng::SgxRng, SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE,
-};
+#[cfg(feature = "backup-enable")]
+use frame_sodium::rng::SgxRng;
+use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE};
 use secp256k1::{
     self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
 };
@@ -70,6 +71,7 @@ impl EnclaveKey {
 
     /// If you can get the dec_key, it is the initialization at the time of recovery,
     /// otherwise, a new dec_key is generated.
+    #[cfg(feature = "backup-enable")]
     pub fn set_dec_key_by_owner(
         mut self,
         client_config: &ClientConfig,
@@ -88,6 +90,7 @@ impl EnclaveKey {
     }
 
     /// Get dec_key from key-vault node in initialization when joining newly.
+    #[cfg(feature = "backup-enable")]
     pub fn set_dec_key_by_member(
         mut self,
         client_config: &ClientConfig,
@@ -100,6 +103,7 @@ impl EnclaveKey {
     }
 
     /// Sealing locally, make it persistent, and save it in the key-vault node as well
+    #[cfg(feature = "backup-enable")]
     pub fn store_dec_key(
         &self,
         client_config: &ClientConfig,
@@ -120,6 +124,7 @@ impl EnclaveKey {
     }
 
     /// After trying to get the local sealed dec_key, get it to key-vault node
+    #[cfg(feature = "backup-enable")]
     fn get_dec_key(
         client_config: &ClientConfig,
         key_vault_endpoint: &str,

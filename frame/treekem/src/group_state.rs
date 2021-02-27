@@ -51,17 +51,16 @@ impl Handshake for GroupState {
         Ok((handshake, path_secret))
     }
 
-    fn process_handshake<F>(
+    fn process_handshake<
+        #[cfg(feature = "backup-enable")] F: FnOnce(&[u8], u32) -> Result<PathSecret>,
+    >(
         &mut self,
         store_path_secrets: &StorePathSecrets,
         handshake: &HandshakeParams,
         source: &PathSecretSource,
         max_roster_idx: u32,
-        recover_path_secret_from_key_vault: F,
-    ) -> Result<AppKeyChain>
-    where
-        F: FnOnce(&[u8], u32) -> Result<PathSecret>,
-    {
+        #[cfg(feature = "backup-enable")] recover_path_secret_from_key_vault: F,
+    ) -> Result<AppKeyChain> {
         ensure!(
             handshake.prior_epoch() == self.epoch,
             "Handshake's prior epoch ({:?}) isn't the current epoch ({:?}).",
@@ -99,11 +98,20 @@ impl Handshake for GroupState {
                             self.epoch,
                         ) {
                             Ok(ps) => ps,
-                            Err(_) => recover_path_secret_from_key_vault(
-                                handshake.hash().as_ref(),
-                                handshake.roster_idx(),
-                            )
-                            .expect("Failed to recover path_secret from both local and remote"),
+                            Err(_) => {
+                                #[cfg(feature = "backup-enable")]
+                                {
+                                    recover_path_secret_from_key_vault(
+                                        handshake.hash().as_ref(),
+                                        handshake.roster_idx(),
+                                    )
+                                    .expect(
+                                        "Failed to recover path_secret from both local and remote",
+                                    )
+                                }
+                                #[cfg(not(feature = "backup-enable"))]
+                                panic!("Failed to recover path_secret from local")
+                            }
                         }
                     }
                     PathSecretSource::LocalTestKV(_) => {

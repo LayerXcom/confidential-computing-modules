@@ -16,16 +16,16 @@ pub trait Handshake: Sized {
     fn create_handshake(&self, source: &PathSecretSource) -> Result<(HandshakeParams, PathSecret)>;
 
     /// Process a received handshake from other members.
-    fn process_handshake<F>(
+    fn process_handshake<
+        #[cfg(feature = "backup-enable")] F: FnOnce(&[u8], u32) -> Result<PathSecret>,
+    >(
         &mut self,
         store_path_secrets: &StorePathSecrets,
         handshake: &HandshakeParams,
         source: &PathSecretSource,
         max_roster_idx: u32,
-        recover_path_secret_from_key_vault: F,
-    ) -> Result<AppKeyChain>
-    where
-        F: FnOnce(&[u8], u32) -> Result<PathSecret>;
+        #[cfg(feature = "backup-enable")] recover_path_secret_from_key_vault: F,
+    ) -> Result<AppKeyChain>;
 }
 
 // TODO: Does need signature over the group's history?
