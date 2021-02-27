@@ -1,6 +1,6 @@
-use frame_config::IAS_ROOT_CERT;
-use frame_config::PATH_SECRETS_DIR;
+use frame_config::{ANONIFY_PARAMS_DIR, IAS_ROOT_CERT, PATH_SECRETS_DIR};
 use frame_runtime::traits::*;
+use frame_sodium::StoreEnclaveDecryptionKey;
 use frame_treekem::StorePathSecrets;
 use std::{env, string::String, vec::Vec};
 
@@ -11,6 +11,7 @@ pub struct KeyVaultEnclaveContext {
     key_vault_endpoint: String,
     spid: String,
     store_path_secrets: StorePathSecrets,
+    store_enclave_dec_key: StoreEnclaveDecryptionKey,
     ias_root_cert: Vec<u8>,
 }
 
@@ -39,6 +40,10 @@ impl ConfigGetter for KeyVaultEnclaveContext {
         &self.store_path_secrets
     }
 
+    fn store_enclave_dec_key(&self) -> &StoreEnclaveDecryptionKey {
+        &self.store_enclave_dec_key
+    }
+
     fn ias_root_cert(&self) -> &[u8] {
         &self.ias_root_cert
     }
@@ -52,6 +57,7 @@ impl KeyVaultEnclaveContext {
         let key_vault_endpoint =
             env::var("KEY_VAULT_ENDPOINT").expect("KEY_VAULT_ENDPOINT is not set");
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
+        let store_enclave_dec_key = StoreEnclaveDecryptionKey::new(&*ANONIFY_PARAMS_DIR);
 
         Self {
             version,
@@ -60,6 +66,7 @@ impl KeyVaultEnclaveContext {
             key_vault_endpoint,
             spid,
             store_path_secrets,
+            store_enclave_dec_key,
             ias_root_cert: (&*IAS_ROOT_CERT).to_vec(),
         }
     }

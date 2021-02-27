@@ -115,6 +115,10 @@ impl BackupEnclaveDecryptionKeyRequestBody {
     pub fn new(dec_key: SodiumPrivateKey) -> Self {
         Self { dec_key }
     }
+
+    pub fn dec_key(&self) -> &SodiumPrivateKey {
+        &self.dec_key
+    }
 }
 
 impl RequestBody for BackupEnclaveDecryptionKeyRequestBody {}

@@ -14,10 +14,12 @@ use frame_mra_tls::{
 use frame_treekem::{PathSecret, StorePathSecrets};
 use serde_json::Value;
 use std::{string::ToString, vec::Vec};
+use frame_sodium::{StoreEnclaveDecryptionKey, SealedEnclaveDecryptionKey};
 
 #[derive(Default, Clone)]
 pub struct KeyVaultHandler {
     store_path_secrets: StorePathSecrets,
+    store_enclave_dec_key: StoreEnclaveDecryptionKey,
 }
 
 impl RequestHandler for KeyVaultHandler {
@@ -36,7 +38,9 @@ impl RequestHandler for KeyVaultHandler {
             "ManuallyRecoverAllPathSecrets" => {
                 self.manually_recover_path_secrets_all(decoded["body"].clone())
             }
-            "StoreEnclaveDecryptionKey" => unimplemented!(),
+            "StoreEnclaveDecryptionKey" => {
+                self.store_enclave_decryption_key(decoded["body"].clone())
+            }
             "RecoverEnclaveDecrptionKey" => unimplemented!(),
             _ => unreachable!("got unknown command: {:?}", cmd),
         }
@@ -44,21 +48,27 @@ impl RequestHandler for KeyVaultHandler {
 }
 
 impl KeyVaultHandler {
-    pub fn new(store_path_secrets: StorePathSecrets) -> Self {
-        Self { store_path_secrets }
+    pub fn new(
+        store_path_secrets: StorePathSecrets,
+        store_enclave_dec_key: StoreEnclaveDecryptionKey,
+    ) -> Self {
+        Self {
+            store_path_secrets,
+            store_enclave_dec_key,
+        }
     }
 
     fn store_enclave_decryption_key(&self, body: Value) -> anyhow::Result<Vec<u8>> {
-        let backup_path_secret: BackupEnclaveDecryptionKeyRequestBody = serde_json::from_value(body)?;
-        
-        let eps = PathSecret::from(backup_path_secret.path_secret())
-            .try_into_exporting(backup_path_secret.epoch(), backup_path_secret.id())?;
-        self.store_path_secrets
-            .clone()
-            .create_dir_all(backup_path_secret.roster_idx().to_string())?
-            .save_to_local_filesystem(&eps)?;
+        let enclave_dec_key: BackupEnclaveDecryptionKeyRequestBody = serde_json::from_value(body)?;
 
-        serde_json::to_vec(&eps).map_err(Into::into)
+        let encoded = enclave_dec_key.dec_key().try_into_sealing()?;
+        let sealed = SealedEnclaveDecryptionKey::decode(&encoded)?;
+
+        self.store_enclave_dec_key
+            .clone()
+            .save_to_local_filesystem(&sealed)?;
+
+        serde_json::to_vec(&sealed).map_err(Into::into)
     }
 
     fn store_path_secret(&self, body: Value) -> anyhow::Result<Vec<u8>> {

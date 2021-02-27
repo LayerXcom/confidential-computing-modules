@@ -17,7 +17,7 @@ use frame_mra_tls::key_vault::{
     },
     response::RecoveredPathSecret,
 };
-use frame_sodium::{SodiumCiphertext, SodiumPubKey};
+use frame_sodium::{SodiumCiphertext, SodiumPubKey, StoreEnclaveDecryptionKey};
 use frame_treekem::{handshake::HandshakeParams, PathSecret, StorePathSecrets};
 use remote_attestation::EncodedQuote;
 
@@ -73,6 +73,7 @@ pub trait ConfigGetter {
     fn spid(&self) -> &str;
     fn key_vault_endpoint(&self) -> &str;
     fn store_path_secrets(&self) -> &StorePathSecrets;
+    fn store_enclave_dec_key(&self) -> &StoreEnclaveDecryptionKey;
     fn ias_root_cert(&self) -> &[u8];
 }
 

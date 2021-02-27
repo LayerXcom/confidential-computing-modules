@@ -14,7 +14,9 @@ use frame_common::{
     },
     AccessPolicy,
 };
-use frame_config::{IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DIR};
+use frame_config::{
+    ANONIFY_PARAMS_DIR, IAS_ROOT_CERT, KEY_VAULT_ENCLAVE_MEASUREMENT, PATH_SECRETS_DIR,
+};
 use frame_enclave::EnclaveEngine;
 use frame_mra_tls::key_vault::{
     request::{
@@ -25,7 +27,7 @@ use frame_mra_tls::key_vault::{
 };
 use frame_mra_tls::{AttestedTlsConfig, Client, ClientConfig};
 use frame_runtime::traits::*;
-use frame_sodium::{rng::SgxRng, SodiumCiphertext, SodiumPubKey};
+use frame_sodium::{rng::SgxRng, SodiumCiphertext, SodiumPubKey, StoreEnclaveDecryptionKey};
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, PathSecret, StorePathSecrets,
@@ -53,6 +55,7 @@ pub struct AnonifyEnclaveContext {
     group_key: Arc<SgxRwLock<GroupKey>>,
     client_config: ClientConfig,
     store_path_secrets: StorePathSecrets,
+    store_enclave_dec_key: StoreEnclaveDecryptionKey,
     ias_root_cert: Vec<u8>,
     state_counter: Arc<SgxRwLock<StateCounter>>,
 }
@@ -80,6 +83,10 @@ impl ConfigGetter for AnonifyEnclaveContext {
 
     fn store_path_secrets(&self) -> &StorePathSecrets {
         &self.store_path_secrets
+    }
+
+    fn store_enclave_dec_key(&self) -> &StoreEnclaveDecryptionKey {
+        &self.store_enclave_dec_key
     }
 
     fn ias_root_cert(&self) -> &[u8] {
@@ -329,6 +336,7 @@ impl AnonifyEnclaveContext {
                 *KEY_VAULT_ENCLAVE_MEASUREMENT,
             );
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
+        let store_enclave_dec_key = StoreEnclaveDecryptionKey::new(&*ANONIFY_PARAMS_DIR);
         let state_counter = Arc::new(SgxRwLock::new(StateCounter::default()));
 
         let enclave_key = {
@@ -353,6 +361,7 @@ impl AnonifyEnclaveContext {
             key_vault_endpoint,
             client_config,
             store_path_secrets,
+            store_enclave_dec_key,
             ias_root_cert: (&*IAS_ROOT_CERT).to_vec(),
             state_counter,
         })

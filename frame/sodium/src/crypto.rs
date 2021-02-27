@@ -206,8 +206,8 @@ impl SodiumPrivateKey {
         SodiumPubKey(self.0.public_key())
     }
 
-    pub fn try_into_sealing<'a>(self) -> Result<Vec<u8>> {
-        UnsealedEnclaveDecryptionKey::from_sodium_priv_key(self).encoded_sealing()
+    pub fn try_into_sealing<'a>(&self) -> Result<Vec<u8>> {
+        UnsealedEnclaveDecryptionKey::from_sodium_priv_key(&self).encoded_sealing()
     }
 }
 

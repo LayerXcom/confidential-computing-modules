@@ -16,7 +16,7 @@ use sgx_types::sgx_sealed_data_t;
 pub struct UnsealedEnclaveDecryptionKey([u8; KEY_SIZE]);
 
 impl UnsealedEnclaveDecryptionKey {
-    pub fn from_sodium_priv_key(priv_key: SodiumPrivateKey) -> Self {
+    pub fn from_sodium_priv_key(priv_key: &SodiumPrivateKey) -> Self {
         let buf = bincode::serialize(&priv_key).unwrap(); // must not fail
         let mut res = [0u8; KEY_SIZE];
         res.copy_from_slice(&buf[..]);
