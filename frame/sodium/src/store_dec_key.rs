@@ -1,13 +1,11 @@
-use crate::bincode;
 use crate::local_anyhow::Result;
 use crate::localstd::{
-    fmt, fs,
-    io::{BufReader, Write},
+    fs,
+    io::{Read, Write},
     path::{Path, PathBuf},
-    vec::Vec,
+    string::String,
 };
-use crate::rand_core::{CryptoRng, RngCore};
-use crate::sealing::SealedEnclaveDecryptionKey;
+use crate::sealing::{SealedEnclaveDecryptionKey, UnsealedEnclaveDecryptionKey};
 use frame_config::PJ_ROOT_DIR;
 use serde_json_sgx as serde_json;
 use tracing::info;
@@ -50,16 +48,22 @@ impl StoreEnclaveDecryptionKey {
         Ok(())
     }
 
-    // pub fn load_from_local_filesystem(&self, id: &[u8]) -> Result<ExportPathSecret> {
-    //     let file_path = self.local_dir_path.join(DEC_KEY_FILE_NAME);
-    //     info!(
-    //         "Loading a sealed path secret from the path: {:?}",
-    //         file_path
-    //     );
-    //     let file = fs::File::open(file_path)?;
-    //     let reader = BufReader::new(file);
-    //     let eps = serde_json::from_reader(reader)?;
+    pub fn load_from_local_filesystem(&self) -> Result<UnsealedEnclaveDecryptionKey> {
+        let file_path = self.local_dir_path.join(DEC_KEY_FILE_NAME);
+        info!(
+            "Loading a sealed path secret from the path: {:?}",
+            file_path
+        );
+        let mut file = fs::File::open(file_path)?;
+        // `from_reader` nothing owns the data, therefore you cannot have a reference to that data in your struct.
+        // using `from_str` from an owned buffer.
+        // ref: https://stackoverflow.com/questions/60801133/how-do-i-use-serde-to-deserialize-structs-with-references-from-a-reader
+        let mut strbuf = String::new();
+        file.read_to_string(&mut strbuf)?;
+        let sealed_dec_key: SealedEnclaveDecryptionKey = serde_json::from_str(&strbuf)?;
 
-    //     Ok(eps)
-    // }
+        // `sealed_dec_key` is only valid as long as `strbuf` exists.
+        // so, it's unsealed here.
+        sealed_dec_key.unsealing()
+    }
 }

@@ -5,16 +5,16 @@ use frame_mra_tls::{
         request::{
             BackupAllPathSecretsRequestBody, BackupEnclaveDecryptionKeyRequestBody,
             BackupPathSecretRequestBody, RecoverAllPathSecretsRequestbody,
-            RecoverEnclaveDecryptionKeyRequestBody, RecoverPathSecretRequestBody,
+            RecoverPathSecretRequestBody,
         },
         response::RecoveredPathSecret,
     },
     RequestHandler,
 };
+use frame_sodium::{SealedEnclaveDecryptionKey, StoreEnclaveDecryptionKey};
 use frame_treekem::{PathSecret, StorePathSecrets};
 use serde_json::Value;
 use std::{string::ToString, vec::Vec};
-use frame_sodium::{StoreEnclaveDecryptionKey, SealedEnclaveDecryptionKey};
 
 #[derive(Default, Clone)]
 pub struct KeyVaultHandler {
@@ -41,7 +41,9 @@ impl RequestHandler for KeyVaultHandler {
             "StoreEnclaveDecryptionKey" => {
                 self.store_enclave_decryption_key(decoded["body"].clone())
             }
-            "RecoverEnclaveDecrptionKey" => unimplemented!(),
+            "RecoverEnclaveDecrptionKey" => {
+                self.recover_enclave_decryption_key(decoded["body"].clone())
+            }
             _ => unreachable!("got unknown command: {:?}", cmd),
         }
     }
@@ -81,6 +83,16 @@ impl KeyVaultHandler {
             .save_to_local_filesystem(&eps)?;
 
         serde_json::to_vec(&eps).map_err(Into::into)
+    }
+
+    fn recover_enclave_decryption_key(&self, _body: Value) -> anyhow::Result<Vec<u8>> {
+        let dec_key = self
+            .store_enclave_dec_key
+            .clone()
+            .load_from_local_filesystem()?
+            .into_sodium_priv_key()?;
+
+        serde_json::to_vec(&dec_key).map_err(Into::into)
     }
 
     fn recover_path_secret(&self, body: Value) -> anyhow::Result<Vec<u8>> {

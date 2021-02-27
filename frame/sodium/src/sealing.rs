@@ -23,6 +23,10 @@ impl UnsealedEnclaveDecryptionKey {
         Self(res)
     }
 
+    pub fn into_sodium_priv_key(self) -> Result<SodiumPrivateKey> {
+        bincode::deserialize(&self.0[..]).map_err(Into::into)
+    }
+
     pub fn encoded_sealing(self) -> Result<Vec<u8>> {
         let additional = [0u8; 0];
         let sealed_data = SgxSealedData::<Self>::seal_data(&additional, &self)
