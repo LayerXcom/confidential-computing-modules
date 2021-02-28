@@ -34,4 +34,5 @@ members = [
 exclude = [
     "tools/enc",
     "tools/blob",
+    "tools/sblob",
 ]

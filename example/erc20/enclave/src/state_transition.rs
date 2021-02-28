@@ -169,4 +169,13 @@ impl_runtime! {
         let owner = self.get_map::<AccountId>(*OWNER_ACCOUNT_ID, "Owner")?;
         get_state![owner]
     }
+
+    pub fn blob_size(
+        self,
+        caller: AccountId,
+        blob: Bytes
+    ) {
+        let blob_size = U64::from_raw(blob.size() as u64);
+        get_state![blob_size]
+    }
 }
