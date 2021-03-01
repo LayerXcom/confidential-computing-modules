@@ -178,4 +178,17 @@ impl_runtime! {
         let blob_size = U64::from_raw(blob.size() as u64);
         get_state![blob_size]
     }
+
+    pub fn append_blob_by_get_state(
+        self,
+        sender: AccountId,
+        other: Bytes
+    ) {
+        let mut existing_blob = self.get_map::<Bytes>(sender, "Blob")?;
+        existing_blob.extend(other);
+
+        let _ = update!(sender, "Blob", existing_blob, Bytes);
+        let blob_size = U64::from_raw(existing_blob.size() as u64);
+        get_state![blob_size]
+    }
 }

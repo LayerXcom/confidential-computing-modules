@@ -38,7 +38,7 @@ fn main() {
             ],
         },
         runtime_params: ps,
-        state_name: "blob_size".to_string(),
+        state_name: "append_blob_by_get_state".to_string(),
     };
 
     let json = json!(c);
