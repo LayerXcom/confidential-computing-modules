@@ -597,14 +597,14 @@ async fn test_join_group_then_handshake() {
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
-    // using invalid enclave encryption key because app2 have to sync with bc, but app2's enclave encryption key cannot be set here
+    // using the same encryption key because app2 have to sync with bc, but app2's enclave encryption key cannot be set here
     // so using app1's key
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
         .set_json(&balance_of_req(&mut csprng, &enc_key1))
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_server_error(), "response: {:?}", resp); // return 500 error
+    assert!(resp.status().is_success(), "response: {:?}", resp); // return 200 OK: becuse allowed same enclave encryption key
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
