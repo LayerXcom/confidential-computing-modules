@@ -12,6 +12,7 @@ crate-type = ["staticlib"]
 frame-runtime = { path = "../../../frame/runtime", default-features = false, features = ["sgx"] }
 frame-config = { path = "../../../frame/config", default-features = false, features = ["sgx"] }
 frame-enclave = { path = "../../../frame/enclave" }
+frame-sodium = { path = "../../../frame/sodium", default-features = false, features = ["sgx"] }
 frame-types = { path = "../../../frame/types" }
 frame-common = { path = "../../../frame/common", default-features = false, features = ["sgx"] }
 anonify-enclave = { path = "../../../modules/anonify-enclave", default-features = false }

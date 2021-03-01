@@ -39,7 +39,10 @@ impl StoreEnclaveDecryptionKey {
         sealed_dec_key: &SealedEnclaveDecryptionKey<'_>,
     ) -> Result<()> {
         let file_path = self.local_dir_path.join(DEC_KEY_FILE_NAME);
-        info!("Saving a sealed path secret to the path: {:?}", file_path);
+        info!(
+            "Saving a sealed enclave decryption key to the path: {:?}",
+            file_path
+        );
         let mut file = fs::File::create(file_path)?;
         serde_json::to_writer(&mut file, &sealed_dec_key)?;
         file.flush()?;
@@ -51,7 +54,7 @@ impl StoreEnclaveDecryptionKey {
     pub fn load_from_local_filesystem(&self) -> Result<UnsealedEnclaveDecryptionKey> {
         let file_path = self.local_dir_path.join(DEC_KEY_FILE_NAME);
         info!(
-            "Loading a sealed path secret from the path: {:?}",
+            "Loading a sealed enclave decryption key from the path: {:?}",
             file_path
         );
         let mut file = fs::File::open(file_path)?;

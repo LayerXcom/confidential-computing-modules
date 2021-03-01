@@ -37,6 +37,7 @@ use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, StorePathSecrets,
 };
+use rand_core::{CryptoRng, RngCore};
 use remote_attestation::{EncodedQuote, QuoteTarget};
 use std::{
     env,
@@ -299,7 +300,7 @@ impl KeyVaultOps for AnonifyEnclaveContext {
 
 // TODO: Consider SGX_ERROR_BUSY.
 impl AnonifyEnclaveContext {
-    pub fn new(version: usize) -> Result<Self> {
+    pub fn new<R: RngCore + CryptoRng>(version: usize, rng: &mut R) -> Result<Self> {
         let user_state_db = UserStateDB::new();
         let user_counter_db = UserCounterDB::new();
 
@@ -378,7 +379,7 @@ impl AnonifyEnclaveContext {
                         Err(_e) => {
                             // new anonify group will be created.
                             if my_roster_idx == 0 {
-                                enc_key.get_new_gen_dec_key()?
+                                enc_key.get_new_gen_dec_key(rng)?
                             } else {
                                 // should panic because it failed when initializing the node.
                                 panic!("The node cannot be initialized because there is no Enclave decryption key either locally or remotely.");
@@ -388,7 +389,7 @@ impl AnonifyEnclaveContext {
 
                     // If the backup disabled, generate a new Enclave decryption key on each node.
                     #[cfg(not(feature = "backup-enable"))]
-                    enc_key.get_new_gen_dec_key()?
+                    enc_key.get_new_gen_dec_key(rng)?
                 }
             }
         };

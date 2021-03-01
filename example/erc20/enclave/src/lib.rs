@@ -8,6 +8,7 @@ mod ecalls;
 mod state_transition;
 
 use anonify_enclave::context::AnonifyEnclaveContext;
+use frame_sodium::rng::SgxRng;
 use once_cell::sync::Lazy;
 use std::backtrace;
 
@@ -19,6 +20,7 @@ pub static ENCLAVE_CONTEXT: Lazy<AnonifyEnclaveContext> = Lazy::new(|| {
         backtrace::PrintFormat::Short,
     )
     .unwrap();
-    AnonifyEnclaveContext::new(ANONIFY_MRENCLAVE_VERSION)
+    let mut rng = SgxRng::new().unwrap();
+    AnonifyEnclaveContext::new(ANONIFY_MRENCLAVE_VERSION, &mut rng)
         .expect("Failed to instantiate ENCLAVE_CONTEXT")
 });

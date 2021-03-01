@@ -15,9 +15,10 @@ use frame_mra_tls::{
 };
 use frame_runtime::traits::*;
 use frame_sodium::{
-    rng::SgxRng, SealedEnclaveDecryptionKey, SodiumCiphertext, SodiumPrivateKey, SodiumPubKey,
+    SealedEnclaveDecryptionKey, SodiumCiphertext, SodiumPrivateKey, SodiumPubKey,
     StoreEnclaveDecryptionKey, SODIUM_PUBLIC_KEY_SIZE,
 };
+use rand_core::{CryptoRng, RngCore};
 use secp256k1::{
     self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
 };
@@ -103,12 +104,8 @@ impl EnclaveKey {
         Ok(self)
     }
 
-    pub fn get_new_gen_dec_key(mut self) -> Result<Self> {
-        let decryption_privkey = {
-            let mut rng = SgxRng::new()?;
-            SodiumPrivateKey::from_random(&mut rng)?
-        };
-
+    pub fn get_new_gen_dec_key<R: RngCore + CryptoRng>(mut self, rng: &mut R) -> Result<Self> {
+        let decryption_privkey = SodiumPrivateKey::from_random(rng)?;
         self.decryption_privkey = Some(decryption_privkey);
         Ok(self)
     }

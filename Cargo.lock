@@ -1517,6 +1517,7 @@ dependencies = [
  "frame-config",
  "frame-enclave",
  "frame-runtime",
+ "frame-sodium",
  "frame-types",
  "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
  "sgx_tstd",
