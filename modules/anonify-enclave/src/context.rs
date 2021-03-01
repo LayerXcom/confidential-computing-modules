@@ -359,13 +359,30 @@ impl AnonifyEnclaveContext {
         let state_counter = Arc::new(SgxRwLock::new(StateCounter::default()));
 
         let enclave_key = {
-            if my_roster_idx == 0 {
-                EnclaveKey::new()?.set_dec_key_by_owner(&client_config, &key_vault_endpoint)
-            } else {
-                EnclaveKey::new()?.set_dec_key_by_member(&client_config, &key_vault_endpoint)
+            let enc_key = EnclaveKey::new()?;
+            // Trying set the enclave decryption key from local storage.
+            match enc_key.set_dec_key_from_locally_sealed(&store_enclave_dec_key) {
+                Ok(enclave_key) => enclave_key,
+                // If not, trying set the key from remote key-vault node.
+                Err(_e) => {
+                    match enc_key
+                        .set_dec_key_from_remotelly_sealed(&client_config, &key_vault_endpoint)
+                    {
+                        Ok(enclave_key) => enclave_key,
+                        Err(_e) => {
+                            // new anonify group will be created.
+                            if my_roster_idx == 0 {
+                                enc_key.set_new_dec_key()?
+                            } else {
+                            }
+                        }
+                    }
+                }
             }
-        }?;
-        enclave_key.store_dec_key(&client_config, &key_vault_endpoint)?;
+        };
+
+        #[cfg(feature = "backup-enable")]
+        enclave_key.store_dec_key_to_key_vault(&client_config, &key_vault_endpoint)?;
 
         Ok(AnonifyEnclaveContext {
             spid,

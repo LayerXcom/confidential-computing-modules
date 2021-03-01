@@ -69,20 +69,53 @@ impl EnclaveKey {
         })
     }
 
-    /// If you can get the dec_key, it is the initialization at the time of recovery,
-    /// otherwise, a new dec_key is generated.
+    /// Setting the Enclave decryption key sealed and stored in local storage
+    /// The newly joining node should fail because it has not stored it.
+    pub fn set_dec_key_from_locally_sealed(
+        mut self,
+        store_dec_key: &StoreEnclaveDecryptionKey,
+    ) -> Result<Self> {
+        let decryption_privkey = store_dec_key
+            .load_from_local_filesystem()?
+            .into_sodium_priv_key()?;
+
+        self.decryption_privkey = Some(decryption_privkey);
+        Ok(self)
+    }
+
+    /// Get dec_key from key-vault node in initialization when joining newly.
     #[cfg(feature = "backup-enable")]
-    pub fn set_dec_key_by_owner(
+    pub fn set_dec_key_from_remotelly_sealed(
         mut self,
         client_config: &ClientConfig,
         key_vault_endpoint: &str,
     ) -> Result<Self> {
-        let decryption_privkey = match Self::get_dec_key(&client_config, &key_vault_endpoint) {
-            Ok(dec_key) => dec_key,
-            Err(_e) => {
-                let mut rng = SgxRng::new()?;
-                SodiumPrivateKey::from_random(&mut rng)?
-            }
+        let decryption_privkey = Self::get_dec_key(&client_config, &key_vault_endpoint)?;
+
+        self.decryption_privkey = Some(decryption_privkey);
+        Ok(self)
+    }
+
+    /// After trying to get the local sealed dec_key, get it to key-vault node
+    #[cfg(feature = "backup-enable")]
+    fn get_dec_key(
+        client_config: &ClientConfig,
+        key_vault_endpoint: &str,
+    ) -> Result<SodiumPrivateKey> {
+        let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
+        let get_dec_key_request = KeyVaultRequest::new(
+            KeyVaultCmd::RecoverEnclaveDecrptionKey,
+            RecoverEnclaveDecryptionKeyRequestBody::default(),
+        );
+        let dec_key: SodiumPrivateKey = mra_tls_client.send_json(get_dec_key_request)?;
+
+        Ok(dec_key)
+    }
+
+    pub fn set_new_dec_key(mut self) -> Result<Self> {
+        let decryption_privkey = {
+            let mut rng = SgxRng::new()?;
+            SodiumPrivateKey::from_random(&mut rng)?
         };
 
         self.decryption_privkey = Some(decryption_privkey);
@@ -104,7 +137,7 @@ impl EnclaveKey {
 
     /// Sealing locally, make it persistent, and save it in the key-vault node as well
     #[cfg(feature = "backup-enable")]
-    pub fn store_dec_key(
+    pub fn store_dec_key_to_key_vault(
         &self,
         client_config: &ClientConfig,
         key_vault_endpoint: &str,
@@ -121,22 +154,6 @@ impl EnclaveKey {
         let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
 
         Ok(())
-    }
-
-    /// After trying to get the local sealed dec_key, get it to key-vault node
-    #[cfg(feature = "backup-enable")]
-    fn get_dec_key(
-        client_config: &ClientConfig,
-        key_vault_endpoint: &str,
-    ) -> Result<SodiumPrivateKey> {
-        let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
-        let get_dec_key_request = KeyVaultRequest::new(
-            KeyVaultCmd::RecoverEnclaveDecrptionKey,
-            RecoverEnclaveDecryptionKeyRequestBody::default(),
-        );
-        let dec_key: SodiumPrivateKey = mra_tls_client.send_json(get_dec_key_request)?;
-
-        Ok(dec_key)
     }
 
     pub fn sign(&self, msg: &[u8]) -> Result<(Signature, RecoveryId)> {
