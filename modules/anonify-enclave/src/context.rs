@@ -16,7 +16,7 @@ use frame_common::{
 };
 #[cfg(feature = "backup-enable")]
 use frame_config::KEY_VAULT_ENCLAVE_MEASUREMENT;
-use frame_config::{IAS_ROOT_CERT, PATH_SECRETS_DIR};
+use frame_config::{ANONIFY_PARAMS_DIR, IAS_ROOT_CERT, PATH_SECRETS_DIR};
 use frame_enclave::EnclaveEngine;
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::{
@@ -30,13 +30,14 @@ use frame_mra_tls::{
     AttestedTlsConfig, Client, ClientConfig,
 };
 use frame_runtime::traits::*;
-use frame_sodium::{rng::SgxRng, SodiumCiphertext, SodiumPubKey};
+use frame_sodium::{SodiumCiphertext, SodiumPubKey, StoreEnclaveDecryptionKey};
 #[cfg(feature = "backup-enable")]
 use frame_treekem::PathSecret;
 use frame_treekem::{
     handshake::{PathSecretKVS, PathSecretSource},
     init_path_secret_kvs, StorePathSecrets,
 };
+use rand_core::{CryptoRng, RngCore};
 use remote_attestation::{EncodedQuote, QuoteTarget};
 use std::{
     env,
@@ -62,6 +63,7 @@ pub struct AnonifyEnclaveContext {
     #[cfg(feature = "backup-enable")]
     client_config: ClientConfig,
     store_path_secrets: StorePathSecrets,
+    store_enclave_dec_key: StoreEnclaveDecryptionKey,
     ias_root_cert: Vec<u8>,
     state_counter: Arc<SgxRwLock<StateCounter>>,
 }
@@ -90,6 +92,10 @@ impl ConfigGetter for AnonifyEnclaveContext {
 
     fn store_path_secrets(&self) -> &StorePathSecrets {
         &self.store_path_secrets
+    }
+
+    fn store_enclave_dec_key(&self) -> &StoreEnclaveDecryptionKey {
+        &self.store_enclave_dec_key
     }
 
     fn ias_root_cert(&self) -> &[u8] {
@@ -294,7 +300,7 @@ impl KeyVaultOps for AnonifyEnclaveContext {
 
 // TODO: Consider SGX_ERROR_BUSY.
 impl AnonifyEnclaveContext {
-    pub fn new(version: usize) -> Result<Self> {
+    pub fn new<R: RngCore + CryptoRng>(version: usize, rng: &mut R) -> Result<Self> {
         let user_state_db = UserStateDB::new();
         let user_counter_db = UserCounterDB::new();
 
@@ -350,19 +356,47 @@ impl AnonifyEnclaveContext {
         };
 
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
+        let store_enclave_dec_key = StoreEnclaveDecryptionKey::new(&*ANONIFY_PARAMS_DIR);
         let state_counter = Arc::new(SgxRwLock::new(StateCounter::default()));
 
-        let mut rng = SgxRng::new()?;
-        let enclave_key = EnclaveKey::new(&mut rng)?;
-        // TODO:
-        // let enclave_key = {
-        //     if my_roster_idx == 0 {
-        //         EnclaveKey::new()?.set_dec_key_by_owner(&client_config, &key_vault_endpoint)
-        //     } else {
-        //         EnclaveKey::new()?.set_dec_key_by_member(&client_config, &key_vault_endpoint)
-        //     }
-        // }?;
-        // enclave_key.store_dec_key(&client_config, &key_vault_endpoint)?;
+        let enclave_key = {
+            let enc_key = EnclaveKey::new()?;
+            // Trying set the enclave decryption key from local storage.
+            match enc_key
+                .clone()
+                .get_dec_key_from_locally_sealed(&store_enclave_dec_key)
+            {
+                Ok(enclave_key) => enclave_key,
+                // If not, trying set the key from remote key-vault node.
+                Err(_e) => {
+                    // If the backup enabled, try to fetch the enclave decryption key from the remote key_vault node.
+                    #[cfg(feature = "backup-enable")]
+                    match enc_key
+                        .clone()
+                        .get_dec_key_from_remotelly_sealed(&client_config, &key_vault_endpoint)
+                    {
+                        Ok(enclave_key) => enclave_key,
+                        Err(_e) => {
+                            // new anonify group will be created.
+                            if my_roster_idx == 0 {
+                                enc_key.get_new_gen_dec_key(rng)?
+                            } else {
+                                // should panic because it failed when initializing the node.
+                                panic!("The node cannot be initialized because there is no Enclave decryption key either locally or remotely.");
+                            }
+                        }
+                    }
+
+                    // If the backup disabled, generate a new Enclave decryption key on each node.
+                    #[cfg(not(feature = "backup-enable"))]
+                    enc_key.get_new_gen_dec_key(rng)?
+                }
+            }
+        };
+
+        enclave_key.store_dec_key_to_local(&store_enclave_dec_key)?;
+        #[cfg(feature = "backup-enable")]
+        enclave_key.store_dec_key_to_remote(&client_config, &key_vault_endpoint)?;
 
         Ok(AnonifyEnclaveContext {
             spid,
@@ -379,6 +413,7 @@ impl AnonifyEnclaveContext {
             #[cfg(feature = "backup-enable")]
             client_config,
             store_path_secrets,
+            store_enclave_dec_key,
             ias_root_cert: (&*IAS_ROOT_CERT).to_vec(),
             state_counter,
         })

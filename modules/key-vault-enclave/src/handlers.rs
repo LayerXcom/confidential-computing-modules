@@ -3,13 +3,15 @@ use frame_common::crypto::ExportPathSecret;
 use frame_mra_tls::{
     key_vault::{
         request::{
-            BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody,
-            RecoverAllPathSecretsRequestbody, RecoverPathSecretRequestBody,
+            BackupAllPathSecretsRequestBody, BackupEnclaveDecryptionKeyRequestBody,
+            BackupPathSecretRequestBody, RecoverAllPathSecretsRequestbody,
+            RecoverPathSecretRequestBody,
         },
         response::RecoveredPathSecret,
     },
     RequestHandler,
 };
+use frame_sodium::{SealedEnclaveDecryptionKey, StoreEnclaveDecryptionKey};
 use frame_treekem::{PathSecret, StorePathSecrets};
 use serde_json::Value;
 use std::{string::ToString, vec::Vec};
@@ -17,6 +19,7 @@ use std::{string::ToString, vec::Vec};
 #[derive(Default, Clone)]
 pub struct KeyVaultHandler {
     store_path_secrets: StorePathSecrets,
+    store_enclave_dec_key: StoreEnclaveDecryptionKey,
 }
 
 impl RequestHandler for KeyVaultHandler {
@@ -35,16 +38,39 @@ impl RequestHandler for KeyVaultHandler {
             "ManuallyRecoverAllPathSecrets" => {
                 self.manually_recover_path_secrets_all(decoded["body"].clone())
             }
-            "StoreEnclaveDecryptionKey" => unimplemented!(),
-            "RecoverEnclaveDecrptionKey" => unimplemented!(),
+            "StoreEnclaveDecryptionKey" => {
+                self.store_enclave_decryption_key(decoded["body"].clone())
+            }
+            "RecoverEnclaveDecrptionKey" => {
+                self.recover_enclave_decryption_key(decoded["body"].clone())
+            }
             _ => unreachable!("got unknown command: {:?}", cmd),
         }
     }
 }
 
 impl KeyVaultHandler {
-    pub fn new(store_path_secrets: StorePathSecrets) -> Self {
-        Self { store_path_secrets }
+    pub fn new(
+        store_path_secrets: StorePathSecrets,
+        store_enclave_dec_key: StoreEnclaveDecryptionKey,
+    ) -> Self {
+        Self {
+            store_path_secrets,
+            store_enclave_dec_key,
+        }
+    }
+
+    fn store_enclave_decryption_key(&self, body: Value) -> anyhow::Result<Vec<u8>> {
+        let enclave_dec_key: BackupEnclaveDecryptionKeyRequestBody = serde_json::from_value(body)?;
+
+        let encoded = enclave_dec_key.dec_key().try_into_sealing()?;
+        let sealed = SealedEnclaveDecryptionKey::decode(&encoded)?;
+
+        self.store_enclave_dec_key
+            .clone()
+            .save_to_local_filesystem(&sealed)?;
+
+        serde_json::to_vec(&sealed).map_err(Into::into)
     }
 
     fn store_path_secret(&self, body: Value) -> anyhow::Result<Vec<u8>> {
@@ -57,6 +83,16 @@ impl KeyVaultHandler {
             .save_to_local_filesystem(&eps)?;
 
         serde_json::to_vec(&eps).map_err(Into::into)
+    }
+
+    fn recover_enclave_decryption_key(&self, _body: Value) -> anyhow::Result<Vec<u8>> {
+        let dec_key = self
+            .store_enclave_dec_key
+            .clone()
+            .load_from_local_filesystem()?
+            .into_sodium_priv_key()?;
+
+        serde_json::to_vec(&dec_key).map_err(Into::into)
     }
 
     fn recover_path_secret(&self, body: Value) -> anyhow::Result<Vec<u8>> {

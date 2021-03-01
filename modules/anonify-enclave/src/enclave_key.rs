@@ -2,17 +2,22 @@
 
 use crate::error::{EnclaveError, Result};
 use anonify_ecall_types::*;
+use anyhow::anyhow;
 use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
 use frame_enclave::EnclaveEngine;
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::{
-    key_vault::request::{KeyVaultCmd, KeyVaultRequest, StoreEnclaveDecryptionKeyRequestBody},
+    key_vault::request::{
+        BackupEnclaveDecryptionKeyRequestBody, KeyVaultCmd, KeyVaultRequest,
+        RecoverEnclaveDecryptionKeyRequestBody,
+    },
     Client, ClientConfig,
 };
 use frame_runtime::traits::*;
-#[cfg(feature = "backup-enable")]
-use frame_sodium::rng::SgxRng;
-use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE};
+use frame_sodium::{
+    SealedEnclaveDecryptionKey, SodiumCiphertext, SodiumPrivateKey, SodiumPubKey,
+    StoreEnclaveDecryptionKey, SODIUM_PUBLIC_KEY_SIZE,
+};
 use rand_core::{CryptoRng, RngCore};
 use secp256k1::{
     self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
@@ -51,10 +56,7 @@ pub struct EnclaveKey {
 }
 
 impl EnclaveKey {
-    pub fn new<CR>(csprng: &mut CR) -> Result<Self>
-    where
-        CR: RngCore + CryptoRng,
-    {
+    pub fn new() -> Result<Self> {
         let signing_privkey = loop {
             let mut ret = [0u8; SECRET_KEY_SIZE];
             rand_assign(&mut ret)?;
@@ -63,44 +65,22 @@ impl EnclaveKey {
                 break key;
             }
         };
-        let decryption_privkey = SodiumPrivateKey::from_random(csprng)?;
-        Ok(Self {
+
+        Ok(EnclaveKey {
             signing_privkey,
-            decryption_privkey: Some(decryption_privkey),
+            decryption_privkey: None,
         })
     }
 
-    // pub fn new() -> Result<Self> {
-    //     let signing_privkey = loop {
-    //         let mut ret = [0u8; SECRET_KEY_SIZE];
-    //         rand_assign(&mut ret)?;
-
-    //         if let Ok(key) = SecretKey::parse(&ret) {
-    //             break key;
-    //         }
-    //     };
-
-    //     Ok(EnclaveKey {
-    //         signing_privkey,
-    //         decryption_privkey: None,
-    //     })
-    // }
-
-    /// If you can get the dec_key, it is the initialization at the time of recovery,
-    /// otherwise, a new dec_key is generated.
-    #[cfg(feature = "backup-enable")]
-    pub fn set_dec_key_by_owner(
+    /// Setting the Enclave decryption key sealed and stored in local storage
+    /// The newly joining node should fail because it has not stored it.
+    pub fn get_dec_key_from_locally_sealed(
         mut self,
-        client_config: &ClientConfig,
-        key_vault_endpoint: &str,
+        store_dec_key: &StoreEnclaveDecryptionKey,
     ) -> Result<Self> {
-        let decryption_privkey = match Self::get_dec_key(&client_config, &key_vault_endpoint) {
-            Ok(dec_key) => dec_key,
-            Err(_e) => {
-                let mut rng = SgxRng::new()?;
-                SodiumPrivateKey::from_random(&mut rng)?
-            }
-        };
+        let decryption_privkey = store_dec_key
+            .load_from_local_filesystem()?
+            .into_sodium_priv_key()?;
 
         self.decryption_privkey = Some(decryption_privkey);
         Ok(self)
@@ -108,20 +88,44 @@ impl EnclaveKey {
 
     /// Get dec_key from key-vault node in initialization when joining newly.
     #[cfg(feature = "backup-enable")]
-    pub fn set_dec_key_by_member(
+    pub fn get_dec_key_from_remotelly_sealed(
         mut self,
         client_config: &ClientConfig,
         key_vault_endpoint: &str,
     ) -> Result<Self> {
-        let decryption_privkey = Self::get_dec_key(&client_config, &key_vault_endpoint)?;
+        let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
+        let get_dec_key_request = KeyVaultRequest::new(
+            KeyVaultCmd::RecoverEnclaveDecrptionKey,
+            RecoverEnclaveDecryptionKeyRequestBody::default(),
+        );
+        let decryption_privkey: SodiumPrivateKey = mra_tls_client.send_json(get_dec_key_request)?;
 
         self.decryption_privkey = Some(decryption_privkey);
         Ok(self)
     }
 
+    pub fn get_new_gen_dec_key<R: RngCore + CryptoRng>(mut self, rng: &mut R) -> Result<Self> {
+        let decryption_privkey = SodiumPrivateKey::from_random(rng)?;
+        self.decryption_privkey = Some(decryption_privkey);
+        Ok(self)
+    }
+
+    pub fn store_dec_key_to_local(&self, store_dec_key: &StoreEnclaveDecryptionKey) -> Result<()> {
+        let encoded = self
+            .decryption_privkey
+            .as_ref()
+            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?
+            .try_into_sealing()?;
+        let sealed =
+            SealedEnclaveDecryptionKey::decode(&encoded).map_err(|e| anyhow!("{:?}", e))?;
+        store_dec_key
+            .save_to_local_filesystem(&sealed)
+            .map_err(Into::into)
+    }
+
     /// Sealing locally, make it persistent, and save it in the key-vault node as well
     #[cfg(feature = "backup-enable")]
-    pub fn store_dec_key(
+    pub fn store_dec_key_to_remote(
         &self,
         client_config: &ClientConfig,
         key_vault_endpoint: &str,
@@ -133,26 +137,11 @@ impl EnclaveKey {
             .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?;
         let key_vault_request = KeyVaultRequest::new(
             KeyVaultCmd::StoreEnclaveDecryptionKey,
-            StoreEnclaveDecryptionKeyRequestBody::new(dec_key.clone()),
+            BackupEnclaveDecryptionKeyRequestBody::new(dec_key.clone()),
         );
         let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
 
         Ok(())
-    }
-
-    /// After trying to get the local sealed dec_key, get it to key-vault node
-    #[cfg(feature = "backup-enable")]
-    fn get_dec_key(
-        client_config: &ClientConfig,
-        key_vault_endpoint: &str,
-    ) -> Result<SodiumPrivateKey> {
-        unimplemented!();
-        // let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
-        // let get_dec_key_request = KeyVaultRequest::new(KeyVaultCmd::RecoverEnclaveDecrptionKey, recover_request);
-        // let dec_key: SodiumPrivateKey =
-        //     mra_tls_client.send_json(get_dec_key_request)?;
-
-        // Ok(dec_key)
     }
 
     pub fn sign(&self, msg: &[u8]) -> Result<(Signature, RecoveryId)> {

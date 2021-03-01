@@ -79,7 +79,6 @@ contract ReportHandle {
         address inpVerifyingKey = BytesUtils.toAddress(extractElement(quote, 368, 20), 0);
         bytes32 inpEncryptionKey = BytesUtils.toBytes32(extractElement(quote, 388, 32), 0);
         require(verifyingKeyMapping[inpVerifyingKey] == address(0), "The verifying key has already been registered.");
-        require(encryptionKeyMapping[inpEncryptionKey] == bytes32(0), "The encryption key has already been registered.");
 
         return (inpMrEnclave, inpVerifyingKey, inpEncryptionKey);
     }

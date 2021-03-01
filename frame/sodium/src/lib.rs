@@ -38,5 +38,13 @@ use std_xsalsa20poly1305 as xsalsa20poly1305;
 mod crypto;
 #[cfg(feature = "sgx")]
 pub mod rng;
+#[cfg(feature = "sgx")]
+pub mod sealing;
+#[cfg(feature = "sgx")]
+pub mod store_dec_key;
 
 pub use crypto::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE};
+#[cfg(feature = "sgx")]
+pub use sealing::SealedEnclaveDecryptionKey;
+#[cfg(feature = "sgx")]
+pub use store_dec_key::StoreEnclaveDecryptionKey;
