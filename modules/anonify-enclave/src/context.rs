@@ -30,7 +30,7 @@ use frame_mra_tls::{
     AttestedTlsConfig, Client, ClientConfig,
 };
 use frame_runtime::traits::*;
-use frame_sodium::{rng::SgxRng, SodiumCiphertext, SodiumPubKey, StoreEnclaveDecryptionKey};
+use frame_sodium::{SodiumCiphertext, SodiumPubKey, StoreEnclaveDecryptionKey};
 #[cfg(feature = "backup-enable")]
 use frame_treekem::PathSecret;
 use frame_treekem::{
@@ -361,28 +361,41 @@ impl AnonifyEnclaveContext {
         let enclave_key = {
             let enc_key = EnclaveKey::new()?;
             // Trying set the enclave decryption key from local storage.
-            match enc_key.set_dec_key_from_locally_sealed(&store_enclave_dec_key) {
+            match enc_key
+                .clone()
+                .get_dec_key_from_locally_sealed(&store_enclave_dec_key)
+            {
                 Ok(enclave_key) => enclave_key,
                 // If not, trying set the key from remote key-vault node.
                 Err(_e) => {
+                    // If the backup enabled, try to fetch the enclave decryption key from the remote key_vault node.
+                    #[cfg(feature = "backup-enable")]
                     match enc_key
-                        .set_dec_key_from_remotelly_sealed(&client_config, &key_vault_endpoint)
+                        .clone()
+                        .get_dec_key_from_remotelly_sealed(&client_config, &key_vault_endpoint)
                     {
                         Ok(enclave_key) => enclave_key,
                         Err(_e) => {
                             // new anonify group will be created.
                             if my_roster_idx == 0 {
-                                enc_key.set_new_dec_key()?
+                                enc_key.get_new_gen_dec_key()?
                             } else {
+                                // should panic because it failed when initializing the node.
+                                panic!("The node cannot be initialized because there is no Enclave decryption key either locally or remotely.");
                             }
                         }
                     }
+
+                    // If the backup disabled, generate a new Enclave decryption key on each node.
+                    #[cfg(not(feature = "backup-enable"))]
+                    enc_key.get_new_gen_dec_key()?
                 }
             }
         };
 
+        enclave_key.store_dec_key_to_local(&store_enclave_dec_key)?;
         #[cfg(feature = "backup-enable")]
-        enclave_key.store_dec_key_to_key_vault(&client_config, &key_vault_endpoint)?;
+        enclave_key.store_dec_key_to_remote(&client_config, &key_vault_endpoint)?;
 
         Ok(AnonifyEnclaveContext {
             spid,

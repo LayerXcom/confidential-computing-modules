@@ -2,6 +2,7 @@
 
 use crate::error::{EnclaveError, Result};
 use anonify_ecall_types::*;
+use anyhow::anyhow;
 use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
 use frame_enclave::EnclaveEngine;
 #[cfg(feature = "backup-enable")]
@@ -13,9 +14,10 @@ use frame_mra_tls::{
     Client, ClientConfig,
 };
 use frame_runtime::traits::*;
-#[cfg(feature = "backup-enable")]
-use frame_sodium::rng::SgxRng;
-use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, SODIUM_PUBLIC_KEY_SIZE};
+use frame_sodium::{
+    rng::SgxRng, SealedEnclaveDecryptionKey, SodiumCiphertext, SodiumPrivateKey, SodiumPubKey,
+    StoreEnclaveDecryptionKey, SODIUM_PUBLIC_KEY_SIZE,
+};
 use secp256k1::{
     self, util::SECRET_KEY_SIZE, Message, PublicKey, RecoveryId, SecretKey, Signature,
 };
@@ -71,7 +73,7 @@ impl EnclaveKey {
 
     /// Setting the Enclave decryption key sealed and stored in local storage
     /// The newly joining node should fail because it has not stored it.
-    pub fn set_dec_key_from_locally_sealed(
+    pub fn get_dec_key_from_locally_sealed(
         mut self,
         store_dec_key: &StoreEnclaveDecryptionKey,
     ) -> Result<Self> {
@@ -85,34 +87,23 @@ impl EnclaveKey {
 
     /// Get dec_key from key-vault node in initialization when joining newly.
     #[cfg(feature = "backup-enable")]
-    pub fn set_dec_key_from_remotelly_sealed(
+    pub fn get_dec_key_from_remotelly_sealed(
         mut self,
         client_config: &ClientConfig,
         key_vault_endpoint: &str,
     ) -> Result<Self> {
-        let decryption_privkey = Self::get_dec_key(&client_config, &key_vault_endpoint)?;
-
-        self.decryption_privkey = Some(decryption_privkey);
-        Ok(self)
-    }
-
-    /// After trying to get the local sealed dec_key, get it to key-vault node
-    #[cfg(feature = "backup-enable")]
-    fn get_dec_key(
-        client_config: &ClientConfig,
-        key_vault_endpoint: &str,
-    ) -> Result<SodiumPrivateKey> {
         let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
         let get_dec_key_request = KeyVaultRequest::new(
             KeyVaultCmd::RecoverEnclaveDecrptionKey,
             RecoverEnclaveDecryptionKeyRequestBody::default(),
         );
-        let dec_key: SodiumPrivateKey = mra_tls_client.send_json(get_dec_key_request)?;
+        let decryption_privkey: SodiumPrivateKey = mra_tls_client.send_json(get_dec_key_request)?;
 
-        Ok(dec_key)
+        self.decryption_privkey = Some(decryption_privkey);
+        Ok(self)
     }
 
-    pub fn set_new_dec_key(mut self) -> Result<Self> {
+    pub fn get_new_gen_dec_key(mut self) -> Result<Self> {
         let decryption_privkey = {
             let mut rng = SgxRng::new()?;
             SodiumPrivateKey::from_random(&mut rng)?
@@ -122,22 +113,22 @@ impl EnclaveKey {
         Ok(self)
     }
 
-    /// Get dec_key from key-vault node in initialization when joining newly.
-    #[cfg(feature = "backup-enable")]
-    pub fn set_dec_key_by_member(
-        mut self,
-        client_config: &ClientConfig,
-        key_vault_endpoint: &str,
-    ) -> Result<Self> {
-        let decryption_privkey = Self::get_dec_key(&client_config, &key_vault_endpoint)?;
-
-        self.decryption_privkey = Some(decryption_privkey);
-        Ok(self)
+    pub fn store_dec_key_to_local(&self, store_dec_key: &StoreEnclaveDecryptionKey) -> Result<()> {
+        let encoded = self
+            .decryption_privkey
+            .as_ref()
+            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?
+            .try_into_sealing()?;
+        let sealed =
+            SealedEnclaveDecryptionKey::decode(&encoded).map_err(|e| anyhow!("{:?}", e))?;
+        store_dec_key
+            .save_to_local_filesystem(&sealed)
+            .map_err(Into::into)
     }
 
     /// Sealing locally, make it persistent, and save it in the key-vault node as well
     #[cfg(feature = "backup-enable")]
-    pub fn store_dec_key_to_key_vault(
+    pub fn store_dec_key_to_remote(
         &self,
         client_config: &ClientConfig,
         key_vault_endpoint: &str,
