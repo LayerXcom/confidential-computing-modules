@@ -153,5 +153,4 @@ pub fn set_env_vars() {
         "IAS_URL",
         "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report",
     );
-    env::set_var("AUDITOR_ENDPOINT", "test");
 }
