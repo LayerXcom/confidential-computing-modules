@@ -83,6 +83,14 @@ RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \
   -p frame-retrier \
   -p frame-sodium -- --nocapture
 
+#
 # Compile Checks
+#
 
 ./scripts/build-cli.sh
+cd ${ANONIFY_ROOT}/example/erc20/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo c
+cd ${ANONIFY_ROOT}/example/key-vault/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo c
+cd ${ANONIFY_ROOT}/example/wallet
+RUST_BACKTRACE=1 RUST_LOG=debug cargo c
