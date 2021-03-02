@@ -21,7 +21,7 @@ echo "Integration testing..."
 cd ${ANONIFY_ROOT}/scripts
 unset BACKUP
 export ENCLAVE_PKG_NAME=key_vault
-make DEBUG=1 ENCLAVE_DIR=nodes/key-vault/enclave
+make DEBUG=1 ENCLAVE_DIR=example/key-vault/enclave
 export BACKUP=disable
 export ENCLAVE_PKG_NAME=erc20
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
