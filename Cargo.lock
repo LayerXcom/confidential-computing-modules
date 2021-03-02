@@ -2700,6 +2700,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "key-vault-server"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "anonify-eth-driver",
+ "failure",
+ "frame-host",
+ "key-vault-node-server",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "language-tags"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
