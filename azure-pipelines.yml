@@ -36,14 +36,5 @@ stages:
         tags: latest
         dockerfile: ./docker/erc20.Dockerfile
         buildContext: .
-    - task: Docker@2
-      displayName: Build and Push key-vault image
-      inputs:
-        command: buildAndPush
-        containerRegistry: anonify-ci-cd-acr
-        repository: key-vault
-        tags: latest
-        dockerfile: ./docker/keyvault.Dockerfile
-        buildContext: .
     - script: docker image prune -f
       displayName: Remove dangling images
