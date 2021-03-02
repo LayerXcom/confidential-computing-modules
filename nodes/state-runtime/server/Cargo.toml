@@ -1,7 +1,7 @@
 [package]
 name = "state-runtime-node-server"
-version = "0.1.0"
-authors = ["osuketh <dish230@gmail.com>"]
+version = "0.5.1"
+authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 
 [dependencies]
