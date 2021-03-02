@@ -279,7 +279,6 @@ async fn test_skip_invalid_event() {
 async fn test_node_recovery() {
     set_env_vars();
     set_server_env_vars();
-    env::remove_var("AUDITOR_ENDPOINT");
 
     let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
     let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");

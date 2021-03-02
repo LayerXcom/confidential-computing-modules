@@ -306,6 +306,7 @@ impl AnonifyEnclaveContext {
 
         let source = match env::var("AUDITOR_ENDPOINT") {
             Err(_) => PathSecretSource::Local,
+            // just for unit testing (test_app_msg_correctness)
             #[cfg(debug_assertions)]
             Ok(test) if test == "test" => {
                 const UNTIL_ROSTER_IDX: usize = 10;
