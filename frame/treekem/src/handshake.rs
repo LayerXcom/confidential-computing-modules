@@ -117,8 +117,7 @@ impl DirectPathNodeMsg {
 pub enum PathSecretSource {
     Local,
     Remote(String),
-    /// just for test use to derive new path secret depending on current path secret.
-    LocalTest(CurrentPathSecret),
+    #[cfg(debug_assertions)]
     LocalTestKV(PathSecretKVS),
 }
 

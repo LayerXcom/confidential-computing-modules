@@ -187,14 +187,6 @@ impl GroupState {
     ) -> Result<PathSecret> {
         match source {
             PathSecretSource::Local => Ok(PathSecret::new_from_random_sgx()),
-            // just for test use to derive new path secret depending on current path secret.
-            PathSecretSource::LocalTest(current_path_secret) => {
-                let access_key = AccessKey::new(roster_idx, epoch);
-                let mut current = current_path_secret.0.write().unwrap();
-                let next = current.clone().derive_next(access_key)?;
-                *current = next.clone();
-                Ok(next)
-            }
             #[cfg(debug_assertions)]
             PathSecretSource::LocalTestKV(db) => {
                 db.get(roster_idx, epoch).cloned().ok_or_else(|| {
