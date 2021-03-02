@@ -114,6 +114,7 @@ impl Handshake for GroupState {
                             }
                         }
                     }
+                    #[cfg(debug_assertions)]
                     PathSecretSource::LocalTestKV(_) => {
                         Self::request_new_path_secret(source, self.my_roster_idx, self.epoch)?
                     }
@@ -194,6 +195,7 @@ impl GroupState {
                 *current = next.clone();
                 Ok(next)
             }
+            #[cfg(debug_assertions)]
             PathSecretSource::LocalTestKV(db) => {
                 db.get(roster_idx, epoch).cloned().ok_or_else(|| {
                     anyhow!(
