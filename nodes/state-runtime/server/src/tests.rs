@@ -4,6 +4,7 @@ use anonify_ecall_types::input;
 use anonify_eth_driver::eth::*;
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
+use frame_config::{ABI_PATH, BIN_PATH};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
@@ -51,7 +52,6 @@ async fn test_multiple_messages() {
     set_env_vars();
     set_server_env_vars();
 
-    let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
     let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
 
     let enclave = EnclaveDir::new()
@@ -100,7 +100,7 @@ async fn test_multiple_messages() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
-        &abi_path,
+        &*ABI_PATH,
         &eth_url,
         &contract_address.contract_address,
     )
@@ -158,7 +158,6 @@ async fn test_skip_invalid_event() {
     set_env_vars();
     set_server_env_vars();
 
-    let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
     let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
 
     let enclave = EnclaveDir::new()
@@ -207,7 +206,7 @@ async fn test_skip_invalid_event() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
-        &abi_path,
+        &*ABI_PATH,
         &eth_url,
         &contract_address.contract_address,
     )
@@ -281,7 +280,6 @@ async fn test_node_recovery() {
     set_server_env_vars();
     env::remove_var("AUDITOR_ENDPOINT");
 
-    let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
     let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
 
     let enclave = EnclaveDir::new()
@@ -365,7 +363,7 @@ async fn test_node_recovery() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
-        &abi_path,
+        &*ABI_PATH,
         &eth_url,
         &contract_address.contract_address,
     )
@@ -445,7 +443,7 @@ async fn test_node_recovery() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
-        &abi_path,
+        &*ABI_PATH,
         &eth_url,
         &contract_address.contract_address,
     )
@@ -483,7 +481,6 @@ async fn test_join_group_then_handshake() {
     set_env_vars();
     set_server_env_vars();
 
-    let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
     let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
 
     // Enclave must be initialized in main function.
@@ -569,7 +566,7 @@ async fn test_join_group_then_handshake() {
         test::read_body_json(resp).await;
     let enc_key1 = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
-        &abi_path,
+        &*ABI_PATH,
         &eth_url,
         &contract_address.contract_address,
     )
@@ -625,7 +622,7 @@ async fn test_join_group_then_handshake() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
-        &abi_path,
+        &*ABI_PATH,
         &eth_url,
         &contract_address.contract_address,
     )
@@ -696,7 +693,6 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     set_env_vars();
     set_server_env_vars();
 
-    let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
     let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
 
     let enclave = EnclaveDir::new()
@@ -749,7 +745,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
-        &abi_path,
+        &*ABI_PATH,
         &eth_url,
         &contract_address.contract_address,
     )
@@ -896,8 +892,6 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
 }
 
 fn set_server_env_vars() {
-    env::set_var("ABI_PATH", "../../../contract-build/Anonify.abi");
-    env::set_var("BIN_PATH", "../../../contract-build/Anonify.bin");
     env::set_var("CONFIRMATIONS", "0");
     env::set_var("ACCOUNT_INDEX", "0");
     env::set_var("PASSWORD", "anonify0101");

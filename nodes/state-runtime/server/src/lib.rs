@@ -1,4 +1,5 @@
 use anonify_eth_driver::{traits::*, Dispatcher, EventCache};
+use frame_config::{ABI_PATH, BIN_PATH};
 use sgx_types::sgx_enclave_id_t;
 use std::env;
 
@@ -28,8 +29,6 @@ where
 {
     pub fn new(eid: sgx_enclave_id_t) -> Self {
         let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
-        let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
-        let bin_path = env::var("BIN_PATH").expect("BIN_PATH is not set");
         let account_index: usize = env::var("ACCOUNT_INDEX")
             .expect("ACCOUNT_INDEX is not set")
             .parse()
@@ -50,8 +49,8 @@ where
         Server {
             eid,
             eth_url,
-            abi_path,
-            bin_path,
+            abi_path: (&*ABI_PATH.to_str().unwrap()).to_string(),
+            bin_path: (&*BIN_PATH.to_str().unwrap()).to_string(),
             confirmations,
             account_index,
             sync_time,

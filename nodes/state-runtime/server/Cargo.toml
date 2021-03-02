@@ -10,6 +10,7 @@ anonify-ecall-types = { path = "../../../modules/anonify-ecall-types"}
 anonify-eth-driver = { path = "../../../modules/anonify-eth-driver", default-features = false }
 frame-host = { path = "../../../frame/host" }
 frame-common = { path = "../../../frame/common" }
+frame-config = { path = "../../../frame/config" }
 sgx_types = "1.1.1"
 actix-web = "3"
 actix-rt = "1.1"
