@@ -11,6 +11,7 @@ use frame_common::{
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
+use frame_config::{ABI_PATH, BIN_PATH};
 use once_cell::sync::Lazy;
 use serde_json::json;
 use sgx_types::*;
@@ -22,8 +23,6 @@ use web3::{
     Web3,
 };
 
-const ABI_PATH: &str = "../../contract-build/Anonify.abi";
-const BIN_PATH: &str = "../../contract-build/Anonify.bin";
 const CONFIRMATIONS: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
@@ -43,7 +42,7 @@ pub async fn get_enclave_encryption_key(
     let web3_conn = web3.eth();
 
     let address = Address::from_str(contract_addr).unwrap();
-    let f = File::open(ABI_PATH).unwrap();
+    let f = File::open(&*ABI_PATH).unwrap();
     let abi = ContractABI::load(BufReader::new(f)).unwrap();
 
     let query_enclave_encryption_key: Vec<u8> = Contract::new(web3_conn, address, abi)
@@ -87,15 +86,15 @@ async fn test_integration_eth_construct() {
         .deploy(
             deployer_addr.clone(),
             gas,
-            ABI_PATH,
-            BIN_PATH,
+            &*ABI_PATH,
+            &*BIN_PATH,
             CONFIRMATIONS,
             JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
     dispatcher
-        .set_contract_address(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, &*ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -197,15 +196,15 @@ async fn test_auto_notification() {
         .deploy(
             deployer_addr.clone(),
             gas,
-            ABI_PATH,
-            BIN_PATH,
+            &*ABI_PATH,
+            &*BIN_PATH,
             CONFIRMATIONS,
             JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
     dispatcher
-        .set_contract_address(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, &*ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -338,15 +337,15 @@ async fn test_integration_eth_transfer() {
         .deploy(
             deployer_addr.clone(),
             gas,
-            ABI_PATH,
-            BIN_PATH,
+            &*ABI_PATH,
+            &*BIN_PATH,
             CONFIRMATIONS,
             JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
     dispatcher
-        .set_contract_address(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, &*ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -504,15 +503,15 @@ async fn test_key_rotation() {
         .deploy(
             deployer_addr.clone(),
             gas,
-            ABI_PATH,
-            BIN_PATH,
+            &*ABI_PATH,
+            &*BIN_PATH,
             CONFIRMATIONS,
             JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
     dispatcher
-        .set_contract_address(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, &*ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -622,15 +621,15 @@ async fn test_integration_eth_approve() {
         .deploy(
             deployer_addr.clone(),
             gas,
-            ABI_PATH,
-            BIN_PATH,
+            &*ABI_PATH,
+            &*BIN_PATH,
             CONFIRMATIONS,
             JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
     dispatcher
-        .set_contract_address(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, &*ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -775,15 +774,15 @@ async fn test_integration_eth_transfer_from() {
         .deploy(
             deployer_addr.clone(),
             gas,
-            ABI_PATH,
-            BIN_PATH,
+            &*ABI_PATH,
+            &*BIN_PATH,
             CONFIRMATIONS,
             JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
     dispatcher
-        .set_contract_address(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, &*ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -1112,15 +1111,15 @@ async fn test_integration_eth_mint() {
         .deploy(
             deployer_addr.clone(),
             gas,
-            ABI_PATH,
-            BIN_PATH,
+            &*ABI_PATH,
+            &*BIN_PATH,
             CONFIRMATIONS,
             JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
     dispatcher
-        .set_contract_address(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, &*ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
@@ -1245,15 +1244,15 @@ async fn test_integration_eth_burn() {
         .deploy(
             deployer_addr.clone(),
             gas,
-            ABI_PATH,
-            BIN_PATH,
+            &*ABI_PATH,
+            &*BIN_PATH,
             CONFIRMATIONS,
             JOIN_GROUP_CMD,
         )
         .await
         .unwrap();
     dispatcher
-        .set_contract_address(&contract_addr, ABI_PATH)
+        .set_contract_address(&contract_addr, &*ABI_PATH)
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);

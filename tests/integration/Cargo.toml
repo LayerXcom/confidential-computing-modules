@@ -9,6 +9,7 @@ sgx_types = "1.1.1"
 frame-sodium = { path = "../../frame/sodium" }
 frame-common = { path = "../../frame/common" }
 frame-runtime = { path = "../../frame/runtime" }
+frame-config = { path = "../../frame/config" }
 frame-host = { path = "../../frame/host" }
 anonify-eth-driver = { path = "../../modules/anonify-eth-driver" }
 anonify-ecall-types = { path = "../../modules/anonify-ecall-types" }

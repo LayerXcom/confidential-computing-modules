@@ -21,7 +21,7 @@ echo "Integration testing..."
 cd ${ANONIFY_ROOT}/scripts
 unset BACKUP
 export ENCLAVE_PKG_NAME=key_vault
-make DEBUG=1 ENCLAVE_DIR=nodes/key-vault/enclave
+make DEBUG=1 ENCLAVE_DIR=example/key-vault/enclave
 export BACKUP=disable
 export ENCLAVE_PKG_NAME=erc20
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
@@ -57,7 +57,7 @@ unset BACKUP
 export ENCLAVE_PKG_NAME=erc20
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
-cd ${ANONIFY_ROOT}/nodes/key-vault/server
+cd ${ANONIFY_ROOT}/nodes/key-vault
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocapture
 sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_recover_without_key_vault -- --nocapture
@@ -83,6 +83,14 @@ RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \
   -p frame-retrier \
   -p frame-sodium -- --nocapture
 
+#
 # Compile Checks
+#
 
 ./scripts/build-cli.sh
+cd ${ANONIFY_ROOT}/example/erc20/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo c
+cd ${ANONIFY_ROOT}/example/key-vault/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo c
+cd ${ANONIFY_ROOT}/example/wallet
+RUST_BACKTRACE=1 RUST_LOG=debug cargo c

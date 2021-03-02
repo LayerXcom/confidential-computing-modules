@@ -2506,6 +2506,7 @@ dependencies = [
  "anonify-eth-driver",
  "ethabi",
  "frame-common",
+ "frame-config",
  "frame-host",
  "frame-runtime",
  "frame-sodium",
@@ -2697,6 +2698,18 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "web3",
+]
+
+[[package]]
+name = "key-vault-server"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "anonify-eth-driver",
+ "failure",
+ "frame-host",
+ "key-vault-node-server",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -4525,6 +4538,7 @@ dependencies = [
  "ethabi",
  "failure",
  "frame-common",
+ "frame-config",
  "frame-host",
  "frame-runtime",
  "frame-sodium",

@@ -41,6 +41,20 @@ pub static PJ_ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
     current_dir
 });
 
+pub static ABI_PATH: Lazy<PathBuf> = Lazy::new(|| {
+    let abi_path_from_root = env::var("ABI_PATH").expect("ABI_PATH is not set");
+    let mut abi_path = PJ_ROOT_DIR.clone();
+    abi_path.push(abi_path_from_root);
+    abi_path
+});
+
+pub static BIN_PATH: Lazy<PathBuf> = Lazy::new(|| {
+    let bin_path_from_root = env::var("BIN_PATH").expect("BIN_PATH is not set");
+    let mut bin_path = PJ_ROOT_DIR.clone();
+    bin_path.push(bin_path_from_root);
+    bin_path
+});
+
 pub static ANONIFY_PARAMS_DIR: Lazy<PathBuf> = Lazy::new(|| {
     let mut measurement_file_path = PJ_ROOT_DIR.clone();
     measurement_file_path.push(".anonify");
@@ -68,8 +82,8 @@ pub static ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
 
 #[cfg(feature = "sgx")]
 pub static ANONIFY_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
-    let pkg_name =
-        env::var("ANONIFY_ENCLAVE_PKG_NAME").expect("ANONIFY_ENCLAVE_PKG_NAME is not set");
+    let pkg_name = env::var("STATE_RUNTIME_ENCLAVE_PKG_NAME")
+        .expect("STATE_RUNTIME_ENCLAVE_PKG_NAME is not set");
     let mut measurement_file_path = ANONIFY_PARAMS_DIR.clone();
     measurement_file_path.push(format!("{}_measurement.txt", pkg_name));
 

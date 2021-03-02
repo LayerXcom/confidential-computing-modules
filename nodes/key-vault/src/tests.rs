@@ -4,7 +4,7 @@ use anonify_ecall_types::input;
 use anonify_eth_driver::eth::{EthDeployer, EthSender, EventWatcher};
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;
-use frame_config::PJ_ROOT_DIR;
+use frame_config::{PJ_ROOT_DIR, ABI_PATH};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
@@ -33,7 +33,6 @@ async fn test_backup_path_secret() {
     set_server_env_vars();
     clear_path_secrets();
 
-    let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
     let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
 
     // Setup key-vault server
@@ -117,7 +116,7 @@ async fn test_backup_path_secret() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
-        &abi_path,
+        &*ABI_PATH,
         &eth_url,
         &contract_address.contract_address,
     )
@@ -191,7 +190,6 @@ async fn test_recover_without_key_vault() {
     set_server_env_vars();
     clear_path_secrets();
 
-    let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
     let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
 
     // Setup key-vault server
@@ -275,7 +273,7 @@ async fn test_recover_without_key_vault() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
-        &abi_path,
+        &*ABI_PATH,
         &eth_url,
         &contract_address.contract_address,
     )
@@ -343,7 +341,6 @@ async fn test_manually_backup_all() {
     set_server_env_vars();
     clear_path_secrets();
 
-    let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
     let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
 
     // Setup key-vault server
@@ -428,7 +425,7 @@ async fn test_manually_backup_all() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
-        &abi_path,
+        &*ABI_PATH,
         &eth_url,
         &contract_address.contract_address,
     )
@@ -509,7 +506,6 @@ async fn test_manually_recover_all() {
     set_server_env_vars();
     clear_path_secrets();
 
-    let abi_path = env::var("ABI_PATH").expect("ABI_PATH is not set");
     let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
 
     // Setup key-vault server
@@ -594,7 +590,7 @@ async fn test_manually_recover_all() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
-        &abi_path,
+        &*ABI_PATH,
         &eth_url,
         &contract_address.contract_address,
     )
@@ -685,8 +681,6 @@ fn set_env_vars() {
 }
 
 fn set_server_env_vars() {
-    env::set_var("ABI_PATH", "../../../contract-build/Anonify.abi");
-    env::set_var("BIN_PATH", "../../../contract-build/Anonify.bin");
     env::set_var("CONFIRMATIONS", "0");
     env::set_var("ACCOUNT_INDEX", "0");
     env::set_var("PASSWORD", "anonify0101");
