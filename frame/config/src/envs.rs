@@ -69,7 +69,7 @@ pub static ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
 #[cfg(feature = "sgx")]
 pub static ANONIFY_ENCLAVE_MEASUREMENT: Lazy<EnclaveMeasurement> = Lazy::new(|| {
     let pkg_name =
-        env::var("ANONIFY_ENCLAVE_PKG_NAME").expect("ANONIFY_ENCLAVE_PKG_NAME is not set");
+        env::var("STATE_RUNTIME_ENCLAVE_PKG_NAME").expect("STATE_RUNTIME_ENCLAVE_PKG_NAME is not set");
     let mut measurement_file_path = ANONIFY_PARAMS_DIR.clone();
     measurement_file_path.push(format!("{}_measurement.txt", pkg_name));
 
