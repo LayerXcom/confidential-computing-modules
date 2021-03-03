@@ -105,7 +105,7 @@ fn recover_path_secret_from_key_vault_for_test(
 
     let recover_request_body = RecoverPathSecretRequestBody::new(roster_idx, id.to_vec());
     let ias_url = env::var("IAS_URL").expect("IAS_URL is not set");
-    let key_vault_endpoint = env::var("KEY_VAULT_ENDPOINT").expect("KEY_VAULT_ENDPOINT is not set");
+    let key_vault_endpoint = env::var("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME").expect("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME is not set");
     let spid = env::var("SPID").expect("SPID is not set");
     let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
 

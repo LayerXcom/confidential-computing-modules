@@ -6,7 +6,7 @@ use std::{env, io, sync::Arc};
 #[actix_web::main]
 async fn main() -> io::Result<()> {
     tracing_subscriber::fmt::init();
-    let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set.");
+    let state_runtime_url = env::var("STATE_RUNTIME_URL").expect("STATE_RUNTIME_URL is not set.");
     let num_workers: usize = env::var("NUM_WORKERS")
         .unwrap_or_else(|_| "16".to_string())
         .parse()
@@ -24,7 +24,7 @@ async fn main() -> io::Result<()> {
             .route("/api/v1/start", web::post().to(handle_start))
             .route("/api/v1/stop", web::post().to(handle_stop))
     })
-    .bind(anonify_url)?
+    .bind(state_runtime_url)?
     .workers(num_workers)
     .run()
     .await

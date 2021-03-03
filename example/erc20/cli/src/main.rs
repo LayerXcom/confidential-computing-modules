@@ -38,7 +38,7 @@ fn main() {
     let mut csprng = rand::thread_rng();
 
     let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
-    let anonify_url = env::var("ANONIFY_URL").expect("ANONIFY_URL is not set");
+    let anonify_url = env::var("STATE_RUNTIME_URL").expect("STATE_RUNTIME_URL is not set");
 
     match matches.subcommand() {
         (ANONIFY_COMMAND, Some(matches)) => subcommand_anonify(
