@@ -34,6 +34,9 @@ services:
       IAS_ROOT_CERT_PATH: ${IAS_ROOT_CERT_PATH}
       EVENT_LIMIT: ${EVENT_LIMIT}
       UNLOCK_DURATION: ${UNLOCK_DURATION}
+    # Add an lookup from the IP Adress to FQDN because of the following limition of rustls
+    # https://github.com/ctz/rustls/issues/184
+    # https://github.com/briansmith/webpki/issues/54
     extra_hosts:
       - "${KEY_VAULT_FQDN}:${KEY_VAULT_IP_ADDRESS}"
     stdin_open: true
