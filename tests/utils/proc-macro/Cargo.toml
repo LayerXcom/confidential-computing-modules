@@ -1,6 +1,6 @@
 [package]
 name = "test-utils-proc-macro"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 
