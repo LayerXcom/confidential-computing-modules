@@ -15,9 +15,9 @@ use reqwest::Client;
 use serde_json::json;
 use std::path::PathBuf;
 
-pub(crate) fn deploy(anonify_url: String) -> Result<()> {
+pub(crate) fn deploy(state_runtime_url: String) -> Result<()> {
     let res = Client::new()
-        .post(&format!("{}/api/v1/deploy", &anonify_url))
+        .post(&format!("{}/api/v1/deploy", &state_runtime_url))
         .send()?
         .text()?;
 
@@ -25,10 +25,10 @@ pub(crate) fn deploy(anonify_url: String) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn join_group(anonify_url: String, contract_address: String) -> Result<()> {
+pub(crate) fn join_group(state_runtime_url: String, contract_address: String) -> Result<()> {
     let req = state_runtime_node_api::join_group::post::Request { contract_address };
     let res = Client::new()
-        .post(&format!("{}/api/v1/join_group", &anonify_url))
+        .post(&format!("{}/api/v1/join_group", &state_runtime_url))
         .json(&req)
         .send()?
         .text()?;
@@ -37,10 +37,10 @@ pub(crate) fn join_group(anonify_url: String, contract_address: String) -> Resul
     Ok(())
 }
 
-pub(crate) fn register_report(anonify_url: String, contract_address: String) -> Result<()> {
+pub(crate) fn register_report(state_runtime_url: String, contract_address: String) -> Result<()> {
     let req = state_runtime_node_api::register_report::post::Request { contract_address };
     let res = Client::new()
-        .post(&format!("{}/api/v1/register_report", &anonify_url))
+        .post(&format!("{}/api/v1/register_report", &state_runtime_url))
         .json(&req)
         .send()?
         .text()?;
@@ -49,10 +49,10 @@ pub(crate) fn register_report(anonify_url: String, contract_address: String) -> 
     Ok(())
 }
 
-pub(crate) fn update_mrenclave(anonify_url: String, contract_address: String) -> Result<()> {
+pub(crate) fn update_mrenclave(state_runtime_url: String, contract_address: String) -> Result<()> {
     let req = state_runtime_node_api::update_mrenclave::post::Request { contract_address };
     let res = Client::new()
-        .post(&format!("{}/api/v1/update_mrenclave", &anonify_url))
+        .post(&format!("{}/api/v1/update_mrenclave", &state_runtime_url))
         .json(&req)
         .send()?
         .text()?;
@@ -61,9 +61,12 @@ pub(crate) fn update_mrenclave(anonify_url: String, contract_address: String) ->
     Ok(())
 }
 
-pub(crate) fn get_enclave_encryption_key(anonify_url: String) -> Result<SodiumPubKey> {
+pub(crate) fn get_enclave_encryption_key(state_runtime_url: String) -> Result<SodiumPubKey> {
     let resp: state_runtime_node_api::enclave_encryption_key::get::Response = Client::new()
-        .get(&format!("{}/api/v1/enclave_encryption_key", &anonify_url))
+        .get(&format!(
+            "{}/api/v1/enclave_encryption_key",
+            &state_runtime_url
+        ))
         .send()?
         .json()?;
 
@@ -73,7 +76,7 @@ pub(crate) fn get_enclave_encryption_key(anonify_url: String) -> Result<SodiumPu
 pub(crate) fn init_state<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
-    anonify_url: String,
+    state_runtime_url: String,
     index: usize,
     total_supply: u64,
     enclave_encryption_key: &SodiumPubKey,
@@ -102,7 +105,7 @@ where
     .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
-        .post(&format!("{}/api/v1/state", &anonify_url))
+        .post(&format!("{}/api/v1/state", &state_runtime_url))
         .json(&state_runtime_node_api::state::post::Request::new(
             ciphertext,
         ))
@@ -116,7 +119,7 @@ where
 pub(crate) fn transfer<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
-    anonify_url: String,
+    state_runtime_url: String,
     index: usize,
     recipient: AccountId,
     amount: u64,
@@ -147,7 +150,7 @@ where
     .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
-        .post(&format!("{}/api/v1/state", &anonify_url))
+        .post(&format!("{}/api/v1/state", &state_runtime_url))
         .json(&state_runtime_node_api::state::post::Request::new(
             ciphertext,
         ))
@@ -161,7 +164,7 @@ where
 pub(crate) fn approve<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
-    anonify_url: String,
+    state_runtime_url: String,
     index: usize,
     spender: AccountId,
     amount: u64,
@@ -192,7 +195,7 @@ where
     .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
-        .post(&format!("{}/api/v1/state", &anonify_url))
+        .post(&format!("{}/api/v1/state", &state_runtime_url))
         .json(&state_runtime_node_api::state::post::Request::new(
             ciphertext,
         ))
@@ -206,7 +209,7 @@ where
 pub(crate) fn transfer_from<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
-    anonify_url: String,
+    state_runtime_url: String,
     index: usize,
     owner: AccountId,
     recipient: AccountId,
@@ -239,7 +242,7 @@ where
     .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
-        .post(&format!("{}/api/v1/state", &anonify_url))
+        .post(&format!("{}/api/v1/state", &state_runtime_url))
         .json(&state_runtime_node_api::state::post::Request::new(
             ciphertext,
         ))
@@ -253,7 +256,7 @@ where
 pub(crate) fn mint<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
-    anonify_url: String,
+    state_runtime_url: String,
     index: usize,
     recipient: AccountId,
     amount: u64,
@@ -284,7 +287,7 @@ where
     .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
-        .post(&format!("{}/api/v1/state", &anonify_url))
+        .post(&format!("{}/api/v1/state", &state_runtime_url))
         .json(&state_runtime_node_api::state::post::Request::new(
             ciphertext,
         ))
@@ -298,7 +301,7 @@ where
 pub(crate) fn burn<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
-    anonify_url: String,
+    state_runtime_url: String,
     index: usize,
     amount: u64,
     enclave_encryption_key: &SodiumPubKey,
@@ -327,7 +330,7 @@ where
     .map_err(|e| anyhow!("{:?}", e))?;
 
     let res = Client::new()
-        .post(&format!("{}/api/v1/state", &anonify_url))
+        .post(&format!("{}/api/v1/state", &state_runtime_url))
         .json(&state_runtime_node_api::state::post::Request::new(
             ciphertext,
         ))
@@ -338,9 +341,9 @@ where
     Ok(())
 }
 
-pub(crate) fn key_rotation(anonify_url: String) -> Result<()> {
+pub(crate) fn key_rotation(state_runtime_url: String) -> Result<()> {
     let res = Client::new()
-        .post(&format!("{}/api/v1/key_rotation", &anonify_url))
+        .post(&format!("{}/api/v1/key_rotation", &state_runtime_url))
         .send()?
         .text()?;
 
@@ -352,7 +355,7 @@ pub(crate) fn key_rotation(anonify_url: String) -> Result<()> {
 pub(crate) fn allowance<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
-    anonify_url: String,
+    state_runtime_url: String,
     index: usize,
     spender: AccountId,
     enclave_encryption_key: &SodiumPubKey,
@@ -381,7 +384,7 @@ where
     )
     .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
-        .get(&format!("{}/api/v1/state", &anonify_url))
+        .get(&format!("{}/api/v1/state", &state_runtime_url))
         .json(&state_runtime_node_api::state::get::Request::new(
             ciphertext,
         ))
@@ -395,7 +398,7 @@ where
 pub(crate) fn balance_of<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
-    anonify_url: String,
+    state_runtime_url: String,
     index: usize,
     enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
@@ -421,7 +424,7 @@ where
     )
     .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
-        .get(&format!("{}/api/v1/state", &anonify_url))
+        .get(&format!("{}/api/v1/state", &state_runtime_url))
         .json(&state_runtime_node_api::state::get::Request::new(
             ciphertext,
         ))
@@ -432,19 +435,25 @@ where
     Ok(())
 }
 
-pub(crate) fn start_sync_bc(anonify_url: String) -> Result<()> {
+pub(crate) fn start_sync_bc(state_runtime_url: String) -> Result<()> {
     Client::new()
-        .get(&format!("{}/api/v1/start_sync_bc", &anonify_url))
+        .get(&format!("{}/api/v1/start_sync_bc", &state_runtime_url))
         .send()?
         .text()?;
 
     Ok(())
 }
 
-pub(crate) fn set_contract_address(anonify_url: String, contract_address: String) -> Result<()> {
+pub(crate) fn set_contract_address(
+    state_runtime_url: String,
+    contract_address: String,
+) -> Result<()> {
     let req = state_runtime_node_api::contract_addr::post::Request::new(contract_address);
     Client::new()
-        .get(&format!("{}/api/v1/set_contract_address", &anonify_url))
+        .get(&format!(
+            "{}/api/v1/set_contract_address",
+            &state_runtime_url
+        ))
         .json(&req)
         .send()?
         .text()?;

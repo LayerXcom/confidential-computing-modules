@@ -38,14 +38,14 @@ fn main() {
     let mut csprng = rand::thread_rng();
 
     let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
-    let anonify_url = env::var("STATE_RUNTIME_URL").expect("STATE_RUNTIME_URL is not set");
+    let state_runtime_url = env::var("STATE_RUNTIME_URL").expect("STATE_RUNTIME_URL is not set");
 
     match matches.subcommand() {
         (ANONIFY_COMMAND, Some(matches)) => subcommand_anonify(
             term,
             root_dir,
             contract_addr,
-            anonify_url,
+            state_runtime_url,
             matches,
             rng,
             &mut csprng,
@@ -72,7 +72,7 @@ fn subcommand_anonify<R, CR>(
     mut term: Term,
     root_dir: PathBuf,
     default_contract_addr: String,
-    anonify_url: String,
+    state_runtime_url: String,
     matches: &ArgMatches,
     rng: &mut R,
     csprng: &mut CR,
@@ -82,7 +82,7 @@ fn subcommand_anonify<R, CR>(
 {
     match matches.subcommand() {
         ("deploy", Some(_)) => {
-            commands::deploy(anonify_url).expect("Failed to deploy command");
+            commands::deploy(state_runtime_url).expect("Failed to deploy command");
         }
         ("join_group", Some(matches)) => {
             let contract_addr = match matches.value_of("contract-addr") {
@@ -90,7 +90,8 @@ fn subcommand_anonify<R, CR>(
                 None => default_contract_addr,
             };
 
-            commands::join_group(anonify_url, contract_addr).expect("Failed to join_group command");
+            commands::join_group(state_runtime_url, contract_addr)
+                .expect("Failed to join_group command");
         }
         ("register_report", Some(matches)) => {
             let contract_addr = match matches.value_of("contract-addr") {
@@ -98,7 +99,7 @@ fn subcommand_anonify<R, CR>(
                 None => default_contract_addr,
             };
 
-            commands::register_report(anonify_url, contract_addr)
+            commands::register_report(state_runtime_url, contract_addr)
                 .expect("Failed to register_report command");
         }
         ("update_mrenclave", Some(matches)) => {
@@ -107,7 +108,7 @@ fn subcommand_anonify<R, CR>(
                 None => default_contract_addr,
             };
 
-            commands::update_mrenclave(anonify_url, contract_addr)
+            commands::update_mrenclave(state_runtime_url, contract_addr)
                 .expect("Failed to update_mrenclave command");
         }
         ("init_state", Some(matches)) => {
@@ -133,7 +134,7 @@ fn subcommand_anonify<R, CR>(
             commands::init_state(
                 &mut term,
                 root_dir,
-                anonify_url,
+                state_runtime_url,
                 keyfile_index,
                 total_supply,
                 &enclave_encryption_key,
@@ -167,7 +168,7 @@ fn subcommand_anonify<R, CR>(
             commands::transfer(
                 &mut term,
                 root_dir,
-                anonify_url,
+                state_runtime_url,
                 keyfile_index,
                 target_addr,
                 amount,
@@ -202,7 +203,7 @@ fn subcommand_anonify<R, CR>(
             commands::approve(
                 &mut term,
                 root_dir,
-                anonify_url,
+                state_runtime_url,
                 keyfile_index,
                 target_addr,
                 amount,
@@ -239,7 +240,7 @@ fn subcommand_anonify<R, CR>(
             commands::transfer_from(
                 &mut term,
                 root_dir,
-                anonify_url,
+                state_runtime_url,
                 keyfile_index,
                 owner_addr,
                 target_addr,
@@ -275,7 +276,7 @@ fn subcommand_anonify<R, CR>(
             commands::mint(
                 &mut term,
                 root_dir,
-                anonify_url,
+                state_runtime_url,
                 keyfile_index,
                 target_addr,
                 amount,
@@ -308,7 +309,7 @@ fn subcommand_anonify<R, CR>(
             commands::burn(
                 &mut term,
                 root_dir,
-                anonify_url,
+                state_runtime_url,
                 keyfile_index,
                 amount,
                 &enclave_encryption_key,
@@ -318,7 +319,7 @@ fn subcommand_anonify<R, CR>(
             .expect("Failed to burn command");
         }
         ("key_rotation", Some(_)) => {
-            commands::key_rotation(anonify_url).expect("Failed to key_rotation command");
+            commands::key_rotation(state_runtime_url).expect("Failed to key_rotation command");
         }
         ("allowance", Some(matches)) => {
             let keyfile_index: usize = matches
@@ -340,7 +341,7 @@ fn subcommand_anonify<R, CR>(
             commands::allowance(
                 &mut term,
                 root_dir,
-                anonify_url,
+                state_runtime_url,
                 keyfile_index,
                 spender_addr,
                 &enclave_encryption_key,
@@ -367,7 +368,7 @@ fn subcommand_anonify<R, CR>(
             commands::balance_of(
                 &mut term,
                 root_dir,
-                anonify_url,
+                state_runtime_url,
                 keyfile_index,
                 &enclave_encryption_key,
                 rng,
@@ -376,7 +377,7 @@ fn subcommand_anonify<R, CR>(
             .expect("Failed balance_of command");
         }
         ("start_sync_bc", Some(_)) => {
-            commands::start_sync_bc(anonify_url).expect("Failed to start_sync_bc command");
+            commands::start_sync_bc(state_runtime_url).expect("Failed to start_sync_bc command");
         }
         ("set_contract_address", Some(matches)) => {
             let contract_addr = match matches.value_of("contract-addr") {
@@ -384,12 +385,13 @@ fn subcommand_anonify<R, CR>(
                 None => default_contract_addr,
             };
 
-            commands::set_contract_address(anonify_url, contract_addr)
+            commands::set_contract_address(state_runtime_url, contract_addr)
                 .expect("Failed to set_contract_address command");
         }
         ("get_enclave_encryption_key", Some(_)) => {
-            let enclave_encryption_key = commands::get_enclave_encryption_key(anonify_url.clone())
-                .expect("Failed getting encryption key");
+            let enclave_encryption_key =
+                commands::get_enclave_encryption_key(state_runtime_url.clone())
+                    .expect("Failed getting encryption key");
             let encoded = base64::encode(&enclave_encryption_key.to_bytes());
             println!("{:?}", encoded);
         }
