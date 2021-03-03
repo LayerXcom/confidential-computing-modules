@@ -339,8 +339,8 @@ impl AnonifyEnclaveContext {
         let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
 
         #[cfg(feature = "backup-enable")]
-        let key_vault_endpoint =
-            env::var("KEY_VAULT_ENDPOINT").expect("KEY_VAULT_ENDPOINT is not set");
+        let key_vault_endpoint = env::var("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME")
+            .expect("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME is not set");
 
         #[cfg(feature = "backup-enable")]
         let client_config = {

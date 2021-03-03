@@ -6,7 +6,7 @@ source /root/.docker_bashrc
 export PATH=~/.cargo/bin:$PATH
 export SGX_MODE=HW
 export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
-export ANONIFY_URL=172.18.0.3:8080
+export STATE_RUNTIME_URL=172.18.0.3:8080
 export ETH_URL=http://172.18.0.2:8545
 export ANONYMOUS_ASSET_ABI_PATH="../../build/Anonify.abi"
 

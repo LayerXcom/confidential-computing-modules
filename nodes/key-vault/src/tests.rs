@@ -4,7 +4,7 @@ use anonify_ecall_types::input;
 use anonify_eth_driver::eth::{EthDeployer, EthSender, EventWatcher};
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;
-use frame_config::{PJ_ROOT_DIR, ABI_PATH};
+use frame_config::{ABI_PATH, PJ_ROOT_DIR};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
@@ -675,7 +675,6 @@ fn set_env_vars() {
         "IAS_URL",
         "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report",
     );
-    env::set_var("KEY_VAULT_ENDPOINT", "localhost:12345");
     env::set_var("ENCLAVE_PKG_NAME", "key_vault");
     env::set_var("PATH_SECRETS_DIR", ".anonify/test_pathsecrets");
 }

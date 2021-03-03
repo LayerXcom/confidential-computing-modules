@@ -29,7 +29,7 @@ impl EnclaveEngine for ServerStarter {
         let server_config = ServerConfig::from_attested_tls_config(attested_tls_config)?
             .set_attestation_report_verifier(IAS_ROOT_CERT.to_vec(), *ANONIFY_ENCLAVE_MEASUREMENT);
 
-        let key_vault_address = env::var("KEY_VAULT_ADDRESS")?;
+        let key_vault_address = env::var("KEY_VAULT_ENDPOINT_FOR_KEY_VAULT")?;
         let mut server = Server::new(key_vault_address, server_config);
         let store_path_secrets = enclave_context.store_path_secrets();
         let store_enclave_dec_key = enclave_context.store_enclave_dec_key();

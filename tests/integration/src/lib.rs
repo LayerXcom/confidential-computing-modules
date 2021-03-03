@@ -8,10 +8,10 @@ use frame_common::{
     state_types::NotifyState,
     traits::*,
 };
+use frame_config::{ABI_PATH, BIN_PATH};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
-use frame_config::{ABI_PATH, BIN_PATH};
 use once_cell::sync::Lazy;
 use serde_json::json;
 use sgx_types::*;
@@ -1393,7 +1393,6 @@ pub fn set_env_vars() {
         "IAS_URL",
         "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report",
     );
-    env::set_var("KEY_VAULT_ENDPOINT", "localhost:12345");
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
     env::set_var("BACKUP", "disable");
 }

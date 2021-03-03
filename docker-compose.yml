@@ -15,14 +15,14 @@ services:
       MY_ROSTER_IDX: ${MY_ROSTER_IDX}
       MAX_ROSTER_IDX: ${MAX_ROSTER_IDX}
       IAS_URL: ${IAS_URL}
-      KEY_VAULT_ENDPOINT: ${KEY_VAULT_ENDPOINT}
-      KEY_VAULT_ADDRESS: ${KEY_VAULT_ADDRESS}
+      KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME: "${KEY_VAULT_FQDN}:${KEY_VAULT_PORT}"
+      KEY_VAULT_ENDPOINT_FOR_KEY_VAULT: "${KEY_VAULT_IP_ADDRESS}:${KEY_VAULT_PORT}"
       ENCLAVE_PKG_NAME: ${ENCLAVE_PKG_NAME}
       STATE_RUNTIME_ENCLAVE_PKG_NAME: ${STATE_RUNTIME_ENCLAVE_PKG_NAME}
       KEY_VAULT_ENCLAVE_PKG_NAME: ${KEY_VAULT_ENCLAVE_PKG_NAME}
       BACKUP: ${BACKUP}
-      ETH_URL: "http://${ETH_ADDRESS}:${ETH_PORT}"
-      ANONIFY_URL: "${ANONIFY_ADDRESS}:${ANONIFY_PORT}"
+      ETH_URL: "http://${ETH_IP_ADDRESS}:${ETH_DOCKER_PORT}"
+      STATE_RUNTIME_URL: "${STATE_RUNTIME_IP_ADDRESS}:${STATE_RUNTIME_PORT}"
       ABI_PATH: ${ABI_PATH}
       BIN_PATH: ${BIN_PATH}
       CONFIRMATIONS: ${CONFIRMATIONS}
@@ -34,21 +34,26 @@ services:
       IAS_ROOT_CERT_PATH: ${IAS_ROOT_CERT_PATH}
       EVENT_LIMIT: ${EVENT_LIMIT}
       UNLOCK_DURATION: ${UNLOCK_DURATION}
+    # Add an lookup from the IP Adress to FQDN because of the following limition of rustls
+    # https://github.com/ctz/rustls/issues/184
+    # https://github.com/briansmith/webpki/issues/54
+    extra_hosts:
+      - "${KEY_VAULT_FQDN}:${KEY_VAULT_IP_ADDRESS}"
     stdin_open: true
     tty: true
     networks:
       testing_net:
-        ipv4_address: ${ANONIFY_ADDRESS}
+        ipv4_address: ${STATE_RUNTIME_IP_ADDRESS}
 
   ganache:
       image: trufflesuite/ganache-cli:latest
       ports:
-        - "${ETH_HOST_PORT}:${ETH_PORT}"
+        - "${ETH_HOST_PORT}:${ETH_DOCKER_PORT}"
       volumes:
         - ./ganache_data:/ganache_data
       networks:
         testing_net:
-          ipv4_address: ${ETH_ADDRESS}
+          ipv4_address: ${ETH_IP_ADDRESS}
 
 networks:
   testing_net:

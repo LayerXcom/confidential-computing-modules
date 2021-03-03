@@ -54,8 +54,8 @@ impl KeyVaultEnclaveContext {
         let spid = env::var("SPID").expect("SPID is not set");
         let ias_url = env::var("IAS_URL").expect("IAS_URL is not set");
         let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
-        let key_vault_endpoint =
-            env::var("KEY_VAULT_ENDPOINT").expect("KEY_VAULT_ENDPOINT is not set");
+        let key_vault_endpoint = env::var("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME")
+            .expect("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME is not set");
         let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
         let store_enclave_dec_key = StoreEnclaveDecryptionKey::new(&*ANONIFY_PARAMS_DIR);
 
