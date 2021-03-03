@@ -28,9 +28,10 @@ pub static PATH_SECRETS_DIR: Lazy<String> =
     Lazy::new(|| env::var("PATH_SECRETS_DIR").unwrap_or(".anonify/pathsecrets".to_string()));
 
 pub static PJ_ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
+    let pj_name = env::var("PJ_NAME").unwrap_or("anonify".to_string());
     let mut current_dir = env::current_dir().unwrap();
     loop {
-        if current_dir.file_name() == Some(OsStr::new("anonify")) {
+        if current_dir.file_name() == Some(OsStr::new(pj_name.as_str())) {
             break;
         }
         if !current_dir.pop() {
@@ -39,6 +40,12 @@ pub static PJ_ROOT_DIR: Lazy<PathBuf> = Lazy::new(|| {
     }
 
     current_dir
+});
+
+pub static BUILD_DIR: Lazy<PathBuf> = Lazy::new(|| {
+    let mut build_dir = PJ_ROOT_DIR.clone();
+    build_dir.push("build");
+    build_dir
 });
 
 pub static ABI_PATH: Lazy<PathBuf> = Lazy::new(|| {
