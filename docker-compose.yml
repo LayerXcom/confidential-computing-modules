@@ -21,7 +21,7 @@ services:
       STATE_RUNTIME_ENCLAVE_PKG_NAME: ${STATE_RUNTIME_ENCLAVE_PKG_NAME}
       KEY_VAULT_ENCLAVE_PKG_NAME: ${KEY_VAULT_ENCLAVE_PKG_NAME}
       BACKUP: ${BACKUP}
-      ETH_URL: "http://${ETH_ADDRESS}:${ETH_PORT}"
+      ETH_URL: "http://${ETH_IP_ADDRESS}:${ETH_DOCKER_PORT}"
       STATE_RUNTIME_URL: "${STATE_RUNTIME_IP_ADDRESS}:${STATE_RUNTIME_PORT}"
       ABI_PATH: ${ABI_PATH}
       BIN_PATH: ${BIN_PATH}
@@ -45,12 +45,12 @@ services:
   ganache:
       image: trufflesuite/ganache-cli:latest
       ports:
-        - "${ETH_HOST_PORT}:${ETH_PORT}"
+        - "${ETH_HOST_PORT}:${ETH_DOCKER_PORT}"
       volumes:
         - ./ganache_data:/ganache_data
       networks:
         testing_net:
-          ipv4_address: ${ETH_ADDRESS}
+          ipv4_address: ${ETH_IP_ADDRESS}
 
 networks:
   testing_net:
