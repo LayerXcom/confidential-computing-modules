@@ -16,7 +16,7 @@ pub struct Server<D: Deployer, S: Sender, W: Watcher> {
     pub bin_path: String,
     pub confirmations: usize,
     pub account_index: usize,
-    pub password: String,
+    pub password: Option<String>,
     pub sync_time: u64,
     pub dispatcher: Dispatcher<D, S, W>,
 }
@@ -33,7 +33,10 @@ where
             .expect("ACCOUNT_INDEX is not set")
             .parse()
             .expect("Failed to parse ACCOUNT_INDEX to usize");
-        let password = env::var("PASSWORD").expect("PASSWORD is not set");
+        let password: Option<String> = match env::var("PASSWORD") {
+            Ok(pw) => Some(pw),
+            Err(_) => None
+        };
         let confirmations: usize = env::var("CONFIRMATIONS")
             .expect("CONFIRMATIONS is not set")
             .parse()
