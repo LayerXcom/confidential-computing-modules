@@ -25,7 +25,7 @@ use web3::{
 
 const CONFIRMATIONS: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
-const PASSWORD: Option<String> = Some(String::from("anonify0101"));
+pub static PASSWORD: Lazy<Option<String>> = Lazy::new(|| Some(String::from("anonify0101")));
 
 pub static ETH_URL: Lazy<String> =
     Lazy::new(|| env::var("ETH_URL").unwrap_or("http://172.28.0.2:8545".to_string()));
