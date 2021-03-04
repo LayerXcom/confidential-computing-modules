@@ -1,6 +1,6 @@
 [package]
 name = "state-runtime-node-api"
-version = "0.5.2"
+version = "0.5.3"
 authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 

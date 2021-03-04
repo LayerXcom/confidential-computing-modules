@@ -1,6 +1,6 @@
 [package]
 name = "frame-host"
-version = "0.5.2"
+version = "0.5.3"
 authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 build = "build.rs"
@@ -20,5 +20,6 @@ hex = "0.4"
 tracing = "0.1"
 
 [build-dependencies]
+frame-config = { path = "../config"}
 dirs = "2.0"
 cc = "1.0"
