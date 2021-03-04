@@ -54,14 +54,14 @@ impl Deployer for EthDeployer {
         })
     }
 
-    async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+    async fn get_account(&self, index: usize, password: Option<String>) -> Result<Address> {
         Retry::new(
             "get_account",
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(deployer_retry_condition)
-        .spawn_async(|| async { self.web3_conn.get_account(index, password).await })
+        .spawn_async(|| async { self.web3_conn.get_account(index, password.clone()).await })
         .await
     }
 

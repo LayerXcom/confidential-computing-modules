@@ -61,13 +61,13 @@ impl Sender for EthSender {
         }
     }
 
-    async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+    async fn get_account(&self, index: usize, password: Option<String>) -> Result<Address> {
         Retry::new(
             "get_account",
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
-        .spawn_async(|| async { self.contract.get_account(index, password).await })
+        .spawn_async(|| async { self.contract.get_account(index, password.clone()).await })
         .await
     }
 

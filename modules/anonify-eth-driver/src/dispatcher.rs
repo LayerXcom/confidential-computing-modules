@@ -254,7 +254,7 @@ where
             .await
     }
 
-    pub async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+    pub async fn get_account(&self, index: usize, password: Option<String>) -> Result<Address> {
         self.inner
             .read()
             .deployer
