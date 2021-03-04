@@ -1,6 +1,6 @@
 [package]
 name = "unit-tests-host"
-version = "0.5.3"
+version = "0.5.4"
 authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 build = "build.rs"
