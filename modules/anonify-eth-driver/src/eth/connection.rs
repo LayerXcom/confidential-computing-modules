@@ -186,7 +186,7 @@ impl Web3Contract {
         Ok(Web3Logs::new(logs, cache, events))
     }
 
-    pub async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+    pub async fn get_account(&self, index: usize, password: Option<String>) -> Result<Address> {
         self.web3_conn.get_account(index, password).await
     }
 
@@ -219,15 +219,17 @@ impl Web3Http {
         })
     }
 
-    pub async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+    pub async fn get_account(&self, index: usize, password: Option<String>) -> Result<Address> {
         let account = self.web3.eth().accounts().await?[index];
-        if !self
-            .web3
-            .personal()
-            .unlock_account(account, password, Some(self.unlock_duration))
-            .await?
-        {
-            return Err(HostError::UnlockError);
+        if let Some(pw) = password {
+            if !self
+                .web3
+                .personal()
+                .unlock_account(account, &pw, Some(self.unlock_duration))
+                .await?
+            {
+                return Err(HostError::UnlockError);
+            }
         }
 
         Ok(account)
