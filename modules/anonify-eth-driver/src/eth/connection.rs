@@ -220,7 +220,15 @@ impl Web3Http {
     }
 
     pub async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {
-        let account = self.web3.eth().accounts().await?[index];
+        let accounts = self.web3.eth().accounts().await?;
+        if accounts.len() <= index {
+            Err(anyhow!(
+                "index {} is out of accounts length: {}",
+                index,
+                accounts.len()
+            ))
+        }
+        let account = accounts[index];
         if let Some(pw) = password {
             if !self
                 .web3
