@@ -5,6 +5,7 @@ use frame_config::EnclaveMeasurement;
 use remote_attestation::AttestedReport;
 use std::io::{Cursor, Read};
 use std::vec::Vec;
+use log::debug;
 
 #[derive(Clone, Debug)]
 pub struct AttestedReportVerifier {
@@ -97,6 +98,7 @@ impl rustls::ClientCertVerifier for AttestedReportVerifier {
         certs: &[rustls::Certificate],
         _sni: Option<&webpki::DNSName>,
     ) -> std::result::Result<rustls::ClientCertVerified, rustls::TLSError> {
+        debug!("Start verifying the certificate of mutual attested tls in client side...");
         if certs.len() != 1 {
             return Err(rustls::TLSError::NoCertificatesPresented);
         }
@@ -119,6 +121,7 @@ impl rustls::ServerCertVerifier for AttestedReportVerifier {
         _hostname: webpki::DNSNameRef,
         _ocsp: &[u8],
     ) -> std::result::Result<rustls::ServerCertVerified, rustls::TLSError> {
+        debug!("Start verifying the certificate of mutual attested tls in server side...");
         if certs.len() != 1 {
             return Err(rustls::TLSError::NoCertificatesPresented);
         }
