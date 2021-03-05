@@ -1478,6 +1478,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "env_logger"
+version = "0.7.1"
+source = "git+https://github.com/mesalock-linux/env_logger-sgx#839ef5144497dd61e7a5dc99ace41c561b576f20"
+dependencies = [
+ "log 0.4.11 (git+https://github.com/mesalock-linux/log-sgx)",
+ "sgx_tstd",
+]
+
+[[package]]
 name = "erc20-cli"
 version = "0.5.4"
 dependencies = [
@@ -1489,7 +1498,7 @@ dependencies = [
  "dialoguer",
  "dirs",
  "ed25519-dalek",
- "env_logger",
+ "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "ethabi",
  "frame-common",
  "frame-sodium",
@@ -1513,12 +1522,14 @@ dependencies = [
  "anyhow 1.0.28",
  "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx?rev=sgx_1.1.3)",
  "ed25519-dalek",
+ "env_logger 0.7.1 (git+https://github.com/mesalock-linux/env_logger-sgx)",
  "frame-common",
  "frame-config",
  "frame-enclave",
  "frame-runtime",
  "frame-sodium",
  "frame-types",
+ "log 0.4.11 (git+https://github.com/mesalock-linux/log-sgx)",
  "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
  "sgx_tstd",
  "sgx_types 1.1.3",
@@ -2658,11 +2669,13 @@ version = "0.5.4"
 dependencies = [
  "anyhow 1.0.28",
  "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx?rev=sgx_1.1.3)",
+ "env_logger 0.7.1 (git+https://github.com/mesalock-linux/env_logger-sgx)",
  "frame-config",
  "frame-enclave",
  "frame-types",
  "key-vault-ecall-types",
  "key-vault-enclave",
+ "log 0.4.11 (git+https://github.com/mesalock-linux/log-sgx)",
  "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
  "sgx_tstd",
 ]
