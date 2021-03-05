@@ -103,9 +103,10 @@ impl rustls::ClientCertVerifier for AttestedReportVerifier {
 
         match self.verify_cert(&certs[0].0) {
             Ok(_) => Ok(rustls::ClientCertVerified::assertion()),
-            Err(_) => Err(rustls::TLSError::WebPKIError(
-                webpki::Error::ExtensionValueInvalid,
-            )),
+            Err(err) => Err(rustls::TLSError::General(format!(
+                "WebPKI ExtensionValueInvalid Error: {:?}",
+                err
+            ))),
         }
     }
 }
@@ -123,9 +124,10 @@ impl rustls::ServerCertVerifier for AttestedReportVerifier {
         }
         match self.verify_cert(&certs[0].0) {
             Ok(_) => Ok(rustls::ServerCertVerified::assertion()),
-            Err(_) => Err(rustls::TLSError::WebPKIError(
-                webpki::Error::ExtensionValueInvalid,
-            )),
+            Err(err) => Err(rustls::TLSError::General(format!(
+                "WebPKI ExtensionValueInvalid Error: {:?}",
+                err
+            ))),
         }
     }
 }
