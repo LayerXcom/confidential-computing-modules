@@ -682,7 +682,7 @@ fn set_env_vars() {
 fn set_server_env_vars() {
     env::set_var("CONFIRMATIONS", "0");
     env::set_var("ACCOUNT_INDEX", "0");
-    env::set_var("PASSWORD", "anonify0101");
+    // env::set_var("PASSWORD", "anonify0101");
 }
 
 fn clear_local_path_secrets() {
