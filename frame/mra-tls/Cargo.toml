@@ -29,3 +29,4 @@ chrono = { version = "0.4", git = "https://github.com/mesalock-linux/chrono-sgx"
 test-utils = { path = "../../tests/utils" }
 pem = { version = "0.8.2", git = "https://github.com/mesalock-linux/pem-rs-sgx" }
 tracing = { version = "0.1", default-features = false }
+log = { git = "https://github.com/mesalock-linux/log-sgx" }
