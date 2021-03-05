@@ -5,6 +5,7 @@ use crate::{
     utils::ContractInfo,
     workflow::*,
 };
+use anyhow::anyhow;
 use ethabi::{Topic, TopicFilter};
 use std::{env, fs, path::Path};
 use web3::{
@@ -220,7 +221,16 @@ impl Web3Http {
     }
 
     pub async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {
-        let account = self.web3.eth().accounts().await?[index];
+        let accounts = self.web3.eth().accounts().await?;
+        if accounts.len() <= index {
+            return Err(anyhow!(
+                "index {} is out of accounts length: {}",
+                index,
+                accounts.len()
+            ))
+            .map_err(Into::into);
+        }
+        let account = accounts[index];
         if let Some(pw) = password {
             if !self
                 .web3
