@@ -12,7 +12,7 @@ use web3::types::{Address, H256};
 pub trait Deployer: Sized {
     fn new(enclave_id: sgx_enclave_id_t, node_url: &str) -> Result<Self>;
 
-    async fn get_account(&self, index: usize, password: Option<String>) -> Result<Address>;
+    async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address>;
 
     /// Deploying contract with attestation.
     async fn deploy<P>(
@@ -43,7 +43,7 @@ pub trait Sender: Sized {
 
     fn from_contract(enclave_id: sgx_enclave_id_t, contract: ContractKind) -> Self;
 
-    async fn get_account(&self, index: usize, password: Option<String>) -> Result<Address>;
+    async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address>;
 
     /// Send an encrypted command of state transition to blockchain nodes.
     async fn send_command(&self, host_output: &host_output::Command) -> Result<H256>;

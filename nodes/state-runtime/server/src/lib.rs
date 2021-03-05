@@ -33,10 +33,7 @@ where
             .expect("ACCOUNT_INDEX is not set")
             .parse()
             .expect("Failed to parse ACCOUNT_INDEX to usize");
-        let password: Option<String> = match env::var("PASSWORD") {
-            Ok(pw) => Some(pw),
-            Err(_) => None
-        };
+        let password: Option<String> = env::var("PASSWORD").ok();
         let confirmations: usize = env::var("CONFIRMATIONS")
             .expect("CONFIRMATIONS is not set")
             .parse()

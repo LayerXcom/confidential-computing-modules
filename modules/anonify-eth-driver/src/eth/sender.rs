@@ -61,7 +61,7 @@ impl Sender for EthSender {
         }
     }
 
-    async fn get_account(&self, index: usize, password: Option<String>) -> Result<Address> {
+    async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {
         Retry::new(
             "get_account",
             *REQUEST_RETRIES,
