@@ -67,7 +67,7 @@ impl Sender for EthSender {
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
-        .spawn_async(|| async { self.contract.get_account(index, password.clone()).await })
+        .spawn_async(|| async { self.contract.get_account(index, password).await })
         .await
     }
 

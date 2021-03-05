@@ -61,7 +61,7 @@ impl Deployer for EthDeployer {
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(deployer_retry_condition)
-        .spawn_async(|| async { self.web3_conn.get_account(index, password.clone()).await })
+        .spawn_async(|| async { self.web3_conn.get_account(index, password).await })
         .await
     }
 
