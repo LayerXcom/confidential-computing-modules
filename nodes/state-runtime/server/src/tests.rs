@@ -893,7 +893,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
 fn set_server_env_vars() {
     env::set_var("CONFIRMATIONS", "0");
     env::set_var("ACCOUNT_INDEX", "0");
-    // env::set_var("PASSWORD", "anonify0101");
+    env::set_var("PASSWORD", "anonify0101");
 }
 
 fn my_turn() {
