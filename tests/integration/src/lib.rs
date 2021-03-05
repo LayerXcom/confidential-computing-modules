@@ -79,7 +79,7 @@ async fn test_integration_eth_construct() {
 
     // Deploy
     let deployer_addr = dispatcher
-        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
     let contract_addr = dispatcher
@@ -189,7 +189,7 @@ async fn test_auto_notification() {
 
     // Deploy
     let deployer_addr = dispatcher
-        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
     let contract_addr = dispatcher
@@ -330,7 +330,7 @@ async fn test_integration_eth_transfer() {
 
     // Deploy
     let deployer_addr = dispatcher
-        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
     let contract_addr = dispatcher
@@ -496,7 +496,7 @@ async fn test_key_rotation() {
 
     // Deploy
     let deployer_addr = dispatcher
-        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
     let contract_addr = dispatcher
@@ -614,7 +614,7 @@ async fn test_integration_eth_approve() {
 
     // Deploy
     let deployer_addr = dispatcher
-        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
     let contract_addr = dispatcher
@@ -767,7 +767,7 @@ async fn test_integration_eth_transfer_from() {
 
     // Deploy
     let deployer_addr = dispatcher
-        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
     let contract_addr = dispatcher
@@ -1104,7 +1104,7 @@ async fn test_integration_eth_mint() {
 
     // Deploy
     let deployer_addr = dispatcher
-        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
     let contract_addr = dispatcher
@@ -1237,7 +1237,7 @@ async fn test_integration_eth_burn() {
 
     // Deploy
     let deployer_addr = dispatcher
-        .get_account(ACCOUNT_INDEX, PASSWORD)
+        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
     let contract_addr = dispatcher

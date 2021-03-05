@@ -18,7 +18,7 @@ where
 
     let sender_address = server
         .dispatcher
-        .get_account(server.account_index, &server.password)
+        .get_account(server.account_index, server.password.as_deref())
         .await
         .map_err(|e| ServerError::from(e))?;
     let contract_address = server
@@ -55,7 +55,7 @@ where
 {
     let sender_address = server
         .dispatcher
-        .get_account(server.account_index, &server.password)
+        .get_account(server.account_index, server.password.as_deref())
         .await
         .map_err(|e| ServerError::from(e))?;
     let tx_hash = server
@@ -85,7 +85,7 @@ where
 {
     let sender_address = server
         .dispatcher
-        .get_account(server.account_index, &server.password)
+        .get_account(server.account_index, server.password.as_deref())
         .await
         .map_err(|e| ServerError::from(e))?;
     let tx_hash = server
@@ -115,7 +115,7 @@ where
 {
     let sender_address = server
         .dispatcher
-        .get_account(server.account_index, &server.password)
+        .get_account(server.account_index, server.password.as_deref())
         .await
         .map_err(|e| ServerError::from(e))?;
 
@@ -143,7 +143,7 @@ where
 {
     let sender_address = server
         .dispatcher
-        .get_account(server.account_index, &server.password)
+        .get_account(server.account_index, server.password.as_deref())
         .await
         .map_err(|e| ServerError::from(e))?;
     let tx_hash = server
@@ -301,7 +301,7 @@ where
 {
     let sender_address = server
         .dispatcher
-        .get_account(server.account_index, &server.password)
+        .get_account(server.account_index, server.password.as_deref())
         .await
         .map_err(|e| ServerError::from(e))?;
     let tx_hash = server

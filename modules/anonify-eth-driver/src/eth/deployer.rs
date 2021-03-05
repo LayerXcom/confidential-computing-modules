@@ -54,7 +54,7 @@ impl Deployer for EthDeployer {
         })
     }
 
-    async fn get_account(&self, index: usize, password: &str) -> Result<Address> {
+    async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {
         Retry::new(
             "get_account",
             *REQUEST_RETRIES,
