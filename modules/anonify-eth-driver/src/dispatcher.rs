@@ -186,6 +186,9 @@ where
         let inner = self.inner.read();
         let input = host_input::Command::new(ciphertext, signer, gas, ecall_cmd);
         let eid = inner.deployer.get_enclave_id();
+        let t1 = std::time::SystemTime::now();
+        println!("########## t1: {:?}", t1);
+
         let host_output = CommandWorkflow::exec(input, eid)?;
 
         match &inner.sender {
