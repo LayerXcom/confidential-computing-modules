@@ -20,7 +20,7 @@ log = "0.4"
 env_logger = "0.7"
 tiny-bip39 = "0.6.0"
 ed25519-dalek = "1.0.0-pre.2"
-web3 = "0.14"
+web3 = { version = "0.14.0", default-features = false, features = ["http-tls"] }
 ethabi = "12.0.0"
 anyhow = "1.0"
 thiserror = "1.0"

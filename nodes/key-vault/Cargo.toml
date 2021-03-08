@@ -29,7 +29,7 @@ anonify-eth-driver = { path = "../../modules/anonify-eth-driver" }
 anonify-ecall-types = { path = "../../modules/anonify-ecall-types"}
 state-runtime-node-server = { path = "../../nodes/state-runtime/server" }
 state-runtime-node-api = { path = "../../nodes/state-runtime/api" }
-web3 = "0.14"
+web3 = { version = "0.14.0", default-features = false, features = ["http-tls"] }
 ethabi = "12.0.0"
 sgx_urts = "1.1.1"
 rand_core = "0.5"
