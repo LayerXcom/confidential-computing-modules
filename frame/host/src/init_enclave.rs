@@ -16,7 +16,6 @@ pub struct EnclaveDir(PathBuf);
 impl EnclaveDir {
     pub fn new() -> Self {
         let enclave_dir = &*ANONIFY_PARAMS_DIR;
-        info!("Enclave.signed.so is generated at: {:?}", enclave_dir);
         if !enclave_dir.is_dir() {
             fs::create_dir_all(&enclave_dir).expect("Cannot create enclave directory.");
         }
@@ -32,6 +31,9 @@ impl EnclaveDir {
         let enclave = self
             .create_enclave(&mut launch_token, &mut launch_token_updated, is_debug)
             .expect("Failed to create enclave");
+
+        let pkg_name = env::var("ENCLAVE_PKG_NAME").expect("failed to get env 'ENCLAVE_PKG_NAME'");
+        info!("{}.signed.so is generated at: {:?}", pkg_name, self.0);
 
         // If launch token is updated, save it as token file.
         if launch_token_updated != 0 {
