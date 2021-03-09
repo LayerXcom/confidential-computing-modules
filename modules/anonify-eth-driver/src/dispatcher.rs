@@ -195,13 +195,7 @@ where
         println!("########## st8: {:?}", st8);
 
         match &inner.sender {
-            Some(s) => {
-                let st9 = std::time::SystemTime::now();
-                println!("########## st9: {:?}", st9);
-                s.send_command(&host_output).await;
-                let st10 = std::time::SystemTime::now();
-                println!("########## st10: {:?}", st10)
-            }
+            Some(s) => s.send_command(&host_output).await
             None => Err(HostError::AddressNotSet),
         }
     }
