@@ -39,8 +39,8 @@ impl EnclaveConnector {
         let st3 = std::time::SystemTime::now();
         println!("########## st3: {:?}", st3);
         let result = self.inner_invoke_ecall(cmd, input_payload)?;
-        let st8 = std::time::SystemTime::now();
-        println!("########## st8: {:?}", st8);
+        let st6 = std::time::SystemTime::now();
+        println!("########## st6: {:?}", st6);
         bincode::deserialize(&result[..]).map_err(Into::into)
     }
 
@@ -68,8 +68,8 @@ impl EnclaveConnector {
                 &mut output_len,
             )
         };
-        let st7 = std::time::SystemTime::now();
-        println!("########## st7: {:?}", st7);
+        let st5 = std::time::SystemTime::now();
+        println!("########## st5: {:?}", st5 ;
 
         if status != sgx_status_t::SGX_SUCCESS {
             return Err(FrameHostError::SgxStatus {

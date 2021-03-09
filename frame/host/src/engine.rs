@@ -18,8 +18,8 @@ pub trait HostEngine {
         println!("########## st2: {:?}", st2);
         let ecall_output = EnclaveConnector::new(eid, Self::OUTPUT_MAX_LEN)
             .invoke_ecall::<Self::EI, Self::EO>(ecall_cmd, ecall_input)?;
-        let st9 = std::time::SystemTime::now();
-        println!("########## st9: {:?}", st9);
+        let st7 = std::time::SystemTime::now();
+        println!("########## st7: {:?}", st7);
         host_output.set_ecall_output(ecall_output)
     }
 }

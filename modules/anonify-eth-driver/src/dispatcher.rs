@@ -191,17 +191,17 @@ where
 
         let host_output = CommandWorkflow::exec(input, eid)?;
 
-        let st10 = std::time::SystemTime::now();
-        println!("########## st10: {:?}", st10);
+        let st8 = std::time::SystemTime::now();
+        println!("########## st8: {:?}", st8);
 
         match &inner.sender {
             Some(s) => {
-                let st11 = std::time::SystemTime::now();
-                println!("########## st11: {:?}", st11);
+                let st9 = std::time::SystemTime::now();
+                println!("########## st9: {:?}", st9);
                 s.send_command(&host_output).await;
-                let st12 = std::time::SystemTime::now();
-                println!("########## st12: {:?}", st12)
-            },
+                let st10 = std::time::SystemTime::now();
+                println!("########## st10: {:?}", st10)
+            }
             None => Err(HostError::AddressNotSet),
         }
     }
