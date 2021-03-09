@@ -25,7 +25,11 @@ macro_rules! register_ecall {
                     .map_err(|e| anyhow!("{:?}", e))?;
                 let input = EE::decrypt::<$ctx_ops>(ciphertext, $ctx)?;
                 EE::eval_policy(&input)?;
+                let st5 = std::time::SystemTime::now();
+                println!("########## st5: {:?}", st5);
                 EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?
+                let st6 = std::time::SystemTime::now();
+                println!("########## st6: {:?}", st6);
             };
 
             #[cfg(not(feature = "runtime_enabled"))]

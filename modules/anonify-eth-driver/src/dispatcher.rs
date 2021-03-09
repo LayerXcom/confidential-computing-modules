@@ -186,13 +186,22 @@ where
         let inner = self.inner.read();
         let input = host_input::Command::new(ciphertext, signer, gas, ecall_cmd);
         let eid = inner.deployer.get_enclave_id();
-        let t1 = std::time::SystemTime::now();
-        println!("########## t1: {:?}", t1);
+        let st1 = std::time::SystemTime::now();
+        println!("########## st1: {:?}", st1);
 
         let host_output = CommandWorkflow::exec(input, eid)?;
 
+        let st10 = std::time::SystemTime::now();
+        println!("########## st10: {:?}", st10);
+
         match &inner.sender {
-            Some(s) => s.send_command(&host_output).await,
+            Some(s) => {
+                let st11 = std::time::SystemTime::now();
+                println!("########## st11: {:?}", st11);
+                s.send_command(&host_output).await;
+                let st12 = std::time::SystemTime::now();
+                println!("########## st12: {:?}", st12)
+            },
             None => Err(HostError::AddressNotSet),
         }
     }
