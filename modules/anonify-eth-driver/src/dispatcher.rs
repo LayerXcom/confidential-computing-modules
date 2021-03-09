@@ -195,7 +195,7 @@ where
         println!("########## st8: {:?}", st8);
 
         match &inner.sender {
-            Some(s) => s.send_command(&host_output).await
+            Some(s) => s.send_command(&host_output).await,
             None => Err(HostError::AddressNotSet),
         }
     }
