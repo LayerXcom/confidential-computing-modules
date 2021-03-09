@@ -28,19 +28,8 @@ contract Anonify is ReportHandle {
     event StoreHandshake(bytes handshake, uint256 stateCounter);
     event UpdateMrenclaveVer(uint32 newVersion);
 
-    constructor(
-        uint32 mrenclaveVer,
-        uint32 _rosterIdx
-    ) public {
-        require(_rosterIdx == 0, "First roster_idx must be zero");
-
-        // The node that joins first does not send command data,
-        // it sends handshake for the first time.
-        _groupKeyCounter[_rosterIdx] = GroupKeyCounter(0, 1);
+    constructor() public {
         _owner = msg.sender;
-        _mrenclaveVer = mrenclaveVer;
-        _rosterIdxCounter = _rosterIdx;
-
     }
 
     modifier onlyOwner() {
