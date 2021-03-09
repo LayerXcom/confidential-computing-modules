@@ -46,13 +46,11 @@ You can use anonify-cli to communicate with a whole anonify system. See the [tra
 
 Build Anonify's command line utilities.
 ```
-$ ./scripts/env-cli.sh // Change env vars depending on your environment
 $ ./scripts/build-cli.sh
 ```
 
 If you want to build artifacts in release mode, pass a `--release` argument.
 ```
-$ ./scripts/env-cli.sh // Change env vars depending on your environment
 $ ./scripts/build-cli.sh --release
 ```
 
