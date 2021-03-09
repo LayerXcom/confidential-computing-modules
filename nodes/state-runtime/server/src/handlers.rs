@@ -1,12 +1,16 @@
 use crate::error::{Result, ServerError};
 use crate::Server;
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpResponse, Responder};
 use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::traits::*;
 use std::{sync::Arc, time};
 use tracing::{debug, error, info};
 
 const DEFAULT_GAS: u64 = 5_000_000;
+
+pub async fn handle_health_check() -> impl Responder {
+    HttpResponse::Ok().finish()
+}
 
 pub async fn handle_deploy<D, S, W>(server: web::Data<Arc<Server<D, S, W>>>) -> Result<HttpResponse>
 where
