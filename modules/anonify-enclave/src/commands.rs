@@ -11,6 +11,7 @@ use frame_runtime::traits::*;
 use frame_sodium::SodiumCiphertext;
 use serde::{Deserialize, Serialize};
 use std::{marker::PhantomData, vec::Vec};
+use log::debug;
 
 /// A message sender that encrypts commands
 #[derive(Debug, Clone, Default)]
@@ -58,6 +59,7 @@ where
             ciphertext.generation(),
             ciphertext.epoch(),
         );
+        debug!("##### enclave_sig");
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
         let command_output = output::Command::new(ciphertext, enclave_sig.0, enclave_sig.1);
 
