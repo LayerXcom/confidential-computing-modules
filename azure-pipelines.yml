@@ -20,21 +20,21 @@ stages:
       condition: always()
       displayName: 'Shutdown'
 
-- stage: Docker_Build_and_Push
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-  jobs:
-  - job: Docker
-    pool:
-      name: 'AnonifyDev'
-    steps:
-    - task: Docker@2
-      displayName: Build and Push anonify image
-      inputs:
-        command: buildAndPush
-        containerRegistry: anonify-ci-cd-acr
-        repository: erc20-state-runtime
-        tags: latest
-        dockerfile: ./docker/erc20.Dockerfile
-        buildContext: .
-    - script: docker image prune -f
-      displayName: Remove dangling images
+# - stage: Docker_Build_and_Push
+#   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+#   jobs:
+#   - job: Docker
+#     pool:
+#       name: 'AnonifyDev'
+#     steps:
+#     - task: Docker@2
+#       displayName: Build and Push anonify image
+#       inputs:
+#         command: buildAndPush
+#         containerRegistry: anonify-ci-cd-acr
+#         repository: erc20-state-runtime
+#         tags: latest
+#         dockerfile: ./docker/erc20.Dockerfile
+#         buildContext: .
+#     - script: docker image prune -f
+#       displayName: Remove dangling images
