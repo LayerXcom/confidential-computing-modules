@@ -63,7 +63,7 @@ You can try to build the codebase on your local machine or test it in sgx-enable
 Anonify assumes your hardware supports Intel SGX. Without such hardware, you can build it in simulation mode, which allows you to build on macOS.
 
 ```
-$ docker run -v `pwd`:/root/anonify --rm -it osuketh/anonify:1804-1.1.3
+$ docker run -v `pwd`:/root/anonify --rm -it osuketh/anonify:20210310-1804-1.1.3
 ```
 
 ### Testing (ERC20 app)
