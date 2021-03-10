@@ -72,10 +72,6 @@ async fn test_backup_path_secret() {
         App::new()
             .data(erc20_server.clone())
             .route(
-                "/api/v1/deploy",
-                web::post().to(handle_deploy::<EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
@@ -229,10 +225,6 @@ async fn test_recover_without_key_vault() {
         App::new()
             .data(erc20_server.clone())
             .route(
-                "/api/v1/deploy",
-                web::post().to(handle_deploy::<EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
@@ -379,10 +371,6 @@ async fn test_manually_backup_all() {
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
-            .route(
-                "/api/v1/deploy",
-                web::post().to(handle_deploy::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
@@ -544,10 +532,6 @@ async fn test_manually_recover_all() {
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
-            .route(
-                "/api/v1/deploy",
-                web::post().to(handle_deploy::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),

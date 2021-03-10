@@ -12,41 +12,6 @@ pub async fn handle_health_check() -> impl Responder {
     HttpResponse::Ok().finish()
 }
 
-pub async fn handle_deploy<S, W>(server: web::Data<Arc<Server<S, W>>>) -> Result<HttpResponse>
-where
-    S: Sender,
-    W: Watcher,
-{
-    debug!("Starting deploy a contract...");
-
-    let sender_address = server
-        .dispatcher
-        .get_account(server.account_index, server.password.as_deref())
-        .await
-        .map_err(|e| ServerError::from(e))?;
-    let contract_address = server
-        .dispatcher
-        .deploy(
-            sender_address,
-            DEFAULT_GAS,
-            &server.abi_path,
-            &server.bin_path,
-            server.confirmations,
-            JOIN_GROUP_CMD,
-        )
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
-    debug!("Contract address: {:?}", &contract_address);
-    server
-        .dispatcher
-        .set_contract_address(&contract_address, &server.abi_path)
-        .map_err(|e| ServerError::from(e))?;
-
-    Ok(HttpResponse::Accepted()
-        .json(state_runtime_node_api::deploy::post::Response { contract_address }))
-}
-
 pub async fn handle_join_group<S, W>(
     server: web::Data<Arc<Server<S, W>>>,
     req: web::Json<state_runtime_node_api::join_group::post::Request>,

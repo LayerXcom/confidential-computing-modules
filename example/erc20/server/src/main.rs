@@ -24,10 +24,6 @@ async fn main() -> io::Result<()> {
         App::new()
             .data(server.clone())
             .route(
-                "/api/v1/deploy",
-                web::post().to(handle_deploy::<EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/join_group",
                 web::post().to(handle_join_group::<EthSender, EventWatcher>),
             )

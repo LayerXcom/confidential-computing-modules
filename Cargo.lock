@@ -4561,6 +4561,7 @@ dependencies = [
  "anonify-ecall-types",
  "anonify-eth-driver",
  "anyhow 1.0.34",
+ "eth-deployer",
  "ethabi",
  "failure",
  "frame-common",
