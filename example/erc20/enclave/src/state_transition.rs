@@ -1,4 +1,5 @@
 use frame_runtime::prelude::*;
+use log::debug;
 
 pub const MAX_MEM_SIZE: usize = 100;
 
