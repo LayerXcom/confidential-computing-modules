@@ -78,12 +78,12 @@ async fn test_integration_eth_construct() {
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = EthDeployer::new(&*ETH_URL)
-        .unwrap()
+    let contract_addr = deployer
         .deploy(
             &*ABI_PATH,
             &*BIN_PATH,
@@ -198,12 +198,12 @@ async fn test_auto_notification() {
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = EthDeployer::new(&*ETH_URL)
-        .unwrap()
+    let contract_addr = deployer
         .deploy(
             &*ABI_PATH,
             &*BIN_PATH,
@@ -349,12 +349,12 @@ async fn test_integration_eth_transfer() {
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = EthDeployer::new(&*ETH_URL)
-        .unwrap()
+    let contract_addr = deployer
         .deploy(
             &*ABI_PATH,
             &*BIN_PATH,
@@ -525,12 +525,12 @@ async fn test_key_rotation() {
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = EthDeployer::new(&*ETH_URL)
-        .unwrap()
+    let contract_addr = deployer
         .deploy(
             &*ABI_PATH,
             &*BIN_PATH,
@@ -653,12 +653,12 @@ async fn test_integration_eth_approve() {
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = EthDeployer::new(&*ETH_URL)
-        .unwrap()
+    let contract_addr = deployer
         .deploy(
             &*ABI_PATH,
             &*BIN_PATH,
@@ -816,12 +816,12 @@ async fn test_integration_eth_transfer_from() {
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = EthDeployer::new(&*ETH_URL)
-        .unwrap()
+    let contract_addr = deployer
         .deploy(
             &*ABI_PATH,
             &*BIN_PATH,
@@ -1163,12 +1163,12 @@ async fn test_integration_eth_mint() {
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = EthDeployer::new(&*ETH_URL)
-        .unwrap()
+    let contract_addr = deployer
         .deploy(
             &*ABI_PATH,
             &*BIN_PATH,
@@ -1306,12 +1306,12 @@ async fn test_integration_eth_burn() {
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = EthDeployer::new(&*ETH_URL)
-        .unwrap()
+    let contract_addr = deployer
         .deploy(
             &*ABI_PATH,
             &*BIN_PATH,
