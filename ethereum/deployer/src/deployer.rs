@@ -8,7 +8,6 @@ use crate::{
 use async_trait::async_trait;
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
-use sgx_types::sgx_enclave_id_t;
 use std::{marker::Send, path::Path};
 use web3::types::Address;
 
@@ -37,18 +36,16 @@ const fn deployer_retry_condition(res: &Result<Address>) -> bool {
 /// Components needed to deploy a contract
 #[derive(Debug)]
 pub struct EthDeployer {
-    enclave_id: sgx_enclave_id_t,
     web3_conn: Web3Http,
     address: Option<Address>, // contract address
 }
 
-#[async_trait]
-impl Deployer for EthDeployer {
-    fn new(enclave_id: sgx_enclave_id_t, node_url: &str) -> Result<Self> {
+
+impl EthDeployer {
+    fn new(node_url: &str) -> Result<Self> {
         let web3_conn = Web3Http::new(node_url)?;
 
         Ok(EthDeployer {
-            enclave_id,
             web3_conn,
             address: None,
         })
@@ -67,7 +64,6 @@ impl Deployer for EthDeployer {
 
     async fn deploy<P>(
         &mut self,
-        host_output: &host_output::JoinGroup,
         abi_path: P,
         bin_path: P,
         confirmations: usize,
@@ -103,13 +99,5 @@ impl Deployer for EthDeployer {
             self.web3_conn,
             contract_info,
         )?))
-    }
-
-    fn get_enclave_id(&self) -> sgx_enclave_id_t {
-        self.enclave_id
-    }
-
-    fn get_node_url(&self) -> &str {
-        &self.web3_conn.get_eth_url()
     }
 }
