@@ -12,7 +12,7 @@ Please refer to [White Paper (JP)](https://layerx.co.jp/wp-content/uploads/2020/
 ## Setup
 Building an Anonify contract.
 ```
-$ solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
+$ solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/Anonify.sol
 ```
 
 Copy environment variables and set your `SPID` and `SUB_KEY`.

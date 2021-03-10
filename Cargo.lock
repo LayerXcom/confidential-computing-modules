@@ -1557,6 +1557,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "eth-deployer"
+version = "0.5.4"
+dependencies = [
+ "anonify-eth-driver",
+ "frame-config",
+ "frame-retrier",
+ "hex",
+ "web3",
+]
+
+[[package]]
 name = "ethabi"
 version = "12.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
