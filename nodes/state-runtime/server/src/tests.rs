@@ -31,11 +31,11 @@ async fn test_deploy_post() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
-    let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
 
     let mut app = test::init_service(App::new().data(server.clone()).route(
         "/api/v1/deploy",
-        web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
+        web::post().to(handle_deploy::<EthSender, EventWatcher>),
     ))
     .await;
 
@@ -60,26 +60,26 @@ async fn test_multiple_messages() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
             .route(
                 "/api/v1/deploy",
-                web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_deploy::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_get_state::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/enclave_encryption_key",
                 web::get()
-                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                    .to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -166,26 +166,26 @@ async fn test_skip_invalid_event() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
             .route(
                 "/api/v1/deploy",
-                web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_deploy::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_get_state::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/enclave_encryption_key",
                 web::get()
-                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                    .to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -287,26 +287,26 @@ async fn test_node_recovery() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
             .route(
                 "/api/v1/deploy",
-                web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_deploy::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_get_state::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/enclave_encryption_key",
                 web::get()
-                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                    .to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -315,7 +315,7 @@ async fn test_node_recovery() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let recovered_eid = recovered_enclave.geteid();
-    let recovered_server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(
+    let recovered_server = Arc::new(Server::<EthSender, EventWatcher>::new(
         recovered_eid,
     ));
 
@@ -324,24 +324,24 @@ async fn test_node_recovery() {
             .data(recovered_server.clone())
             .route(
                 "/api/v1/state",
-                web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_get_state::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/enclave_encryption_key",
                 web::get()
-                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                    .to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/register_report",
-                web::post().to(handle_register_report::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_register_report::<EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -489,23 +489,23 @@ async fn test_join_group_then_handshake() {
     let eid1 = enclave1.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server1 = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid1));
+    let server1 = Arc::new(Server::<EthSender, EventWatcher>::new(eid1));
 
     let mut app1 = test::init_service(
         App::new()
             .data(server1.clone())
             .route(
                 "/api/v1/deploy",
-                web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_deploy::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_get_state::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/enclave_encryption_key",
                 web::get()
-                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                    .to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -514,35 +514,35 @@ async fn test_join_group_then_handshake() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid2 = enclave2.geteid();
-    let server2 = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid2));
+    let server2 = Arc::new(Server::<EthSender, EventWatcher>::new(eid2));
 
     let mut app2 = test::init_service(
         App::new()
             .data(server2.clone())
             .route(
                 "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_join_group::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_get_state::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/key_rotation",
-                web::post().to(handle_key_rotation::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_key_rotation::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/enclave_encryption_key",
                 web::get()
-                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                    .to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
             ),
     )
     .await;
@@ -700,30 +700,30 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
             .route(
                 "/api/v1/deploy",
-                web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_deploy::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_get_state::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/user_counter",
-                web::get().to(handle_get_user_counter::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_get_user_counter::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/enclave_encryption_key",
                 web::get()
-                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                    .to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
             ),
     )
     .await;
