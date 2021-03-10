@@ -17,8 +17,6 @@ contract Anonify is ReportHandle {
     address private _owner;
     // A version of enclave binary
     uint32 private _mrenclaveVer;
-    // An counter of registered roster index
-    uint32 private _rosterIdxCounter;
     // Counter for enforcing the order of state transitions
     uint256 private _stateCounter;
     // Counter for enforcing the order of state transitions
@@ -45,17 +43,12 @@ contract Anonify is ReportHandle {
         uint32 _version,
         uint32 _rosterIdx
     ) public {
-        // require(_mrenclaveVer == _version, "Must be same version");
-        // require(
-        //     _rosterIdx == _rosterIdxCounter + 1,
-        //     "Joining the group must be ordered accordingly by roster index"
-        // );
+        require(_mrenclaveVer == _version, "Must be same version");
 
         handleReport(_report, _reportSig);
         // It is assumed that the nodes participate in the order of roster index,
         // and all the nodes finish participating before the state transition.
         _groupKeyCounter[_rosterIdx] = GroupKeyCounter(0, _rosterIdx + 1);
-        _rosterIdxCounter = _rosterIdx;
         storeHandshake(_handshake);
     }
 
