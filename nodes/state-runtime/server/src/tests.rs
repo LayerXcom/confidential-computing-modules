@@ -40,6 +40,10 @@ async fn test_multiple_messages() {
         App::new()
             .data(server.clone())
             .route(
+                "/api/v1/join_group",
+                web::post().to(handle_join_group::<EthSender, EventWatcher>),
+            )
+            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
@@ -61,6 +65,16 @@ async fn test_multiple_messages() {
         .await
         .unwrap();
     println!("contract address: {:?}", contract_address);
+
+    let req = test::TestRequest::post()
+        .uri("/api/v1/join_group")
+        .set_json(&state_runtime_node_api::join_group::post::Request {
+            contract_address: contract_address.clone(),
+        })
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -141,6 +155,10 @@ async fn test_skip_invalid_event() {
         App::new()
             .data(server.clone())
             .route(
+                "/api/v1/join_group",
+                web::post().to(handle_join_group::<EthSender, EventWatcher>),
+            )
+            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
@@ -162,6 +180,16 @@ async fn test_skip_invalid_event() {
         .await
         .unwrap();
     println!("contract address: {:?}", contract_address);
+
+    let req = test::TestRequest::post()
+        .uri("/api/v1/join_group")
+        .set_json(&state_runtime_node_api::join_group::post::Request {
+            contract_address: contract_address.clone(),
+        })
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -257,6 +285,10 @@ async fn test_node_recovery() {
         App::new()
             .data(server.clone())
             .route(
+                "/api/v1/join_group",
+                web::post().to(handle_join_group::<EthSender, EventWatcher>),
+            )
+            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
@@ -310,6 +342,16 @@ async fn test_node_recovery() {
         .await
         .unwrap();
     println!("contract address: {:?}", contract_address);
+
+    let req = test::TestRequest::post()
+        .uri("/api/v1/join_group")
+        .set_json(&state_runtime_node_api::join_group::post::Request {
+            contract_address: contract_address.clone(),
+        })
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -452,6 +494,10 @@ async fn test_join_group_then_handshake() {
         App::new()
             .data(server1.clone())
             .route(
+                "/api/v1/join_group",
+                web::post().to(handle_join_group::<EthSender, EventWatcher>),
+            )
+            .route(
                 "/api/v1/state",
                 web::get().to(handle_get_state::<EthSender, EventWatcher>),
             )
@@ -507,6 +553,16 @@ async fn test_join_group_then_handshake() {
         .await
         .unwrap();
     println!("contract address: {:?}", contract_address);
+
+    let req = test::TestRequest::post()
+        .uri("/api/v1/join_group")
+        .set_json(&state_runtime_node_api::join_group::post::Request {
+            contract_address: contract_address.clone(),
+        })
+        .to_request();
+    let resp = test::call_service(&mut app1, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -655,6 +711,10 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
+            .route(
+                "/api/v1/join_group",
+                web::post().to(handle_join_group::<EthSender, EventWatcher>),
+            )
             .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
