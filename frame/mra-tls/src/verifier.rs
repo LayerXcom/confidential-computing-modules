@@ -2,10 +2,10 @@ use crate::cert::*;
 use crate::error::{MraTLSError, Result};
 use anyhow::anyhow;
 use frame_config::EnclaveMeasurement;
+use log::debug;
 use remote_attestation::AttestedReport;
 use std::io::{Cursor, Read};
 use std::vec::Vec;
-use log::debug;
 
 #[derive(Clone, Debug)]
 pub struct AttestedReportVerifier {

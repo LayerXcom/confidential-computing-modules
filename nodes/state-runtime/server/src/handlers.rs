@@ -98,9 +98,7 @@ where
     Ok(HttpResponse::Accepted().json(state_runtime_node_api::state::post::Response { tx_hash }))
 }
 
-pub async fn handle_key_rotation<S, W>(
-    server: web::Data<Arc<Server<S, W>>>,
-) -> Result<HttpResponse>
+pub async fn handle_key_rotation<S, W>(server: web::Data<Arc<Server<S, W>>>) -> Result<HttpResponse>
 where
     S: Sender,
     W: Watcher,

@@ -86,7 +86,7 @@ async fn test_multiple_messages() {
             contract_address: contract_address.clone(),
         })
         .to_request();
-    let resp = test::call_service(&mut recovered_app, req).await;
+    let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
@@ -214,7 +214,7 @@ async fn test_skip_invalid_event() {
             contract_address: contract_address.clone(),
         })
         .to_request();
-    let resp = test::call_service(&mut recovered_app, req).await;
+    let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
@@ -389,7 +389,7 @@ async fn test_node_recovery() {
             contract_address: contract_address.clone(),
         })
         .to_request();
-    let resp = test::call_service(&mut recovered_app, req).await;
+    let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
@@ -613,7 +613,7 @@ async fn test_join_group_then_handshake() {
             contract_address: contract_address.clone(),
         })
         .to_request();
-    let resp = test::call_service(&mut recovered_app, req).await;
+    let resp = test::call_service(&mut app1, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
@@ -678,7 +678,7 @@ async fn test_join_group_then_handshake() {
             contract_address: contract_address.clone(),
         })
         .to_request();
-    let resp = test::call_service(&mut recovered_app, req).await;
+    let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()

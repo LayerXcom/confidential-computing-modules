@@ -9,9 +9,9 @@ mod state_transition;
 
 use anonify_enclave::context::AnonifyEnclaveContext;
 use frame_sodium::rng::SgxRng;
+use log::debug;
 use once_cell::sync::Lazy;
 use std::backtrace;
-use log::debug;
 
 const ANONIFY_MRENCLAVE_VERSION: usize = 0;
 

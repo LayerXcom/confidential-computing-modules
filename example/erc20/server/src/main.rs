@@ -57,13 +57,11 @@ async fn main() -> io::Result<()> {
             )
             .route(
                 "/api/v1/register_notification",
-                web::post()
-                    .to(handle_register_notification::<EthSender, EventWatcher>),
+                web::post().to(handle_register_notification::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get()
-                    .to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
+                web::get().to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/register_report",
