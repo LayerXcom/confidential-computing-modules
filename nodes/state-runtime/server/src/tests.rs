@@ -808,6 +808,25 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     println!("contract address: {:?}", contract_address);
 
     let req = test::TestRequest::get()
+        .uri("/api/v1/set_contract_address")
+        .set_json(&state_runtime_node_api::contract_addr::post::Request {
+            contract_address: contract_address.clone(),
+        })
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+
+    let req = test::TestRequest::post()
+        .uri("/api/v1/join_group")
+        .set_json(&state_runtime_node_api::join_group::post::Request {
+            contract_address: contract_address.clone(),
+        })
+        .to_request();
+    let resp = test::call_service(&mut app, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
+
+    let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
         .to_request();
     let resp = test::call_service(&mut app, req).await;
