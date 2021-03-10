@@ -53,7 +53,14 @@ impl EthDeployer {
         .await
     }
 
-    async fn deploy<P>(&self, abi_path: P, bin_path: P, confirmations: usize) -> Result<String>
+    async fn deploy<P>(
+        &self,
+        abi_path: P,
+        bin_path: P,
+        confirmations: usize,
+        gas: u64,
+        deployer: Address,
+    ) -> Result<String>
     where
         P: AsRef<Path> + Send + Sync + Copy,
     {
@@ -65,7 +72,7 @@ impl EthDeployer {
         .set_condition(deployer_retry_condition)
         .spawn_async(|| async {
             self.web3_conn
-                .deploy(host_output.clone(), abi_path, bin_path, confirmations)
+                .deploy(abi_path, bin_path, confirmations, gas, deployer)
                 .await
         })
         .await?;

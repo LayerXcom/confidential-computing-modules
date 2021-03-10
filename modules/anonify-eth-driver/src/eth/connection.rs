@@ -255,36 +255,19 @@ impl Web3Http {
 
     pub async fn deploy<P: AsRef<Path>>(
         &self,
-        output: host_output::JoinGroup,
         abi_path: P,
         bin_path: P,
         confirmations: usize,
+        gas: u64,
+        deployer: Address,
     ) -> Result<Address> {
         let abi = fs::read(abi_path)?;
         let bin = fs::read_to_string(bin_path)?;
 
-        let ecall_output = output
-            .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?;
-        let report = ecall_output.report().to_vec();
-        let report_sig = ecall_output.report_sig().to_vec();
-        let handshake = ecall_output.handshake().to_vec();
-        let gas = output.gas;
-
         let contract = Contract::deploy(self.web3.eth(), abi.as_slice())?
             .options(Options::with(|opt| opt.gas = Some(gas.into())))
             .confirmations(confirmations)
-            .execute(
-                bin.as_str(),
-                (
-                    report,
-                    report_sig,
-                    handshake,
-                    ecall_output.mrenclave_ver(),
-                    ecall_output.roster_idx(),
-                ),
-                output.signer,
-            )
+            .execute(bin.as_str(), (), deployer)
             .await?;
 
         Ok(contract.address())
