@@ -12,48 +12,11 @@ pub async fn handle_health_check() -> impl Responder {
     HttpResponse::Ok().finish()
 }
 
-pub async fn handle_deploy<D, S, W>(server: web::Data<Arc<Server<D, S, W>>>) -> Result<HttpResponse>
-where
-    D: Deployer,
-    S: Sender,
-    W: Watcher,
-{
-    debug!("Starting deploy a contract...");
-
-    let sender_address = server
-        .dispatcher
-        .get_account(server.account_index, server.password.as_deref())
-        .await
-        .map_err(|e| ServerError::from(e))?;
-    let contract_address = server
-        .dispatcher
-        .deploy(
-            sender_address,
-            DEFAULT_GAS,
-            &server.abi_path,
-            &server.bin_path,
-            server.confirmations,
-            JOIN_GROUP_CMD,
-        )
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
-    debug!("Contract address: {:?}", &contract_address);
-    server
-        .dispatcher
-        .set_contract_address(&contract_address, &server.abi_path)
-        .map_err(|e| ServerError::from(e))?;
-
-    Ok(HttpResponse::Accepted()
-        .json(state_runtime_node_api::deploy::post::Response { contract_address }))
-}
-
-pub async fn handle_join_group<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
+pub async fn handle_join_group<S, W>(
+    server: web::Data<Arc<Server<S, W>>>,
     req: web::Json<state_runtime_node_api::join_group::post::Request>,
 ) -> Result<HttpResponse>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {
@@ -78,12 +41,11 @@ where
         .json(state_runtime_node_api::join_group::post::Response { tx_hash }))
 }
 
-pub async fn handle_update_mrenclave<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
+pub async fn handle_update_mrenclave<S, W>(
+    server: web::Data<Arc<Server<S, W>>>,
     req: web::Json<state_runtime_node_api::update_mrenclave::post::Request>,
 ) -> Result<HttpResponse>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {
@@ -108,12 +70,11 @@ where
         .json(state_runtime_node_api::update_mrenclave::post::Response { tx_hash }))
 }
 
-pub async fn handle_send_command<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
+pub async fn handle_send_command<S, W>(
+    server: web::Data<Arc<Server<S, W>>>,
     req: web::Json<state_runtime_node_api::state::post::Request>,
 ) -> Result<HttpResponse>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {
@@ -137,11 +98,8 @@ where
     Ok(HttpResponse::Accepted().json(state_runtime_node_api::state::post::Response { tx_hash }))
 }
 
-pub async fn handle_key_rotation<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
-) -> Result<HttpResponse>
+pub async fn handle_key_rotation<S, W>(server: web::Data<Arc<Server<S, W>>>) -> Result<HttpResponse>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {
@@ -161,12 +119,11 @@ where
 }
 
 /// Fetch events from blockchain nodes manually, and then get the state data from enclave.
-pub async fn handle_get_state<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
+pub async fn handle_get_state<S, W>(
+    server: web::Data<Arc<Server<S, W>>>,
     req: web::Json<state_runtime_node_api::state::get::Request>,
 ) -> Result<HttpResponse>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {
@@ -185,12 +142,11 @@ where
 }
 
 /// Fetch events from blockchain nodes manually, and then get the user counter from enclave.
-pub async fn handle_get_user_counter<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
+pub async fn handle_get_user_counter<S, W>(
+    server: web::Data<Arc<Server<S, W>>>,
     req: web::Json<state_runtime_node_api::user_counter::get::Request>,
 ) -> Result<HttpResponse>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {
@@ -209,11 +165,10 @@ where
         .json(state_runtime_node_api::user_counter::get::Response { user_counter }))
 }
 
-pub async fn handle_enclave_encryption_key<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
+pub async fn handle_enclave_encryption_key<S, W>(
+    server: web::Data<Arc<Server<S, W>>>,
 ) -> Result<HttpResponse>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {
@@ -229,11 +184,10 @@ where
     ))
 }
 
-pub async fn handle_start_sync_bc<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
+pub async fn handle_start_sync_bc<S, W>(
+    server: web::Data<Arc<Server<S, W>>>,
 ) -> Result<HttpResponse>
 where
-    D: Deployer + Send + Sync + 'static,
     S: Sender + Send + Sync + 'static,
     W: Watcher + Send + Sync + 'static,
 {
@@ -257,12 +211,11 @@ where
     Ok(HttpResponse::Ok().finish())
 }
 
-pub async fn handle_set_contract_address<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
+pub async fn handle_set_contract_address<S, W>(
+    server: web::Data<Arc<Server<S, W>>>,
     req: web::Json<state_runtime_node_api::contract_addr::post::Request>,
 ) -> Result<HttpResponse>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {
@@ -277,12 +230,11 @@ where
     Ok(HttpResponse::Ok().finish())
 }
 
-pub async fn handle_register_notification<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
+pub async fn handle_register_notification<S, W>(
+    server: web::Data<Arc<Server<S, W>>>,
     req: web::Json<state_runtime_node_api::register_notification::post::Request>,
 ) -> Result<HttpResponse>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {
@@ -294,12 +246,11 @@ where
     Ok(HttpResponse::Ok().finish())
 }
 
-pub async fn handle_register_report<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
+pub async fn handle_register_report<S, W>(
+    server: web::Data<Arc<Server<S, W>>>,
     req: web::Json<state_runtime_node_api::register_report::post::Request>,
 ) -> Result<HttpResponse>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {
@@ -325,11 +276,10 @@ where
 }
 
 #[cfg(feature = "backup-enable")]
-pub async fn handle_all_backup_to<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
+pub async fn handle_all_backup_to<S, W>(
+    server: web::Data<Arc<Server<S, W>>>,
 ) -> Result<HttpResponse>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {
@@ -341,11 +291,10 @@ where
 }
 
 #[cfg(feature = "backup-enable")]
-pub async fn handle_all_backup_from<D, S, W>(
-    server: web::Data<Arc<Server<D, S, W>>>,
+pub async fn handle_all_backup_from<S, W>(
+    server: web::Data<Arc<Server<S, W>>>,
 ) -> Result<HttpResponse>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {

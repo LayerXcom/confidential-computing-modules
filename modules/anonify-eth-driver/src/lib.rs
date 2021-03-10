@@ -4,7 +4,7 @@
 mod backup;
 mod cache;
 pub mod dispatcher;
-mod error;
+pub mod error;
 pub mod eth;
 pub mod traits;
 mod utils;

@@ -21,6 +21,7 @@ key-vault-ecall-types = { path = "../../modules/key-vault-ecall-types" }
 once_cell = "1.5.2"
 
 [dev-dependencies]
+eth-deployer = { path = "../../ethereum/deployer"}
 frame-config = { path = "../../frame/config" }
 frame-common = { path = "../../frame/common" }
 frame-runtime = { path = "../../frame/runtime" }

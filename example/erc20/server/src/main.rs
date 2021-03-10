@@ -18,60 +18,54 @@ async fn main() -> io::Result<()> {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
-    let server = Arc::new(Server::<EthDeployer, EthSender, EventWatcher>::new(eid));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
 
     HttpServer::new(move || {
         App::new()
             .data(server.clone())
             .route(
-                "/api/v1/deploy",
-                web::post().to(handle_deploy::<EthDeployer, EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_join_group::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/update_mrenclave",
-                web::post().to(handle_update_mrenclave::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_update_mrenclave::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::post().to(handle_send_command::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
-                web::get().to(handle_get_state::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_get_state::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/user_counter",
-                web::get().to(handle_get_user_counter::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_get_user_counter::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/key_rotation",
-                web::post().to(handle_key_rotation::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_key_rotation::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/start_sync_bc",
-                web::get().to(handle_start_sync_bc::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_start_sync_bc::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/register_notification",
-                web::post()
-                    .to(handle_register_notification::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_register_notification::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get()
-                    .to(handle_enclave_encryption_key::<EthDeployer, EthSender, EventWatcher>),
+                web::get().to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/register_report",
-                web::post().to(handle_register_report::<EthDeployer, EthSender, EventWatcher>),
+                web::post().to(handle_register_report::<EthSender, EventWatcher>),
             )
     })
     .bind(my_node_url)?

@@ -7,9 +7,9 @@ extern crate sgx_tstd as std;
 mod ecalls;
 
 use key_vault_enclave::context::KeyVaultEnclaveContext;
+use log::debug;
 use once_cell::sync::Lazy;
 use std::backtrace;
-use log::debug;
 
 const KEY_VAULT_MRENCLAVE_VERSION: usize = 0;
 

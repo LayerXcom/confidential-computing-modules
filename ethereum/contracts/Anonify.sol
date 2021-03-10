@@ -17,36 +17,17 @@ contract Anonify is ReportHandle {
     address private _owner;
     // A version of enclave binary
     uint32 private _mrenclaveVer;
-    // An counter of registered roster index
-    uint32 private _rosterIdxCounter;
     // Counter for enforcing the order of state transitions
     uint256 private _stateCounter;
     // Counter for enforcing the order of state transitions
     mapping(uint32 => GroupKeyCounter) private _groupKeyCounter;
-    // Mapping of a sender and roster index
-    mapping(address => uint32) private _senderToRosterIdx;
 
     event StoreCiphertext(bytes ciphertext, uint256 stateCounter);
     event StoreHandshake(bytes handshake, uint256 stateCounter);
     event UpdateMrenclaveVer(uint32 newVersion);
 
-    constructor(
-        bytes memory _report,
-        bytes memory _reportSig,
-        bytes memory _handshake,
-        uint32 mrenclaveVer,
-        uint32 _rosterIdx
-    ) public ReportHandle(_report, _reportSig) {
-        require(_rosterIdx == 0, "First roster_idx must be zero");
-
-        // The node that joins first does not send command data,
-        // it sends handshake for the first time.
-        _groupKeyCounter[_rosterIdx] = GroupKeyCounter(0, 1);
+    constructor() public {
         _owner = msg.sender;
-        _mrenclaveVer = mrenclaveVer;
-        _senderToRosterIdx[msg.sender] = _rosterIdx;
-        _rosterIdxCounter = _rosterIdx;
-        storeHandshake(_handshake);
     }
 
     modifier onlyOwner() {
@@ -63,21 +44,11 @@ contract Anonify is ReportHandle {
         uint32 _rosterIdx
     ) public {
         require(_mrenclaveVer == _version, "Must be same version");
-        require(
-            _rosterIdx == _rosterIdxCounter + 1,
-            "Joining the group must be ordered accordingly by roster index"
-        );
-        require(
-            _senderToRosterIdx[msg.sender] == 0,
-            "The msg.sender can join only once"
-        );
 
         handleReport(_report, _reportSig);
         // It is assumed that the nodes participate in the order of roster index,
         // and all the nodes finish participating before the state transition.
         _groupKeyCounter[_rosterIdx] = GroupKeyCounter(0, _rosterIdx + 1);
-        _senderToRosterIdx[msg.sender] = _rosterIdx;
-        _rosterIdxCounter = _rosterIdx;
         storeHandshake(_handshake);
     }
 
@@ -91,7 +62,6 @@ contract Anonify is ReportHandle {
         require(_mrenclaveVer == _version, "Must be same version");
 
         handleReport(_report, _reportSig);
-        _senderToRosterIdx[msg.sender] = _rosterIdx;
     }
 
     function updateMrenclave(
@@ -154,10 +124,6 @@ contract Anonify is ReportHandle {
         uint32 _generation,
         uint32 _epoch
     ) public {
-        require(
-            _senderToRosterIdx[msg.sender] == _rosterIdx,
-            "The roster index must be same as the registered one"
-        );
         address verifyingKey =
             Secp256k1.recover(
                 sha256(abi.encodePacked(_handshake, _rosterIdx, _generation, _epoch)),

@@ -9,7 +9,7 @@ pub mod handlers;
 mod tests;
 
 #[derive(Debug)]
-pub struct Server<D: Deployer, S: Sender, W: Watcher> {
+pub struct Server<S: Sender, W: Watcher> {
     pub eid: sgx_enclave_id_t,
     pub eth_url: String,
     pub abi_path: String,
@@ -18,12 +18,11 @@ pub struct Server<D: Deployer, S: Sender, W: Watcher> {
     pub account_index: usize,
     pub password: Option<String>,
     pub sync_time: u64,
-    pub dispatcher: Dispatcher<D, S, W>,
+    pub dispatcher: Dispatcher<S, W>,
 }
 
-impl<D, S, W> Server<D, S, W>
+impl<S, W> Server<S, W>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {
@@ -44,7 +43,7 @@ where
             .expect("Failed to parse SYNC_BC_TIME to u64");
 
         let cache = EventCache::default();
-        let dispatcher = Dispatcher::<D, S, W>::new(eid, &eth_url, cache).unwrap();
+        let dispatcher = Dispatcher::<S, W>::new(eid, &eth_url, cache).unwrap();
 
         Server {
             eid,

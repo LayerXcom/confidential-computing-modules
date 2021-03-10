@@ -10,7 +10,7 @@ ANONIFY_ROOT=/root/anonify
 
 dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/.."
-solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
+solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/Anonify.sol
 
 cd frame/types
 cargo build
@@ -38,8 +38,6 @@ RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 # ERC20 Application Tests
 
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_deploy_post -- --nocapture
-sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture
 sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_skip_invalid_event -- --nocapture

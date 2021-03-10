@@ -70,17 +70,6 @@ pub mod state {
     }
 }
 
-pub mod deploy {
-    pub mod post {
-        use super::super::*;
-
-        #[derive(Debug, Clone, Eq, PartialEq, Hash, Default, Deserialize, Serialize)]
-        pub struct Response {
-            pub contract_address: String,
-        }
-    }
-}
-
 pub mod join_group {
     pub mod post {
         use super::super::*;

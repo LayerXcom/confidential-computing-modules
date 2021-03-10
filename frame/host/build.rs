@@ -1,4 +1,3 @@
-use frame_config::BUILD_DIR;
 use std::env;
 
 fn main() {

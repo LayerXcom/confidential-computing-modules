@@ -1557,6 +1557,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "eth-deployer"
+version = "0.5.4"
+dependencies = [
+ "anonify-eth-driver",
+ "frame-config",
+ "frame-retrier",
+ "hex",
+ "web3",
+]
+
+[[package]]
 name = "ethabi"
 version = "12.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2516,6 +2527,7 @@ dependencies = [
  "actix-rt",
  "anonify-ecall-types",
  "anonify-eth-driver",
+ "eth-deployer",
  "ethabi",
  "frame-common",
  "frame-config",
@@ -2690,6 +2702,7 @@ dependencies = [
  "anonify-ecall-types",
  "anonify-eth-driver",
  "anyhow 1.0.34",
+ "eth-deployer",
  "ethabi",
  "frame-common",
  "frame-config",
@@ -4549,6 +4562,7 @@ dependencies = [
  "anonify-ecall-types",
  "anonify-eth-driver",
  "anyhow 1.0.34",
+ "eth-deployer",
  "ethabi",
  "failure",
  "frame-common",

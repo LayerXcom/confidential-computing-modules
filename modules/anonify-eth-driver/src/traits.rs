@@ -4,33 +4,8 @@ use crate::{cache::EventCache, error::Result, utils::*, workflow::*};
 
 use async_trait::async_trait;
 use sgx_types::sgx_enclave_id_t;
-use std::{marker::Send, path::Path};
+use std::path::Path;
 use web3::types::{Address, H256};
-
-/// A trait for deploying contracts
-#[async_trait]
-pub trait Deployer: Sized {
-    fn new(enclave_id: sgx_enclave_id_t, node_url: &str) -> Result<Self>;
-
-    async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address>;
-
-    /// Deploying contract with attestation.
-    async fn deploy<P>(
-        &mut self,
-        host_output: &host_output::JoinGroup,
-        abi_path: P,
-        bin_path: P,
-        confirmations: usize,
-    ) -> Result<String>
-    where
-        P: AsRef<Path> + Send + Sync + Copy;
-
-    fn get_contract<P: AsRef<Path>>(self, abi_path: P) -> Result<ContractKind>;
-
-    fn get_enclave_id(&self) -> sgx_enclave_id_t;
-
-    fn get_node_url(&self) -> &str;
-}
 
 /// A trait for sending transactions to blockchain nodes
 #[async_trait]
