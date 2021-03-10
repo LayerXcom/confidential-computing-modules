@@ -36,13 +36,13 @@ pub struct EthDeployer {
 }
 
 impl EthDeployer {
-    fn new(node_url: &str) -> Result<Self> {
+    pub fn new(node_url: &str) -> Result<Self> {
         let web3_conn = Web3Http::new(node_url)?;
 
         Ok(EthDeployer { web3_conn })
     }
 
-    async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {
+    pub async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {
         Retry::new(
             "get_account",
             *REQUEST_RETRIES,
@@ -53,7 +53,7 @@ impl EthDeployer {
         .await
     }
 
-    async fn deploy<P>(
+    pub async fn deploy<P>(
         &self,
         abi_path: P,
         bin_path: P,

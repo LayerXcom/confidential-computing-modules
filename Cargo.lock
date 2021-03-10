@@ -2527,6 +2527,7 @@ dependencies = [
  "actix-rt",
  "anonify-ecall-types",
  "anonify-eth-driver",
+ "eth-deployer",
  "ethabi",
  "frame-common",
  "frame-config",
