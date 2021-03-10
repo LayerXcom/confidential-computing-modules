@@ -99,6 +99,17 @@ async fn test_integration_eth_construct() {
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
 
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
+
     // Get handshake from contract
     dispatcher
         .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
@@ -207,6 +218,17 @@ async fn test_auto_notification() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
 
     // Get handshake from contract
     dispatcher
@@ -347,6 +369,17 @@ async fn test_integration_eth_transfer() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
 
     // Get handshake from contract
     dispatcher
@@ -513,6 +546,17 @@ async fn test_key_rotation() {
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
 
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
+
     // Get handshake from contract
     dispatcher
         .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
@@ -629,6 +673,17 @@ async fn test_integration_eth_approve() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
 
     // Get handshake from contract
     dispatcher
@@ -781,6 +836,17 @@ async fn test_integration_eth_transfer_from() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
 
     // Get handshake from contract
     dispatcher
@@ -1118,6 +1184,17 @@ async fn test_integration_eth_mint() {
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
 
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
+
     // Get handshake from contract
     dispatcher
         .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
@@ -1249,6 +1326,17 @@ async fn test_integration_eth_burn() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
 
     // Get handshake from contract
     dispatcher
