@@ -29,8 +29,8 @@ impl_runtime! {
         recipient: AccountId,
         amount: U64
     ) {
-        env_logger::init();
-        debug!("##### transfer");
+        let t = localstd::time::SystemTime::now();
+        debug!("##### transfer start: {:?}", t);
         let sender_balance = self.get_map::<U64>(sender, "Balance")?;
         let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
 
