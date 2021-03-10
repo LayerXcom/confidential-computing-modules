@@ -1,4 +1,5 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.7.4;
 
 library ArrayUtils {
     function bytes4_range(bytes4[] memory self, uint offset, uint len) internal pure returns (bytes4[] memory res) {

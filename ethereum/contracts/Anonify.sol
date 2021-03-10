@@ -1,6 +1,8 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.7.4;
 pragma experimental ABIEncoderV2;
 
+import "./utils/SafeMath.sol";
 import "./ReportHandle.sol";
 import "./utils/Secp256k1.sol";
 import "./utils/BytesUtils.sol";
@@ -8,6 +10,7 @@ import "./utils/BytesUtils.sol";
 // Consider: Avoid inheritting
 contract Anonify is ReportHandle {
     using BytesUtils for bytes;
+    using SafeMath for uint256;
 
     struct GroupKeyCounter {
         uint32 generation;
@@ -26,7 +29,7 @@ contract Anonify is ReportHandle {
     event StoreHandshake(bytes handshake, uint256 stateCounter);
     event UpdateMrenclaveVer(uint32 newVersion);
 
-    constructor() public {
+    constructor() {
         _owner = msg.sender;
     }
 
