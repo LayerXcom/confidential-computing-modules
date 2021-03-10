@@ -45,11 +45,11 @@ contract Anonify is ReportHandle {
         uint32 _version,
         uint32 _rosterIdx
     ) public {
-        require(_mrenclaveVer == _version, "Must be same version");
-        require(
-            _rosterIdx == _rosterIdxCounter + 1,
-            "Joining the group must be ordered accordingly by roster index"
-        );
+        // require(_mrenclaveVer == _version, "Must be same version");
+        // require(
+        //     _rosterIdx == _rosterIdxCounter + 1,
+        //     "Joining the group must be ordered accordingly by roster index"
+        // );
 
         handleReport(_report, _reportSig);
         // It is assumed that the nodes participate in the order of roster index,
