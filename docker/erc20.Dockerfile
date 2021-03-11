@@ -10,7 +10,7 @@ RUN set -x && \
     apt-get upgrade -y --no-install-recommends && \
     apt-get install -y --no-install-recommends libzmq3-dev llvm clang-3.9 llvm-3.9-dev libclang-3.9-dev software-properties-common nodejs && \
     rm -rf /var/lib/apt/lists/* && \
-    curl -o /usr/bin/solc -fL https://github.com/ethereum/solidity/releases/download/v0.5.16/solc-static-linux && \
+    curl -o /usr/bin/solc -fL https://github.com/ethereum/solidity/releases/download/v0.7.4/solc-static-linux && \
     chmod u+x /usr/bin/solc && \
     rm -rf /root/.cargo/registry && rm -rf /root/.cargo/git && \
     git clone --depth 1 -b v1.1.3 https://github.com/baidu/rust-sgx-sdk.git sgx
