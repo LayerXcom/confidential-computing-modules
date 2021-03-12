@@ -1,4 +1,4 @@
-use anonify_eth_driver::{traits::*, Dispatcher, EventCache};
+use anonify_eth_driver::{traits::*, utils::get_account, Dispatcher, EventCache, Web3Http};
 use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH};
 use sgx_types::sgx_enclave_id_t;
 use std::env;
@@ -42,8 +42,18 @@ where
             .parse()
             .expect("Failed to parse SYNC_BC_TIME to u64");
 
+        let web3_conn = Web3Http::new(eth_url).unwrap();
+        let sender_address = get_account(&web3_conn, account_index, password).unwrap();
+
         let cache = EventCache::default();
-        let dispatcher = Dispatcher::<S, W>::new(eid, &eth_url, cache);
+        let dispatcher = Dispatcher::<S, W>::new(eid, &eth_url, cache)
+            .set_anonify_contract_address(
+                sender_address,
+                [0u8; 32], //salt
+                &*ANONIFY_ABI_PATH,
+                &*ANONIFY_BIN_PATH,
+            )
+            .unwrap();
 
         Server {
             eid,

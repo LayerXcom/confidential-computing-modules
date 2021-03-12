@@ -1,9 +1,37 @@
-use crate::{error::Result, eth::connection::Web3Contract};
+use crate::{
+    error::{Result, HostError},
+    eth::{connection::Web3Contract, sender::sender_retry_condition},
+    Web3Http,
+};
 use anyhow::anyhow;
 use ethabi::Contract as ContractABI;
 use frame_common::traits::Keccak256;
+use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
+use frame_retrier::{strategy, Retry};
 use std::{fs, io::BufReader, path::Path, str::FromStr};
 use web3::types::Address;
+
+/// Define a retry condition of deploying contracts.
+/// If it returns true, retry deploying contracts.
+const fn deployer_retry_condition(res: &Result<Address>) -> bool {
+    match res {
+        Ok(_) => false,
+        Err(err) => match err {
+            HostError::Web3ContractError(web3_err) => match web3_err {
+                web3::contract::Error::Abi(_) => false,
+                _ => true,
+            },
+            HostError::Web3ContractDeployError(web3_err) => match web3_err {
+                web3::contract::deploy::Error::Abi(_) => false,
+                _ => true,
+            },
+            HostError::EcallOutputNotSet => false,
+            // error reading abi and bin path
+            HostError::IoError(_) => false,
+            _ => true,
+        },
+    }
+}
 
 /// Needed information to handle smart contracts.
 #[derive(Debug, Clone)]
@@ -44,4 +72,15 @@ pub fn calc_anonify_contract_address(sender: Address, salt: [u8; 32], bin_code: 
     let mut addr = [0u8; 20];
     addr.copy_from_slice(&hash[12..]);
     Address::from(addr)
+}
+
+pub async fn get_account(web3_conn: &Web3Http, index: usize, password: Option<&str>) -> Result<Address> {
+    Retry::new(
+        "get_account",
+        *REQUEST_RETRIES,
+        strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
+    )
+    .set_condition(deployer_retry_condition)
+    .spawn_async(|| async { web3_conn.get_account(index, password).await })
+    .await
 }

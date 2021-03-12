@@ -44,10 +44,6 @@ async fn test_multiple_messages() {
                 web::post().to(handle_join_group::<EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
