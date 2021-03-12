@@ -1,5 +1,5 @@
 use anonify_eth_driver::{traits::*, Dispatcher, EventCache};
-use frame_config::{ABI_PATH, BIN_PATH};
+use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH};
 use sgx_types::sgx_enclave_id_t;
 use std::env;
 
@@ -48,8 +48,8 @@ where
         Server {
             eid,
             eth_url,
-            abi_path: (&*ABI_PATH.to_str().unwrap()).to_string(),
-            bin_path: (&*BIN_PATH.to_str().unwrap()).to_string(),
+            abi_path: (&*ANONIFY_ABI_PATH.to_str().unwrap()).to_string(),
+            bin_path: (&*ANONIFY_BIN_PATH.to_str().unwrap()).to_string(),
             confirmations,
             account_index,
             sync_time,

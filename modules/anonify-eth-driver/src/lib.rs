@@ -7,7 +7,7 @@ pub mod dispatcher;
 pub mod error;
 pub mod eth;
 pub mod traits;
-mod utils;
+pub mod utils;
 mod workflow;
 
 pub use cache::EventCache;

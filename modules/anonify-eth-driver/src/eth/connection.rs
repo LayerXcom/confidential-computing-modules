@@ -30,12 +30,12 @@ pub struct Web3Contract {
 }
 
 impl Web3Contract {
-    pub fn new<P: AsRef<Path>>(
+    pub fn new(
         web3_conn: Web3Http,
-        contract_info: ContractInfo<'_, P>,
+        contract_info: ContractInfo,
     ) -> Result<Self> {
         let abi = contract_info.contract_abi()?;
-        let address = contract_info.address()?;
+        let address = contract_info.address();
         let contract = Contract::new(web3_conn.web3.eth(), address, abi);
         let event_limit = env::var("EVENT_LIMIT")
             .unwrap_or_else(|_| "100".to_string())
@@ -199,7 +199,7 @@ impl Web3Contract {
 /// Basic web3 connection components via HTTP.
 #[derive(Debug)]
 pub struct Web3Http {
-    web3: Web3<Http>,
+    pub web3: Web3<Http>,
     eth_url: String,
     unlock_duration: u16,
 }

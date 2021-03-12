@@ -8,11 +8,12 @@ use crate::{
     utils::*,
     workflow::host_input,
 };
+use anyhow::anyhow;
 use frame_host::engine::HostEngine;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{fmt::Debug, path::Path};
+use std::{fmt::Debug, path::Path, str::FromStr};
 use web3::types::{Address, H256};
 
 /// This dispatcher communicates with a blockchain node.
@@ -59,9 +60,11 @@ where
         let mut inner = self.inner.write();
         let enclave_id = inner.enclave_id;
         let node_url = &inner.node_url;
+        let contract_addr = Address::from_str(contract_addr)
+            .map_err(|e| anyhow!("Failed to Address::from_str: {:?}", e))?;
 
-        let contract_info = ContractInfo::new(abi_path, contract_addr);
-        let sender = S::new(enclave_id, node_url, contract_info)?;
+        let contract_info = ContractInfo::new(abi_path, contract_addr)?;
+        let sender = S::new(enclave_id, node_url, contract_info.clone())?;
         let watcher = W::new(node_url, contract_info, inner.cache.clone())?;
 
         inner.sender = Some(sender);
