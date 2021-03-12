@@ -1,5 +1,6 @@
 use frame_runtime::prelude::*;
 use log::debug;
+use std::time;
 
 pub const MAX_MEM_SIZE: usize = 100;
 
@@ -29,15 +30,18 @@ impl_runtime! {
         recipient: AccountId,
         amount: U64
     ) {
-        let t = localstd::time::SystemTime::now();
-        debug!("##### transfer start: {:?}", t);
         let sender_balance = self.get_map::<U64>(sender, "Balance")?;
         let recipient_balance = self.get_map::<U64>(recipient, "Balance")?;
 
         ensure!(sender_balance > amount, "transfer amount ({:?}) exceeds balance ({:?}).", amount, sender_balance);
 
+        let t = time::SystemTime::now();
+        debug!("########## sender and recipient update: {:?}", t);
         let sender_update = update!(sender, "Balance", sender_balance - amount, U64);
         let recipient_update = update!(recipient, "Balance", recipient_balance + amount, U64);
+
+        let t = time::SystemTime::now();
+        debug!("########## return update: {:?}", t);
 
         return_update![sender_update, recipient_update]
     }

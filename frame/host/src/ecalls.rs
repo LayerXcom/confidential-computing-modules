@@ -36,11 +36,7 @@ impl EnclaveConnector {
         D: DeserializeOwned + EcallOutput,
     {
         let input_payload = bincode::serialize(&input)?;
-        let st3 = std::time::SystemTime::now();
-        println!("########## st3: {:?}", st3);
         let result = self.inner_invoke_ecall(cmd, input_payload)?;
-        let st6 = std::time::SystemTime::now();
-        println!("########## st6: {:?}", st6);
         bincode::deserialize(&result[..]).map_err(Into::into)
     }
 
@@ -54,8 +50,8 @@ impl EnclaveConnector {
 
         let mut ret = EnclaveStatus::default();
 
-        let st4 = std::time::SystemTime::now();
-        println!("########## st4: {:?}", st4);
+        let st3 = std::time::SystemTime::now();
+        println!("########## st3: {:?}", st3);
         let status = unsafe {
             ecall_entry_point(
                 self.eid,
@@ -68,9 +64,9 @@ impl EnclaveConnector {
                 &mut output_len,
             )
         };
-        let st5 = std::time::SystemTime::now();
-        println!("########## st5: {:?}", st5);
 
+        let st10 = std::time::SystemTime::now();
+        println!("########## st10: {:?}", st10);
         if status != sgx_status_t::SGX_SUCCESS {
             return Err(FrameHostError::SgxStatus {
                 status,

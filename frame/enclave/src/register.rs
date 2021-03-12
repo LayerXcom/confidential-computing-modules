@@ -1,3 +1,6 @@
+use log::debug;
+use std::time;
+
 #[macro_export]
 macro_rules! register_ecall {
     (   $ctx: expr,
@@ -23,11 +26,19 @@ macro_rules! register_ecall {
             let res = {
                 let ciphertext = bincode::deserialize(&input_payload[..])
                     .map_err(|e| anyhow!("{:?}", e))?;
+
+                let st4 = std::time::SystemTime::now();
+                debug!("########## st4: {:?}", st4);
                 let input = EE::decrypt::<$ctx_ops>(ciphertext, $ctx)?;
                 EE::eval_policy(&input)?;
+
+                let st5 = std::time::SystemTime::now();
+                debug!("########## st5: {:?}", st5);
                 EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?
             };
 
+            let st9 = std::time::SystemTime::now();
+            debug!("########## st9: {:?}", st9);
             #[cfg(not(feature = "runtime_enabled"))]
             let res = EE::handle_without_runtime::<$ctx_ops>($ctx)?;
 

@@ -10,7 +10,7 @@ use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use frame_sodium::SodiumCiphertext;
 use serde::{Deserialize, Serialize};
-use std::{marker::PhantomData, vec::Vec};
+use std::{marker::PhantomData, vec::Vec, time};
 use log::debug;
 
 /// A message sender that encrypts commands
@@ -46,10 +46,16 @@ where
     {
         let group_key = &mut *enclave_context.write_group_key();
         let roster_idx = group_key.my_roster_idx();
+
+        let st6 = time::SystemTime::now();
+        debug!("########## st6: {:?}", st6);
         // ratchet sender's app keychain per tx.
         group_key.sender_ratchet(roster_idx as usize)?;
 
         let my_account_id = self.ecall_input.access_policy().into_account_id();
+
+        let st7 = time::SystemTime::now();
+        debug!("########## st7: {:?}", st7);
         let ciphertext = Commands::<R, C, AP>::new(my_account_id, self.ecall_input)?
             .encrypt(group_key, max_mem_size)?;
 
@@ -59,7 +65,9 @@ where
             ciphertext.generation(),
             ciphertext.epoch(),
         );
-        debug!("##### enclave_sig");
+
+        let st8 = time::SystemTime::now();
+        debug!("########## st8: {:?}", st8);
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
         let command_output = output::Command::new(ciphertext, enclave_sig.0, enclave_sig.1);
 

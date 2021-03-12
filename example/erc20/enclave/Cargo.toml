@@ -17,7 +17,7 @@ frame-types = { path = "../../../frame/types" }
 frame-common = { path = "../../../frame/common", default-features = false, features = ["sgx"] }
 anonify-enclave = { path = "../../../modules/anonify-enclave", default-features = false }
 anonify-ecall-types = { path = "../../../modules/anonify-ecall-types", default-features = false, features = ["sgx"] }
-sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git"}
+sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 anyhow = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
