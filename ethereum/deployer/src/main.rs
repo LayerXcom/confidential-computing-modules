@@ -1,6 +1,6 @@
 use eth_deployer::EthDeployer;
 use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, CREATE2_ABI_PATH, CREATE2_BIN_PATH};
-use std::env;
+use std::{env, str::FromStr};
 
 const GAS: u64 = 5_000_000;
 
@@ -25,24 +25,33 @@ async fn main() {
         .await
         .unwrap();
 
-    let contract_address = match args[0].as_str() {
-        "create2" => deployer.deploy(
-            &*CREATE2_ABI_PATH,
-            &*CREATE2_BIN_PATH,
-            confirmations,
-            GAS,
-            signer,
-        ),
-        _ => deployer.deploy(
-            &*ANONIFY_ABI_PATH,
-            &*ANONIFY_BIN_PATH,
-            confirmations,
-            GAS,
-            signer,
-        ),
-    }
-    .await
-    .unwrap();
-
-    println!("contract_address");
+    match args[0].as_str() {
+        "create2" => {
+            let contract_address = deployer
+                .deploy(
+                    &*CREATE2_ABI_PATH,
+                    &*CREATE2_BIN_PATH,
+                    confirmations,
+                    GAS,
+                    signer,
+                )
+                .await
+                .unwrap();
+            println!("{}", contract_address);
+        }
+        contract_address if web3::types::Address::from_str(contract_address).is_ok() => {
+            let tx_hash = deployer
+                .deploy_anonify(
+                    &*ANONIFY_ABI_PATH,
+                    &*ANONIFY_BIN_PATH,
+                    signer,
+                    GAS,
+                    Default::default(), //TODO
+                )
+                .await
+                .unwrap();
+            println!("tx_hash: {}", tx_hash);
+        }
+        _ => panic!("Invalid arguments"),
+    };
 }
