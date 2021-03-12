@@ -33,13 +33,16 @@ const fn deployer_retry_condition(res: &Result<Address>) -> bool {
 #[derive(Debug)]
 pub struct EthDeployer {
     web3_conn: Web3Http,
+    anonify_contract_address: Option<Address>,
 }
 
 impl EthDeployer {
     pub fn new(node_url: &str) -> Result<Self> {
         let web3_conn = Web3Http::new(node_url)?;
+        let contract_info = ContractInfo::new(abi_path, contract_addr);
+        Contract::new(web3_conn.web3.eth(), address, abi);
 
-        Ok(EthDeployer { web3_conn })
+        Ok(EthDeployer { web3_conn, anonify_contract_address: None })
     }
 
     pub async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {
@@ -51,6 +54,10 @@ impl EthDeployer {
         .set_condition(deployer_retry_condition)
         .spawn_async(|| async { self.web3_conn.get_account(index, password).await })
         .await
+    }
+
+    pub fn set_anonify_contract_address(mut self, signer: Address) -> Result<Self> {
+        unimplemented!();
     }
 
     pub async fn deploy<P>(
@@ -78,5 +85,45 @@ impl EthDeployer {
         .await?;
 
         Ok(hex::encode(contract_addr.as_bytes()))
+    }
+
+    pub async fn deploy_anonify<P>(
+        &self,
+        abi_path: P,
+        bin_path: P,
+    ) -> Result<H256>
+     where
+        P: AsRef<Path> + Send + Sync + Copy,
+    {
+        let anonify_contract_address = self.anonify_contract_address.unwrap();
+        let contract_info = ContractInfo::new(abi_path, anonify_contract_address);
+        let contract = Contract::new(web3_conn.web3.eth(), address, abi);
+
+        Retry::new(
+            "send_command",
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
+        )
+        .set_condition(deployer_retry_condition)
+        .spawn_async(|| async {
+             contract
+            .call(
+                "storeCommand",
+                (
+                    ciphertext.encode(),
+                    enclave_sig,
+                    ciphertext.roster_idx(),
+                    ciphertext.generation(),
+                    ciphertext.epoch(),
+                ),
+                output.signer,
+                Options::with(|opt| opt.gas = Some(gas.into())),
+            )
+            .await
+            .map_err(Into::into)
+
+            self.contract.send_command(host_output.clone()).await
+        })
+        .await
     }
 }
