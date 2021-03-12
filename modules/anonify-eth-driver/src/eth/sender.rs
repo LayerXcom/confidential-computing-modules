@@ -38,10 +38,10 @@ pub struct EthSender {
 
 #[async_trait]
 impl Sender for EthSender {
-    fn new<P: AsRef<Path>>(
+    fn new(
         enclave_id: sgx_enclave_id_t,
         node_url: &str,
-        contract_info: ContractInfo<'_, P>,
+        contract_info: ContractInfo,
     ) -> Result<Self> {
         let web3_http = Web3Http::new(node_url)?;
         let contract = Web3Contract::new(web3_http, contract_info)?;

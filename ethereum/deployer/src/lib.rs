@@ -1,11 +1,15 @@
 use anonify_eth_driver::{
     error::{HostError, Result},
     eth::Web3Http,
+    utils::ContractInfo,
 };
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use std::{marker::Send, path::Path};
-use web3::types::Address;
+use web3::{
+    contract::{Contract, Options},
+    types::{Address, H256},
+};
 
 /// Define a retry condition of deploying contracts.
 /// If it returns true, retry deploying contracts.
@@ -39,10 +43,11 @@ pub struct EthDeployer {
 impl EthDeployer {
     pub fn new(node_url: &str) -> Result<Self> {
         let web3_conn = Web3Http::new(node_url)?;
-        let contract_info = ContractInfo::new(abi_path, contract_addr);
-        Contract::new(web3_conn.web3.eth(), address, abi);
 
-        Ok(EthDeployer { web3_conn, anonify_contract_address: None })
+        Ok(EthDeployer {
+            web3_conn,
+            anonify_contract_address: None,
+        })
     }
 
     pub async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {
@@ -91,38 +96,34 @@ impl EthDeployer {
         &self,
         abi_path: P,
         bin_path: P,
+        signer: Address,
+        gas: u64,
+        salt: H256,
     ) -> Result<H256>
-     where
+    where
         P: AsRef<Path> + Send + Sync + Copy,
     {
         let anonify_contract_address = self.anonify_contract_address.unwrap();
-        let contract_info = ContractInfo::new(abi_path, anonify_contract_address);
-        let contract = Contract::new(web3_conn.web3.eth(), address, abi);
+        let contract_info = ContractInfo::new(abi_path, anonify_contract_address)?;
+        let abi = contract_info.contract_abi()?;
+        let contract = Contract::new(self.web3_conn.web3.eth(), contract_info.address(), abi);
 
         Retry::new(
-            "send_command",
+            "deploy",
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(deployer_retry_condition)
         .spawn_async(|| async {
-             contract
-            .call(
-                "storeCommand",
-                (
-                    ciphertext.encode(),
-                    enclave_sig,
-                    ciphertext.roster_idx(),
-                    ciphertext.generation(),
-                    ciphertext.epoch(),
-                ),
-                output.signer,
-                Options::with(|opt| opt.gas = Some(gas.into())),
-            )
-            .await
-            .map_err(Into::into)
-
-            self.contract.send_command(host_output.clone()).await
+            contract
+                .call(
+                    "deploy",
+                    salt,
+                    signer,
+                    Options::with(|opt| opt.gas = Some(gas.into())),
+                )
+                .await
+                .map_err(Into::into)
         })
         .await
     }
