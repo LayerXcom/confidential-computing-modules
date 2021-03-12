@@ -1,6 +1,6 @@
 use eth_deployer::EthDeployer;
 use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, CREATE2_ABI_PATH, CREATE2_BIN_PATH};
-use std::{env, str::FromStr};
+use std::{env, fs, str::FromStr};
 
 const GAS: u64 = 5_000_000;
 
@@ -40,14 +40,12 @@ async fn main() {
             println!("{}", contract_address);
         }
         contract_address if web3::types::Address::from_str(contract_address).is_ok() => {
+            let bin_code = fs::read(&*ANONIFY_BIN_PATH).unwrap();
+            let salt = [0u8; 32];
+
             let tx_hash = deployer
-                .deploy_anonify(
-                    &*ANONIFY_ABI_PATH,
-                    &*ANONIFY_BIN_PATH,
-                    signer,
-                    GAS,
-                    Default::default(), //TODO
-                )
+                .set_anonify_contract_address(signer, salt, &bin_code)
+                .deploy_anonify(&*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH, signer, GAS, salt)
                 .await
                 .unwrap();
             println!("tx_hash: {}", tx_hash);

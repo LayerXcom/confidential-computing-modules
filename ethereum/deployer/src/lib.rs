@@ -61,9 +61,9 @@ impl EthDeployer {
         .await
     }
 
-    pub fn set_anonify_contract_address(mut self, sender: Address, bin_code: &[u8]) -> Self {
-        let addr = calc_anonify_contract_address(sender, Default::default(), bin_code);
-        self.anonify_contract_address = addr;
+    pub fn set_anonify_contract_address(mut self, sender: Address, salt: [u8; 32], bin_code: &[u8]) -> Self {
+        let addr = calc_anonify_contract_address(sender, salt, bin_code);
+        self.anonify_contract_address = Some(addr);
         self
     }
 
@@ -100,7 +100,7 @@ impl EthDeployer {
         bin_path: P,
         signer: Address,
         gas: u64,
-        salt: H256,
+        salt: [u8; 32],
     ) -> Result<H256>
     where
         P: AsRef<Path> + Send + Sync + Copy,
