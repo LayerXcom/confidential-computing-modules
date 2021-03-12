@@ -92,7 +92,7 @@ async fn test_integration_eth_construct() {
         )
         .await
         .unwrap();
-    let anonify_contract_addr = deployer
+    let tx_hash = deployer
         .deploy_anonify_by_create2(
             &*CREATE2_ABI_PATH,
             deployer_addr,
@@ -106,6 +106,7 @@ async fn test_integration_eth_construct() {
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
         .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("create2 contract address: {}", create2_contract_addr);
@@ -124,7 +125,7 @@ async fn test_integration_eth_construct() {
 
     // Init state
     let total_supply: u64 = 100;
-    let pubkey = get_enclave_encryption_key(&anonify_contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -200,6 +201,7 @@ async fn test_auto_notification() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
+    let salt = [1u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -208,32 +210,38 @@ async fn test_auto_notification() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let create2_contract_addr = deployer
         .deploy(
-            &*ANONIFY_ABI_PATH,
-            &*ANONIFY_BIN_PATH,
+            &*CREATE2_ABI_PATH,
+            &*CREATE2_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
-    dispatcher
-        .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_create2(
+            &*CREATE2_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ANONIFY_ABI_PATH,
-            JOIN_GROUP_CMD,
+            salt,
+            create2_contract_addr,
         )
+        .await
+        .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("create2 contract address: {}", create2_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_CMD)
         .await
         .unwrap();
 
@@ -244,7 +252,7 @@ async fn test_auto_notification() {
         .unwrap();
 
     // Init state
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let total_supply: u64 = 100;
     let req = json!({
         "access_policy": my_access_policy.clone(),
@@ -352,6 +360,7 @@ async fn test_integration_eth_transfer() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
+    let salt = [2u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -360,32 +369,38 @@ async fn test_integration_eth_transfer() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let create2_contract_addr = deployer
         .deploy(
-            &*ANONIFY_ABI_PATH,
-            &*ANONIFY_BIN_PATH,
+            &*CREATE2_ABI_PATH,
+            &*CREATE2_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
-    dispatcher
-        .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_create2(
+            &*CREATE2_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ANONIFY_ABI_PATH,
-            JOIN_GROUP_CMD,
+            salt,
+            create2_contract_addr,
         )
+        .await
+        .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("create2 contract address: {}", create2_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_CMD)
         .await
         .unwrap();
 
@@ -397,7 +412,7 @@ async fn test_integration_eth_transfer() {
 
     // Init state
     let total_supply: u64 = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
 
     let req = json!({
         "access_policy": my_access_policy.clone(),
@@ -529,6 +544,7 @@ async fn test_key_rotation() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
+    let salt = [3u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -537,32 +553,38 @@ async fn test_key_rotation() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let create2_contract_addr = deployer
         .deploy(
-            &*ANONIFY_ABI_PATH,
-            &*ANONIFY_BIN_PATH,
+            &*CREATE2_ABI_PATH,
+            &*CREATE2_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
-    dispatcher
-        .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_create2(
+            &*CREATE2_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ANONIFY_ABI_PATH,
-            JOIN_GROUP_CMD,
+            salt,
+            create2_contract_addr,
         )
+        .await
+        .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("create2 contract address: {}", create2_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_CMD)
         .await
         .unwrap();
 
@@ -587,7 +609,7 @@ async fn test_key_rotation() {
 
     // init state
     let total_supply: u64 = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -658,6 +680,7 @@ async fn test_integration_eth_approve() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
+    let salt = [4u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -666,35 +689,40 @@ async fn test_integration_eth_approve() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let create2_contract_addr = deployer
         .deploy(
-            &*ANONIFY_ABI_PATH,
-            &*ANONIFY_BIN_PATH,
+            &*CREATE2_ABI_PATH,
+            &*CREATE2_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
-    dispatcher
-        .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_create2(
+            &*CREATE2_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ANONIFY_ABI_PATH,
-            JOIN_GROUP_CMD,
+            salt,
+            create2_contract_addr,
         )
         .await
         .unwrap();
 
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("create2 contract address: {}", create2_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_CMD)
+        .await
+        .unwrap();
     // Get handshake from contract
     dispatcher
         .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
@@ -703,7 +731,7 @@ async fn test_integration_eth_approve() {
 
     // Init state
     let total_supply = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -822,6 +850,7 @@ async fn test_integration_eth_transfer_from() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
+    let salt = [5u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -830,32 +859,38 @@ async fn test_integration_eth_transfer_from() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let create2_contract_addr = deployer
         .deploy(
-            &*ANONIFY_ABI_PATH,
-            &*ANONIFY_BIN_PATH,
+            &*CREATE2_ABI_PATH,
+            &*CREATE2_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
-    dispatcher
-        .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_create2(
+            &*CREATE2_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ANONIFY_ABI_PATH,
-            JOIN_GROUP_CMD,
+            salt,
+            create2_contract_addr,
         )
+        .await
+        .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("create2 contract address: {}", create2_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_CMD)
         .await
         .unwrap();
 
@@ -867,7 +902,7 @@ async fn test_integration_eth_transfer_from() {
 
     // Init state
     let total_supply: u64 = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -1170,6 +1205,7 @@ async fn test_integration_eth_mint() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
+    let salt = [6u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -1178,31 +1214,38 @@ async fn test_integration_eth_mint() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let create2_contract_addr = deployer
         .deploy(
-            &*ANONIFY_ABI_PATH,
-            &*ANONIFY_BIN_PATH,
+            &*CREATE2_ABI_PATH,
+            &*CREATE2_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
-    dispatcher
-        .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_create2(
+            &*CREATE2_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ANONIFY_ABI_PATH,
-            JOIN_GROUP_CMD,
+            salt,
+            create2_contract_addr,
         )
+        .await
+        .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("create2 contract address: {}", create2_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_CMD)
         .await
         .unwrap();
 
@@ -1214,7 +1257,7 @@ async fn test_integration_eth_mint() {
 
     // Init state
     let total_supply = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -1313,6 +1356,7 @@ async fn test_integration_eth_burn() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
+    let salt = [7u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -1321,32 +1365,38 @@ async fn test_integration_eth_burn() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let create2_contract_addr = deployer
         .deploy(
-            &*ANONIFY_ABI_PATH,
-            &*ANONIFY_BIN_PATH,
+            &*CREATE2_ABI_PATH,
+            &*CREATE2_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
-    dispatcher
-        .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_create2(
+            &*CREATE2_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ANONIFY_ABI_PATH,
-            JOIN_GROUP_CMD,
+            salt,
+            create2_contract_addr,
         )
+        .await
+        .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("create2 contract address: {}", create2_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_CMD)
         .await
         .unwrap();
 
@@ -1358,7 +1408,7 @@ async fn test_integration_eth_burn() {
 
     // Init state
     let total_supply = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
