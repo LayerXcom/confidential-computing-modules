@@ -1,7 +1,7 @@
 use anonify_eth_driver::{
     error::{HostError, Result},
     eth::{sender::sender_retry_condition, Web3Http},
-    utils::ContractInfo,
+    utils::{calc_anonify_contract_address, ContractInfo},
 };
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
@@ -37,7 +37,6 @@ const fn deployer_retry_condition(res: &Result<Address>) -> bool {
 #[derive(Debug)]
 pub struct EthDeployer {
     web3_conn: Web3Http,
-    anonify_contract_address: Option<Address>,
 }
 
 impl EthDeployer {
@@ -46,7 +45,6 @@ impl EthDeployer {
 
         Ok(EthDeployer {
             web3_conn,
-            anonify_contract_address: None,
         })
     }
 
@@ -59,10 +57,6 @@ impl EthDeployer {
         .set_condition(deployer_retry_condition)
         .spawn_async(|| async { self.web3_conn.get_account(index, password).await })
         .await
-    }
-
-    pub fn set_anonify_contract_address(mut self, signer: Address) -> Result<Self> {
-        unimplemented!();
     }
 
     pub async fn deploy<P>(
@@ -92,21 +86,18 @@ impl EthDeployer {
         Ok(hex::encode(contract_addr.as_bytes()))
     }
 
-    pub async fn deploy_anonify<P>(
+    pub async fn deploy_anonify_by_create2<P>(
         &self,
         abi_path: P,
-        bin_path: P,
         signer: Address,
         gas: u64,
-        salt: H256,
+        salt: [u8; 32],
+        create2_address: Address,
     ) -> Result<H256>
     where
         P: AsRef<Path> + Send + Sync + Copy,
     {
-        let anonify_contract_address = self
-            .anonify_contract_address
-            .ok_or_else(|| HostError::AddressNotSet)?;
-        let contract_info = ContractInfo::new(abi_path, anonify_contract_address)?;
+        let contract_info = ContractInfo::new(abi_path, create2_address)?;
         let abi = contract_info.contract_abi()?;
         let contract = Contract::new(self.web3_conn.web3.eth(), contract_info.address(), abi);
 

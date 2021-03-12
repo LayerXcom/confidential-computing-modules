@@ -17,7 +17,7 @@ async fn main() {
         .parse::<usize>()
         .expect("Failed to parse CONFIRMATIONS to usize");
     let args: Vec<String> = env::args().collect();
-    assert_eq!(args.len(), 1);
+    assert_eq!(args.len(), 2);
 
     let deployer = EthDeployer::new(&eth_url).unwrap();
     let signer = deployer
@@ -25,7 +25,7 @@ async fn main() {
         .await
         .unwrap();
 
-    match args[0].as_str() {
+    match args[1].as_str() {
         "create2" => {
             let contract_address = deployer
                 .deploy(
@@ -40,14 +40,11 @@ async fn main() {
             println!("{}", contract_address);
         }
         contract_address if web3::types::Address::from_str(contract_address).is_ok() => {
+            let create2_address = web3::types::Address::from_str(contract_address).unwrap();
+            let salt = [0u8; 32];
+
             let tx_hash = deployer
-                .deploy_anonify(
-                    &*ANONIFY_ABI_PATH,
-                    &*ANONIFY_BIN_PATH,
-                    signer,
-                    GAS,
-                    Default::default(), //TODO
-                )
+                .deploy_anonify_by_create2(&*CREATE2_ABI_PATH, signer, GAS, salt, create2_address)
                 .await
                 .unwrap();
             println!("tx_hash: {}", tx_hash);

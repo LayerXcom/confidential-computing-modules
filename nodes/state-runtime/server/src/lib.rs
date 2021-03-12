@@ -43,7 +43,7 @@ where
             .expect("Failed to parse SYNC_BC_TIME to u64");
 
         let cache = EventCache::default();
-        let dispatcher = Dispatcher::<S, W>::new(eid, &eth_url, cache).unwrap();
+        let dispatcher = Dispatcher::<S, W>::new(eid, &eth_url, cache);
 
         Server {
             eid,

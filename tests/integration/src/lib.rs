@@ -75,7 +75,6 @@ async fn test_integration_eth_construct() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -93,6 +92,8 @@ async fn test_integration_eth_construct() {
         )
         .await
         .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
     dispatcher
         .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
         .unwrap();
@@ -195,7 +196,6 @@ async fn test_auto_notification() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -213,6 +213,8 @@ async fn test_auto_notification() {
         )
         .await
         .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
     dispatcher
         .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
         .unwrap();
@@ -346,7 +348,6 @@ async fn test_integration_eth_transfer() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -364,6 +365,8 @@ async fn test_integration_eth_transfer() {
         )
         .await
         .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
     dispatcher
         .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
         .unwrap();
@@ -522,7 +525,6 @@ async fn test_key_rotation() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -540,6 +542,8 @@ async fn test_key_rotation() {
         )
         .await
         .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
     dispatcher
         .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
         .unwrap();
@@ -650,7 +654,6 @@ async fn test_integration_eth_approve() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -668,6 +671,8 @@ async fn test_integration_eth_approve() {
         )
         .await
         .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
     dispatcher
         .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
         .unwrap();
@@ -813,7 +818,6 @@ async fn test_integration_eth_transfer_from() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -831,6 +835,8 @@ async fn test_integration_eth_transfer_from() {
         )
         .await
         .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
     dispatcher
         .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
         .unwrap();
@@ -1160,7 +1166,6 @@ async fn test_integration_eth_mint() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -1178,6 +1183,7 @@ async fn test_integration_eth_mint() {
         )
         .await
         .unwrap();
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
     dispatcher
         .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
         .unwrap();
@@ -1303,7 +1309,6 @@ async fn test_integration_eth_burn() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -1321,6 +1326,8 @@ async fn test_integration_eth_burn() {
         )
         .await
         .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
     dispatcher
         .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
         .unwrap();
