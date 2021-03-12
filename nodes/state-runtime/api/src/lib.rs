@@ -74,11 +74,6 @@ pub mod join_group {
     pub mod post {
         use super::super::*;
 
-        #[derive(Clone, Deserialize, Serialize, Debug)]
-        pub struct Request {
-            pub contract_address: String,
-        }
-
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
         pub struct Response {
             pub tx_hash: H256,
@@ -89,11 +84,6 @@ pub mod join_group {
 pub mod update_mrenclave {
     pub mod post {
         use super::super::*;
-
-        #[derive(Clone, Deserialize, Serialize, Debug)]
-        pub struct Request {
-            pub contract_address: String,
-        }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
         pub struct Response {
@@ -124,23 +114,6 @@ pub mod key_rotation {
     }
 }
 
-pub mod contract_addr {
-    pub mod post {
-        use super::super::*;
-
-        #[derive(Clone, Deserialize, Serialize, Debug)]
-        pub struct Request {
-            pub contract_address: String,
-        }
-
-        impl Request {
-            pub fn new(contract_address: String) -> Self {
-                Request { contract_address }
-            }
-        }
-    }
-}
-
 pub mod register_notification {
     pub mod post {
         use super::super::*;
@@ -161,11 +134,6 @@ pub mod register_notification {
 pub mod register_report {
     pub mod post {
         use super::super::*;
-
-        #[derive(Clone, Debug, Deserialize, Serialize)]
-        pub struct Request {
-            pub contract_address: String,
-        }
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
         pub struct Response {

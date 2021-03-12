@@ -125,7 +125,7 @@ impl Sender for EthSender {
         .await
     }
 
-    fn get_contract(self) -> Web3Contract {
-        self.contract
+    fn get_contract(&self) -> &Web3Contract {
+        &self.contract
     }
 }

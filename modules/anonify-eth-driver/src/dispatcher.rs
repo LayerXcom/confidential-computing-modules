@@ -74,9 +74,15 @@ where
         Ok(self)
     }
 
-    pub fn get_anonify_contract_address(&self) -> Address {
+    pub fn get_anonify_contract_address(&self) -> Result<Address> {
         let inner = self.inner.read();
-        
+        let address = inner
+            .sender
+            .as_ref()
+            .ok_or_else(|| HostError::AddressNotSet)?
+            .get_contract()
+            .address();
+        Ok(address)
     }
 
     /// - Starting syncing with the blockchain node.

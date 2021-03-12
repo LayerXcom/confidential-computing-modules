@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 
-use crate::{cache::EventCache, error::Result, utils::*, workflow::*};
+use crate::{
+    cache::EventCache, error::Result, eth::connection::Web3Contract, utils::*, workflow::*,
+};
 
 use async_trait::async_trait;
 use sgx_types::sgx_enclave_id_t;
@@ -34,7 +36,7 @@ pub trait Sender: Sized {
 
     async fn handshake(&self, host_output: &host_output::Handshake) -> Result<H256>;
 
-    fn get_contract(self) -> Web3Contract;
+    fn get_contract(&self) -> &Web3Contract;
 }
 
 /// A trait of fetching event from blockchian nodes
