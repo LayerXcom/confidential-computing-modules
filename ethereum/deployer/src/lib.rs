@@ -1,6 +1,6 @@
 use anonify_eth_driver::{
     error::{HostError, Result},
-    eth::Web3Http,
+    eth::{Web3Http, sender::sender_retry_condition},
     utils::ContractInfo,
 };
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
@@ -113,7 +113,7 @@ impl EthDeployer {
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
-        .set_condition(deployer_retry_condition)
+        .set_condition(sender_retry_condition)
         .spawn_async(|| async {
             contract
                 .call(

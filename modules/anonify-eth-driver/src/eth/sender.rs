@@ -15,7 +15,7 @@ use web3::types::{Address, H256};
 
 /// Define a retry condition of sending transactions.
 /// If it returns false, don't need to retry sending transactions.
-const fn sender_retry_condition(res: &Result<H256>) -> bool {
+pub const fn sender_retry_condition(res: &Result<H256>) -> bool {
     match res {
         Ok(_) => false,
         Err(err) => match err {

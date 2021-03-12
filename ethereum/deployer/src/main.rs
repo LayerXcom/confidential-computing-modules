@@ -11,19 +11,22 @@ async fn main() {
         .unwrap_or_else(|_| "0".to_string())
         .parse::<usize>()
         .unwrap();
-    let password = env::var("PASSWORD").ok().as_deref();
+    let password = env::var("PASSWORD").ok();
     let confirmations = env::var("CONFIRMATIONS")
         .expect("CONFIRMATIONS is not set")
         .parse::<usize>()
         .expect("Failed to parse CONFIRMATIONS to usize");
-    let arg: Vec<String> = env::args().collect();
-    assert_eq!(arg.len(), 1);
+    let args: Vec<String> = env::args().collect();
+    assert_eq!(args.len(), 1);
 
     let deployer = EthDeployer::new(&eth_url).unwrap();
-    let signer = deployer.get_account(account_index, password).await.unwrap();
+    let signer = deployer
+        .get_account(account_index, password.as_deref())
+        .await
+        .unwrap();
 
-    let contract_address = match contract_name {
-        format!("create2") => deployer.deploy(
+    let contract_address = match args[0].as_str() {
+        "create2" => deployer.deploy(
             &*CREATE2_ABI_PATH,
             &*CREATE2_BIN_PATH,
             confirmations,
