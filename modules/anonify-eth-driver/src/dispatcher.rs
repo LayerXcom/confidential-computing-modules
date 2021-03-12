@@ -26,7 +26,7 @@ pub struct Dispatcher<S: Sender, W: Watcher> {
 struct InnerDispatcher<S: Sender, W: Watcher> {
     node_url: String,
     enclave_id: sgx_enclave_id_t,
-    contract_address: Address,
+    contract_address: Option<Address>,
     sender: Option<S>,
     watcher: Option<W>,
     cache: EventCache,
@@ -39,20 +39,11 @@ where
     S: Sender,
     W: Watcher,
 {
-    pub fn new<P: AsRef<Path> + Copy>(
-        enclave_id: sgx_enclave_id_t,
-        node_url: &str,
-        cache: EventCache,
-        sender: Address,
-        bin_path: P,
-    ) -> Result<Self> {
-        let bin_code = fs::read(bin_path)?;
-        let contract_address = calc_anonify_contract_address(sender, Default::default(), &bin_code);
-
+    pub fn new(enclave_id: sgx_enclave_id_t, node_url: &str, cache: EventCache) -> Self {
         let inner = RwLock::new(InnerDispatcher {
             enclave_id,
             node_url: node_url.to_string(),
-            contract_address,
+            contract_address: None,
             cache,
             sender: None,
             watcher: None,
@@ -60,7 +51,22 @@ where
             backup: SecretBackup::default(),
         });
 
-        Ok(Dispatcher { inner })
+        Dispatcher { inner }
+    }
+
+    pub fn set_anonify_contract_address<P: AsRef<Path> + Copy>(
+        self,
+        sender: Address,
+        salt: [u8; 32],
+        bin_path: P,
+    ) -> Result<Self> {
+        let bin_code = fs::read(bin_path)?;
+        let contract_address = calc_anonify_contract_address(sender, salt, &bin_code);
+        {
+            let mut inner = self.inner.write();
+            inner.contract_address = Some(contract_address);
+        }
+        Ok(self)
     }
 
     /// - Starting syncing with the blockchain node.
