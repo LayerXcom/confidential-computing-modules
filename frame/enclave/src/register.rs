@@ -1,6 +1,3 @@
-use log::debug;
-use std::time;
-
 #[macro_export]
 macro_rules! register_ecall {
     (   $ctx: expr,
@@ -9,6 +6,8 @@ macro_rules! register_ecall {
         $ctx_ops: ty,
         $( ($cmd: path, $handler: ty), )*
     ) => {
+        use log::debug;
+        use std::time;
         fn ecall_handler(cmd: u32, input: &mut [u8]) -> anyhow::Result<Vec<u8>> {
             match cmd {
                 $(
