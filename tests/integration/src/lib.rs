@@ -9,7 +9,7 @@ use frame_common::{
     state_types::NotifyState,
     traits::*,
 };
-use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH};
+use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, CREATE2_ABI_PATH, CREATE2_BIN_PATH};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
@@ -74,6 +74,7 @@ async fn test_integration_eth_construct() {
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
+    let salt = 0;
     let cache = EventCache::default();
 
     // Deploy
@@ -82,21 +83,31 @@ async fn test_integration_eth_construct() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let create2_contract_addr = deployer
         .deploy(
-            &*ANONIFY_ABI_PATH,
-            &*ANONIFY_BIN_PATH,
+            &*CREATE2_ABI_PATH,
+            &*CREATE2_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache);
-    dispatcher
-        .set_contract_address(&contract_addr, &*ANONIFY_ABI_PATH)
+    let anonify_contract_addr = deployer
+        .deploy_anonify_by_create2(
+            &*CREATE2_ABI_PATH,
+            deployer_addr,
+            gas,
+            salt,
+            create2_contract_addr,
+        )
+        .await
         .unwrap();
+
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .unwrap();
+
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
 

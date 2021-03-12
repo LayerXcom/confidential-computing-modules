@@ -26,7 +26,6 @@ pub struct Dispatcher<S: Sender, W: Watcher> {
 struct InnerDispatcher<S: Sender, W: Watcher> {
     node_url: String,
     enclave_id: sgx_enclave_id_t,
-    contract_address: Option<Address>,
     sender: Option<S>,
     watcher: Option<W>,
     cache: EventCache,
@@ -43,7 +42,6 @@ where
         let inner = RwLock::new(InnerDispatcher {
             enclave_id,
             node_url: node_url.to_string(),
-            contract_address: None,
             cache,
             sender: None,
             watcher: None,
@@ -58,14 +56,21 @@ where
         self,
         sender: Address,
         salt: [u8; 32],
+        abi_path: P,
         bin_path: P,
     ) -> Result<Self> {
         let bin_code = fs::read(bin_path)?;
         let contract_address = calc_anonify_contract_address(sender, salt, &bin_code);
+        let contract_info = ContractInfo::new(abi_path, contract_address)?;
+
         {
             let mut inner = self.inner.write();
-            inner.contract_address = Some(contract_address);
+            let sender = S::new(inner.enclave_id, &inner.node_url, contract_info.clone())?;
+            let watcher = W::new(&inner.node_url, contract_info, inner.cache.clone())?;
+            inner.sender = Some(sender);
+            inner.watcher = Some(watcher);
         }
+
         Ok(self)
     }
 
@@ -75,49 +80,12 @@ where
         Ok(self)
     }
 
-    pub fn set_contract_address<P: AsRef<Path> + Copy>(
-        &self,
-        contract_addr: &str,
-        abi_path: P,
-    ) -> Result<()> {
-        let mut inner = self.inner.write();
-        let enclave_id = inner.enclave_id;
-        let node_url = &inner.node_url;
-        let contract_addr = Address::from_str(contract_addr)
-            .map_err(|e| anyhow!("Failed to Address::from_str: {:?}", e))?;
-
-        let contract_info = ContractInfo::new(abi_path, contract_addr)?;
-        let sender = S::new(enclave_id, node_url, contract_info.clone())?;
-        let watcher = W::new(node_url, contract_info, inner.cache.clone())?;
-
-        inner.sender = Some(sender);
-        inner.watcher = Some(watcher);
-
-        Ok(())
-    }
-
-    pub async fn join_group<P: AsRef<Path> + Copy>(
-        &self,
-        signer: Address,
-        gas: u64,
-        contract_addr: &str,
-        abi_path: P,
-        ecall_cmd: u32,
-    ) -> Result<H256> {
-        self.send_report_handshake(signer, gas, contract_addr, abi_path, ecall_cmd, "joinGroup")
+    pub async fn join_group(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {
+        self.send_report_handshake(signer, gas, ecall_cmd, "joinGroup")
             .await
     }
 
-    pub async fn register_report<P: AsRef<Path> + Copy>(
-        &self,
-        signer: Address,
-        gas: u64,
-        contract_addr: &str,
-        abi_path: P,
-        ecall_cmd: u32,
-    ) -> Result<H256> {
-        self.set_contract_address(contract_addr, abi_path)?;
-
+    pub async fn register_report(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         let input = host_input::RegisterReport::new(signer, gas, ecall_cmd);
@@ -133,36 +101,23 @@ where
         Ok(tx_hash)
     }
 
-    pub async fn update_mrenclave<P: AsRef<Path> + Copy>(
+    pub async fn update_mrenclave(
         &self,
         signer: Address,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
         ecall_cmd: u32,
     ) -> Result<H256> {
-        self.send_report_handshake(
-            signer,
-            gas,
-            contract_addr,
-            abi_path,
-            ecall_cmd,
-            "updateMrenclave",
-        )
-        .await
+        self.send_report_handshake(signer, gas, ecall_cmd, "updateMrenclave")
+            .await
     }
 
-    async fn send_report_handshake<P: AsRef<Path> + Copy>(
+    async fn send_report_handshake(
         &self,
         signer: Address,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
         ecall_cmd: u32,
         method: &str,
     ) -> Result<H256> {
-        self.set_contract_address(contract_addr, abi_path)?;
-
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         let input = host_input::JoinGroup::new(signer, gas, ecall_cmd);

@@ -43,9 +43,7 @@ impl EthDeployer {
     pub fn new(node_url: &str) -> Result<Self> {
         let web3_conn = Web3Http::new(node_url)?;
 
-        Ok(EthDeployer {
-            web3_conn,
-        })
+        Ok(EthDeployer { web3_conn })
     }
 
     pub async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {
@@ -66,11 +64,11 @@ impl EthDeployer {
         confirmations: usize,
         gas: u64,
         deployer: Address,
-    ) -> Result<String>
+    ) -> Result<Address>
     where
         P: AsRef<Path> + Send + Sync + Copy,
     {
-        let contract_addr = Retry::new(
+        Retry::new(
             "deploy",
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
@@ -81,9 +79,8 @@ impl EthDeployer {
                 .deploy(abi_path, bin_path, confirmations, gas, deployer)
                 .await
         })
-        .await?;
-
-        Ok(hex::encode(contract_addr.as_bytes()))
+        .await
+        .map_err(Into::into)
     }
 
     pub async fn deploy_anonify_by_create2<P>(
