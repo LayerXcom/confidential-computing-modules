@@ -17,7 +17,7 @@ async fn main() {
         .parse::<usize>()
         .expect("Failed to parse CONFIRMATIONS to usize");
     let args: Vec<String> = env::args().collect();
-    assert_eq!(args.len(), 1);
+    assert_eq!(args.len(), 2);
 
     let deployer = EthDeployer::new(&eth_url).unwrap();
     let signer = deployer
@@ -25,7 +25,7 @@ async fn main() {
         .await
         .unwrap();
 
-    match args[0].as_str() {
+    match args[1].as_str() {
         "create2" => {
             let contract_address = deployer
                 .deploy(
