@@ -6,8 +6,8 @@ source /root/.docker_bashrc
 export PATH=~/.cargo/bin:$PATH
 export SGX_MODE=HW
 export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
-export STATE_RUNTIME_URL=172.18.0.3:8080
-export ETH_URL=http://172.18.0.2:8545
+export MY_NODE_URL=172.16.0.3:8080
+export ETH_URL=http://172.16.0.2:8545
 export ANONYMOUS_ASSET_ABI_PATH="../../build/Anonify.abi"
 
 dirpath=$(cd $(dirname $0) && pwd)
@@ -29,7 +29,7 @@ make DEBUG=1 FEATURES=ERC20
 # enclave.signed.so is need to initialize enclave.
 rm -rf ../example/erc20/bin && cp -rf bin/ ../example/erc20/bin/ && cd ../
 
-solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
+solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/Anonify.sol
 cd example/erc20/server
 
 echo "Build artifacts in debug mode."

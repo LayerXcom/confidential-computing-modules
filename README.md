@@ -12,7 +12,7 @@ Please refer to [White Paper (JP)](https://layerx.co.jp/wp-content/uploads/2020/
 ## Setup
 Building an Anonify contract.
 ```
-$ solc -o contract-build --bin --abi --optimize --overwrite contracts/Anonify.sol
+$ solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/Anonify.sol
 ```
 
 Copy environment variables and set your `SPID` and `SUB_KEY`.
@@ -46,13 +46,11 @@ You can use anonify-cli to communicate with a whole anonify system. See the [tra
 
 Build Anonify's command line utilities.
 ```
-$ ./scripts/env-cli.sh // Change env vars depending on your environment
 $ ./scripts/build-cli.sh
 ```
 
 If you want to build artifacts in release mode, pass a `--release` argument.
 ```
-$ ./scripts/env-cli.sh // Change env vars depending on your environment
 $ ./scripts/build-cli.sh --release
 ```
 
@@ -65,7 +63,7 @@ You can try to build the codebase on your local machine or test it in sgx-enable
 Anonify assumes your hardware supports Intel SGX. Without such hardware, you can build it in simulation mode, which allows you to build on macOS.
 
 ```
-$ docker run -v `pwd`:/root/anonify --rm -it osuketh/anonify:1804-1.1.3
+$ docker run -v `pwd`:/root/anonify --rm -it osuketh/anonify:20210310-1804-1.1.3
 ```
 
 ### Testing (ERC20 app)

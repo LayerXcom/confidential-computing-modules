@@ -12,18 +12,19 @@ use frame_host::engine::HostEngine;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{fmt::Debug, marker::Send, path::Path};
+use std::{fmt::Debug, path::Path};
 use web3::types::{Address, H256};
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
-pub struct Dispatcher<D: Deployer, S: Sender, W: Watcher> {
-    inner: RwLock<InnerDispatcher<D, S, W>>,
+pub struct Dispatcher<S: Sender, W: Watcher> {
+    inner: RwLock<InnerDispatcher<S, W>>,
 }
 
 #[derive(Debug)]
-struct InnerDispatcher<D: Deployer, S: Sender, W: Watcher> {
-    deployer: D,
+struct InnerDispatcher<S: Sender, W: Watcher> {
+    node_url: String,
+    enclave_id: sgx_enclave_id_t,
     sender: Option<S>,
     watcher: Option<W>,
     cache: EventCache,
@@ -31,16 +32,15 @@ struct InnerDispatcher<D: Deployer, S: Sender, W: Watcher> {
     backup: SecretBackup,
 }
 
-impl<D, S, W> Dispatcher<D, S, W>
+impl<S, W> Dispatcher<S, W>
 where
-    D: Deployer,
     S: Sender,
     W: Watcher,
 {
     pub fn new(enclave_id: sgx_enclave_id_t, node_url: &str, cache: EventCache) -> Result<Self> {
-        let deployer = D::new(enclave_id, node_url)?;
         let inner = RwLock::new(InnerDispatcher {
-            deployer,
+            enclave_id,
+            node_url: node_url.to_string(),
             cache,
             sender: None,
             watcher: None,
@@ -57,8 +57,8 @@ where
         abi_path: P,
     ) -> Result<()> {
         let mut inner = self.inner.write();
-        let enclave_id = inner.deployer.get_enclave_id();
-        let node_url = inner.deployer.get_node_url();
+        let enclave_id = inner.enclave_id;
+        let node_url = &inner.node_url;
 
         let contract_info = ContractInfo::new(abi_path, contract_addr);
         let sender = S::new(enclave_id, node_url, contract_info)?;
@@ -68,30 +68,6 @@ where
         inner.watcher = Some(watcher);
 
         Ok(())
-    }
-
-    pub async fn deploy<P>(
-        &self,
-        deploy_user: Address,
-        gas: u64,
-        abi_path: P,
-        bin_path: P,
-        confirmations: usize,
-        ecall_cmd: u32,
-    ) -> Result<String>
-    where
-        P: AsRef<Path> + Send + Sync + Copy,
-    {
-        let mut inner = self.inner.write();
-        let eid = inner.deployer.get_enclave_id();
-        let input = host_input::JoinGroup::new(deploy_user, gas, ecall_cmd);
-        let host_output = JoinGroupWorkflow::exec(input, eid)?;
-
-        let contract_addr = inner
-            .deployer
-            .deploy(&host_output, abi_path, bin_path, confirmations)
-            .await?;
-        Ok(contract_addr)
     }
 
     pub async fn join_group<P: AsRef<Path> + Copy>(
@@ -117,7 +93,7 @@ where
         self.set_contract_address(contract_addr, abi_path)?;
 
         let inner = self.inner.read();
-        let eid = inner.deployer.get_enclave_id();
+        let eid = inner.enclave_id;
         let input = host_input::RegisterReport::new(signer, gas, ecall_cmd);
         let host_output = RegisterReportWorkflow::exec(input, eid)?;
 
@@ -162,7 +138,7 @@ where
         self.set_contract_address(contract_addr, abi_path)?;
 
         let inner = self.inner.read();
-        let eid = inner.deployer.get_enclave_id();
+        let eid = inner.enclave_id;
         let input = host_input::JoinGroup::new(signer, gas, ecall_cmd);
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
@@ -185,10 +161,10 @@ where
     ) -> Result<H256> {
         let inner = self.inner.read();
         let input = host_input::Command::new(ciphertext, signer, gas, ecall_cmd);
-        let eid = inner.deployer.get_enclave_id();
+        let eid = inner.enclave_id;
+        
         let st1 = std::time::SystemTime::now();
         println!("########## st1: {:?}", st1);
-
         let host_output = CommandWorkflow::exec(input, eid)?;
 
         let st8 = std::time::SystemTime::now();
@@ -205,7 +181,7 @@ where
         ciphertext: SodiumCiphertext,
         ecall_cmd: u32,
     ) -> Result<serde_json::Value> {
-        let eid = self.inner.read().deployer.get_enclave_id();
+        let eid = self.inner.read().enclave_id;
         let input = host_input::GetState::new(ciphertext, ecall_cmd);
         let state = GetStateWorkflow::exec(input, eid)?
             .ecall_output
@@ -220,7 +196,7 @@ where
         ciphertext: SodiumCiphertext,
         ecall_cmd: u32,
     ) -> Result<serde_json::Value> {
-        let eid = self.inner.read().deployer.get_enclave_id();
+        let eid = self.inner.read().enclave_id;
         let input = host_input::GetUserCounter::new(ciphertext, ecall_cmd);
         let user_counter = GetUserCounterWorkflow::exec(input, eid)?
             .ecall_output
@@ -232,7 +208,7 @@ where
     pub async fn handshake(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {
         let inner = self.inner.read();
         let input = host_input::Handshake::new(signer, gas, ecall_cmd);
-        let eid = inner.deployer.get_enclave_id();
+        let eid = inner.enclave_id;
         let host_output = HandshakeWorkflow::exec(input, eid)?;
 
         let tx_hash = inner
@@ -251,7 +227,7 @@ where
         fetch_handshake_cmd: u32,
     ) -> Result<Option<Vec<serde_json::Value>>> {
         let inner = self.inner.read();
-        let eid = inner.deployer.get_enclave_id();
+        let eid = inner.enclave_id;
         inner
             .watcher
             .as_ref()
@@ -263,14 +239,16 @@ where
     pub async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {
         self.inner
             .read()
-            .deployer
+            .sender
+            .as_ref()
+            .ok_or(HostError::AddressNotSet)?
             .get_account(index, password)
             .await
     }
 
     pub fn get_enclave_encryption_key(&self, ecall_cmd: u32) -> Result<SodiumPubKey> {
         let input = host_input::GetEncryptionKey::new(ecall_cmd);
-        let eid = self.inner.read().deployer.get_enclave_id();
+        let eid = self.inner.read().enclave_id;
         let enclave_encryption_key = GetEncryptionKeyWorkflow::exec(input, eid)?;
 
         Ok(enclave_encryption_key
@@ -286,7 +264,7 @@ where
     ) -> Result<()> {
         let inner = self.inner.read();
         let input = host_input::RegisterNotification::new(ciphertext, ecall_cmd);
-        let eid = inner.deployer.get_enclave_id();
+        let eid = inner.enclave_id;
         let _host_output = RegisterNotificationWorkflow::exec(input, eid)?;
 
         Ok(())
@@ -295,14 +273,14 @@ where
     #[cfg(feature = "backup-enable")]
     pub fn all_backup_to(&self, ecall_cmd: u32) -> Result<()> {
         let inner = self.inner.read();
-        let eid = inner.deployer.get_enclave_id();
+        let eid = inner.enclave_id;
         inner.backup.all_backup_to(eid, ecall_cmd)
     }
 
     #[cfg(feature = "backup-enable")]
     pub fn all_backup_from(&self, ecall_cmd: u32) -> Result<()> {
         let inner = self.inner.read();
-        let eid = inner.deployer.get_enclave_id();
+        let eid = inner.enclave_id;
         inner.backup.all_backup_from(eid, ecall_cmd)
     }
 }

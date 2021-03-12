@@ -1,4 +1,5 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.7.4;
 
 /*
     Copyright 2016, Adrià Massanet
@@ -95,14 +96,13 @@ library SolRsaVerify {
 
         uint i;
 
-        /// decipher
         bytes memory input = join(_s,_e,_m);
         uint inputlen = input.length;
 
         uint decipherlen = _m.length;
         bytes memory decipher = new bytes(decipherlen);
         assembly {
-            pop(staticcall(sub(gas,2000), 5, add(input,0x20), inputlen, add(decipher,0x20), decipherlen))
+            pop(staticcall(sub(gas(), 2000), 5, add(input,0x20), inputlen, add(decipher,0x20), decipherlen))
 	    }
 
         uint paddingLen = decipherlen - 3 - sha256Prefix.length - 32;

@@ -2,6 +2,7 @@
 extern crate lazy_static;
 use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
+use eth_deployer::EthDeployer;
 use ethabi::Contract as ContractABI;
 use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
@@ -28,11 +29,11 @@ const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
 
 pub static ETH_URL: Lazy<String> =
-    Lazy::new(|| env::var("ETH_URL").unwrap_or("http://172.28.0.2:8545".to_string()));
+    Lazy::new(|| env::var("ETH_URL").unwrap_or("http://172.16.0.2:8545".to_string()));
 
 pub async fn get_enclave_encryption_key(
     contract_addr: &str,
-    dispatcher: &Dispatcher<EthDeployer, EthSender, EventWatcher>,
+    dispatcher: &Dispatcher<EthSender, EventWatcher>,
 ) -> SodiumPubKey {
     let enclave_encryption_key = dispatcher
         .get_enclave_encryption_key(GET_ENCLAVE_ENCRYPTION_KEY_CMD)
@@ -74,22 +75,21 @@ async fn test_integration_eth_construct() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = dispatcher
+    let contract_addr = deployer
         .deploy(
-            deployer_addr.clone(),
-            gas,
             &*ABI_PATH,
             &*BIN_PATH,
             CONFIRMATIONS,
-            JOIN_GROUP_CMD,
+            gas,
+            deployer_addr.clone(),
         )
         .await
         .unwrap();
@@ -98,6 +98,17 @@ async fn test_integration_eth_construct() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
 
     // Get handshake from contract
     dispatcher
@@ -184,22 +195,21 @@ async fn test_auto_notification() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = dispatcher
+    let contract_addr = deployer
         .deploy(
-            deployer_addr.clone(),
-            gas,
             &*ABI_PATH,
             &*BIN_PATH,
             CONFIRMATIONS,
-            JOIN_GROUP_CMD,
+            gas,
+            deployer_addr.clone(),
         )
         .await
         .unwrap();
@@ -208,6 +218,17 @@ async fn test_auto_notification() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
 
     // Get handshake from contract
     dispatcher
@@ -325,22 +346,21 @@ async fn test_integration_eth_transfer() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = dispatcher
+    let contract_addr = deployer
         .deploy(
-            deployer_addr.clone(),
-            gas,
             &*ABI_PATH,
             &*BIN_PATH,
             CONFIRMATIONS,
-            JOIN_GROUP_CMD,
+            gas,
+            deployer_addr.clone(),
         )
         .await
         .unwrap();
@@ -349,6 +369,17 @@ async fn test_integration_eth_transfer() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
 
     // Get handshake from contract
     dispatcher
@@ -491,22 +522,21 @@ async fn test_key_rotation() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = dispatcher
+    let contract_addr = deployer
         .deploy(
-            deployer_addr.clone(),
-            gas,
             &*ABI_PATH,
             &*BIN_PATH,
             CONFIRMATIONS,
-            JOIN_GROUP_CMD,
+            gas,
+            deployer_addr.clone(),
         )
         .await
         .unwrap();
@@ -515,6 +545,17 @@ async fn test_key_rotation() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
 
     // Get handshake from contract
     dispatcher
@@ -609,22 +650,21 @@ async fn test_integration_eth_approve() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = dispatcher
+    let contract_addr = deployer
         .deploy(
-            deployer_addr.clone(),
-            gas,
             &*ABI_PATH,
             &*BIN_PATH,
             CONFIRMATIONS,
-            JOIN_GROUP_CMD,
+            gas,
+            deployer_addr.clone(),
         )
         .await
         .unwrap();
@@ -633,6 +673,17 @@ async fn test_integration_eth_approve() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
 
     // Get handshake from contract
     dispatcher
@@ -762,22 +813,21 @@ async fn test_integration_eth_transfer_from() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = dispatcher
+    let contract_addr = deployer
         .deploy(
-            deployer_addr.clone(),
-            gas,
             &*ABI_PATH,
             &*BIN_PATH,
             CONFIRMATIONS,
-            JOIN_GROUP_CMD,
+            gas,
+            deployer_addr.clone(),
         )
         .await
         .unwrap();
@@ -786,6 +836,17 @@ async fn test_integration_eth_transfer_from() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
 
     // Get handshake from contract
     dispatcher
@@ -1099,22 +1160,21 @@ async fn test_integration_eth_mint() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = dispatcher
+    let contract_addr = deployer
         .deploy(
-            deployer_addr.clone(),
-            gas,
             &*ABI_PATH,
             &*BIN_PATH,
             CONFIRMATIONS,
-            JOIN_GROUP_CMD,
+            gas,
+            deployer_addr.clone(),
         )
         .await
         .unwrap();
@@ -1123,6 +1183,17 @@ async fn test_integration_eth_mint() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
 
     // Get handshake from contract
     dispatcher
@@ -1232,22 +1303,21 @@ async fn test_integration_eth_burn() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher =
-        Dispatcher::<EthDeployer, EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
+    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
-    let deployer_addr = dispatcher
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = dispatcher
+    let contract_addr = deployer
         .deploy(
-            deployer_addr.clone(),
-            gas,
             &*ABI_PATH,
             &*BIN_PATH,
             CONFIRMATIONS,
-            JOIN_GROUP_CMD,
+            gas,
+            deployer_addr.clone(),
         )
         .await
         .unwrap();
@@ -1256,6 +1326,17 @@ async fn test_integration_eth_burn() {
         .unwrap();
     println!("Deployer account_id: {:?}", deployer_addr);
     println!("deployed contract account_id: {}", contract_addr);
+
+    dispatcher
+        .join_group(
+            deployer_addr,
+            gas,
+            &contract_addr,
+            &*ABI_PATH,
+            JOIN_GROUP_CMD,
+        )
+        .await
+        .unwrap();
 
     // Get handshake from contract
     dispatcher

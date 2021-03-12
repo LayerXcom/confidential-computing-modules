@@ -1,4 +1,5 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.7.4;
 
 // ref: https://github.com/witnet/elliptic-curve-solidity/blob/master/contracts/EllipticCurve.sol
 // ref: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/cryptography/ECDSA.sol

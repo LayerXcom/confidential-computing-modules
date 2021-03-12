@@ -20,6 +20,5 @@ hex = "0.4"
 tracing = "0.1"
 
 [build-dependencies]
-frame-config = { path = "../config"}
 dirs = "2.0"
 cc = "1.0"
