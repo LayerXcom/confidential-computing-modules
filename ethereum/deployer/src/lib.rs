@@ -1,7 +1,7 @@
 use anonify_eth_driver::{
     error::{HostError, Result},
     eth::{sender::sender_retry_condition, Web3Http},
-    utils::ContractInfo,
+    utils::{calc_anonify_contract_address, ContractInfo},
 };
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
@@ -61,8 +61,10 @@ impl EthDeployer {
         .await
     }
 
-    pub fn set_anonify_contract_address(mut self, signer: Address) -> Result<Self> {
-        unimplemented!();
+    pub fn set_anonify_contract_address(mut self, sender: Address, bin_code: &[u8]) -> Self {
+        let addr = calc_anonify_contract_address(sender, Default::default(), bin_code);
+        self.anonify_contract_address = addr;
+        self
     }
 
     pub async fn deploy<P>(

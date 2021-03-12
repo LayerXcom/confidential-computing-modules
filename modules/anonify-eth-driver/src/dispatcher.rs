@@ -13,7 +13,7 @@ use frame_host::engine::HostEngine;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{fmt::Debug, path::Path, str::FromStr};
+use std::{fmt::Debug, fs, path::Path, str::FromStr};
 use web3::types::{Address, H256};
 
 /// This dispatcher communicates with a blockchain node.
@@ -26,6 +26,7 @@ pub struct Dispatcher<S: Sender, W: Watcher> {
 struct InnerDispatcher<S: Sender, W: Watcher> {
     node_url: String,
     enclave_id: sgx_enclave_id_t,
+    contract_address: Address,
     sender: Option<S>,
     watcher: Option<W>,
     cache: EventCache,
@@ -38,10 +39,20 @@ where
     S: Sender,
     W: Watcher,
 {
-    pub fn new(enclave_id: sgx_enclave_id_t, node_url: &str, cache: EventCache) -> Result<Self> {
+    pub fn new<P: AsRef<Path> + Copy>(
+        enclave_id: sgx_enclave_id_t,
+        node_url: &str,
+        cache: EventCache,
+        sender: Address,
+        bin_path: P,
+    ) -> Result<Self> {
+        let bin_code = fs::read(bin_path)?;
+        let contract_address = calc_anonify_contract_address(sender, Default::default(), &bin_code);
+
         let inner = RwLock::new(InnerDispatcher {
             enclave_id,
             node_url: node_url.to_string(),
+            contract_address,
             cache,
             sender: None,
             watcher: None,
@@ -50,6 +61,12 @@ where
         });
 
         Ok(Dispatcher { inner })
+    }
+
+    /// - Starting syncing with the blockchain node.
+    /// - Joining as the state runtime node.
+    pub fn run(self) -> Result<Self> {
+        Ok(self)
     }
 
     pub fn set_contract_address<P: AsRef<Path> + Copy>(
