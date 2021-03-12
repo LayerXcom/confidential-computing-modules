@@ -1,6 +1,6 @@
 use anonify_eth_driver::{
     error::{HostError, Result},
-    eth::{Web3Http, sender::sender_retry_condition},
+    eth::{sender::sender_retry_condition, Web3Http},
     utils::ContractInfo,
 };
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
@@ -103,7 +103,9 @@ impl EthDeployer {
     where
         P: AsRef<Path> + Send + Sync + Copy,
     {
-        let anonify_contract_address = self.anonify_contract_address.unwrap();
+        let anonify_contract_address = self
+            .anonify_contract_address
+            .ok_or_else(|| HostError::AddressNotSet)?;
         let contract_info = ContractInfo::new(abi_path, anonify_contract_address)?;
         let abi = contract_info.contract_abi()?;
         let contract = Contract::new(self.web3_conn.web3.eth(), contract_info.address(), abi);
