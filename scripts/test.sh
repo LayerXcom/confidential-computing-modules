@@ -48,14 +48,32 @@ cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture -- SALT
 sleep 1
 
+cd ${ANONIFY_ROOT}/ethereum/deployer
+SALT=`openssl rand -hex 32`
+cargo run CREATE2_CONTRACT_ADDRESS SALT
+cd ${ANONIFY_ROOT}/nodes/state-runtime/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_skip_invalid_event -- --nocapture -- SALT
+sleep 1
 
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_skip_invalid_event -- --nocapture
+cd ${ANONIFY_ROOT}/ethereum/deployer
+SALT=`openssl rand -hex 32`
+cargo run CREATE2_CONTRACT_ADDRESS SALT
+cd ${ANONIFY_ROOT}/nodes/state-runtime/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture -- SALT
 sleep 1
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+SALT=`openssl rand -hex 32`
+cargo run CREATE2_CONTRACT_ADDRESS SALT
+cd ${ANONIFY_ROOT}/nodes/state-runtime/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture -- SALT
 sleep 1
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture
-sleep 1
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_duplicated_out_of_order_request_from_same_user -- --nocapture
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+SALT=`openssl rand -hex 32`
+cargo run CREATE2_CONTRACT_ADDRESS SALT
+cd ${ANONIFY_ROOT}/nodes/state-runtime/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_duplicated_out_of_order_request_from_same_user -- --nocapture -- SALT
 
 # Secret Backup Application Tests
 

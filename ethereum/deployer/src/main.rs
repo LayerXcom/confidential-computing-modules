@@ -37,7 +37,7 @@ async fn main() {
                 )
                 .await
                 .unwrap();
-            println!("{}", contract_address);
+            println!("{:x}", contract_address);
         }
         contract_address if web3::types::Address::from_str(contract_address).is_ok() => {
             let create2_address = web3::types::Address::from_str(contract_address).unwrap();
@@ -52,7 +52,7 @@ async fn main() {
                 .deploy_anonify_by_create2(&*CREATE2_ABI_PATH, signer, GAS, salt, create2_address)
                 .await
                 .unwrap();
-            println!("tx_hash: {}", tx_hash);
+            println!("tx_hash: {:x}", tx_hash);
         }
         _ => panic!("Invalid arguments"),
     };
