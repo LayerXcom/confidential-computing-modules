@@ -74,6 +74,11 @@ where
         Ok(self)
     }
 
+    pub fn get_anonify_contract_address(&self) -> Address {
+        let inner = self.inner.read();
+        
+    }
+
     /// - Starting syncing with the blockchain node.
     /// - Joining as the state runtime node.
     pub fn run(self) -> Result<Self> {

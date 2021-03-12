@@ -32,7 +32,7 @@ pub static ETH_URL: Lazy<String> =
     Lazy::new(|| env::var("ETH_URL").unwrap_or("http://172.16.0.2:8545".to_string()));
 
 pub async fn get_enclave_encryption_key(
-    contract_addr: &str,
+    contract_addr: Address,
     dispatcher: &Dispatcher<EthSender, EventWatcher>,
 ) -> SodiumPubKey {
     let enclave_encryption_key = dispatcher
@@ -42,11 +42,10 @@ pub async fn get_enclave_encryption_key(
     let web3 = Web3::new(transport);
     let web3_conn = web3.eth();
 
-    let address = Address::from_str(contract_addr).unwrap();
     let f = File::open(&*ANONIFY_ABI_PATH).unwrap();
     let abi = ContractABI::load(BufReader::new(f)).unwrap();
 
-    let query_enclave_encryption_key: Vec<u8> = Contract::new(web3_conn, address, abi)
+    let query_enclave_encryption_key: Vec<u8> = Contract::new(web3_conn, contract_addr, abi)
         .query(
             "getEncryptionKey",
             enclave_encryption_key.to_bytes(),
@@ -74,7 +73,7 @@ async fn test_integration_eth_construct() {
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let salt = 0;
+    let salt = [0u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -109,16 +108,11 @@ async fn test_integration_eth_construct() {
         .unwrap();
 
     println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
+    println!("create2 contract address: {}", create2_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(
-            deployer_addr,
-            gas,
-            &contract_addr,
-            &*ANONIFY_ABI_PATH,
-            JOIN_GROUP_CMD,
-        )
+        .join_group(deployer_addr, gas, JOIN_GROUP_CMD)
         .await
         .unwrap();
 
@@ -130,7 +124,7 @@ async fn test_integration_eth_construct() {
 
     // Init state
     let total_supply: u64 = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(&anonify_contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {

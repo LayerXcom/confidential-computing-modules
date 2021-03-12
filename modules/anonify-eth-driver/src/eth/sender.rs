@@ -52,12 +52,10 @@ impl Sender for EthSender {
         })
     }
 
-    fn from_contract(enclave_id: sgx_enclave_id_t, contract: ContractKind) -> Self {
-        match contract {
-            ContractKind::Web3Contract(contract) => EthSender {
-                enclave_id,
-                contract,
-            },
+    fn from_contract(enclave_id: sgx_enclave_id_t, contract: Web3Contract) -> Self {
+        EthSender {
+            enclave_id,
+            contract,
         }
     }
 
@@ -127,7 +125,7 @@ impl Sender for EthSender {
         .await
     }
 
-    fn get_contract(self) -> ContractKind {
-        ContractKind::Web3Contract(self.contract)
+    fn get_contract(self) -> Web3Contract {
+        self.contract
     }
 }

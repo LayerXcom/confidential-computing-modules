@@ -59,8 +59,8 @@ impl Watcher for EventWatcher {
         Ok(enclave_updated_state.notify_states())
     }
 
-    fn get_contract(self) -> ContractKind {
-        ContractKind::Web3Contract(self.contract)
+    fn get_contract(self) -> Web3Contract {
+        self.contract
     }
 }
 

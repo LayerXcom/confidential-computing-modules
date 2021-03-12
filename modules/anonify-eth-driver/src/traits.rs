@@ -16,7 +16,7 @@ pub trait Sender: Sized {
         contract_info: ContractInfo,
     ) -> Result<Self>;
 
-    fn from_contract(enclave_id: sgx_enclave_id_t, contract: ContractKind) -> Self;
+    fn from_contract(enclave_id: sgx_enclave_id_t, contract: Web3Contract) -> Self;
 
     async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address>;
 
@@ -34,7 +34,7 @@ pub trait Sender: Sized {
 
     async fn handshake(&self, host_output: &host_output::Handshake) -> Result<H256>;
 
-    fn get_contract(self) -> ContractKind;
+    fn get_contract(self) -> Web3Contract;
 }
 
 /// A trait of fetching event from blockchian nodes
@@ -50,5 +50,5 @@ pub trait Watcher: Sized {
         fetch_handshake_cmd: u32,
     ) -> Result<Option<Vec<serde_json::Value>>>;
 
-    fn get_contract(self) -> ContractKind;
+    fn get_contract(self) -> Web3Contract;
 }

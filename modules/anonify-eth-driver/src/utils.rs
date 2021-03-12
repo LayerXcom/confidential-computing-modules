@@ -45,8 +45,3 @@ pub fn calc_anonify_contract_address(sender: Address, salt: [u8; 32], bin_code: 
     addr.copy_from_slice(&hash[12..]);
     Address::from(addr)
 }
-
-/// A type of contract
-pub enum ContractKind {
-    Web3Contract(Web3Contract),
-}
