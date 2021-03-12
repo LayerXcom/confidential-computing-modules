@@ -35,11 +35,20 @@ make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 cd ${ANONIFY_ROOT}/tests/integration
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 
+# Deploy a CREATE2 Contract
+cd ${ANONIFY_ROOT}/ethereum/deployer
+CREATE2_CONTRACT_ADDRESS=`cargo run create2`
+
 # ERC20 Application Tests
 
+cd ${ANONIFY_ROOT}/ethereum/deployer
+SALT=`openssl rand -hex 32`
+cargo run CREATE2_CONTRACT_ADDRESS SALT
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture -- SALT
 sleep 1
+
+
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_skip_invalid_event -- --nocapture
 sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture

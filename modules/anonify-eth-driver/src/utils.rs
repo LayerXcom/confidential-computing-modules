@@ -13,7 +13,7 @@ use web3::types::Address;
 
 /// Define a retry condition of deploying contracts.
 /// If it returns true, retry deploying contracts.
-const fn deployer_retry_condition(res: &Result<Address>) -> bool {
+pub const fn deployer_retry_condition(res: &Result<Address>) -> bool {
     match res {
         Ok(_) => false,
         Err(err) => match err {

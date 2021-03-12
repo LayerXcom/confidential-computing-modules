@@ -25,7 +25,7 @@ impl EthDeployer {
     }
 
     pub async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {
-        get_account(&self.web3_conn, index, password)
+        get_account(&self.web3_conn, index, password).await
     }
 
     pub async fn deploy<P>(

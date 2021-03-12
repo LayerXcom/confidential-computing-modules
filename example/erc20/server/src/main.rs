@@ -18,7 +18,7 @@ async fn main() -> io::Result<()> {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid).await);
 
     HttpServer::new(move || {
         App::new()

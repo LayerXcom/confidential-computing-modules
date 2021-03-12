@@ -26,7 +26,7 @@ where
     S: Sender,
     W: Watcher,
 {
-    pub fn new(eid: sgx_enclave_id_t) -> Self {
+    pub async fn new(eid: sgx_enclave_id_t, salt: [u8; 32]) -> Self {
         let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
         let account_index: usize = env::var("ACCOUNT_INDEX")
             .expect("ACCOUNT_INDEX is not set")
@@ -42,14 +42,16 @@ where
             .parse()
             .expect("Failed to parse SYNC_BC_TIME to u64");
 
-        let web3_conn = Web3Http::new(eth_url).unwrap();
-        let sender_address = get_account(&web3_conn, account_index, password).unwrap();
+        let web3_conn = Web3Http::new(&eth_url).unwrap();
+        let sender_address = get_account(&web3_conn, account_index, password.as_deref())
+            .await
+            .unwrap();
 
         let cache = EventCache::default();
         let dispatcher = Dispatcher::<S, W>::new(eid, &eth_url, cache)
             .set_anonify_contract_address(
                 sender_address,
-                [0u8; 32], //salt
+                salt,
                 &*ANONIFY_ABI_PATH,
                 &*ANONIFY_BIN_PATH,
             )

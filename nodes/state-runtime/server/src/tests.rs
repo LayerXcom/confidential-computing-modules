@@ -1,8 +1,7 @@
 use crate::{handlers::*, Server};
 use actix_web::{test, web, App};
 use anonify_ecall_types::input;
-use anonify_eth_driver::eth::*;
-use eth_deployer::EthDeployer;
+use anonify_eth_driver::{eth::*, utils::*};
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
 use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH};
@@ -12,7 +11,7 @@ use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use integration_tests::set_env_vars;
 use rand_core::{CryptoRng, RngCore};
 use serde_json::json;
-use std::{env, fs::File, io::BufReader, path::Path, str::FromStr, sync::Arc, time};
+use std::{env, fs, io::BufReader, path::Path, str::FromStr, sync::Arc, time};
 use web3::{
     contract::{Contract, Options},
     transports::Http,
@@ -22,6 +21,14 @@ use web3::{
 
 const SYNC_TIME: u64 = 1500;
 const GAS: u64 = 5_000_000;
+
+fn decode_salt(arg: &str) -> [u8; 32] {
+    let mut res = [0u8; 32];
+    let v = hex::decode(arg).unwrap();
+    assert_eq!(v.len(), 32);
+    res.copy_from_slice(&v[..]);
+    res
+}
 
 #[actix_rt::test]
 async fn test_multiple_messages() {
@@ -35,7 +42,8 @@ async fn test_multiple_messages() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
+    let salt = decode_salt(env::args().collect::<Vec<String>>()[3].as_str());
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid, salt));
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -58,28 +66,15 @@ async fn test_multiple_messages() {
     )
     .await;
 
-    let deployer = EthDeployer::new(&eth_url).unwrap();
-    let signer = deployer.get_account(0usize, None).await.unwrap();
-    let contract_address = deployer
-        .deploy(&*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH, 0usize, GAS, signer)
+    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
+    let contract_address =
+        calc_anonify_contract_address(signer, salt, &fs::read(&*ANONIFY_BIN_PATH).unwrap());
     println!("contract address: {:?}", contract_address);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_address")
-        .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
-        .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_address: contract_address.clone(),
-        })
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -96,7 +91,7 @@ async fn test_multiple_messages() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        &contract_address,
+        contract_address,
     )
     .await;
 
@@ -159,17 +154,14 @@ async fn test_skip_invalid_event() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
+    let salt = decode_salt(env::args().collect::<Vec<String>>()[3].as_str());
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid, salt));
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
             .route(
                 "/api/v1/join_group",
                 web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
@@ -186,28 +178,14 @@ async fn test_skip_invalid_event() {
     )
     .await;
 
-    let deployer = EthDeployer::new(&eth_url).unwrap();
-    let signer = deployer.get_account(0usize, None).await.unwrap();
-    let contract_address = deployer
-        .deploy(&*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH, 0usize, GAS, signer)
+    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    println!("contract address: {:?}", contract_address);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_address")
-        .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let contract_address =
+        calc_anonify_contract_address(signer, salt, &fs::read(&*ANONIFY_BIN_PATH).unwrap());
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
-        .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_address: contract_address.clone(),
-        })
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -224,7 +202,7 @@ async fn test_skip_invalid_event() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        &contract_address,
+        contract_address,
     )
     .await;
 
@@ -302,17 +280,14 @@ async fn test_node_recovery() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
+    let salt = decode_salt(env::args().collect::<Vec<String>>()[3].as_str());
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid, salt));
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
             .route(
                 "/api/v1/join_group",
                 web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
@@ -333,7 +308,7 @@ async fn test_node_recovery() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let recovered_eid = recovered_enclave.geteid();
-    let recovered_server = Arc::new(Server::<EthSender, EventWatcher>::new(recovered_eid));
+    let recovered_server = Arc::new(Server::<EthSender, EventWatcher>::new(recovered_eid, salt));
 
     let mut recovered_app = test::init_service(
         App::new()
@@ -341,10 +316,6 @@ async fn test_node_recovery() {
             .route(
                 "/api/v1/state",
                 web::get().to(handle_get_state::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
@@ -361,28 +332,14 @@ async fn test_node_recovery() {
     )
     .await;
 
-    let deployer = EthDeployer::new(&eth_url).unwrap();
-    let signer = deployer.get_account(0usize, None).await.unwrap();
-    let contract_address = deployer
-        .deploy(&*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH, 0usize, GAS, signer)
+    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    println!("contract address: {:?}", contract_address);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_address")
-        .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let contract_address =
+        calc_anonify_contract_address(signer, salt, &fs::read(&*ANONIFY_BIN_PATH).unwrap());
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
-        .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_address: contract_address.clone(),
-        })
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -399,7 +356,7 @@ async fn test_node_recovery() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        &contract_address,
+        contract_address,
     )
     .await;
 
@@ -450,20 +407,8 @@ async fn test_node_recovery() {
 
     my_turn();
 
-    let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_address")
-        .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut recovered_app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-
     let req = test::TestRequest::post()
         .uri("/api/v1/register_report")
-        .set_json(&state_runtime_node_api::register_report::post::Request {
-            contract_address: contract_address.clone(),
-        })
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -479,7 +424,7 @@ async fn test_node_recovery() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        &contract_address,
+        contract_address,
     )
     .await;
 
@@ -523,7 +468,8 @@ async fn test_join_group_then_handshake() {
     let eid1 = enclave1.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server1 = Arc::new(Server::<EthSender, EventWatcher>::new(eid1));
+    let salt = decode_salt(env::args().collect::<Vec<String>>()[3].as_str());
+    let server1 = Arc::new(Server::<EthSender, EventWatcher>::new(eid1, salt));
 
     let mut app1 = test::init_service(
         App::new()
@@ -531,10 +477,6 @@ async fn test_join_group_then_handshake() {
             .route(
                 "/api/v1/join_group",
                 web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
@@ -551,7 +493,7 @@ async fn test_join_group_then_handshake() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid2 = enclave2.geteid();
-    let server2 = Arc::new(Server::<EthSender, EventWatcher>::new(eid2));
+    let server2 = Arc::new(Server::<EthSender, EventWatcher>::new(eid2, salt));
 
     let mut app2 = test::init_service(
         App::new()
@@ -569,10 +511,6 @@ async fn test_join_group_then_handshake() {
                 web::get().to(handle_get_state::<EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/key_rotation",
                 web::post().to(handle_key_rotation::<EthSender, EventWatcher>),
             )
@@ -585,28 +523,14 @@ async fn test_join_group_then_handshake() {
 
     // Party 1
 
-    let deployer = EthDeployer::new(&eth_url).unwrap();
-    let signer = deployer.get_account(0usize, None).await.unwrap();
-    let contract_address = deployer
-        .deploy(&*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH, 0usize, GAS, signer)
+    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    println!("contract address: {:?}", contract_address);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_address")
-        .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut app1, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let contract_address =
+        calc_anonify_contract_address(signer, salt, &fs::read(&*ANONIFY_BIN_PATH).unwrap());
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
-        .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_address: contract_address.clone(),
-        })
         .to_request();
     let resp = test::call_service(&mut app1, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -623,7 +547,7 @@ async fn test_join_group_then_handshake() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        &contract_address,
+        contract_address,
     )
     .await;
 
@@ -640,15 +564,6 @@ async fn test_join_group_then_handshake() {
 
     other_turn();
 
-    let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_address")
-        .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-
     // using the same encryption key because app2 have to sync with bc, but app2's enclave encryption key cannot be set here
     // so using app1's key
     let req = test::TestRequest::get()
@@ -658,20 +573,8 @@ async fn test_join_group_then_handshake() {
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp); // return 200 OK: becuse allowed same enclave encryption key
 
-    let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_address")
-        .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
-        .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_address: contract_address.clone(),
-        })
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -688,7 +591,7 @@ async fn test_join_group_then_handshake() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        &contract_address,
+        contract_address,
     )
     .await;
 
@@ -764,17 +667,14 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
+    let salt = decode_salt(env::args().collect::<Vec<String>>()[3].as_str());
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid, salt));
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
             .route(
                 "/api/v1/join_group",
                 web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/state",
@@ -795,28 +695,14 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     )
     .await;
 
-    let deployer = EthDeployer::new(&eth_url).unwrap();
-    let signer = deployer.get_account(0usize, None).await.unwrap();
-    let contract_address = deployer
-        .deploy(&*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH, 0usize, GAS, signer)
+    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    println!("contract address: {:?}", contract_address);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_address")
-        .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let contract_address =
+        calc_anonify_contract_address(signer, salt, &fs::read(&*ANONIFY_BIN_PATH).unwrap());
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
-        .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_address: contract_address.clone(),
-        })
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -833,7 +719,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        &contract_address,
+        contract_address,
     )
     .await;
 
@@ -995,17 +881,15 @@ async fn verify_enclave_encryption_key<P: AsRef<Path>>(
     enclave_encryption_key: SodiumPubKey,
     abi_path: P,
     eth_url: &str,
-    contract_address: &str,
+    contract_address: Address,
 ) -> SodiumPubKey {
     let transport = Http::new(eth_url).unwrap();
     let web3 = Web3::new(transport);
     let web3_conn = web3.eth();
-
-    let address = Address::from_str(contract_address).unwrap();
-    let f = File::open(abi_path).unwrap();
+    let f = fs::File::open(abi_path).unwrap();
     let abi = ContractABI::load(BufReader::new(f)).unwrap();
 
-    let query_enclave_encryption_key: Vec<u8> = Contract::new(web3_conn, address, abi)
+    let query_enclave_encryption_key: Vec<u8> = Contract::new(web3_conn, contract_address, abi)
         .query(
             "getEncryptionKey",
             enclave_encryption_key.to_bytes(),
