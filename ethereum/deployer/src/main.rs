@@ -39,6 +39,19 @@ async fn main() {
                 .unwrap();
             println!("{:x}", contract_address);
         }
+        "anonify" => {
+            let contract_address = deployer
+                .deploy(
+                    &*ANONIFY_ABI_PATH,
+                    &*ANONIFY_BIN_PATH,
+                    confirmations,
+                    GAS,
+                    signer,
+                )
+                .await
+                .unwrap();
+            println!("{:x}", contract_address);
+        }
         contract_address if web3::types::Address::from_str(contract_address).is_ok() => {
             let create2_address = web3::types::Address::from_str(contract_address).unwrap();
             let mut salt = [0u8; 32];
