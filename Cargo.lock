@@ -4546,6 +4546,7 @@ dependencies = [
 name = "state-runtime-node-api"
 version = "0.5.4"
 dependencies = [
+ "frame-common",
  "frame-sodium",
  "serde 1.0.117",
  "serde_json 1.0.59",

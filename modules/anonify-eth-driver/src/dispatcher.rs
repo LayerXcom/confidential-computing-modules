@@ -9,6 +9,7 @@ use crate::{
     workflow::host_input,
 };
 use anyhow::anyhow;
+use frame_common::crypto::AccountId;
 use frame_host::engine::HostEngine;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use parking_lot::RwLock;

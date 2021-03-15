@@ -1,6 +1,6 @@
 use anonify_ecall_types::*;
 use frame_common::{
-    crypto::{Ciphertext, ExportHandshake},
+    crypto::{AccountId, Ciphertext, ExportHandshake},
     state_types::StateCounter,
 };
 use frame_host::engine::*;
@@ -13,7 +13,7 @@ pub struct CommandWorkflow;
 
 impl HostEngine for CommandWorkflow {
     type HI = host_input::Command;
-    type EI = SodiumCiphertext;
+    type EI = input::Command;
     type EO = output::Command;
     type HO = host_output::Command;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -150,6 +150,7 @@ pub mod host_input {
         ) -> Self {
             Command {
                 ciphertext,
+                user_id,
                 signer,
                 gas,
                 ecall_cmd,
