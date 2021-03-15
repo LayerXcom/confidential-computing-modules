@@ -927,7 +927,10 @@ where
     let ciphertext =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
-    state_runtime_node_api::state::post::Request { ciphertext }
+    state_runtime_node_api::state::post::Request {
+        ciphertext,
+        user_id: None,
+    }
 }
 
 fn balance_of_req<CR>(
