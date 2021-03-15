@@ -155,7 +155,7 @@ async fn test_evaluate_access_policy_by_user_id_field() {
         .set_json(&transfer_10_req_json)
         .to_request();
     let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
+    assert!(resp.status().is_server_error(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
