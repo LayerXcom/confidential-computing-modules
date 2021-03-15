@@ -2700,7 +2700,6 @@ version = "0.5.4"
 dependencies = [
  "actix-rt",
  "actix-web",
- "anonify-ecall-types",
  "anonify-eth-driver",
  "anyhow 1.0.34",
  "eth-deployer",
@@ -2708,7 +2707,6 @@ dependencies = [
  "frame-common",
  "frame-config",
  "frame-host",
- "frame-runtime",
  "frame-sodium",
  "key-vault-ecall-types",
  "key-vault-host",
