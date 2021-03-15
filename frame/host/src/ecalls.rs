@@ -65,8 +65,8 @@ impl EnclaveConnector {
             )
         };
 
-        let st10 = std::time::SystemTime::now();
-        println!("########## st10: {:?}", st10);
+        let st9 = std::time::SystemTime::now();
+        println!("########## st9: {:?}", st9);
         if status != sgx_status_t::SGX_SUCCESS {
             return Err(FrameHostError::SgxStatus {
                 status,
