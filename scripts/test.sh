@@ -38,6 +38,8 @@ RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 # ERC20 Application Tests
 
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_evaluate_access_policy_by_user_id_field -- --nocapture
+sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture
 sleep 1
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_skip_invalid_event -- --nocapture
