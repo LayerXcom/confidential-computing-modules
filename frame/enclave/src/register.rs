@@ -36,8 +36,6 @@ macro_rules! register_ecall {
                 EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?
             };
 
-            let st9 = std::time::SystemTime::now();
-            debug!("########## st9: {:?}", st9);
             #[cfg(not(feature = "runtime_enabled"))]
             let res = EE::handle_without_runtime::<$ctx_ops>($ctx)?;
 
