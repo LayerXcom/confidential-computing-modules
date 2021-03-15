@@ -8,15 +8,41 @@ use crate::serde::{
 use crate::serde_bytes;
 use crate::serde_json;
 use frame_common::{
-    crypto::{Ciphertext, ExportHandshake},
+    crypto::{AccountId, Ciphertext, ExportHandshake},
     state_types::{StateCounter, StateType, UserCounter},
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
-use frame_sodium::SodiumPubKey;
+use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 
 pub mod input {
     use super::*;
+
+    #[derive(Debug, Clone, Deserialize, Serialize, Default)]
+    #[serde(crate = "crate::serde")]
+    pub struct Command {
+        ciphertext: SodiumCiphertext,
+        user_id: Option<AccountId>,
+    }
+
+    impl EcallInput for Command {}
+
+    impl Command {
+        pub fn new(ciphertext: SodiumCiphertext, user_id: Option<AccountId>) -> Self {
+            Self {
+                ciphertext,
+                user_id,
+            }
+        }
+
+        pub fn ciphertext(&self) -> &SodiumCiphertext {
+            &self.ciphertext
+        }
+
+        pub fn user_id(&self) -> Option<AccountId> {
+            self.user_id
+        }
+    }
 
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]

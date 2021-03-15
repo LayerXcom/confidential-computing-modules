@@ -224,7 +224,7 @@ impl EnclaveKeyOps for AnonifyEnclaveContext {
         self.enclave_key.sign(msg).map_err(Into::into)
     }
 
-    fn decrypt(&self, ciphertext: SodiumCiphertext) -> anyhow::Result<Vec<u8>> {
+    fn decrypt(&self, ciphertext: &SodiumCiphertext) -> anyhow::Result<Vec<u8>> {
         self.enclave_key.decrypt(ciphertext).map_err(Into::into)
     }
 
@@ -435,7 +435,7 @@ impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(ciphertext)?;
+        let buf = enclave_context.decrypt(&ciphertext)?;
         let ecall_input = serde_json::from_slice(&buf[..])?;
 
         Ok(Self { ecall_input })
@@ -479,7 +479,7 @@ impl<AP: AccessPolicy> EnclaveEngine for GetUserCounter<AP> {
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(ciphertext)?;
+        let buf = enclave_context.decrypt(&ciphertext)?;
         let ecall_input = serde_json::from_slice(&buf[..])?;
 
         Ok(Self { ecall_input })

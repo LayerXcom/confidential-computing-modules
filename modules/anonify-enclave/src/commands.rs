@@ -8,7 +8,6 @@ use frame_common::{
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_sodium::SodiumCiphertext;
 use serde::{Deserialize, Serialize};
 use std::{
     marker::PhantomData,
@@ -20,26 +19,46 @@ use std::{
 #[derive(Debug, Clone, Default)]
 pub struct CmdSender<AP: AccessPolicy> {
     command_plaintext: CommandPlaintext<AP>,
+    user_id: Option<AccountId>,
 }
 
 impl<AP> EnclaveEngine for CmdSender<AP>
 where
     AP: AccessPolicy,
 {
-    type EI = SodiumCiphertext;
+    type EI = input::Command;
     type EO = output::Command;
 
-    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn decrypt<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(ciphertext)?;
+        let buf = enclave_context.decrypt(ecall_input.ciphertext())?;
         let command_plaintext = serde_json::from_slice(&buf[..])?;
-        Ok(Self { command_plaintext })
+
+        Ok(Self {
+            command_plaintext,
+            user_id: ecall_input.user_id(),
+        })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
-        self.command_plaintext.access_policy().verify()
+        if self.command_plaintext.access_policy().verify().is_err() {
+            return Err(anyhow!("Failed to verify access policy"));
+        }
+
+        if let Some(user_id_for_verify) = self.user_id {
+            let user_id = self.command_plaintext.access_policy().into_account_id();
+            if user_id != user_id_for_verify {
+                return Err(anyhow!(
+                    "Invalid user_id. user_id in the ciphertext: {:?}, user_id for verification: {:?}",
+                    user_id,
+                    user_id_for_verify
+                ));
+            }
+        }
+
+        Ok(())
     }
 
     fn handle<R, C>(self, enclave_context: &C, max_mem_size: usize) -> anyhow::Result<Self::EO>
