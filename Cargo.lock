@@ -4568,7 +4568,6 @@ dependencies = [
  "frame-common",
  "frame-config",
  "frame-host",
- "frame-runtime",
  "frame-sodium",
  "hex",
  "integration-tests",
