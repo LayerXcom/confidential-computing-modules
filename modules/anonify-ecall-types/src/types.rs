@@ -1,9 +1,5 @@
 use crate::bincode;
-use crate::localstd::{
-    fmt, str,
-    string::{String, ToString},
-    vec::Vec,
-};
+use crate::localstd::{fmt, str, string::String, vec::Vec};
 use crate::serde::{
     de::{self, Error, SeqAccess},
     ser::SerializeSeq,
@@ -21,61 +17,6 @@ use frame_sodium::SodiumPubKey;
 
 pub mod input {
     use super::*;
-
-    #[derive(Debug, Clone, Deserialize, Serialize)]
-    #[serde(crate = "crate::serde")]
-    pub struct Command<AP: AccessPolicy> {
-        #[serde(deserialize_with = "AP::deserialize")]
-        pub access_policy: AP,
-        pub runtime_params: serde_json::Value,
-        pub cmd_name: String,
-        pub counter: UserCounter,
-    }
-
-    impl<AP> Default for Command<AP>
-    where
-        AP: AccessPolicy,
-    {
-        fn default() -> Self {
-            Self {
-                access_policy: AP::default(),
-                runtime_params: serde_json::Value::Null,
-                cmd_name: String::default(),
-                counter: UserCounter::default(),
-            }
-        }
-    }
-
-    impl<AP> Command<AP>
-    where
-        AP: AccessPolicy,
-    {
-        pub fn new(
-            access_policy: AP,
-            runtime_params: serde_json::Value,
-            cmd_name: impl ToString,
-            counter: UserCounter,
-        ) -> Self {
-            Command {
-                access_policy,
-                runtime_params,
-                cmd_name: cmd_name.to_string(),
-                counter,
-            }
-        }
-
-        pub fn access_policy(&self) -> &AP {
-            &self.access_policy
-        }
-
-        pub fn cmd_name(&self) -> &str {
-            &self.cmd_name
-        }
-
-        pub fn counter(&self) -> UserCounter {
-            self.counter
-        }
-    }
 
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]

@@ -1,6 +1,5 @@
 use crate::{handlers::*, Server};
 use actix_web::{test, web, App};
-use anonify_ecall_types::input;
 use anonify_eth_driver::eth::*;
 use eth_deployer::EthDeployer;
 use ethabi::Contract as ContractABI;
@@ -1052,10 +1051,15 @@ where
         3, 101, 33, 155, 58, 175, 168, 63, 73, 125, 205, 225,
     ];
     let access_policy = Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge);
-    let init_100 = json!({
-        "total_supply": U64::from_raw(100),
+
+    let req = json!({
+        "access_policy": access_policy,
+        "runtime_params": {
+            "total_supply": 100,
+        },
+        "cmd_name": "construct",
+        "counter": counter,
     });
-    let req = input::Command::new(access_policy, init_100, "construct", counter.into());
     let ciphertext =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
@@ -1086,14 +1090,19 @@ where
         186, 25, 30, 135, 114, 237, 169, 138, 122, 81, 61, 43, 183,
     ];
     let access_policy = Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge);
-    let transfer_10 = json!({
-        "amount": U64::from_raw(10),
-        "recipient": AccountId([
-            236, 126, 92, 200, 50, 125, 9, 112, 74, 58, 35, 60, 181, 105, 198, 107, 62, 111, 168,
-            118,
-        ])
+
+    let req = json!({
+        "access_policy": access_policy,
+        "runtime_params": {
+            "amount": 10,
+            "recipient": AccountId([
+                236, 126, 92, 200, 50, 125, 9, 112, 74, 58, 35, 60, 181, 105, 198, 107, 62, 111, 168,
+                118,
+            ])
+        },
+        "cmd_name": "transfer",
+        "counter": counter,
     });
-    let req = input::Command::new(access_policy, transfer_10, "transfer", counter.into());
     let ciphertext =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 
@@ -1124,14 +1133,19 @@ where
         186, 25, 30, 135, 114, 237, 169, 138, 122, 81, 61, 43, 183,
     ];
     let access_policy = Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge);
-    let transfer_10 = json!({
-        "amount": U64::from_raw(110),
-        "recipient": AccountId([
-            236, 126, 92, 200, 50, 125, 9, 112, 74, 58, 35, 60, 181, 105, 198, 107, 62, 111, 168,
-            118,
-        ])
+
+    let req = json!({
+        "access_policy": access_policy,
+        "runtime_params": {
+            "amount": 110,
+            "recipient": AccountId([
+                236, 126, 92, 200, 50, 125, 9, 112, 74, 58, 35, 60, 181, 105, 198, 107, 62, 111, 168,
+                118,
+            ])
+        },
+        "cmd_name": "transfer",
+        "counter": counter,
     });
-    let req = input::Command::new(access_policy, transfer_10, "transfer", counter.into());
     let ciphertext =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 

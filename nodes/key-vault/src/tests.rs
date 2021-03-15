@@ -1,13 +1,11 @@
 use crate::{handlers::*, Server as KeyVaultServer};
 use actix_web::{test, web, App};
-use anonify_ecall_types::input;
 use anonify_eth_driver::eth::{EthSender, EventWatcher};
 use eth_deployer::EthDeployer;
 use ethabi::Contract as ContractABI;
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, PJ_ROOT_DIR};
 use frame_host::EnclaveDir;
-use frame_runtime::primitives::U64;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use once_cell::sync::Lazy;
 use rand_core::{CryptoRng, RngCore};
@@ -916,10 +914,16 @@ where
         3, 101, 33, 155, 58, 175, 168, 63, 73, 125, 205, 225,
     ];
     let access_policy = Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge);
-    let init_100 = json!({
-        "total_supply": U64::from_raw(100),
+
+    let req = json!({
+        "access_policy": access_policy,
+        "runtime_params": {
+            "total_supply": 100,
+        },
+        "cmd_name": "construct",
+        "counter": counter,
     });
-    let req = input::Command::new(access_policy, init_100, "construct", counter.into());
+
     let ciphertext =
         SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
 

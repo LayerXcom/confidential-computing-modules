@@ -24,10 +24,8 @@ once_cell = "1.5.2"
 eth-deployer = { path = "../../ethereum/deployer"}
 frame-config = { path = "../../frame/config" }
 frame-common = { path = "../../frame/common" }
-frame-runtime = { path = "../../frame/runtime" }
 frame-sodium = { path = "../../frame/sodium" }
 anonify-eth-driver = { path = "../../modules/anonify-eth-driver" }
-anonify-ecall-types = { path = "../../modules/anonify-ecall-types"}
 state-runtime-node-server = { path = "../../nodes/state-runtime/server" }
 state-runtime-node-api = { path = "../../nodes/state-runtime/api" }
 web3 = "0.14"
