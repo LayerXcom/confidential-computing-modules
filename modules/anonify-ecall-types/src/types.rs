@@ -18,7 +18,7 @@ use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 pub mod input {
     use super::*;
 
-    #[derive(Debug, Clone, Deserialize, Serialize)]
+    #[derive(Debug, Clone, Deserialize, Serialize, Default)]
     #[serde(crate = "crate::serde")]
     pub struct Command {
         ciphertext: SodiumCiphertext,

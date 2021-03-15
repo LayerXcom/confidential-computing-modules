@@ -8,7 +8,6 @@ use frame_common::{
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_sodium::SodiumCiphertext;
 use serde::{Deserialize, Serialize};
 use std::{
     marker::PhantomData,
@@ -50,9 +49,13 @@ where
 
         if let Some(user_id_for_verify) = self.user_id {
             let user_id = self.command_plaintext.access_policy().into_account_id();
-            return (user_id == user_id_for_verify)
-                .then()
-                .ok_or_else(|_| anyhow!("Invalid user_id. user_id in the ciphertext: {:?}, user_id for verification: {:?}", user_id, user_id_for_verify));
+            if user_id != user_id_for_verify {
+                return Err(anyhow!(
+                    "Invalid user_id. user_id in the ciphertext: {:?}, user_id for verification: {:?}",
+                    user_id,
+                    user_id_for_verify
+                ));
+            }
         }
 
         Ok(())
