@@ -47,15 +47,15 @@ where
         let group_key = &mut *enclave_context.write_group_key();
         let roster_idx = group_key.my_roster_idx();
 
-        let st6 = time::SystemTime::now();
-        debug!("########## st6: {:?}", st6);
+        let et5 = time::SystemTime::now();
+        debug!("########## et5: {:?}", et5);
         // ratchet sender's app keychain per tx.
         group_key.sender_ratchet(roster_idx as usize)?;
 
         let my_account_id = self.ecall_input.access_policy().into_account_id();
 
-        let st7 = time::SystemTime::now();
-        debug!("########## st7: {:?}", st7);
+        let et6 = time::SystemTime::now();
+        debug!("########## et6: {:?}", et6);
         let ciphertext = Commands::<R, C, AP>::new(my_account_id, self.ecall_input)?
             .encrypt(group_key, max_mem_size)?;
 
@@ -66,8 +66,8 @@ where
             ciphertext.epoch(),
         );
 
-        let st8 = time::SystemTime::now();
-        debug!("########## st8: {:?}", st8);
+        let et7 = time::SystemTime::now();
+        debug!("########## et7: {:?}", et7);
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
         let command_output = output::Command::new(ciphertext, enclave_sig.0, enclave_sig.1);
 

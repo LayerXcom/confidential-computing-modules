@@ -48,6 +48,8 @@ impl Watcher for EventWatcher {
         fetch_ciphertext_cmd: u32,
         fetch_handshake_cmd: u32,
     ) -> Result<Option<Vec<serde_json::Value>>> {
+        let rt1 = std::time::SystemTime::now();
+        debug!("########## rt1: {:?}", rt1);
         let enclave_updated_state = self
             .contract
             .get_event(self.cache.clone(), self.contract.address())
@@ -151,6 +153,8 @@ impl Web3Logs {
 
             // Processing conditions by ciphertext or handshake event
             if log.0.topics[0] == self.events.ciphertext_signature() {
+                let rt3 = std::time::SystemTime::now();
+                debug!("########## rt3: {:?}", rt3);
                 let res = match Ciphertext::decode(&mut &bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
@@ -226,6 +230,8 @@ impl EnclaveLog {
     ) -> EnclaveUpdatedState {
         match self.inner {
             Some(log) => {
+                let rt4 = std::time::SystemTime::now();
+                debug!("########## rt4: {:?}", rt4);
                 let next_blc_num = log.latest_blc_num + 1;
                 let notify_states =
                     log.invoke_ecall(eid, fetch_ciphertext_cmd, fetch_handshake_cmd);
@@ -282,6 +288,9 @@ impl InnerEnclaveLog {
                             e.state_counter(),
                             fetch_ciphertext_cmd,
                         );
+
+                        let rt5 = std::time::SystemTime::now();
+                        debug!("########## rt5: {:?}", rt5);
                         match InsertCiphertextWorkflow::exec(inp, eid)
                             .map_err(Into::into)
                             .and_then(|e| {
@@ -289,6 +298,8 @@ impl InnerEnclaveLog {
                             }) {
                             Ok(notify) => {
                                 if let Some(notify_state) = notify.state {
+                                    let rt6 = std::time::SystemTime::now();
+                                    debug!("########## rt6: {:?}", rt6);
                                     match bincode::deserialize::<Vec<u8>>(
                                         &notify_state.into_vec()[..],
                                     ) {
@@ -399,6 +410,8 @@ impl EnclaveUpdatedState {
     /// Only if EnclaveUpdatedState has new block number to log,
     /// it's set next block number to event cache.
     pub fn save_cache(self, contract_addr: Address) -> Self {
+        let rt7 = std::time::SystemTime::now();
+        debug!("########## rt7: {:?}", rt7);
         match &self.block_num {
             Some(block_num) => {
                 let mut w = self.cache.inner().write();

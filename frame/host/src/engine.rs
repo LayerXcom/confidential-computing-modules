@@ -15,13 +15,13 @@ pub trait HostEngine {
         let ecall_cmd = input.ecall_cmd();
         let (ecall_input, host_output) = input.apply()?;
 
-        let st2 = std::time::SystemTime::now();
-        println!("########## st2: {:?}", st2);
+        let et1 = std::time::SystemTime::now();
+        println!("########## et1: {:?}", et1);
         let ecall_output = EnclaveConnector::new(eid, Self::OUTPUT_MAX_LEN)
             .invoke_ecall::<Self::EI, Self::EO>(ecall_cmd, ecall_input)?;
 
-        let st10 = std::time::SystemTime::now();
-        println!("########## st10: {:?}", st10);
+        let et9 = std::time::SystemTime::now();
+        println!("########## et9: {:?}", et9);
         host_output.set_ecall_output(ecall_output)
     }
 }

@@ -26,13 +26,13 @@ macro_rules! register_ecall {
                 let ciphertext = bincode::deserialize(&input_payload[..])
                     .map_err(|e| anyhow!("{:?}", e))?;
 
-                let st4 = std::time::SystemTime::now();
-                debug!("########## st4: {:?}", st4);
+                let et3 = std::time::SystemTime::now();
+                debug!("########## et3: {:?}", et3);
                 let input = EE::decrypt::<$ctx_ops>(ciphertext, $ctx)?;
                 EE::eval_policy(&input)?;
 
-                let st5 = std::time::SystemTime::now();
-                debug!("########## st5: {:?}", st5);
+                let et4 = std::time::SystemTime::now();
+                debug!("########## et4: {:?}", et4);
                 EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?
             };
 
