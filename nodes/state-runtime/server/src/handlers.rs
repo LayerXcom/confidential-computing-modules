@@ -72,6 +72,7 @@ where
         .dispatcher
         .send_command(
             req.ciphertext.clone(),
+            req.user_id,
             sender_address,
             DEFAULT_GAS,
             SEND_COMMAND_CMD,

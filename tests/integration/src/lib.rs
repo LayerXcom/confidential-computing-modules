@@ -139,6 +139,7 @@ async fn test_integration_eth_construct() {
     let receipt = dispatcher
         .send_command(
             encrypted_command,
+            None,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -267,6 +268,7 @@ async fn test_auto_notification() {
     let receipt = dispatcher
         .send_command(
             encrypted_command,
+            None,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -320,7 +322,13 @@ async fn test_auto_notification() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr,
+            gas,
+            SEND_COMMAND_CMD,
+        )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
@@ -427,6 +435,7 @@ async fn test_integration_eth_transfer() {
     let receipt = dispatcher
         .send_command(
             encrypted_command,
+            None,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -488,7 +497,13 @@ async fn test_integration_eth_transfer() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr,
+            gas,
+            SEND_COMMAND_CMD,
+        )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
@@ -623,6 +638,7 @@ async fn test_key_rotation() {
     let receipt = dispatcher
         .send_command(
             encrypted_command,
+            None,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -745,6 +761,7 @@ async fn test_integration_eth_approve() {
     let receipt = dispatcher
         .send_command(
             encrypted_command,
+            None,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -800,7 +817,13 @@ async fn test_integration_eth_approve() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr,
+            gas,
+            SEND_COMMAND_CMD,
+        )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
@@ -916,6 +939,7 @@ async fn test_integration_eth_transfer_from() {
     let receipt = dispatcher
         .send_command(
             encrypted_command,
+            None,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -1015,6 +1039,7 @@ async fn test_integration_eth_transfer_from() {
     let receipt = dispatcher
         .send_command(
             encrypted_command,
+            None,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -1114,7 +1139,13 @@ async fn test_integration_eth_transfer_from() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr,
+            gas,
+            SEND_COMMAND_CMD,
+        )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
@@ -1271,6 +1302,7 @@ async fn test_integration_eth_mint() {
     let receipt = dispatcher
         .send_command(
             encrypted_command,
+            None,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -1301,7 +1333,13 @@ async fn test_integration_eth_mint() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr,
+            gas,
+            SEND_COMMAND_CMD,
+        )
         .await
         .unwrap();
 
@@ -1422,6 +1460,7 @@ async fn test_integration_eth_burn() {
     let receipt = dispatcher
         .send_command(
             encrypted_command,
+            None,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -1454,6 +1493,7 @@ async fn test_integration_eth_burn() {
     let receipt = dispatcher
         .send_command(
             encrypted_command,
+            None,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_CMD,
@@ -1481,7 +1521,13 @@ async fn test_integration_eth_burn() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr,
+            gas,
+            SEND_COMMAND_CMD,
+        )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);

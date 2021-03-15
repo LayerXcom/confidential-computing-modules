@@ -45,6 +45,13 @@ cd ${ANONIFY_ROOT}/ethereum/deployer
 SALT=`openssl rand -hex 32`
 cargo run CREATE2_CONTRACT_ADDRESS SALT
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_evaluate_access_policy_by_user_id_field -- --nocapture  -- SALT
+sleep 1
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+SALT=`openssl rand -hex 32`
+cargo run CREATE2_CONTRACT_ADDRESS SALT
+cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture -- SALT
 sleep 1
 

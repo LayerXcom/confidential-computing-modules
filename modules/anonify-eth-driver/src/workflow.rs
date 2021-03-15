@@ -1,6 +1,6 @@
 use anonify_ecall_types::*;
 use frame_common::{
-    crypto::{Ciphertext, ExportHandshake},
+    crypto::{AccountId, Ciphertext, ExportHandshake},
     state_types::StateCounter,
 };
 use frame_host::engine::*;
@@ -13,7 +13,7 @@ pub struct CommandWorkflow;
 
 impl HostEngine for CommandWorkflow {
     type HI = host_input::Command;
-    type EI = SodiumCiphertext;
+    type EI = input::Command;
     type EO = output::Command;
     type HO = host_output::Command;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -134,6 +134,7 @@ pub mod host_input {
 
     pub struct Command {
         ciphertext: SodiumCiphertext,
+        user_id: Option<AccountId>,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
@@ -142,12 +143,14 @@ pub mod host_input {
     impl Command {
         pub fn new(
             ciphertext: SodiumCiphertext,
+            user_id: Option<AccountId>,
             signer: Address,
             gas: u64,
             ecall_cmd: u32,
         ) -> Self {
             Command {
                 ciphertext,
+                user_id,
                 signer,
                 gas,
                 ecall_cmd,
@@ -156,13 +159,14 @@ pub mod host_input {
     }
 
     impl HostInput for Command {
-        type EcallInput = SodiumCiphertext;
+        type EcallInput = input::Command;
         type HostOutput = host_output::Command;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             let host_output = host_output::Command::new(self.signer, self.gas);
+            let ecall_input = input::Command::new(self.ciphertext, self.user_id);
 
-            Ok((self.ciphertext, host_output))
+            Ok((ecall_input, host_output))
         }
 
         fn ecall_cmd(&self) -> u32 {
