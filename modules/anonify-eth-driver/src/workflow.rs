@@ -134,6 +134,7 @@ pub mod host_input {
 
     pub struct Command {
         ciphertext: SodiumCiphertext,
+        user_id: Option<AccountId>,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
@@ -142,6 +143,7 @@ pub mod host_input {
     impl Command {
         pub fn new(
             ciphertext: SodiumCiphertext,
+            user_id: Option<AccountId>,
             signer: Address,
             gas: u64,
             ecall_cmd: u32,
@@ -156,13 +158,14 @@ pub mod host_input {
     }
 
     impl HostInput for Command {
-        type EcallInput = SodiumCiphertext;
+        type EcallInput = input::Command;
         type HostOutput = host_output::Command;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             let host_output = host_output::Command::new(self.signer, self.gas);
+            let ecall_input = input::Command::new(self.ciphertext, self.user_id);
 
-            Ok((self.ciphertext, host_output))
+            Ok((ecall_input, host_output))
         }
 
         fn ecall_cmd(&self) -> u32 {

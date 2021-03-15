@@ -224,7 +224,7 @@ impl EnclaveKeyOps for AnonifyEnclaveContext {
         self.enclave_key.sign(msg).map_err(Into::into)
     }
 
-    fn decrypt(&self, ciphertext: SodiumCiphertext) -> anyhow::Result<Vec<u8>> {
+    fn decrypt(&self, ciphertext: &SodiumCiphertext) -> anyhow::Result<Vec<u8>> {
         self.enclave_key.decrypt(ciphertext).map_err(Into::into)
     }
 

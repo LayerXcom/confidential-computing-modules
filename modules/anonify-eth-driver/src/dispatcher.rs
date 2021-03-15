@@ -181,12 +181,13 @@ where
     pub async fn send_command(
         &self,
         ciphertext: SodiumCiphertext,
+        user_id: Option<AccountId>,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
     ) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Command::new(ciphertext, signer, gas, ecall_cmd);
+        let input = host_input::Command::new(ciphertext, user_id, signer, gas, ecall_cmd);
         let eid = inner.enclave_id;
         let host_output = CommandWorkflow::exec(input, eid)?;
 

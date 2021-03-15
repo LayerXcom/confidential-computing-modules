@@ -34,12 +34,17 @@ pub mod state {
 
         #[derive(Debug, Clone, Deserialize, Serialize)]
         pub struct Request {
+            #[serde(flatten)]
             pub ciphertext: SodiumCiphertext,
+            pub user_id: Option<AccountId>,
         }
 
         impl Request {
             pub fn new(ciphertext: SodiumCiphertext) -> Self {
-                Request { ciphertext }
+                Request {
+                    ciphertext,
+                    user_id: None,
+                }
             }
         }
 
