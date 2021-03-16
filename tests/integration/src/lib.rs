@@ -24,9 +24,9 @@ use web3::{
     Web3,
 };
 
-const factory_contract_addr: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
+const CONFIRMATIONS: usize = 0;
 
 pub static ETH_URL: Lazy<String> =
     Lazy::new(|| env::var("ETH_URL").unwrap_or("http://172.16.0.2:8545".to_string()));
@@ -73,7 +73,6 @@ async fn test_integration_eth_construct() {
     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let salt = [0u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -97,7 +96,6 @@ async fn test_integration_eth_construct() {
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            salt,
             factory_contract_addr,
             CONFIRMATIONS,
         )
@@ -111,6 +109,7 @@ async fn test_integration_eth_construct() {
             factory_contract_addr,
             &*ANONIFY_ABI_PATH,
         )
+        .await
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
@@ -238,7 +237,13 @@ async fn test_auto_notification() {
         .unwrap();
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
-        .set_anonify_contract_address(deployer_addr, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .set_anonify_contract_address(
+            deployer_addr,
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
+        .await
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
@@ -373,7 +378,6 @@ async fn test_integration_eth_transfer() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let salt = [2u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -397,7 +401,6 @@ async fn test_integration_eth_transfer() {
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            salt,
             factory_contract_addr,
             CONFIRMATIONS,
         )
@@ -405,7 +408,13 @@ async fn test_integration_eth_transfer() {
         .unwrap();
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
-        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .set_anonify_contract_address(
+            deployer_addr,
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
+        .await
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
@@ -565,7 +574,6 @@ async fn test_key_rotation() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let salt = [3u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -589,7 +597,6 @@ async fn test_key_rotation() {
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            salt,
             factory_contract_addr,
             CONFIRMATIONS,
         )
@@ -597,7 +604,13 @@ async fn test_key_rotation() {
         .unwrap();
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
-        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .set_anonify_contract_address(
+            deployer_addr,
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
+        .await
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
@@ -703,7 +716,6 @@ async fn test_integration_eth_approve() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let salt = [4u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -727,7 +739,6 @@ async fn test_integration_eth_approve() {
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            salt,
             factory_contract_addr,
             CONFIRMATIONS,
         )
@@ -735,7 +746,13 @@ async fn test_integration_eth_approve() {
         .unwrap();
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
-        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .set_anonify_contract_address(
+            deployer_addr,
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
+        .await
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
@@ -881,7 +898,6 @@ async fn test_integration_eth_transfer_from() {
     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let salt = [5u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -905,7 +921,6 @@ async fn test_integration_eth_transfer_from() {
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            salt,
             factory_contract_addr,
             CONFIRMATIONS,
         )
@@ -913,7 +928,13 @@ async fn test_integration_eth_transfer_from() {
         .unwrap();
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
-        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .set_anonify_contract_address(
+            deployer_addr,
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
+        .await
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
@@ -1245,7 +1266,6 @@ async fn test_integration_eth_mint() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let salt = [6u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -1269,7 +1289,6 @@ async fn test_integration_eth_mint() {
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            salt,
             factory_contract_addr,
             CONFIRMATIONS,
         )
@@ -1277,7 +1296,13 @@ async fn test_integration_eth_mint() {
         .unwrap();
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
-        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .set_anonify_contract_address(
+            deployer_addr,
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
+        .await
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
@@ -1404,7 +1429,6 @@ async fn test_integration_eth_burn() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let salt = [7u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -1428,14 +1452,20 @@ async fn test_integration_eth_burn() {
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            salt,
             factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
-        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .set_anonify_contract_address(
+            deployer_addr,
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
+        .await
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
