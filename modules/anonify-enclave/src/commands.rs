@@ -113,9 +113,13 @@ where
         let roster_idx = self.ecall_input.ciphertext().roster_idx() as usize;
         let msg_gen = self.ecall_input.ciphertext().generation();
 
+        let rt7 = std::time::SystemTime::now();
+        debug!("########## rt7: {:?}", rt7);
         // Even if group_key's ratchet operations and state transitions fail, state_counter must be incremented so it doesn't get stuck.
         enclave_context.verify_state_counter_increment(self.ecall_input.state_counter())?;
 
+        let rt8 = std::time::SystemTime::now();
+        debug!("########## rt8: {:?}", rt8);
         // Since the sender's keychain has already ratcheted,
         // even if an error occurs in the state transition, the receiver's keychain also ratchet.
         // `receiver_ratchet` fails if
@@ -128,16 +132,22 @@ where
         group_key.sync_ratchet(roster_idx, msg_gen)?;
         group_key.receiver_ratchet(roster_idx)?;
 
+        let rt9 = std::time::SystemTime::now();
+        debug!("########## rt9: {:?}", rt9);
         let mut output = output::ReturnNotifyState::default();
         let decrypted_cmds =
             Commands::<R, C, AP>::decrypt(self.ecall_input.ciphertext(), group_key)?;
         if let Some(cmds) = decrypted_cmds {
+            let rt10 = std::time::SystemTime::now();
+            debug!("########## rt10: {:?}", rt10);
             // Since the command data is valid for the error at the time of state transition,
             // `user_counter` must be verified and incremented before the state transition.
             enclave_context.verify_user_counter_increment(cmds.my_account_id, cmds.counter)?;
             // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
             let state_iter = cmds.state_transition(enclave_context.clone())?;
 
+            let rt14 = std::time::SystemTime::now();
+            debug!("########## rt14: {:?}", rt14);
             if let Some(notify_state) = enclave_context.update_state(state_iter.0, state_iter.1) {
                 let json = serde_json::to_vec(&notify_state)?;
                 let bytes = bincode::serialize(&json[..])?;
@@ -221,6 +231,8 @@ where
         self,
         ctx: CTX,
     ) -> Result<(Vec<UpdatedState<StateType>>, Vec<Option<NotifyState>>)> {
+        let rt11 = std::time::SystemTime::now();
+        debug!("########## rt11: {:?}", rt11);
         let res = R::new(ctx).execute(self.call_kind, self.my_account_id)?;
 
         match res {

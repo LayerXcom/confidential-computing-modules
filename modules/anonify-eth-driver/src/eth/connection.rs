@@ -187,8 +187,8 @@ impl Web3Contract {
             .limit(self.event_limit)
             .build();
 
-        let rt2 = std::time::SystemTime::now();
-        debug!("########## rt2: {:?}", rt2);
+        let rt1 = std::time::SystemTime::now();
+        debug!("########## rt1: {:?}", rt1);
         let logs = self.web3_conn.get_logs(&filter).await?;
 
         Ok(Web3Logs::new(logs, cache, events))
