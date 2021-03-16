@@ -61,11 +61,18 @@ async fn main() {
                 salt.copy_from_slice(&vec[..]);
             }
 
-            let tx_hash = deployer
-                .deploy_anonify_by_factory(&*FACTORY_ABI_PATH, signer, GAS, salt, factory_address)
+            let receipt = deployer
+                .deploy_anonify_by_factory(
+                    &*FACTORY_ABI_PATH,
+                    signer,
+                    GAS,
+                    salt,
+                    factory_address,
+                    confirmations,
+                )
                 .await
                 .unwrap();
-            println!("tx_hash: {:x}", tx_hash);
+            println!("receipt: {:x}", receipt);
         }
         _ => panic!("Invalid arguments"),
     };
