@@ -37,44 +37,44 @@ RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 
 # Deploy a FACTORY Contract
 cd ${ANONIFY_ROOT}/ethereum/deployer
-FACTORY_CONTRACT_ADDRESS=`cargo run factory`
+export FACTORY_CONTRACT_ADDRESS=`cargo run factory`
 
 # ERC20 Application Tests
 
 cd ${ANONIFY_ROOT}/ethereum/deployer
 cargo run $FACTORY_CONTRACT_ADDRESS
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_evaluate_access_policy_by_user_id_field -- --nocapture  -- SALT
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_evaluate_access_policy_by_user_id_field -- --nocapture
 sleep 1
 
 cd ${ANONIFY_ROOT}/ethereum/deployer
 cargo run $FACTORY_CONTRACT_ADDRESS
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture -- SALT
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture
 sleep 1
 
 cd ${ANONIFY_ROOT}/ethereum/deployer
 cargo run $FACTORY_CONTRACT_ADDRESS
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_skip_invalid_event -- --nocapture -- SALT
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_skip_invalid_event -- --nocapture
 sleep 1
 
 cd ${ANONIFY_ROOT}/ethereum/deployer
 cargo run $FACTORY_CONTRACT_ADDRESS
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture -- SALT
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture
 sleep 1
 
 cd ${ANONIFY_ROOT}/ethereum/deployer
 cargo run $FACTORY_CONTRACT_ADDRESS
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture -- SALT
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture
 sleep 1
 
 cd ${ANONIFY_ROOT}/ethereum/deployer
 cargo run $FACTORY_CONTRACT_ADDRESS
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_duplicated_out_of_order_request_from_same_user -- --nocapture -- SALT
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_duplicated_out_of_order_request_from_same_user -- --nocapture
 
 # Secret Backup Application Tests
 

@@ -1,7 +1,7 @@
 use anonify_eth_driver::{traits::*, utils::get_account, Dispatcher, EventCache, Web3Http};
 use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH};
 use sgx_types::sgx_enclave_id_t;
-use std::env;
+use std::{env, str::FromStr};
 use web3::types::Address;
 
 mod error;
@@ -27,7 +27,7 @@ where
     S: Sender,
     W: Watcher,
 {
-    pub async fn new(eid: sgx_enclave_id_t, salt: [u8; 32]) -> Self {
+    pub async fn new(eid: sgx_enclave_id_t) -> Self {
         let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
         let account_index: usize = env::var("ACCOUNT_INDEX")
             .expect("ACCOUNT_INDEX is not set")
@@ -44,7 +44,8 @@ where
             .expect("Failed to parse SYNC_BC_TIME to u64");
         let factory_contract_address = Address::from_str(
             &env::var("FACTORY_CONTRACT_ADDRESS").expect("FACTORY_CONTRACT_ADDRESS is not set"),
-        );
+        )
+        .unwrap();
 
         let web3_conn = Web3Http::new(&eth_url).unwrap();
         let sender_address = get_account(&web3_conn, account_index, password.as_deref())
@@ -59,6 +60,7 @@ where
                 factory_contract_address,
                 &*ANONIFY_ABI_PATH,
             )
+            .await
             .unwrap();
 
         Server {

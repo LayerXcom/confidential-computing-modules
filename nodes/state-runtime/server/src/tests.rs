@@ -24,14 +24,6 @@ use web3::{
 const SYNC_TIME: u64 = 1500;
 const GAS: u64 = 5_000_000;
 
-fn decode_salt(arg: &str) -> [u8; 32] {
-    let mut res = [0u8; 32];
-    let v = hex::decode(arg).unwrap();
-    assert_eq!(v.len(), 32);
-    res.copy_from_slice(&v[..]);
-    res
-}
-
 #[actix_rt::test]
 async fn test_evaluate_access_policy_by_user_id_field() {
     set_env_vars();
@@ -85,9 +77,6 @@ async fn test_evaluate_access_policy_by_user_id_field() {
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
-        .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_address: contract_address.clone(),
-        })
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -182,8 +171,7 @@ async fn test_multiple_messages() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let salt = decode_salt(env::args().collect::<Vec<String>>()[3].as_str());
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid, salt));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -294,8 +282,7 @@ async fn test_skip_invalid_event() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let salt = decode_salt(env::args().collect::<Vec<String>>()[3].as_str());
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid, salt));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -420,8 +407,7 @@ async fn test_node_recovery() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let salt = decode_salt(env::args().collect::<Vec<String>>()[3].as_str());
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid, salt));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -448,7 +434,7 @@ async fn test_node_recovery() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let recovered_eid = recovered_enclave.geteid();
-    let recovered_server = Arc::new(Server::<EthSender, EventWatcher>::new(recovered_eid, salt));
+    let recovered_server = Arc::new(Server::<EthSender, EventWatcher>::new(recovered_eid));
 
     let mut recovered_app = test::init_service(
         App::new()
@@ -608,8 +594,7 @@ async fn test_join_group_then_handshake() {
     let eid1 = enclave1.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let salt = decode_salt(env::args().collect::<Vec<String>>()[3].as_str());
-    let server1 = Arc::new(Server::<EthSender, EventWatcher>::new(eid1, salt));
+    let server1 = Arc::new(Server::<EthSender, EventWatcher>::new(eid1));
 
     let mut app1 = test::init_service(
         App::new()
@@ -633,7 +618,7 @@ async fn test_join_group_then_handshake() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid2 = enclave2.geteid();
-    let server2 = Arc::new(Server::<EthSender, EventWatcher>::new(eid2, salt));
+    let server2 = Arc::new(Server::<EthSender, EventWatcher>::new(eid2));
 
     let mut app2 = test::init_service(
         App::new()
@@ -807,8 +792,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let salt = decode_salt(env::args().collect::<Vec<String>>()[3].as_str());
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid, salt));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
     let mut app = test::init_service(
         App::new()
             .data(server.clone())

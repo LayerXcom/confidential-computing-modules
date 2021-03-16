@@ -52,7 +52,7 @@ async fn main() {
                 .unwrap();
             println!("{:x}", contract_address);
         }
-        contract_address if web3::types::Address::from_str(contract_address).is_ok() => {
+        contract_address => {
             let factory_address = web3::types::Address::from_str(contract_address).unwrap();
 
             let receipt = deployer
@@ -67,6 +67,5 @@ async fn main() {
                 .unwrap();
             println!("receipt: {:?}", receipt);
         }
-        _ => panic!("Invalid arguments"),
     };
 }
