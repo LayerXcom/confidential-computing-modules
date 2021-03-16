@@ -110,7 +110,7 @@ impl Web3Contract {
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
 
         let st3 = std::time::SystemTime::now();
-        debug!("########## st3: {:?}", st3);
+        println!("########## st3: {:?}", st3);
         let ciphertext = ecall_output.ciphertext();
         let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
@@ -118,7 +118,7 @@ impl Web3Contract {
         let gas = output.gas;
 
         let st4 = std::time::SystemTime::now();
-        debug!("########## st4: {:?}", st4);
+        println!("########## st4: {:?}", st4);
         self.contract
             .call(
                 "storeCommand",
@@ -188,7 +188,7 @@ impl Web3Contract {
             .build();
 
         let rt1 = std::time::SystemTime::now();
-        debug!("########## rt1: {:?}", rt1);
+        println!("########## rt1: {:?}", rt1);
         let logs = self.web3_conn.get_logs(&filter).await?;
 
         Ok(Web3Logs::new(logs, cache, events))
