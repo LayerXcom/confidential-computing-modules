@@ -54,18 +54,18 @@ impl EthDeployer {
         .map_err(Into::into)
     }
 
-    pub async fn deploy_anonify_by_create2<P>(
+    pub async fn deploy_anonify_by_factory<P>(
         &self,
         abi_path: P,
         signer: Address,
         gas: u64,
         salt: [u8; 32],
-        create2_address: Address,
+        factory_address: Address,
     ) -> Result<H256>
     where
         P: AsRef<Path> + Send + Sync + Copy,
     {
-        let contract_info = ContractInfo::new(abi_path, create2_address)?;
+        let contract_info = ContractInfo::new(abi_path, factory_address)?;
         let abi = contract_info.contract_abi()?;
         let contract = Contract::new(self.web3_conn.web3.eth(), contract_info.address(), abi);
 

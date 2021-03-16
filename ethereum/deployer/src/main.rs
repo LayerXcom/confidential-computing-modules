@@ -1,5 +1,5 @@
 use eth_deployer::EthDeployer;
-use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, CREATE2_ABI_PATH, CREATE2_BIN_PATH};
+use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH, FACTORY_BIN_PATH};
 use std::{env, str::FromStr};
 
 const GAS: u64 = 5_000_000;
@@ -26,11 +26,11 @@ async fn main() {
         .unwrap();
 
     match args[1].as_str() {
-        "create2" => {
+        "factory" => {
             let contract_address = deployer
                 .deploy(
-                    &*CREATE2_ABI_PATH,
-                    &*CREATE2_BIN_PATH,
+                    &*FACTORY_ABI_PATH,
+                    &*FACTORY_BIN_PATH,
                     confirmations,
                     GAS,
                     signer,
@@ -53,7 +53,7 @@ async fn main() {
             println!("{:x}", contract_address);
         }
         contract_address if web3::types::Address::from_str(contract_address).is_ok() => {
-            let create2_address = web3::types::Address::from_str(contract_address).unwrap();
+            let factory_address = web3::types::Address::from_str(contract_address).unwrap();
             let mut salt = [0u8; 32];
             if args.len() == 3 {
                 let vec = hex::decode(&args[2]).unwrap();
@@ -62,7 +62,7 @@ async fn main() {
             }
 
             let tx_hash = deployer
-                .deploy_anonify_by_create2(&*CREATE2_ABI_PATH, signer, GAS, salt, create2_address)
+                .deploy_anonify_by_factory(&*FACTORY_ABI_PATH, signer, GAS, salt, factory_address)
                 .await
                 .unwrap();
             println!("tx_hash: {:x}", tx_hash);

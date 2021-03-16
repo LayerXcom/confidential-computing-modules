@@ -9,7 +9,7 @@ use frame_common::{
     state_types::NotifyState,
     traits::*,
 };
-use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, CREATE2_ABI_PATH, CREATE2_BIN_PATH};
+use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH, FACTORY_BIN_PATH};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
@@ -82,10 +82,10 @@ async fn test_integration_eth_construct() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let create2_contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*CREATE2_ABI_PATH,
-            &*CREATE2_BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
@@ -93,12 +93,12 @@ async fn test_integration_eth_construct() {
         .await
         .unwrap();
     let tx_hash = deployer
-        .deploy_anonify_by_create2(
-            &*CREATE2_ABI_PATH,
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
             salt,
-            create2_contract_addr,
+            factory_contract_addr,
         )
         .await
         .unwrap();
@@ -109,7 +109,7 @@ async fn test_integration_eth_construct() {
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
     println!("Deployer account_id: {:?}", deployer_addr);
-    println!("create2 contract address: {}", create2_contract_addr);
+    println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
@@ -211,10 +211,10 @@ async fn test_auto_notification() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let create2_contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*CREATE2_ABI_PATH,
-            &*CREATE2_BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
@@ -222,12 +222,12 @@ async fn test_auto_notification() {
         .await
         .unwrap();
     let tx_hash = deployer
-        .deploy_anonify_by_create2(
-            &*CREATE2_ABI_PATH,
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
             salt,
-            create2_contract_addr,
+            factory_contract_addr,
         )
         .await
         .unwrap();
@@ -238,7 +238,7 @@ async fn test_auto_notification() {
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
     println!("Deployer account_id: {:?}", deployer_addr);
-    println!("create2 contract address: {}", create2_contract_addr);
+    println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
@@ -377,10 +377,10 @@ async fn test_integration_eth_transfer() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let create2_contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*CREATE2_ABI_PATH,
-            &*CREATE2_BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
@@ -388,12 +388,12 @@ async fn test_integration_eth_transfer() {
         .await
         .unwrap();
     let tx_hash = deployer
-        .deploy_anonify_by_create2(
-            &*CREATE2_ABI_PATH,
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
             salt,
-            create2_contract_addr,
+            factory_contract_addr,
         )
         .await
         .unwrap();
@@ -404,7 +404,7 @@ async fn test_integration_eth_transfer() {
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
     println!("Deployer account_id: {:?}", deployer_addr);
-    println!("create2 contract address: {}", create2_contract_addr);
+    println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
@@ -568,10 +568,10 @@ async fn test_key_rotation() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let create2_contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*CREATE2_ABI_PATH,
-            &*CREATE2_BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
@@ -579,12 +579,12 @@ async fn test_key_rotation() {
         .await
         .unwrap();
     let tx_hash = deployer
-        .deploy_anonify_by_create2(
-            &*CREATE2_ABI_PATH,
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
             salt,
-            create2_contract_addr,
+            factory_contract_addr,
         )
         .await
         .unwrap();
@@ -595,7 +595,7 @@ async fn test_key_rotation() {
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
     println!("Deployer account_id: {:?}", deployer_addr);
-    println!("create2 contract address: {}", create2_contract_addr);
+    println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
@@ -705,10 +705,10 @@ async fn test_integration_eth_approve() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let create2_contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*CREATE2_ABI_PATH,
-            &*CREATE2_BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
@@ -716,12 +716,12 @@ async fn test_integration_eth_approve() {
         .await
         .unwrap();
     let tx_hash = deployer
-        .deploy_anonify_by_create2(
-            &*CREATE2_ABI_PATH,
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
             salt,
-            create2_contract_addr,
+            factory_contract_addr,
         )
         .await
         .unwrap();
@@ -732,7 +732,7 @@ async fn test_integration_eth_approve() {
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
     println!("Deployer account_id: {:?}", deployer_addr);
-    println!("create2 contract address: {}", create2_contract_addr);
+    println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
@@ -882,10 +882,10 @@ async fn test_integration_eth_transfer_from() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let create2_contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*CREATE2_ABI_PATH,
-            &*CREATE2_BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
@@ -893,12 +893,12 @@ async fn test_integration_eth_transfer_from() {
         .await
         .unwrap();
     let tx_hash = deployer
-        .deploy_anonify_by_create2(
-            &*CREATE2_ABI_PATH,
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
             salt,
-            create2_contract_addr,
+            factory_contract_addr,
         )
         .await
         .unwrap();
@@ -909,7 +909,7 @@ async fn test_integration_eth_transfer_from() {
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
     println!("Deployer account_id: {:?}", deployer_addr);
-    println!("create2 contract address: {}", create2_contract_addr);
+    println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
@@ -1245,10 +1245,10 @@ async fn test_integration_eth_mint() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let create2_contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*CREATE2_ABI_PATH,
-            &*CREATE2_BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
@@ -1256,12 +1256,12 @@ async fn test_integration_eth_mint() {
         .await
         .unwrap();
     let tx_hash = deployer
-        .deploy_anonify_by_create2(
-            &*CREATE2_ABI_PATH,
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
             salt,
-            create2_contract_addr,
+            factory_contract_addr,
         )
         .await
         .unwrap();
@@ -1272,7 +1272,7 @@ async fn test_integration_eth_mint() {
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
     println!("Deployer account_id: {:?}", deployer_addr);
-    println!("create2 contract address: {}", create2_contract_addr);
+    println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
@@ -1403,10 +1403,10 @@ async fn test_integration_eth_burn() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let create2_contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*CREATE2_ABI_PATH,
-            &*CREATE2_BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
@@ -1414,12 +1414,12 @@ async fn test_integration_eth_burn() {
         .await
         .unwrap();
     let tx_hash = deployer
-        .deploy_anonify_by_create2(
-            &*CREATE2_ABI_PATH,
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
             salt,
-            create2_contract_addr,
+            factory_contract_addr,
         )
         .await
         .unwrap();
@@ -1430,7 +1430,7 @@ async fn test_integration_eth_burn() {
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
     println!("Deployer account_id: {:?}", deployer_addr);
-    println!("create2 contract address: {}", create2_contract_addr);
+    println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher

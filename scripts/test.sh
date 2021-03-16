@@ -10,7 +10,7 @@ ANONIFY_ROOT=/root/anonify
 
 dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/.."
-solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/Anonify.sol ethereum/contracts/Create2.sol
+solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/Anonify.sol ethereum/contracts/Factory.sol
 
 cd frame/types
 cargo build
@@ -35,50 +35,50 @@ make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 cd ${ANONIFY_ROOT}/tests/integration
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 
-# Deploy a CREATE2 Contract
+# Deploy a FACTORY Contract
 cd ${ANONIFY_ROOT}/ethereum/deployer
-CREATE2_CONTRACT_ADDRESS=`cargo run create2`
+FACTORY_CONTRACT_ADDRESS=`cargo run factory`
 
 # ERC20 Application Tests
 
 cd ${ANONIFY_ROOT}/ethereum/deployer
 SALT=`openssl rand -hex 32`
-cargo run CREATE2_CONTRACT_ADDRESS SALT
+cargo run $FACTORY_CONTRACT_ADDRESS $SALT
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_evaluate_access_policy_by_user_id_field -- --nocapture  -- SALT
 sleep 1
 
 cd ${ANONIFY_ROOT}/ethereum/deployer
 SALT=`openssl rand -hex 32`
-cargo run CREATE2_CONTRACT_ADDRESS SALT
+cargo run $FACTORY_CONTRACT_ADDRESS $SALT
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture -- SALT
 sleep 1
 
 cd ${ANONIFY_ROOT}/ethereum/deployer
 SALT=`openssl rand -hex 32`
-cargo run CREATE2_CONTRACT_ADDRESS SALT
+cargo run $FACTORY_CONTRACT_ADDRESS $SALT
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_skip_invalid_event -- --nocapture -- SALT
 sleep 1
 
 cd ${ANONIFY_ROOT}/ethereum/deployer
 SALT=`openssl rand -hex 32`
-cargo run CREATE2_CONTRACT_ADDRESS SALT
+cargo run $FACTORY_CONTRACT_ADDRESS $SALT
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture -- SALT
 sleep 1
 
 cd ${ANONIFY_ROOT}/ethereum/deployer
 SALT=`openssl rand -hex 32`
-cargo run CREATE2_CONTRACT_ADDRESS SALT
+cargo run $FACTORY_CONTRACT_ADDRESS $SALT
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture -- SALT
 sleep 1
 
 cd ${ANONIFY_ROOT}/ethereum/deployer
 SALT=`openssl rand -hex 32`
-cargo run CREATE2_CONTRACT_ADDRESS SALT
+cargo run $FACTORY_CONTRACT_ADDRESS $SALT
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_duplicated_out_of_order_request_from_same_user -- --nocapture -- SALT
 

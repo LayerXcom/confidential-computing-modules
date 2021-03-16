@@ -58,7 +58,7 @@ impl ContractInfo {
 }
 
 /// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1014.md
-/// Returns the smart contract address genereted by the CREATE2 operation,
+/// Returns the smart contract address genereted by the FACTORY operation,
 /// keccak256( 0xff ++ address ++ salt ++ keccak256(init_code))[12:]
 pub fn calc_anonify_contract_address(sender: Address, salt: [u8; 32], bin_code: &[u8]) -> Address {
     let bytes = [
