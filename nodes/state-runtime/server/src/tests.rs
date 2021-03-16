@@ -58,22 +58,9 @@ async fn test_evaluate_access_policy_by_user_id_field() {
     )
     .await;
 
-    let deployer = EthDeployer::new(&eth_url).unwrap();
-    let signer = deployer.get_account(0usize, None).await.unwrap();
-    let contract_address = deployer
-        .deploy(&*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH, 0usize, GAS, signer)
+    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    println!("contract address: {:?}", contract_address);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_address")
-        .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
@@ -81,7 +68,6 @@ async fn test_evaluate_access_policy_by_user_id_field() {
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
-
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
         .to_request();
@@ -93,7 +79,6 @@ async fn test_evaluate_access_policy_by_user_id_field() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        &contract_address,
     )
     .await;
 
@@ -197,9 +182,6 @@ async fn test_multiple_messages() {
     let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    let contract_address =
-        calc_anonify_contract_address(signer, salt, &fs::read(&*ANONIFY_BIN_PATH).unwrap());
-    println!("contract address: {:?}", contract_address);
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
@@ -219,7 +201,6 @@ async fn test_multiple_messages() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        contract_address,
     )
     .await;
 
@@ -308,8 +289,6 @@ async fn test_skip_invalid_event() {
     let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    let contract_address =
-        calc_anonify_contract_address(signer, salt, &fs::read(&*ANONIFY_BIN_PATH).unwrap());
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
@@ -329,7 +308,6 @@ async fn test_skip_invalid_event() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        contract_address,
     )
     .await;
 
@@ -461,8 +439,6 @@ async fn test_node_recovery() {
     let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    let contract_address =
-        calc_anonify_contract_address(signer, salt, &fs::read(&*ANONIFY_BIN_PATH).unwrap());
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
@@ -482,7 +458,6 @@ async fn test_node_recovery() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        contract_address,
     )
     .await;
 
@@ -550,7 +525,6 @@ async fn test_node_recovery() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        contract_address,
     )
     .await;
 
@@ -651,8 +625,6 @@ async fn test_join_group_then_handshake() {
     let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    let contract_address =
-        calc_anonify_contract_address(signer, salt, &fs::read(&*ANONIFY_BIN_PATH).unwrap());
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
@@ -672,7 +644,6 @@ async fn test_join_group_then_handshake() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        contract_address,
     )
     .await;
 
@@ -716,7 +687,6 @@ async fn test_join_group_then_handshake() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        contract_address,
     )
     .await;
 
@@ -822,8 +792,6 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    let contract_address =
-        calc_anonify_contract_address(signer, salt, &fs::read(&*ANONIFY_BIN_PATH).unwrap());
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
@@ -843,7 +811,6 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        contract_address,
     )
     .await;
 
@@ -1006,19 +973,19 @@ fn other_turn() {
     env::set_var("ACCOUNT_INDEX", "1");
 }
 
-async fn verify_enclave_encryption_key<P: AsRef<Path>>(
+async fn verify_enclave_encryption_key<P: AsRef<Path> + Copy>(
     enclave_encryption_key: SodiumPubKey,
-    abi_path: P,
+    factory_abi_path: P,
     eth_url: &str,
-    contract_address: Address,
 ) -> SodiumPubKey {
-    let transport = Http::new(eth_url).unwrap();
-    let web3 = Web3::new(transport);
-    let web3_conn = web3.eth();
-    let f = fs::File::open(abi_path).unwrap();
-    let abi = ContractABI::load(BufReader::new(f)).unwrap();
+    let factory_contract_address = Address::from_str(
+        &env::var("FACTORY_CONTRACT_ADDRESS").expect("FACTORY_CONTRACT_ADDRESS is not set"),
+    )
+    .unwrap();
+    let contract =
+        create_contract_interface(eth_url, factory_abi_path, factory_contract_address).unwrap();
 
-    let query_enclave_encryption_key: Vec<u8> = Contract::new(web3_conn, contract_address, abi)
+    let query_enclave_encryption_key: Vec<u8> = contract
         .query(
             "getEncryptionKey",
             enclave_encryption_key.to_bytes(),
