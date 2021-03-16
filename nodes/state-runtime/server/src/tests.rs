@@ -52,10 +52,6 @@ async fn test_evaluate_access_policy_by_user_id_field() {
                 web::post().to(handle_join_group::<EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )

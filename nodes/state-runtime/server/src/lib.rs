@@ -1,7 +1,8 @@
 use anonify_eth_driver::{traits::*, utils::get_account, Dispatcher, EventCache, Web3Http};
-use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH};
+use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH};
 use sgx_types::sgx_enclave_id_t;
 use std::env;
+use web3::types::Address;
 
 mod error;
 pub mod handlers;
@@ -41,6 +42,9 @@ where
             .unwrap_or_else(|_| "1000".to_string())
             .parse()
             .expect("Failed to parse SYNC_BC_TIME to u64");
+        let factory_contract_address = Address::from_str(
+            &env::var("FACTORY_CONTRACT_ADDRESS").expect("FACTORY_CONTRACT_ADDRESS is not set"),
+        );
 
         let web3_conn = Web3Http::new(&eth_url).unwrap();
         let sender_address = get_account(&web3_conn, account_index, password.as_deref())
@@ -51,9 +55,9 @@ where
         let dispatcher = Dispatcher::<S, W>::new(eid, &eth_url, cache)
             .set_anonify_contract_address(
                 sender_address,
-                salt,
+                &*FACTORY_ABI_PATH,
+                factory_contract_address,
                 &*ANONIFY_ABI_PATH,
-                &*ANONIFY_BIN_PATH,
             )
             .unwrap();
 
