@@ -54,25 +54,18 @@ async fn main() {
         }
         contract_address if web3::types::Address::from_str(contract_address).is_ok() => {
             let factory_address = web3::types::Address::from_str(contract_address).unwrap();
-            let mut salt = [0u8; 32];
-            if args.len() == 3 {
-                let vec = hex::decode(&args[2]).unwrap();
-                assert_eq!(vec.len(), 32);
-                salt.copy_from_slice(&vec[..]);
-            }
 
             let receipt = deployer
                 .deploy_anonify_by_factory(
                     &*FACTORY_ABI_PATH,
                     signer,
                     GAS,
-                    salt,
                     factory_address,
                     confirmations,
                 )
                 .await
                 .unwrap();
-            println!("receipt: {:x}", receipt);
+            println!("receipt: {:?}", receipt);
         }
         _ => panic!("Invalid arguments"),
     };

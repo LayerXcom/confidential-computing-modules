@@ -1,5 +1,5 @@
 use crate::{
-    error::{Result, HostError},
+    error::{HostError, Result},
     eth::{connection::Web3Contract, sender::sender_retry_condition},
     Web3Http,
 };
@@ -9,7 +9,7 @@ use frame_common::traits::Keccak256;
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use std::{fs, io::BufReader, path::Path, str::FromStr};
-use web3::types::Address;
+use web3::{contract::Contract, transports::Http, types::Address};
 
 /// Define a retry condition of deploying contracts.
 /// If it returns true, retry deploying contracts.
@@ -74,7 +74,11 @@ pub fn calc_anonify_contract_address(sender: Address, salt: [u8; 32], bin_code: 
     Address::from(addr)
 }
 
-pub async fn get_account(web3_conn: &Web3Http, index: usize, password: Option<&str>) -> Result<Address> {
+pub async fn get_account(
+    web3_conn: &Web3Http,
+    index: usize,
+    password: Option<&str>,
+) -> Result<Address> {
     Retry::new(
         "get_account",
         *REQUEST_RETRIES,
@@ -83,4 +87,20 @@ pub async fn get_account(web3_conn: &Web3Http, index: usize, password: Option<&s
     .set_condition(deployer_retry_condition)
     .spawn_async(|| async { web3_conn.get_account(index, password).await })
     .await
+}
+
+pub fn create_contract_interface<P: AsRef<Path> + Copy>(
+    node_url: &str,
+    abi_path: P,
+    contracrt_address: Address,
+) -> Result<Contract<Http>> {
+    let web3_conn = Web3Http::new(node_url)?;
+    let contract_info = ContractInfo::new(abi_path, contracrt_address)?;
+    let abi = contract_info.contract_abi()?;
+
+    Ok(Contract::new(
+        web3_conn.web3.eth(),
+        contract_info.address(),
+        abi,
+    ))
 }

@@ -24,7 +24,7 @@ use web3::{
     Web3,
 };
 
-const CONFIRMATIONS: usize = 0;
+const factory_contract_addr: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
 
@@ -99,12 +99,18 @@ async fn test_integration_eth_construct() {
             gas,
             salt,
             factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
-        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .set_anonify_contract_address(
+            deployer_addr,
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
@@ -202,7 +208,6 @@ async fn test_auto_notification() {
     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
     let gas = 5_000_000;
-    let salt = [1u8; 32];
     let cache = EventCache::default();
 
     // Deploy
@@ -226,14 +231,14 @@ async fn test_auto_notification() {
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            salt,
             factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
-        .set_anonify_contract_address(deployer_addr, salt, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
+        .set_anonify_contract_address(deployer_addr, &*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH)
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
@@ -394,6 +399,7 @@ async fn test_integration_eth_transfer() {
             gas,
             salt,
             factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
@@ -585,6 +591,7 @@ async fn test_key_rotation() {
             gas,
             salt,
             factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
@@ -722,6 +729,7 @@ async fn test_integration_eth_approve() {
             gas,
             salt,
             factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
@@ -899,6 +907,7 @@ async fn test_integration_eth_transfer_from() {
             gas,
             salt,
             factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
@@ -1262,6 +1271,7 @@ async fn test_integration_eth_mint() {
             gas,
             salt,
             factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();

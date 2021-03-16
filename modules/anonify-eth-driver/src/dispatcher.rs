@@ -15,7 +15,10 @@ use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{fmt::Debug, fs, path::Path, str::FromStr};
-use web3::types::{Address, H256};
+use web3::{
+    contract::Options,
+    types::{Address, H256},
+};
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
@@ -53,21 +56,32 @@ where
         Dispatcher { inner }
     }
 
-    pub fn set_anonify_contract_address<P: AsRef<Path> + Copy>(
+    pub async fn set_anonify_contract_address<P: AsRef<Path> + Copy>(
         self,
         sender: Address,
-        salt: [u8; 32],
-        abi_path: P,
-        bin_path: P,
+        factory_abi_path: P,
+        factory_contract_address: Address,
+        anonify_abi_path: P,
     ) -> Result<Self> {
-        let bin_code = fs::read(bin_path)?;
-        let contract_address = calc_anonify_contract_address(sender, salt, &bin_code);
-        let contract_info = ContractInfo::new(abi_path, contract_address)?;
-
         {
             let mut inner = self.inner.write();
-            let sender = S::new(inner.enclave_id, &inner.node_url, contract_info.clone())?;
-            let watcher = W::new(&inner.node_url, contract_info, inner.cache.clone())?;
+            let contract = create_contract_interface(
+                &inner.node_url,
+                factory_abi_path,
+                factory_contract_address,
+            )?;
+            let anonify_contract_address: Address = contract
+                .query("getAnonifyAddress", (), None, Options::default(), None)
+                .await?;
+            let anonify_contract_info =
+                ContractInfo::new(anonify_abi_path, anonify_contract_address)?;
+
+            let sender = S::new(
+                inner.enclave_id,
+                &inner.node_url,
+                anonify_contract_info.clone(),
+            )?;
+            let watcher = W::new(&inner.node_url, anonify_contract_info, inner.cache.clone())?;
             inner.sender = Some(sender);
             inner.watcher = Some(watcher);
         }

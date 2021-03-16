@@ -1,7 +1,7 @@
 use anonify_eth_driver::{
     error::{HostError, Result},
     eth::{sender::sender_retry_condition, Web3Http},
-    utils::{calc_anonify_contract_address, deployer_retry_condition, get_account, ContractInfo},
+    utils::*,
 };
 use frame_config::{
     ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_BIN_PATH, REQUEST_RETRIES, RETRY_DELAY_MILLS,
@@ -61,16 +61,14 @@ impl EthDeployer {
         abi_path: P,
         signer: Address,
         gas: u64,
-        salt: [u8; 32],
         factory_address: Address,
         confirmations: usize,
     ) -> Result<TransactionReceipt>
     where
         P: AsRef<Path> + Send + Sync + Copy,
     {
-        let contract_info = ContractInfo::new(abi_path, factory_address)?;
-        let abi = contract_info.contract_abi()?;
-        let contract = Contract::new(self.web3_conn.web3.eth(), contract_info.address(), abi);
+        let contract =
+            create_contract_interface(self.web3_conn.get_eth_url(), abi_path, factory_address)?;
 
         Retry::new(
             "deploy",
