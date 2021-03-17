@@ -102,14 +102,7 @@ where
 
     /// - Starting syncing with the blockchain node.
     /// - Joining as the state runtime node.
-    pub async fn run(
-        self,
-        sync_time: u64,
-        signer: Address,
-        gas: u64,
-    ) -> Result<()>
-    {
-
+    pub async fn run(self, sync_time: u64, signer: Address, gas: u64) -> Result<()> {
         let tx_hash = self.join_group(signer, gas, JOIN_GROUP_CMD).await?;
         info!("A transaction hash of join_group: {:?}", tx_hash);
 

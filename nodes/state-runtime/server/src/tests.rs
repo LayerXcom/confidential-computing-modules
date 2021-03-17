@@ -27,14 +27,15 @@ async fn test_evaluate_access_policy_by_user_id_field() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
+    // TODO: Dupulicated Server initialization
+    Server::<EthSender, EventWatcher>::new(eid)
+        .await
+        .run()
+        .await;
     let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid).await);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
-            .route(
-                "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
@@ -50,12 +51,6 @@ async fn test_evaluate_access_policy_by_user_id_field() {
     )
     .await;
 
-    let req = test::TestRequest::post()
-        .uri("/api/v1/join_group")
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
         .to_request();
@@ -145,14 +140,15 @@ async fn test_multiple_messages() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
+    // TODO: Dupulicated Server initialization
+    Server::<EthSender, EventWatcher>::new(eid)
+        .await
+        .run()
+        .await;
     let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid).await);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
-            .route(
-                "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
@@ -167,13 +163,6 @@ async fn test_multiple_messages() {
             ),
     )
     .await;
-
-    let req = test::TestRequest::post()
-        .uri("/api/v1/join_group")
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -249,14 +238,15 @@ async fn test_skip_invalid_event() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
+    // TODO: Dupulicated Server initialization
+    Server::<EthSender, EventWatcher>::new(eid)
+        .await
+        .run()
+        .await;
     let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid).await);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
-            .route(
-                "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
@@ -271,13 +261,6 @@ async fn test_skip_invalid_event() {
             ),
     )
     .await;
-
-    let req = test::TestRequest::post()
-        .uri("/api/v1/join_group")
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -368,14 +351,15 @@ async fn test_node_recovery() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
+    // TODO: Dupulicated Server initialization
+    Server::<EthSender, EventWatcher>::new(eid)
+        .await
+        .run()
+        .await;
     let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid).await);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
-            .route(
-                "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
@@ -395,6 +379,11 @@ async fn test_node_recovery() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let recovered_eid = recovered_enclave.geteid();
+    // TODO: Dupulicated Server initialization
+    Server::<EthSender, EventWatcher>::new(recovered_eid)
+        .await
+        .run()
+        .await;
     let recovered_server = Arc::new(Server::<EthSender, EventWatcher>::new(recovered_eid).await);
 
     let mut recovered_app = test::init_service(
@@ -418,13 +407,6 @@ async fn test_node_recovery() {
             ),
     )
     .await;
-
-    let req = test::TestRequest::post()
-        .uri("/api/v1/join_group")
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -549,15 +531,16 @@ async fn test_join_group_then_handshake() {
     let eid1 = enclave1.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
+    // TODO: Dupulicated Server initialization
+    Server::<EthSender, EventWatcher>::new(eid1)
+        .await
+        .run()
+        .await;
     let server1 = Arc::new(Server::<EthSender, EventWatcher>::new(eid1).await);
 
     let mut app1 = test::init_service(
         App::new()
             .data(server1.clone())
-            .route(
-                "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/state",
                 web::get().to(handle_get_state::<EthSender, EventWatcher>),
@@ -573,15 +556,16 @@ async fn test_join_group_then_handshake() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid2 = enclave2.geteid();
+    // TODO: Dupulicated Server initialization
+    Server::<EthSender, EventWatcher>::new(eid2)
+        .await
+        .run()
+        .await;
     let server2 = Arc::new(Server::<EthSender, EventWatcher>::new(eid2).await);
 
     let mut app2 = test::init_service(
         App::new()
             .data(server2.clone())
-            .route(
-                "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
@@ -741,14 +725,15 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
+    // TODO: Dupulicated Server initialization
+    Server::<EthSender, EventWatcher>::new(eid)
+        .await
+        .run()
+        .await;
     let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid).await);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
-            .route(
-                "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
@@ -767,13 +752,6 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
             ),
     )
     .await;
-
-    let req = test::TestRequest::post()
-        .uri("/api/v1/join_group")
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
