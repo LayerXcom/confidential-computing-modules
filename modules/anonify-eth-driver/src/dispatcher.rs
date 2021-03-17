@@ -99,17 +99,14 @@ impl Dispatcher {
     /// - Starting syncing with the blockchain node.
     /// - Joining as the state runtime node.
     pub async fn run(self, sync_time: u64, signer: Address, gas: u64) -> Result<()> {
-        let tx_hash = self.join_group(signer, gas, JOIN_GROUP_CMD).await?;
+        let tx_hash = self.join_group(signer, gas).await?;
         info!("A transaction hash of join_group: {:?}", tx_hash);
 
         // it spawns a new OS thread, and hosts an event loop.
         actix_rt::Arbiter::new().exec_fn(move || {
             actix_rt::spawn(async move {
                 loop {
-                    match self
-                        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-                        .await
-                    {
+                    match self.fetch_events().await {
                         Ok(updated_states) => info!("State updated: {:?}", updated_states),
                         Err(err) => error!("event fetched error: {:?}", err),
                     };
@@ -121,30 +118,25 @@ impl Dispatcher {
         Ok(())
     }
 
-    pub async fn fetch_events(
-        &self,
-        fetch_ciphertext_cmd: u32,
-        fetch_handshake_cmd: u32,
-    ) -> Result<Option<Vec<serde_json::Value>>> {
+    pub async fn fetch_events(&self) -> Result<Option<Vec<serde_json::Value>>> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         inner
             .watcher
             .as_ref()
             .ok_or(HostError::EventWatcherNotSet)?
-            .fetch_events(eid, fetch_ciphertext_cmd, fetch_handshake_cmd)
+            .fetch_events(eid, FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
             .await
     }
 
-    pub async fn join_group(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {
-        self.send_report_handshake(signer, gas, ecall_cmd, "joinGroup")
-            .await
+    pub async fn join_group(&self, signer: Address, gas: u64) -> Result<H256> {
+        self.send_report_handshake(signer, gas, "joinGroup").await
     }
 
-    pub async fn register_report(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {
+    pub async fn register_report(&self, signer: Address, gas: u64) -> Result<H256> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
-        let input = host_input::RegisterReport::new(signer, gas, ecall_cmd);
+        let input = host_input::RegisterReport::new(signer, gas, SEND_REGISTER_REPORT_CMD);
         let host_output = RegisterReportWorkflow::exec(input, eid)?;
 
         let tx_hash = inner
@@ -157,26 +149,15 @@ impl Dispatcher {
         Ok(tx_hash)
     }
 
-    pub async fn update_mrenclave(
-        &self,
-        signer: Address,
-        gas: u64,
-        ecall_cmd: u32,
-    ) -> Result<H256> {
-        self.send_report_handshake(signer, gas, ecall_cmd, "updateMrenclave")
+    pub async fn update_mrenclave(&self, signer: Address, gas: u64) -> Result<H256> {
+        self.send_report_handshake(signer, gas, "updateMrenclave")
             .await
     }
 
-    async fn send_report_handshake(
-        &self,
-        signer: Address,
-        gas: u64,
-        ecall_cmd: u32,
-        method: &str,
-    ) -> Result<H256> {
+    async fn send_report_handshake(&self, signer: Address, gas: u64, method: &str) -> Result<H256> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
-        let input = host_input::JoinGroup::new(signer, gas, ecall_cmd);
+        let input = host_input::JoinGroup::new(signer, gas, JOIN_GROUP_CMD);
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
         let tx_hash = inner
@@ -195,10 +176,9 @@ impl Dispatcher {
         user_id: Option<AccountId>,
         signer: Address,
         gas: u64,
-        ecall_cmd: u32,
     ) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Command::new(ciphertext, user_id, signer, gas, ecall_cmd);
+        let input = host_input::Command::new(ciphertext, user_id, signer, gas, SEND_COMMAND_CMD);
         let eid = inner.enclave_id;
         let host_output = CommandWorkflow::exec(input, eid)?;
 
@@ -208,13 +188,9 @@ impl Dispatcher {
         }
     }
 
-    pub fn get_state(
-        &self,
-        ciphertext: SodiumCiphertext,
-        ecall_cmd: u32,
-    ) -> Result<serde_json::Value> {
+    pub fn get_state(&self, ciphertext: SodiumCiphertext) -> Result<serde_json::Value> {
         let eid = self.inner.read().enclave_id;
-        let input = host_input::GetState::new(ciphertext, ecall_cmd);
+        let input = host_input::GetState::new(ciphertext, GET_STATE_CMD);
         let state = GetStateWorkflow::exec(input, eid)?
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
@@ -223,13 +199,9 @@ impl Dispatcher {
         serde_json::from_slice(&bytes[..]).map_err(Into::into)
     }
 
-    pub fn get_user_counter(
-        &self,
-        ciphertext: SodiumCiphertext,
-        ecall_cmd: u32,
-    ) -> Result<serde_json::Value> {
+    pub fn get_user_counter(&self, ciphertext: SodiumCiphertext) -> Result<serde_json::Value> {
         let eid = self.inner.read().enclave_id;
-        let input = host_input::GetUserCounter::new(ciphertext, ecall_cmd);
+        let input = host_input::GetUserCounter::new(ciphertext, GET_USER_COUNTER_CMD);
         let user_counter = GetUserCounterWorkflow::exec(input, eid)?
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
@@ -237,9 +209,9 @@ impl Dispatcher {
         serde_json::to_value(user_counter.user_counter).map_err(Into::into)
     }
 
-    pub async fn handshake(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {
+    pub async fn handshake(&self, signer: Address, gas: u64) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Handshake::new(signer, gas, ecall_cmd);
+        let input = host_input::Handshake::new(signer, gas, SEND_HANDSHAKE_CMD);
         let eid = inner.enclave_id;
         let host_output = HandshakeWorkflow::exec(input, eid)?;
 
@@ -263,8 +235,8 @@ impl Dispatcher {
             .await
     }
 
-    pub fn get_enclave_encryption_key(&self, ecall_cmd: u32) -> Result<SodiumPubKey> {
-        let input = host_input::GetEncryptionKey::new(ecall_cmd);
+    pub fn get_enclave_encryption_key(&self) -> Result<SodiumPubKey> {
+        let input = host_input::GetEncryptionKey::new(GET_ENCLAVE_ENCRYPTION_KEY_CMD);
         let eid = self.inner.read().enclave_id;
         let enclave_encryption_key = GetEncryptionKeyWorkflow::exec(input, eid)?;
 
@@ -274,13 +246,9 @@ impl Dispatcher {
             .enclave_encryption_key())
     }
 
-    pub fn register_notification(
-        &self,
-        ciphertext: SodiumCiphertext,
-        ecall_cmd: u32,
-    ) -> Result<()> {
+    pub fn register_notification(&self, ciphertext: SodiumCiphertext) -> Result<()> {
         let inner = self.inner.read();
-        let input = host_input::RegisterNotification::new(ciphertext, ecall_cmd);
+        let input = host_input::RegisterNotification::new(ciphertext, REGISTER_NOTIFICATION_CMD);
         let eid = inner.enclave_id;
         let _host_output = RegisterNotificationWorkflow::exec(input, eid)?;
 
@@ -288,16 +256,18 @@ impl Dispatcher {
     }
 
     #[cfg(feature = "backup-enable")]
-    pub fn all_backup_to(&self, ecall_cmd: u32) -> Result<()> {
+    pub fn all_backup_to(&self) -> Result<()> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
-        inner.backup.all_backup_to(eid, ecall_cmd)
+        inner.backup.all_backup_to(eid, BACKUP_PATH_SECRET_ALL_CMD)
     }
 
     #[cfg(feature = "backup-enable")]
-    pub fn all_backup_from(&self, ecall_cmd: u32) -> Result<()> {
+    pub fn all_backup_from(&self) -> Result<()> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
-        inner.backup.all_backup_from(eid, ecall_cmd)
+        inner
+            .backup
+            .all_backup_from(eid, RECOVER_PATH_SECRET_ALL_CMD)
     }
 }
