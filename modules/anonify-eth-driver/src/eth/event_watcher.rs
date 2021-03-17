@@ -26,11 +26,7 @@ pub struct EventWatcher {
 
 #[async_trait]
 impl Watcher for EventWatcher {
-    fn new(
-        node_url: &str,
-        contract_info: ContractInfo,
-        cache: EventCache,
-    ) -> Result<Self> {
+    fn new(node_url: &str, contract_info: ContractInfo, cache: EventCache) -> Result<Self> {
         let web3_http = Web3Http::new(node_url)?;
         let contract = Web3Contract::new(web3_http, contract_info)?;
 

@@ -83,13 +83,27 @@ unset BACKUP
 export ENCLAVE_PKG_NAME=erc20
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
 cd ${ANONIFY_ROOT}/nodes/key-vault
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocapture
 sleep 1
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
+cd ${ANONIFY_ROOT}/nodes/key-vault
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_recover_without_key_vault -- --nocapture
 sleep 1
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
+cd ${ANONIFY_ROOT}/nodes/key-vault
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_manually_backup_all -- --nocapture
 sleep 1
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
+cd ${ANONIFY_ROOT}/nodes/key-vault
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_manually_recover_all -- --nocapture
 
 #

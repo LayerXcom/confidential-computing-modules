@@ -1,28 +1,20 @@
 use crate::{handlers::*, Server};
 use actix_web::{test, web, App};
 use anonify_eth_driver::{eth::*, utils::*};
-use eth_deployer::EthDeployer;
-use ethabi::Contract as ContractABI;
 use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse},
     AccessPolicy,
 };
-use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH};
+use frame_config::{ANONIFY_ABI_PATH, FACTORY_ABI_PATH};
 use frame_host::EnclaveDir;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use integration_tests::set_env_vars;
 use rand_core::{CryptoRng, RngCore};
 use serde_json::json;
-use std::{env, fs, io::BufReader, path::Path, str::FromStr, sync::Arc, time};
-use web3::{
-    contract::{Contract, Options},
-    transports::Http,
-    types::Address,
-    Web3,
-};
+use std::{env, path::Path, str::FromStr, sync::Arc, time};
+use web3::{contract::Options, types::Address};
 
 const SYNC_TIME: u64 = 1500;
-const GAS: u64 = 5_000_000;
 
 #[actix_rt::test]
 async fn test_evaluate_access_policy_by_user_id_field() {
@@ -57,10 +49,6 @@ async fn test_evaluate_access_policy_by_user_id_field() {
             ),
     )
     .await;
-
-    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
-        .await
-        .unwrap();
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
@@ -180,10 +168,6 @@ async fn test_multiple_messages() {
     )
     .await;
 
-    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
-        .await
-        .unwrap();
-
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
         .to_request();
@@ -287,10 +271,6 @@ async fn test_skip_invalid_event() {
             ),
     )
     .await;
-
-    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
-        .await
-        .unwrap();
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
@@ -438,10 +418,6 @@ async fn test_node_recovery() {
             ),
     )
     .await;
-
-    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
-        .await
-        .unwrap();
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
@@ -627,10 +603,6 @@ async fn test_join_group_then_handshake() {
 
     // Party 1
 
-    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
-        .await
-        .unwrap();
-
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
         .to_request();
@@ -795,10 +767,6 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
             ),
     )
     .await;
-
-    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
-        .await
-        .unwrap();
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
