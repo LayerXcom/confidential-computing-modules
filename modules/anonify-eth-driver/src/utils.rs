@@ -1,6 +1,5 @@
 use crate::{
     error::{HostError, Result},
-    eth::{connection::Web3Contract, sender::sender_retry_condition},
     Web3Http,
 };
 use anyhow::anyhow;
@@ -8,7 +7,7 @@ use ethabi::Contract as ContractABI;
 use frame_common::traits::Keccak256;
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
-use std::{fs, io::BufReader, path::Path, str::FromStr};
+use std::{fs, path::Path};
 use web3::{contract::Contract, transports::Http, types::Address};
 
 /// Define a retry condition of deploying contracts.

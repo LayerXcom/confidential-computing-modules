@@ -8,13 +8,12 @@ use crate::{
     utils::*,
     workflow::host_input,
 };
-use anyhow::anyhow;
 use frame_common::crypto::AccountId;
 use frame_host::engine::HostEngine;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{fmt::Debug, fs, path::Path, str::FromStr};
+use std::{fmt::Debug, path::Path};
 use web3::{
     contract::Options,
     types::{Address, H256},
@@ -58,7 +57,6 @@ where
 
     pub async fn set_anonify_contract_address<P: AsRef<Path> + Copy>(
         self,
-        sender: Address,
         factory_abi_path: P,
         factory_contract_address: Address,
         anonify_abi_path: P,

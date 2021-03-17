@@ -1,4 +1,4 @@
-use anonify_eth_driver::{traits::*, utils::get_account, Dispatcher, EventCache, Web3Http};
+use anonify_eth_driver::{traits::*, Dispatcher, EventCache};
 use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH};
 use sgx_types::sgx_enclave_id_t;
 use std::{env, str::FromStr};
@@ -47,15 +47,9 @@ where
         )
         .unwrap();
 
-        let web3_conn = Web3Http::new(&eth_url).unwrap();
-        let sender_address = get_account(&web3_conn, account_index, password.as_deref())
-            .await
-            .unwrap();
-
         let cache = EventCache::default();
         let dispatcher = Dispatcher::<S, W>::new(eid, &eth_url, cache)
             .set_anonify_contract_address(
-                sender_address,
                 &*FACTORY_ABI_PATH,
                 factory_contract_address,
                 &*ANONIFY_ABI_PATH,

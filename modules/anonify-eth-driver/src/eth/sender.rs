@@ -9,7 +9,6 @@ use async_trait::async_trait;
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use sgx_types::sgx_enclave_id_t;
-use std::path::Path;
 use tracing::info;
 use web3::types::{Address, H256};
 
@@ -65,7 +64,7 @@ impl Sender for EthSender {
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
-        .set_condition(sender_retry_condition)
+        .set_condition(deployer_retry_condition)
         .spawn_async(|| async { self.contract.get_account(index, password).await })
         .await
     }

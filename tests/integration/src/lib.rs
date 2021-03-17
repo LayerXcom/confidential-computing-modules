@@ -104,7 +104,6 @@ async fn test_integration_eth_construct() {
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
-            deployer_addr,
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
             &*ANONIFY_ABI_PATH,
@@ -238,7 +237,6 @@ async fn test_auto_notification() {
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
-            deployer_addr,
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
             &*ANONIFY_ABI_PATH,
@@ -409,7 +407,6 @@ async fn test_integration_eth_transfer() {
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
-            deployer_addr,
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
             &*ANONIFY_ABI_PATH,
@@ -605,7 +602,6 @@ async fn test_key_rotation() {
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
-            deployer_addr,
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
             &*ANONIFY_ABI_PATH,
@@ -747,7 +743,6 @@ async fn test_integration_eth_approve() {
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
-            deployer_addr,
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
             &*ANONIFY_ABI_PATH,
@@ -929,7 +924,6 @@ async fn test_integration_eth_transfer_from() {
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
-            deployer_addr,
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
             &*ANONIFY_ABI_PATH,
@@ -1297,7 +1291,6 @@ async fn test_integration_eth_mint() {
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
-            deployer_addr,
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
             &*ANONIFY_ABI_PATH,
@@ -1460,7 +1453,6 @@ async fn test_integration_eth_burn() {
 
     let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
-            deployer_addr,
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
             &*ANONIFY_ABI_PATH,
