@@ -8,6 +8,7 @@ use crate::{
     utils::*,
     workflow::host_input,
 };
+use anonify_ecall_types::cmd::*;
 use frame_common::crypto::AccountId;
 use frame_host::engine::HostEngine;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
@@ -100,8 +101,50 @@ where
 
     /// - Starting syncing with the blockchain node.
     /// - Joining as the state runtime node.
-    pub fn run(self) -> Result<Self> {
+    pub async fn run(
+        self,
+        sync_time: u64,
+        index: usize,
+        password: Option<&str>,
+        gas: u64,
+    ) -> Result<Self> {
+        let signer = self.get_account(index, password).await?;
+
+        // it spawns a new OS thread, and hosts an event loop.
+        actix_rt::Arbiter::new().exec_fn(move || {
+            actix_rt::spawn(async move {
+                loop {
+                    match self
+                        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+                        .await
+                    {
+                        Ok(updated_states) => info!("State updated: {:?}", updated_states),
+                        Err(err) => error!("event fetched error: {:?}", err),
+                    };
+                    actix_rt::time::delay_for(time::Duration::from_millis(sync_time)).await;
+                }
+            });
+        });
+
+        let tx_hash = self.join_group(signer, gas, JOIN_GROUP_CMD)?;
+        info!("A transaction hash of join_group: {:?}", tx_hash);
+
         Ok(self)
+    }
+
+    pub async fn fetch_events(
+        &self,
+        fetch_ciphertext_cmd: u32,
+        fetch_handshake_cmd: u32,
+    ) -> Result<Option<Vec<serde_json::Value>>> {
+        let inner = self.inner.read();
+        let eid = inner.enclave_id;
+        inner
+            .watcher
+            .as_ref()
+            .ok_or(HostError::EventWatcherNotSet)?
+            .fetch_events(eid, fetch_ciphertext_cmd, fetch_handshake_cmd)
+            .await
     }
 
     pub async fn join_group(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {
@@ -219,21 +262,6 @@ where
             .await?;
 
         Ok(tx_hash)
-    }
-
-    pub async fn fetch_events(
-        &self,
-        fetch_ciphertext_cmd: u32,
-        fetch_handshake_cmd: u32,
-    ) -> Result<Option<Vec<serde_json::Value>>> {
-        let inner = self.inner.read();
-        let eid = inner.enclave_id;
-        inner
-            .watcher
-            .as_ref()
-            .ok_or(HostError::EventWatcherNotSet)?
-            .fetch_events(eid, fetch_ciphertext_cmd, fetch_handshake_cmd)
-            .await
     }
 
     pub async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {

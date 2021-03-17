@@ -9,6 +9,8 @@ pub mod handlers;
 #[cfg(test)]
 mod tests;
 
+const DEFAULT_GAS: u64 = 5_000_000;
+
 #[derive(Debug)]
 pub struct Server<S: Sender, W: Watcher> {
     pub eid: sgx_enclave_id_t,
@@ -16,9 +18,7 @@ pub struct Server<S: Sender, W: Watcher> {
     pub abi_path: String,
     pub bin_path: String,
     pub confirmations: usize,
-    pub account_index: usize,
-    pub password: Option<String>,
-    pub sync_time: u64,
+    pub sender_address: Address,
     pub dispatcher: Dispatcher<S, W>,
 }
 
@@ -55,7 +55,15 @@ where
                 &*ANONIFY_ABI_PATH,
             )
             .await
+            .unwrap()
+            .run(sync_time, account_index, password.as_deref(), DEFAULT_GAS)
+            .await
             .unwrap();
+
+        let sender_address = dispatcher
+            .get_account(account_index, password.as_deref())
+            .await
+            .map_err(|e| ServerError::from(e))?;
 
         Server {
             eid,
@@ -63,9 +71,7 @@ where
             abi_path: (&*ANONIFY_ABI_PATH.to_str().unwrap()).to_string(),
             bin_path: (&*ANONIFY_BIN_PATH.to_str().unwrap()).to_string(),
             confirmations,
-            account_index,
-            sync_time,
-            password,
+            sender_address,
             dispatcher,
         }
     }
