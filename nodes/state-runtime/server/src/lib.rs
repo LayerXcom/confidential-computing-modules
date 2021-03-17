@@ -9,6 +9,8 @@ pub mod handlers;
 #[cfg(test)]
 mod tests;
 
+const DEFAULT_GAS: u64 = 5_000_000;
+
 #[derive(Debug)]
 pub struct Server<S: Sender, W: Watcher> {
     pub eid: sgx_enclave_id_t,
@@ -16,9 +18,7 @@ pub struct Server<S: Sender, W: Watcher> {
     pub abi_path: String,
     pub bin_path: String,
     pub confirmations: usize,
-    pub account_index: usize,
-    pub password: Option<String>,
-    pub sync_time: u64,
+    pub sender_address: Address,
     pub dispatcher: Dispatcher<S, W>,
 }
 
@@ -38,10 +38,6 @@ where
             .expect("CONFIRMATIONS is not set")
             .parse()
             .expect("Failed to parse CONFIRMATIONS to usize");
-        let sync_time: u64 = env::var("SYNC_BC_TIME")
-            .unwrap_or_else(|_| "1000".to_string())
-            .parse()
-            .expect("Failed to parse SYNC_BC_TIME to u64");
         let factory_contract_address = Address::from_str(
             &env::var("FACTORY_CONTRACT_ADDRESS").expect("FACTORY_CONTRACT_ADDRESS is not set"),
         )
@@ -57,16 +53,31 @@ where
             .await
             .unwrap();
 
+        let sender_address = dispatcher
+            .get_account(account_index, password.as_deref())
+            .await
+            .unwrap();
+
         Server {
             eid,
             eth_url,
             abi_path: (&*ANONIFY_ABI_PATH.to_str().unwrap()).to_string(),
             bin_path: (&*ANONIFY_BIN_PATH.to_str().unwrap()).to_string(),
             confirmations,
-            account_index,
-            sync_time,
-            password,
+            sender_address,
             dispatcher,
         }
+    }
+
+    pub async fn run(self) {
+        let sync_time: u64 = env::var("SYNC_BC_TIME")
+            .unwrap_or_else(|_| "1000".to_string())
+            .parse()
+            .expect("Failed to parse SYNC_BC_TIME to u64");
+
+        self.dispatcher
+            .run(sync_time, self.sender_address, DEFAULT_GAS)
+            .await
+            .unwrap();
     }
 }

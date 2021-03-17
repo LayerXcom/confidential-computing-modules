@@ -390,6 +390,7 @@ dependencies = [
 name = "anonify-eth-driver"
 version = "0.5.4"
 dependencies = [
+ "actix-rt",
  "anonify-ecall-types",
  "anyhow 1.0.34",
  "async-trait",

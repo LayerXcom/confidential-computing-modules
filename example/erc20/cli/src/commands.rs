@@ -15,26 +15,6 @@ use reqwest::Client;
 use serde_json::json;
 use std::path::PathBuf;
 
-pub(crate) fn deploy(state_runtime_url: String) -> Result<()> {
-    let res = Client::new()
-        .post(&format!("{}/api/v1/deploy", &state_runtime_url))
-        .send()?
-        .text()?;
-
-    println!("Deployed Contract address: {}", res);
-    Ok(())
-}
-
-pub(crate) fn join_group(state_runtime_url: String) -> Result<()> {
-    let res = Client::new()
-        .post(&format!("{}/api/v1/join_group", &state_runtime_url))
-        .send()?
-        .text()?;
-
-    println!("Transaction hash: {:?}", res);
-    Ok(())
-}
-
 pub(crate) fn register_report(state_runtime_url: String) -> Result<()> {
     let res = Client::new()
         .post(&format!("{}/api/v1/register_report", &state_runtime_url))
@@ -426,15 +406,6 @@ where
         .text()?;
 
     println!("Current State: {:?}", res);
-    Ok(())
-}
-
-pub(crate) fn start_sync_bc(state_runtime_url: String) -> Result<()> {
-    Client::new()
-        .get(&format!("{}/api/v1/start_sync_bc", &state_runtime_url))
-        .send()?
-        .text()?;
-
     Ok(())
 }
 

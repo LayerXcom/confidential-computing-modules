@@ -1,35 +1,12 @@
 use crate::error::{Result, ServerError};
-use crate::Server;
+use crate::{Server, DEFAULT_GAS};
 use actix_web::{web, HttpResponse, Responder};
 use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::traits::*;
-use std::{sync::Arc, time};
-use tracing::{error, info};
-
-const DEFAULT_GAS: u64 = 5_000_000;
+use std::sync::Arc;
 
 pub async fn handle_health_check() -> impl Responder {
     HttpResponse::Ok().finish()
-}
-
-pub async fn handle_join_group<S, W>(server: web::Data<Arc<Server<S, W>>>) -> Result<HttpResponse>
-where
-    S: Sender,
-    W: Watcher,
-{
-    let sender_address = server
-        .dispatcher
-        .get_account(server.account_index, server.password.as_deref())
-        .await
-        .map_err(|e| ServerError::from(e))?;
-    let tx_hash = server
-        .dispatcher
-        .join_group(sender_address, DEFAULT_GAS, JOIN_GROUP_CMD)
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
-    Ok(HttpResponse::Accepted()
-        .json(state_runtime_node_api::join_group::post::Response { tx_hash }))
 }
 
 pub async fn handle_update_mrenclave<S, W>(
@@ -39,14 +16,9 @@ where
     S: Sender,
     W: Watcher,
 {
-    let sender_address = server
-        .dispatcher
-        .get_account(server.account_index, server.password.as_deref())
-        .await
-        .map_err(|e| ServerError::from(e))?;
     let tx_hash = server
         .dispatcher
-        .update_mrenclave(sender_address, DEFAULT_GAS, JOIN_GROUP_CMD)
+        .update_mrenclave(server.sender_address, DEFAULT_GAS, JOIN_GROUP_CMD)
         .await
         .map_err(|e| ServerError::from(e))?;
 
@@ -62,18 +34,12 @@ where
     S: Sender,
     W: Watcher,
 {
-    let sender_address = server
-        .dispatcher
-        .get_account(server.account_index, server.password.as_deref())
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
     let tx_hash = server
         .dispatcher
         .send_command(
             req.ciphertext.clone(),
             req.user_id,
-            sender_address,
+            server.sender_address,
             DEFAULT_GAS,
             SEND_COMMAND_CMD,
         )
@@ -88,14 +54,9 @@ where
     S: Sender,
     W: Watcher,
 {
-    let sender_address = server
-        .dispatcher
-        .get_account(server.account_index, server.password.as_deref())
-        .await
-        .map_err(|e| ServerError::from(e))?;
     let tx_hash = server
         .dispatcher
-        .handshake(sender_address, DEFAULT_GAS, SEND_HANDSHAKE_CMD)
+        .handshake(server.sender_address, DEFAULT_GAS, SEND_HANDSHAKE_CMD)
         .await
         .map_err(|e| ServerError::from(e))?;
 
@@ -169,33 +130,6 @@ where
     ))
 }
 
-pub async fn handle_start_sync_bc<S, W>(
-    server: web::Data<Arc<Server<S, W>>>,
-) -> Result<HttpResponse>
-where
-    S: Sender + Send + Sync + 'static,
-    W: Watcher + Send + Sync + 'static,
-{
-    // it spawns a new OS thread, and hosts an event loop.
-    actix_rt::Arbiter::new().exec_fn(move || {
-        actix_rt::spawn(async move {
-            loop {
-                match server
-                    .dispatcher
-                    .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-                    .await
-                {
-                    Ok(updated_states) => info!("State updated: {:?}", updated_states),
-                    Err(err) => error!("event fetched error: {:?}", err),
-                };
-                actix_rt::time::delay_for(time::Duration::from_millis(server.sync_time)).await;
-            }
-        });
-    });
-
-    Ok(HttpResponse::Ok().finish())
-}
-
 pub async fn handle_register_notification<S, W>(
     server: web::Data<Arc<Server<S, W>>>,
     req: web::Json<state_runtime_node_api::register_notification::post::Request>,
@@ -219,14 +153,9 @@ where
     S: Sender,
     W: Watcher,
 {
-    let sender_address = server
-        .dispatcher
-        .get_account(server.account_index, server.password.as_deref())
-        .await
-        .map_err(|e| ServerError::from(e))?;
     let tx_hash = server
         .dispatcher
-        .register_report(sender_address, DEFAULT_GAS, SEND_REGISTER_REPORT_CMD)
+        .register_report(server.sender_address, DEFAULT_GAS, SEND_REGISTER_REPORT_CMD)
         .await
         .map_err(|e| ServerError::from(e))?;
 

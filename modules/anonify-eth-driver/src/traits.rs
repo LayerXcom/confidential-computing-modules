@@ -10,7 +10,7 @@ use web3::types::{Address, H256};
 
 /// A trait for sending transactions to blockchain nodes
 #[async_trait]
-pub trait Sender: Sized {
+pub trait Sender: Sized + Send + Sync + 'static {
     fn new(
         enclave_id: sgx_enclave_id_t,
         node_url: &str,
@@ -40,7 +40,7 @@ pub trait Sender: Sized {
 
 /// A trait of fetching event from blockchian nodes
 #[async_trait]
-pub trait Watcher: Sized {
+pub trait Watcher: Sized + Send + Sync + 'static {
     fn new(node_url: &str, contract_info: ContractInfo, cache: EventCache) -> Result<Self>;
 
     /// Blocking event fetch from blockchain nodes.
