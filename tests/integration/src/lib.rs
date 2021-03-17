@@ -33,7 +33,7 @@ pub static ETH_URL: Lazy<String> =
 
 pub async fn get_enclave_encryption_key(
     contract_addr: Address,
-    dispatcher: &Dispatcher<EthSender, EventWatcher>,
+    dispatcher: &Dispatcher,
 ) -> SodiumPubKey {
     let enclave_encryption_key = dispatcher
         .get_enclave_encryption_key(GET_ENCLAVE_ENCRYPTION_KEY_CMD)
@@ -102,7 +102,7 @@ async fn test_integration_eth_construct() {
         .await
         .unwrap();
 
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
@@ -235,7 +235,7 @@ async fn test_auto_notification() {
         .await
         .unwrap();
 
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
@@ -405,7 +405,7 @@ async fn test_integration_eth_transfer() {
         .await
         .unwrap();
 
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
@@ -600,7 +600,7 @@ async fn test_key_rotation() {
         .await
         .unwrap();
 
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
@@ -741,7 +741,7 @@ async fn test_integration_eth_approve() {
         .await
         .unwrap();
 
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
@@ -922,7 +922,7 @@ async fn test_integration_eth_transfer_from() {
         .await
         .unwrap();
 
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
@@ -1289,7 +1289,7 @@ async fn test_integration_eth_mint() {
         .await
         .unwrap();
 
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
@@ -1451,7 +1451,7 @@ async fn test_integration_eth_burn() {
         .await
         .unwrap();
 
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, cache)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
