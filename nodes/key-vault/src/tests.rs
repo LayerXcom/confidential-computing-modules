@@ -12,10 +12,8 @@ use once_cell::sync::Lazy;
 use rand_core::{CryptoRng, RngCore};
 use serde_json::json;
 use state_runtime_node_server::{handlers::*, Server as ERC20Server};
-use std::{env, fs, path::Path, str::FromStr, sync::Arc, time};
+use std::{env, fs, path::Path, str::FromStr, sync::Arc};
 use web3::{contract::Options, types::Address};
-
-const SYNC_TIME: u64 = 1500;
 
 #[actix_rt::test]
 async fn test_backup_path_secret() {
@@ -55,14 +53,15 @@ async fn test_backup_path_secret() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
+    // TODO: Dupulicated Server initialization
+    ERC20Server::<EthSender, EventWatcher>::new(app_eid)
+        .await
+        .run()
+        .await;
     let erc20_server = Arc::new(ERC20Server::<EthSender, EventWatcher>::new(app_eid).await);
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
-            .route(
-                "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
@@ -84,13 +83,6 @@ async fn test_backup_path_secret() {
 
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
-
-    let req = test::TestRequest::post()
-        .uri("/api/v1/join_group")
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -208,14 +200,15 @@ async fn test_recover_without_key_vault() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
+    // TODO: Dupulicated Server initialization
+    ERC20Server::<EthSender, EventWatcher>::new(app_eid)
+        .await
+        .run()
+        .await;
     let erc20_server = Arc::new(ERC20Server::<EthSender, EventWatcher>::new(app_eid).await);
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
-            .route(
-                "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
@@ -237,13 +230,6 @@ async fn test_recover_without_key_vault() {
 
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
-
-    let req = test::TestRequest::post()
-        .uri("/api/v1/join_group")
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -355,14 +341,15 @@ async fn test_manually_backup_all() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
+    // TODO: Dupulicated Server initialization
+    ERC20Server::<EthSender, EventWatcher>::new(app_eid)
+        .await
+        .run()
+        .await;
     let erc20_server = Arc::new(ERC20Server::<EthSender, EventWatcher>::new(app_eid).await);
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
-            .route(
-                "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
@@ -385,13 +372,6 @@ async fn test_manually_backup_all() {
             ),
     )
     .await;
-
-    let req = test::TestRequest::post()
-        .uri("/api/v1/join_group")
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -516,14 +496,15 @@ async fn test_manually_recover_all() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
+    // TODO: Dupulicated Server initialization
+    ERC20Server::<EthSender, EventWatcher>::new(app_eid)
+        .await
+        .run()
+        .await;
     let erc20_server = Arc::new(ERC20Server::<EthSender, EventWatcher>::new(app_eid).await);
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
-            .route(
-                "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
@@ -546,13 +527,6 @@ async fn test_manually_recover_all() {
             ),
     )
     .await;
-
-    let req = test::TestRequest::post()
-        .uri("/api/v1/join_group")
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")

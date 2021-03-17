@@ -72,12 +72,6 @@ fn subcommand_anonify<R, CR>(
     CR: RngCore + CryptoRng,
 {
     match matches.subcommand() {
-        ("deploy", Some(_)) => {
-            commands::deploy(state_runtime_url).expect("Failed to deploy command");
-        }
-        ("join_group", Some(_)) => {
-            commands::join_group(state_runtime_url).expect("Failed to join_group command");
-        }
         ("register_report", Some(_)) => {
             commands::register_report(state_runtime_url)
                 .expect("Failed to register_report command");
@@ -351,9 +345,6 @@ fn subcommand_anonify<R, CR>(
             )
             .expect("Failed balance_of command");
         }
-        ("start_sync_bc", Some(_)) => {
-            commands::start_sync_bc(state_runtime_url).expect("Failed to start_sync_bc command");
-        }
         ("get_enclave_encryption_key", Some(_)) => {
             let enclave_encryption_key =
                 commands::get_enclave_encryption_key(state_runtime_url.clone())
@@ -371,13 +362,6 @@ fn subcommand_anonify<R, CR>(
 fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
     SubCommand::with_name(ANONIFY_COMMAND)
         .about("Anonify operations")
-        .subcommand(
-            SubCommand::with_name("deploy").about("Deploy a contract from anonify services."),
-        )
-        .subcommand(
-            SubCommand::with_name("join_group")
-                .about("join group a contract from anonify services."),
-        )
         .subcommand(
             SubCommand::with_name("register_report").about("register a report to the blockchain"),
         )
@@ -606,9 +590,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .takes_value(true)
                         .required(true),
                 ),
-        )
-        .subcommand(
-            SubCommand::with_name("start_sync_bc").about("Get state from anonify services."),
         )
         .subcommand(
             SubCommand::with_name("get_enclave_encryption_key")

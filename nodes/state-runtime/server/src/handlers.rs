@@ -3,8 +3,7 @@ use crate::{Server, DEFAULT_GAS};
 use actix_web::{web, HttpResponse, Responder};
 use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::traits::*;
-use std::{sync::Arc, time};
-use tracing::{error, info};
+use std::sync::Arc;
 
 pub async fn handle_health_check() -> impl Responder {
     HttpResponse::Ok().finish()
