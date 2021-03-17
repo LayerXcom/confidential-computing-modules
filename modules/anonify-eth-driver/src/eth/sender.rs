@@ -65,6 +65,7 @@ impl Sender for EthSender {
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
+        .set_condition(sender_retry_condition)
         .spawn_async(|| async { self.contract.get_account(index, password).await })
         .await
     }
