@@ -36,15 +36,12 @@ fn main() {
     let rng = &mut OsRng;
     // just for testing
     let mut csprng = rand::thread_rng();
-
-    let contract_addr = env::var("CONTRACT_ADDR").unwrap_or_else(|_| String::default());
     let state_runtime_url = env::var("STATE_RUNTIME_URL").expect("STATE_RUNTIME_URL is not set");
 
     match matches.subcommand() {
         (ANONIFY_COMMAND, Some(matches)) => subcommand_anonify(
             term,
             root_dir,
-            contract_addr,
             state_runtime_url,
             matches,
             rng,
@@ -71,7 +68,6 @@ const DEFAULT_TARGET: &str = "7H5cyDJ9CXBKOiM8tWnGaz5vqHY=";
 fn subcommand_anonify<R, CR>(
     mut term: Term,
     root_dir: PathBuf,
-    default_contract_addr: String,
     state_runtime_url: String,
     matches: &ArgMatches,
     rng: &mut R,
@@ -84,31 +80,15 @@ fn subcommand_anonify<R, CR>(
         ("deploy", Some(_)) => {
             commands::deploy(state_runtime_url).expect("Failed to deploy command");
         }
-        ("join_group", Some(matches)) => {
-            let contract_addr = match matches.value_of("contract-addr") {
-                Some(addr) => addr.to_string(),
-                None => default_contract_addr,
-            };
-
-            commands::join_group(state_runtime_url, contract_addr)
-                .expect("Failed to join_group command");
+        ("join_group", Some(_)) => {
+            commands::join_group(state_runtime_url).expect("Failed to join_group command");
         }
-        ("register_report", Some(matches)) => {
-            let contract_addr = match matches.value_of("contract-addr") {
-                Some(addr) => addr.to_string(),
-                None => default_contract_addr,
-            };
-
-            commands::register_report(state_runtime_url, contract_addr)
+        ("register_report", Some(_)) => {
+            commands::register_report(state_runtime_url)
                 .expect("Failed to register_report command");
         }
-        ("update_mrenclave", Some(matches)) => {
-            let contract_addr = match matches.value_of("contract-addr") {
-                Some(addr) => addr.to_string(),
-                None => default_contract_addr,
-            };
-
-            commands::update_mrenclave(state_runtime_url, contract_addr)
+        ("update_mrenclave", Some(_)) => {
+            commands::update_mrenclave(state_runtime_url)
                 .expect("Failed to update_mrenclave command");
         }
         ("init_state", Some(matches)) => {
@@ -379,15 +359,6 @@ fn subcommand_anonify<R, CR>(
         ("start_sync_bc", Some(_)) => {
             commands::start_sync_bc(state_runtime_url).expect("Failed to start_sync_bc command");
         }
-        ("set_contract_address", Some(matches)) => {
-            let contract_addr = match matches.value_of("contract-addr") {
-                Some(addr) => addr.to_string(),
-                None => default_contract_addr,
-            };
-
-            commands::set_contract_address(state_runtime_url, contract_addr)
-                .expect("Failed to set_contract_address command");
-        }
         ("get_enclave_encryption_key", Some(_)) => {
             let enclave_encryption_key =
                 commands::get_enclave_encryption_key(state_runtime_url.clone())
@@ -410,18 +381,14 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         )
         .subcommand(
             SubCommand::with_name("join_group")
-                .about("join group a contract from anonify services.")
-                .arg(Arg::with_name("contract-addr").short("c").takes_value(true)),
+                .about("join group a contract from anonify services."),
         )
         .subcommand(
-            SubCommand::with_name("register_report")
-                .about("register a report to the blockchain")
-                .arg(Arg::with_name("contract-addr").short("c").takes_value(true)),
+            SubCommand::with_name("register_report").about("register a report to the blockchain"),
         )
         .subcommand(
             SubCommand::with_name("update_mrenclave")
-                .about("update mrenclave a contract from anonify services.")
-                .arg(Arg::with_name("contract-addr").short("c").takes_value(true)),
+                .about("update mrenclave a contract from anonify services."),
         )
         .subcommand(
             SubCommand::with_name("init_state")
@@ -647,11 +614,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         )
         .subcommand(
             SubCommand::with_name("start_sync_bc").about("Get state from anonify services."),
-        )
-        .subcommand(
-            SubCommand::with_name("set_contract_address")
-                .about("Get state from anonify services.")
-                .arg(Arg::with_name("contract-addr").short("c").takes_value(true)),
         )
         .subcommand(
             SubCommand::with_name("get_enclave_encryption_key")
