@@ -1,9 +1,6 @@
 use crate::{handlers::*, Server as KeyVaultServer};
 use actix_web::{test, web, App};
-use anonify_eth_driver::{
-    eth::{EthSender, EventWatcher},
-    utils::*,
-};
+use anonify_eth_driver::utils::*;
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_config::{ANONIFY_ABI_PATH, FACTORY_ABI_PATH, PJ_ROOT_DIR};
 use frame_host::EnclaveDir;
@@ -54,29 +51,17 @@ async fn test_backup_path_secret() {
     let mut csprng = rand::thread_rng();
 
     // TODO: Dupulicated Server initialization
-    ERC20Server::<EthSender, EventWatcher>::new(app_eid)
-        .await
-        .run()
-        .await;
-    let erc20_server = Arc::new(ERC20Server::<EthSender, EventWatcher>::new(app_eid).await);
+    ERC20Server::new(app_eid).await.run().await;
+    let erc20_server = Arc::new(ERC20Server::new(app_eid).await);
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
-            .route(
-                "/api/v1/state",
-                web::post().to(handle_send_command::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/state",
-                web::get().to(handle_get_state::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/key_rotation",
-                web::post().to(handle_key_rotation::<EthSender, EventWatcher>),
-            )
+            .route("/api/v1/state", web::post().to(handle_send_command))
+            .route("/api/v1/state", web::get().to(handle_get_state))
+            .route("/api/v1/key_rotation", web::post().to(handle_key_rotation))
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
+                web::get().to(handle_enclave_encryption_key),
             ),
     )
     .await;
@@ -201,29 +186,17 @@ async fn test_recover_without_key_vault() {
     let mut csprng = rand::thread_rng();
 
     // TODO: Dupulicated Server initialization
-    ERC20Server::<EthSender, EventWatcher>::new(app_eid)
-        .await
-        .run()
-        .await;
-    let erc20_server = Arc::new(ERC20Server::<EthSender, EventWatcher>::new(app_eid).await);
+    ERC20Server::new(app_eid).await.run().await;
+    let erc20_server = Arc::new(ERC20Server::new(app_eid).await);
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
-            .route(
-                "/api/v1/state",
-                web::post().to(handle_send_command::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/state",
-                web::get().to(handle_get_state::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/key_rotation",
-                web::post().to(handle_key_rotation::<EthSender, EventWatcher>),
-            )
+            .route("/api/v1/state", web::post().to(handle_send_command))
+            .route("/api/v1/state", web::get().to(handle_get_state))
+            .route("/api/v1/key_rotation", web::post().to(handle_key_rotation))
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
+                web::get().to(handle_enclave_encryption_key),
             ),
     )
     .await;
@@ -342,33 +315,21 @@ async fn test_manually_backup_all() {
     let mut csprng = rand::thread_rng();
 
     // TODO: Dupulicated Server initialization
-    ERC20Server::<EthSender, EventWatcher>::new(app_eid)
-        .await
-        .run()
-        .await;
-    let erc20_server = Arc::new(ERC20Server::<EthSender, EventWatcher>::new(app_eid).await);
+    ERC20Server::new(app_eid).await.run().await;
+    let erc20_server = Arc::new(ERC20Server::new(app_eid).await);
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
-            .route(
-                "/api/v1/state",
-                web::post().to(handle_send_command::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/state",
-                web::get().to(handle_get_state::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/key_rotation",
-                web::post().to(handle_key_rotation::<EthSender, EventWatcher>),
-            )
+            .route("/api/v1/state", web::post().to(handle_send_command))
+            .route("/api/v1/state", web::get().to(handle_get_state))
+            .route("/api/v1/key_rotation", web::post().to(handle_key_rotation))
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
+                web::get().to(handle_enclave_encryption_key),
             )
             .route(
                 "/api/v1/all_backup_to",
-                web::post().to(handle_all_backup_to::<EthSender, EventWatcher>),
+                web::post().to(handle_all_backup_to),
             ),
     )
     .await;
@@ -497,33 +458,21 @@ async fn test_manually_recover_all() {
     let mut csprng = rand::thread_rng();
 
     // TODO: Dupulicated Server initialization
-    ERC20Server::<EthSender, EventWatcher>::new(app_eid)
-        .await
-        .run()
-        .await;
-    let erc20_server = Arc::new(ERC20Server::<EthSender, EventWatcher>::new(app_eid).await);
+    ERC20Server::new(app_eid).await.run().await;
+    let erc20_server = Arc::new(ERC20Server::new(app_eid).await);
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
-            .route(
-                "/api/v1/state",
-                web::post().to(handle_send_command::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/state",
-                web::get().to(handle_get_state::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/key_rotation",
-                web::post().to(handle_key_rotation::<EthSender, EventWatcher>),
-            )
+            .route("/api/v1/state", web::post().to(handle_send_command))
+            .route("/api/v1/state", web::get().to(handle_get_state))
+            .route("/api/v1/key_rotation", web::post().to(handle_key_rotation))
             .route(
                 "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key::<EthSender, EventWatcher>),
+                web::get().to(handle_enclave_encryption_key),
             )
             .route(
                 "/api/v1/all_backup_from",
-                web::post().to(handle_all_backup_from::<EthSender, EventWatcher>),
+                web::post().to(handle_all_backup_from),
             ),
     )
     .await;
