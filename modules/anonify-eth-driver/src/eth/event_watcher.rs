@@ -2,11 +2,9 @@ use super::connection::{Web3Contract, Web3Http};
 use crate::{
     cache::EventCache,
     error::{HostError, Result},
-    traits::*,
     utils::*,
     workflow::*,
 };
-use async_trait::async_trait;
 use ethabi::{decode, Event, EventParam, Hash, ParamType};
 use frame_common::{
     crypto::{Ciphertext, ExportHandshake},
@@ -19,14 +17,14 @@ use tracing::{debug, error, info, warn};
 use web3::types::{Address, Log};
 
 /// Components needed to watch events
+#[derive(Debug)]
 pub struct EventWatcher {
     contract: Web3Contract,
     cache: EventCache,
 }
 
-#[async_trait]
-impl Watcher for EventWatcher {
-    fn new(node_url: &str, contract_info: ContractInfo, cache: EventCache) -> Result<Self> {
+impl EventWatcher {
+    pub fn new(node_url: &str, contract_info: ContractInfo, cache: EventCache) -> Result<Self> {
         let web3_http = Web3Http::new(node_url)?;
         let contract = Web3Contract::new(web3_http, contract_info)?;
 
@@ -38,7 +36,7 @@ impl Watcher for EventWatcher {
     /// If an error occurs in the process of updating the status due to the fetched events,
     /// that events will be skipped. (No retry process)
     /// If an error occurs on all TEE nodes due to an invalid event etc., skip processing is okay.
-    async fn fetch_events(
+    pub async fn fetch_events(
         &self,
         eid: sgx_enclave_id_t,
         fetch_ciphertext_cmd: u32,
@@ -55,7 +53,7 @@ impl Watcher for EventWatcher {
         Ok(enclave_updated_state.notify_states())
     }
 
-    fn get_contract(self) -> Web3Contract {
+    pub fn get_contract(self) -> Web3Contract {
         self.contract
     }
 }

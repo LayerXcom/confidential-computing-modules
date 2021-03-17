@@ -1,12 +1,11 @@
 #[cfg(feature = "backup-enable")]
 use crate::backup::SecretBackup;
-use crate::workflow::*;
 use crate::{
     cache::EventCache,
     error::{HostError, Result},
-    traits::*,
+    eth::{EthSender, EventWatcher},
     utils::*,
-    workflow::host_input,
+    workflow::*,
 };
 use anonify_ecall_types::cmd::*;
 use frame_common::crypto::AccountId;
@@ -23,26 +22,22 @@ use web3::{
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
-pub struct Dispatcher<S: Sender, W: Watcher> {
-    inner: RwLock<InnerDispatcher<S, W>>,
+pub struct Dispatcher {
+    inner: RwLock<InnerDispatcher>,
 }
 
 #[derive(Debug)]
-struct InnerDispatcher<S: Sender, W: Watcher> {
+struct InnerDispatcher {
     node_url: String,
     enclave_id: sgx_enclave_id_t,
-    sender: Option<S>,
-    watcher: Option<W>,
+    sender: Option<EthSender>,
+    watcher: Option<EventWatcher>,
     cache: EventCache,
     #[cfg(feature = "backup-enable")]
     backup: SecretBackup,
 }
 
-impl<S, W> Dispatcher<S, W>
-where
-    S: Sender,
-    W: Watcher,
-{
+impl Dispatcher {
     pub fn new(enclave_id: sgx_enclave_id_t, node_url: &str, cache: EventCache) -> Self {
         let inner = RwLock::new(InnerDispatcher {
             enclave_id,
@@ -76,12 +71,13 @@ where
             let anonify_contract_info =
                 ContractInfo::new(anonify_abi_path, anonify_contract_address)?;
 
-            let sender = S::new(
+            let sender = EthSender::new(
                 inner.enclave_id,
                 &inner.node_url,
                 anonify_contract_info.clone(),
             )?;
-            let watcher = W::new(&inner.node_url, anonify_contract_info, inner.cache.clone())?;
+            let watcher =
+                EventWatcher::new(&inner.node_url, anonify_contract_info, inner.cache.clone())?;
             inner.sender = Some(sender);
             inner.watcher = Some(watcher);
         }

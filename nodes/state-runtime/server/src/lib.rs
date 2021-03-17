@@ -1,4 +1,4 @@
-use anonify_eth_driver::{traits::*, Dispatcher, EventCache};
+use anonify_eth_driver::{Dispatcher, EventCache};
 use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH};
 use sgx_types::sgx_enclave_id_t;
 use std::{env, str::FromStr};
@@ -12,21 +12,17 @@ mod tests;
 const DEFAULT_GAS: u64 = 5_000_000;
 
 #[derive(Debug)]
-pub struct Server<S: Sender, W: Watcher> {
+pub struct Server {
     pub eid: sgx_enclave_id_t,
     pub eth_url: String,
     pub abi_path: String,
     pub bin_path: String,
     pub confirmations: usize,
     pub sender_address: Address,
-    pub dispatcher: Dispatcher<S, W>,
+    pub dispatcher: Dispatcher,
 }
 
-impl<S, W> Server<S, W>
-where
-    S: Sender,
-    W: Watcher,
-{
+impl Server {
     pub async fn new(eid: sgx_enclave_id_t) -> Self {
         let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
         let account_index: usize = env::var("ACCOUNT_INDEX")
@@ -44,7 +40,7 @@ where
         .unwrap();
 
         let cache = EventCache::default();
-        let dispatcher = Dispatcher::<S, W>::new(eid, &eth_url, cache)
+        let dispatcher = Dispatcher::new(eid, &eth_url, cache)
             .set_anonify_contract_address(
                 &*FACTORY_ABI_PATH,
                 factory_contract_address,

@@ -6,7 +6,6 @@ mod cache;
 pub mod dispatcher;
 pub mod error;
 pub mod eth;
-pub mod traits;
 pub mod utils;
 mod workflow;
 
