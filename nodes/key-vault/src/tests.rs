@@ -3,7 +3,6 @@ use actix_web::{test, web, App};
 use anonify_eth_driver::{
     eth::{EthSender, EventWatcher},
     utils::*,
-    Web3Http,
 };
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_config::{ANONIFY_ABI_PATH, FACTORY_ABI_PATH, PJ_ROOT_DIR};
@@ -14,15 +13,9 @@ use rand_core::{CryptoRng, RngCore};
 use serde_json::json;
 use state_runtime_node_server::{handlers::*, Server as ERC20Server};
 use std::{env, fs, path::Path, str::FromStr, sync::Arc, time};
-use web3::{
-    contract::{Contract, Options},
-    transports::Http,
-    types::Address,
-    Web3,
-};
+use web3::{contract::Options, types::Address};
 
 const SYNC_TIME: u64 = 1500;
-const GAS: u64 = 5_000_000;
 
 #[actix_rt::test]
 async fn test_backup_path_secret() {
@@ -91,10 +84,6 @@ async fn test_backup_path_secret() {
 
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
-
-    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
-        .await
-        .unwrap();
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
@@ -249,10 +238,6 @@ async fn test_recover_without_key_vault() {
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
 
-    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
-        .await
-        .unwrap();
-
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
         .to_request();
@@ -400,10 +385,6 @@ async fn test_manually_backup_all() {
             ),
     )
     .await;
-
-    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
-        .await
-        .unwrap();
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
@@ -565,10 +546,6 @@ async fn test_manually_recover_all() {
             ),
     )
     .await;
-
-    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
-        .await
-        .unwrap();
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")

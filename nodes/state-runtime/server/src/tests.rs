@@ -415,7 +415,7 @@ async fn test_node_recovery() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let recovered_eid = recovered_enclave.geteid();
-    let recovered_server = Arc::new(Server::<EthSender, EventWatcher>::new(recovered_eid));
+    let recovered_server = Arc::new(Server::<EthSender, EventWatcher>::new(recovered_eid).await);
 
     let mut recovered_app = test::init_service(
         App::new()
@@ -573,7 +573,7 @@ async fn test_join_group_then_handshake() {
     let eid1 = enclave1.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server1 = Arc::new(Server::<EthSender, EventWatcher>::new(eid1));
+    let server1 = Arc::new(Server::<EthSender, EventWatcher>::new(eid1).await);
 
     let mut app1 = test::init_service(
         App::new()
@@ -597,7 +597,7 @@ async fn test_join_group_then_handshake() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid2 = enclave2.geteid();
-    let server2 = Arc::new(Server::<EthSender, EventWatcher>::new(eid2));
+    let server2 = Arc::new(Server::<EthSender, EventWatcher>::new(eid2).await);
 
     let mut app2 = test::init_service(
         App::new()
