@@ -39,14 +39,9 @@ fn main() {
     let state_runtime_url = env::var("STATE_RUNTIME_URL").expect("STATE_RUNTIME_URL is not set");
 
     match matches.subcommand() {
-        (ANONIFY_COMMAND, Some(matches)) => subcommand_anonify(
-            term,
-            root_dir,
-            state_runtime_url,
-            matches,
-            rng,
-            &mut csprng,
-        ),
+        (ANONIFY_COMMAND, Some(matches)) => {
+            subcommand_anonify(term, root_dir, state_runtime_url, matches, rng, &mut csprng)
+        }
         (WALLET_COMMAND, Some(matches)) => subcommand_wallet(term, root_dir, matches, rng),
         _ => {
             term.error(matches.usage()).unwrap();
