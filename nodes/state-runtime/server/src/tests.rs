@@ -7,7 +7,7 @@ use frame_common::{
     crypto::{AccountId, Ed25519ChallengeResponse},
     AccessPolicy,
 };
-use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH};
+use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH};
 use frame_host::EnclaveDir;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use integration_tests::set_env_vars;
@@ -35,7 +35,7 @@ async fn test_evaluate_access_policy_by_user_id_field() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid).await);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -77,6 +77,7 @@ async fn test_evaluate_access_policy_by_user_id_field() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
+        &*FACTORY_ABI_PATH,
         &*ANONIFY_ABI_PATH,
         &eth_url,
     )
@@ -156,7 +157,7 @@ async fn test_multiple_messages() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid).await);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -199,6 +200,7 @@ async fn test_multiple_messages() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
+        &*FACTORY_ABI_PATH,
         &*ANONIFY_ABI_PATH,
         &eth_url,
     )
@@ -263,7 +265,7 @@ async fn test_skip_invalid_event() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid).await);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -306,6 +308,7 @@ async fn test_skip_invalid_event() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
+        &*FACTORY_ABI_PATH,
         &*ANONIFY_ABI_PATH,
         &eth_url,
     )
@@ -385,7 +388,7 @@ async fn test_node_recovery() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid).await);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -456,6 +459,7 @@ async fn test_node_recovery() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
+        &*FACTORY_ABI_PATH,
         &*ANONIFY_ABI_PATH,
         &eth_url,
     )
@@ -523,6 +527,7 @@ async fn test_node_recovery() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
+        &*FACTORY_ABI_PATH,
         &*ANONIFY_ABI_PATH,
         &eth_url,
     )
@@ -642,6 +647,7 @@ async fn test_join_group_then_handshake() {
         test::read_body_json(resp).await;
     let enc_key1 = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
+        &*FACTORY_ABI_PATH,
         &*ANONIFY_ABI_PATH,
         &eth_url,
     )
@@ -685,6 +691,7 @@ async fn test_join_group_then_handshake() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
+        &*FACTORY_ABI_PATH,
         &*ANONIFY_ABI_PATH,
         &eth_url,
     )
@@ -762,7 +769,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid).await);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -809,6 +816,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
         test::read_body_json(resp).await;
     let enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
+        &*FACTORY_ABI_PATH,
         &*ANONIFY_ABI_PATH,
         &eth_url,
     )
@@ -976,25 +984,33 @@ fn other_turn() {
 async fn verify_enclave_encryption_key<P: AsRef<Path> + Copy>(
     enclave_encryption_key: SodiumPubKey,
     factory_abi_path: P,
+    anonify_abi_path: P,
     eth_url: &str,
 ) -> SodiumPubKey {
     let factory_contract_address = Address::from_str(
         &env::var("FACTORY_CONTRACT_ADDRESS").expect("FACTORY_CONTRACT_ADDRESS is not set"),
     )
     .unwrap();
-    let contract =
-        create_contract_interface(eth_url, factory_abi_path, factory_contract_address).unwrap();
 
-    let query_enclave_encryption_key: Vec<u8> = contract
-        .query(
-            "getEncryptionKey",
-            enclave_encryption_key.to_bytes(),
-            None,
-            Options::default(),
-            None,
-        )
-        .await
-        .unwrap();
+    let anonify_contract_address: Address =
+        create_contract_interface(eth_url, factory_abi_path, factory_contract_address)
+            .unwrap()
+            .query("getAnonifyAddress", (), None, Options::default(), None)
+            .await
+            .unwrap();
+
+    let query_enclave_encryption_key: Vec<u8> =
+        create_contract_interface(eth_url, anonify_abi_path, anonify_contract_address)
+            .unwrap()
+            .query(
+                "getEncryptionKey",
+                enclave_encryption_key.to_bytes(),
+                None,
+                Options::default(),
+                None,
+            )
+            .await
+            .unwrap();
 
     assert_eq!(
         enclave_encryption_key,
