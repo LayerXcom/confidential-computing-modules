@@ -2702,8 +2702,6 @@ dependencies = [
  "actix-web",
  "anonify-eth-driver",
  "anyhow 1.0.34",
- "eth-deployer",
- "ethabi",
  "frame-common",
  "frame-config",
  "frame-host",

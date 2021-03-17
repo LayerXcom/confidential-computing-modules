@@ -1,25 +1,19 @@
 use crate::{handlers::*, Server as KeyVaultServer};
 use actix_web::{test, web, App};
-use anonify_eth_driver::eth::{EthSender, EventWatcher};
-use eth_deployer::EthDeployer;
-use ethabi::Contract as ContractABI;
+use anonify_eth_driver::{
+    eth::{EthSender, EventWatcher},
+    utils::*,
+    Web3Http,
+};
 use frame_common::crypto::Ed25519ChallengeResponse;
-use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, PJ_ROOT_DIR};
+use frame_config::{ANONIFY_ABI_PATH, PJ_ROOT_DIR};
 use frame_host::EnclaveDir;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use once_cell::sync::Lazy;
 use rand_core::{CryptoRng, RngCore};
 use serde_json::json;
 use state_runtime_node_server::{handlers::*, Server as ERC20Server};
-use std::{
-    env,
-    fs::{self, File},
-    io::BufReader,
-    path::Path,
-    str::FromStr,
-    sync::Arc,
-    time,
-};
+use std::{env, fs, path::Path, str::FromStr, sync::Arc, time};
 use web3::{
     contract::{Contract, Options},
     transports::Http,
@@ -77,10 +71,6 @@ async fn test_backup_path_secret() {
                 web::post().to(handle_join_group::<EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
@@ -102,29 +92,12 @@ async fn test_backup_path_secret() {
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
 
-    // Deploy
-    let deployer = EthDeployer::new(&eth_url).unwrap();
-    let signer = deployer.get_account(0usize, None).await.unwrap();
-    let contract_address = deployer
-        .deploy(&*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH, 0usize, GAS, signer)
+    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    println!("contract address: {:?}", contract_address);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_address")
-        .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
-        .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_address: contract_address.clone(),
-        })
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -142,7 +115,6 @@ async fn test_backup_path_secret() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        &contract_address,
     )
     .await;
 
@@ -255,10 +227,6 @@ async fn test_recover_without_key_vault() {
                 web::post().to(handle_join_group::<EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
@@ -280,29 +248,12 @@ async fn test_recover_without_key_vault() {
     let path_secrets_dir =
         PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
 
-    // Deploy
-    let deployer = EthDeployer::new(&eth_url).unwrap();
-    let signer = deployer.get_account(0usize, None).await.unwrap();
-    let contract_address = deployer
-        .deploy(&*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH, 0usize, GAS, signer)
+    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    println!("contract address: {:?}", contract_address);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_address")
-        .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
-        .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_address: contract_address.clone(),
-        })
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -320,7 +271,6 @@ async fn test_recover_without_key_vault() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        &contract_address,
     )
     .await;
 
@@ -427,10 +377,6 @@ async fn test_manually_backup_all() {
                 web::post().to(handle_join_group::<EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
@@ -453,29 +399,12 @@ async fn test_manually_backup_all() {
     )
     .await;
 
-    // Deploy
-    let deployer = EthDeployer::new(&eth_url).unwrap();
-    let signer = deployer.get_account(0usize, None).await.unwrap();
-    let contract_address = deployer
-        .deploy(&*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH, 0usize, GAS, signer)
+    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    println!("contract address: {:?}", contract_address);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_address")
-        .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
-        .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_address: contract_address.clone(),
-        })
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -493,7 +422,6 @@ async fn test_manually_backup_all() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        &contract_address,
     )
     .await;
 
@@ -613,10 +541,6 @@ async fn test_manually_recover_all() {
                 web::post().to(handle_join_group::<EthSender, EventWatcher>),
             )
             .route(
-                "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
-            )
-            .route(
                 "/api/v1/state",
                 web::post().to(handle_send_command::<EthSender, EventWatcher>),
             )
@@ -639,29 +563,12 @@ async fn test_manually_recover_all() {
     )
     .await;
 
-    // Deploy
-    let deployer = EthDeployer::new(&eth_url).unwrap();
-    let signer = deployer.get_account(0usize, None).await.unwrap();
-    let contract_address = deployer
-        .deploy(&*ANONIFY_ABI_PATH, &*ANONIFY_BIN_PATH, 0usize, GAS, signer)
+    let signer = get_account(&Web3Http::new(&eth_url).unwrap(), 0usize, None)
         .await
         .unwrap();
-    println!("contract address: {:?}", contract_address);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/set_contract_address")
-        .set_json(&state_runtime_node_api::contract_addr::post::Request {
-            contract_address: contract_address.clone(),
-        })
-        .to_request();
-    let resp = test::call_service(&mut app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::post()
         .uri("/api/v1/join_group")
-        .set_json(&state_runtime_node_api::join_group::post::Request {
-            contract_address: contract_address.clone(),
-        })
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -679,7 +586,6 @@ async fn test_manually_recover_all() {
         enc_key_resp.enclave_encryption_key,
         &*ANONIFY_ABI_PATH,
         &eth_url,
-        &contract_address,
     )
     .await;
 
@@ -858,21 +764,19 @@ fn get_remote_ids(roster_idx: String) -> Vec<String> {
     ids
 }
 
-async fn verify_enclave_encryption_key<P: AsRef<Path>>(
+async fn verify_enclave_encryption_key<P: AsRef<Path> + Copy>(
     enclave_encryption_key: SodiumPubKey,
-    abi_path: P,
+    factory_abi_path: P,
     eth_url: &str,
-    contract_address: &str,
 ) -> SodiumPubKey {
-    let transport = Http::new(eth_url).unwrap();
-    let web3 = Web3::new(transport);
-    let web3_conn = web3.eth();
+    let factory_contract_address = Address::from_str(
+        &env::var("FACTORY_CONTRACT_ADDRESS").expect("FACTORY_CONTRACT_ADDRESS is not set"),
+    )
+    .unwrap();
+    let contract =
+        create_contract_interface(eth_url, factory_abi_path, factory_contract_address).unwrap();
 
-    let address = Address::from_str(contract_address).unwrap();
-    let f = File::open(abi_path).unwrap();
-    let abi = ContractABI::load(BufReader::new(f)).unwrap();
-
-    let query_enclave_encryption_key: Vec<u8> = Contract::new(web3_conn, address, abi)
+    let query_enclave_encryption_key: Vec<u8> = contract
         .query(
             "getEncryptionKey",
             enclave_encryption_key.to_bytes(),

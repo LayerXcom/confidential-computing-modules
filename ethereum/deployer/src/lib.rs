@@ -1,16 +1,10 @@
-use anonify_eth_driver::{
-    error::{HostError, Result},
-    eth::{sender::sender_retry_condition, Web3Http},
-    utils::*,
-};
-use frame_config::{
-    ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_BIN_PATH, REQUEST_RETRIES, RETRY_DELAY_MILLS,
-};
+use anonify_eth_driver::{error::Result, eth::Web3Http, utils::*};
+use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
-use std::{fs, marker::Send, path::Path};
+use std::{marker::Send, path::Path};
 use web3::{
-    contract::{Contract, Options},
-    types::{Address, TransactionReceipt, H256},
+    contract::Options,
+    types::{Address, TransactionReceipt},
 };
 
 /// Components needed to deploy a contract

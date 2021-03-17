@@ -4,7 +4,7 @@ use actix_web::{web, HttpResponse, Responder};
 use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::traits::*;
 use std::{sync::Arc, time};
-use tracing::{debug, error, info};
+use tracing::{error, info};
 
 const DEFAULT_GAS: u64 = 5_000_000;
 
