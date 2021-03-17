@@ -8,14 +8,16 @@ use crate::{
     utils::*,
     workflow::host_input,
 };
-use anyhow::anyhow;
 use frame_common::crypto::AccountId;
 use frame_host::engine::HostEngine;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{fmt::Debug, fs, path::Path, str::FromStr};
-use web3::types::{Address, H256};
+use std::{fmt::Debug, path::Path};
+use web3::{
+    contract::Options,
+    types::{Address, H256},
+};
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug)]
@@ -27,7 +29,6 @@ pub struct Dispatcher<S: Sender, W: Watcher> {
 struct InnerDispatcher<S: Sender, W: Watcher> {
     node_url: String,
     enclave_id: sgx_enclave_id_t,
-    contract_address: Option<Address>,
     sender: Option<S>,
     watcher: Option<W>,
     cache: EventCache,
@@ -44,7 +45,6 @@ where
         let inner = RwLock::new(InnerDispatcher {
             enclave_id,
             node_url: node_url.to_string(),
-            contract_address: None,
             cache,
             sender: None,
             watcher: None,
@@ -55,19 +55,47 @@ where
         Dispatcher { inner }
     }
 
-    pub fn set_anonify_contract_address<P: AsRef<Path> + Copy>(
+    pub async fn set_anonify_contract_address<P: AsRef<Path> + Copy>(
         self,
-        sender: Address,
-        salt: [u8; 32],
-        bin_path: P,
+        factory_abi_path: P,
+        factory_contract_address: Address,
+        anonify_abi_path: P,
     ) -> Result<Self> {
-        let bin_code = fs::read(bin_path)?;
-        let contract_address = calc_anonify_contract_address(sender, salt, &bin_code);
         {
             let mut inner = self.inner.write();
-            inner.contract_address = Some(contract_address);
+            let contract = create_contract_interface(
+                &inner.node_url,
+                factory_abi_path,
+                factory_contract_address,
+            )?;
+            let anonify_contract_address: Address = contract
+                .query("getAnonifyAddress", (), None, Options::default(), None)
+                .await?;
+            let anonify_contract_info =
+                ContractInfo::new(anonify_abi_path, anonify_contract_address)?;
+
+            let sender = S::new(
+                inner.enclave_id,
+                &inner.node_url,
+                anonify_contract_info.clone(),
+            )?;
+            let watcher = W::new(&inner.node_url, anonify_contract_info, inner.cache.clone())?;
+            inner.sender = Some(sender);
+            inner.watcher = Some(watcher);
         }
+
         Ok(self)
+    }
+
+    pub fn get_anonify_contract_address(&self) -> Result<Address> {
+        let inner = self.inner.read();
+        let address = inner
+            .sender
+            .as_ref()
+            .ok_or_else(|| HostError::AddressNotSet)?
+            .get_contract()
+            .address();
+        Ok(address)
     }
 
     /// - Starting syncing with the blockchain node.
@@ -76,49 +104,12 @@ where
         Ok(self)
     }
 
-    pub fn set_contract_address<P: AsRef<Path> + Copy>(
-        &self,
-        contract_addr: &str,
-        abi_path: P,
-    ) -> Result<()> {
-        let mut inner = self.inner.write();
-        let enclave_id = inner.enclave_id;
-        let node_url = &inner.node_url;
-        let contract_addr = Address::from_str(contract_addr)
-            .map_err(|e| anyhow!("Failed to Address::from_str: {:?}", e))?;
-
-        let contract_info = ContractInfo::new(abi_path, contract_addr)?;
-        let sender = S::new(enclave_id, node_url, contract_info.clone())?;
-        let watcher = W::new(node_url, contract_info, inner.cache.clone())?;
-
-        inner.sender = Some(sender);
-        inner.watcher = Some(watcher);
-
-        Ok(())
-    }
-
-    pub async fn join_group<P: AsRef<Path> + Copy>(
-        &self,
-        signer: Address,
-        gas: u64,
-        contract_addr: &str,
-        abi_path: P,
-        ecall_cmd: u32,
-    ) -> Result<H256> {
-        self.send_report_handshake(signer, gas, contract_addr, abi_path, ecall_cmd, "joinGroup")
+    pub async fn join_group(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {
+        self.send_report_handshake(signer, gas, ecall_cmd, "joinGroup")
             .await
     }
 
-    pub async fn register_report<P: AsRef<Path> + Copy>(
-        &self,
-        signer: Address,
-        gas: u64,
-        contract_addr: &str,
-        abi_path: P,
-        ecall_cmd: u32,
-    ) -> Result<H256> {
-        self.set_contract_address(contract_addr, abi_path)?;
-
+    pub async fn register_report(&self, signer: Address, gas: u64, ecall_cmd: u32) -> Result<H256> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         let input = host_input::RegisterReport::new(signer, gas, ecall_cmd);
@@ -134,36 +125,23 @@ where
         Ok(tx_hash)
     }
 
-    pub async fn update_mrenclave<P: AsRef<Path> + Copy>(
+    pub async fn update_mrenclave(
         &self,
         signer: Address,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
         ecall_cmd: u32,
     ) -> Result<H256> {
-        self.send_report_handshake(
-            signer,
-            gas,
-            contract_addr,
-            abi_path,
-            ecall_cmd,
-            "updateMrenclave",
-        )
-        .await
+        self.send_report_handshake(signer, gas, ecall_cmd, "updateMrenclave")
+            .await
     }
 
-    async fn send_report_handshake<P: AsRef<Path> + Copy>(
+    async fn send_report_handshake(
         &self,
         signer: Address,
         gas: u64,
-        contract_addr: &str,
-        abi_path: P,
         ecall_cmd: u32,
         method: &str,
     ) -> Result<H256> {
-        self.set_contract_address(contract_addr, abi_path)?;
-
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         let input = host_input::JoinGroup::new(signer, gas, ecall_cmd);

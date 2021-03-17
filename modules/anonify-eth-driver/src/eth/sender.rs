@@ -9,7 +9,6 @@ use async_trait::async_trait;
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use sgx_types::sgx_enclave_id_t;
-use std::path::Path;
 use tracing::info;
 use web3::types::{Address, H256};
 
@@ -52,12 +51,10 @@ impl Sender for EthSender {
         })
     }
 
-    fn from_contract(enclave_id: sgx_enclave_id_t, contract: ContractKind) -> Self {
-        match contract {
-            ContractKind::Web3Contract(contract) => EthSender {
-                enclave_id,
-                contract,
-            },
+    fn from_contract(enclave_id: sgx_enclave_id_t, contract: Web3Contract) -> Self {
+        EthSender {
+            enclave_id,
+            contract,
         }
     }
 
@@ -67,6 +64,7 @@ impl Sender for EthSender {
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
+        .set_condition(deployer_retry_condition)
         .spawn_async(|| async { self.contract.get_account(index, password).await })
         .await
     }
@@ -127,7 +125,7 @@ impl Sender for EthSender {
         .await
     }
 
-    fn get_contract(self) -> ContractKind {
-        ContractKind::Web3Contract(self.contract)
+    fn get_contract(&self) -> &Web3Contract {
+        &self.contract
     }
 }

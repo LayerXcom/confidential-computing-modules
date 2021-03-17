@@ -14,7 +14,7 @@ use frame_common::{
 };
 use frame_host::engine::HostEngine;
 use sgx_types::sgx_enclave_id_t;
-use std::{cmp::Ordering, fmt, path::Path};
+use std::{cmp::Ordering, fmt};
 use tracing::{debug, error, info, warn};
 use web3::types::{Address, Log};
 
@@ -26,11 +26,7 @@ pub struct EventWatcher {
 
 #[async_trait]
 impl Watcher for EventWatcher {
-    fn new(
-        node_url: &str,
-        contract_info: ContractInfo,
-        cache: EventCache,
-    ) -> Result<Self> {
+    fn new(node_url: &str, contract_info: ContractInfo, cache: EventCache) -> Result<Self> {
         let web3_http = Web3Http::new(node_url)?;
         let contract = Web3Contract::new(web3_http, contract_info)?;
 
@@ -59,8 +55,8 @@ impl Watcher for EventWatcher {
         Ok(enclave_updated_state.notify_states())
     }
 
-    fn get_contract(self) -> ContractKind {
-        ContractKind::Web3Contract(self.contract)
+    fn get_contract(self) -> Web3Contract {
+        self.contract
     }
 }
 

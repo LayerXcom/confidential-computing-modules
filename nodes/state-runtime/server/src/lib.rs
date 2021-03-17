@@ -1,7 +1,8 @@
 use anonify_eth_driver::{traits::*, Dispatcher, EventCache};
-use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH};
+use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH};
 use sgx_types::sgx_enclave_id_t;
-use std::env;
+use std::{env, str::FromStr};
+use web3::types::Address;
 
 mod error;
 pub mod handlers;
@@ -26,7 +27,7 @@ where
     S: Sender,
     W: Watcher,
 {
-    pub fn new(eid: sgx_enclave_id_t) -> Self {
+    pub async fn new(eid: sgx_enclave_id_t) -> Self {
         let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
         let account_index: usize = env::var("ACCOUNT_INDEX")
             .expect("ACCOUNT_INDEX is not set")
@@ -41,9 +42,20 @@ where
             .unwrap_or_else(|_| "1000".to_string())
             .parse()
             .expect("Failed to parse SYNC_BC_TIME to u64");
+        let factory_contract_address = Address::from_str(
+            &env::var("FACTORY_CONTRACT_ADDRESS").expect("FACTORY_CONTRACT_ADDRESS is not set"),
+        )
+        .unwrap();
 
         let cache = EventCache::default();
-        let dispatcher = Dispatcher::<S, W>::new(eid, &eth_url, cache);
+        let dispatcher = Dispatcher::<S, W>::new(eid, &eth_url, cache)
+            .set_anonify_contract_address(
+                &*FACTORY_ABI_PATH,
+                factory_contract_address,
+                &*ANONIFY_ABI_PATH,
+            )
+            .await
+            .unwrap();
 
         Server {
             eid,

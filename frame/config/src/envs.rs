@@ -64,7 +64,7 @@ pub static ANONIFY_BIN_PATH: Lazy<PathBuf> = Lazy::new(|| {
     bin_path
 });
 
-pub static CREATE2_ABI_PATH: Lazy<PathBuf> = Lazy::new(|| {
+pub static FACTORY_ABI_PATH: Lazy<PathBuf> = Lazy::new(|| {
     let abi_path_from_root = env::var("ABI_PATH").expect("ABI_PATH is not set");
     let mut abi_path = PJ_ROOT_DIR.clone();
     abi_path.push(abi_path_from_root);
@@ -72,7 +72,7 @@ pub static CREATE2_ABI_PATH: Lazy<PathBuf> = Lazy::new(|| {
     abi_path
 });
 
-pub static CREATE2_BIN_PATH: Lazy<PathBuf> = Lazy::new(|| {
+pub static FACTORY_BIN_PATH: Lazy<PathBuf> = Lazy::new(|| {
     let bin_path_from_root = env::var("BIN_PATH").expect("BIN_PATH is not set");
     let mut bin_path = PJ_ROOT_DIR.clone();
     bin_path.push(bin_path_from_root);

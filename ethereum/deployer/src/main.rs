@@ -1,5 +1,5 @@
 use eth_deployer::EthDeployer;
-use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, CREATE2_ABI_PATH, CREATE2_BIN_PATH};
+use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH, FACTORY_BIN_PATH};
 use std::{env, str::FromStr};
 
 const GAS: u64 = 5_000_000;
@@ -17,7 +17,7 @@ async fn main() {
         .parse::<usize>()
         .expect("Failed to parse CONFIRMATIONS to usize");
     let args: Vec<String> = env::args().collect();
-    assert_eq!(args.len(), 2);
+    assert!(args.len() == 2 || args.len() == 3);
 
     let deployer = EthDeployer::new(&eth_url).unwrap();
     let signer = deployer
@@ -26,29 +26,46 @@ async fn main() {
         .unwrap();
 
     match args[1].as_str() {
-        "create2" => {
+        "factory" => {
             let contract_address = deployer
                 .deploy(
-                    &*CREATE2_ABI_PATH,
-                    &*CREATE2_BIN_PATH,
+                    &*FACTORY_ABI_PATH,
+                    &*FACTORY_BIN_PATH,
                     confirmations,
                     GAS,
                     signer,
                 )
                 .await
                 .unwrap();
-            println!("{}", contract_address);
+            println!("{:x}", contract_address);
         }
-        contract_address if web3::types::Address::from_str(contract_address).is_ok() => {
-            let create2_address = web3::types::Address::from_str(contract_address).unwrap();
-            let salt = [0u8; 32];
-
-            let tx_hash = deployer
-                .deploy_anonify_by_create2(&*CREATE2_ABI_PATH, signer, GAS, salt, create2_address)
+        "anonify" => {
+            let contract_address = deployer
+                .deploy(
+                    &*ANONIFY_ABI_PATH,
+                    &*ANONIFY_BIN_PATH,
+                    confirmations,
+                    GAS,
+                    signer,
+                )
                 .await
                 .unwrap();
-            println!("tx_hash: {}", tx_hash);
+            println!("{:x}", contract_address);
         }
-        _ => panic!("Invalid arguments"),
+        contract_address => {
+            let factory_address = web3::types::Address::from_str(contract_address).unwrap();
+
+            let receipt = deployer
+                .deploy_anonify_by_factory(
+                    &*FACTORY_ABI_PATH,
+                    signer,
+                    GAS,
+                    factory_address,
+                    confirmations,
+                )
+                .await
+                .unwrap();
+            println!("receipt: {:?}", receipt);
+        }
     };
 }

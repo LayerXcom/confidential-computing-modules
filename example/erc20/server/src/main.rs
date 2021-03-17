@@ -18,7 +18,7 @@ async fn main() -> io::Result<()> {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
-    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid));
+    let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid).await);
 
     HttpServer::new(move || {
         App::new()
@@ -50,10 +50,6 @@ async fn main() -> io::Result<()> {
             .route(
                 "/api/v1/start_sync_bc",
                 web::get().to(handle_start_sync_bc::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/set_contract_address",
-                web::get().to(handle_set_contract_address::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/register_notification",

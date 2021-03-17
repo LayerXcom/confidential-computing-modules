@@ -4,7 +4,7 @@ use actix_web::{web, HttpResponse, Responder};
 use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::traits::*;
 use std::{sync::Arc, time};
-use tracing::{debug, error, info};
+use tracing::{error, info};
 
 const DEFAULT_GAS: u64 = 5_000_000;
 
@@ -12,10 +12,7 @@ pub async fn handle_health_check() -> impl Responder {
     HttpResponse::Ok().finish()
 }
 
-pub async fn handle_join_group<S, W>(
-    server: web::Data<Arc<Server<S, W>>>,
-    req: web::Json<state_runtime_node_api::join_group::post::Request>,
-) -> Result<HttpResponse>
+pub async fn handle_join_group<S, W>(server: web::Data<Arc<Server<S, W>>>) -> Result<HttpResponse>
 where
     S: Sender,
     W: Watcher,
@@ -27,13 +24,7 @@ where
         .map_err(|e| ServerError::from(e))?;
     let tx_hash = server
         .dispatcher
-        .join_group(
-            sender_address,
-            DEFAULT_GAS,
-            &req.contract_address,
-            &server.abi_path,
-            JOIN_GROUP_CMD,
-        )
+        .join_group(sender_address, DEFAULT_GAS, JOIN_GROUP_CMD)
         .await
         .map_err(|e| ServerError::from(e))?;
 
@@ -43,7 +34,6 @@ where
 
 pub async fn handle_update_mrenclave<S, W>(
     server: web::Data<Arc<Server<S, W>>>,
-    req: web::Json<state_runtime_node_api::update_mrenclave::post::Request>,
 ) -> Result<HttpResponse>
 where
     S: Sender,
@@ -56,13 +46,7 @@ where
         .map_err(|e| ServerError::from(e))?;
     let tx_hash = server
         .dispatcher
-        .update_mrenclave(
-            sender_address,
-            DEFAULT_GAS,
-            &req.contract_address,
-            &server.abi_path,
-            JOIN_GROUP_CMD,
-        )
+        .update_mrenclave(sender_address, DEFAULT_GAS, JOIN_GROUP_CMD)
         .await
         .map_err(|e| ServerError::from(e))?;
 
@@ -212,25 +196,6 @@ where
     Ok(HttpResponse::Ok().finish())
 }
 
-pub async fn handle_set_contract_address<S, W>(
-    server: web::Data<Arc<Server<S, W>>>,
-    req: web::Json<state_runtime_node_api::contract_addr::post::Request>,
-) -> Result<HttpResponse>
-where
-    S: Sender,
-    W: Watcher,
-{
-    debug!("Starting set a contract address...");
-
-    debug!("Contract address: {:?}", &req.contract_address);
-    server
-        .dispatcher
-        .set_contract_address(&req.contract_address, &server.abi_path)
-        .map_err(|e| ServerError::from(e))?;
-
-    Ok(HttpResponse::Ok().finish())
-}
-
 pub async fn handle_register_notification<S, W>(
     server: web::Data<Arc<Server<S, W>>>,
     req: web::Json<state_runtime_node_api::register_notification::post::Request>,
@@ -249,7 +214,6 @@ where
 
 pub async fn handle_register_report<S, W>(
     server: web::Data<Arc<Server<S, W>>>,
-    req: web::Json<state_runtime_node_api::register_report::post::Request>,
 ) -> Result<HttpResponse>
 where
     S: Sender,
@@ -262,13 +226,7 @@ where
         .map_err(|e| ServerError::from(e))?;
     let tx_hash = server
         .dispatcher
-        .register_report(
-            sender_address,
-            DEFAULT_GAS,
-            &req.contract_address,
-            &server.abi_path,
-            SEND_REGISTER_REPORT_CMD,
-        )
+        .register_report(sender_address, DEFAULT_GAS, SEND_REGISTER_REPORT_CMD)
         .await
         .map_err(|e| ServerError::from(e))?;
 

@@ -30,10 +30,7 @@ pub struct Web3Contract {
 }
 
 impl Web3Contract {
-    pub fn new(
-        web3_conn: Web3Http,
-        contract_info: ContractInfo,
-    ) -> Result<Self> {
+    pub fn new(web3_conn: Web3Http, contract_info: ContractInfo) -> Result<Self> {
         let abi = contract_info.contract_abi()?;
         let address = contract_info.address();
         let contract = Contract::new(web3_conn.web3.eth(), address, abi);
