@@ -379,11 +379,8 @@ async fn test_node_recovery() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let recovered_eid = recovered_enclave.geteid();
-    // TODO: Dupulicated Server initialization
-    Server::<EthSender, EventWatcher>::new(recovered_eid)
-        .await
-        .run()
-        .await;
+
+    // Do not run
     let recovered_server = Arc::new(Server::<EthSender, EventWatcher>::new(recovered_eid).await);
 
     let mut recovered_app = test::init_service(
