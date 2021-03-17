@@ -76,17 +76,6 @@ pub mod state {
     }
 }
 
-pub mod join_group {
-    pub mod post {
-        use super::super::*;
-
-        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response {
-            pub tx_hash: H256,
-        }
-    }
-}
-
 pub mod update_mrenclave {
     pub mod post {
         use super::super::*;

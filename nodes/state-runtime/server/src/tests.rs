@@ -584,13 +584,6 @@ async fn test_join_group_then_handshake() {
 
     // Party 1
 
-    let req = test::TestRequest::post()
-        .uri("/api/v1/join_group")
-        .to_request();
-    let resp = test::call_service(&mut app1, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
-
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
         .to_request();
@@ -627,13 +620,6 @@ async fn test_join_group_then_handshake() {
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp); // return 200 OK: becuse allowed same enclave encryption key
-
-    let req = test::TestRequest::post()
-        .uri("/api/v1/join_group")
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
