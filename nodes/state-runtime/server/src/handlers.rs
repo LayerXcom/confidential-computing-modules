@@ -78,6 +78,8 @@ where
     S: Sender,
     W: Watcher,
 {
+    let st0 = std::time::SystemTime::now();
+    println!("########## st0: {:?}", st0);
     let sender_address = server
         .dispatcher
         .get_account(server.account_index, server.password.as_deref())
@@ -94,6 +96,9 @@ where
         )
         .await
         .map_err(|e| ServerError::from(e))?;
+
+    let st9 = std::time::SystemTime::now();
+    println!("########## st9: {:?}", st9);
 
     Ok(HttpResponse::Accepted().json(state_runtime_node_api::state::post::Response { tx_hash }))
 }

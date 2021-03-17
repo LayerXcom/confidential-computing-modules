@@ -56,6 +56,8 @@ impl Watcher for EventWatcher {
             .insert_enclave(eid, fetch_ciphertext_cmd, fetch_handshake_cmd)
             .save_cache(self.contract.address());
 
+        let rt18 = std::time::SystemTime::now();
+        debug!("########## rt18: {:?}", rt18);
         Ok(enclave_updated_state.notify_states())
     }
 
@@ -300,8 +302,8 @@ impl InnerEnclaveLog {
                             }) {
                             Ok(notify) => {
                                 if let Some(notify_state) = notify.state {
-                                    let rt15 = std::time::SystemTime::now();
-                                    debug!("########## rt15: {:?}", rt15);
+                                    let rt16 = std::time::SystemTime::now();
+                                    debug!("########## rt16: {:?}", rt16);
                                     match bincode::deserialize::<Vec<u8>>(
                                         &notify_state.into_vec()[..],
                                     ) {
@@ -412,8 +414,8 @@ impl EnclaveUpdatedState {
     /// Only if EnclaveUpdatedState has new block number to log,
     /// it's set next block number to event cache.
     pub fn save_cache(self, contract_addr: Address) -> Self {
-        let rt16 = std::time::SystemTime::now();
-        debug!("########## rt16: {:?}", rt16);
+        let rt17 = std::time::SystemTime::now();
+        debug!("########## rt17: {:?}", rt17);
         match &self.block_num {
             Some(block_num) => {
                 let mut w = self.cache.inner().write();

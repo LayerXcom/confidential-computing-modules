@@ -167,8 +167,8 @@ where
         println!("########## st1: {:?}", st1);
         let host_output = CommandWorkflow::exec(input, eid)?;
 
-        let st2 = std::time::SystemTime::now();
-        println!("########## st2: {:?}", st2);
+        let st6 = std::time::SystemTime::now();
+        println!("########## st6: {:?}", st6);
 
         match &inner.sender {
             Some(s) => s.send_command(&host_output).await,

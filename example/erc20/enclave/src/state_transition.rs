@@ -35,13 +35,13 @@ impl_runtime! {
 
         ensure!(sender_balance > amount, "transfer amount ({:?}) exceeds balance ({:?}).", amount, sender_balance);
 
-        let rt12 = time::SystemTime::now();
-        debug!("########## rt12: {:?}", rt12);
+        let rt13 = time::SystemTime::now();
+        debug!("########## rt13: {:?}", rt13);
         let sender_update = update!(sender, "Balance", sender_balance - amount, U64);
         let recipient_update = update!(recipient, "Balance", recipient_balance + amount, U64);
 
-        let rt13 = time::SystemTime::now();
-        debug!("########## rt13: {:?}", rt13);
+        let rt14 = time::SystemTime::now();
+        debug!("########## rt14: {:?}", rt14);
 
         return_update![sender_update, recipient_update]
     }
