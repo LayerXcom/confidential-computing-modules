@@ -38,10 +38,6 @@ where
             .expect("CONFIRMATIONS is not set")
             .parse()
             .expect("Failed to parse CONFIRMATIONS to usize");
-        let sync_time: u64 = env::var("SYNC_BC_TIME")
-            .unwrap_or_else(|_| "1000".to_string())
-            .parse()
-            .expect("Failed to parse SYNC_BC_TIME to u64");
         let factory_contract_address = Address::from_str(
             &env::var("FACTORY_CONTRACT_ADDRESS").expect("FACTORY_CONTRACT_ADDRESS is not set"),
         )
@@ -55,15 +51,12 @@ where
                 &*ANONIFY_ABI_PATH,
             )
             .await
-            .unwrap()
-            .run(sync_time, account_index, password.as_deref(), DEFAULT_GAS)
-            .await
             .unwrap();
 
         let sender_address = dispatcher
             .get_account(account_index, password.as_deref())
             .await
-            .map_err(|e| ServerError::from(e))?;
+            .unwrap();
 
         Server {
             eid,
@@ -74,5 +67,17 @@ where
             sender_address,
             dispatcher,
         }
+    }
+
+    pub async fn run(self) {
+        let sync_time: u64 = env::var("SYNC_BC_TIME")
+            .unwrap_or_else(|_| "1000".to_string())
+            .parse()
+            .expect("Failed to parse SYNC_BC_TIME to u64");
+
+        self.dispatcher
+            .run(sync_time, self.sender_address, DEFAULT_GAS)
+            .await
+            .unwrap();
     }
 }

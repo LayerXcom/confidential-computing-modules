@@ -14,7 +14,8 @@ use frame_host::engine::HostEngine;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{fmt::Debug, path::Path};
+use std::{fmt::Debug, path::Path, time};
+use tracing::{error, info};
 use web3::{
     contract::Options,
     types::{Address, H256},
@@ -104,11 +105,13 @@ where
     pub async fn run(
         self,
         sync_time: u64,
-        index: usize,
-        password: Option<&str>,
+        signer: Address,
         gas: u64,
-    ) -> Result<Self> {
-        let signer = self.get_account(index, password).await?;
+    ) -> Result<()>
+    {
+
+        let tx_hash = self.join_group(signer, gas, JOIN_GROUP_CMD).await?;
+        info!("A transaction hash of join_group: {:?}", tx_hash);
 
         // it spawns a new OS thread, and hosts an event loop.
         actix_rt::Arbiter::new().exec_fn(move || {
@@ -126,10 +129,7 @@ where
             });
         });
 
-        let tx_hash = self.join_group(signer, gas, JOIN_GROUP_CMD)?;
-        info!("A transaction hash of join_group: {:?}", tx_hash);
-
-        Ok(self)
+        Ok(())
     }
 
     pub async fn fetch_events(

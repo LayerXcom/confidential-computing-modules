@@ -18,15 +18,17 @@ async fn main() -> io::Result<()> {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
+
+    // TODO: Dupulicated Server initialization
+    Server::<EthSender, EventWatcher>::new(eid)
+        .await
+        .run()
+        .await;
     let server = Arc::new(Server::<EthSender, EventWatcher>::new(eid).await);
 
     HttpServer::new(move || {
         App::new()
             .data(server.clone())
-            .route(
-                "/api/v1/join_group",
-                web::post().to(handle_join_group::<EthSender, EventWatcher>),
-            )
             .route(
                 "/api/v1/update_mrenclave",
                 web::post().to(handle_update_mrenclave::<EthSender, EventWatcher>),
@@ -46,10 +48,6 @@ async fn main() -> io::Result<()> {
             .route(
                 "/api/v1/key_rotation",
                 web::post().to(handle_key_rotation::<EthSender, EventWatcher>),
-            )
-            .route(
-                "/api/v1/start_sync_bc",
-                web::get().to(handle_start_sync_bc::<EthSender, EventWatcher>),
             )
             .route(
                 "/api/v1/register_notification",
