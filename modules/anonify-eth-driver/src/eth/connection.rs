@@ -11,7 +11,7 @@ use std::{env, fs, path::Path};
 use web3::{
     contract::{Contract, Options},
     transports::Http,
-    types::{Address, BlockNumber, Filter, FilterBuilder, Log, H256, TransactionReceipt},
+    types::{Address, BlockNumber, Filter, FilterBuilder, Log, TransactionReceipt, H256},
     Web3,
 };
 

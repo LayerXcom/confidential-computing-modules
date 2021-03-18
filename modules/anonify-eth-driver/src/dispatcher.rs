@@ -17,7 +17,7 @@ use std::{fmt::Debug, path::Path, time};
 use tracing::{error, info};
 use web3::{
     contract::Options,
-    types::{Address, H256, TransactionReceipt},
+    types::{Address, TransactionReceipt, H256},
 };
 
 /// This dispatcher communicates with a blockchain node.
@@ -161,7 +161,12 @@ impl Dispatcher {
             .await
     }
 
-    async fn send_report_handshake(&self, signer: Address, gas: u64, method: &str) -> Result<TransactionReceipt> {
+    async fn send_report_handshake(
+        &self,
+        signer: Address,
+        gas: u64,
+        method: &str,
+    ) -> Result<TransactionReceipt> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         let input = host_input::JoinGroup::new(signer, gas, JOIN_GROUP_CMD);
