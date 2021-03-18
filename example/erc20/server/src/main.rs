@@ -21,7 +21,7 @@ async fn main() -> io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .data(server.clone())
+            .app_data(server.clone())
             .route(
                 "/api/v1/update_mrenclave",
                 web::post().to(handle_update_mrenclave),
