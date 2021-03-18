@@ -1,7 +1,7 @@
 use frame_common::crypto::AccountId;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use serde::{Deserialize, Serialize};
-use web3::types::H256;
+use web3::types::{TransactionReceipt, H256};
 
 // ----------------------
 //  GET and POST types
@@ -82,7 +82,7 @@ pub mod update_mrenclave {
 
         #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
         pub struct Response {
-            pub tx_hash: H256,
+            pub receipt: TransactionReceipt,
         }
     }
 }

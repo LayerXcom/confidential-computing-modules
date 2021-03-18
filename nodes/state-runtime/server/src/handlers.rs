@@ -8,14 +8,14 @@ pub async fn handle_health_check() -> impl Responder {
 }
 
 pub async fn handle_update_mrenclave(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
-    let tx_hash = server
+    let receipt = server
         .dispatcher
         .update_mrenclave(server.sender_address, DEFAULT_GAS)
         .await
         .map_err(|e| ServerError::from(e))?;
 
     Ok(HttpResponse::Accepted()
-        .json(state_runtime_node_api::update_mrenclave::post::Response { tx_hash }))
+        .json(state_runtime_node_api::update_mrenclave::post::Response { receipt }))
 }
 
 pub async fn handle_send_command(

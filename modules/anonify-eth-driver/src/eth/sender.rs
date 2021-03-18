@@ -1,30 +1,10 @@
 use super::connection::{Web3Contract, Web3Http};
-use crate::{
-    error::{HostError, Result},
-    utils::*,
-    workflow::*,
-};
+use crate::{error::Result, utils::*, workflow::*};
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use sgx_types::sgx_enclave_id_t;
 use tracing::info;
-use web3::types::{Address, H256};
-
-/// Define a retry condition of sending transactions.
-/// If it returns false, don't need to retry sending transactions.
-pub const fn sender_retry_condition(res: &Result<H256>) -> bool {
-    match res {
-        Ok(_) => false,
-        Err(err) => match err {
-            HostError::Web3ContractError(web3_err) => match web3_err {
-                web3::contract::Error::Abi(_) => false,
-                _ => true,
-            },
-            HostError::EcallOutputNotSet => false,
-            _ => true,
-        },
-    }
-}
+use web3::types::{Address, TransactionReceipt, H256};
 
 /// Components needed to send a transaction
 #[derive(Debug)]
@@ -70,17 +50,18 @@ impl EthSender {
         &self,
         host_output: &host_output::JoinGroup,
         method: &str,
-    ) -> Result<H256> {
+        confirmations: usize,
+    ) -> Result<TransactionReceipt> {
         info!("Sending a handshake to blockchain: {:?}", host_output);
         Retry::new(
             "send_report_handshake",
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
-        .set_condition(sender_retry_condition)
+        .set_condition(call_with_conf_retry_condition)
         .spawn_async(|| async {
             self.contract
-                .send_report_handshake(host_output.clone(), method)
+                .send_report_handshake(host_output.clone(), method, confirmations)
                 .await
         })
         .await

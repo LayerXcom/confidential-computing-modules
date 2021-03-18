@@ -69,7 +69,7 @@ impl EthDeployer {
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
-        .set_condition(deploy_with_conf_retry_condition)
+        .set_condition(call_with_conf_retry_condition)
         .spawn_async(|| async {
             contract
                 .call_with_confirmations(
@@ -83,12 +83,5 @@ impl EthDeployer {
                 .map_err(Into::into)
         })
         .await
-    }
-}
-
-pub const fn deploy_with_conf_retry_condition(res: &Result<TransactionReceipt>) -> bool {
-    match res {
-        Ok(_) => false,
-        Err(_err) => false,
     }
 }

@@ -17,7 +17,7 @@ use std::{fmt::Debug, path::Path, time};
 use tracing::{error, info};
 use web3::{
     contract::Options,
-    types::{Address, H256},
+    types::{Address, H256, TransactionReceipt},
 };
 
 /// This dispatcher communicates with a blockchain node.
@@ -30,6 +30,7 @@ pub struct Dispatcher {
 struct InnerDispatcher {
     node_url: String,
     enclave_id: sgx_enclave_id_t,
+    confirmations: usize,
     sender: Option<EthSender>,
     watcher: Option<EventWatcher>,
     cache: EventCache,
@@ -38,10 +39,16 @@ struct InnerDispatcher {
 }
 
 impl Dispatcher {
-    pub fn new(enclave_id: sgx_enclave_id_t, node_url: &str, cache: EventCache) -> Self {
+    pub fn new(
+        enclave_id: sgx_enclave_id_t,
+        node_url: &str,
+        confirmations: usize,
+        cache: EventCache,
+    ) -> Self {
         let inner = RwLock::new(InnerDispatcher {
             enclave_id,
             node_url: node_url.to_string(),
+            confirmations,
             cache,
             sender: None,
             watcher: None,
@@ -129,7 +136,7 @@ impl Dispatcher {
             .await
     }
 
-    pub async fn join_group(&self, signer: Address, gas: u64) -> Result<H256> {
+    pub async fn join_group(&self, signer: Address, gas: u64) -> Result<TransactionReceipt> {
         self.send_report_handshake(signer, gas, "joinGroup").await
     }
 
@@ -149,25 +156,25 @@ impl Dispatcher {
         Ok(tx_hash)
     }
 
-    pub async fn update_mrenclave(&self, signer: Address, gas: u64) -> Result<H256> {
+    pub async fn update_mrenclave(&self, signer: Address, gas: u64) -> Result<TransactionReceipt> {
         self.send_report_handshake(signer, gas, "updateMrenclave")
             .await
     }
 
-    async fn send_report_handshake(&self, signer: Address, gas: u64, method: &str) -> Result<H256> {
+    async fn send_report_handshake(&self, signer: Address, gas: u64, method: &str) -> Result<TransactionReceipt> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         let input = host_input::JoinGroup::new(signer, gas, JOIN_GROUP_CMD);
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
-        let tx_hash = inner
+        let receipt = inner
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .send_report_handshake(&host_output, method)
+            .send_report_handshake(&host_output, method, inner.confirmations)
             .await?;
 
-        Ok(tx_hash)
+        Ok(receipt)
     }
 
     pub async fn send_command(
