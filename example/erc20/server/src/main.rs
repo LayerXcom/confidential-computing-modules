@@ -18,10 +18,11 @@ async fn main() -> io::Result<()> {
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
     let server = Server::new(eid).await.run().await;
+    let server = Arc::new(server);
 
     HttpServer::new(move || {
         App::new()
-            .app_data(server.clone())
+            .data(server.clone())
             .route(
                 "/api/v1/update_mrenclave",
                 web::post().to(handle_update_mrenclave),

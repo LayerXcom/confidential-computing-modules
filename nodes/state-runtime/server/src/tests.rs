@@ -133,6 +133,7 @@ async fn test_multiple_messages() {
     let mut csprng = rand::thread_rng();
 
     let server = Server::new(eid).await.run().await;
+    let server = Arc::new(server);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -221,6 +222,7 @@ async fn test_skip_invalid_event() {
     let mut csprng = rand::thread_rng();
 
     let server = Server::new(eid).await.run().await;
+    let server = Arc::new(server);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -324,6 +326,7 @@ async fn test_node_recovery() {
     let mut csprng = rand::thread_rng();
 
     let server = Server::new(eid).await.run().await;
+    let server = Arc::new(server);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -343,6 +346,7 @@ async fn test_node_recovery() {
 
     // Do not run
     let recovered_server = Arc::new(Server::new(recovered_eid).await);
+    let recovered_server = Arc::new(recovered_server);
 
     let mut recovered_app = test::init_service(
         App::new()
@@ -485,6 +489,7 @@ async fn test_join_group_then_handshake() {
     let mut csprng = rand::thread_rng();
 
     let server1 = Server::new(eid1).await.run().await;
+    let server1 = Arc::new(server1);
     let mut app1 = test::init_service(
         App::new()
             .data(server1.clone())
@@ -501,6 +506,7 @@ async fn test_join_group_then_handshake() {
         .expect("Failed to initialize enclave.");
     let eid2 = enclave2.geteid();
     let server2 = Server::new(eid2).await.run().await;
+    let server2 = Arc::new(server2);
     let mut app2 = test::init_service(
         App::new()
             .data(server2.clone())
@@ -642,6 +648,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     let mut csprng = rand::thread_rng();
 
     let server = Server::new(eid).await.run().await;
+    let server = Arc::new(server);
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
