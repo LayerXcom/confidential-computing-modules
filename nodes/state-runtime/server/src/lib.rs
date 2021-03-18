@@ -17,7 +17,6 @@ pub struct Server {
     pub eth_url: String,
     pub abi_path: String,
     pub bin_path: String,
-    pub confirmations: usize,
     pub sender_address: Address,
     pub dispatcher: Dispatcher,
 }
@@ -40,7 +39,7 @@ impl Server {
         .unwrap();
 
         let cache = EventCache::default();
-        let dispatcher = Dispatcher::new(eid, &eth_url, cache)
+        let dispatcher = Dispatcher::new(eid, &eth_url, confirmations, cache)
             .set_anonify_contract_address(
                 &*FACTORY_ABI_PATH,
                 factory_contract_address,
@@ -59,7 +58,6 @@ impl Server {
             eth_url,
             abi_path: (&*ANONIFY_ABI_PATH.to_str().unwrap()).to_string(),
             bin_path: (&*ANONIFY_BIN_PATH.to_str().unwrap()).to_string(),
-            confirmations,
             sender_address,
             dispatcher,
         }

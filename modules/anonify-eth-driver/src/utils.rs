@@ -8,7 +8,11 @@ use frame_common::traits::Keccak256;
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use std::{fs, path::Path};
-use web3::{contract::Contract, transports::Http, types::Address};
+use web3::{
+    contract::Contract,
+    transports::Http,
+    types::{Address, TransactionReceipt, H256},
+};
 
 /// Define a retry condition of deploying contracts.
 /// If it returns true, retry deploying contracts.
@@ -27,6 +31,36 @@ pub const fn deployer_retry_condition(res: &Result<Address>) -> bool {
             HostError::EcallOutputNotSet => false,
             // error reading abi and bin path
             HostError::IoError(_) => false,
+            _ => true,
+        },
+    }
+}
+
+/// Define a retry condition of sending transactions.
+/// If it returns false, don't need to retry sending transactions.
+pub const fn sender_retry_condition(res: &Result<H256>) -> bool {
+    match res {
+        Ok(_) => false,
+        Err(err) => match err {
+            HostError::Web3ContractError(web3_err) => match web3_err {
+                web3::contract::Error::Abi(_) => false,
+                _ => true,
+            },
+            HostError::EcallOutputNotSet => false,
+            _ => true,
+        },
+    }
+}
+
+pub const fn call_with_conf_retry_condition(res: &Result<TransactionReceipt>) -> bool {
+    match res {
+        Ok(_) => false,
+        Err(err) => match err {
+            HostError::Web3ContractError(web3_err) => match web3_err {
+                web3::contract::Error::Abi(_) => false,
+                _ => true,
+            },
+            HostError::EcallOutputNotSet => false,
             _ => true,
         },
     }

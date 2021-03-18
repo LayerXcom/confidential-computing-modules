@@ -11,7 +11,7 @@ use std::{env, fs, path::Path};
 use web3::{
     contract::{Contract, Options},
     transports::Http,
-    types::{Address, BlockNumber, Filter, FilterBuilder, Log, H256},
+    types::{Address, BlockNumber, Filter, FilterBuilder, Log, TransactionReceipt, H256},
     Web3,
 };
 
@@ -51,7 +51,8 @@ impl Web3Contract {
         &self,
         output: host_output::JoinGroup,
         method: &str,
-    ) -> Result<H256> {
+        confirmations: usize,
+    ) -> Result<TransactionReceipt> {
         let ecall_output = output
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
@@ -61,7 +62,7 @@ impl Web3Contract {
         let gas = output.gas;
 
         self.contract
-            .call(
+            .call_with_confirmations(
                 method,
                 (
                     report,
@@ -72,6 +73,7 @@ impl Web3Contract {
                 ),
                 output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
+                confirmations,
             )
             .await
             .map_err(Into::into)
