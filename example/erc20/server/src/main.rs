@@ -17,10 +17,8 @@ async fn main() -> io::Result<()> {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
-
-    // TODO: Dupulicated Server initialization
-    Server::new(eid).await.run().await;
-    let server = Arc::new(Server::new(eid).await);
+    let server = Server::new(eid).await.run().await;
+    let server = Arc::new(server);
 
     HttpServer::new(move || {
         App::new()

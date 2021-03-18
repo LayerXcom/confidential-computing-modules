@@ -11,7 +11,7 @@ mod tests;
 
 const DEFAULT_GAS: u64 = 5_000_000;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Server {
     pub eid: sgx_enclave_id_t,
     pub eth_url: String,
@@ -65,15 +65,19 @@ impl Server {
         }
     }
 
-    pub async fn run(self) {
+    pub async fn run(mut self) -> Self {
         let sync_time: u64 = env::var("SYNC_BC_TIME")
             .unwrap_or_else(|_| "1000".to_string())
             .parse()
             .expect("Failed to parse SYNC_BC_TIME to u64");
 
-        self.dispatcher
+        let dispatcher = self
+            .dispatcher
             .run(sync_time, self.sender_address, DEFAULT_GAS)
             .await
             .unwrap();
+
+        self.dispatcher = dispatcher;
+        self
     }
 }
