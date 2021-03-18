@@ -1,7 +1,7 @@
 use actix_web::{web, App, HttpServer};
 use frame_host::EnclaveDir;
 use state_runtime_node_server::{handlers::*, Server};
-use std::{env, io, sync::Arc};
+use std::{env, io};
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
@@ -17,10 +17,7 @@ async fn main() -> io::Result<()> {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
-
-    // TODO: Dupulicated Server initialization
-    Server::new(eid).await.run().await;
-    let server = Arc::new(Server::new(eid).await);
+    let server = Server::new(eid).await.run().await;
 
     HttpServer::new(move || {
         App::new()
