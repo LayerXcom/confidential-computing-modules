@@ -29,9 +29,10 @@ async fn test_evaluate_access_policy_by_user_id_field() {
     let mut csprng = rand::thread_rng();
 
     let server = Server::new(eid).await.run().await;
+    let server = Arc::new(server);
     let mut app = test::init_service(
         App::new()
-            .app_data(server.clone())
+            .data(server.clone())
             .route("/api/v1/state", web::post().to(handle_send_command))
             .route("/api/v1/state", web::get().to(handle_get_state))
             .route(
