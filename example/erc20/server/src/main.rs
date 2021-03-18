@@ -1,7 +1,7 @@
 use actix_web::{web, App, HttpServer};
 use frame_host::EnclaveDir;
 use state_runtime_node_server::{handlers::*, Server};
-use std::{env, io};
+use std::{env, io, sync::Arc};
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
