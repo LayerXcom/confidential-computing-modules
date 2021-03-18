@@ -13,7 +13,7 @@ use frame_host::engine::HostEngine;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{fmt::Debug, path::Path, time};
+use std::{fmt::Debug, path::Path, sync::Arc, time};
 use tracing::{error, info};
 use web3::{
     contract::Options,
@@ -21,9 +21,9 @@ use web3::{
 };
 
 /// This dispatcher communicates with a blockchain node.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Dispatcher {
-    inner: RwLock<InnerDispatcher>,
+    inner: Arc<RwLock<InnerDispatcher>>,
 }
 
 #[derive(Debug)]
@@ -45,7 +45,7 @@ impl Dispatcher {
         confirmations: usize,
         cache: EventCache,
     ) -> Self {
-        let inner = RwLock::new(InnerDispatcher {
+        let inner = Arc::new(RwLock::new(InnerDispatcher {
             enclave_id,
             node_url: node_url.to_string(),
             confirmations,
@@ -54,7 +54,7 @@ impl Dispatcher {
             watcher: None,
             #[cfg(feature = "backup-enable")]
             backup: SecretBackup::default(),
-        });
+        }));
 
         Dispatcher { inner }
     }
@@ -105,7 +105,9 @@ impl Dispatcher {
 
     /// - Starting syncing with the blockchain node.
     /// - Joining as the state runtime node.
-    pub async fn run(self, sync_time: u64, signer: Address, gas: u64) -> Result<()> {
+    /// These operations are not mutable so just returning self data type.
+    pub async fn run(self, sync_time: u64, signer: Address, gas: u64) -> Result<Self> {
+        let this = self.clone();
         let tx_hash = self.join_group(signer, gas).await?;
         info!("A transaction hash of join_group: {:?}", tx_hash);
 
@@ -122,7 +124,7 @@ impl Dispatcher {
             });
         });
 
-        Ok(())
+        Ok(this)
     }
 
     pub async fn fetch_events(&self) -> Result<Option<Vec<serde_json::Value>>> {

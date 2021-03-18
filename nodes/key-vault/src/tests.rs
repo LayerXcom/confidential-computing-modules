@@ -50,9 +50,8 @@ async fn test_backup_path_secret() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    // TODO: Dupulicated Server initialization
-    ERC20Server::new(app_eid).await.run().await;
-    let erc20_server = Arc::new(ERC20Server::new(app_eid).await);
+    let erc20_server = ERC20Server::new(app_eid).await.run().await;
+    let erc20_server = Arc::new(erc20_server);
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
@@ -185,9 +184,8 @@ async fn test_recover_without_key_vault() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    // TODO: Dupulicated Server initialization
-    ERC20Server::new(app_eid).await.run().await;
-    let erc20_server = Arc::new(ERC20Server::new(app_eid).await);
+    let erc20_server = ERC20Server::new(app_eid).await.run().await;
+    let erc20_server = Arc::new(erc20_server);
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
@@ -314,9 +312,8 @@ async fn test_manually_backup_all() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    // TODO: Dupulicated Server initialization
-    ERC20Server::new(app_eid).await.run().await;
-    let erc20_server = Arc::new(ERC20Server::new(app_eid).await);
+    let erc20_server = ERC20Server::new(app_eid).await.run().await;
+    let erc20_server = Arc::new(erc20_server);
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
@@ -457,9 +454,8 @@ async fn test_manually_recover_all() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    // TODO: Dupulicated Server initialization
-    ERC20Server::new(app_eid).await.run().await;
-    let erc20_server = Arc::new(ERC20Server::new(app_eid).await);
+   let erc20_server = ERC20Server::new(app_eid).await.run().await;
+   let erc20_server = Arc::new(erc20_server);
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
