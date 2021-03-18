@@ -31,7 +31,7 @@ async fn test_evaluate_access_policy_by_user_id_field() {
     let server = Server::new(eid).await.run().await;
     let mut app = test::init_service(
         App::new()
-            .data(server.clone())
+            .app_data(server.clone())
             .route("/api/v1/state", web::post().to(handle_send_command))
             .route("/api/v1/state", web::get().to(handle_get_state))
             .route(
