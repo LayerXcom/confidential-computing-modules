@@ -346,7 +346,6 @@ async fn test_node_recovery() {
 
     // Do not run
     let recovered_server = Arc::new(Server::new(recovered_eid).await);
-    let recovered_server = Arc::new(recovered_server);
 
     let mut recovered_app = test::init_service(
         App::new()
