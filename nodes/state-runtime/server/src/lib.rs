@@ -1,7 +1,7 @@
 use anonify_eth_driver::{Dispatcher, EventCache};
 use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH};
 use sgx_types::sgx_enclave_id_t;
-use std::{env, str::FromStr, sync::Arc};
+use std::{env, str::FromStr};
 use web3::types::Address;
 
 mod error;
@@ -71,7 +71,8 @@ impl Server {
             .parse()
             .expect("Failed to parse SYNC_BC_TIME to u64");
 
-        let dispatcher = self.dispatcher
+        let dispatcher = self
+            .dispatcher
             .run(sync_time, self.sender_address, DEFAULT_GAS)
             .await
             .unwrap();

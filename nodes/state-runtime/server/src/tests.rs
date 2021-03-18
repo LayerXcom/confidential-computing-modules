@@ -27,9 +27,8 @@ async fn test_evaluate_access_policy_by_user_id_field() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    // TODO: Dupulicated Server initialization
-    Server::new(eid).await.run().await;
-    let server = Arc::new(Server::new(eid).await);
+
+    let server = Server::new(eid).await.run().await;
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -131,9 +130,8 @@ async fn test_multiple_messages() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    // TODO: Dupulicated Server initialization
-    Server::new(eid).await.run().await;
-    let server = Arc::new(Server::new(eid).await);
+
+    let server = Server::new(eid).await.run().await;
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -220,9 +218,8 @@ async fn test_skip_invalid_event() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    // TODO: Dupulicated Server initialization
-    Server::new(eid).await.run().await;
-    let server = Arc::new(Server::new(eid).await);
+
+    let server = Server::new(eid).await.run().await;
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -324,9 +321,8 @@ async fn test_node_recovery() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    // TODO: Dupulicated Server initialization
-    Server::new(eid).await.run().await;
-    let server = Arc::new(Server::new(eid).await);
+
+    let server = Server::new(eid).await.run().await;
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
@@ -486,10 +482,8 @@ async fn test_join_group_then_handshake() {
     let eid1 = enclave1.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    // TODO: Dupulicated Server initialization
-    Server::new(eid1).await.run().await;
-    let server1 = Arc::new(Server::new(eid1).await);
 
+    let server1 = Server::new(eid1).await.run().await;
     let mut app1 = test::init_service(
         App::new()
             .data(server1.clone())
@@ -505,10 +499,7 @@ async fn test_join_group_then_handshake() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid2 = enclave2.geteid();
-    // TODO: Dupulicated Server initialization
-    Server::new(eid2).await.run().await;
-    let server2 = Arc::new(Server::new(eid2).await);
-
+    let server2 = Server::new(eid2).await.run().await;
     let mut app2 = test::init_service(
         App::new()
             .data(server2.clone())
@@ -648,9 +639,8 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    // TODO: Dupulicated Server initialization
-    Server::new(eid).await.run().await;
-    let server = Arc::new(Server::new(eid).await);
+
+    let server = Server::new(eid).await.run().await;
     let mut app = test::init_service(
         App::new()
             .data(server.clone())
