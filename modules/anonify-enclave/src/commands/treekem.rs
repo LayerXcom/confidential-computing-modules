@@ -1,19 +1,16 @@
-use crate::error::Result;
+use super::executor::CommandExecutor;
+use super::plaintext::CommandPlaintext;
 use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{
     crypto::{AccountId, Sha256},
-    state_types::{NotifyState, ReturnState, StateType, UpdatedState, UserCounter},
-    AccessPolicy, TreeKemCiphertext,
+    state_types::StateType,
+    AccessPolicy,
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use serde::{Deserialize, Serialize};
-use std::{
-    marker::PhantomData,
-    string::{String, ToString},
-    vec::Vec,
-};
+use std::marker::PhantomData;
 
 /// A message sender that encrypts commands
 #[derive(Debug, Clone, Default)]
@@ -89,60 +86,6 @@ where
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct CommandPlaintext<AP: AccessPolicy> {
-    #[serde(deserialize_with = "AP::deserialize")]
-    pub access_policy: AP,
-    pub runtime_params: serde_json::Value,
-    pub cmd_name: String,
-    pub counter: UserCounter,
-}
-
-impl<AP> Default for CommandPlaintext<AP>
-where
-    AP: AccessPolicy,
-{
-    fn default() -> Self {
-        Self {
-            access_policy: AP::default(),
-            runtime_params: serde_json::Value::Null,
-            cmd_name: String::default(),
-            counter: UserCounter::default(),
-        }
-    }
-}
-
-impl<AP> CommandPlaintext<AP>
-where
-    AP: AccessPolicy,
-{
-    pub fn new(
-        access_policy: AP,
-        runtime_params: serde_json::Value,
-        cmd_name: impl ToString,
-        counter: UserCounter,
-    ) -> Self {
-        CommandPlaintext {
-            access_policy,
-            runtime_params,
-            cmd_name: cmd_name.to_string(),
-            counter,
-        }
-    }
-
-    pub fn access_policy(&self) -> &AP {
-        &self.access_policy
-    }
-
-    pub fn cmd_name(&self) -> &str {
-        &self.cmd_name
-    }
-
-    pub fn counter(&self) -> UserCounter {
-        self.counter
-    }
-}
-
 /// A message receiver that decrypt commands and make state transition
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct CommandByTreeKemReceiver<AP> {
@@ -202,7 +145,7 @@ where
         if let Some(cmds) = decrypted_cmds {
             // Since the command data is valid for the error at the time of state transition,
             // `user_counter` must be verified and incremented before the state transition.
-            enclave_context.verify_user_counter_increment(cmds.my_account_id, cmds.counter)?;
+            enclave_context.verify_user_counter_increment(cmds.my_account_id(), cmds.counter())?;
             // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
             let state_iter = cmds.state_transition(enclave_context.clone())?;
 
@@ -214,99 +157,5 @@ where
         }
 
         Ok(output)
-    }
-}
-
-/// Command data which make state update
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CommandExecutor<R: RuntimeExecutor<CTX>, CTX: ContextOps<S = StateType>, AP> {
-    my_account_id: AccountId,
-    #[serde(deserialize_with = "R::C::deserialize")]
-    call_kind: R::C,
-    counter: UserCounter,
-    phantom: PhantomData<CTX>,
-    ap: PhantomData<AP>,
-}
-
-impl<R, CTX, AP> CommandExecutor<R, CTX, AP>
-where
-    R: RuntimeExecutor<CTX, S = StateType>,
-    CTX: ContextOps<S = StateType>,
-    AP: AccessPolicy,
-{
-    pub fn new(my_account_id: AccountId, command_plaintext: CommandPlaintext<AP>) -> Result<Self> {
-        let call_kind = R::C::new(
-            command_plaintext.cmd_name(),
-            command_plaintext.runtime_params.clone(),
-        )?;
-
-        Ok(CommandExecutor {
-            my_account_id,
-            call_kind,
-            counter: command_plaintext.counter(),
-            phantom: PhantomData,
-            ap: PhantomData,
-        })
-    }
-
-    pub fn encrypt<GK: GroupKeyOps>(
-        &self,
-        key: &GK,
-        max_mem_size: usize,
-    ) -> Result<TreeKemCiphertext> {
-        // Add padding to fix the ciphertext size of all state types.
-        // The padding works for fixing the ciphertext size so that
-        // other people cannot distinguish what state is encrypted based on the size.
-        fn append_padding(buf: &mut Vec<u8>, max_mem_size: usize) {
-            let padding_size = max_mem_size - buf.len();
-            let padding = vec![0u8; padding_size];
-            buf.extend_from_slice(&padding);
-        }
-
-        let mut buf = bincode::serialize(&self).unwrap(); // must not fail
-        append_padding(&mut buf, max_mem_size);
-        key.encrypt(buf).map_err(Into::into)
-    }
-
-    pub fn decode(bytes: &[u8]) -> Result<Self> {
-        bincode::deserialize(bytes).map_err(Into::into)
-    }
-
-    /// Only if the TEE belongs to the group, you can receive ciphertext and decrypt it,
-    /// otherwise do nothing.
-    pub fn state_transition(
-        self,
-        ctx: CTX,
-    ) -> Result<(
-        impl Iterator<Item = UpdatedState<StateType>>,
-        impl Iterator<Item = Option<NotifyState>>,
-    )> {
-        let stf_res = self.stf_call(ctx)?;
-        Ok((stf_res.0.into_iter(), stf_res.1.into_iter()))
-    }
-
-    fn decrypt<GK: GroupKeyOps>(
-        ciphertext: &TreeKemCiphertext,
-        key: &mut GK,
-    ) -> Result<Option<Self>> {
-        match key.decrypt(ciphertext)? {
-            Some(plaintext) => CommandExecutor::decode(&plaintext[..]).map(Some),
-            None => Ok(None),
-        }
-    }
-
-    fn stf_call(
-        self,
-        ctx: CTX,
-    ) -> Result<(Vec<UpdatedState<StateType>>, Vec<Option<NotifyState>>)> {
-        let res = R::new(ctx).execute(self.call_kind, self.my_account_id)?;
-
-        match res {
-            ReturnState::Updated(updates) => Ok(updates),
-            ReturnState::Get(_) => Err(anyhow!(
-                "Calling state transition function, but the called function is for getting state."
-            )
-            .into()),
-        }
     }
 }
