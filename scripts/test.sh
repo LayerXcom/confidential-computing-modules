@@ -81,7 +81,8 @@ function exec_kv_node_tests() {
   done
 }
 
-exec_kv_node_tests test_backup_path_secret \
+exec_kv_node_tests test_health_check \
+  test_backup_path_secret \
   test_recover_without_key_vault \
   test_manually_backup_all \
   test_manually_recover_all

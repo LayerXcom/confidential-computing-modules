@@ -6,7 +6,7 @@ pub mod handlers;
 #[cfg(test)]
 mod tests;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Server {
     pub eid: sgx_enclave_id_t,
     pub dispatcher: Dispatcher,

@@ -3,19 +3,20 @@ use frame_host::engine::HostEngine;
 use key_vault_ecall_types::cmd::*;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
+use std::sync::Arc;
 
 /// This dispatcher communicates with a mra-tls server.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Dispatcher {
-    inner: RwLock<InnerDispatcher>,
+    inner: Arc<RwLock<InnerDispatcher>>,
 }
 
 impl Dispatcher {
     pub fn new(enclave_id: sgx_enclave_id_t) -> Result<Self> {
-        let inner = RwLock::new(InnerDispatcher {
+        let inner = Arc::new(RwLock::new(InnerDispatcher {
             enclave_id,
             is_healthy: false,
-        });
+        }));
 
         Ok(Dispatcher { inner })
     }
@@ -48,7 +49,7 @@ impl Dispatcher {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct InnerDispatcher {
     enclave_id: sgx_enclave_id_t,
     is_healthy: bool,

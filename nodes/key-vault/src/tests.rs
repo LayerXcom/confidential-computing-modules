@@ -1,5 +1,5 @@
-use crate::{handlers::*, Server as KeyVaultServer};
-use actix_web::{test, web, App};
+use crate::{handlers::handle_health_check, Server as KeyVaultServer};
+use actix_web::{http::StatusCode, test, web, App};
 use anonify_eth_driver::utils::*;
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_config::{ANONIFY_ABI_PATH, FACTORY_ABI_PATH, PJ_ROOT_DIR};
@@ -11,6 +11,40 @@ use serde_json::json;
 use state_runtime_node_server::{handlers::*, Server as ERC20Server};
 use std::{env, fs, path::Path, str::FromStr, sync::Arc};
 use web3::{contract::Options, types::Address};
+
+#[actix_rt::test]
+async fn test_health_check() {
+    set_env_vars();
+    set_server_env_vars();
+
+    let key_vault_server_enclave = EnclaveDir::new()
+        .init_enclave(true)
+        .expect("Failed to initialize enclave.");
+    let key_vault_server_eid = key_vault_server_enclave.geteid();
+
+    let server = KeyVaultServer::new(key_vault_server_eid);
+    let unhealthy_server = Arc::new(server.clone());
+    let mut unhealthy_app = test::init_service(
+        App::new()
+            .data(unhealthy_server.clone())
+            .route("/api/v1/health", web::get().to(handle_health_check)),
+    )
+    .await;
+    let req = test::TestRequest::get().uri("/api/v1/health").to_request();
+    let resp = test::call_service(&mut unhealthy_app, req).await;
+    assert_eq!(resp.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+    let healthy_server = Arc::new(server.run().await);
+    let mut healthy_app = test::init_service(
+        App::new()
+            .data(healthy_server.clone())
+            .route("/api/v1/health", web::get().to(handle_health_check)),
+    )
+    .await;
+    let req = test::TestRequest::get().uri("/api/v1/health").to_request();
+    let resp = test::call_service(&mut healthy_app, req).await;
+    assert_eq!(resp.status(), StatusCode::OK);
+}
 
 #[actix_rt::test]
 async fn test_backup_path_secret() {
