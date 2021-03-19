@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate lazy_static;
-use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
 use eth_deployer::EthDeployer;
 use ethabi::Contract as ContractABI;
@@ -9,7 +8,7 @@ use frame_common::{
     state_types::NotifyState,
     traits::*,
 };
-use frame_config::{ABI_PATH, BIN_PATH};
+use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH, FACTORY_BIN_PATH};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::{Approved, U64};
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
@@ -24,29 +23,26 @@ use web3::{
     Web3,
 };
 
-const CONFIRMATIONS: usize = 0;
 const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
+const CONFIRMATIONS: usize = 0;
 
 pub static ETH_URL: Lazy<String> =
     Lazy::new(|| env::var("ETH_URL").unwrap_or("http://172.16.0.2:8545".to_string()));
 
 pub async fn get_enclave_encryption_key(
-    contract_addr: &str,
-    dispatcher: &Dispatcher<EthSender, EventWatcher>,
+    contract_addr: Address,
+    dispatcher: &Dispatcher,
 ) -> SodiumPubKey {
-    let enclave_encryption_key = dispatcher
-        .get_enclave_encryption_key(GET_ENCLAVE_ENCRYPTION_KEY_CMD)
-        .unwrap();
+    let enclave_encryption_key = dispatcher.get_enclave_encryption_key().unwrap();
     let transport = Http::new(&*ETH_URL).unwrap();
     let web3 = Web3::new(transport);
     let web3_conn = web3.eth();
 
-    let address = Address::from_str(contract_addr).unwrap();
-    let f = File::open(&*ABI_PATH).unwrap();
+    let f = File::open(&*ANONIFY_ABI_PATH).unwrap();
     let abi = ContractABI::load(BufReader::new(f)).unwrap();
 
-    let query_enclave_encryption_key: Vec<u8> = Contract::new(web3_conn, address, abi)
+    let query_enclave_encryption_key: Vec<u8> = Contract::new(web3_conn, contract_addr, abi)
         .query(
             "getEncryptionKey",
             enclave_encryption_key.to_bytes(),
@@ -75,7 +71,6 @@ async fn test_integration_eth_construct() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -83,42 +78,49 @@ async fn test_integration_eth_construct() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*ABI_PATH,
-            &*BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-    dispatcher
-        .set_contract_address(&contract_addr, &*ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ABI_PATH,
-            JOIN_GROUP_CMD,
+            factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
 
-    // Get handshake from contract
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+        .set_anonify_contract_address(
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
         .await
         .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("factory contract address: {}", factory_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+
+    // Get handshake from contract
+    dispatcher.fetch_events().await.unwrap();
 
     // Init state
     let total_supply: u64 = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -130,22 +132,14 @@ async fn test_integration_eth_construct() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(
-            encrypted_command,
-            deployer_addr.clone(),
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
         .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     let req = json!({
         "access_policy": COMMON_ACCESS_POLICY.clone(),
@@ -155,7 +149,7 @@ async fn test_integration_eth_construct() {
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     // Get state from enclave
-    let owner_account_id = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let owner_account_id = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": my_access_policy.clone(),
@@ -164,7 +158,7 @@ async fn test_integration_eth_construct() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let my_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let my_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": COMMON_ACCESS_POLICY.clone(),
@@ -173,7 +167,7 @@ async fn test_integration_eth_construct() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let actual_total_supply = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let actual_total_supply = dispatcher.get_state(encrypted_req).unwrap();
     println!("owner_account_id: {:?}", owner_account_id);
     assert_eq!(
         owner_account_id,
@@ -195,7 +189,6 @@ async fn test_auto_notification() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -203,41 +196,48 @@ async fn test_auto_notification() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*ABI_PATH,
-            &*BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-    dispatcher
-        .set_contract_address(&contract_addr, &*ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ABI_PATH,
-            JOIN_GROUP_CMD,
+            factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
 
-    // Get handshake from contract
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+        .set_anonify_contract_address(
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
         .await
         .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("factory contract address: {}", factory_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+
+    // Get handshake from contract
+    dispatcher.fetch_events().await.unwrap();
 
     // Init state
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let total_supply: u64 = 100;
     let req = json!({
         "access_policy": my_access_policy.clone(),
@@ -250,12 +250,7 @@ async fn test_auto_notification() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(
-            encrypted_command,
-            deployer_addr.clone(),
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
         .await
         .unwrap();
 
@@ -264,16 +259,10 @@ async fn test_auto_notification() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    dispatcher
-        .register_notification(encrypted_req, REGISTER_NOTIFICATION_CMD)
-        .unwrap();
+    dispatcher.register_notification(encrypted_req).unwrap();
 
     // Get logs from contract and update state inside enclave.
-    let updated_state = dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap()
-        .unwrap();
+    let updated_state = dispatcher.fetch_events().await.unwrap().unwrap();
     let notified_state: Vec<NotifyState> = updated_state
         .into_iter()
         .map(|e| serde_json::from_value(e).unwrap())
@@ -305,17 +294,13 @@ async fn test_auto_notification() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
+        .send_command(encrypted_command, None, deployer_addr, gas)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    let updated_state = dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap()
-        .unwrap();
+    let updated_state = dispatcher.fetch_events().await.unwrap().unwrap();
     let notified_state: Vec<NotifyState> = updated_state
         .into_iter()
         .map(|e| serde_json::from_value(e).unwrap())
@@ -346,7 +331,6 @@ async fn test_integration_eth_transfer() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -354,42 +338,49 @@ async fn test_integration_eth_transfer() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*ABI_PATH,
-            &*BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-    dispatcher
-        .set_contract_address(&contract_addr, &*ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ABI_PATH,
-            JOIN_GROUP_CMD,
+            factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
 
-    // Get handshake from contract
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+        .set_anonify_contract_address(
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
         .await
         .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("factory contract address: {}", factory_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+
+    // Get handshake from contract
+    dispatcher.fetch_events().await.unwrap();
 
     // Init state
     let total_supply: u64 = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
 
     let req = json!({
         "access_policy": my_access_policy.clone(),
@@ -402,22 +393,14 @@ async fn test_integration_eth_transfer() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(
-            encrypted_command,
-            deployer_addr.clone(),
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
         .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     // Get state from enclave
     let req = json!({
@@ -427,7 +410,7 @@ async fn test_integration_eth_transfer() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let my_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let my_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
@@ -436,7 +419,7 @@ async fn test_integration_eth_transfer() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let other_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
@@ -445,7 +428,7 @@ async fn test_integration_eth_transfer() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let third_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let third_state = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, 0);
     assert_eq!(third_state, 0);
@@ -465,16 +448,13 @@ async fn test_integration_eth_transfer() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
+        .send_command(encrypted_command, None, deployer_addr, gas)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     // Check the updated states
     let req = json!({
@@ -484,7 +464,7 @@ async fn test_integration_eth_transfer() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let my_updated_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let my_updated_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
@@ -493,7 +473,7 @@ async fn test_integration_eth_transfer() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_updated_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let other_updated_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
@@ -502,7 +482,7 @@ async fn test_integration_eth_transfer() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let third_updated_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let third_updated_state = dispatcher.get_state(encrypted_req).unwrap();
 
     assert_eq!(my_updated_state, 70);
     assert_eq!(other_updated_state, amount);
@@ -522,7 +502,6 @@ async fn test_key_rotation() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -530,55 +509,59 @@ async fn test_key_rotation() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*ABI_PATH,
-            &*BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-    dispatcher
-        .set_contract_address(&contract_addr, &*ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ABI_PATH,
-            JOIN_GROUP_CMD,
+            factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
 
-    // Get handshake from contract
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+        .set_anonify_contract_address(
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
         .await
         .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("factory contract address: {}", factory_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+
+    // Get handshake from contract
+    dispatcher.fetch_events().await.unwrap();
 
     // Send handshake
     let receipt = dispatcher
-        .handshake(deployer_addr.clone(), gas, SEND_HANDSHAKE_CMD)
+        .handshake(deployer_addr.clone(), gas)
         .await
         .unwrap();
     println!("handshake receipt: {:?}", receipt);
 
     // Get handshake from contract
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     // init state
     let total_supply: u64 = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -590,21 +573,13 @@ async fn test_key_rotation() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(
-            encrypted_command,
-            deployer_addr.clone(),
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
         .await
         .unwrap();
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     // Get state from enclave
     let req = json!({
@@ -614,7 +589,7 @@ async fn test_key_rotation() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let my_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let my_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
@@ -623,7 +598,7 @@ async fn test_key_rotation() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let other_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
@@ -632,7 +607,7 @@ async fn test_key_rotation() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let third_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let third_state = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, 0);
     assert_eq!(third_state, 0);
@@ -650,7 +625,6 @@ async fn test_integration_eth_approve() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -658,42 +632,48 @@ async fn test_integration_eth_approve() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*ABI_PATH,
-            &*BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-    dispatcher
-        .set_contract_address(&contract_addr, &*ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ABI_PATH,
-            JOIN_GROUP_CMD,
+            factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
 
-    // Get handshake from contract
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+        .set_anonify_contract_address(
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
         .await
         .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("factory contract address: {}", factory_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+    // Get handshake from contract
+    dispatcher.fetch_events().await.unwrap();
 
     // Init state
     let total_supply = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -705,22 +685,14 @@ async fn test_integration_eth_approve() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(
-            encrypted_command,
-            deployer_addr.clone(),
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
         .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     let spender = other_access_policy.into_account_id();
     // Get state from enclave
@@ -733,7 +705,7 @@ async fn test_integration_eth_approve() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let my_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let my_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
@@ -744,7 +716,7 @@ async fn test_integration_eth_approve() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let other_state = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(my_state, 0);
     assert_eq!(other_state, 0);
 
@@ -762,16 +734,13 @@ async fn test_integration_eth_approve() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
+        .send_command(encrypted_command, None, deployer_addr, gas)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     // Check the updated states
     let req = json!({
@@ -783,7 +752,7 @@ async fn test_integration_eth_approve() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let my_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let my_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
@@ -794,7 +763,7 @@ async fn test_integration_eth_approve() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_state = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let other_state = dispatcher.get_state(encrypted_req).unwrap();
 
     assert_eq!(my_state, amount);
     assert_eq!(other_state, 0);
@@ -813,7 +782,6 @@ async fn test_integration_eth_transfer_from() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -821,42 +789,49 @@ async fn test_integration_eth_transfer_from() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*ABI_PATH,
-            &*BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-    dispatcher
-        .set_contract_address(&contract_addr, &*ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ABI_PATH,
-            JOIN_GROUP_CMD,
+            factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
 
-    // Get handshake from contract
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+        .set_anonify_contract_address(
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
         .await
         .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("factory contract address: {}", factory_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+
+    // Get handshake from contract
+    dispatcher.fetch_events().await.unwrap();
 
     // Init state
     let total_supply: u64 = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -868,22 +843,14 @@ async fn test_integration_eth_transfer_from() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(
-            encrypted_command,
-            deployer_addr.clone(),
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
         .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     // Get initial state from enclave
     let req = json!({
@@ -893,7 +860,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let my_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let my_state_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
@@ -902,7 +869,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let other_state_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
@@ -911,7 +878,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let third_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let third_state_balance = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(my_state_balance, 100);
     assert_eq!(other_state_balance, 0);
     assert_eq!(third_state_balance, 0);
@@ -926,7 +893,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let my_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let my_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
@@ -937,7 +904,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let other_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
@@ -948,7 +915,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let third_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let third_state_approved = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(my_state_approved, 0);
     assert_eq!(other_state_approved, 0);
     assert_eq!(third_state_approved, 0);
@@ -967,21 +934,13 @@ async fn test_integration_eth_transfer_from() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(
-            encrypted_command,
-            deployer_addr.clone(),
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     // Check the updated states
     let req = json!({
@@ -991,7 +950,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let my_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let my_state_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
@@ -1000,7 +959,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let other_state_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
@@ -1009,7 +968,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let third_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let third_state_balance = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(my_state_balance, 100);
     assert_eq!(other_state_balance, 0);
     assert_eq!(third_state_balance, 0);
@@ -1023,7 +982,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let my_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let my_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
@@ -1034,7 +993,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let other_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
@@ -1045,7 +1004,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let third_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let third_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     assert_eq!(my_state_approved, amount);
     assert_eq!(other_state_approved, 0);
@@ -1068,16 +1027,13 @@ async fn test_integration_eth_transfer_from() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
+        .send_command(encrypted_command, None, deployer_addr, gas)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     // Check the final states
     let req = json!({
@@ -1087,7 +1043,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let my_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let my_state_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
@@ -1096,7 +1052,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let other_state_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
@@ -1105,7 +1061,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let third_state_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let third_state_balance = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(my_state_balance, 80);
     assert_eq!(other_state_balance, 0);
     assert_eq!(third_state_balance, 20);
@@ -1119,7 +1075,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let my_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let my_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
@@ -1130,7 +1086,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let other_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": third_access_policy.clone(),
@@ -1141,7 +1097,7 @@ async fn test_integration_eth_transfer_from() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let third_state_approved = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let third_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     assert_eq!(my_state_approved, 10);
     assert_eq!(other_state_approved, 0);
@@ -1160,7 +1116,6 @@ async fn test_integration_eth_mint() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -1168,42 +1123,49 @@ async fn test_integration_eth_mint() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*ABI_PATH,
-            &*BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-    dispatcher
-        .set_contract_address(&contract_addr, &*ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ABI_PATH,
-            JOIN_GROUP_CMD,
+            factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
 
-    // Get handshake from contract
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+        .set_anonify_contract_address(
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
         .await
         .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("factory contract address: {}", factory_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+
+    // Get handshake from contract
+    dispatcher.fetch_events().await.unwrap();
 
     // Init state
     let total_supply = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -1215,22 +1177,14 @@ async fn test_integration_eth_mint() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(
-            encrypted_command,
-            deployer_addr.clone(),
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
         .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     // transit state
     let amount = 50;
@@ -1247,17 +1201,14 @@ async fn test_integration_eth_mint() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
+        .send_command(encrypted_command, None, deployer_addr, gas)
         .await
         .unwrap();
 
     println!("minted state receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     let req = json!({
         "access_policy": COMMON_ACCESS_POLICY.clone(),
@@ -1267,7 +1218,7 @@ async fn test_integration_eth_mint() {
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     // Check the final states
-    let actual_total_supply = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let actual_total_supply = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": my_access_policy.clone(),
@@ -1276,7 +1227,7 @@ async fn test_integration_eth_mint() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let owner_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let owner_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": other_access_policy.clone(),
@@ -1285,7 +1236,7 @@ async fn test_integration_eth_mint() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let other_balance = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(actual_total_supply, 150);
     assert_eq!(owner_balance, 100);
     assert_eq!(other_balance, amount);
@@ -1303,7 +1254,6 @@ async fn test_integration_eth_burn() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let dispatcher = Dispatcher::<EthSender, EventWatcher>::new(eid, &*ETH_URL, cache).unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -1311,42 +1261,49 @@ async fn test_integration_eth_burn() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let contract_addr = deployer
+    let factory_contract_addr = deployer
         .deploy(
-            &*ABI_PATH,
-            &*BIN_PATH,
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
             deployer_addr.clone(),
         )
         .await
         .unwrap();
-    dispatcher
-        .set_contract_address(&contract_addr, &*ABI_PATH)
-        .unwrap();
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("deployed contract account_id: {}", contract_addr);
-
-    dispatcher
-        .join_group(
+    let tx_hash = deployer
+        .deploy_anonify_by_factory(
+            &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
-            &contract_addr,
-            &*ABI_PATH,
-            JOIN_GROUP_CMD,
+            factory_contract_addr,
+            CONFIRMATIONS,
         )
         .await
         .unwrap();
 
-    // Get handshake from contract
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+        .set_anonify_contract_address(
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
         .await
         .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("factory contract address: {}", factory_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
+
+    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+
+    // Get handshake from contract
+    dispatcher.fetch_events().await.unwrap();
 
     // Init state
     let total_supply = 100;
-    let pubkey = get_enclave_encryption_key(&contract_addr, &dispatcher).await;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
     let req = json!({
         "access_policy": my_access_policy.clone(),
         "runtime_params": {
@@ -1358,22 +1315,14 @@ async fn test_integration_eth_burn() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(
-            encrypted_command,
-            deployer_addr.clone(),
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
         .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     // Send a transaction to contract
     let amount = 30;
@@ -1390,21 +1339,13 @@ async fn test_integration_eth_burn() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(
-            encrypted_command,
-            deployer_addr.clone(),
-            gas,
-            SEND_COMMAND_CMD,
-        )
+        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     // Send a transaction to contract
     let amount = 20;
@@ -1419,16 +1360,13 @@ async fn test_integration_eth_burn() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, deployer_addr, gas, SEND_COMMAND_CMD)
+        .send_command(encrypted_command, None, deployer_addr, gas)
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
-        .await
-        .unwrap();
+    dispatcher.fetch_events().await.unwrap();
 
     let req = json!({
         "access_policy": COMMON_ACCESS_POLICY.clone(),
@@ -1438,7 +1376,7 @@ async fn test_integration_eth_burn() {
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     // Check the final states
-    let actual_total_supply = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let actual_total_supply = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": my_access_policy,
@@ -1447,7 +1385,7 @@ async fn test_integration_eth_burn() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let owner_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let owner_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
         "access_policy": other_access_policy,
@@ -1456,7 +1394,7 @@ async fn test_integration_eth_burn() {
     });
     let encrypted_req =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_balance = dispatcher.get_state(encrypted_req, GET_STATE_CMD).unwrap();
+    let other_balance = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(actual_total_supply.as_u64().unwrap(), 80); // 100 - 20(burn)
     assert_eq!(owner_balance, 70); // 100 - 30(transfer)
     assert_eq!(other_balance, 10); // 30 - 20(burn)

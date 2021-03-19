@@ -48,17 +48,35 @@ pub static BUILD_DIR: Lazy<PathBuf> = Lazy::new(|| {
     build_dir
 });
 
-pub static ABI_PATH: Lazy<PathBuf> = Lazy::new(|| {
+pub static ANONIFY_ABI_PATH: Lazy<PathBuf> = Lazy::new(|| {
     let abi_path_from_root = env::var("ABI_PATH").expect("ABI_PATH is not set");
     let mut abi_path = PJ_ROOT_DIR.clone();
     abi_path.push(abi_path_from_root);
+    abi_path.push("Anonify.abi");
     abi_path
 });
 
-pub static BIN_PATH: Lazy<PathBuf> = Lazy::new(|| {
+pub static ANONIFY_BIN_PATH: Lazy<PathBuf> = Lazy::new(|| {
     let bin_path_from_root = env::var("BIN_PATH").expect("BIN_PATH is not set");
     let mut bin_path = PJ_ROOT_DIR.clone();
     bin_path.push(bin_path_from_root);
+    bin_path.push("Anonify.bin");
+    bin_path
+});
+
+pub static FACTORY_ABI_PATH: Lazy<PathBuf> = Lazy::new(|| {
+    let abi_path_from_root = env::var("ABI_PATH").expect("ABI_PATH is not set");
+    let mut abi_path = PJ_ROOT_DIR.clone();
+    abi_path.push(abi_path_from_root);
+    abi_path.push("DeployAnonify.abi");
+    abi_path
+});
+
+pub static FACTORY_BIN_PATH: Lazy<PathBuf> = Lazy::new(|| {
+    let bin_path_from_root = env::var("BIN_PATH").expect("BIN_PATH is not set");
+    let mut bin_path = PJ_ROOT_DIR.clone();
+    bin_path.push(bin_path_from_root);
+    bin_path.push("DeployAnonify.bin");
     bin_path
 });
 

@@ -8,35 +8,58 @@ use frame_common::{
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
-use frame_sodium::SodiumCiphertext;
 use serde::{Deserialize, Serialize};
-use std::{marker::PhantomData, vec::Vec, time};
+use std::{
+    marker::PhantomData,
+    string::{String, ToString},
+    vec::Vec,
+};
 use log::debug;
 
 /// A message sender that encrypts commands
 #[derive(Debug, Clone, Default)]
 pub struct CmdSender<AP: AccessPolicy> {
-    ecall_input: input::Command<AP>,
+    command_plaintext: CommandPlaintext<AP>,
+    user_id: Option<AccountId>,
 }
 
 impl<AP> EnclaveEngine for CmdSender<AP>
 where
     AP: AccessPolicy,
 {
-    type EI = SodiumCiphertext;
+    type EI = input::Command;
     type EO = output::Command;
 
-    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn decrypt<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(ciphertext)?;
-        let ecall_input = serde_json::from_slice(&buf[..])?;
-        Ok(Self { ecall_input })
+        let buf = enclave_context.decrypt(ecall_input.ciphertext())?;
+        let command_plaintext = serde_json::from_slice(&buf[..])?;
+
+        Ok(Self {
+            command_plaintext,
+            user_id: ecall_input.user_id(),
+        })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
-        self.ecall_input.access_policy().verify()
+        if self.command_plaintext.access_policy().verify().is_err() {
+            return Err(anyhow!("Failed to verify access policy"));
+        }
+
+        if let Some(user_id_for_verify) = self.user_id {
+            let user_id = self.command_plaintext.access_policy().into_account_id();
+            if user_id != user_id_for_verify {
+                return Err(anyhow!(
+                    "Invalid user_id. user_id in the ciphertext: {:?}, user_id for verification: {:?}",
+                    user_id,
+                    user_id_for_verify
+                ));
+            }
+        }
+
+        Ok(())
     }
 
     fn handle<R, C>(self, enclave_context: &C, max_mem_size: usize) -> anyhow::Result<Self::EO>
@@ -54,11 +77,11 @@ where
         // ratchet sender's app keychain per tx.
         group_key.sender_ratchet(roster_idx as usize)?;
 
-        let my_account_id = self.ecall_input.access_policy().into_account_id();
+        let my_account_id = self.command_plaintext.access_policy().into_account_id();
 
         let st4 = time::SystemTime::now();
         debug!("########## st4: {:?}", st4);
-        let ciphertext = Commands::<R, C, AP>::new(my_account_id, self.ecall_input)?
+        let ciphertext = CommandExecutor::<R, C, AP>::new(my_account_id, self.command_plaintext)?
             .encrypt(group_key, max_mem_size)?;
 
         let msg = Sha256::hash_for_attested_tx(
@@ -74,6 +97,60 @@ where
         let command_output = output::Command::new(ciphertext, enclave_sig.0, enclave_sig.1);
 
         Ok(command_output)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct CommandPlaintext<AP: AccessPolicy> {
+    #[serde(deserialize_with = "AP::deserialize")]
+    pub access_policy: AP,
+    pub runtime_params: serde_json::Value,
+    pub cmd_name: String,
+    pub counter: UserCounter,
+}
+
+impl<AP> Default for CommandPlaintext<AP>
+where
+    AP: AccessPolicy,
+{
+    fn default() -> Self {
+        Self {
+            access_policy: AP::default(),
+            runtime_params: serde_json::Value::Null,
+            cmd_name: String::default(),
+            counter: UserCounter::default(),
+        }
+    }
+}
+
+impl<AP> CommandPlaintext<AP>
+where
+    AP: AccessPolicy,
+{
+    pub fn new(
+        access_policy: AP,
+        runtime_params: serde_json::Value,
+        cmd_name: impl ToString,
+        counter: UserCounter,
+    ) -> Self {
+        CommandPlaintext {
+            access_policy,
+            runtime_params,
+            cmd_name: cmd_name.to_string(),
+            counter,
+        }
+    }
+
+    pub fn access_policy(&self) -> &AP {
+        &self.access_policy
+    }
+
+    pub fn cmd_name(&self) -> &str {
+        &self.cmd_name
+    }
+
+    pub fn counter(&self) -> UserCounter {
+        self.counter
     }
 }
 
@@ -140,7 +217,7 @@ where
         debug!("########## rt10: {:?}", rt10);
         let mut output = output::ReturnNotifyState::default();
         let decrypted_cmds =
-            Commands::<R, C, AP>::decrypt(self.ecall_input.ciphertext(), group_key)?;
+            CommandExecutor::<R, C, AP>::decrypt(self.ecall_input.ciphertext(), group_key)?;
         if let Some(cmds) = decrypted_cmds {
             let rt11 = std::time::SystemTime::now();
             debug!("########## rt11: {:?}", rt11);
@@ -165,7 +242,7 @@ where
 
 /// Command data which make state update
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps<S = StateType>, AP> {
+pub struct CommandExecutor<R: RuntimeExecutor<CTX>, CTX: ContextOps<S = StateType>, AP> {
     my_account_id: AccountId,
     #[serde(deserialize_with = "R::C::deserialize")]
     call_kind: R::C,
@@ -174,19 +251,22 @@ pub struct Commands<R: RuntimeExecutor<CTX>, CTX: ContextOps<S = StateType>, AP>
     ap: PhantomData<AP>,
 }
 
-impl<R, CTX, AP> Commands<R, CTX, AP>
+impl<R, CTX, AP> CommandExecutor<R, CTX, AP>
 where
     R: RuntimeExecutor<CTX, S = StateType>,
     CTX: ContextOps<S = StateType>,
     AP: AccessPolicy,
 {
-    pub fn new(my_account_id: AccountId, ecall_input: input::Command<AP>) -> Result<Self> {
-        let call_kind = R::C::new(ecall_input.cmd_name(), ecall_input.runtime_params.clone())?;
+    pub fn new(my_account_id: AccountId, command_plaintext: CommandPlaintext<AP>) -> Result<Self> {
+        let call_kind = R::C::new(
+            command_plaintext.cmd_name(),
+            command_plaintext.runtime_params.clone(),
+        )?;
 
-        Ok(Commands {
+        Ok(CommandExecutor {
             my_account_id,
             call_kind,
-            counter: ecall_input.counter(),
+            counter: command_plaintext.counter(),
             phantom: PhantomData,
             ap: PhantomData,
         })
@@ -226,7 +306,7 @@ where
 
     fn decrypt<GK: GroupKeyOps>(ciphertext: &Ciphertext, key: &mut GK) -> Result<Option<Self>> {
         match key.decrypt(ciphertext)? {
-            Some(plaintext) => Commands::decode(&plaintext[..]).map(Some),
+            Some(plaintext) => CommandExecutor::decode(&plaintext[..]).map(Some),
             None => Ok(None),
         }
     }

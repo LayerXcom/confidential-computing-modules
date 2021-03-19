@@ -1,9 +1,5 @@
 use crate::bincode;
-use crate::localstd::{
-    fmt, str,
-    string::{String, ToString},
-    vec::Vec,
-};
+use crate::localstd::{fmt, str, string::String, vec::Vec};
 use crate::serde::{
     de::{self, Error, SeqAccess},
     ser::SerializeSeq,
@@ -12,68 +8,39 @@ use crate::serde::{
 use crate::serde_bytes;
 use crate::serde_json;
 use frame_common::{
-    crypto::{Ciphertext, ExportHandshake},
+    crypto::{AccountId, Ciphertext, ExportHandshake},
     state_types::{StateCounter, StateType, UserCounter},
     traits::AccessPolicy,
     EcallInput, EcallOutput,
 };
-use frame_sodium::SodiumPubKey;
+use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 
 pub mod input {
     use super::*;
 
-    #[derive(Debug, Clone, Deserialize, Serialize)]
+    #[derive(Debug, Clone, Deserialize, Serialize, Default)]
     #[serde(crate = "crate::serde")]
-    pub struct Command<AP: AccessPolicy> {
-        #[serde(deserialize_with = "AP::deserialize")]
-        pub access_policy: AP,
-        pub runtime_params: serde_json::Value,
-        pub cmd_name: String,
-        pub counter: UserCounter,
+    pub struct Command {
+        ciphertext: SodiumCiphertext,
+        user_id: Option<AccountId>,
     }
 
-    impl<AP> Default for Command<AP>
-    where
-        AP: AccessPolicy,
-    {
-        fn default() -> Self {
+    impl EcallInput for Command {}
+
+    impl Command {
+        pub fn new(ciphertext: SodiumCiphertext, user_id: Option<AccountId>) -> Self {
             Self {
-                access_policy: AP::default(),
-                runtime_params: serde_json::Value::Null,
-                cmd_name: String::default(),
-                counter: UserCounter::default(),
-            }
-        }
-    }
-
-    impl<AP> Command<AP>
-    where
-        AP: AccessPolicy,
-    {
-        pub fn new(
-            access_policy: AP,
-            runtime_params: serde_json::Value,
-            cmd_name: impl ToString,
-            counter: UserCounter,
-        ) -> Self {
-            Command {
-                access_policy,
-                runtime_params,
-                cmd_name: cmd_name.to_string(),
-                counter,
+                ciphertext,
+                user_id,
             }
         }
 
-        pub fn access_policy(&self) -> &AP {
-            &self.access_policy
+        pub fn ciphertext(&self) -> &SodiumCiphertext {
+            &self.ciphertext
         }
 
-        pub fn cmd_name(&self) -> &str {
-            &self.cmd_name
-        }
-
-        pub fn counter(&self) -> UserCounter {
-            self.counter
+        pub fn user_id(&self) -> Option<AccountId> {
+            self.user_id
         }
     }
 

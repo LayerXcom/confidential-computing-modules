@@ -150,7 +150,7 @@ impl EnclaveKey {
         Ok(sig)
     }
 
-    pub fn decrypt(&self, ciphertext: SodiumCiphertext) -> Result<Vec<u8>> {
+    pub fn decrypt(&self, ciphertext: &SodiumCiphertext) -> Result<Vec<u8>> {
         let dec_key = self
             .decryption_privkey
             .as_ref()

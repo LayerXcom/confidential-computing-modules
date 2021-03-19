@@ -15,33 +15,9 @@ use reqwest::Client;
 use serde_json::json;
 use std::path::PathBuf;
 
-pub(crate) fn deploy(state_runtime_url: String) -> Result<()> {
-    let res = Client::new()
-        .post(&format!("{}/api/v1/deploy", &state_runtime_url))
-        .send()?
-        .text()?;
-
-    println!("Deployed Contract address: {}", res);
-    Ok(())
-}
-
-pub(crate) fn join_group(state_runtime_url: String, contract_address: String) -> Result<()> {
-    let req = state_runtime_node_api::join_group::post::Request { contract_address };
-    let res = Client::new()
-        .post(&format!("{}/api/v1/join_group", &state_runtime_url))
-        .json(&req)
-        .send()?
-        .text()?;
-
-    println!("Transaction hash: {:?}", res);
-    Ok(())
-}
-
-pub(crate) fn register_report(state_runtime_url: String, contract_address: String) -> Result<()> {
-    let req = state_runtime_node_api::register_report::post::Request { contract_address };
+pub(crate) fn register_report(state_runtime_url: String) -> Result<()> {
     let res = Client::new()
         .post(&format!("{}/api/v1/register_report", &state_runtime_url))
-        .json(&req)
         .send()?
         .text()?;
 
@@ -49,11 +25,9 @@ pub(crate) fn register_report(state_runtime_url: String, contract_address: Strin
     Ok(())
 }
 
-pub(crate) fn update_mrenclave(state_runtime_url: String, contract_address: String) -> Result<()> {
-    let req = state_runtime_node_api::update_mrenclave::post::Request { contract_address };
+pub(crate) fn update_mrenclave(state_runtime_url: String) -> Result<()> {
     let res = Client::new()
         .post(&format!("{}/api/v1/update_mrenclave", &state_runtime_url))
-        .json(&req)
         .send()?
         .text()?;
 
@@ -432,32 +406,6 @@ where
         .text()?;
 
     println!("Current State: {:?}", res);
-    Ok(())
-}
-
-pub(crate) fn start_sync_bc(state_runtime_url: String) -> Result<()> {
-    Client::new()
-        .get(&format!("{}/api/v1/start_sync_bc", &state_runtime_url))
-        .send()?
-        .text()?;
-
-    Ok(())
-}
-
-pub(crate) fn set_contract_address(
-    state_runtime_url: String,
-    contract_address: String,
-) -> Result<()> {
-    let req = state_runtime_node_api::contract_addr::post::Request::new(contract_address);
-    Client::new()
-        .get(&format!(
-            "{}/api/v1/set_contract_address",
-            &state_runtime_url
-        ))
-        .json(&req)
-        .send()?
-        .text()?;
-
     Ok(())
 }
 
