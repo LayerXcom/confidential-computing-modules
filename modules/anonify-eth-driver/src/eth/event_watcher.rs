@@ -6,10 +6,7 @@ use crate::{
     workflow::*,
 };
 use ethabi::{decode, Event, EventParam, Hash, ParamType};
-use frame_common::{
-    crypto::{Ciphertext, ExportHandshake},
-    state_types::StateCounter,
-};
+use frame_common::{crypto::ExportHandshake, state_types::StateCounter, TreeKemCiphertext};
 use frame_host::engine::HostEngine;
 use sgx_types::sgx_enclave_id_t;
 use std::{cmp::Ordering, fmt};

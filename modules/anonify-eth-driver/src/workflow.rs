@@ -1,7 +1,8 @@
 use anonify_ecall_types::*;
 use frame_common::{
-    crypto::{AccountId, Ciphertext, ExportHandshake},
+    crypto::{AccountId, ExportHandshake},
     state_types::StateCounter,
+    TreeKemCiphertext,
 };
 use frame_host::engine::*;
 use frame_sodium::SodiumCiphertext;
@@ -9,13 +10,13 @@ use web3::types::Address;
 
 pub const OUTPUT_MAX_LEN: usize = 2048;
 
-pub struct CommandWorkflow;
+pub struct CommandByTreeKemWorkflow;
 
-impl HostEngine for CommandWorkflow {
-    type HI = host_input::Command;
+impl HostEngine for CommandByTreeKemWorkflow {
+    type HI = host_input::CommandByTreeKem;
     type EI = input::Command;
-    type EO = output::Command;
-    type HO = host_output::Command;
+    type EO = output::CommandByTreeKem;
+    type HO = host_output::CommandByTreeKem;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
 }
 
@@ -69,11 +70,11 @@ impl HostEngine for GetStateWorkflow {
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
 }
 
-pub struct InsertCiphertextWorkflow;
+pub struct InsertCiphertextByTreeKemWorkflow;
 
-impl HostEngine for InsertCiphertextWorkflow {
-    type HI = host_input::InsertCiphertext;
-    type EI = input::InsertCiphertext;
+impl HostEngine for InsertCiphertextByTreeKemWorkflow {
+    type HI = host_input::InsertCiphertextByTreeKem;
+    type EI = input::InsertCiphertextByTreeKem;
     type EO = output::ReturnNotifyState;
     type HO = host_output::InsertCiphertext;
     const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
@@ -132,7 +133,7 @@ impl HostEngine for GetUserCounterWorkflow {
 pub mod host_input {
     use super::*;
 
-    pub struct Command {
+    pub struct CommandByTreeKem {
         ciphertext: SodiumCiphertext,
         user_id: Option<AccountId>,
         signer: Address,
@@ -140,7 +141,7 @@ pub mod host_input {
         ecall_cmd: u32,
     }
 
-    impl Command {
+    impl CommandByTreeKem {
         pub fn new(
             ciphertext: SodiumCiphertext,
             user_id: Option<AccountId>,
@@ -148,7 +149,7 @@ pub mod host_input {
             gas: u64,
             ecall_cmd: u32,
         ) -> Self {
-            Command {
+            CommandByTreeKem {
                 ciphertext,
                 user_id,
                 signer,
@@ -158,12 +159,12 @@ pub mod host_input {
         }
     }
 
-    impl HostInput for Command {
+    impl HostInput for CommandByTreeKem {
         type EcallInput = input::Command;
-        type HostOutput = host_output::Command;
+        type HostOutput = host_output::CommandByTreeKem;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let host_output = host_output::Command::new(self.signer, self.gas);
+            let host_output = host_output::CommandByTreeKem::new(self.signer, self.gas);
             let ecall_input = input::Command::new(self.ciphertext, self.user_id);
 
             Ok((ecall_input, host_output))
@@ -348,15 +349,19 @@ pub mod host_input {
         }
     }
 
-    pub struct InsertCiphertext {
-        ciphertext: Ciphertext,
+    pub struct InsertCiphertextByTreeKem {
+        ciphertext: TreeKemCiphertext,
         state_counter: StateCounter,
         ecall_cmd: u32,
     }
 
-    impl InsertCiphertext {
-        pub fn new(ciphertext: Ciphertext, state_counter: StateCounter, ecall_cmd: u32) -> Self {
-            InsertCiphertext {
+    impl InsertCiphertextByTreeKem {
+        pub fn new(
+            ciphertext: TreeKemCiphertext,
+            state_counter: StateCounter,
+            ecall_cmd: u32,
+        ) -> Self {
+            InsertCiphertextByTreeKem {
                 ciphertext,
                 state_counter,
                 ecall_cmd,
@@ -364,8 +369,8 @@ pub mod host_input {
         }
     }
 
-    impl HostInput for InsertCiphertext {
-        type EcallInput = input::InsertCiphertext;
+    impl HostInput for InsertCiphertextByTreeKem {
+        type EcallInput = input::InsertCiphertextByTreeKem;
         type HostOutput = host_output::InsertCiphertext;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
@@ -488,14 +493,14 @@ pub mod host_output {
     use super::*;
 
     #[derive(Debug, Clone)]
-    pub struct Command {
+    pub struct CommandByTreeKem {
         pub signer: Address,
         pub gas: u64,
-        pub ecall_output: Option<output::Command>,
+        pub ecall_output: Option<output::CommandByTreeKem>,
     }
 
-    impl HostOutput for Command {
-        type EcallOutput = output::Command;
+    impl HostOutput for CommandByTreeKem {
+        type EcallOutput = output::CommandByTreeKem;
 
         fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
             self.ecall_output = Some(output);
@@ -504,9 +509,9 @@ pub mod host_output {
         }
     }
 
-    impl Command {
+    impl CommandByTreeKem {
         pub fn new(signer: Address, gas: u64) -> Self {
-            Command {
+            CommandByTreeKem {
                 signer,
                 gas,
                 ecall_output: None,
