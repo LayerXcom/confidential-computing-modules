@@ -8,7 +8,7 @@ use crate::crypto::{
 use crate::group_state::GroupState;
 use crate::ratchet_tree::RatchetTreeNode;
 use anyhow::{anyhow, ensure, Result};
-use frame_common::crypto::Ciphertext;
+use frame_common::TreeKemCiphertext;
 use ring::aead::{Aad, BoundKey, Nonce, OpeningKey, SealingKey, UnboundKey, AES_256_GCM};
 use serde::Serialize;
 use std::{convert::TryFrom, prelude::v1::*};
@@ -27,7 +27,7 @@ impl AppKeyChain {
         &self,
         mut plaintext: Vec<u8>,
         group_state: &GroupState,
-    ) -> Result<Ciphertext> {
+    ) -> Result<TreeKemCiphertext> {
         let my_roster_idx = group_state.my_roster_idx();
 
         let (ub_key, nonce_seq, generation) = self.key_nonce_gen(my_roster_idx as usize)?;
@@ -35,7 +35,7 @@ impl AppKeyChain {
         sealing_key.seal_in_place_append_tag(Aad::empty(), &mut plaintext)?;
 
         let ciphertext = plaintext;
-        Ok(Ciphertext::new(
+        Ok(TreeKemCiphertext::new(
             generation,
             group_state.epoch(),
             my_roster_idx,
@@ -46,7 +46,7 @@ impl AppKeyChain {
     /// Decrypt messag with current member's application secret.
     pub fn decrypt_msg(
         &self,
-        app_msg: &Ciphertext,
+        app_msg: &TreeKemCiphertext,
         group_state: &GroupState,
     ) -> Result<Option<Vec<u8>>> {
         match group_state.my_node()? {

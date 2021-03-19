@@ -8,10 +8,10 @@ use crate::serde::{
 use crate::serde_bytes;
 use crate::serde_json;
 use frame_common::{
-    crypto::{AccountId, TreeKemCiphertext, ExportHandshake},
+    crypto::{AccountId, ExportHandshake},
     state_types::{StateCounter, StateType, UserCounter},
     traits::AccessPolicy,
-    EcallInput, EcallOutput,
+    EcallInput, EcallOutput, TreeKemCiphertext,
 };
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 
@@ -46,16 +46,16 @@ pub mod input {
 
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
-    pub struct InsertCiphertext {
+    pub struct InsertCiphertextByTreeKem {
         ciphertext: TreeKemCiphertext,
         state_counter: StateCounter,
     }
 
-    impl EcallInput for InsertCiphertext {}
+    impl EcallInput for InsertCiphertextByTreeKem {}
 
-    impl InsertCiphertext {
+    impl InsertCiphertextByTreeKem {
         pub fn new(ciphertext: TreeKemCiphertext, state_counter: StateCounter) -> Self {
-            InsertCiphertext {
+            InsertCiphertextByTreeKem {
                 ciphertext,
                 state_counter,
             }
@@ -202,27 +202,27 @@ pub mod output {
     use super::*;
 
     #[derive(Debug, Clone)]
-    pub struct Command {
+    pub struct CommandByTreeKem {
         enclave_sig: secp256k1::Signature,
-        ciphertext: Ciphertext,
+        ciphertext: TreeKemCiphertext,
         recovery_id: secp256k1::RecoveryId,
     }
 
-    impl Default for Command {
+    impl Default for CommandByTreeKem {
         fn default() -> Self {
             let enclave_sig = secp256k1::Signature::parse(&[0u8; 64]);
             let recovery_id = secp256k1::RecoveryId::parse(0).unwrap();
             Self {
                 enclave_sig,
-                ciphertext: Ciphertext::default(),
+                ciphertext: TreeKemCiphertext::default(),
                 recovery_id,
             }
         }
     }
 
-    impl EcallOutput for Command {}
+    impl EcallOutput for CommandByTreeKem {}
 
-    impl Serialize for Command {
+    impl Serialize for CommandByTreeKem {
         // not for human readable, used for binary encoding
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
@@ -236,7 +236,7 @@ pub mod output {
         }
     }
 
-    impl<'de> Deserialize<'de> for Command {
+    impl<'de> Deserialize<'de> for CommandByTreeKem {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
             D: de::Deserializer<'de>,
@@ -244,13 +244,13 @@ pub mod output {
             struct CommandVisitor;
 
             impl<'de> de::Visitor<'de> for CommandVisitor {
-                type Value = Command;
+                type Value = CommandByTreeKem;
 
                 fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                     formatter.write_str("ecall output command")
                 }
 
-                fn visit_seq<V>(self, mut seq: V) -> Result<Command, V::Error>
+                fn visit_seq<V>(self, mut seq: V) -> Result<CommandByTreeKem, V::Error>
                 where
                     V: SeqAccess<'de>,
                 {
@@ -271,7 +271,7 @@ pub mod output {
                     let ciphertext = bincode::deserialize(&ciphertext_v[..])
                         .map_err(|_e| V::Error::custom("InvalidCiphertext"))?;
 
-                    Ok(Command::new(ciphertext, enclave_sig, recovery_id))
+                    Ok(CommandByTreeKem::new(ciphertext, enclave_sig, recovery_id))
                 }
             }
 
@@ -279,20 +279,20 @@ pub mod output {
         }
     }
 
-    impl Command {
+    impl CommandByTreeKem {
         pub fn new(
-            ciphertext: Ciphertext,
+            ciphertext: TreeKemCiphertext,
             enclave_sig: secp256k1::Signature,
             recovery_id: secp256k1::RecoveryId,
         ) -> Self {
-            Command {
+            CommandByTreeKem {
                 enclave_sig,
                 ciphertext,
                 recovery_id,
             }
         }
 
-        pub fn ciphertext(&self) -> &Ciphertext {
+        pub fn ciphertext(&self) -> &TreeKemCiphertext {
             &self.ciphertext
         }
 

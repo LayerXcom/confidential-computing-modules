@@ -3,7 +3,6 @@ use crate::local_anyhow::{anyhow, Error};
 use crate::local_once_cell::sync::Lazy;
 use crate::localstd::{
     boxed::Box,
-    cmp::Ordering,
     fmt,
     io::{self, Read, Write},
     string::String,

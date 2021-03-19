@@ -35,8 +35,10 @@ use serde_std as serde;
 #[cfg(feature = "sgx")]
 use sgx_anyhow as local_anyhow;
 
+pub mod ciphertexts;
 pub mod crypto;
 pub mod state_types;
 pub mod traits;
 
+pub use crate::ciphertexts::treekem::TreeKemCiphertext;
 pub use traits::*;

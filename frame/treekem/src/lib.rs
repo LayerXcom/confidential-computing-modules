@@ -5,7 +5,6 @@
 extern crate sgx_tstd as std;
 
 mod application;
-pub mod ciphertext;
 mod crypto;
 mod group_state;
 pub mod handshake;
@@ -16,7 +15,6 @@ mod store_path_secrets;
 mod test_funcs;
 
 pub use crate::application::AppKeyChain;
-pub use crate::ciphertext::TreeKemCiphertext;
 pub use crate::crypto::secrets::SealedPathSecret;
 pub use crate::crypto::secrets::{PathSecret, UnsealedPathSecret};
 pub use crate::group_state::GroupState;

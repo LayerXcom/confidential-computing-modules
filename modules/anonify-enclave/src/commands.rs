@@ -2,9 +2,9 @@ use crate::error::Result;
 use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{
-    crypto::{AccountId, Ciphertext, Sha256},
+    crypto::{AccountId, Sha256},
     state_types::{NotifyState, ReturnState, StateType, UpdatedState, UserCounter},
-    AccessPolicy,
+    AccessPolicy, TreeKemCiphertext,
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
@@ -17,17 +17,17 @@ use std::{
 
 /// A message sender that encrypts commands
 #[derive(Debug, Clone, Default)]
-pub struct CmdSender<AP: AccessPolicy> {
+pub struct CommandByTreeKemSender<AP: AccessPolicy> {
     command_plaintext: CommandPlaintext<AP>,
     user_id: Option<AccountId>,
 }
 
-impl<AP> EnclaveEngine for CmdSender<AP>
+impl<AP> EnclaveEngine for CommandByTreeKemSender<AP>
 where
     AP: AccessPolicy,
 {
     type EI = input::Command;
-    type EO = output::Command;
+    type EO = output::CommandByTreeKem;
 
     fn decrypt<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
@@ -82,7 +82,8 @@ where
             ciphertext.epoch(),
         );
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
-        let command_output = output::Command::new(ciphertext, enclave_sig.0, enclave_sig.1);
+        let command_output =
+            output::CommandByTreeKem::new(ciphertext, enclave_sig.0, enclave_sig.1);
 
         Ok(command_output)
     }
@@ -144,16 +145,16 @@ where
 
 /// A message receiver that decrypt commands and make state transition
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct CmdReceiver<AP> {
-    ecall_input: input::InsertCiphertext,
+pub struct CommandByTreeKemReceiver<AP> {
+    ecall_input: input::InsertCiphertextByTreeKem,
     ap: PhantomData<AP>,
 }
 
-impl<AP> EnclaveEngine for CmdReceiver<AP>
+impl<AP> EnclaveEngine for CommandByTreeKemReceiver<AP>
 where
     AP: AccessPolicy,
 {
-    type EI = input::InsertCiphertext;
+    type EI = input::InsertCiphertextByTreeKem;
     type EO = output::ReturnNotifyState;
 
     fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
@@ -248,7 +249,11 @@ where
         })
     }
 
-    pub fn encrypt<GK: GroupKeyOps>(&self, key: &GK, max_mem_size: usize) -> Result<Ciphertext> {
+    pub fn encrypt<GK: GroupKeyOps>(
+        &self,
+        key: &GK,
+        max_mem_size: usize,
+    ) -> Result<TreeKemCiphertext> {
         // Add padding to fix the ciphertext size of all state types.
         // The padding works for fixing the ciphertext size so that
         // other people cannot distinguish what state is encrypted based on the size.
@@ -280,7 +285,10 @@ where
         Ok((stf_res.0.into_iter(), stf_res.1.into_iter()))
     }
 
-    fn decrypt<GK: GroupKeyOps>(ciphertext: &Ciphertext, key: &mut GK) -> Result<Option<Self>> {
+    fn decrypt<GK: GroupKeyOps>(
+        ciphertext: &TreeKemCiphertext,
+        key: &mut GK,
+    ) -> Result<Option<Self>> {
         match key.decrypt(ciphertext)? {
             Some(plaintext) => CommandExecutor::decode(&plaintext[..]).map(Some),
             None => Ok(None),
