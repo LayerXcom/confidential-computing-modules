@@ -3,8 +3,12 @@ use crate::{Server, DEFAULT_GAS};
 use actix_web::{web, HttpResponse, Responder};
 use std::sync::Arc;
 
-pub async fn handle_health_check() -> impl Responder {
-    HttpResponse::Ok().finish()
+pub async fn handle_health_check(server: web::Data<Arc<Server>>) -> impl Responder {
+    if server.dispatcher.is_healthy() {
+        HttpResponse::Ok().finish()
+    } else {
+        HttpResponse::ServiceUnavailable().finish()
+    }
 }
 
 pub async fn handle_update_mrenclave(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {

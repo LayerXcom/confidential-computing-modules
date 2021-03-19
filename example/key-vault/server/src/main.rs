@@ -21,6 +21,7 @@ async fn main() -> io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(server.clone())
+            .route("/api/v1/health", web::get().to(handle_health_check))
             .route("/api/v1/start", web::post().to(handle_start))
             .route("/api/v1/stop", web::post().to(handle_stop))
     })

@@ -73,7 +73,8 @@ impl Server {
             .dispatcher
             .run(sync_time, self.sender_address, DEFAULT_GAS)
             .await
-            .unwrap();
+            .unwrap()
+            .set_healthy();
 
         self.dispatcher = dispatcher;
         self
