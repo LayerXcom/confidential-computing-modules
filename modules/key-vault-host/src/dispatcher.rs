@@ -4,6 +4,7 @@ use key_vault_ecall_types::cmd::*;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::sync::Arc;
+use tokio::sync::oneshot;
 
 /// This dispatcher communicates with a mra-tls server.
 #[derive(Debug, Clone)]
@@ -21,14 +22,17 @@ impl Dispatcher {
         Ok(Dispatcher { inner })
     }
 
-    pub async fn start(self) -> Result<Self> {
+    pub async fn start(self) -> Self {
         let eid = self.inner.read().enclave_id;
         let input = host_input::StartServer::new(START_SERVER_CMD);
+        let (tx, rx) = oneshot::channel();
         std::thread::spawn(move || {
-            let _host_output = StartServerWorkflow::exec(input, eid).unwrap();
+            let host_output = StartServerWorkflow::exec(input, eid).unwrap();
+            tx.send(host_output).unwrap();
         });
 
-        Ok(self)
+        let _ = rx.await.unwrap();
+        self.set_healthy()
     }
 
     pub async fn stop(&self) -> Result<()> {
@@ -39,7 +43,7 @@ impl Dispatcher {
         Ok(())
     }
 
-    pub fn set_healthy(self) -> Self {
+    fn set_healthy(self) -> Self {
         self.inner.write().is_healthy = true;
         self
     }

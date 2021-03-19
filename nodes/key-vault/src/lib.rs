@@ -19,9 +19,7 @@ impl Server {
     }
 
     pub async fn run(mut self) -> Self {
-        let dispatcher = self.dispatcher.start().await.unwrap().set_healthy();
-
-        self.dispatcher = dispatcher;
+        self.dispatcher = self.dispatcher.start().await;
         self
     }
 }

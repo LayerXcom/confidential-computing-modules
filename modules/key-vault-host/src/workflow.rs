@@ -76,14 +76,14 @@ pub mod host_input {
 pub mod host_output {
     use super::*;
 
-    #[derive(Default)]
+    #[derive(Default, Debug)]
     pub struct StartServer;
 
     impl HostOutput for StartServer {
         type EcallOutput = output::Empty;
     }
 
-    #[derive(Default)]
+    #[derive(Default, Debug)]
     pub struct StopServer;
 
     impl HostOutput for StopServer {
