@@ -25,21 +25,9 @@ async fn test_backup_path_secret() {
         .init_enclave(true)
         .expect("Failed to initialize server enclave.");
     let key_vault_server_eid = key_vault_server_enclave.geteid();
-    let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid));
-
-    let mut key_vault_app = test::init_service(
-        App::new()
-            .data(key_vault_server.clone())
-            .route("/api/v1/start", web::post().to(handle_start))
-            .route("/api/v1/stop", web::post().to(handle_stop)),
-    )
-    .await;
-
-    let req = test::TestRequest::post().uri("/api/v1/start").to_request();
-    let resp = test::call_service(&mut key_vault_app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-
-    actix_rt::time::delay_for(std::time::Duration::from_secs(1)).await;
+    let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid).run().await);
+    let _key_vault_app = test::init_service(App::new().data(key_vault_server.clone())).await;
+    std::thread::sleep(std::time::Duration::from_secs(1));
 
     // Setup ERC20 application
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
@@ -159,20 +147,8 @@ async fn test_recover_without_key_vault() {
         .init_enclave(true)
         .expect("Failed to initialize server enclave.");
     let key_vault_server_eid = key_vault_server_enclave.geteid();
-    let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid));
-
-    let mut key_vault_app = test::init_service(
-        App::new()
-            .data(key_vault_server.clone())
-            .route("/api/v1/start", web::post().to(handle_start))
-            .route("/api/v1/stop", web::post().to(handle_stop)),
-    )
-    .await;
-
-    let req = test::TestRequest::post().uri("/api/v1/start").to_request();
-    let resp = test::call_service(&mut key_vault_app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-
+    let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid).run().await);
+    let _key_vault_app = test::init_service(App::new().data(key_vault_server.clone())).await;
     std::thread::sleep(std::time::Duration::from_secs(1));
 
     // Setup ERC20 application
@@ -287,20 +263,8 @@ async fn test_manually_backup_all() {
         .init_enclave(true)
         .expect("Failed to initialize server enclave.");
     let key_vault_server_eid = key_vault_server_enclave.geteid();
-    let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid));
-
-    let mut key_vault_app = test::init_service(
-        App::new()
-            .data(key_vault_server.clone())
-            .route("/api/v1/start", web::post().to(handle_start))
-            .route("/api/v1/stop", web::post().to(handle_stop)),
-    )
-    .await;
-
-    let req = test::TestRequest::post().uri("/api/v1/start").to_request();
-    let resp = test::call_service(&mut key_vault_app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-
+    let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid).run().await);
+    let _key_vault_app = test::init_service(App::new().data(key_vault_server.clone())).await;
     std::thread::sleep(std::time::Duration::from_secs(1));
 
     // Setup ERC20 application
@@ -429,20 +393,8 @@ async fn test_manually_recover_all() {
         .init_enclave(true)
         .expect("Failed to initialize server enclave.");
     let key_vault_server_eid = key_vault_server_enclave.geteid();
-    let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid));
-
-    let mut key_vault_app = test::init_service(
-        App::new()
-            .data(key_vault_server.clone())
-            .route("/api/v1/start", web::post().to(handle_start))
-            .route("/api/v1/stop", web::post().to(handle_stop)),
-    )
-    .await;
-
-    let req = test::TestRequest::post().uri("/api/v1/start").to_request();
-    let resp = test::call_service(&mut key_vault_app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-
+    let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid).run().await);
+    let _key_vault_app = test::init_service(App::new().data(key_vault_server.clone())).await;
     std::thread::sleep(std::time::Duration::from_secs(1));
 
     // Setup ERC20 application
@@ -454,8 +406,8 @@ async fn test_manually_recover_all() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-   let erc20_server = ERC20Server::new(app_eid).await.run().await;
-   let erc20_server = Arc::new(erc20_server);
+    let erc20_server = ERC20Server::new(app_eid).await.run().await;
+    let erc20_server = Arc::new(erc20_server);
     let mut app = test::init_service(
         App::new()
             .data(erc20_server.clone())
