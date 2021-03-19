@@ -8,7 +8,7 @@ use crate::serde::{
 use crate::serde_bytes;
 use crate::serde_json;
 use frame_common::{
-    crypto::{AccountId, Ciphertext, ExportHandshake},
+    crypto::{AccountId, TreeKemCiphertext, ExportHandshake},
     state_types::{StateCounter, StateType, UserCounter},
     traits::AccessPolicy,
     EcallInput, EcallOutput,
@@ -47,21 +47,21 @@ pub mod input {
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
     pub struct InsertCiphertext {
-        ciphertext: Ciphertext,
+        ciphertext: TreeKemCiphertext,
         state_counter: StateCounter,
     }
 
     impl EcallInput for InsertCiphertext {}
 
     impl InsertCiphertext {
-        pub fn new(ciphertext: Ciphertext, state_counter: StateCounter) -> Self {
+        pub fn new(ciphertext: TreeKemCiphertext, state_counter: StateCounter) -> Self {
             InsertCiphertext {
                 ciphertext,
                 state_counter,
             }
         }
 
-        pub fn ciphertext(&self) -> &Ciphertext {
+        pub fn ciphertext(&self) -> &TreeKemCiphertext {
             &self.ciphertext
         }
 
