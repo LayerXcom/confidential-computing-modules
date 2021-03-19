@@ -41,40 +41,26 @@ export FACTORY_CONTRACT_ADDRESS=`cargo run factory`
 
 # ERC20 Application Tests
 
-cd ${ANONIFY_ROOT}/ethereum/deployer
-cargo run $FACTORY_CONTRACT_ADDRESS
-cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_evaluate_access_policy_by_user_id_field -- --nocapture
-sleep 1
+function exec_sr_node_tests() {
+  for N in $@
+  do
+    cd ${ANONIFY_ROOT}/ethereum/deployer
+    cargo run $FACTORY_CONTRACT_ADDRESS
+    cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 
-cd ${ANONIFY_ROOT}/ethereum/deployer
-cargo run $FACTORY_CONTRACT_ADDRESS
-cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture
-sleep 1
+    RUST_BACKTRACE=1 RUST_LOG=debug cargo test $N -- --nocapture
+    sleep 1
+  done
+}
 
-cd ${ANONIFY_ROOT}/ethereum/deployer
-cargo run $FACTORY_CONTRACT_ADDRESS
-cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_skip_invalid_event -- --nocapture
-sleep 1
+exec_sr_node_tests test_health_check \
+  test_evaluate_access_policy_by_user_id_field \
+  test_multiple_messages \
+  test_skip_invalid_event \
+  test_node_recovery \
+  test_join_group_then_handshake \
+  test_duplicated_out_of_order_request_from_same_user
 
-cd ${ANONIFY_ROOT}/ethereum/deployer
-cargo run $FACTORY_CONTRACT_ADDRESS
-cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture
-sleep 1
-
-cd ${ANONIFY_ROOT}/ethereum/deployer
-cargo run $FACTORY_CONTRACT_ADDRESS
-cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture
-sleep 1
-
-cd ${ANONIFY_ROOT}/ethereum/deployer
-cargo run $FACTORY_CONTRACT_ADDRESS
-cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_duplicated_out_of_order_request_from_same_user -- --nocapture
 
 # Secret Backup Application Tests
 
@@ -83,28 +69,22 @@ unset BACKUP
 export ENCLAVE_PKG_NAME=erc20
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
-cd ${ANONIFY_ROOT}/ethereum/deployer
-cargo run $FACTORY_CONTRACT_ADDRESS
-cd ${ANONIFY_ROOT}/nodes/key-vault
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocapture
-sleep 1
+function exec_kv_node_tests() {
+  for N in $@
+  do
+    cd ${ANONIFY_ROOT}/ethereum/deployer
+    cargo run $FACTORY_CONTRACT_ADDRESS
+    cd ${ANONIFY_ROOT}/nodes/key-vault
 
-cd ${ANONIFY_ROOT}/ethereum/deployer
-cargo run $FACTORY_CONTRACT_ADDRESS
-cd ${ANONIFY_ROOT}/nodes/key-vault
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_recover_without_key_vault -- --nocapture
-sleep 1
+    RUST_BACKTRACE=1 RUST_LOG=debug cargo test $N -- --nocapture
+    sleep 1
+  done
+}
 
-cd ${ANONIFY_ROOT}/ethereum/deployer
-cargo run $FACTORY_CONTRACT_ADDRESS
-cd ${ANONIFY_ROOT}/nodes/key-vault
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_manually_backup_all -- --nocapture
-sleep 1
-
-cd ${ANONIFY_ROOT}/ethereum/deployer
-cargo run $FACTORY_CONTRACT_ADDRESS
-cd ${ANONIFY_ROOT}/nodes/key-vault
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_manually_recover_all -- --nocapture
+exec_kv_node_tests test_backup_path_secret \
+  test_recover_without_key_vault \
+  test_manually_backup_all \
+  test_manually_recover_all
 
 #
 # Unit Tests
