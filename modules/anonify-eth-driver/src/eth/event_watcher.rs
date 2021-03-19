@@ -234,8 +234,6 @@ impl EnclaveLog {
     ) -> EnclaveUpdatedState {
         match self.inner {
             Some(log) => {
-                let rt5 = std::time::SystemTime::now();
-                debug!("########## rt5: {:?}", rt5);
                 let next_blc_num = log.latest_blc_num + 1;
                 let notify_states =
                     log.invoke_ecall(eid, fetch_ciphertext_cmd, fetch_handshake_cmd);
@@ -287,6 +285,8 @@ impl InnerEnclaveLog {
                             ciphertext.generation()
                         );
 
+                        let rt5 = std::time::SystemTime::now();
+                        debug!("########## rt5: {:?}", rt5);
                         let inp = host_input::InsertCiphertext::new(
                             ciphertext.clone(),
                             e.state_counter(),
