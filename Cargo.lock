@@ -2705,7 +2705,6 @@ dependencies = [
  "frame-config",
  "frame-host",
  "frame-sodium",
- "key-vault-ecall-types",
  "key-vault-host",
  "once_cell 1.5.2",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
