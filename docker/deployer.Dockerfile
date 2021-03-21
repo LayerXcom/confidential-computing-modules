@@ -30,9 +30,6 @@ RUN source /opt/sgxsdk/environment && \
 RUN cd $PJ_ROOT/frame/types/ && \
     /root/.cargo/bin/cargo build
 
-RUN cd $PJ_ROOT/scripts && \
-    make ../build/Anonify_common_t.o
-
 RUN cd $PJ_ROOT/ethereum/deployer && \
     RUST_BACKTRACE=1 RUST_LOG=debug /root/.cargo/bin/cargo build --release
 
