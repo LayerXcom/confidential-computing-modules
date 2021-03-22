@@ -49,7 +49,7 @@ impl EnclaveEngine for JoinGroupSender {
         Ok(output::ReturnJoinGroup::new(
             attested_report.report().to_vec(),
             attested_report.report_sig().to_vec(),
-            export_handshake.encode(),
+            Some(export_handshake.encode()),
             enclave_context.mrenclave_ver(),
             export_handshake.roster_idx(),
         ))
