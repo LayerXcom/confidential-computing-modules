@@ -313,7 +313,6 @@ pub struct SodiumCiphertext {
 impl frame_common::EcallInput for SodiumCiphertext {}
 
 impl SodiumCiphertext {
-    #[cfg(feature = "std")]
     pub fn encrypt<T>(
         csprng: &mut T,
         others_pub_key: &SodiumPubKey,

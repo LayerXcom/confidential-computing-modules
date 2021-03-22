@@ -18,6 +18,7 @@ contract Anonify is ReportHandle {
     // Counter for enforcing the order of state transitions
     uint256 private _stateCounter;
 
+    event JoinGroup(uint32 rosterIdx, bytes32 enclaveEncryptionKey);
     event StoreCiphertext(bytes ciphertext, uint256 stateCounter);
     event UpdateMrenclaveVer(uint32 newVersion);
 
@@ -34,11 +35,14 @@ contract Anonify is ReportHandle {
     function joinGroup(
         bytes memory _report,
         bytes memory _reportSig,
-        uint32 _version
+        uint32 _version,
+        uint32 _rosterIdx
     ) public {
         require(_mrenclaveVer == _version, "Must be same version");
 
-        handleReport(_report, _reportSig);
+        bytes32 enclaveEncryptionKey = handleReport(_report, _reportSig);
+
+        emit JoinGroup(_rosterIdx, enclaveEncryptionKey);
     }
 
     function updateMrenclave(

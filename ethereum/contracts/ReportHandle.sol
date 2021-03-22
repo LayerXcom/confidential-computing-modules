@@ -30,7 +30,7 @@ contract ReportHandle {
     constructor() {}
 
     // Check mrenclave value and report signature and then set new enclave address.
-    function handleReport(bytes memory _report, bytes memory _reportSig) internal {
+    function handleReport(bytes memory _report, bytes memory _reportSig) internal returns (bytes32) {
         (bytes32 inpMrEnclave, address inpVerifyingKey, bytes32 inpEncryptionKey) = extractFromReport(_report, _reportSig);
         if(mrEnclave == 0) {
             mrEnclave = inpMrEnclave;
@@ -39,6 +39,8 @@ contract ReportHandle {
         require(mrEnclave == inpMrEnclave, "mrenclave included in the report is not correct.");
 
         setKeys(inpVerifyingKey, inpEncryptionKey);
+
+        return inpEncryptionKey;
     }
 
     function updateMrenclaveInner(bytes memory _report, bytes memory _reportSig) internal {
