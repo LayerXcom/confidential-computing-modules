@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate lazy_static;
+use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
 use eth_deployer::EthDeployer;
 use ethabi::Contract as ContractABI;
@@ -113,10 +114,16 @@ async fn test_integration_eth_construct() {
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
-    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Get handshake from contract
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let total_supply: u64 = 100;
@@ -132,14 +139,23 @@ async fn test_integration_eth_construct() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr.clone(),
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     let req = json!({
         "access_policy": COMMON_ACCESS_POLICY.clone(),
@@ -231,10 +247,16 @@ async fn test_auto_notification() {
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
-    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Get handshake from contract
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
@@ -250,7 +272,13 @@ async fn test_auto_notification() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr.clone(),
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
 
@@ -262,7 +290,11 @@ async fn test_auto_notification() {
     dispatcher.register_notification(encrypted_req).unwrap();
 
     // Get logs from contract and update state inside enclave.
-    let updated_state = dispatcher.fetch_events().await.unwrap().unwrap();
+    let updated_state = dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap()
+        .unwrap();
     let notified_state: Vec<NotifyState> = updated_state
         .into_iter()
         .map(|e| serde_json::from_value(e).unwrap())
@@ -294,13 +326,23 @@ async fn test_auto_notification() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr, gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr,
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    let updated_state = dispatcher.fetch_events().await.unwrap().unwrap();
+    let updated_state = dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap()
+        .unwrap();
     let notified_state: Vec<NotifyState> = updated_state
         .into_iter()
         .map(|e| serde_json::from_value(e).unwrap())
@@ -373,10 +415,16 @@ async fn test_integration_eth_transfer() {
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
-    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Get handshake from contract
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let total_supply: u64 = 100;
@@ -393,14 +441,23 @@ async fn test_integration_eth_transfer() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr.clone(),
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Get state from enclave
     let req = json!({
@@ -448,13 +505,22 @@ async fn test_integration_eth_transfer() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr, gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr,
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Check the updated states
     let req = json!({
@@ -544,10 +610,16 @@ async fn test_key_rotation() {
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
-    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Get handshake from contract
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Send handshake
     let receipt = dispatcher
@@ -557,7 +629,10 @@ async fn test_key_rotation() {
     println!("handshake receipt: {:?}", receipt);
 
     // Get handshake from contract
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // init state
     let total_supply: u64 = 100;
@@ -573,13 +648,22 @@ async fn test_key_rotation() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr.clone(),
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Get state from enclave
     let req = json!({
@@ -667,9 +751,15 @@ async fn test_integration_eth_approve() {
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
-    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .await
+        .unwrap();
     // Get handshake from contract
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let total_supply = 100;
@@ -685,14 +775,23 @@ async fn test_integration_eth_approve() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr.clone(),
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     let spender = other_access_policy.into_account_id();
     // Get state from enclave
@@ -734,13 +833,22 @@ async fn test_integration_eth_approve() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr, gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr,
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Check the updated states
     let req = json!({
@@ -824,10 +932,16 @@ async fn test_integration_eth_transfer_from() {
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
-    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Get handshake from contract
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let total_supply: u64 = 100;
@@ -843,14 +957,23 @@ async fn test_integration_eth_transfer_from() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr.clone(),
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Get initial state from enclave
     let req = json!({
@@ -934,13 +1057,22 @@ async fn test_integration_eth_transfer_from() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr.clone(),
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Check the updated states
     let req = json!({
@@ -1027,13 +1159,22 @@ async fn test_integration_eth_transfer_from() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr, gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr,
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Check the final states
     let req = json!({
@@ -1158,10 +1299,16 @@ async fn test_integration_eth_mint() {
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
-    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Get handshake from contract
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let total_supply = 100;
@@ -1177,14 +1324,23 @@ async fn test_integration_eth_mint() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr.clone(),
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // transit state
     let amount = 50;
@@ -1201,14 +1357,23 @@ async fn test_integration_eth_mint() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr, gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr,
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
 
     println!("minted state receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     let req = json!({
         "access_policy": COMMON_ACCESS_POLICY.clone(),
@@ -1296,10 +1461,16 @@ async fn test_integration_eth_burn() {
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
-    dispatcher.join_group(deployer_addr, gas).await.unwrap();
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Get handshake from contract
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Init state
     let total_supply = 100;
@@ -1315,14 +1486,23 @@ async fn test_integration_eth_burn() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr.clone(),
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
 
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Send a transaction to contract
     let amount = 30;
@@ -1339,13 +1519,22 @@ async fn test_integration_eth_burn() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr.clone(), gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr.clone(),
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     // Send a transaction to contract
     let amount = 20;
@@ -1360,13 +1549,22 @@ async fn test_integration_eth_burn() {
     let encrypted_command =
         SodiumCiphertext::encrypt(&mut csprng, &pubkey, serde_json::to_vec(&req).unwrap()).unwrap();
     let receipt = dispatcher
-        .send_command(encrypted_command, None, deployer_addr, gas)
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr,
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
         .await
         .unwrap();
     println!("receipt: {:?}", receipt);
 
     // Update state inside enclave
-    dispatcher.fetch_events().await.unwrap();
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .await
+        .unwrap();
 
     let req = json!({
         "access_policy": COMMON_ACCESS_POLICY.clone(),
