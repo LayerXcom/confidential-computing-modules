@@ -35,7 +35,7 @@ use std_rand_core as rand_core;
 #[cfg(feature = "std")]
 use std_xsalsa20poly1305 as xsalsa20poly1305;
 
-mod crypto;
+pub mod crypto;
 #[cfg(feature = "sgx")]
 pub mod rng;
 #[cfg(feature = "sgx")]
