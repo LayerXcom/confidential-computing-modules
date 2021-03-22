@@ -7,11 +7,12 @@ use crate::serde::{
 };
 use crate::serde_bytes;
 use crate::serde_json;
+use crate::CommandCiphertext;
 use frame_common::{
     crypto::{AccountId, ExportHandshake},
     state_types::{StateCounter, StateType, UserCounter},
     traits::AccessPolicy,
-    EcallInput, EcallOutput, TreeKemCiphertext,
+    EcallInput, EcallOutput,
 };
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 
@@ -46,22 +47,22 @@ pub mod input {
 
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
-    pub struct InsertCiphertextByTreeKem {
-        ciphertext: TreeKemCiphertext,
+    pub struct InsertCiphertext {
+        ciphertext: CommandCiphertext,
         state_counter: StateCounter,
     }
 
-    impl EcallInput for InsertCiphertextByTreeKem {}
+    impl EcallInput for InsertCiphertext {}
 
-    impl InsertCiphertextByTreeKem {
-        pub fn new(ciphertext: TreeKemCiphertext, state_counter: StateCounter) -> Self {
-            InsertCiphertextByTreeKem {
+    impl InsertCiphertext {
+        pub fn new(ciphertext: CommandCiphertext, state_counter: StateCounter) -> Self {
+            InsertCiphertext {
                 ciphertext,
                 state_counter,
             }
         }
 
-        pub fn ciphertext(&self) -> &TreeKemCiphertext {
+        pub fn ciphertext(&self) -> &CommandCiphertext {
             &self.ciphertext
         }
 
@@ -202,27 +203,27 @@ pub mod output {
     use super::*;
 
     #[derive(Debug, Clone)]
-    pub struct CommandByTreeKem {
+    pub struct Command {
         enclave_sig: secp256k1::Signature,
-        ciphertext: TreeKemCiphertext,
+        ciphertext: CommandCiphertext,
         recovery_id: secp256k1::RecoveryId,
     }
 
-    impl Default for CommandByTreeKem {
+    impl Default for Command {
         fn default() -> Self {
             let enclave_sig = secp256k1::Signature::parse(&[0u8; 64]);
             let recovery_id = secp256k1::RecoveryId::parse(0).unwrap();
             Self {
                 enclave_sig,
-                ciphertext: TreeKemCiphertext::default(),
+                ciphertext: CommandCiphertext::default(),
                 recovery_id,
             }
         }
     }
 
-    impl EcallOutput for CommandByTreeKem {}
+    impl EcallOutput for Command {}
 
-    impl Serialize for CommandByTreeKem {
+    impl Serialize for Command {
         // not for human readable, used for binary encoding
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
@@ -236,7 +237,7 @@ pub mod output {
         }
     }
 
-    impl<'de> Deserialize<'de> for CommandByTreeKem {
+    impl<'de> Deserialize<'de> for Command {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
             D: de::Deserializer<'de>,
@@ -244,13 +245,13 @@ pub mod output {
             struct CommandVisitor;
 
             impl<'de> de::Visitor<'de> for CommandVisitor {
-                type Value = CommandByTreeKem;
+                type Value = Command;
 
                 fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                     formatter.write_str("ecall output command")
                 }
 
-                fn visit_seq<V>(self, mut seq: V) -> Result<CommandByTreeKem, V::Error>
+                fn visit_seq<V>(self, mut seq: V) -> Result<Command, V::Error>
                 where
                     V: SeqAccess<'de>,
                 {
@@ -271,7 +272,7 @@ pub mod output {
                     let ciphertext = bincode::deserialize(&ciphertext_v[..])
                         .map_err(|_e| V::Error::custom("InvalidCiphertext"))?;
 
-                    Ok(CommandByTreeKem::new(ciphertext, enclave_sig, recovery_id))
+                    Ok(Command::new(ciphertext, enclave_sig, recovery_id))
                 }
             }
 
@@ -279,20 +280,20 @@ pub mod output {
         }
     }
 
-    impl CommandByTreeKem {
+    impl Command {
         pub fn new(
-            ciphertext: TreeKemCiphertext,
+            ciphertext: CommandCiphertext,
             enclave_sig: secp256k1::Signature,
             recovery_id: secp256k1::RecoveryId,
         ) -> Self {
-            CommandByTreeKem {
+            Command {
                 enclave_sig,
                 ciphertext,
                 recovery_id,
             }
         }
 
-        pub fn ciphertext(&self) -> &TreeKemCiphertext {
+        pub fn ciphertext(&self) -> &CommandCiphertext {
             &self.ciphertext
         }
 
@@ -390,23 +391,37 @@ pub mod output {
         report: Vec<u8>,
         #[serde(with = "serde_bytes")]
         report_sig: Vec<u8>,
-        #[serde(with = "serde_bytes")]
-        handshake: Vec<u8>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        handshake: Option<Vec<u8>>,
         mrenclave_ver: u32,
         roster_idx: u32,
     }
 
     impl fmt::Debug for ReturnJoinGroup {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(
-                f,
-                "ReturnJoinGroup {{ report: 0x{}, report_sig: 0x{}, handshake: 0x{}, mrenclave_ver: {:?}, roster_idx: {:?} }}",
-                hex::encode(&self.report()),
-                hex::encode(&self.report_sig()),
-                hex::encode(&self.handshake),
-                self.mrenclave_ver,
-                self.roster_idx
-            )
+            match self.handshake() {
+                Some(handshake) => {
+                    write!(
+                        f,
+                        "ReturnJoinGroup {{ report: 0x{}, report_sig: 0x{}, handshake: 0x{}, mrenclave_ver: {:?}, roster_idx: {:?} }}",
+                        hex::encode(&self.report()),
+                        hex::encode(&self.report_sig()),
+                        hex::encode(&handshake),
+                        self.mrenclave_ver,
+                        self.roster_idx
+                    )
+                }
+                None => {
+                    write!(
+                        f,
+                        "ReturnJoinGroup {{ report: 0x{}, report_sig: 0x{}, mrenclave_ver: {:?}, roster_idx: {:?} }}",
+                        hex::encode(&self.report()),
+                        hex::encode(&self.report_sig()),
+                        self.mrenclave_ver,
+                        self.roster_idx
+                    )
+                }
+            }
         }
     }
 
@@ -416,7 +431,7 @@ pub mod output {
         pub fn new(
             report: Vec<u8>,
             report_sig: Vec<u8>,
-            handshake: Vec<u8>,
+            handshake: Option<Vec<u8>>,
             mrenclave_ver: usize,
             roster_idx: u32,
         ) -> Self {
@@ -437,8 +452,8 @@ pub mod output {
             &self.report_sig[..]
         }
 
-        pub fn handshake(&self) -> &[u8] {
-            &self.handshake[..]
+        pub fn handshake(&self) -> Option<&[u8]> {
+            self.handshake.as_deref()
         }
 
         pub fn mrenclave_ver(&self) -> u32 {

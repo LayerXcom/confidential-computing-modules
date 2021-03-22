@@ -5,6 +5,7 @@ use crate::{
     utils::ContractInfo,
     workflow::*,
 };
+use anonify_ecall_types::CommandCiphertext;
 use anyhow::anyhow;
 use ethabi::{Topic, TopicFilter};
 use std::{env, fs, path::Path};
@@ -58,25 +59,28 @@ impl Web3Contract {
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
-        let handshake = ecall_output.handshake().to_vec();
         let gas = output.gas;
 
-        self.contract
-            .call_with_confirmations(
-                method,
-                (
-                    report,
-                    report_sig,
-                    handshake,
-                    ecall_output.mrenclave_ver(),
-                    ecall_output.roster_idx(),
-                ),
-                output.signer,
-                Options::with(|opt| opt.gas = Some(gas.into())),
-                confirmations,
-            )
-            .await
-            .map_err(Into::into)
+        match ecall_output.handshake() {
+            Some(handshake) => self
+                .contract
+                .call_with_confirmations(
+                    method,
+                    (
+                        report,
+                        report_sig,
+                        handshake.to_vec(),
+                        ecall_output.mrenclave_ver(),
+                        ecall_output.roster_idx(),
+                    ),
+                    output.signer,
+                    Options::with(|opt| opt.gas = Some(gas.into())),
+                    confirmations,
+                )
+                .await
+                .map_err(Into::into),
+            None => unimplemented!(),
+        }
     }
 
     pub async fn register_report(&self, output: host_output::RegisterReport) -> Result<H256> {
@@ -103,31 +107,35 @@ impl Web3Contract {
             .map_err(Into::into)
     }
 
-    pub async fn send_command(&self, output: host_output::CommandByTreeKem) -> Result<H256> {
+    // TODO: treekem
+    pub async fn send_command(&self, output: host_output::Command) -> Result<H256> {
         let ecall_output = output
             .ecall_output
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
-        let ciphertext = ecall_output.ciphertext();
         let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
         let gas = output.gas;
 
-        self.contract
-            .call(
-                "storeCommand",
-                (
-                    ciphertext.encode(),
-                    enclave_sig,
-                    ciphertext.roster_idx(),
-                    ciphertext.generation(),
-                    ciphertext.epoch(),
-                ),
-                output.signer,
-                Options::with(|opt| opt.gas = Some(gas.into())),
-            )
-            .await
-            .map_err(Into::into)
+        match ecall_output.ciphertext() {
+            CommandCiphertext::TreeKem(ciphertext) => self
+                .contract
+                .call(
+                    "storeCommand",
+                    (
+                        ciphertext.encode(),
+                        enclave_sig,
+                        ciphertext.roster_idx(),
+                        ciphertext.generation(),
+                        ciphertext.epoch(),
+                    ),
+                    output.signer,
+                    Options::with(|opt| opt.gas = Some(gas.into())),
+                )
+                .await
+                .map_err(Into::into),
+            _ => return Err(HostError::InvalidCiphertextError),
+        }
     }
 
     pub async fn handshake(&self, output: host_output::Handshake) -> Result<H256> {
@@ -159,8 +167,8 @@ impl Web3Contract {
 
     pub async fn get_event(&self, cache: EventCache, key: Address) -> Result<Web3Logs> {
         let events = EthEvent::create_event();
-        let ciphertext_sig = events.ciphertext_signature();
-        let handshake_sig = events.handshake_signature();
+        let ciphertext_sig = events.treekem_ciphertext_signature();
+        let handshake_sig = events.treekem_handshake_signature();
         // Read latest block number from in-memory event cache.
         let latest_fetched_num = cache
             .inner()

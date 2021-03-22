@@ -1,6 +1,7 @@
 use crate::error::{Result, ServerError};
-use crate::{Server, DEFAULT_GAS};
+use crate::{CmdEncryptionAlgo, Server, DEFAULT_GAS};
 use actix_web::{web, HttpResponse, Responder};
+use anonify_ecall_types::cmd::*;
 use std::sync::Arc;
 
 pub async fn handle_health_check(server: web::Data<Arc<Server>>) -> impl Responder {
@@ -14,7 +15,7 @@ pub async fn handle_health_check(server: web::Data<Arc<Server>>) -> impl Respond
 pub async fn handle_update_mrenclave(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     let receipt = server
         .dispatcher
-        .update_mrenclave(server.sender_address, DEFAULT_GAS)
+        .update_mrenclave(server.sender_address, DEFAULT_GAS, JOIN_GROUP_TREEKEM_CMD)
         .await
         .map_err(|e| ServerError::from(e))?;
 
@@ -26,6 +27,10 @@ pub async fn handle_send_command(
     server: web::Data<Arc<Server>>,
     req: web::Json<state_runtime_node_api::state::post::Request>,
 ) -> Result<HttpResponse> {
+    let ecall_cmd = match server.cmd_encryption_algo {
+        CmdEncryptionAlgo::TreeKem => SEND_COMMAND_TREEKEM_CMD,
+    };
+
     let tx_hash = server
         .dispatcher
         .send_command(
@@ -33,6 +38,7 @@ pub async fn handle_send_command(
             req.user_id,
             server.sender_address,
             DEFAULT_GAS,
+            ecall_cmd,
         )
         .await
         .map_err(|e| ServerError::from(e))?;
@@ -56,9 +62,13 @@ pub async fn handle_get_state(
     server: web::Data<Arc<Server>>,
     req: web::Json<state_runtime_node_api::state::get::Request>,
 ) -> Result<HttpResponse> {
+    let (fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd) = match server.cmd_encryption_algo {
+        CmdEncryptionAlgo::TreeKem => (FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD),
+    };
+
     server
         .dispatcher
-        .fetch_events()
+        .fetch_events(fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd)
         .await
         .map_err(|e| ServerError::from(e))?;
 
@@ -75,9 +85,13 @@ pub async fn handle_get_user_counter(
     server: web::Data<Arc<Server>>,
     req: web::Json<state_runtime_node_api::user_counter::get::Request>,
 ) -> Result<HttpResponse> {
+    let (fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd) = match server.cmd_encryption_algo {
+        CmdEncryptionAlgo::TreeKem => (FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD),
+    };
+
     server
         .dispatcher
-        .fetch_events()
+        .fetch_events(fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd)
         .await
         .map_err(|e| ServerError::from(e))?;
 

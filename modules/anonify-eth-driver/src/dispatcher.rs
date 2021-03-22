@@ -105,20 +105,30 @@ impl Dispatcher {
         Ok(address)
     }
 
-    // TODO: treekem
     /// - Starting syncing with the blockchain node.
     /// - Joining as the state runtime node.
     /// These operations are not mutable so just returning self data type.
-    pub async fn run(self, sync_time: u64, signer: Address, gas: u64) -> Result<Self> {
+    pub async fn run(
+        self,
+        sync_time: u64,
+        signer: Address,
+        gas: u64,
+        fetch_ciphertext_ecall_cmd: u32,
+        fetch_handshake_ecalll_cmd: u32,
+        join_group_ecall_cmd: u32,
+    ) -> Result<Self> {
         let this = self.clone();
-        let receipt = self.join_group(signer, gas).await?;
+        let receipt = self.join_group(signer, gas, join_group_ecall_cmd).await?;
         info!("A transaction hash of join_group: {:?}", receipt);
 
         // it spawns a new OS thread, and hosts an event loop.
         actix_rt::Arbiter::new().exec_fn(move || {
             actix_rt::spawn(async move {
                 loop {
-                    match self.fetch_events().await {
+                    match self
+                        .fetch_events(fetch_ciphertext_ecall_cmd, fetch_handshake_ecalll_cmd)
+                        .await
+                    {
                         Ok(updated_states) => info!("State updated: {:?}", updated_states),
                         Err(err) => error!("event fetched error: {:?}", err),
                     };
@@ -139,28 +149,31 @@ impl Dispatcher {
         self.inner.read().is_healthy
     }
 
-    // TODO: treekem
-    pub async fn fetch_events(&self) -> Result<Option<Vec<serde_json::Value>>> {
+    pub async fn fetch_events(
+        &self,
+        fetch_ciphertext_ecall_cmd: u32,
+        getch_handshake_ecall_cmd: u32,
+    ) -> Result<Option<Vec<serde_json::Value>>> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         inner
             .watcher
             .as_ref()
             .ok_or(HostError::EventWatcherNotSet)?
-            .fetch_events(
-                eid,
-                FETCH_CIPHERTEXT_TREEKEM_CMD,
-                FETCH_HANDSHAKE_TREEKEM_CMD,
-            )
+            .fetch_events(eid, fetch_ciphertext_ecall_cmd, getch_handshake_ecall_cmd)
             .await
     }
 
-    // TODO: treekem
-    pub async fn join_group(&self, signer: Address, gas: u64) -> Result<TransactionReceipt> {
-        self.send_report_handshake(signer, gas, "joinGroup").await
+    pub async fn join_group(
+        &self,
+        signer: Address,
+        gas: u64,
+        ecall_cmd: u32,
+    ) -> Result<TransactionReceipt> {
+        self.send_report_handshake(signer, gas, "joinGroup", ecall_cmd)
+            .await
     }
 
-    // TODO: treekem
     pub async fn register_report(&self, signer: Address, gas: u64) -> Result<H256> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
@@ -177,22 +190,26 @@ impl Dispatcher {
         Ok(tx_hash)
     }
 
-    // TODO: treekem
-    pub async fn update_mrenclave(&self, signer: Address, gas: u64) -> Result<TransactionReceipt> {
-        self.send_report_handshake(signer, gas, "updateMrenclave")
+    pub async fn update_mrenclave(
+        &self,
+        signer: Address,
+        gas: u64,
+        ecall_cmd: u32,
+    ) -> Result<TransactionReceipt> {
+        self.send_report_handshake(signer, gas, "updateMrenclave", ecall_cmd)
             .await
     }
 
-    // TODO: treekem
     async fn send_report_handshake(
         &self,
         signer: Address,
         gas: u64,
         method: &str,
+        ecall_cmd: u32,
     ) -> Result<TransactionReceipt> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
-        let input = host_input::JoinGroup::new(signer, gas, JOIN_GROUP_TREEKEM_CMD);
+        let input = host_input::JoinGroup::new(signer, gas, ecall_cmd);
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
         let receipt = inner
@@ -205,24 +222,18 @@ impl Dispatcher {
         Ok(receipt)
     }
 
-    // TODO: treekem
     pub async fn send_command(
         &self,
         ciphertext: SodiumCiphertext,
         user_id: Option<AccountId>,
         signer: Address,
         gas: u64,
+        ecall_cmd: u32,
     ) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::CommandByTreeKem::new(
-            ciphertext,
-            user_id,
-            signer,
-            gas,
-            SEND_COMMAND_TREEKEM_CMD,
-        );
+        let input = host_input::Command::new(ciphertext, user_id, signer, gas, ecall_cmd);
         let eid = inner.enclave_id;
-        let host_output = CommandByTreeKemWorkflow::exec(input, eid)?;
+        let host_output = CommandWorkflow::exec(input, eid)?;
 
         match &inner.sender {
             Some(s) => s.send_command(&host_output).await,
@@ -251,7 +262,6 @@ impl Dispatcher {
         serde_json::to_value(user_counter.user_counter).map_err(Into::into)
     }
 
-    // TODO: treekem
     pub async fn handshake(&self, signer: Address, gas: u64) -> Result<H256> {
         let inner = self.inner.read();
         let input = host_input::Handshake::new(signer, gas, SEND_HANDSHAKE_TREEKEM_CMD);

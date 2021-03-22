@@ -16,6 +16,8 @@ pub enum HostError {
     UnlockError,
     #[error("Decoded EthLogToken to invalid TokenType")]
     InvalidEthLogToken,
+    #[error("Invalid ciphertext")]
+    InvalidCiphertextError,
     #[error("The number of EthLogTokens should be {0}")]
     InvalidNumberOfEthLogToken(usize),
     #[error("IO error: {0}")]

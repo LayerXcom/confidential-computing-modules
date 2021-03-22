@@ -24,7 +24,7 @@ where
     AP: AccessPolicy,
 {
     type EI = input::Command;
-    type EO = output::CommandByTreeKem;
+    type EO = output::Command;
 
     fn decrypt<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
@@ -79,8 +79,11 @@ where
             ciphertext.epoch(),
         );
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
-        let command_output =
-            output::CommandByTreeKem::new(ciphertext, enclave_sig.0, enclave_sig.1);
+        let command_output = output::Command::new(
+            CommandCiphertext::TreeKem(ciphertext),
+            enclave_sig.0,
+            enclave_sig.1,
+        );
 
         Ok(command_output)
     }
@@ -89,7 +92,7 @@ where
 /// A message receiver that decrypt commands and make state transition
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct CommandByTreeKemReceiver<AP> {
-    ecall_input: input::InsertCiphertextByTreeKem,
+    ecall_input: input::InsertCiphertext,
     ap: PhantomData<AP>,
 }
 
@@ -97,7 +100,7 @@ impl<AP> EnclaveEngine for CommandByTreeKemReceiver<AP>
 where
     AP: AccessPolicy,
 {
-    type EI = input::InsertCiphertextByTreeKem;
+    type EI = input::InsertCiphertext;
     type EO = output::ReturnNotifyState;
 
     fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
@@ -121,8 +124,13 @@ where
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();
-        let roster_idx = self.ecall_input.ciphertext().roster_idx() as usize;
-        let msg_gen = self.ecall_input.ciphertext().generation();
+        let treekem_ciphertext = match self.ecall_input.ciphertext() {
+            CommandCiphertext::TreeKem(ciphertext) => ciphertext,
+            _ => return Err(anyhow!("CommandCiphertext is not for treekem")),
+        };
+
+        let roster_idx = treekem_ciphertext.roster_idx() as usize;
+        let msg_gen = treekem_ciphertext.generation();
 
         // Even if group_key's ratchet operations and state transitions fail, state_counter must be incremented so it doesn't get stuck.
         enclave_context.verify_state_counter_increment(self.ecall_input.state_counter())?;
@@ -140,8 +148,7 @@ where
         group_key.receiver_ratchet(roster_idx)?;
 
         let mut output = output::ReturnNotifyState::default();
-        let decrypted_cmds =
-            CommandExecutor::<R, C, AP>::decrypt(self.ecall_input.ciphertext(), group_key)?;
+        let decrypted_cmds = CommandExecutor::<R, C, AP>::decrypt(treekem_ciphertext, group_key)?;
         if let Some(cmds) = decrypted_cmds {
             // Since the command data is valid for the error at the time of state transition,
             // `user_counter` must be verified and incremented before the state transition.
