@@ -74,7 +74,7 @@ where
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
         &enclave_encryption_key,
-        serde_json::to_vec(&req).unwrap(),
+        &serde_json::to_vec(&req).unwrap(),
     )
     .map_err(|e| anyhow!("{:?}", e))?;
 
@@ -119,7 +119,7 @@ where
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
         &enclave_encryption_key,
-        serde_json::to_vec(&req).unwrap(),
+        &serde_json::to_vec(&req).unwrap(),
     )
     .map_err(|e| anyhow!("{:?}", e))?;
 
@@ -164,7 +164,7 @@ where
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
         &enclave_encryption_key,
-        serde_json::to_vec(&req).unwrap(),
+        &serde_json::to_vec(&req).unwrap(),
     )
     .map_err(|e| anyhow!("{:?}", e))?;
 
@@ -211,7 +211,7 @@ where
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
         &enclave_encryption_key,
-        serde_json::to_vec(&req).unwrap(),
+        &serde_json::to_vec(&req).unwrap(),
     )
     .map_err(|e| anyhow!("{:?}", e))?;
 
@@ -256,7 +256,7 @@ where
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
         &enclave_encryption_key,
-        serde_json::to_vec(&req).unwrap(),
+        &serde_json::to_vec(&req).unwrap(),
     )
     .map_err(|e| anyhow!("{:?}", e))?;
 
@@ -299,7 +299,7 @@ where
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
         &enclave_encryption_key,
-        serde_json::to_vec(&req).unwrap(),
+        &serde_json::to_vec(&req).unwrap(),
     )
     .map_err(|e| anyhow!("{:?}", e))?;
 
@@ -354,7 +354,7 @@ where
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
         &enclave_encryption_key,
-        serde_json::to_vec(&req).unwrap(),
+        &serde_json::to_vec(&req).unwrap(),
     )
     .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
@@ -394,7 +394,7 @@ where
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
         &enclave_encryption_key,
-        serde_json::to_vec(&req).unwrap(),
+        &serde_json::to_vec(&req).unwrap(),
     )
     .map_err(|e| anyhow!("{:?}", e))?;
     let res = Client::new()
