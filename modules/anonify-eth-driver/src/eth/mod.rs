@@ -1,4 +1,5 @@
 pub mod connection;
+mod event_def;
 pub mod event_watcher;
 pub mod sender;
 

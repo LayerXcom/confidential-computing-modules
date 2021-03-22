@@ -1,4 +1,7 @@
-use super::connection::{Web3Contract, Web3Http};
+use super::{
+    connection::{Web3Contract, Web3Http},
+    event_def::*,
+};
 use crate::{
     cache::EventCache,
     error::{HostError, Result},
@@ -6,7 +9,7 @@ use crate::{
     workflow::*,
 };
 use anonify_ecall_types::CommandCiphertext;
-use ethabi::{decode, Event, EventParam, Hash, ParamType};
+use ethabi::{decode, ParamType};
 use frame_common::{crypto::ExportHandshake, state_types::StateCounter, TreeKemCiphertext};
 use frame_host::engine::HostEngine;
 use sgx_types::sgx_enclave_id_t;
@@ -95,17 +98,12 @@ impl fmt::LowerHex for EthLog {
 pub struct Web3Logs {
     logs: Vec<EthLog>,
     cache: EventCache,
-    events: EthEvent,
 }
 
 impl Web3Logs {
-    pub fn new(logs: Vec<Log>, cache: EventCache, events: EthEvent) -> Self {
+    pub fn new(logs: Vec<Log>, cache: EventCache) -> Self {
         let logs: Vec<EthLog> = logs.into_iter().map(Into::into).collect();
-        Web3Logs {
-            logs,
-            cache,
-            events,
-        }
+        Web3Logs { logs, cache }
     }
 
     fn into_enclave_log(self) -> EnclaveLog {
@@ -142,7 +140,7 @@ impl Web3Logs {
             };
 
             // Processing conditions by ciphertext or handshake event
-            if log.0.topics[0] == self.events.treekem_ciphertext_signature() {
+            if log.0.topics[0] == *STORE_TREEKEM_CIPHERTEXT_EVENT {
                 let res = match TreeKemCiphertext::decode(&mut &bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
@@ -158,7 +156,7 @@ impl Web3Logs {
                     state_counter,
                 );
                 payloads.push(payload);
-            } else if log.0.topics[0] == self.events.treekem_handshake_signature() {
+            } else if log.0.topics[0] == *STORE_TREEKEM_HANDSHAKE_EVENT {
                 let res = match ExportHandshake::decode(&bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
@@ -513,59 +511,6 @@ pub(crate) enum Payload {
 impl Default for Payload {
     fn default() -> Self {
         Payload::Ciphertext(Default::default())
-    }
-}
-
-/// A type of events from ethererum network.
-#[derive(Debug)]
-pub struct EthEvent(Vec<Event>);
-
-impl EthEvent {
-    pub fn create_event() -> Self {
-        let events = vec![
-            Event {
-                name: "StoreTreeKemCiphertext".to_owned(),
-                inputs: vec![
-                    EventParam {
-                        name: "ciphertext".to_owned(),
-                        kind: ParamType::Bytes,
-                        indexed: true,
-                    },
-                    EventParam {
-                        name: "stateCounter".to_owned(),
-                        kind: ParamType::Uint(256),
-                        indexed: true,
-                    },
-                ],
-                anonymous: false,
-            },
-            Event {
-                name: "StoreTreeKemHandshake".to_owned(),
-                inputs: vec![
-                    EventParam {
-                        name: "handshake".to_owned(),
-                        kind: ParamType::Bytes,
-                        indexed: true,
-                    },
-                    EventParam {
-                        name: "stateCounter".to_owned(),
-                        kind: ParamType::Uint(256),
-                        indexed: true,
-                    },
-                ],
-                anonymous: false,
-            },
-        ];
-
-        EthEvent(events)
-    }
-
-    pub fn treekem_ciphertext_signature(&self) -> Hash {
-        self.0[0].signature()
-    }
-
-    pub fn treekem_handshake_signature(&self) -> Hash {
-        self.0[1].signature()
     }
 }
 
