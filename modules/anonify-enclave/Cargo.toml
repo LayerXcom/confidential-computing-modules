@@ -23,7 +23,7 @@ libsecp256k1 = { version = "0.2", default-features = false }
 anyhow = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
 thiserror = { git = "https://github.com/mesalock-linux/thiserror-sgx.git" }
 ed25519-dalek = { version = "1.0.0-pre.2", default-features = false, features = ["u64_backend"] }
-rand_core = {  branch = "feature/only-trait", git = "https://github.com/cipepser/rand", default-features = false }
+rand_core = { branch = "feature/only-trait", git = "https://github.com/cipepser/rand", default-features = false }
 
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net","backtrace"] }
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }

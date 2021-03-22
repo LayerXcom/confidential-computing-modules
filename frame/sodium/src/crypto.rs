@@ -313,13 +313,13 @@ pub struct SodiumCiphertext {
 impl frame_common::EcallInput for SodiumCiphertext {}
 
 impl SodiumCiphertext {
-    pub fn encrypt<T>(
-        csprng: &mut T,
+    pub fn encrypt<R>(
+        csprng: &mut R,
         others_pub_key: &SodiumPubKey,
-        plaintext: Vec<u8>,
+        plaintext: &[u8],
     ) -> Result<Self>
     where
-        T: RngCore + CryptoRng,
+        R: RngCore + CryptoRng,
     {
         let my_ephemeral_secret = SodiumPrivateKey::from_random(csprng)?;
         let my_ephemeral_pub_key = my_ephemeral_secret.public_key();
@@ -327,7 +327,7 @@ impl SodiumCiphertext {
 
         let cbox = CryptoBox::new(&others_pub_key.0, &my_ephemeral_secret.0);
         let ciphertext = cbox
-            .encrypt(&nonce.0, &plaintext[..])
+            .encrypt(&nonce.0, plaintext)
             .map_err(|e| anyhow!("Failed to encrypt :{:?}", e))?;
 
         Ok(SodiumCiphertext {

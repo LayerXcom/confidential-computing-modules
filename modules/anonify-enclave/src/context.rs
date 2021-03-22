@@ -228,8 +228,13 @@ impl EnclaveKeyOps for AnonifyEnclaveContext {
         self.enclave_key.decrypt(ciphertext).map_err(Into::into)
     }
 
-    fn encrypt(&self) -> anyhow::Result<Self> {
-        
+    fn encrypt<R: RngCore + CryptoRng>(
+        &self,
+        csprng: &mut R,
+        plaintext: &[u8],
+    ) -> anyhow::Result<SodiumCiphertext> {
+        let pubkey = self.enclave_encryption_key()?;
+        SodiumCiphertext::encrypt(csprng, &pubkey, plaintext)
     }
 
     fn enclave_encryption_key(&self) -> anyhow::Result<SodiumPubKey> {
