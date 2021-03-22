@@ -1,33 +1,11 @@
-use anonify_eth_driver::{
-    error::{HostError, Result},
-    eth::Web3Http,
-};
+use anonify_eth_driver::{error::Result, eth::Web3Http, utils::*};
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use std::{marker::Send, path::Path};
-use web3::types::Address;
-
-/// Define a retry condition of deploying contracts.
-/// If it returns true, retry deploying contracts.
-const fn deployer_retry_condition(res: &Result<Address>) -> bool {
-    match res {
-        Ok(_) => false,
-        Err(err) => match err {
-            HostError::Web3ContractError(web3_err) => match web3_err {
-                web3::contract::Error::Abi(_) => false,
-                _ => true,
-            },
-            HostError::Web3ContractDeployError(web3_err) => match web3_err {
-                web3::contract::deploy::Error::Abi(_) => false,
-                _ => true,
-            },
-            HostError::EcallOutputNotSet => false,
-            // error reading abi and bin path
-            HostError::IoError(_) => false,
-            _ => true,
-        },
-    }
-}
+use web3::{
+    contract::Options,
+    types::{Address, TransactionReceipt},
+};
 
 /// Components needed to deploy a contract
 #[derive(Debug)]
@@ -43,14 +21,7 @@ impl EthDeployer {
     }
 
     pub async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {
-        Retry::new(
-            "get_account",
-            *REQUEST_RETRIES,
-            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
-        )
-        .set_condition(deployer_retry_condition)
-        .spawn_async(|| async { self.web3_conn.get_account(index, password).await })
-        .await
+        get_account(&self.web3_conn, index, password).await
     }
 
     pub async fn deploy<P>(
@@ -60,11 +31,11 @@ impl EthDeployer {
         confirmations: usize,
         gas: u64,
         deployer: Address,
-    ) -> Result<String>
+    ) -> Result<Address>
     where
         P: AsRef<Path> + Send + Sync + Copy,
     {
-        let contract_addr = Retry::new(
+        Retry::new(
             "deploy",
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
@@ -75,8 +46,42 @@ impl EthDeployer {
                 .deploy(abi_path, bin_path, confirmations, gas, deployer)
                 .await
         })
-        .await?;
+        .await
+        .map_err(Into::into)
+    }
 
-        Ok(hex::encode(contract_addr.as_bytes()))
+    pub async fn deploy_anonify_by_factory<P>(
+        &self,
+        abi_path: P,
+        signer: Address,
+        gas: u64,
+        factory_address: Address,
+        confirmations: usize,
+    ) -> Result<TransactionReceipt>
+    where
+        P: AsRef<Path> + Send + Sync + Copy,
+    {
+        let contract =
+            create_contract_interface(self.web3_conn.get_eth_url(), abi_path, factory_address)?;
+
+        Retry::new(
+            "deploy",
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
+        )
+        .set_condition(call_with_conf_retry_condition)
+        .spawn_async(|| async {
+            contract
+                .call_with_confirmations(
+                    "deploy",
+                    (),
+                    signer,
+                    Options::with(|opt| opt.gas = Some(gas.into())),
+                    confirmations,
+                )
+                .await
+                .map_err(Into::into)
+        })
+        .await
     }
 }

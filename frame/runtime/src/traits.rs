@@ -145,7 +145,7 @@ pub trait NotificationOps {
 pub trait EnclaveKeyOps {
     fn sign(&self, msg: &[u8]) -> Result<(secp256k1::Signature, secp256k1::RecoveryId)>;
 
-    fn decrypt(&self, ciphertext: SodiumCiphertext) -> Result<Vec<u8>>;
+    fn decrypt(&self, ciphertext: &SodiumCiphertext) -> Result<Vec<u8>>;
 
     fn enclave_encryption_key(&self) -> Result<SodiumPubKey>;
 }

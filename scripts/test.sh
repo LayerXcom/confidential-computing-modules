@@ -10,7 +10,7 @@ ANONIFY_ROOT=/root/anonify
 
 dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/.."
-solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/Anonify.sol
+solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/Anonify.sol ethereum/contracts/Factory.sol
 
 cd frame/types
 cargo build
@@ -35,17 +35,45 @@ make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 cd ${ANONIFY_ROOT}/tests/integration
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 
+# Deploy a FACTORY Contract
+cd ${ANONIFY_ROOT}/ethereum/deployer
+export FACTORY_CONTRACT_ADDRESS=`cargo run factory`
+
 # ERC20 Application Tests
 
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
+cd ${ANONIFY_ROOT}/nodes/state-runtime/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_evaluate_access_policy_by_user_id_field -- --nocapture
+sleep 1
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
 cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_multiple_messages -- --nocapture
 sleep 1
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
+cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_skip_invalid_event -- --nocapture
 sleep 1
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
+cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_node_recovery -- --nocapture
 sleep 1
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
+cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_join_group_then_handshake -- --nocapture
 sleep 1
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
+cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_duplicated_out_of_order_request_from_same_user -- --nocapture
 
 # Secret Backup Application Tests
@@ -55,13 +83,27 @@ unset BACKUP
 export ENCLAVE_PKG_NAME=erc20
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
 cd ${ANONIFY_ROOT}/nodes/key-vault
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_backup_path_secret -- --nocapture
 sleep 1
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
+cd ${ANONIFY_ROOT}/nodes/key-vault
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_recover_without_key_vault -- --nocapture
 sleep 1
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
+cd ${ANONIFY_ROOT}/nodes/key-vault
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_manually_backup_all -- --nocapture
 sleep 1
+
+cd ${ANONIFY_ROOT}/ethereum/deployer
+cargo run $FACTORY_CONTRACT_ADDRESS
+cd ${ANONIFY_ROOT}/nodes/key-vault
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_manually_recover_all -- --nocapture
 
 #

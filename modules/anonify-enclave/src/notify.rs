@@ -44,7 +44,7 @@ impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(ciphertext)?;
+        let buf = enclave_context.decrypt(&ciphertext)?;
         let ecall_input = serde_json::from_slice(&buf[..])?;
         Ok(Self { ecall_input })
     }
