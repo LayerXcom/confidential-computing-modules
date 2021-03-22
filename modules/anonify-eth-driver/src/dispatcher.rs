@@ -34,6 +34,7 @@ struct InnerDispatcher {
     sender: Option<EthSender>,
     watcher: Option<EventWatcher>,
     cache: EventCache,
+    is_healthy: bool,
     #[cfg(feature = "backup-enable")]
     backup: SecretBackup,
 }
@@ -52,6 +53,7 @@ impl Dispatcher {
             cache,
             sender: None,
             watcher: None,
+            is_healthy: false,
             #[cfg(feature = "backup-enable")]
             backup: SecretBackup::default(),
         }));
@@ -108,8 +110,8 @@ impl Dispatcher {
     /// These operations are not mutable so just returning self data type.
     pub async fn run(self, sync_time: u64, signer: Address, gas: u64) -> Result<Self> {
         let this = self.clone();
-        let tx_hash = self.join_group(signer, gas).await?;
-        info!("A transaction hash of join_group: {:?}", tx_hash);
+        let receipt = self.join_group(signer, gas).await?;
+        info!("A transaction hash of join_group: {:?}", receipt);
 
         // it spawns a new OS thread, and hosts an event loop.
         actix_rt::Arbiter::new().exec_fn(move || {
@@ -125,6 +127,15 @@ impl Dispatcher {
         });
 
         Ok(this)
+    }
+
+    pub fn set_healthy(self) -> Self {
+        self.inner.write().is_healthy = true;
+        self
+    }
+
+    pub fn is_healthy(&self) -> bool {
+        self.inner.read().is_healthy
     }
 
     pub async fn fetch_events(&self) -> Result<Option<Vec<serde_json::Value>>> {
