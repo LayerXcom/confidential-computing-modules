@@ -1,3 +1,4 @@
+use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::{Dispatcher, EventCache};
 use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH};
 use sgx_types::sgx_enclave_id_t;
@@ -19,6 +20,7 @@ pub struct Server {
     pub bin_path: String,
     pub sender_address: Address,
     pub dispatcher: Dispatcher,
+    pub cmd_encryption_algo: CmdEncryptionAlgo,
 }
 
 impl Server {
@@ -60,6 +62,7 @@ impl Server {
             bin_path: (&*ANONIFY_BIN_PATH.to_str().unwrap()).to_string(),
             sender_address,
             dispatcher,
+            cmd_encryption_algo: CmdEncryptionAlgo::TreeKem,
         }
     }
 
@@ -69,14 +72,28 @@ impl Server {
             .parse()
             .expect("Failed to parse SYNC_BC_TIME to u64");
 
-        let dispatcher = self
-            .dispatcher
-            .run(sync_time, self.sender_address, DEFAULT_GAS)
-            .await
-            .unwrap()
-            .set_healthy();
+        let dispatcher = match self.cmd_encryption_algo {
+            CmdEncryptionAlgo::TreeKem => self
+                .dispatcher
+                .run(
+                    sync_time,
+                    self.sender_address,
+                    DEFAULT_GAS,
+                    FETCH_CIPHERTEXT_TREEKEM_CMD,
+                    FETCH_HANDSHAKE_TREEKEM_CMD,
+                    JOIN_GROUP_TREEKEM_CMD,
+                )
+                .await
+                .unwrap()
+                .set_healthy(),
+        };
 
         self.dispatcher = dispatcher;
         self
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum CmdEncryptionAlgo {
+    TreeKem,
 }
