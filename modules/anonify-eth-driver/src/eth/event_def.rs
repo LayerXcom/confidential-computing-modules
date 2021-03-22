@@ -42,23 +42,3 @@ pub static STORE_TREEKEM_HANDSHAKE_EVENT: Lazy<Hash> = Lazy::new(|| {
     }
     .signature()
 });
-
-pub static JOIN_GROUP_EVENT: Lazy<Hash> = Lazy::new(|| {
-    Event {
-        name: "JoinGroup".to_owned(),
-        inputs: vec![
-            EventParam {
-                name: "rosterIdx".to_owned(),
-                kind: ParamType::Uint(32),
-                indexed: true,
-            },
-            EventParam {
-                name: "enclaveEncryptionKey".to_owned(),
-                kind: ParamType::FixedBytes(32),
-                indexed: true,
-            },
-        ],
-        anonymous: false,
-    }
-    .signature()
-});

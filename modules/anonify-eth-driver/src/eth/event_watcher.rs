@@ -12,7 +12,6 @@ use anonify_ecall_types::CommandCiphertext;
 use ethabi::ParamType;
 use frame_common::{crypto::ExportHandshake, state_types::StateCounter, TreeKemCiphertext};
 use frame_host::engine::HostEngine;
-use frame_sodium::crypto::SODIUM_PUBLIC_KEY_SIZE;
 use sgx_types::sgx_enclave_id_t;
 use std::{cmp::Ordering, fmt};
 use tracing::{debug, error, info, warn};
@@ -111,29 +110,6 @@ impl EthLog {
 
         Ok((bytes, StateCounter::new(state_counter.as_u32())))
     }
-
-    fn decode_join_group_data(&self) -> Result<(u32, [u8; SODIUM_PUBLIC_KEY_SIZE])> {
-        let tokens = ethabi::decode(
-            &[
-                ParamType::Uint(32),
-                ParamType::FixedBytes(SODIUM_PUBLIC_KEY_SIZE),
-            ],
-            &self.0.data.0,
-        )?;
-        if tokens.len() != 2 {
-            return Err(HostError::InvalidNumberOfEthLogToken(2));
-        }
-        let roster_idx = tokens[0]
-            .clone()
-            .to_uint()
-            .ok_or_else(|| HostError::InvalidEthLogToken)?;
-        let enclave_encryption_key = tokens[1]
-            .clone()
-            .to_fixed_bytes()
-            .ok_or_else(|| HostError::InvalidEthLogToken)?;
-
-        Ok((roster_idx, enclave_encryption_key))
-    }
 }
 
 /// Event fetched logs from smart contracts.
@@ -223,7 +199,6 @@ impl Web3Logs {
                     state_counter,
                 );
                 payloads.push(payload);
-            } else if log.0.topics[0] = *JOIN_GROUP_EVENT {
             } else {
                 error!("Invalid topics: {:?}", log.0.topics[0]);
                 continue;
