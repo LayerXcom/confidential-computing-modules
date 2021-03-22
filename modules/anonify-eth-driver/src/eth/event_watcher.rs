@@ -5,6 +5,7 @@ use crate::{
     utils::*,
     workflow::*,
 };
+use anonify_ecall_types::CommandCiphertext;
 use ethabi::{decode, Event, EventParam, Hash, ParamType};
 use frame_common::{crypto::ExportHandshake, state_types::StateCounter, TreeKemCiphertext};
 use frame_host::engine::HostEngine;
@@ -141,7 +142,7 @@ impl Web3Logs {
             };
 
             // Processing conditions by ciphertext or handshake event
-            if log.0.topics[0] == self.events.ciphertext_signature() {
+            if log.0.topics[0] == self.events.treekem_ciphertext_signature() {
                 let res = match TreeKemCiphertext::decode(&mut &bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
@@ -153,11 +154,11 @@ impl Web3Logs {
                     res.roster_idx(),
                     res.epoch(),
                     res.generation(),
-                    Payload::TreeKemCiphertext(res),
+                    Payload::Ciphertext(CommandCiphertext::TreeKem(res)),
                     state_counter,
                 );
                 payloads.push(payload);
-            } else if log.0.topics[0] == self.events.handshake_signature() {
+            } else if log.0.topics[0] == self.events.treekem_handshake_signature() {
                 let res = match ExportHandshake::decode(&bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
@@ -169,7 +170,7 @@ impl Web3Logs {
                     res.roster_idx(),
                     res.prior_epoch(),
                     u32::MAX, // handshake is the last of the generation
-                    Payload::TreeKemHandshake(res),
+                    Payload::Handshake(res),
                     state_counter,
                 );
                 payloads.push(payload);
@@ -260,20 +261,25 @@ impl InnerEnclaveLog {
 
             for e in self.payloads {
                 match e.payload {
-                    Payload::TreeKemCiphertext(ref ciphertext) => {
-                        info!(
-                            "Fetch a ciphertext: roster_idx: {}, epoch: {}, generation: {}",
-                            ciphertext.roster_idx(),
-                            ciphertext.epoch(),
-                            ciphertext.generation()
-                        );
+                    Payload::Ciphertext(ref ciphertext) => {
+                        match ciphertext {
+                            CommandCiphertext::TreeKem(c) => {
+                                info!(
+                                    "Fetch a ciphertext: roster_idx: {}, epoch: {}, generation: {}",
+                                    c.roster_idx(),
+                                    c.epoch(),
+                                    c.generation()
+                                );
+                            }
+                            _ => error!("Invalid ciphertext: {:?}", ciphertext),
+                        }
 
-                        let inp = host_input::InsertCiphertextByTreeKem::new(
+                        let inp = host_input::InsertCiphertext::new(
                             ciphertext.clone(),
                             e.state_counter(),
                             fetch_ciphertext_cmd,
                         );
-                        match InsertCiphertextByTreeKemWorkflow::exec(inp, eid)
+                        match InsertCiphertextWorkflow::exec(inp, eid)
                             .map_err(Into::into)
                             .and_then(|e| {
                                 e.ecall_output.ok_or_else(|| HostError::EcallOutputNotSet)
@@ -309,7 +315,7 @@ impl InnerEnclaveLog {
                                     .into_iter()
                                     .find(|log| match decode_data(&log) {
                                         Ok((bytes, _state_counter)) => match TreeKemCiphertext::decode(&mut &bytes[..]) {
-                                            Ok(ref res) => res == ciphertext,
+                                            Ok(res) => CommandCiphertext::TreeKem(res) == *ciphertext,
                                             Err(error) => {
                                                 error!("Ciphertext::decode error: {:?}", error);
                                                 false
@@ -338,7 +344,7 @@ impl InnerEnclaveLog {
                             }
                         };
                     }
-                    Payload::TreeKemHandshake(ref handshake) => {
+                    Payload::Handshake(ref handshake) => {
                         info!(
                             "Fetch a handshake: roster_idx: {}, epoch: {}",
                             handshake.roster_idx(),
@@ -500,13 +506,13 @@ impl Ord for PayloadType {
 
 #[derive(Debug, Clone, Hash)]
 pub(crate) enum Payload {
-    TreeKemCiphertext(TreeKemCiphertext),
-    TreeKemHandshake(ExportHandshake),
+    Ciphertext(CommandCiphertext),
+    Handshake(ExportHandshake),
 }
 
 impl Default for Payload {
     fn default() -> Self {
-        Payload::TreeKemCiphertext(Default::default())
+        Payload::Ciphertext(Default::default())
     }
 }
 
@@ -518,7 +524,7 @@ impl EthEvent {
     pub fn create_event() -> Self {
         let events = vec![
             Event {
-                name: "StoreCiphertext".to_owned(),
+                name: "StoreTreeKemCiphertext".to_owned(),
                 inputs: vec![
                     EventParam {
                         name: "ciphertext".to_owned(),
@@ -534,7 +540,7 @@ impl EthEvent {
                 anonymous: false,
             },
             Event {
-                name: "StoreHandshake".to_owned(),
+                name: "StoreTreeKemHandshake".to_owned(),
                 inputs: vec![
                     EventParam {
                         name: "handshake".to_owned(),
@@ -554,11 +560,11 @@ impl EthEvent {
         EthEvent(events)
     }
 
-    pub fn ciphertext_signature(&self) -> Hash {
+    pub fn treekem_ciphertext_signature(&self) -> Hash {
         self.0[0].signature()
     }
 
-    pub fn handshake_signature(&self) -> Hash {
+    pub fn treekem_handshake_signature(&self) -> Hash {
         self.0[1].signature()
     }
 }

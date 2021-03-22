@@ -25,8 +25,8 @@ contract Anonify is ReportHandle {
     // Counter for enforcing the order of state transitions
     mapping(uint32 => GroupKeyCounter) private _groupKeyCounter;
 
-    event StoreCiphertext(bytes ciphertext, uint256 stateCounter);
-    event StoreHandshake(bytes handshake, uint256 stateCounter);
+    event StoreTreeKemCiphertext(bytes ciphertext, uint256 stateCounter);
+    event StoreTreeKemHandshake(bytes handshake, uint256 stateCounter);
     event UpdateMrenclaveVer(uint32 newVersion);
 
     constructor() {

@@ -79,7 +79,7 @@ impl EthSender {
         .await
     }
 
-    pub async fn send_command(&self, host_output: &host_output::CommandByTreeKem) -> Result<H256> {
+    pub async fn send_command(&self, host_output: &host_output::Command) -> Result<H256> {
         info!("Sending a command to blockchain: {:?}", host_output);
         Retry::new(
             "send_command",
