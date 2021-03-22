@@ -365,7 +365,7 @@ pub(crate) mod tests {
         let pk_server = sk_server.public_key();
 
         let msg = b"This is a test message";
-        let ciphertext = SodiumCiphertext::encrypt(&mut rng, &pk_server, msg.to_vec()).unwrap();
+        let ciphertext = SodiumCiphertext::encrypt(&mut rng, &pk_server, &msg.to_vec()).unwrap();
 
         let plaintext = ciphertext.decrypt(&sk_server).unwrap();
         assert_eq!(plaintext, &msg[..]);
