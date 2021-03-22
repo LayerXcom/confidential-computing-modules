@@ -52,7 +52,7 @@ contract Anonify is ReportHandle {
         // It is assumed that the nodes participate in the order of roster index,
         // and all the nodes finish participating before the state transition.
         _groupKeyCounter[_rosterIdx] = GroupKeyCounter(0, _rosterIdx + 1);
-        storeHandshake(_handshake);
+        storeTreeKemHandshake(_handshake);
     }
 
     // a recovered TEE node registers the report
@@ -79,7 +79,7 @@ contract Anonify is ReportHandle {
 
         updateMrenclaveInner(_report, _reportSig);
         _mrenclaveVer = _newVersion;
-        storeHandshake(_handshake);
+        storeTreeKemHandshake(_handshake);
         emit UpdateMrenclaveVer(_newVersion);
     }
 
@@ -93,7 +93,14 @@ contract Anonify is ReportHandle {
     ) public {
         address verifyingKey =
             Secp256k1.recover(
-                sha256(abi.encodePacked(_newCiphertext, _rosterIdx, _generation, _epoch)),
+                sha256(
+                    abi.encodePacked(
+                        _newCiphertext,
+                        _rosterIdx,
+                        _generation,
+                        _epoch
+                    )
+                ),
                 _enclaveSig
             );
         require(
@@ -117,7 +124,7 @@ contract Anonify is ReportHandle {
 
         _groupKeyCounter[_rosterIdx] = GroupKeyCounter(_generation, _epoch);
         _stateCounter = incremented_state_counter;
-        emit StoreCiphertext(_newCiphertext, incremented_state_counter);
+        emit StoreTreeKemCiphertext(_newCiphertext, incremented_state_counter);
     }
 
     function handshake(
@@ -129,7 +136,14 @@ contract Anonify is ReportHandle {
     ) public {
         address verifyingKey =
             Secp256k1.recover(
-                sha256(abi.encodePacked(_handshake, _rosterIdx, _generation, _epoch)),
+                sha256(
+                    abi.encodePacked(
+                        _handshake,
+                        _rosterIdx,
+                        _generation,
+                        _epoch
+                    )
+                ),
                 _enclaveSig
             );
         require(
@@ -140,22 +154,19 @@ contract Anonify is ReportHandle {
             verifyingKeyMapping[verifyingKey] == verifyingKey,
             "Invalid enclave signature."
         );
-        require(
-            _generation == 0,
-            "generation must be zero"
-        );
+        require(_generation == 0, "generation must be zero");
         require(
             _epoch > _groupKeyCounter[_rosterIdx].epoch,
             "epoch must be bigger than the counter"
         );
 
         _groupKeyCounter[_rosterIdx] = GroupKeyCounter(_generation, _epoch);
-        storeHandshake(_handshake);
+        storeTreeKemHandshake(_handshake);
     }
 
-    function storeHandshake(bytes memory _handshake) private {
+    function storeTreeKemHandshake(bytes memory _handshake) private {
         uint256 incremented_state_counter = _stateCounter.add(1);
         _stateCounter = incremented_state_counter;
-        emit StoreHandshake(_handshake, incremented_state_counter);
+        emit StoreTreeKemHandshake(_handshake, incremented_state_counter);
     }
 }
