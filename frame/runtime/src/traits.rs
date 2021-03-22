@@ -6,9 +6,10 @@ use crate::localstd::{
 };
 use crate::serde::{de::DeserializeOwned, Serialize};
 use frame_common::{
-    crypto::{AccountId, Ciphertext},
+    crypto::AccountId,
     state_types::{MemId, NotifyState, ReturnState, StateCounter, UpdatedState, UserCounter},
     traits::*,
+    TreeKemCiphertext,
 };
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::key_vault::{
@@ -162,9 +163,9 @@ pub trait GroupKeyOps: Sized {
         #[cfg(feature = "backup-enable")] recover_path_secret: F,
     ) -> Result<()>;
 
-    fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext>;
+    fn encrypt(&self, plaintext: Vec<u8>) -> Result<TreeKemCiphertext>;
 
-    fn decrypt(&self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>>;
+    fn decrypt(&self, app_msg: &TreeKemCiphertext) -> Result<Option<Vec<u8>>>;
 
     /// Ratchet sender's keychain per a transaction
     fn sender_ratchet(&mut self, roster_idx: usize) -> Result<()>;

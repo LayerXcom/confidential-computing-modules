@@ -6,10 +6,7 @@ use crate::{
     workflow::*,
 };
 use ethabi::{decode, Event, EventParam, Hash, ParamType};
-use frame_common::{
-    crypto::{Ciphertext, ExportHandshake},
-    state_types::StateCounter,
-};
+use frame_common::{crypto::ExportHandshake, state_types::StateCounter, TreeKemCiphertext};
 use frame_host::engine::HostEngine;
 use sgx_types::sgx_enclave_id_t;
 use std::{cmp::Ordering, fmt};
@@ -145,7 +142,7 @@ impl Web3Logs {
 
             // Processing conditions by ciphertext or handshake event
             if log.0.topics[0] == self.events.ciphertext_signature() {
-                let res = match Ciphertext::decode(&mut &bytes[..]) {
+                let res = match TreeKemCiphertext::decode(&mut &bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
                         error!("{}", e);
@@ -156,7 +153,7 @@ impl Web3Logs {
                     res.roster_idx(),
                     res.epoch(),
                     res.generation(),
-                    Payload::Ciphertext(res),
+                    Payload::TreeKemCiphertext(res),
                     state_counter,
                 );
                 payloads.push(payload);
@@ -172,7 +169,7 @@ impl Web3Logs {
                     res.roster_idx(),
                     res.prior_epoch(),
                     u32::MAX, // handshake is the last of the generation
-                    Payload::Handshake(res),
+                    Payload::TreeKemHandshake(res),
                     state_counter,
                 );
                 payloads.push(payload);
@@ -263,7 +260,7 @@ impl InnerEnclaveLog {
 
             for e in self.payloads {
                 match e.payload {
-                    Payload::Ciphertext(ref ciphertext) => {
+                    Payload::TreeKemCiphertext(ref ciphertext) => {
                         info!(
                             "Fetch a ciphertext: roster_idx: {}, epoch: {}, generation: {}",
                             ciphertext.roster_idx(),
@@ -271,12 +268,12 @@ impl InnerEnclaveLog {
                             ciphertext.generation()
                         );
 
-                        let inp = host_input::InsertCiphertext::new(
+                        let inp = host_input::InsertCiphertextByTreeKem::new(
                             ciphertext.clone(),
                             e.state_counter(),
                             fetch_ciphertext_cmd,
                         );
-                        match InsertCiphertextWorkflow::exec(inp, eid)
+                        match InsertCiphertextByTreeKemWorkflow::exec(inp, eid)
                             .map_err(Into::into)
                             .and_then(|e| {
                                 e.ecall_output.ok_or_else(|| HostError::EcallOutputNotSet)
@@ -311,7 +308,7 @@ impl InnerEnclaveLog {
                                 match (&self.logs)
                                     .into_iter()
                                     .find(|log| match decode_data(&log) {
-                                        Ok((bytes, _state_counter)) => match Ciphertext::decode(&mut &bytes[..]) {
+                                        Ok((bytes, _state_counter)) => match TreeKemCiphertext::decode(&mut &bytes[..]) {
                                             Ok(ref res) => res == ciphertext,
                                             Err(error) => {
                                                 error!("Ciphertext::decode error: {:?}", error);
@@ -341,7 +338,7 @@ impl InnerEnclaveLog {
                             }
                         };
                     }
-                    Payload::Handshake(ref handshake) => {
+                    Payload::TreeKemHandshake(ref handshake) => {
                         info!(
                             "Fetch a handshake: roster_idx: {}, epoch: {}",
                             handshake.roster_idx(),
@@ -503,13 +500,13 @@ impl Ord for PayloadType {
 
 #[derive(Debug, Clone, Hash)]
 pub(crate) enum Payload {
-    Ciphertext(Ciphertext),
-    Handshake(ExportHandshake),
+    TreeKemCiphertext(TreeKemCiphertext),
+    TreeKemHandshake(ExportHandshake),
 }
 
 impl Default for Payload {
     fn default() -> Self {
-        Payload::Ciphertext(Default::default())
+        Payload::TreeKemCiphertext(Default::default())
     }
 }
 
