@@ -105,7 +105,6 @@ impl Dispatcher {
         Ok(address)
     }
 
-    // TODO: treekem
     /// - Starting syncing with the blockchain node.
     /// - Joining as the state runtime node.
     /// These operations are not mutable so just returning self data type.
