@@ -289,8 +289,8 @@ impl InnerEnclaveLog {
         } else {
             let mut acc = vec![];
 
-            for e in self.payloads {
-                match e.payload {
+            for e in &self.payloads {
+                match &e.payload {
                     Payload::TreeKemCiphertext {
                         roster_idx,
                         epoch,
@@ -302,75 +302,17 @@ impl InnerEnclaveLog {
                             roster_idx, epoch, generation,
                         );
 
+                        let ciphertext = CommandCiphertext::TreeKem(ciphertext.clone());
                         let inp = host_input::InsertCiphertext::new(
-                            CommandCiphertext::TreeKem(ciphertext.clone()),
+                            ciphertext.clone(),
                             e.state_counter(),
                             fetch_ciphertext_cmd,
                         );
-                        match InsertCiphertextWorkflow::exec(inp, eid)
-                            .map_err(Into::into)
-                            .and_then(|e| {
-                                e.ecall_output.ok_or_else(|| HostError::EcallOutputNotSet)
-                            }) {
-                            Ok(notify) => {
-                                if let Some(notify_state) = notify.state {
-                                    match bincode::deserialize::<Vec<u8>>(
-                                        &notify_state.into_vec()[..],
-                                    ) {
-                                        Ok(bytes) => match serde_json::from_slice(&bytes[..]) {
-                                            Ok(json) => acc.push(json),
-                                            Err(err) => error!(
-                                                "Error in serde_json::from_slice(&bytes[..]): {:?}",
-                                                err
-                                            ),
-                                        },
-                                        Err(err) => {
-                                            error!("Error in bincode::deserialize: {:?}", err)
-                                        }
-                                    }
-                                }
-                            }
-                            // Even if an error occurs in Enclave, it is unlikely that retry process will succeed,
-                            // so skip the event.
-                            Err(err) => {
-                                error!(
-                                    "Error in enclave (InsertCiphertextWorkflow::exec): {:?}",
-                                    err
-                                );
 
-                                // Logging a skipped event
-                                match (&self.logs)
-                                    .into_iter()
-                                    .find(|log| match log.decode_cipher_handshake_data() {
-                                        Ok((bytes, _state_counter)) => match TreeKemCiphertext::decode(&mut &bytes[..]) {
-                                            Ok(res) => res == *ciphertext,
-                                            Err(error) => {
-                                                error!("Ciphertext::decode error: {:?}", error);
-                                                false
-                                            }
-                                        },
-                                        Err(error) => {
-                                            error!("decode_data error: {:?}", error);
-                                            false
-                                        }
-                                    }) {
-                                    Some(skipped_log) => {
-                                        warn!(
-                                            "A event is skipped because of occurring error in enclave: {:?}",
-                                            skipped_log
-                                        )
-                                    }
-                                    None => {
-                                        error!(
-                                            "Not found the skipped event. The corresponding ciphertext is {:?}",
-                                            ciphertext
-                                        );
-                                    }
-                                }
-
-                                continue;
-                            }
-                        };
+                        match self.insert_ciphertext(inp, eid, &ciphertext) {
+                            Some(notification) => acc.push(notification),
+                            None => continue,
+                        }
                     }
                     Payload::Handshake {
                         roster_idx,
@@ -403,6 +345,72 @@ impl InnerEnclaveLog {
                 Some(acc)
             }
         }
+    }
+
+    fn insert_ciphertext(
+        &self,
+        inp: host_input::InsertCiphertext,
+        eid: sgx_enclave_id_t,
+        ciphertext: &CommandCiphertext,
+    ) -> Option<serde_json::Value> {
+        match InsertCiphertextWorkflow::exec(inp, eid)
+            .map_err(Into::into)
+            .and_then(|e| e.ecall_output.ok_or_else(|| HostError::EcallOutputNotSet))
+        {
+            Ok(notify) => {
+                if let Some(notify_state) = notify.state {
+                    match bincode::deserialize::<Vec<u8>>(&notify_state.into_vec()[..]) {
+                        Ok(bytes) => match serde_json::from_slice(&bytes[..]) {
+                            Ok(json) => return Some(json),
+                            Err(err) => {
+                                error!("Error in serde_json::from_slice(&bytes[..]): {:?}", err)
+                            }
+                        },
+                        Err(err) => error!("Error in bincode::deserialize: {:?}", err),
+                    }
+                }
+            }
+            // Even if an error occurs in Enclave, it is unlikely that retry process will succeed,
+            // so skip the event.
+            Err(err) => {
+                error!(
+                    "Error in enclave (InsertCiphertextWorkflow::exec): {:?}",
+                    err
+                );
+
+                // Logging a skipped event
+                match (&self.logs).into_iter().find(|log| {
+                    match log.decode_cipher_handshake_data() {
+                        Ok((bytes, _state_counter)) => {
+                            match TreeKemCiphertext::decode(&mut &bytes[..]) {
+                                Ok(res) => CommandCiphertext::TreeKem(res) == *ciphertext,
+                                Err(error) => {
+                                    error!("Ciphertext::decode error: {:?}", error);
+                                    false
+                                }
+                            }
+                        }
+                        Err(error) => {
+                            error!("decode_data error: {:?}", error);
+                            false
+                        }
+                    }
+                }) {
+                    Some(skipped_log) => warn!(
+                        "A event is skipped because of occurring error in enclave: {:?}",
+                        skipped_log
+                    ),
+                    None => {
+                        error!(
+                            "Not found the skipped event. The corresponding ciphertext is {:?}",
+                            ciphertext
+                        );
+                    }
+                }
+            }
+        }
+
+        None
     }
 
     fn insert_handshake(
