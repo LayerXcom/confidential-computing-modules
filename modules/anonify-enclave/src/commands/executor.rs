@@ -4,11 +4,12 @@ use anyhow::anyhow;
 use frame_common::{
     crypto::AccountId,
     state_types::{NotifyState, ReturnState, StateType, UpdatedState, UserCounter},
-    AccessPolicy, TreeKemCiphertext,
+    AccessPolicy, EnclaveKeyCiphertext, TreeKemCiphertext,
 };
 use frame_runtime::traits::*;
 use serde::{Deserialize, Serialize};
 use std::{marker::PhantomData, vec::Vec};
+use rand_core::{CryptoRng, RngCore};
 
 /// Command data which make state update
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -47,21 +48,21 @@ where
         key: &GK,
         max_mem_size: usize,
     ) -> Result<TreeKemCiphertext> {
-        // Add padding to fix the ciphertext size of all state types.
-        // The padding works for fixing the ciphertext size so that
-        // other people cannot distinguish what state is encrypted based on the size.
-        fn append_padding(buf: &mut Vec<u8>, max_mem_size: usize) {
-            let padding_size = max_mem_size - buf.len();
-            let padding = vec![0u8; padding_size];
-            buf.extend_from_slice(&padding);
-        }
-
         let mut buf = bincode::serialize(&self).unwrap(); // must not fail
-        append_padding(&mut buf, max_mem_size);
+        Self::append_padding(&mut buf, max_mem_size);
         key.encrypt(buf).map_err(Into::into)
     }
 
-    pub fn encrypt_with_enclave_key(&self)
+    pub fn encrypt_with_enclave_key<R: RngCore + CryptoRng>(
+        &self,
+        csprng: &mut R,
+        pubkey: SodiumPubKey,
+        max_mem_size: usize,
+    ) -> Result<EnclaveKeyCiphertext> {
+        let mut buf = bincode::serialize(&self).unwrap(); // must not fail
+        Self::append_padding(&mut buf, max_mem_size);
+        SodiumCiphertext::encrypt(csprng, &pubkey, buf)
+    }
 
     pub fn decode(bytes: &[u8]) -> Result<Self> {
         bincode::deserialize(bytes).map_err(Into::into)
@@ -103,6 +104,15 @@ where
             )
             .into()),
         }
+    }
+
+    // Add padding to fix the ciphertext size of all state types.
+    // The padding works for fixing the ciphertext size so that
+    // other people cannot distinguish what state is encrypted based on the size.
+    fn append_padding(buf: &mut Vec<u8>, max_mem_size: usize) {
+        let padding_size = max_mem_size - buf.len();
+        let padding = vec![0u8; padding_size];
+        buf.extend_from_slice(&padding);
     }
 
     pub fn my_account_id(&self) -> AccountId {

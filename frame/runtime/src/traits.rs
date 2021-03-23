@@ -21,7 +21,6 @@ use frame_mra_tls::key_vault::{
 };
 use frame_sodium::{SodiumCiphertext, SodiumPubKey, StoreEnclaveDecryptionKey};
 use frame_treekem::{handshake::HandshakeParams, PathSecret, StorePathSecrets};
-use rand_core::{CryptoRng, RngCore};
 use remote_attestation::EncodedQuote;
 
 /// Execute state transition functions from runtime
@@ -149,8 +148,6 @@ pub trait EnclaveKeyOps {
     fn sign(&self, msg: &[u8]) -> Result<(secp256k1::Signature, secp256k1::RecoveryId)>;
 
     fn decrypt(&self, ciphertext: &SodiumCiphertext) -> Result<Vec<u8>>;
-
-    fn encrypt<R: RngCore + CryptoRng>(&self, csprng: &mut R, plaintext: &[u8]) -> Result<SodiumCiphertext>;
 
     fn enclave_encryption_key(&self) -> Result<SodiumPubKey>;
 }

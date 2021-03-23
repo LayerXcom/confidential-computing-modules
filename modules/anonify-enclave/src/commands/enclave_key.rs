@@ -9,6 +9,7 @@ use frame_common::{
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
+use frame_sodium::rng::SgxRng;
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
@@ -64,26 +65,17 @@ where
         C: ContextOps<S = StateType> + Clone,
     {
         let my_roster_idx = enclave_context.my_roster_idx();
-        
-
-        let group_key = &mut *enclave_context.write_group_key();
-        let roster_idx = group_key.my_roster_idx();
-        // ratchet sender's app keychain per tx.
-        group_key.sender_ratchet(roster_idx as usize)?;
-
+        let pubkey = enclave_context.enclave_encryption_key()?;
         let my_account_id = self.command_plaintext.access_policy().into_account_id();
-        let ciphertext = CommandExecutor::<R, C, AP>::new(my_account_id, self.command_plaintext)?
-            .encrypt(group_key, max_mem_size)?;
 
-        let msg = Sha256::hash_for_attested_tx(
-            &ciphertext.encode(),
-            roster_idx,
-            ciphertext.generation(),
-            ciphertext.epoch(),
-        );
+        let mut csprng = SgxRng::new()?;
+        let ciphertext = CommandExecutor::<R, C, AP>::new(my_account_id, self.command_plaintext)?
+            .encrypt_with_enclave_key(pubkey, max_mem_size)?;
+
+        let msg = Sha256::hash_for_attested_tx(&ciphertext.encode(), my_roster_idx);
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
         let command_output = output::Command::new(
-            CommandCiphertext::TreeKem(ciphertext),
+            CommandCiphertext::EnclaveKey(ciphertext),
             enclave_sig.0,
             enclave_sig.1,
         );

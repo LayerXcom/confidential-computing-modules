@@ -28,12 +28,13 @@ pub mod types;
 pub use crate::types::*;
 
 use crate::serde::{Deserialize, Serialize};
-use frame_common::TreeKemCiphertext;
+use frame_common::{TreeKemCiphertext, EnclaveKeyCiphertext};
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[serde(crate = "crate::serde")]
 pub enum CommandCiphertext {
     TreeKem(TreeKemCiphertext),
+    EnclaveKey(EnclaveKeyCiphertext),
 }
 
 impl Default for CommandCiphertext {

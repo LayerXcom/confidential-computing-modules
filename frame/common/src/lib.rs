@@ -40,5 +40,5 @@ pub mod crypto;
 pub mod state_types;
 pub mod traits;
 
-pub use crate::ciphertexts::treekem::TreeKemCiphertext;
+pub use crate::ciphertexts::{enclave_key::EnclaveKeyCiphertext, treekem::TreeKemCiphertext};
 pub use traits::*;
