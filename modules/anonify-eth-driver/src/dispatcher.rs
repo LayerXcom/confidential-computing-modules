@@ -77,6 +77,9 @@ impl Dispatcher {
             let anonify_contract_address: Address = contract
                 .query("getAnonifyAddress", (), None, Options::default(), None)
                 .await?;
+            if anonify_contract_address == Address::zero() {
+                return Err(HostError::AnonifyAddressNotSet);
+            }
             let anonify_contract_info =
                 ContractInfo::new(anonify_abi_path, anonify_contract_address)?;
 

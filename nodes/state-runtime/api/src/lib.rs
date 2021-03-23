@@ -60,6 +60,7 @@ pub mod state {
 
         #[derive(Debug, Clone, Deserialize, Serialize)]
         pub struct Request {
+            #[serde(flatten)]
             pub ciphertext: SodiumCiphertext,
         }
 
