@@ -8,7 +8,7 @@ use frame_common::{
     AccessPolicy, TreeKemCiphertext,
 };
 use frame_runtime::traits::*;
-use frame_sodium::{SodiumCiphertext, SodiumPubKey};
+use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey};
 use rand_core::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
 use std::{marker::PhantomData, vec::Vec};
@@ -92,6 +92,16 @@ where
             Some(plaintext) => CommandExecutor::decode(&plaintext[..]).map(Some),
             None => Ok(None),
         }
+    }
+
+    pub fn decrypt_with_enclave_key(
+        ciphertext: &SodiumCiphertext,
+        privkey: &SodiumPrivateKey,
+    ) -> Result<Self> {
+        ciphertext
+            .decrypt(privkey)
+            .map_err(Into::into)
+            .and_then(|bytes| CommandExecutor::decode(&bytes[..]))
     }
 
     fn stf_call(

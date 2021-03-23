@@ -30,7 +30,7 @@ use frame_mra_tls::{
     AttestedTlsConfig, Client, ClientConfig,
 };
 use frame_runtime::traits::*;
-use frame_sodium::{SodiumCiphertext, SodiumPubKey, StoreEnclaveDecryptionKey};
+use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, StoreEnclaveDecryptionKey};
 #[cfg(feature = "backup-enable")]
 use frame_treekem::PathSecret;
 use frame_treekem::{
@@ -236,6 +236,12 @@ impl EnclaveKeyOps for AnonifyEnclaveContext {
     fn enclave_encryption_key(&self) -> anyhow::Result<SodiumPubKey> {
         self.enclave_key
             .enclave_encryption_key()
+            .map_err(|e| anyhow!("{:?}", e))
+    }
+
+    fn enclave_decryption_key(&self) -> anyhow::Result<&SodiumPrivateKey> {
+        self.enclave_key
+            .enclave_decryption_key()
             .map_err(|e| anyhow!("{:?}", e))
     }
 }

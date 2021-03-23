@@ -21,7 +21,7 @@ impl Default for CommandCiphertext {
 #[derive(Clone, Serialize, Deserialize, PartialEq, Default)]
 #[serde(crate = "crate::serde")]
 pub struct EnclaveKeyCiphertext {
-    encrypted_state: SodiumCiphertext,
+    pub encrypted_state: SodiumCiphertext,
 }
 
 impl fmt::Debug for EnclaveKeyCiphertext {
