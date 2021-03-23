@@ -1,4 +1,7 @@
-use super::connection::{Web3Contract, Web3Http};
+use super::{
+    connection::{Web3Contract, Web3Http},
+    event_def::*,
+};
 use crate::{
     cache::EventCache,
     error::{HostError, Result},
@@ -6,7 +9,7 @@ use crate::{
     workflow::*,
 };
 use anonify_ecall_types::CommandCiphertext;
-use ethabi::{decode, Event, EventParam, Hash, ParamType};
+use ethabi::ParamType;
 use frame_common::{crypto::ExportHandshake, state_types::StateCounter, TreeKemCiphertext};
 use frame_host::engine::HostEngine;
 use sgx_types::sgx_enclave_id_t;
@@ -90,22 +93,36 @@ impl fmt::LowerHex for EthLog {
     }
 }
 
+impl EthLog {
+    fn decode_cipher_handshake_data(&self) -> Result<(Vec<u8>, StateCounter)> {
+        let tokens = ethabi::decode(&[ParamType::Bytes, ParamType::Uint(256)], &self.0.data.0)?;
+        if tokens.len() != 2 {
+            return Err(HostError::InvalidNumberOfEthLogToken(2));
+        }
+        let bytes = tokens[0]
+            .clone()
+            .to_bytes()
+            .ok_or_else(|| HostError::InvalidEthLogToken)?;
+        let state_counter = tokens[1]
+            .clone()
+            .to_uint()
+            .ok_or_else(|| HostError::InvalidEthLogToken)?;
+
+        Ok((bytes, StateCounter::new(state_counter.as_u32())))
+    }
+}
+
 /// Event fetched logs from smart contracts.
 #[derive(Debug)]
 pub struct Web3Logs {
     logs: Vec<EthLog>,
     cache: EventCache,
-    events: EthEvent,
 }
 
 impl Web3Logs {
-    pub fn new(logs: Vec<Log>, cache: EventCache, events: EthEvent) -> Self {
+    pub fn new(logs: Vec<Log>, cache: EventCache) -> Self {
         let logs: Vec<EthLog> = logs.into_iter().map(Into::into).collect();
-        Web3Logs {
-            logs,
-            cache,
-            events,
-        }
+        Web3Logs { logs, cache }
     }
 
     fn into_enclave_log(self) -> EnclaveLog {
@@ -133,16 +150,16 @@ impl Web3Logs {
                 continue;
             }
 
-            let (bytes, state_counter) = match decode_data(&log) {
-                Ok(d) => d,
-                Err(e) => {
-                    error!("{}", e);
-                    continue;
-                }
-            };
-
             // Processing conditions by ciphertext or handshake event
-            if log.0.topics[0] == self.events.treekem_ciphertext_signature() {
+            if log.0.topics[0] == *STORE_TREEKEM_CIPHERTEXT_EVENT {
+                let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
+                    Ok(d) => d,
+                    Err(e) => {
+                        error!("{}", e);
+                        continue;
+                    }
+                };
+
                 let res = match TreeKemCiphertext::decode(&mut &bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
@@ -158,7 +175,15 @@ impl Web3Logs {
                     state_counter,
                 );
                 payloads.push(payload);
-            } else if log.0.topics[0] == self.events.treekem_handshake_signature() {
+            } else if log.0.topics[0] == *STORE_TREEKEM_HANDSHAKE_EVENT {
+                let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
+                    Ok(d) => d,
+                    Err(e) => {
+                        error!("{}", e);
+                        continue;
+                    }
+                };
+
                 let res = match ExportHandshake::decode(&bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
@@ -313,7 +338,7 @@ impl InnerEnclaveLog {
                                 // Logging a skipped event
                                 match (&self.logs)
                                     .into_iter()
-                                    .find(|log| match decode_data(&log) {
+                                    .find(|log| match log.decode_cipher_handshake_data() {
                                         Ok((bytes, _state_counter)) => match TreeKemCiphertext::decode(&mut &bytes[..]) {
                                             Ok(res) => CommandCiphertext::TreeKem(res) == *ciphertext,
                                             Err(error) => {
@@ -514,74 +539,4 @@ impl Default for Payload {
     fn default() -> Self {
         Payload::Ciphertext(Default::default())
     }
-}
-
-/// A type of events from ethererum network.
-#[derive(Debug)]
-pub struct EthEvent(Vec<Event>);
-
-impl EthEvent {
-    pub fn create_event() -> Self {
-        let events = vec![
-            Event {
-                name: "StoreTreeKemCiphertext".to_owned(),
-                inputs: vec![
-                    EventParam {
-                        name: "ciphertext".to_owned(),
-                        kind: ParamType::Bytes,
-                        indexed: true,
-                    },
-                    EventParam {
-                        name: "stateCounter".to_owned(),
-                        kind: ParamType::Uint(256),
-                        indexed: true,
-                    },
-                ],
-                anonymous: false,
-            },
-            Event {
-                name: "StoreTreeKemHandshake".to_owned(),
-                inputs: vec![
-                    EventParam {
-                        name: "handshake".to_owned(),
-                        kind: ParamType::Bytes,
-                        indexed: true,
-                    },
-                    EventParam {
-                        name: "stateCounter".to_owned(),
-                        kind: ParamType::Uint(256),
-                        indexed: true,
-                    },
-                ],
-                anonymous: false,
-            },
-        ];
-
-        EthEvent(events)
-    }
-
-    pub fn treekem_ciphertext_signature(&self) -> Hash {
-        self.0[0].signature()
-    }
-
-    pub fn treekem_handshake_signature(&self) -> Hash {
-        self.0[1].signature()
-    }
-}
-
-fn decode_data(log: &EthLog) -> Result<(Vec<u8>, StateCounter)> {
-    let tokens = decode(&[ParamType::Bytes, ParamType::Uint(256)], &log.0.data.0)?;
-    if tokens.len() != 2 {
-        return Err(HostError::InvalidNumberOfEthLogToken(2));
-    }
-    let bytes = tokens[0]
-        .clone()
-        .to_bytes()
-        .ok_or_else(|| HostError::InvalidEthLogToken)?;
-    let state_counter = tokens[1]
-        .clone()
-        .to_uint()
-        .ok_or_else(|| HostError::InvalidEthLogToken)?;
-
-    Ok((bytes, StateCounter::new(state_counter.as_u32())))
 }

@@ -1,4 +1,4 @@
-use super::event_watcher::{EthEvent, Web3Logs};
+use super::{event_def::*, event_watcher::Web3Logs};
 use crate::{
     cache::EventCache,
     error::{HostError, Result},
@@ -166,9 +166,6 @@ impl Web3Contract {
     }
 
     pub async fn get_event(&self, cache: EventCache, key: Address) -> Result<Web3Logs> {
-        let events = EthEvent::create_event();
-        let ciphertext_sig = events.treekem_ciphertext_signature();
-        let handshake_sig = events.treekem_handshake_signature();
         // Read latest block number from in-memory event cache.
         let latest_fetched_num = cache
             .inner()
@@ -179,7 +176,10 @@ impl Web3Contract {
         let filter = FilterBuilder::default()
             .address(vec![self.address])
             .topic_filter(TopicFilter {
-                topic0: Topic::OneOf(vec![ciphertext_sig, handshake_sig]),
+                topic0: Topic::OneOf(vec![
+                    *STORE_TREEKEM_CIPHERTEXT_EVENT,
+                    *STORE_TREEKEM_HANDSHAKE_EVENT,
+                ]),
                 topic1: Topic::Any,
                 topic2: Topic::Any,
                 topic3: Topic::Any,
@@ -191,7 +191,7 @@ impl Web3Contract {
 
         let logs = self.web3_conn.get_logs(&filter).await?;
 
-        Ok(Web3Logs::new(logs, cache, events))
+        Ok(Web3Logs::new(logs, cache))
     }
 
     pub async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {

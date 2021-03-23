@@ -967,7 +967,7 @@ where
         "counter": counter,
     });
     let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(csprng, &enc_key, &serde_json::to_vec(&req).unwrap()).unwrap();
 
     state_runtime_node_api::state::post::Request {
         ciphertext,
@@ -1014,7 +1014,7 @@ where
         "counter": counter,
     });
     let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(csprng, &enc_key, &serde_json::to_vec(&req).unwrap()).unwrap();
 
     state_runtime_node_api::state::post::Request {
         ciphertext,
@@ -1061,7 +1061,7 @@ where
         "counter": counter,
     });
     let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(csprng, &enc_key, &serde_json::to_vec(&req).unwrap()).unwrap();
 
     state_runtime_node_api::state::post::Request {
         ciphertext,
@@ -1097,7 +1097,7 @@ where
         "state_name": "balance_of",
     });
     let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(csprng, &enc_key, &serde_json::to_vec(&req).unwrap()).unwrap();
 
     state_runtime_node_api::state::get::Request { ciphertext }
 }
@@ -1128,7 +1128,7 @@ where
         "access_policy": access_policy,
     });
     let ciphertext =
-        SodiumCiphertext::encrypt(csprng, &enc_key, serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(csprng, &enc_key, &serde_json::to_vec(&req).unwrap()).unwrap();
 
     state_runtime_node_api::user_counter::get::Request { ciphertext }
 }
