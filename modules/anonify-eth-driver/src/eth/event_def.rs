@@ -42,3 +42,23 @@ pub static STORE_TREEKEM_HANDSHAKE_EVENT: Lazy<Hash> = Lazy::new(|| {
     }
     .signature()
 });
+
+pub static STORE_ENCLAVE_KEY_CIPHERTEXT_EVENT: Lazy<Hash> = Lazy::new(|| {
+    Event {
+        name: "StoreEnclaveKeyCiphertext".to_owned(),
+        inputs: vec![
+            EventParam {
+                name: "ciphertext".to_owned(),
+                kind: ParamType::Bytes,
+                indexed: true,
+            },
+            EventParam {
+                name: "stateCounter".to_owned(),
+                kind: ParamType::Uint(256),
+                indexed: true,
+            },
+        ],
+        anonymous: false,
+    }
+    .signature()
+});
