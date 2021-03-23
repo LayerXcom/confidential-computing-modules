@@ -72,7 +72,7 @@ where
         let ciphertext = CommandExecutor::<R, C, AP>::new(my_account_id, self.command_plaintext)?
             .encrypt_with_treekem(group_key, max_mem_size)?;
 
-        let msg = Sha256::hash_for_attested_tx(
+        let msg = Sha256::hash_for_attested_treekem_tx(
             &ciphertext.encode(),
             roster_idx,
             ciphertext.generation(),

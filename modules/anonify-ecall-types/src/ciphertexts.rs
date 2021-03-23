@@ -1,14 +1,27 @@
 use crate::bincode;
 use crate::localstd::{boxed::Box, fmt, vec::Vec};
 use crate::serde::{Deserialize, Serialize};
-use crate::serde_bytes;
+use frame_common::TreeKemCiphertext;
+use frame_sodium::SodiumCiphertext;
+
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[serde(crate = "crate::serde")]
+pub enum CommandCiphertext {
+    TreeKem(TreeKemCiphertext),
+    EnclaveKey(EnclaveKeyCiphertext),
+}
+
+impl Default for CommandCiphertext {
+    fn default() -> Self {
+        CommandCiphertext::TreeKem(Default::default())
+    }
+}
 
 /// Application message broadcasted to other members.
-#[derive(Clone, Serialize, Deserialize, Eq, Ord, Hash, Default)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[serde(crate = "crate::serde")]
 pub struct EnclaveKeyCiphertext {
-    #[serde(with = "serde_bytes")]
-    encrypted_state: Vec<u8>,
+    encrypted_state: SodiumCiphertext,
 }
 
 impl fmt::Debug for EnclaveKeyCiphertext {
@@ -22,7 +35,7 @@ impl fmt::Debug for EnclaveKeyCiphertext {
 }
 
 impl EnclaveKeyCiphertext {
-    pub fn new(encrypted_state: Vec<u8>) -> Self {
+    pub fn new(encrypted_state: SodiumCiphertext) -> Self {
         EnclaveKeyCiphertext { encrypted_state }
     }
 

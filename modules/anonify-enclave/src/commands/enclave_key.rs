@@ -70,9 +70,9 @@ where
 
         let mut csprng = SgxRng::new()?;
         let ciphertext = CommandExecutor::<R, C, AP>::new(my_account_id, self.command_plaintext)?
-            .encrypt_with_enclave_key(pubkey, max_mem_size)?;
+            .encrypt_with_enclave_key(&mut csprng, pubkey, max_mem_size)?;
 
-        let msg = Sha256::hash_for_attested_tx(&ciphertext.encode(), my_roster_idx);
+        let msg = Sha256::hash_for_attested_enclave_key_tx(&ciphertext.encode(), my_roster_idx);
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
         let command_output = output::Command::new(
             CommandCiphertext::EnclaveKey(ciphertext),

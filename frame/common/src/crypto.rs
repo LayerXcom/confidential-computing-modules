@@ -218,7 +218,7 @@ impl Sha256 {
         Sha256(hash)
     }
 
-    pub fn hash_for_attested_tx(
+    pub fn hash_for_attested_treekem_tx(
         ciphertext: &[u8],
         roster_idx: u32,
         generation: u32,
@@ -229,6 +229,16 @@ impl Sha256 {
         hasher.input(roster_idx.to_be_bytes());
         hasher.input(generation.to_be_bytes());
         hasher.input(epoch.to_be_bytes());
+
+        let mut res = Sha256::default();
+        res.copy_from_slice(&hasher.result());
+        res
+    }
+
+    pub fn hash_for_attested_enclave_key_tx(ciphertext: &[u8], roster_idx: u32) -> Self {
+        let mut hasher = sha2::Sha256::new();
+        hasher.input(ciphertext);
+        hasher.input(roster_idx.to_be_bytes());
 
         let mut res = Sha256::default();
         res.copy_from_slice(&hasher.result());

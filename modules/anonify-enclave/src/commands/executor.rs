@@ -7,9 +7,10 @@ use frame_common::{
     AccessPolicy, EnclaveKeyCiphertext, TreeKemCiphertext,
 };
 use frame_runtime::traits::*;
+use frame_sodium::{SodiumCiphertext, SodiumPubKey};
+use rand_core::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
 use std::{marker::PhantomData, vec::Vec};
-use rand_core::{CryptoRng, RngCore};
 
 /// Command data which make state update
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -53,15 +54,15 @@ where
         key.encrypt(buf).map_err(Into::into)
     }
 
-    pub fn encrypt_with_enclave_key<R: RngCore + CryptoRng>(
+    pub fn encrypt_with_enclave_key<RNG: RngCore + CryptoRng>(
         &self,
-        csprng: &mut R,
+        csprng: &mut RNG,
         pubkey: SodiumPubKey,
         max_mem_size: usize,
     ) -> Result<EnclaveKeyCiphertext> {
         let mut buf = bincode::serialize(&self).unwrap(); // must not fail
         Self::append_padding(&mut buf, max_mem_size);
-        SodiumCiphertext::encrypt(csprng, &pubkey, buf)
+        SodiumCiphertext::encrypt(csprng, &pubkey, &buf).map_err(Into::into)
     }
 
     pub fn decode(bytes: &[u8]) -> Result<Self> {
