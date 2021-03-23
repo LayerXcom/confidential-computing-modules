@@ -1,5 +1,6 @@
 use super::plaintext::CommandPlaintext;
 use crate::error::Result;
+use anonify_ecall_types::EnclaveKeyCiphertext;
 use anyhow::anyhow;
 use frame_common::{
     crypto::AccountId,
@@ -7,6 +8,8 @@ use frame_common::{
     AccessPolicy, TreeKemCiphertext,
 };
 use frame_runtime::traits::*;
+use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey};
+use rand_core::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
 use std::{marker::PhantomData, vec::Vec};
 
@@ -42,23 +45,26 @@ where
         })
     }
 
-    pub fn encrypt<GK: GroupKeyOps>(
+    pub fn encrypt_with_treekem<GK: GroupKeyOps>(
         &self,
         key: &GK,
         max_mem_size: usize,
     ) -> Result<TreeKemCiphertext> {
-        // Add padding to fix the ciphertext size of all state types.
-        // The padding works for fixing the ciphertext size so that
-        // other people cannot distinguish what state is encrypted based on the size.
-        fn append_padding(buf: &mut Vec<u8>, max_mem_size: usize) {
-            let padding_size = max_mem_size - buf.len();
-            let padding = vec![0u8; padding_size];
-            buf.extend_from_slice(&padding);
-        }
-
         let mut buf = bincode::serialize(&self).unwrap(); // must not fail
-        append_padding(&mut buf, max_mem_size);
+        Self::append_padding(&mut buf, max_mem_size);
         key.encrypt(buf).map_err(Into::into)
+    }
+
+    pub fn encrypt_with_enclave_key<RNG: RngCore + CryptoRng>(
+        &self,
+        csprng: &mut RNG,
+        pubkey: SodiumPubKey,
+        max_mem_size: usize,
+    ) -> Result<EnclaveKeyCiphertext> {
+        let mut buf = bincode::serialize(&self).unwrap(); // must not fail
+        Self::append_padding(&mut buf, max_mem_size);
+        let encrypted_state = SodiumCiphertext::encrypt(csprng, &pubkey, &buf)?;
+        Ok(EnclaveKeyCiphertext::new(encrypted_state))
     }
 
     pub fn decode(bytes: &[u8]) -> Result<Self> {
@@ -78,7 +84,7 @@ where
         Ok((stf_res.0.into_iter(), stf_res.1.into_iter()))
     }
 
-    pub fn decrypt<GK: GroupKeyOps>(
+    pub fn decrypt_with_treekem<GK: GroupKeyOps>(
         ciphertext: &TreeKemCiphertext,
         key: &mut GK,
     ) -> Result<Option<Self>> {
@@ -86,6 +92,16 @@ where
             Some(plaintext) => CommandExecutor::decode(&plaintext[..]).map(Some),
             None => Ok(None),
         }
+    }
+
+    pub fn decrypt_with_enclave_key(
+        ciphertext: &SodiumCiphertext,
+        privkey: &SodiumPrivateKey,
+    ) -> Result<Self> {
+        ciphertext
+            .decrypt(privkey)
+            .map_err(Into::into)
+            .and_then(|bytes| CommandExecutor::decode(&bytes[..]))
     }
 
     fn stf_call(
@@ -101,6 +117,15 @@ where
             )
             .into()),
         }
+    }
+
+    // Add padding to fix the ciphertext size of all state types.
+    // The padding works for fixing the ciphertext size so that
+    // other people cannot distinguish what state is encrypted based on the size.
+    fn append_padding(buf: &mut Vec<u8>, max_mem_size: usize) {
+        let padding_size = max_mem_size - buf.len();
+        let padding = vec![0u8; padding_size];
+        buf.extend_from_slice(&padding);
     }
 
     pub fn my_account_id(&self) -> AccountId {

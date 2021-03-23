@@ -19,9 +19,8 @@ use frame_mra_tls::key_vault::{
     },
     response::RecoveredPathSecret,
 };
-use frame_sodium::{SodiumCiphertext, SodiumPubKey, StoreEnclaveDecryptionKey};
+use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, StoreEnclaveDecryptionKey};
 use frame_treekem::{handshake::HandshakeParams, PathSecret, StorePathSecrets};
-use rand_core::{CryptoRng, RngCore};
 use remote_attestation::EncodedQuote;
 
 /// Execute state transition functions from runtime
@@ -87,6 +86,7 @@ pub trait ConfigGetter {
     fn store_path_secrets(&self) -> &StorePathSecrets;
     fn store_enclave_dec_key(&self) -> &StoreEnclaveDecryptionKey;
     fn ias_root_cert(&self) -> &[u8];
+    fn my_roster_idx(&self) -> usize;
 }
 
 /// A getter of state stored in enclave memory.
@@ -149,9 +149,9 @@ pub trait EnclaveKeyOps {
 
     fn decrypt(&self, ciphertext: &SodiumCiphertext) -> Result<Vec<u8>>;
 
-    fn encrypt<R: RngCore + CryptoRng>(&self, csprng: &mut R, plaintext: &[u8]) -> Result<SodiumCiphertext>;
-
     fn enclave_encryption_key(&self) -> Result<SodiumPubKey>;
+
+    fn enclave_decryption_key(&self) -> Result<&SodiumPrivateKey>;
 }
 
 pub trait GroupKeyOps: Sized {
