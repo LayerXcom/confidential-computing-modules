@@ -9,7 +9,7 @@ use crate::{
     utils::*,
     workflow::*,
 };
-use anonify_ecall_types::CommandCiphertext;
+use anonify_ecall_types::{CommandCiphertext, EnclaveKeyCiphertext};
 use ethabi::ParamType;
 use frame_common::{crypto::ExportHandshake, state_types::StateCounter, TreeKemCiphertext};
 use frame_host::engine::HostEngine;
@@ -204,6 +204,27 @@ impl Web3Logs {
                     state_counter,
                 };
                 payloads.push(payload);
+            } else if log.0.topics[0] == *STORE_ENCLAVE_KEY_CIPHERTEXT_EVENT {
+                let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
+                    Ok(d) => d,
+                    Err(e) => {
+                        error!("{}", e);
+                        continue;
+                    }
+                };
+
+                let res = match EnclaveKeyCiphertext::decode(&mut &bytes[..]) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        error!("{}", e);
+                        continue;
+                    }
+                };
+                let payload = PayloadType {
+                    payload: Payload::EnclaveKeyCiphertext(res),
+                    state_counter,
+                };
+                payloads.push(payload);
             } else {
                 error!("Invalid topics: {:?}", log.0.topics[0]);
                 continue;
@@ -335,7 +356,21 @@ impl InnerEnclaveLog {
                             continue;
                         }
                     }
-                    Payload::EnclaveKeyCiphertext(ciphertext) => {} // TODO
+                    Payload::EnclaveKeyCiphertext(ciphertext) => {
+                        info!("Fetch a enclave key ciphertext");
+
+                        let ciphertext = CommandCiphertext::EnclaveKey(ciphertext.clone());
+                        let inp = host_input::InsertCiphertext::new(
+                            ciphertext.clone(),
+                            e.state_counter(),
+                            fetch_ciphertext_cmd,
+                        );
+
+                        match self.insert_ciphertext(inp, eid, &ciphertext) {
+                            Some(notification) => acc.push(notification),
+                            None => continue,
+                        }
+                    }
                 }
             }
 
