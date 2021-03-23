@@ -437,7 +437,7 @@ impl EnclaveUpdatedState {
     }
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone)]
 pub struct PayloadType {
     roster_idx: u32,
     epoch: u32,
@@ -529,7 +529,7 @@ impl Ord for PayloadType {
     }
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone)]
 pub(crate) enum Payload {
     Ciphertext(CommandCiphertext),
     Handshake(ExportHandshake),
