@@ -14,7 +14,7 @@ use ethabi::ParamType;
 use frame_common::{crypto::ExportHandshake, state_types::StateCounter, TreeKemCiphertext};
 use frame_host::engine::HostEngine;
 use sgx_types::sgx_enclave_id_t;
-use std::{cmp::Ordering, fmt};
+use std::fmt;
 use tracing::{debug, error, info, warn};
 use web3::types::{Address, Log};
 
@@ -375,7 +375,7 @@ impl InnerEnclaveLog {
                     Payload::Handshake {
                         roster_idx,
                         epoch,
-                        generation,
+                        generation: _,
                         ref handshake,
                     } => {
                         info!(
