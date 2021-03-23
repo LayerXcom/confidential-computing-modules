@@ -121,6 +121,13 @@ impl Dispatcher {
         join_group_ecall_cmd: u32,
     ) -> Result<Self> {
         let this = self.clone();
+        match self
+            .fetch_events(fetch_ciphertext_ecall_cmd, fetch_handshake_ecalll_cmd)
+            .await
+        {
+            Ok(updated_states) => info!("got state updated before join group: {:?}", updated_states),
+            Err(err) => error!("event fetched error has occurred before join group: {:?}", err),
+        };
         let receipt = self.join_group(signer, gas, join_group_ecall_cmd).await?;
         info!("A transaction hash of join_group: {:?}", receipt);
 
