@@ -26,18 +26,6 @@ use serde_std as serde;
 pub mod cmd;
 pub mod types;
 pub use crate::types::*;
+pub mod ciphertexts;
 
-use crate::serde::{Deserialize, Serialize};
-use frame_common::TreeKemCiphertext;
-
-#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-#[serde(crate = "crate::serde")]
-pub enum CommandCiphertext {
-    TreeKem(TreeKemCiphertext),
-}
-
-impl Default for CommandCiphertext {
-    fn default() -> Self {
-        CommandCiphertext::TreeKem(Default::default())
-    }
-}
+pub use ciphertexts::*;

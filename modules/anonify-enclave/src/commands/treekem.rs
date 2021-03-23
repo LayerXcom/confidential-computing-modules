@@ -70,9 +70,9 @@ where
 
         let my_account_id = self.command_plaintext.access_policy().into_account_id();
         let ciphertext = CommandExecutor::<R, C, AP>::new(my_account_id, self.command_plaintext)?
-            .encrypt(group_key, max_mem_size)?;
+            .encrypt_with_treekem(group_key, max_mem_size)?;
 
-        let msg = Sha256::hash_for_attested_tx(
+        let msg = Sha256::hash_for_attested_treekem_tx(
             &ciphertext.encode(),
             roster_idx,
             ciphertext.generation(),
@@ -148,7 +148,8 @@ where
         group_key.receiver_ratchet(roster_idx)?;
 
         let mut output = output::ReturnNotifyState::default();
-        let decrypted_cmds = CommandExecutor::<R, C, AP>::decrypt(treekem_ciphertext, group_key)?;
+        let decrypted_cmds =
+            CommandExecutor::<R, C, AP>::decrypt_with_treekem(treekem_ciphertext, group_key)?;
         if let Some(cmds) = decrypted_cmds {
             // Since the command data is valid for the error at the time of state transition,
             // `user_counter` must be verified and incremented before the state transition.

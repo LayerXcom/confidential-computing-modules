@@ -2,7 +2,7 @@
 use crate::bincode;
 use crate::crypto_box::{self, aead::Aead, Box as CryptoBox, PublicKey, SecretKey, KEY_SIZE};
 use crate::local_anyhow::{anyhow, Result};
-use crate::localstd::{fmt, vec::Vec};
+use crate::localstd::{boxed::Box, fmt, vec::Vec};
 use crate::rand_core::{CryptoRng, RngCore};
 #[cfg(feature = "sgx")]
 use crate::sealing::UnsealedEnclaveDecryptionKey;
@@ -301,7 +301,7 @@ impl SodiumPubKey {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[serde(crate = "crate::serde")]
 pub struct SodiumCiphertext {
     ephemeral_public_key: SodiumPubKey,
@@ -349,6 +349,10 @@ impl SodiumCiphertext {
 
     pub fn encode(&self) -> Vec<u8> {
         bincode::serialize(&self).unwrap() // must not fail
+    }
+
+    pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
+        bincode::deserialize(&bytes[..])
     }
 }
 
