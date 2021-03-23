@@ -58,7 +58,6 @@ exec_sr_node_tests test_health_check \
   test_multiple_messages \
   test_skip_invalid_event \
   test_node_recovery \
-  test_join_group_then_handshake \
   test_duplicated_out_of_order_request_from_same_user
 
 
@@ -82,6 +81,7 @@ function exec_kv_node_tests() {
 }
 
 exec_kv_node_tests test_health_check \
+  test_join_group_then_handshake \
   test_backup_path_secret \
   test_recover_without_key_vault \
   test_manually_backup_all \

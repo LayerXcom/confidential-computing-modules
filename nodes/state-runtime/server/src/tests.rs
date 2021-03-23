@@ -14,8 +14,6 @@ use serde_json::json;
 use std::{env, path::Path, str::FromStr, sync::Arc, time};
 use web3::{contract::Options, types::Address};
 
-const SYNC_TIME: u64 = 1500;
-
 #[actix_rt::test]
 async fn test_health_check() {
     set_env_vars();
@@ -507,166 +505,6 @@ async fn test_node_recovery() {
 }
 
 #[actix_rt::test]
-async fn test_join_group_then_handshake() {
-    set_env_vars();
-
-    let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
-
-    // Enclave must be initialized in main function.
-    let enclave1 = EnclaveDir::new()
-        .init_enclave(true)
-        .expect("Failed to initialize enclave.");
-    let eid1 = enclave1.geteid();
-    // just for testing
-    let mut csprng = rand::thread_rng();
-
-    let server1 = Server::new(eid1).await.run().await;
-    let server1 = Arc::new(server1);
-    let mut app1 = test::init_service(
-        App::new()
-            .data(server1.clone())
-            .route("/api/v1/state", web::get().to(handle_get_state))
-            .route(
-                "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key),
-            ),
-    )
-    .await;
-
-    let enclave2 = EnclaveDir::new()
-        .init_enclave(true)
-        .expect("Failed to initialize enclave.");
-    let eid2 = enclave2.geteid();
-    let server2 = Server::new(eid2).await.run().await;
-    let server2 = Arc::new(server2);
-    let mut app2 = test::init_service(
-        App::new()
-            .data(server2.clone())
-            .route("/api/v1/state", web::post().to(handle_send_command))
-            .route("/api/v1/state", web::get().to(handle_get_state))
-            .route("/api/v1/key_rotation", web::post().to(handle_key_rotation))
-            .route(
-                "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key),
-            ),
-    )
-    .await;
-
-    // Party 1
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/enclave_encryption_key")
-        .to_request();
-    let resp = test::call_service(&mut app1, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    let enc_key_resp: state_runtime_node_api::enclave_encryption_key::get::Response =
-        test::read_body_json(resp).await;
-    let enc_key1 = verify_enclave_encryption_key(
-        enc_key_resp.enclave_encryption_key,
-        &*FACTORY_ABI_PATH,
-        &*ANONIFY_ABI_PATH,
-        &eth_url,
-    )
-    .await;
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key1))
-        .to_request();
-    let resp = test::call_service(&mut app1, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.state, 0);
-
-    // Party 2
-
-    other_turn();
-
-    // using the same encryption key because app2 have to sync with bc, but app2's enclave encryption key cannot be set here
-    // so using app1's key
-    let req = test::TestRequest::get()
-        .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key1))
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp); // return 200 OK: becuse allowed same enclave encryption key
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/enclave_encryption_key")
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    let enc_key_resp: state_runtime_node_api::enclave_encryption_key::get::Response =
-        test::read_body_json(resp).await;
-    let enc_key = verify_enclave_encryption_key(
-        enc_key_resp.enclave_encryption_key,
-        &*FACTORY_ABI_PATH,
-        &*ANONIFY_ABI_PATH,
-        &eth_url,
-    )
-    .await;
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.state, 0);
-
-    let init_100_req = init_100_req(&mut csprng, &enc_key, 1, None);
-    let req = test::TestRequest::post()
-        .uri("/api/v1/state")
-        .set_json(&init_100_req)
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.state, 100);
-
-    let req = test::TestRequest::post()
-        .uri("/api/v1/key_rotation")
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.state, 100);
-
-    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key, 2, None);
-    let req = test::TestRequest::post()
-        .uri("/api/v1/state")
-        .set_json(&transfer_10_req)
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-
-    let req = test::TestRequest::get()
-        .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.state, 90);
-}
-
-#[actix_rt::test]
 async fn test_duplicated_out_of_order_request_from_same_user() {
     set_env_vars();
 
@@ -862,13 +700,6 @@ fn my_turn() {
     env::remove_var("ACCOUNT_INDEX");
     env::set_var("MY_ROSTER_IDX", "0");
     env::set_var("ACCOUNT_INDEX", "0");
-}
-
-fn other_turn() {
-    env::remove_var("MY_ROSTER_IDX");
-    env::remove_var("ACCOUNT_INDEX");
-    env::set_var("MY_ROSTER_IDX", "1");
-    env::set_var("ACCOUNT_INDEX", "1");
 }
 
 async fn verify_enclave_encryption_key<P: AsRef<Path> + Copy>(
