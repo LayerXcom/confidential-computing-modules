@@ -19,7 +19,7 @@ contract Anonify is ReportHandle {
     uint256 private _stateCounter;
 
     event JoinGroup(uint32 rosterIdx);
-    event StoreCiphertext(bytes ciphertext, uint256 stateCounter);
+    event StoreEnclaveKeyCiphertext(bytes ciphertext, uint256 stateCounter);
     event UpdateMrenclaveVer(uint32 newVersion);
 
     constructor() {
@@ -83,6 +83,6 @@ contract Anonify is ReportHandle {
         uint256 incremented_state_counter = _stateCounter.add(1);
 
         _stateCounter = incremented_state_counter;
-        emit StoreCiphertext(_newCiphertext, incremented_state_counter);
+        emit StoreEnclaveKeyCiphertext(_newCiphertext, incremented_state_counter);
     }
 }
