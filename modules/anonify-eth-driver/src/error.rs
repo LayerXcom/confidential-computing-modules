@@ -8,6 +8,8 @@ pub enum HostError {
     Error(#[from] anyhow::Error),
     #[error("Contract address have not been set.")]
     AddressNotSet,
+    #[error("got address(0) via getAnonifyAddress.")]
+    AnonifyAddressNotSet,
     #[error("Event watcher have not been set.")]
     EventWatcherNotSet,
     #[error("Ecall output is not set. An error would have occurred in the enclave")]
