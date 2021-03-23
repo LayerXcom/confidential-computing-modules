@@ -87,6 +87,7 @@ pub trait ConfigGetter {
     fn store_path_secrets(&self) -> &StorePathSecrets;
     fn store_enclave_dec_key(&self) -> &StoreEnclaveDecryptionKey;
     fn ias_root_cert(&self) -> &[u8];
+    fn my_roster_idx(&self) -> usize;
 }
 
 /// A getter of state stored in enclave memory.

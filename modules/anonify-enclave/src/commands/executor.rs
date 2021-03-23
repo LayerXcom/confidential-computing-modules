@@ -42,7 +42,7 @@ where
         })
     }
 
-    pub fn encrypt<GK: GroupKeyOps>(
+    pub fn encrypt_with_treekem<GK: GroupKeyOps>(
         &self,
         key: &GK,
         max_mem_size: usize,
@@ -61,6 +61,8 @@ where
         key.encrypt(buf).map_err(Into::into)
     }
 
+    pub fn encrypt_with_enclave_key(&self)
+
     pub fn decode(bytes: &[u8]) -> Result<Self> {
         bincode::deserialize(bytes).map_err(Into::into)
     }
@@ -78,7 +80,7 @@ where
         Ok((stf_res.0.into_iter(), stf_res.1.into_iter()))
     }
 
-    pub fn decrypt<GK: GroupKeyOps>(
+    pub fn decrypt_with_treekem<GK: GroupKeyOps>(
         ciphertext: &TreeKemCiphertext,
         key: &mut GK,
     ) -> Result<Option<Self>> {

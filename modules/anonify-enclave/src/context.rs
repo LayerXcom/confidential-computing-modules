@@ -50,6 +50,7 @@ use std::{
 #[derive(Clone)]
 pub struct AnonifyEnclaveContext {
     version: usize,
+    my_roster_idx: usize,
     ias_url: String,
     sub_key: String,
     #[cfg(feature = "backup-enable")]
@@ -100,6 +101,10 @@ impl ConfigGetter for AnonifyEnclaveContext {
 
     fn ias_root_cert(&self) -> &[u8] {
         &self.ias_root_cert
+    }
+
+    fn my_roster_idx(&self) -> usize {
+        self.my_roster_idx
     }
 }
 
@@ -417,6 +422,7 @@ impl AnonifyEnclaveContext {
             notifier,
             group_key,
             version,
+            my_roster_idx,
             ias_url,
             sub_key,
             #[cfg(feature = "backup-enable")]
