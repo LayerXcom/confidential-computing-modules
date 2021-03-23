@@ -28,4 +28,4 @@ pub mod types;
 pub use crate::types::*;
 pub mod ciphertexts;
 
-pub use ciphertexts::CommandCiphertext;
+pub use ciphertexts::*;

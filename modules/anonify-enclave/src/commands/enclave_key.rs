@@ -72,7 +72,7 @@ where
         let ciphertext = CommandExecutor::<R, C, AP>::new(my_account_id, self.command_plaintext)?
             .encrypt_with_enclave_key(&mut csprng, pubkey, max_mem_size)?;
 
-        let msg = Sha256::hash_for_attested_enclave_key_tx(&ciphertext.encode(), my_roster_idx);
+        let msg = Sha256::hash_for_attested_enclave_key_tx(&ciphertext.encode(), my_roster_idx as u32);
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
         let command_output = output::Command::new(
             CommandCiphertext::EnclaveKey(ciphertext),
@@ -143,7 +143,7 @@ where
         group_key.receiver_ratchet(roster_idx)?;
 
         let mut output = output::ReturnNotifyState::default();
-        let decrypted_cmds = CommandExecutor::<R, C, AP>::decrypt(treekem_ciphertext, group_key)?;
+        let decrypted_cmds = CommandExecutor::<R, C, AP>::decrypt_with_treekem(treekem_ciphertext, group_key)?;
         if let Some(cmds) = decrypted_cmds {
             // Since the command data is valid for the error at the time of state transition,
             // `user_counter` must be verified and incremented before the state transition.

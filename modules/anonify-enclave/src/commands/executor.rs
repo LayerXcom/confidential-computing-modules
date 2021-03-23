@@ -1,10 +1,11 @@
 use super::plaintext::CommandPlaintext;
 use crate::error::Result;
+use anonify_ecall_types::EnclaveKeyCiphertext;
 use anyhow::anyhow;
 use frame_common::{
     crypto::AccountId,
     state_types::{NotifyState, ReturnState, StateType, UpdatedState, UserCounter},
-    AccessPolicy, EnclaveKeyCiphertext, TreeKemCiphertext,
+    AccessPolicy, TreeKemCiphertext,
 };
 use frame_runtime::traits::*;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
@@ -62,7 +63,8 @@ where
     ) -> Result<EnclaveKeyCiphertext> {
         let mut buf = bincode::serialize(&self).unwrap(); // must not fail
         Self::append_padding(&mut buf, max_mem_size);
-        SodiumCiphertext::encrypt(csprng, &pubkey, &buf).map_err(Into::into)
+        let encrypted_state = SodiumCiphertext::encrypt(csprng, &pubkey, &buf)?;
+        Ok(EnclaveKeyCiphertext::new(encrypted_state))
     }
 
     pub fn decode(bytes: &[u8]) -> Result<Self> {

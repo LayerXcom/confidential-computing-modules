@@ -90,7 +90,7 @@ impl EnclaveEngine for HandshakeSender {
             enclave_context.backup_path_secret(backup_path_secret)?;
         }
 
-        let msg = Sha256::hash_for_attested_tx(
+        let msg = Sha256::hash_for_attested_treekem_tx(
             &export_handshake.encode(),
             handshake.roster_idx(),
             0,         // processing handshake reset generation

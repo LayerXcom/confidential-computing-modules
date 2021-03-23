@@ -4,7 +4,7 @@ use crate::serde::{Deserialize, Serialize};
 use frame_common::TreeKemCiphertext;
 use frame_sodium::SodiumCiphertext;
 
-#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
 #[serde(crate = "crate::serde")]
 pub enum CommandCiphertext {
     TreeKem(TreeKemCiphertext),
@@ -18,7 +18,7 @@ impl Default for CommandCiphertext {
 }
 
 /// Application message broadcasted to other members.
-#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Default)]
 #[serde(crate = "crate::serde")]
 pub struct EnclaveKeyCiphertext {
     encrypted_state: SodiumCiphertext,
@@ -29,7 +29,7 @@ impl fmt::Debug for EnclaveKeyCiphertext {
         write!(
             f,
             "EnclaveKeyCiphertext {{ encrypted_state: 0x{} }}",
-            hex::encode(&self.encrypted_state)
+            hex::encode(self.encode())
         )
     }
 }
@@ -40,14 +40,15 @@ impl EnclaveKeyCiphertext {
     }
 
     pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
-        bincode::deserialize(&bytes[..])
+        let encrypted_state = SodiumCiphertext::decode(bytes)?;
+        Ok(Self { encrypted_state })
     }
 
     pub fn encode(&self) -> Vec<u8> {
-        bincode::serialize(&self).unwrap() // must not fail
+        self.encrypted_state.encode()
     }
 
-    pub fn encrypted_state_ref(&self) -> &[u8] {
+    pub fn encrypted_state(&self) -> &SodiumCiphertext {
         &self.encrypted_state
     }
 }
