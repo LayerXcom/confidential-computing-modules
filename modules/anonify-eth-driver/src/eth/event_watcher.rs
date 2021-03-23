@@ -1,6 +1,7 @@
 use super::{
     connection::{Web3Contract, Web3Http},
     event_def::*,
+    event_payload::*,
 };
 use crate::{
     cache::EventCache,
@@ -167,13 +168,15 @@ impl Web3Logs {
                         continue;
                     }
                 };
-                let payload = PayloadType::new(
-                    res.roster_idx(),
-                    res.epoch(),
-                    res.generation(),
-                    Payload::Ciphertext(CommandCiphertext::TreeKem(res)),
+                let payload = PayloadType {
+                    payload: Payload::TreeKemCiphertext {
+                        roster_idx: res.roster_idx(),
+                        epoch: res.epoch(),
+                        generation: res.generation(),
+                        ciphertext: res,
+                    },
                     state_counter,
-                );
+                };
                 payloads.push(payload);
             } else if log.0.topics[0] == *STORE_TREEKEM_HANDSHAKE_EVENT {
                 let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
@@ -191,13 +194,15 @@ impl Web3Logs {
                         continue;
                     }
                 };
-                let payload = PayloadType::new(
-                    res.roster_idx(),
-                    res.prior_epoch(),
-                    u32::MAX, // handshake is the last of the generation
-                    Payload::Handshake(res),
+                let payload = PayloadType {
+                    payload: Payload::Handshake {
+                        roster_idx: res.roster_idx(),
+                        epoch: res.prior_epoch(),
+                        generation: u32::MAX, // handshake is the last of the generation
+                        handshake: res,
+                    },
                     state_counter,
-                );
+                };
                 payloads.push(payload);
             } else {
                 error!("Invalid topics: {:?}", log.0.topics[0]);
@@ -286,21 +291,19 @@ impl InnerEnclaveLog {
 
             for e in self.payloads {
                 match e.payload {
-                    Payload::Ciphertext(ref ciphertext) => {
-                        match ciphertext {
-                            CommandCiphertext::TreeKem(c) => {
-                                info!(
-                                    "Fetch a ciphertext: roster_idx: {}, epoch: {}, generation: {}",
-                                    c.roster_idx(),
-                                    c.epoch(),
-                                    c.generation()
-                                );
-                            }
-                            _ => error!("Invalid ciphertext: {:?}", ciphertext),
-                        }
+                    Payload::TreeKemCiphertext {
+                        roster_idx,
+                        epoch,
+                        generation,
+                        ref ciphertext,
+                    } => {
+                        info!(
+                            "Fetch a ciphertext: roster_idx: {}, epoch: {}, generation: {}",
+                            roster_idx, epoch, generation,
+                        );
 
                         let inp = host_input::InsertCiphertext::new(
-                            ciphertext.clone(),
+                            CommandCiphertext::TreeKem(ciphertext.clone()),
                             e.state_counter(),
                             fetch_ciphertext_cmd,
                         );
@@ -340,7 +343,7 @@ impl InnerEnclaveLog {
                                     .into_iter()
                                     .find(|log| match log.decode_cipher_handshake_data() {
                                         Ok((bytes, _state_counter)) => match TreeKemCiphertext::decode(&mut &bytes[..]) {
-                                            Ok(res) => CommandCiphertext::TreeKem(res) == *ciphertext,
+                                            Ok(res) => res == *ciphertext,
                                             Err(error) => {
                                                 error!("Ciphertext::decode error: {:?}", error);
                                                 false
@@ -369,11 +372,15 @@ impl InnerEnclaveLog {
                             }
                         };
                     }
-                    Payload::Handshake(ref handshake) => {
+                    Payload::Handshake {
+                        roster_idx,
+                        epoch,
+                        generation,
+                        ref handshake,
+                    } => {
                         info!(
                             "Fetch a handshake: roster_idx: {}, epoch: {}",
-                            handshake.roster_idx(),
-                            handshake.prior_epoch(),
+                            roster_idx, epoch,
                         );
 
                         if let Err(e) = Self::insert_handshake(
@@ -386,6 +393,7 @@ impl InnerEnclaveLog {
                             continue;
                         }
                     }
+                    Payload::EnclaveKeyCiphertext(ciphertext) => {} // TODO
                 }
             }
 
@@ -434,109 +442,5 @@ impl EnclaveUpdatedState {
 
     pub fn notify_states(self) -> Option<Vec<serde_json::Value>> {
         self.notify_states
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct PayloadType {
-    roster_idx: u32,
-    epoch: u32,
-    generation: u32,
-    payload: Payload,
-    state_counter: StateCounter,
-}
-
-impl PayloadType {
-    pub(crate) fn new(
-        roster_idx: u32,
-        epoch: u32,
-        generation: u32,
-        payload: Payload,
-        state_counter: StateCounter,
-    ) -> Self {
-        PayloadType {
-            roster_idx,
-            epoch,
-            generation,
-            payload,
-            state_counter,
-        }
-    }
-
-    /// other is the next of self
-    pub fn is_next(&self, other: &Self) -> bool {
-        self.roster_idx == other.roster_idx
-            && ((self.epoch == other.epoch && self.generation + 1 == other.generation) ||
-            (self.epoch == other.epoch && other.generation == u32::MAX) || // TODO: order gurantee with handshake
-            (self.epoch + 1 == other.epoch && self.generation == u32::MAX && other.generation == 0))
-    }
-
-    pub fn roster_idx(&self) -> u32 {
-        self.roster_idx
-    }
-
-    pub fn epoch(&self) -> u32 {
-        self.epoch
-    }
-
-    pub fn generation(&self) -> u32 {
-        self.generation
-    }
-
-    pub fn state_counter(&self) -> StateCounter {
-        self.state_counter
-    }
-}
-
-impl PartialEq for PayloadType {
-    fn eq(&self, other: &PayloadType) -> bool {
-        self.roster_idx == other.roster_idx
-            && self.epoch == other.epoch
-            && self.generation == other.generation
-    }
-}
-
-impl Eq for PayloadType {}
-
-/// Ordering PayloadType> like:
-/// epoch      | 0              1            2 ..
-/// generation | 0 1 2 3 .. MAX 0 1 2 .. MAX 0 ..
-impl PartialOrd for PayloadType {
-    fn partial_cmp(&self, other: &PayloadType) -> Option<Ordering> {
-        let roster_idx_ord = self.roster_idx.partial_cmp(&other.roster_idx)?;
-        if roster_idx_ord != Ordering::Equal {
-            return Some(roster_idx_ord);
-        }
-
-        let epoch_ord = self.epoch.partial_cmp(&other.epoch)?;
-        if epoch_ord != Ordering::Equal {
-            return Some(epoch_ord);
-        }
-
-        let gen_ord = self.generation.partial_cmp(&other.generation)?;
-        if gen_ord != Ordering::Equal {
-            return Some(gen_ord);
-        }
-
-        Some(Ordering::Equal)
-    }
-}
-
-impl Ord for PayloadType {
-    fn cmp(&self, other: &PayloadType) -> Ordering {
-        self.partial_cmp(&other)
-            .expect("PayloadType must be ordered")
-    }
-}
-
-#[derive(Debug, Clone)]
-pub(crate) enum Payload {
-    Ciphertext(CommandCiphertext),
-    Handshake(ExportHandshake),
-}
-
-impl Default for Payload {
-    fn default() -> Self {
-        Payload::Ciphertext(Default::default())
     }
 }
