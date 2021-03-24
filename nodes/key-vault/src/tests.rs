@@ -51,6 +51,8 @@ async fn test_health_check() {
 #[actix_rt::test]
 async fn test_join_group_then_handshake() {
     set_env_vars();
+    set_server_env_vars();
+    clear_path_secrets();
 
     let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
 
@@ -63,6 +65,8 @@ async fn test_join_group_then_handshake() {
     let _key_vault_app = test::init_service(App::new().data(key_vault_server.clone())).await;
     std::thread::sleep(std::time::Duration::from_secs(1));
 
+    // Setup ERC20 application
+    env::set_var("ENCLAVE_PKG_NAME", "erc20");
     // Enclave must be initialized in main function.
     let enclave1 = EnclaveDir::new()
         .init_enclave(true)
