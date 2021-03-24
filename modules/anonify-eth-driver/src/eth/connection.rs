@@ -2,12 +2,14 @@ use super::{event_def::*, event_watcher::Web3Logs};
 use crate::{
     cache::EventCache,
     error::{HostError, Result},
-    utils::ContractInfo,
+    utils::{event_fetch_retry_condition, ContractInfo},
     workflow::*,
 };
 use anonify_ecall_types::CommandCiphertext;
 use anyhow::anyhow;
 use ethabi::{Topic, TopicFilter};
+use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
+use frame_retrier::{strategy, Retry};
 use std::{env, fs, path::Path};
 use web3::{
     contract::{Contract, Options},
@@ -189,7 +191,14 @@ impl Web3Contract {
             .limit(self.event_limit)
             .build();
 
-        let logs = self.web3_conn.get_logs(&filter).await?;
+        let logs = Retry::new(
+            "fetch_event",
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
+        )
+        .set_condition(event_fetch_retry_condition)
+        .spawn_async(|| async { self.web3_conn.get_logs(&filter).await })
+        .await?;
 
         Ok(Web3Logs::new(logs, cache))
     }

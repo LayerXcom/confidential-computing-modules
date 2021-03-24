@@ -11,7 +11,7 @@ use std::{fs, path::Path};
 use web3::{
     contract::Contract,
     transports::Http,
-    types::{Address, TransactionReceipt, H256},
+    types::{Address, TransactionReceipt, H256, Log},
 };
 
 /// Define a retry condition of deploying contracts.
@@ -53,6 +53,20 @@ pub const fn sender_retry_condition(res: &Result<H256>) -> bool {
 }
 
 pub const fn call_with_conf_retry_condition(res: &Result<TransactionReceipt>) -> bool {
+    match res {
+        Ok(_) => false,
+        Err(err) => match err {
+            HostError::Web3ContractError(web3_err) => match web3_err {
+                web3::contract::Error::Abi(_) => false,
+                _ => true,
+            },
+            HostError::EcallOutputNotSet => false,
+            _ => true,
+        },
+    }
+}
+
+pub const fn event_fetch_retry_condition(res: &Result<Vec<Log>>) -> bool {
     match res {
         Ok(_) => false,
         Err(err) => match err {
