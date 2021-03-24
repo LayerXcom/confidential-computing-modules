@@ -533,6 +533,7 @@ async fn test_join_group_then_handshake() {
     )
     .await;
 
+    env::set_var("MY_ROSTER_IDX", "1");
     let enclave2 = EnclaveDir::new()
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
@@ -580,7 +581,7 @@ async fn test_join_group_then_handshake() {
 
     // Party 2
 
-    other_turn();
+    env::set_var("ACCOUNT_INDEX", "1");
 
     // using the same encryption key because app2 have to sync with bc, but app2's enclave encryption key cannot be set here
     // so using app1's key
@@ -606,6 +607,7 @@ async fn test_join_group_then_handshake() {
     )
     .await;
 
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
         .set_json(&balance_of_req(&mut csprng, &enc_key))
