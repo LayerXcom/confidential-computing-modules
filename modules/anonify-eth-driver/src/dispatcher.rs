@@ -121,12 +121,14 @@ impl Dispatcher {
         join_group_ecall_cmd: u32,
     ) -> Result<Self> {
         let this = self.clone();
+        let receipt = self.join_group(signer, gas, join_group_ecall_cmd).await?;
+        info!("A transaction hash of join_group: {:?}", receipt);
 
         // it spawns a new OS thread, and hosts an event loop.
         actix_rt::Arbiter::new().exec_fn(move || {
             actix_rt::spawn(async move {
                 loop {
-                    match this
+                    match self
                         .fetch_events(fetch_ciphertext_ecall_cmd, fetch_handshake_ecalll_cmd)
                         .await
                     {
@@ -138,10 +140,7 @@ impl Dispatcher {
             });
         });
 
-        let receipt = self.join_group(signer, gas, join_group_ecall_cmd).await?;
-        info!("A transaction hash of join_group: {:?}", receipt);
-
-        Ok(self)
+        Ok(this)
     }
 
     pub fn set_healthy(self) -> Self {
