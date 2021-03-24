@@ -20,7 +20,7 @@ SGX_SDK ?= /opt/sgxsdk
 SGX_MODE ?= HW
 SGX_ARCH ?= x64
 
-ifeq ($(TEST), 1)
+ifeq ($(TEST), UNIT)
 	EDL_FILE := Anonify_test.edl
 	T_H_FILE := Anonify_test_t.h
 	T_C_FILE := Anonify_test_t.c
@@ -29,6 +29,15 @@ ifeq ($(TEST), 1)
 	U_C_FILE := Anonify_test_u.c
 	U_O_FILE := Anonify_test_u.o
 	Enclave_Config_File_Name := UnitTestEnclave.config.xml
+else ifeq ($(TEST), INTEGRATION)
+	EDL_FILE := Anonify_common.edl
+	T_H_FILE := Anonify_common_t.h
+	T_C_FILE := Anonify_common_t.c
+	T_O_FILE := Anonify_common_t.o
+	U_H_FILE := Anonify_common_u.h
+	U_C_FILE := Anonify_common_u.c
+	U_O_FILE := Anonify_common_u.o
+	Enclave_Config_File_Name := IntegrationTestEnclave.config.xml
 else
 	EDL_FILE := Anonify_common.edl
 	T_H_FILE := Anonify_common_t.h
