@@ -13,6 +13,7 @@ mod enclave_key;
 mod error;
 mod group_key;
 mod handshake;
+mod join_group;
 mod kvs;
 mod notify;
 
