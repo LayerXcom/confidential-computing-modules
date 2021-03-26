@@ -62,8 +62,13 @@ impl Server {
             bin_path: (&*ANONIFY_BIN_PATH.to_str().unwrap()).to_string(),
             sender_address,
             dispatcher,
-            cmd_encryption_algo: CmdEncryptionAlgo::TreeKem,
+            cmd_encryption_algo: CmdEncryptionAlgo::EnclaveKey,
         }
+    }
+
+    pub fn use_treekem(mut self) -> Self {
+        self.cmd_encryption_algo = CmdEncryptionAlgo::TreeKem;
+        self
     }
 
     pub async fn run(mut self) -> Self {
@@ -73,6 +78,19 @@ impl Server {
             .expect("Failed to parse SYNC_BC_TIME to u64");
 
         let dispatcher = match self.cmd_encryption_algo {
+            CmdEncryptionAlgo::EnclaveKey => self
+            .dispatcher
+                .run(
+                    sync_time,
+                    self.sender_address,
+                    DEFAULT_GAS,
+                    FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD,
+                    None,
+                    JOIN_GROUP_ENCLAVE_KEY_CMD,
+                )
+                .await
+                .unwrap()
+                .set_healthy(),
             CmdEncryptionAlgo::TreeKem => self
                 .dispatcher
                 .run(
@@ -80,7 +98,7 @@ impl Server {
                     self.sender_address,
                     DEFAULT_GAS,
                     FETCH_CIPHERTEXT_TREEKEM_CMD,
-                    FETCH_HANDSHAKE_TREEKEM_CMD,
+                    Some(FETCH_HANDSHAKE_TREEKEM_CMD),
                     JOIN_GROUP_TREEKEM_CMD,
                 )
                 .await
@@ -95,5 +113,6 @@ impl Server {
 
 #[derive(Debug, Clone, Copy)]
 pub enum CmdEncryptionAlgo {
+    EnclaveKey,
     TreeKem,
 }
