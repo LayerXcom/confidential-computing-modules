@@ -48,51 +48,35 @@ pub static BUILD_DIR: Lazy<PathBuf> = Lazy::new(|| {
     build_dir
 });
 
-pub static ANONIFY_WITH_TREEKEM_ABI_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let abi_path_from_root = env::var("ABI_PATH").unwrap_or_else(|_| "contract-build".to_string());
+pub static ANONIFY_ABI_PATH: Lazy<PathBuf> = Lazy::new(|| {
+    let abi_path_from_root = env::var("ANONIFY_ABI_PATH")
+        .unwrap_or_else(|_| "contract-build/AnonifyWithEnclaveKey.abi".to_string());
     let mut abi_path = PJ_ROOT_DIR.clone();
     abi_path.push(abi_path_from_root);
-    abi_path.push("AnonifyWithTreeKem.abi");
     abi_path
 });
 
-pub static ANONIFY_WITH_TREEKEM_BIN_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let bin_path_from_root = env::var("BIN_PATH").unwrap_or_else(|_| "contract-build".to_string());
+pub static ANONIFY_BIN_PATH: Lazy<PathBuf> = Lazy::new(|| {
+    let bin_path_from_root = env::var("ANONIFY_BIN_PATH")
+        .unwrap_or_else(|_| "contract-build/AnonifyWithEnclaveKey.bin".to_string());
     let mut bin_path = PJ_ROOT_DIR.clone();
     bin_path.push(bin_path_from_root);
-    bin_path.push("AnonifyWithTreeKem.bin");
-    bin_path
-});
-
-pub static ANONIFY_WITH_ENCLAVE_KEY_ABI_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let abi_path_from_root = env::var("ABI_PATH").unwrap_or_else(|_| "contract-build".to_string());
-    let mut abi_path = PJ_ROOT_DIR.clone();
-    abi_path.push(abi_path_from_root);
-    abi_path.push("AnonifyWithEnclaveKey.abi");
-    abi_path
-});
-
-pub static ANONIFY_WITH_ENCLAVE_KEY_BIN_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let bin_path_from_root = env::var("BIN_PATH").unwrap_or_else(|_| "contract-build".to_string());
-    let mut bin_path = PJ_ROOT_DIR.clone();
-    bin_path.push(bin_path_from_root);
-    bin_path.push("AnonifyWithEnclaveKey.bin");
     bin_path
 });
 
 pub static FACTORY_ABI_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let abi_path_from_root = env::var("ABI_PATH").unwrap_or_else(|_| "contract-build".to_string());
+    let abi_path_from_root =
+        env::var("FACTORY_ABI_PATH").unwrap_or_else(|_| "contract-build/DeployAnonify.abi".to_string());
     let mut abi_path = PJ_ROOT_DIR.clone();
     abi_path.push(abi_path_from_root);
-    abi_path.push("DeployAnonify.abi");
     abi_path
 });
 
 pub static FACTORY_BIN_PATH: Lazy<PathBuf> = Lazy::new(|| {
-    let bin_path_from_root = env::var("BIN_PATH").unwrap_or_else(|_| "contract-build".to_string());
+    let bin_path_from_root =
+        env::var("FACTORY_BIN_PATH").unwrap_or_else(|_| "contract-build/DeployAnonify.bin".to_string());
     let mut bin_path = PJ_ROOT_DIR.clone();
     bin_path.push(bin_path_from_root);
-    bin_path.push("DeployAnonify.bin");
     bin_path
 });
 

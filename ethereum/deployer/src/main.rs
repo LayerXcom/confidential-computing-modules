@@ -39,24 +39,11 @@ async fn main() {
                 .unwrap();
             println!("{:x}", contract_address);
         }
-        "anonify_tk_direct" => {
+        "anonify_direct" => {
             let contract_address = deployer
                 .deploy(
-                    &*ANONIFY_WITH_TREEKEM_ABI_PATH,
-                    &*ANONIFY_WITH_TREEKEM_BIN_PATH,
-                    confirmations,
-                    GAS,
-                    signer,
-                )
-                .await
-                .unwrap();
-            println!("{:x}", contract_address);
-        }
-        "anonify_ek_direct" => {
-            let contract_address = deployer
-                .deploy(
-                    &*ANONIFY_WITH_ENCLAVE_KEY_ABI_PATH,
-                    &*ANONIFY_WITH_ENCLAVE_KEY_BIN_PATH,
+                    &*ANONIFY_ABI_PATH,
+                    &*ANONIFY_BIN_PATH,
                     confirmations,
                     GAS,
                     signer,
