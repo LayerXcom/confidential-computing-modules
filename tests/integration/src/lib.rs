@@ -91,6 +91,7 @@ async fn test_integration_eth_construct() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
+            "deployAnonifyWithTreeKem",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -224,6 +225,7 @@ async fn test_auto_notification() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
+            "deployAnonifyWithTreeKem",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -392,6 +394,7 @@ async fn test_integration_eth_transfer() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
+            "deployAnonifyWithTreeKem",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -587,6 +590,7 @@ async fn test_key_rotation() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
+            "deployAnonifyWithTreeKem",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -728,6 +732,7 @@ async fn test_integration_eth_approve() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
+            "deployAnonifyWithTreeKem",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -909,6 +914,7 @@ async fn test_integration_eth_transfer_from() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
+            "deployAnonifyWithTreeKem",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -1276,6 +1282,7 @@ async fn test_integration_eth_mint() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
+            "deployAnonifyWithTreeKem",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -1438,6 +1445,7 @@ async fn test_integration_eth_burn() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
+            "deployAnonifyWithTreeKem",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
