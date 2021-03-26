@@ -38,6 +38,14 @@ register_ecall!(
         GET_USER_COUNTER_CMD,
         GetUserCounter<Ed25519ChallengeResponse>
     ),
+    (
+        SEND_COMMAND_ENCLAVE_KEY_CMD,
+        CommandByEnclaveKeySender<Ed25519ChallengeResponse>
+    ),
+    (
+        FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD,
+        CommandByEnclaveKeyReceiver<Ed25519ChallengeResponse>
+    ),
 );
 
 #[cfg(feature = "backup-enable")]
