@@ -1,5 +1,5 @@
 use eth_deployer::EthDeployer;
-use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH, FACTORY_BIN_PATH};
+use frame_config::*;
 use std::{env, str::FromStr};
 
 const GAS: u64 = 5_000_000;
@@ -39,7 +39,7 @@ async fn main() {
                 .unwrap();
             println!("{:x}", contract_address);
         }
-        "anonify" => {
+        "anonify_direct" => {
             let contract_address = deployer
                 .deploy(
                     &*ANONIFY_ABI_PATH,
@@ -52,11 +52,12 @@ async fn main() {
                 .unwrap();
             println!("{:x}", contract_address);
         }
-        contract_address => {
-            let factory_address = web3::types::Address::from_str(contract_address).unwrap();
+        "anonify_tk" => {
+            let factory_address = web3::types::Address::from_str(args[2].as_str()).unwrap();
 
             let receipt = deployer
                 .deploy_anonify_by_factory(
+                    "deployAnonifyWithTreeKem",
                     &*FACTORY_ABI_PATH,
                     signer,
                     GAS,
@@ -67,5 +68,22 @@ async fn main() {
                 .unwrap();
             println!("receipt: {:?}", receipt);
         }
+        "anonify_ek" => {
+            let factory_address = web3::types::Address::from_str(args[2].as_str()).unwrap();
+
+            let receipt = deployer
+                .deploy_anonify_by_factory(
+                    "deployAnonifyWithEnclaveKey",
+                    &*FACTORY_ABI_PATH,
+                    signer,
+                    GAS,
+                    factory_address,
+                    confirmations,
+                )
+                .await
+                .unwrap();
+            println!("receipt: {:?}", receipt);
+        }
+        _ => panic!("Invalid arguments"),
     };
 }

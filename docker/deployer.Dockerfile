@@ -25,7 +25,7 @@ RUN source /opt/sgxsdk/environment && \
     source /root/.cargo/env && \
     export SGX_MODE=HW && \
     export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
-    solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/Anonify.sol ethereum/contracts/Factory.sol
+    solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/AnonifyWithTreeKem.sol ethereum/contracts/AnonifyWithEnclaveKey.sol ethereum/contracts/Factory.sol
 
 RUN cd $PJ_ROOT/frame/types/ && \
     /root/.cargo/bin/cargo build

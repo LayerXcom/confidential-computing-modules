@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.7.4;
 
-import "./Anonify.sol";
+import "./AnonifyWithTreeKem.sol";
+import "./AnonifyWithEnclaveKey.sol";
 
 contract DeployAnonify {
     address private _anonifyAddress;
@@ -10,10 +11,16 @@ contract DeployAnonify {
 
     constructor() {}
 
-    function deploy() public {
-        Anonify anonify = new Anonify();
-        address anonifyAddr = address(anonify);
-        _anonifyAddress = anonifyAddr;
+    function deployAnonifyWithTreeKem() public {
+        AnonifyWithTreeKem anonify = new AnonifyWithTreeKem();
+        _anonifyAddress = address(anonify);
+
+        emit DeployedAnonify(_anonifyAddress);
+    }
+
+    function deployAnonifyWithEnclaveKey() public {
+        AnonifyWithEnclaveKey anonify = new AnonifyWithEnclaveKey();
+        _anonifyAddress = address(anonify);
 
         emit DeployedAnonify(_anonifyAddress);
     }
