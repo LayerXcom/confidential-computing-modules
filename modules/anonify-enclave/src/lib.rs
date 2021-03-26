@@ -23,7 +23,10 @@ pub mod workflow {
     pub use crate::commands::treekem::{CommandByTreeKemReceiver, CommandByTreeKemSender};
     pub use crate::context::{GetState, GetUserCounter, ReportRegistration};
     pub use crate::enclave_key::EncryptionKeyGetter;
-    pub use crate::handshake::{HandshakeReceiver, HandshakeSender, JoinGroupSender};
+    pub use crate::handshake::{HandshakeReceiver, HandshakeSender};
+    pub use crate::join_group::{
+        enclave_key::JoinGroupWithEnclaveKey, treekem::JoinGroupWithTreeKem,
+    };
     pub use crate::notify::RegisterNotification;
 }
 
