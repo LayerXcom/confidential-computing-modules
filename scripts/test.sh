@@ -10,7 +10,7 @@ ANONIFY_ROOT=/root/anonify
 
 dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/.."
-solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/Anonify.sol ethereum/contracts/Factory.sol
+solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/AnonifyWithTreeKem.sol ethereum/contracts/AnonifyWithEnclaveKey.sol ethereum/contracts/Factory.sol
 
 cd frame/types
 cargo build

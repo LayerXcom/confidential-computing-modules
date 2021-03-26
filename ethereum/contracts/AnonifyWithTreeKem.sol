@@ -8,7 +8,7 @@ import "./utils/Secp256k1.sol";
 import "./utils/BytesUtils.sol";
 
 // Consider: Avoid inheritting
-contract Anonify is ReportHandle {
+contract AnonifyWithTreeKem is ReportHandle {
     using BytesUtils for bytes;
     using SafeMath for uint256;
 
