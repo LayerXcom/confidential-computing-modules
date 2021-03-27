@@ -1530,8 +1530,8 @@ dependencies = [
  "frame-runtime",
  "frame-sodium",
  "frame-types",
+ "lazy_static",
  "log 0.4.14",
- "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
  "sgx_tstd",
  "sgx_types 1.1.3",
 ]
@@ -1786,9 +1786,9 @@ dependencies = [
  "frame-retrier",
  "frame-sodium",
  "http 0.2.1 (git+https://github.com/mesalock-linux/http-sgx?rev=sgx_1.1.3)",
+ "lazy_static",
  "log 0.4.14",
  "num-bigint",
- "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
  "pem",
  "remote-attestation",
  "rustls 0.19.0 (git+https://github.com/mesalock-linux/rustls?branch=mesalock_sgx)",
@@ -2688,8 +2688,8 @@ dependencies = [
  "frame-types",
  "key-vault-ecall-types",
  "key-vault-enclave",
+ "lazy_static",
  "log 0.4.14",
- "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
  "sgx_tstd",
 ]
 
@@ -3086,14 +3086,6 @@ dependencies = [
 [[package]]
 name = "once_cell"
 version = "1.4.0"
-source = "git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3#cefcaa03fed4d85276b3235d875f1b45d399cc3c"
-dependencies = [
- "sgx_tstd",
-]
-
-[[package]]
-name = "once_cell"
-version = "1.4.0"
 source = "git+https://github.com/mesalock-linux/once_cell-sgx#cefcaa03fed4d85276b3235d875f1b45d399cc3c"
 dependencies = [
  "sgx_tstd",
@@ -3304,7 +3296,7 @@ version = "0.8.2"
 source = "git+https://github.com/mesalock-linux/pem-rs-sgx#fdfef4f24a9fb3fa72e8a71bb28bd8ff15feff2f"
 dependencies = [
  "base64 0.13.0 (git+https://github.com/mesalock-linux/rust-base64-sgx)",
- "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx)",
+ "once_cell 1.4.0",
  "regex 1.3.1",
  "sgx_tstd",
 ]
@@ -5431,7 +5423,7 @@ dependencies = [
  "frame-config",
  "frame-mra-tls",
  "frame-treekem",
- "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
+ "lazy_static",
  "sgx_tstd",
  "test-utils",
 ]
