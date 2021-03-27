@@ -1712,8 +1712,7 @@ dependencies = [
  "bincode 1.3.1 (git+https://github.com/mesalock-linux/bincode-sgx)",
  "ed25519-dalek",
  "hex",
- "once_cell 1.4.0 (git+https://github.com/mesalock-linux/once_cell-sgx?rev=sgx_1.1.3)",
- "once_cell 1.5.2",
+ "lazy_static",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_core 0.3.1",
  "rand_os",
@@ -2744,6 +2743,9 @@ name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+dependencies = [
+ "spin",
+]
 
 [[package]]
 name = "libc"
