@@ -12,10 +12,6 @@ use anyhow as local_anyhow;
 use bincode_sgx as bincode;
 #[cfg(feature = "std")]
 use bincode_std as bincode;
-#[cfg(feature = "sgx")]
-use once_cell_sgx as local_once_cell;
-#[cfg(feature = "std")]
-use once_cell_std as local_once_cell;
 #[cfg(all(feature = "sgx", not(feature = "std")))]
 use serde_big_array_sgx as serde_big_array;
 #[cfg(feature = "std")]

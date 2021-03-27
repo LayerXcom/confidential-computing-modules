@@ -21,10 +21,10 @@ echo "Integration testing..."
 cd ${ANONIFY_ROOT}/scripts
 unset BACKUP
 export ENCLAVE_PKG_NAME=key_vault
-make DEBUG=1 TEST=INTEGRATION ENCLAVE_DIR=example/key-vault/enclave
+make DEBUG=1 ENCLAVE_DIR=example/key-vault/enclave
 export BACKUP=disable
 export ENCLAVE_PKG_NAME=erc20
-make DEBUG=1 TEST=INTEGRATION ENCLAVE_DIR=example/erc20/enclave
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
 #
 # Integration Tests
@@ -67,7 +67,7 @@ exec_sr_node_tests test_health_check \
 cd ${ANONIFY_ROOT}/scripts
 unset BACKUP
 export ENCLAVE_PKG_NAME=erc20
-make DEBUG=1 TEST=INTEGRATION ENCLAVE_DIR=example/erc20/enclave
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
 function exec_kv_node_tests() {
   for N in "$@"
@@ -95,7 +95,7 @@ echo "Unit testing..."
 export ENCLAVE_PKG_NAME=units
 export BACKUP=disable
 cd ${ANONIFY_ROOT}/scripts
-make DEBUG=1 TEST=UNIT ENCLAVE_DIR=tests/units/enclave
+make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave
 
 cd ${ANONIFY_ROOT}
 RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \
