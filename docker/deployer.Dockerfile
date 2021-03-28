@@ -47,10 +47,12 @@ WORKDIR $PJ_ROOT
 
 RUN cd $PJ_ROOT
 COPY --from=builder $PJ_ROOT/target/release/eth-deployer ./target/release/
-COPY --from=builder $PJ_ROOT/contract-build/Anonify.abi ./contract-build/
-COPY --from=builder $PJ_ROOT/contract-build/Anonify.bin ./contract-build/
+COPY --from=builder $PJ_ROOT/contract-build/AnonifyWithEnclaveKey.abi ./contract-build/
+COPY --from=builder $PJ_ROOT/contract-build/AnonifyWithEnclaveKey.bin ./contract-build/
+COPY --from=builder $PJ_ROOT/contract-build/AnonifyWithTreeKem.abi ./contract-build/
+COPY --from=builder $PJ_ROOT/contract-build/AnonifyWithTreeKem.bin ./contract-build/
 COPY --from=builder $PJ_ROOT/contract-build/DeployAnonify.abi ./contract-build/
 COPY --from=builder $PJ_ROOT/contract-build/DeployAnonify.bin ./contract-build/
 
 ENTRYPOINT ["./target/release/eth-deployer"]
-CMD ["$1"]
+CMD ["$1", "$2"]
