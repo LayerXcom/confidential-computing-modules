@@ -975,7 +975,7 @@ const INVALID_USER_ID: AccountId = AccountId([
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
 ]);
 
-fn valid_user_id() -> AccountId {
+fn valid_user_id() -> Ed25519ChallengeResponse {
     let sig = [
         236, 103, 17, 252, 166, 199, 9, 46, 200, 107, 188, 0, 37, 111, 83, 105, 175, 81, 231, 14,
         81, 100, 221, 89, 102, 172, 30, 96, 15, 128, 117, 146, 181, 221, 149, 206, 163, 208, 113,
@@ -990,10 +990,10 @@ fn valid_user_id() -> AccountId {
         244, 158, 183, 202, 237, 236, 27, 67, 39, 95, 178, 136, 235, 162, 188, 106, 52, 56, 6, 245,
         3, 101, 33, 155, 58, 175, 168, 63, 73, 125, 205, 225,
     ];
-    Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge).into_account_id()
+    Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge)
 }
 
-fn valid_other_user_id() -> AccountId {
+fn valid_other_user_id() -> Ed25519ChallengeResponse {
     let sig = [
         227, 214, 246, 7, 62, 33, 159, 246, 238, 120, 63, 85, 220, 132, 207, 133, 93, 74, 35, 180,
         99, 85, 57, 254, 2, 205, 175, 221, 61, 86, 246, 86, 229, 86, 19, 47, 46, 46, 66, 4, 186,
@@ -1008,7 +1008,7 @@ fn valid_other_user_id() -> AccountId {
         196, 164, 228, 172, 9, 251, 94, 245, 43, 74, 182, 98, 47, 59, 145, 40, 28, 65, 122, 189,
         150, 211, 16, 29, 204, 200, 52, 116, 106, 234, 138, 139,
     ];
-    Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge).into_account_id()
+    Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challeng)
 }
 
 // to me
@@ -1052,7 +1052,7 @@ where
         "access_policy": valid_user_id(),
         "runtime_params": {
             "amount": 10,
-            "recipient": valid_other_user_id(),
+            "recipient": valid_other_user_id().into_account_id(),
         },
         "cmd_name": "transfer",
         "counter": counter,
@@ -1080,7 +1080,7 @@ where
         "access_policy": valid_other_user_id(),
         "runtime_params": {
             "amount": 5,
-            "recipient": valid_user_id(),
+            "recipient": valid_user_id().into_account_id(),
         },
         "cmd_name": "transfer",
         "counter": counter,
@@ -1108,7 +1108,7 @@ where
         "access_policy": valid_user_id(),
         "runtime_params": {
             "amount": 110,
-            "recipient": valid_other_user_id(),
+            "recipient": valid_other_user_id().into_account_id(),
         },
         "cmd_name": "transfer",
         "counter": counter,
