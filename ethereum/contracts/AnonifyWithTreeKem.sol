@@ -51,7 +51,9 @@ contract AnonifyWithTreeKem is ReportHandle {
         handleReport(_report, _reportSig);
         // It is assumed that the nodes participate in the order of roster index,
         // and all the nodes finish participating before the state transition.
-        _groupKeyCounter[_rosterIdx] = GroupKeyCounter(0, _rosterIdx + 1);
+        for (int i = 0; i < _rosterIdx; i++) {
+            _groupKeyCounter[uint32(i)] = GroupKeyCounter(0, _rosterIdx + 1);
+        }
         storeTreeKemHandshake(_handshake);
     }
 
