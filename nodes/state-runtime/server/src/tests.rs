@@ -92,14 +92,14 @@ async fn test_evaluate_access_policy_by_user_id_field() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 0);
 
-    let init_100_req = init_100_req(&mut csprng, &enc_key, 1, Some(valid_user_id()));
+    let init_100_req = init_100_req_fn(&mut csprng, &enc_key, 1, Some(valid_user_id()));
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -109,7 +109,7 @@ async fn test_evaluate_access_policy_by_user_id_field() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -117,7 +117,7 @@ async fn test_evaluate_access_policy_by_user_id_field() {
     assert_eq!(balance.state, 100);
 
     // Sending valid user_id, so this request should be successful
-    let transfer_10_req_json = transfer_10_req(&mut csprng, &enc_key, 2, Some(valid_user_id()));
+    let transfer_10_req_json = transfer_10_req_fn(&mut csprng, &enc_key, 2, Some(valid_user_id()));
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req_json)
@@ -127,7 +127,7 @@ async fn test_evaluate_access_policy_by_user_id_field() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -135,7 +135,7 @@ async fn test_evaluate_access_policy_by_user_id_field() {
     assert_eq!(balance.state, 90);
 
     // Sending invalid user_id, so this request should be failed
-    let transfer_10_req_json = transfer_10_req(&mut csprng, &enc_key, 3, Some(INVALID_USER_ID));
+    let transfer_10_req_json = transfer_10_req_fn(&mut csprng, &enc_key, 3, Some(INVALID_USER_ID));
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req_json)
@@ -145,7 +145,7 @@ async fn test_evaluate_access_policy_by_user_id_field() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -196,14 +196,14 @@ async fn test_multiple_messages() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 0);
 
-    let init_100_req = init_100_req(&mut csprng, &enc_key, 1, None);
+    let init_100_req = init_100_req_fn(&mut csprng, &enc_key, 1, None);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -213,7 +213,7 @@ async fn test_multiple_messages() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -222,7 +222,7 @@ async fn test_multiple_messages() {
 
     // Sending five messages before receiving any messages
     for i in 0..5 {
-        let transfer_10_req = transfer_10_req(&mut csprng, &enc_key, 2 + i, None);
+        let transfer_10_req = transfer_10_req_fn(&mut csprng, &enc_key, 2 + i, None);
         let req = test::TestRequest::post()
             .uri("/api/v1/state")
             .set_json(&transfer_10_req)
@@ -233,7 +233,7 @@ async fn test_multiple_messages() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -285,14 +285,14 @@ async fn test_skip_invalid_event() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 0);
 
-    let init_100_req = init_100_req(&mut csprng, &enc_key, 1, None);
+    let init_100_req = init_100_req_fn(&mut csprng, &enc_key, 1, None);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -302,7 +302,7 @@ async fn test_skip_invalid_event() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -310,7 +310,7 @@ async fn test_skip_invalid_event() {
     assert_eq!(balance.state, 100);
 
     // state transition should not be occured by this transaction.
-    let transfer_110_req = transfer_110_req(&mut csprng, &enc_key, 2, None);
+    let transfer_110_req = transfer_110_req_fn(&mut csprng, &enc_key, 2, None);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_110_req)
@@ -320,14 +320,14 @@ async fn test_skip_invalid_event() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key, 3, None);
+    let transfer_10_req = transfer_10_req_fn(&mut csprng, &enc_key, 3, None);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req)
@@ -337,7 +337,7 @@ async fn test_skip_invalid_event() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -413,14 +413,14 @@ async fn test_node_recovery() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 0);
 
-    let init_100_req = init_100_req(&mut csprng, &enc_key, 1, None);
+    let init_100_req = init_100_req_fn(&mut csprng, &enc_key, 1, None);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -430,14 +430,14 @@ async fn test_node_recovery() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    let transfer_10_req_ = transfer_10_req(&mut csprng, &enc_key, 2, None);
+    let transfer_10_req_ = transfer_10_req_fn(&mut csprng, &enc_key, 2, None);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req_)
@@ -447,7 +447,7 @@ async fn test_node_recovery() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -481,14 +481,14 @@ async fn test_node_recovery() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90);
 
-    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key, 3, None);
+    let transfer_10_req = transfer_10_req_fn(&mut csprng, &enc_key, 3, None);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req)
@@ -498,7 +498,7 @@ async fn test_node_recovery() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -572,7 +572,7 @@ async fn test_join_group_then_handshake() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key1))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key1))
         .to_request();
     let resp = test::call_service(&mut app1, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -587,7 +587,7 @@ async fn test_join_group_then_handshake() {
     // so using app1's key
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key1))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key1))
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp); // return 200 OK: becuse allowed same enclave encryption key
@@ -610,7 +610,7 @@ async fn test_join_group_then_handshake() {
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -618,7 +618,7 @@ async fn test_join_group_then_handshake() {
     assert_eq!(balance.state, 0);
 
     // Requests from party 2
-    let init_100_req = init_100_req(&mut csprng, &enc_key, 1, None);
+    let init_100_req = init_100_req_fn(&mut csprng, &enc_key, 1, None);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -628,7 +628,7 @@ async fn test_join_group_then_handshake() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -644,14 +644,14 @@ async fn test_join_group_then_handshake() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    let transfer_10_req = transfer_10_req(&mut csprng, &enc_key, 2, None);
+    let transfer_10_req = transfer_10_req_fn(&mut csprng, &enc_key, 2, None);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req)
@@ -661,7 +661,7 @@ async fn test_join_group_then_handshake() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -669,7 +669,7 @@ async fn test_join_group_then_handshake() {
     assert_eq!(balance.state, 90);
 
     // Request from other via state-runtime 1
-    let transfer_other_5_req = transfer_other_5_req(&mut csprng, &enc_key, 1, None);
+    let transfer_other_5_req = transfer_other_5_req_fn(&mut csprng, &enc_key, 1, None);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_other_5_req)
@@ -680,7 +680,7 @@ async fn test_join_group_then_handshake() {
     // check the result of state transition in state-runtime 1
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_other_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_other_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app1, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -690,7 +690,7 @@ async fn test_join_group_then_handshake() {
     // check the result of state transition in state-runtime 2
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_other_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_other_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -698,7 +698,7 @@ async fn test_join_group_then_handshake() {
     assert_eq!(balance.state, 5);
 
     // Request from other via state-runtime 2
-    let transfer_other_5_req = transfer_other_5_req(&mut csprng, &enc_key, 2, None);
+    let transfer_other_5_req = transfer_other_5_req_fn(&mut csprng, &enc_key, 2, None);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_other_5_req)
@@ -709,7 +709,7 @@ async fn test_join_group_then_handshake() {
     // check the result of state transition in state-runtime 1
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_other_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_other_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app1, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -719,7 +719,7 @@ async fn test_join_group_then_handshake() {
     // check the result of state transition in state-runtime 2
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_other_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_other_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -775,7 +775,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/user_counter")
-        .set_json(&user_counter_req(&mut csprng, &enc_key))
+        .set_json(&user_counter_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -783,7 +783,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
         test::read_body_json(resp).await;
     assert_eq!(user_counter.user_counter, 0);
 
-    let init_100_req = init_100_req(
+    let init_100_req = init_100_req_fn(
         &mut csprng,
         &enc_key,
         user_counter.user_counter.as_u64().unwrap() as u32 + 1,
@@ -798,7 +798,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -807,7 +807,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/user_counter")
-        .set_json(&user_counter_req(&mut csprng, &enc_key))
+        .set_json(&user_counter_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -816,7 +816,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     assert_eq!(user_counter.user_counter, 1);
 
     // first request
-    let transfer_10 = transfer_10_req(
+    let transfer_10 = transfer_10_req_fn(
         &mut csprng,
         &enc_key,
         user_counter.user_counter.as_u64().unwrap() as u32 + 1,
@@ -831,7 +831,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -840,7 +840,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/user_counter")
-        .set_json(&user_counter_req(&mut csprng, &enc_key))
+        .set_json(&user_counter_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -849,7 +849,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     assert_eq!(user_counter.user_counter, 2);
 
     // try second duplicated request
-    let transfer_10 = transfer_10_req(
+    let transfer_10 = transfer_10_req_fn(
         &mut csprng,
         &enc_key,
         user_counter.user_counter.as_u64().unwrap() as u32,
@@ -864,7 +864,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -872,7 +872,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     assert_eq!(balance.state, 90); // failed
 
     // send out of order request
-    let transfer_10 = transfer_10_req(
+    let transfer_10 = transfer_10_req_fn(
         &mut csprng,
         &enc_key,
         user_counter.user_counter.as_u64().unwrap() as u32 + 2, // should be 3
@@ -887,7 +887,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -895,7 +895,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
     assert_eq!(balance.state, 90); // failed
 
     // then, send correct request
-    let transfer_10 = transfer_10_req(
+    let transfer_10 = transfer_10_req_fn(
         &mut csprng,
         &enc_key,
         user_counter.user_counter.as_u64().unwrap() as u32 + 1,
@@ -910,7 +910,7 @@ async fn test_duplicated_out_of_order_request_from_same_user() {
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
-        .set_json(&balance_of_req(&mut csprng, &enc_key))
+        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
@@ -1012,7 +1012,7 @@ fn valid_other_user_id() -> AccountId {
 }
 
 // to me
-fn init_100_req<CR>(
+fn init_100_req_fn<CR>(
     csprng: &mut CR,
     enc_key: &SodiumPubKey,
     counter: u32,
@@ -1039,7 +1039,7 @@ where
 }
 
 // from me to other
-fn transfer_10_req<CR>(
+fn transfer_10_req_fn<CR>(
     csprng: &mut CR,
     enc_key: &SodiumPubKey,
     counter: u32,
@@ -1067,7 +1067,7 @@ where
 }
 
 // from other to me
-fn transfer_other_5_req<CR>(
+fn transfer_other_5_req_fn<CR>(
     csprng: &mut CR,
     enc_key: &SodiumPubKey,
     counter: u32,
@@ -1095,7 +1095,7 @@ where
 }
 
 // from me to other
-fn transfer_110_req<CR>(
+fn transfer_110_req_fn<CR>(
     csprng: &mut CR,
     enc_key: &SodiumPubKey,
     counter: u32,
@@ -1122,7 +1122,7 @@ where
     }
 }
 
-fn balance_of_req<CR>(
+fn balance_of_req_fn<CR>(
     csprng: &mut CR,
     enc_key: &SodiumPubKey,
 ) -> state_runtime_node_api::state::get::Request
@@ -1140,7 +1140,7 @@ where
     state_runtime_node_api::state::get::Request { ciphertext }
 }
 
-fn balance_of_other_req<CR>(
+fn balance_of_other_req_fn<CR>(
     csprng: &mut CR,
     enc_key: &SodiumPubKey,
 ) -> state_runtime_node_api::state::get::Request
@@ -1158,7 +1158,7 @@ where
     state_runtime_node_api::state::get::Request { ciphertext }
 }
 
-fn user_counter_req<CR>(
+fn user_counter_req_fn<CR>(
     csprng: &mut CR,
     enc_key: &SodiumPubKey,
 ) -> state_runtime_node_api::user_counter::get::Request
