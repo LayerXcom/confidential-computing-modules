@@ -535,6 +535,7 @@ async fn test_join_group_then_handshake() {
     let mut app1 = test::init_service(
         App::new()
             .data(server1.clone())
+            .route("/api/v1/state", web::post().to(handle_send_command))
             .route("/api/v1/state", web::get().to(handle_get_state))
             .route(
                 "/api/v1/enclave_encryption_key",
