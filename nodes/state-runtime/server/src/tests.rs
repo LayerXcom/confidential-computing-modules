@@ -99,7 +99,12 @@ async fn test_evaluate_access_policy_by_user_id_field() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 0);
 
-    let init_100_req = init_100_req_fn(&mut csprng, &enc_key, 1, Some(valid_user_id()));
+    let init_100_req = init_100_req_fn(
+        &mut csprng,
+        &enc_key,
+        1,
+        Some(valid_user_id().into_account_id()),
+    );
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&init_100_req)
@@ -117,7 +122,12 @@ async fn test_evaluate_access_policy_by_user_id_field() {
     assert_eq!(balance.state, 100);
 
     // Sending valid user_id, so this request should be successful
-    let transfer_10_req_json = transfer_10_req_fn(&mut csprng, &enc_key, 2, Some(valid_user_id()));
+    let transfer_10_req_json = transfer_10_req_fn(
+        &mut csprng,
+        &enc_key,
+        2,
+        Some(valid_user_id().into_account_id()),
+    );
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
         .set_json(&transfer_10_req_json)
@@ -1008,7 +1018,7 @@ fn valid_other_user_id() -> Ed25519ChallengeResponse {
         196, 164, 228, 172, 9, 251, 94, 245, 43, 74, 182, 98, 47, 59, 145, 40, 28, 65, 122, 189,
         150, 211, 16, 29, 204, 200, 52, 116, 106, 234, 138, 139,
     ];
-    Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challeng)
+    Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge)
 }
 
 // to me
