@@ -174,9 +174,6 @@ impl Web3Contract {
     pub async fn get_event(&self, cache: EventCache, key: Address) -> Result<Web3Logs> {
         let rt0 = std::time::SystemTime::now();
         println!("########## rt0: {:?}", rt0);
-        let events = EthEvent::create_event();
-        let ciphertext_sig = events.ciphertext_signature();
-        let handshake_sig = events.handshake_signature();
         // Read latest block number from in-memory event cache.
         let latest_fetched_num = cache
             .inner()
