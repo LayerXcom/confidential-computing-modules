@@ -11,7 +11,8 @@ use frame_runtime::traits::*;
 use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey};
 use rand_core::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
-use std::{marker::PhantomData, vec::Vec};
+use std::{marker::PhantomData, vec::Vec, time};
+use log::debug;
 
 /// Command data which make state update
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -108,6 +109,8 @@ where
         self,
         ctx: CTX,
     ) -> Result<(Vec<UpdatedState<StateType>>, Vec<Option<NotifyState>>)> {
+        let rt12 = std::time::SystemTime::now();
+        debug!("########## rt12: {:?}", rt12);
         let res = R::new(ctx).execute(self.call_kind, self.my_account_id)?;
 
         match res {
