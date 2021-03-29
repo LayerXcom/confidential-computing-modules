@@ -679,6 +679,16 @@ async fn test_join_group_then_handshake() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90);
 
+    env::set_var("ACCOUNT_INDEX", "0");
+    let req = test::TestRequest::get()
+        .uri("/api/v1/state")
+        .set_json(&balance_of_other_req_fn(&mut csprng, &enc_key))
+        .to_request();
+    let resp = test::call_service(&mut app1, req).await;
+    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
+    assert_eq!(balance.state, 10);
+
     // Request from other via state-runtime 1
     let transfer_other_5_req = transfer_other_5_req_fn(&mut csprng, &enc_key, 1, None);
     let req = test::TestRequest::post()
@@ -699,6 +709,7 @@ async fn test_join_group_then_handshake() {
     assert_eq!(balance.state, 5);
 
     // check the result of state transition in state-runtime 2
+    env::set_var("ACCOUNT_INDEX", "1");
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
         .set_json(&balance_of_other_req_fn(&mut csprng, &enc_key))
@@ -718,6 +729,7 @@ async fn test_join_group_then_handshake() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
 
     // check the result of state transition in state-runtime 1
+    env::set_var("ACCOUNT_INDEX", "0");
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
         .set_json(&balance_of_other_req_fn(&mut csprng, &enc_key))
@@ -728,6 +740,7 @@ async fn test_join_group_then_handshake() {
     assert_eq!(balance.state, 0);
 
     // check the result of state transition in state-runtime 2
+    env::set_var("ACCOUNT_INDEX", "1");
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
         .set_json(&balance_of_other_req_fn(&mut csprng, &enc_key))

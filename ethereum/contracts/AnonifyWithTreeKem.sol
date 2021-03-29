@@ -51,9 +51,11 @@ contract AnonifyWithTreeKem is ReportHandle {
         handleReport(_report, _reportSig);
         // It is assumed that the nodes participate in the order of roster index,
         // and all the nodes finish participating before the state transition.
-        for (int i = 0; i < _rosterIdx + 1; i++) {
-            _groupKeyCounter[uint32(i)] = GroupKeyCounter(0, _rosterIdx + 1);
+        for (int i = 0; i < _rosterIdx; i++) {
+            uint32 _generation = _groupKeyCounter[uint32(i)].generation;
+            _groupKeyCounter[uint32(i)] = GroupKeyCounter(_generation, _rosterIdx + 1);
         }
+        _groupKeyCounter[_rosterIdx] = GroupKeyCounter(0, _rosterIdx + 1);
         storeTreeKemHandshake(_handshake);
     }
 
@@ -162,7 +164,9 @@ contract AnonifyWithTreeKem is ReportHandle {
             "epoch must be bigger than the counter"
         );
 
-        _groupKeyCounter[_rosterIdx] = GroupKeyCounter(_generation, _epoch);
+        for (int i = 0; i < _rosterIdx + 1; i++) {
+            _groupKeyCounter[uint32(i)] = GroupKeyCounter(_generation, _epoch);
+        }
         storeTreeKemHandshake(_handshake);
     }
 
