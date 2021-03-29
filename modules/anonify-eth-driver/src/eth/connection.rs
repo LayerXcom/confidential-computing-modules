@@ -81,7 +81,22 @@ impl Web3Contract {
                 )
                 .await
                 .map_err(Into::into),
-            None => unimplemented!(),
+            None => self
+                .contract
+                .call_with_confirmations(
+                    method,
+                    (
+                        report,
+                        report_sig,
+                        ecall_output.mrenclave_ver(),
+                        ecall_output.roster_idx(),
+                    ),
+                    output.signer,
+                    Options::with(|opt| opt.gas = Some(gas.into())),
+                    confirmations,
+                )
+                .await
+                .map_err(Into::into),
         }
     }
 
