@@ -1,9 +1,7 @@
 use crate::bincode;
 use crate::local_anyhow::{anyhow, Error};
-use crate::local_once_cell::sync::Lazy;
 use crate::localstd::{
     boxed::Box,
-    cmp::Ordering,
     fmt,
     io::{self, Read, Write},
     string::String,
@@ -17,6 +15,7 @@ use ed25519_dalek::{
     Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
     SIGNATURE_LENGTH,
 };
+use lazy_static::lazy_static;
 #[cfg(feature = "std")]
 use rand::Rng;
 #[cfg(feature = "std")]
@@ -35,20 +34,25 @@ pub const COMMON_CHALLENGE: [u8; CHALLENGE_SIZE] = [
     135, 35, 77, 36, 45, 164, 254, 64, 8, 169, 238,
 ];
 
-pub static COMMON_ACCESS_POLICY: Lazy<Ed25519ChallengeResponse> = Lazy::new(|| {
-    let secret = SecretKey::from_bytes(&COMMON_SECRET).unwrap();
-    let pubkey = PublicKey::from(&secret);
-    let keypair = Keypair {
-        secret,
-        public: pubkey,
+lazy_static! {
+    pub static ref COMMON_ACCESS_POLICY: Ed25519ChallengeResponse = {
+        let secret = SecretKey::from_bytes(&COMMON_SECRET).unwrap();
+        let pubkey = PublicKey::from(&secret);
+        let keypair = Keypair {
+            secret,
+            public: pubkey,
+        };
+
+        let sig = keypair.sign(&COMMON_CHALLENGE);
+
+        assert!(keypair.verify(&COMMON_CHALLENGE, &sig).is_ok());
+        Ed25519ChallengeResponse::new(sig, keypair.public, COMMON_CHALLENGE)
     };
 
-    let sig = keypair.sign(&COMMON_CHALLENGE);
-
-    assert!(keypair.verify(&COMMON_CHALLENGE, &sig).is_ok());
-    Ed25519ChallengeResponse::new(sig, keypair.public, COMMON_CHALLENGE)
-});
-pub static OWNER_ACCOUNT_ID: Lazy<AccountId> = Lazy::new(|| COMMON_ACCESS_POLICY.account_id());
+    pub static ref OWNER_ACCOUNT_ID: AccountId = {
+        COMMON_ACCESS_POLICY.account_id()
+    };
+}
 
 /// User account_id represents last 20 bytes of digest of user's public key.
 /// A signature verification must return true to generate a user account_id.
@@ -219,7 +223,7 @@ impl Sha256 {
         Sha256(hash)
     }
 
-    pub fn hash_for_attested_tx(
+    pub fn hash_for_attested_treekem_tx(
         ciphertext: &[u8],
         roster_idx: u32,
         generation: u32,
@@ -230,6 +234,16 @@ impl Sha256 {
         hasher.input(roster_idx.to_be_bytes());
         hasher.input(generation.to_be_bytes());
         hasher.input(epoch.to_be_bytes());
+
+        let mut res = Sha256::default();
+        res.copy_from_slice(&hasher.result());
+        res
+    }
+
+    pub fn hash_for_attested_enclave_key_tx(ciphertext: &[u8], roster_idx: u32) -> Self {
+        let mut hasher = sha2::Sha256::new();
+        hasher.input(ciphertext);
+        hasher.input(roster_idx.to_be_bytes());
 
         let mut res = Sha256::default();
         res.copy_from_slice(&hasher.result());
@@ -425,95 +439,6 @@ impl<T: IntoVec> IntoVec for &[T] {
             acc.extend_from_slice(&x.into_vec());
             acc
         })
-    }
-}
-
-/// Application message broadcasted to other members.
-#[derive(Clone, Serialize, Deserialize, Eq, Ord, Hash, Default)]
-#[serde(crate = "crate::serde")]
-pub struct Ciphertext {
-    generation: u32,
-    epoch: u32,
-    roster_idx: u32,
-    #[serde(with = "serde_bytes")]
-    encrypted_state: Vec<u8>,
-}
-
-impl fmt::Debug for Ciphertext {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Ciphertext {{ generation: {:?}, epoch: {:?}, roster_idx: {:?}, encrypted_state: 0x{} }}",
-            self.generation(),
-            self.epoch(),
-            self.roster_idx(),
-            hex::encode(&self.encrypted_state)
-        )
-    }
-}
-
-impl PartialEq for Ciphertext {
-    fn eq(&self, other: &Ciphertext) -> bool {
-        self.roster_idx() == other.roster_idx()
-            && self.generation() == other.generation()
-            && self.epoch() == other.epoch()
-    }
-}
-
-/// Ordering by priority of roster_idx, epoch, generation
-impl PartialOrd for Ciphertext {
-    fn partial_cmp(&self, other: &Ciphertext) -> Option<Ordering> {
-        let roster_idx_ord = self.roster_idx().partial_cmp(&other.roster_idx())?;
-        if roster_idx_ord != Ordering::Equal {
-            return Some(roster_idx_ord);
-        }
-
-        let epoch_ord = self.epoch().partial_cmp(&other.epoch())?;
-        if epoch_ord != Ordering::Equal {
-            return Some(epoch_ord);
-        }
-
-        let gen_ord = self.generation().partial_cmp(&other.generation())?;
-        if gen_ord != Ordering::Equal {
-            return Some(gen_ord);
-        }
-
-        Some(Ordering::Equal)
-    }
-}
-
-impl Ciphertext {
-    pub fn new(generation: u32, epoch: u32, roster_idx: u32, encrypted_state: Vec<u8>) -> Self {
-        Ciphertext {
-            generation,
-            epoch,
-            roster_idx,
-            encrypted_state,
-        }
-    }
-
-    pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
-        bincode::deserialize(&bytes[..])
-    }
-
-    pub fn encode(&self) -> Vec<u8> {
-        bincode::serialize(&self).unwrap() // must not fail
-    }
-
-    pub fn generation(&self) -> u32 {
-        self.generation
-    }
-
-    pub fn epoch(&self) -> u32 {
-        self.epoch
-    }
-
-    pub fn roster_idx(&self) -> u32 {
-        self.roster_idx
-    }
-
-    pub fn encrypted_state_ref(&self) -> &[u8] {
-        &self.encrypted_state
     }
 }
 

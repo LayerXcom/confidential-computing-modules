@@ -34,6 +34,7 @@ struct InnerDispatcher {
     sender: Option<EthSender>,
     watcher: Option<EventWatcher>,
     cache: EventCache,
+    is_healthy: bool,
     #[cfg(feature = "backup-enable")]
     backup: SecretBackup,
 }
@@ -52,6 +53,7 @@ impl Dispatcher {
             cache,
             sender: None,
             watcher: None,
+            is_healthy: false,
             #[cfg(feature = "backup-enable")]
             backup: SecretBackup::default(),
         }));
@@ -75,6 +77,9 @@ impl Dispatcher {
             let anonify_contract_address: Address = contract
                 .query("getAnonifyAddress", (), None, Options::default(), None)
                 .await?;
+            if anonify_contract_address == Address::zero() {
+                return Err(HostError::AnonifyAddressNotSet);
+            }
             let anonify_contract_info =
                 ContractInfo::new(anonify_abi_path, anonify_contract_address)?;
 
@@ -106,16 +111,25 @@ impl Dispatcher {
     /// - Starting syncing with the blockchain node.
     /// - Joining as the state runtime node.
     /// These operations are not mutable so just returning self data type.
-    pub async fn run(self, sync_time: u64, signer: Address, gas: u64) -> Result<Self> {
+    pub async fn run(
+        self,
+        sync_time: u64,
+        signer: Address,
+        gas: u64,
+        fetch_ciphertext_ecall_cmd: u32,
+        fetch_handshake_ecalll_cmd: u32,
+        join_group_ecall_cmd: u32,
+    ) -> Result<Self> {
         let this = self.clone();
-        let tx_hash = self.join_group(signer, gas).await?;
-        info!("A transaction hash of join_group: {:?}", tx_hash);
 
         // it spawns a new OS thread, and hosts an event loop.
         actix_rt::Arbiter::new().exec_fn(move || {
             actix_rt::spawn(async move {
                 loop {
-                    match self.fetch_events().await {
+                    match this
+                        .fetch_events(fetch_ciphertext_ecall_cmd, fetch_handshake_ecalll_cmd)
+                        .await
+                    {
                         Ok(updated_states) => info!("State updated: {:?}", updated_states),
                         Err(err) => error!("event fetched error: {:?}", err),
                     };
@@ -124,22 +138,44 @@ impl Dispatcher {
             });
         });
 
-        Ok(this)
+        let receipt = self.join_group(signer, gas, join_group_ecall_cmd).await?;
+        info!("A transaction hash of join_group: {:?}", receipt);
+
+        Ok(self)
     }
 
-    pub async fn fetch_events(&self) -> Result<Option<Vec<serde_json::Value>>> {
+    pub fn set_healthy(self) -> Self {
+        self.inner.write().is_healthy = true;
+        self
+    }
+
+    pub fn is_healthy(&self) -> bool {
+        self.inner.read().is_healthy
+    }
+
+    pub async fn fetch_events(
+        &self,
+        fetch_ciphertext_ecall_cmd: u32,
+        fetch_handshake_ecall_cmd: u32,
+    ) -> Result<Option<Vec<serde_json::Value>>> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         inner
             .watcher
             .as_ref()
             .ok_or(HostError::EventWatcherNotSet)?
-            .fetch_events(eid, FETCH_CIPHERTEXT_CMD, FETCH_HANDSHAKE_CMD)
+            .fetch_events(eid, fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd)
             .await
     }
 
-    pub async fn join_group(&self, signer: Address, gas: u64) -> Result<TransactionReceipt> {
-        self.send_report_handshake(signer, gas, "joinGroup").await
+    pub async fn join_group(
+        &self,
+        signer: Address,
+        gas: u64,
+        ecall_cmd: u32,
+    ) -> Result<TransactionReceipt> {
+        self.send_report_handshake(signer, gas, "joinGroup", ecall_cmd)
+            .await
     }
 
     pub async fn register_report(&self, signer: Address, gas: u64) -> Result<H256> {
@@ -158,8 +194,13 @@ impl Dispatcher {
         Ok(tx_hash)
     }
 
-    pub async fn update_mrenclave(&self, signer: Address, gas: u64) -> Result<TransactionReceipt> {
-        self.send_report_handshake(signer, gas, "updateMrenclave")
+    pub async fn update_mrenclave(
+        &self,
+        signer: Address,
+        gas: u64,
+        ecall_cmd: u32,
+    ) -> Result<TransactionReceipt> {
+        self.send_report_handshake(signer, gas, "updateMrenclave", ecall_cmd)
             .await
     }
 
@@ -168,10 +209,11 @@ impl Dispatcher {
         signer: Address,
         gas: u64,
         method: &str,
+        ecall_cmd: u32,
     ) -> Result<TransactionReceipt> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
-        let input = host_input::JoinGroup::new(signer, gas, JOIN_GROUP_CMD);
+        let input = host_input::JoinGroup::new(signer, gas, ecall_cmd);
         let host_output = JoinGroupWorkflow::exec(input, eid)?;
 
         let receipt = inner
@@ -190,9 +232,10 @@ impl Dispatcher {
         user_id: Option<AccountId>,
         signer: Address,
         gas: u64,
+        ecall_cmd: u32,
     ) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Command::new(ciphertext, user_id, signer, gas, SEND_COMMAND_CMD);
+        let input = host_input::Command::new(ciphertext, user_id, signer, gas, ecall_cmd);
         let eid = inner.enclave_id;
         
         let st1 = std::time::SystemTime::now();
@@ -231,7 +274,7 @@ impl Dispatcher {
 
     pub async fn handshake(&self, signer: Address, gas: u64) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Handshake::new(signer, gas, SEND_HANDSHAKE_CMD);
+        let input = host_input::Handshake::new(signer, gas, SEND_HANDSHAKE_TREEKEM_CMD);
         let eid = inner.enclave_id;
         let host_output = HandshakeWorkflow::exec(input, eid)?;
 

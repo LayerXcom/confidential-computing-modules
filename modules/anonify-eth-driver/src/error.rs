@@ -8,6 +8,8 @@ pub enum HostError {
     Error(#[from] anyhow::Error),
     #[error("Contract address have not been set.")]
     AddressNotSet,
+    #[error("got address(0) via getAnonifyAddress.")]
+    AnonifyAddressNotSet,
     #[error("Event watcher have not been set.")]
     EventWatcherNotSet,
     #[error("Ecall output is not set. An error would have occurred in the enclave")]
@@ -16,6 +18,8 @@ pub enum HostError {
     UnlockError,
     #[error("Decoded EthLogToken to invalid TokenType")]
     InvalidEthLogToken,
+    #[error("Invalid ciphertext")]
+    InvalidCiphertextError,
     #[error("The number of EthLogTokens should be {0}")]
     InvalidNumberOfEthLogToken(usize),
     #[error("IO error: {0}")]

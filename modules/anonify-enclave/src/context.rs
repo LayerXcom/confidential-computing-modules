@@ -30,7 +30,7 @@ use frame_mra_tls::{
     AttestedTlsConfig, Client, ClientConfig,
 };
 use frame_runtime::traits::*;
-use frame_sodium::{SodiumCiphertext, SodiumPubKey, StoreEnclaveDecryptionKey};
+use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, StoreEnclaveDecryptionKey};
 #[cfg(feature = "backup-enable")]
 use frame_treekem::PathSecret;
 use frame_treekem::{
@@ -50,6 +50,7 @@ use std::{
 #[derive(Clone)]
 pub struct AnonifyEnclaveContext {
     version: usize,
+    my_roster_idx: usize,
     ias_url: String,
     sub_key: String,
     #[cfg(feature = "backup-enable")]
@@ -100,6 +101,10 @@ impl ConfigGetter for AnonifyEnclaveContext {
 
     fn ias_root_cert(&self) -> &[u8] {
         &self.ias_root_cert
+    }
+
+    fn my_roster_idx(&self) -> usize {
+        self.my_roster_idx
     }
 }
 
@@ -231,6 +236,12 @@ impl EnclaveKeyOps for AnonifyEnclaveContext {
     fn enclave_encryption_key(&self) -> anyhow::Result<SodiumPubKey> {
         self.enclave_key
             .enclave_encryption_key()
+            .map_err(|e| anyhow!("{:?}", e))
+    }
+
+    fn enclave_decryption_key(&self) -> anyhow::Result<&SodiumPrivateKey> {
+        self.enclave_key
+            .enclave_decryption_key()
             .map_err(|e| anyhow!("{:?}", e))
     }
 }
@@ -408,6 +419,7 @@ impl AnonifyEnclaveContext {
             notifier,
             group_key,
             version,
+            my_roster_idx,
             ias_url,
             sub_key,
             #[cfg(feature = "backup-enable")]

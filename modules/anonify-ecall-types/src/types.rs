@@ -7,8 +7,9 @@ use crate::serde::{
 };
 use crate::serde_bytes;
 use crate::serde_json;
+use crate::CommandCiphertext;
 use frame_common::{
-    crypto::{AccountId, Ciphertext, ExportHandshake},
+    crypto::{AccountId, ExportHandshake},
     state_types::{StateCounter, StateType, UserCounter},
     traits::AccessPolicy,
     EcallInput, EcallOutput,
@@ -47,21 +48,21 @@ pub mod input {
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
     pub struct InsertCiphertext {
-        ciphertext: Ciphertext,
+        ciphertext: CommandCiphertext,
         state_counter: StateCounter,
     }
 
     impl EcallInput for InsertCiphertext {}
 
     impl InsertCiphertext {
-        pub fn new(ciphertext: Ciphertext, state_counter: StateCounter) -> Self {
+        pub fn new(ciphertext: CommandCiphertext, state_counter: StateCounter) -> Self {
             InsertCiphertext {
                 ciphertext,
                 state_counter,
             }
         }
 
-        pub fn ciphertext(&self) -> &Ciphertext {
+        pub fn ciphertext(&self) -> &CommandCiphertext {
             &self.ciphertext
         }
 
@@ -204,7 +205,7 @@ pub mod output {
     #[derive(Debug, Clone)]
     pub struct Command {
         enclave_sig: secp256k1::Signature,
-        ciphertext: Ciphertext,
+        ciphertext: CommandCiphertext,
         recovery_id: secp256k1::RecoveryId,
     }
 
@@ -214,7 +215,7 @@ pub mod output {
             let recovery_id = secp256k1::RecoveryId::parse(0).unwrap();
             Self {
                 enclave_sig,
-                ciphertext: Ciphertext::default(),
+                ciphertext: CommandCiphertext::default(),
                 recovery_id,
             }
         }
@@ -281,7 +282,7 @@ pub mod output {
 
     impl Command {
         pub fn new(
-            ciphertext: Ciphertext,
+            ciphertext: CommandCiphertext,
             enclave_sig: secp256k1::Signature,
             recovery_id: secp256k1::RecoveryId,
         ) -> Self {
@@ -292,7 +293,7 @@ pub mod output {
             }
         }
 
-        pub fn ciphertext(&self) -> &Ciphertext {
+        pub fn ciphertext(&self) -> &CommandCiphertext {
             &self.ciphertext
         }
 
@@ -390,23 +391,37 @@ pub mod output {
         report: Vec<u8>,
         #[serde(with = "serde_bytes")]
         report_sig: Vec<u8>,
-        #[serde(with = "serde_bytes")]
-        handshake: Vec<u8>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        handshake: Option<Vec<u8>>,
         mrenclave_ver: u32,
         roster_idx: u32,
     }
 
     impl fmt::Debug for ReturnJoinGroup {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(
-                f,
-                "ReturnJoinGroup {{ report: 0x{}, report_sig: 0x{}, handshake: 0x{}, mrenclave_ver: {:?}, roster_idx: {:?} }}",
-                hex::encode(&self.report()),
-                hex::encode(&self.report_sig()),
-                hex::encode(&self.handshake),
-                self.mrenclave_ver,
-                self.roster_idx
-            )
+            match self.handshake() {
+                Some(handshake) => {
+                    write!(
+                        f,
+                        "ReturnJoinGroup {{ report: 0x{}, report_sig: 0x{}, handshake: 0x{}, mrenclave_ver: {:?}, roster_idx: {:?} }}",
+                        hex::encode(&self.report()),
+                        hex::encode(&self.report_sig()),
+                        hex::encode(&handshake),
+                        self.mrenclave_ver,
+                        self.roster_idx
+                    )
+                }
+                None => {
+                    write!(
+                        f,
+                        "ReturnJoinGroup {{ report: 0x{}, report_sig: 0x{}, mrenclave_ver: {:?}, roster_idx: {:?} }}",
+                        hex::encode(&self.report()),
+                        hex::encode(&self.report_sig()),
+                        self.mrenclave_ver,
+                        self.roster_idx
+                    )
+                }
+            }
         }
     }
 
@@ -416,7 +431,7 @@ pub mod output {
         pub fn new(
             report: Vec<u8>,
             report_sig: Vec<u8>,
-            handshake: Vec<u8>,
+            handshake: Option<Vec<u8>>,
             mrenclave_ver: usize,
             roster_idx: u32,
         ) -> Self {
@@ -437,8 +452,8 @@ pub mod output {
             &self.report_sig[..]
         }
 
-        pub fn handshake(&self) -> &[u8] {
-            &self.handshake[..]
+        pub fn handshake(&self) -> Option<&[u8]> {
+            self.handshake.as_deref()
         }
 
         pub fn mrenclave_ver(&self) -> u32 {

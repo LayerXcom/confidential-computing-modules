@@ -1,12 +1,15 @@
-use super::event_watcher::{EthEvent, Web3Logs};
+use super::{event_def::*, event_watcher::Web3Logs};
 use crate::{
     cache::EventCache,
     error::{HostError, Result},
-    utils::ContractInfo,
+    utils::{event_fetch_retry_condition, ContractInfo},
     workflow::*,
 };
+use anonify_ecall_types::CommandCiphertext;
 use anyhow::anyhow;
 use ethabi::{Topic, TopicFilter};
+use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
+use frame_retrier::{strategy, Retry};
 use std::{env, fs, path::Path};
 use web3::{
     contract::{Contract, Options},
@@ -58,25 +61,28 @@ impl Web3Contract {
             .ok_or_else(|| HostError::EcallOutputNotSet)?;
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
-        let handshake = ecall_output.handshake().to_vec();
         let gas = output.gas;
 
-        self.contract
-            .call_with_confirmations(
-                method,
-                (
-                    report,
-                    report_sig,
-                    handshake,
-                    ecall_output.mrenclave_ver(),
-                    ecall_output.roster_idx(),
-                ),
-                output.signer,
-                Options::with(|opt| opt.gas = Some(gas.into())),
-                confirmations,
-            )
-            .await
-            .map_err(Into::into)
+        match ecall_output.handshake() {
+            Some(handshake) => self
+                .contract
+                .call_with_confirmations(
+                    method,
+                    (
+                        report,
+                        report_sig,
+                        handshake.to_vec(),
+                        ecall_output.mrenclave_ver(),
+                        ecall_output.roster_idx(),
+                    ),
+                    output.signer,
+                    Options::with(|opt| opt.gas = Some(gas.into())),
+                    confirmations,
+                )
+                .await
+                .map_err(Into::into),
+            None => unimplemented!(),
+        }
     }
 
     pub async fn register_report(&self, output: host_output::RegisterReport) -> Result<H256> {
@@ -103,6 +109,7 @@ impl Web3Contract {
             .map_err(Into::into)
     }
 
+    // TODO: treekem
     pub async fn send_command(&self, output: host_output::Command) -> Result<H256> {
         let ecall_output = output
             .ecall_output
@@ -116,23 +123,25 @@ impl Web3Contract {
         enclave_sig.push(recovery_id);
         let gas = output.gas;
 
-        let st8 = std::time::SystemTime::now();
-        println!("########## st8: {:?}", st8);
-        self.contract
-            .call(
-                "storeCommand",
-                (
-                    ciphertext.encode(),
-                    enclave_sig,
-                    ciphertext.roster_idx(),
-                    ciphertext.generation(),
-                    ciphertext.epoch(),
-                ),
-                output.signer,
-                Options::with(|opt| opt.gas = Some(gas.into())),
-            )
-            .await
-            .map_err(Into::into)
+        match ecall_output.ciphertext() {
+            CommandCiphertext::TreeKem(ciphertext) => self
+                .contract
+                .call(
+                    "storeCommand",
+                    (
+                        ciphertext.encode(),
+                        enclave_sig,
+                        ciphertext.roster_idx(),
+                        ciphertext.generation(),
+                        ciphertext.epoch(),
+                    ),
+                    output.signer,
+                    Options::with(|opt| opt.gas = Some(gas.into())),
+                )
+                .await
+                .map_err(Into::into),
+            _ => return Err(HostError::InvalidCiphertextError),
+        }
     }
 
     pub async fn handshake(&self, output: host_output::Handshake) -> Result<H256> {
@@ -178,7 +187,10 @@ impl Web3Contract {
         let filter = FilterBuilder::default()
             .address(vec![self.address])
             .topic_filter(TopicFilter {
-                topic0: Topic::OneOf(vec![ciphertext_sig, handshake_sig]),
+                topic0: Topic::OneOf(vec![
+                    *STORE_TREEKEM_CIPHERTEXT_EVENT,
+                    *STORE_TREEKEM_HANDSHAKE_EVENT,
+                ]),
                 topic1: Topic::Any,
                 topic2: Topic::Any,
                 topic3: Topic::Any,
@@ -190,9 +202,17 @@ impl Web3Contract {
 
         let rt1 = std::time::SystemTime::now();
         println!("########## rt1: {:?}", rt1);
-        let logs = self.web3_conn.get_logs(&filter).await?;
 
-        Ok(Web3Logs::new(logs, cache, events))
+        let logs = Retry::new(
+            "fetch_event",
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
+        )
+        .set_condition(event_fetch_retry_condition)
+        .spawn_async(|| async { self.web3_conn.get_logs(&filter).await })
+        .await?;
+
+        Ok(Web3Logs::new(logs, cache))
     }
 
     pub async fn get_account(&self, index: usize, password: Option<&str>) -> Result<Address> {

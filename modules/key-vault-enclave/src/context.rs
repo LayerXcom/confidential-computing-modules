@@ -20,6 +20,10 @@ impl ConfigGetter for KeyVaultEnclaveContext {
         self.version
     }
 
+    fn my_roster_idx(&self) -> usize {
+        Default::default()
+    }
+
     fn ias_url(&self) -> &str {
         &self.ias_url
     }

@@ -1,18 +1,20 @@
-use super::connection::{Web3Contract, Web3Http};
+use super::{
+    connection::{Web3Contract, Web3Http},
+    event_def::*,
+    event_payload::*,
+};
 use crate::{
     cache::EventCache,
     error::{HostError, Result},
     utils::*,
     workflow::*,
 };
-use ethabi::{decode, Event, EventParam, Hash, ParamType};
-use frame_common::{
-    crypto::{Ciphertext, ExportHandshake},
-    state_types::StateCounter,
-};
+use anonify_ecall_types::{CommandCiphertext, EnclaveKeyCiphertext};
+use ethabi::ParamType;
+use frame_common::{crypto::ExportHandshake, state_types::StateCounter, TreeKemCiphertext};
 use frame_host::engine::HostEngine;
 use sgx_types::sgx_enclave_id_t;
-use std::{cmp::Ordering, fmt, time};
+use std::f{fmt, time};
 use tracing::{debug, error, info, warn};
 use web3::types::{Address, Log};
 
@@ -94,22 +96,36 @@ impl fmt::LowerHex for EthLog {
     }
 }
 
+impl EthLog {
+    fn decode_cipher_handshake_data(&self) -> Result<(Vec<u8>, StateCounter)> {
+        let tokens = ethabi::decode(&[ParamType::Bytes, ParamType::Uint(256)], &self.0.data.0)?;
+        if tokens.len() != 2 {
+            return Err(HostError::InvalidNumberOfEthLogToken(2));
+        }
+        let bytes = tokens[0]
+            .clone()
+            .to_bytes()
+            .ok_or_else(|| HostError::InvalidEthLogToken)?;
+        let state_counter = tokens[1]
+            .clone()
+            .to_uint()
+            .ok_or_else(|| HostError::InvalidEthLogToken)?;
+
+        Ok((bytes, StateCounter::new(state_counter.as_u32())))
+    }
+}
+
 /// Event fetched logs from smart contracts.
 #[derive(Debug)]
 pub struct Web3Logs {
     logs: Vec<EthLog>,
     cache: EventCache,
-    events: EthEvent,
 }
 
 impl Web3Logs {
-    pub fn new(logs: Vec<Log>, cache: EventCache, events: EthEvent) -> Self {
+    pub fn new(logs: Vec<Log>, cache: EventCache) -> Self {
         let logs: Vec<EthLog> = logs.into_iter().map(Into::into).collect();
-        Web3Logs {
-            logs,
-            cache,
-            events,
-        }
+        Web3Logs { logs, cache }
     }
 
     fn into_enclave_log(self) -> EnclaveLog {
@@ -139,36 +155,46 @@ impl Web3Logs {
                 continue;
             }
 
-            let rt3 = std::time::SystemTime::now();
-            debug!("########## rt3: {:?}", rt3);
-            let (bytes, state_counter) = match decode_data(&log) {
-                Ok(d) => d,
-                Err(e) => {
-                    error!("{}", e);
-                    continue;
-                }
-            };
-
             // Processing conditions by ciphertext or handshake event
-            if log.0.topics[0] == self.events.ciphertext_signature() {
+            if log.0.topics[0] == *STORE_TREEKEM_CIPHERTEXT_EVENT {
+                let rt3 = std::time::SystemTime::now();
+                debug!("########## rt3: {:?}", rt3);
+                let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
+                    Ok(d) => d,
+                    Err(e) => {
+                        error!("{}", e);
+                        continue;
+                    }
+                };
+
                 let rt4 = std::time::SystemTime::now();
                 debug!("########## rt4: {:?}", rt4);
-                let res = match Ciphertext::decode(&mut &bytes[..]) {
+                let res = match TreeKemCiphertext::decode(&mut &bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
                         error!("{}", e);
                         continue;
                     }
                 };
-                let payload = PayloadType::new(
-                    res.roster_idx(),
-                    res.epoch(),
-                    res.generation(),
-                    Payload::Ciphertext(res),
+                let payload = PayloadType {
+                    payload: Payload::TreeKemCiphertext {
+                        roster_idx: res.roster_idx(),
+                        epoch: res.epoch(),
+                        generation: res.generation(),
+                        ciphertext: res,
+                    },
                     state_counter,
-                );
+                };
                 payloads.push(payload);
-            } else if log.0.topics[0] == self.events.handshake_signature() {
+            } else if log.0.topics[0] == *STORE_TREEKEM_HANDSHAKE_EVENT {
+                let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
+                    Ok(d) => d,
+                    Err(e) => {
+                        error!("{}", e);
+                        continue;
+                    }
+                };
+
                 let res = match ExportHandshake::decode(&bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
@@ -176,13 +202,36 @@ impl Web3Logs {
                         continue;
                     }
                 };
-                let payload = PayloadType::new(
-                    res.roster_idx(),
-                    res.prior_epoch(),
-                    u32::MAX, // handshake is the last of the generation
-                    Payload::Handshake(res),
+                let payload = PayloadType {
+                    payload: Payload::Handshake {
+                        roster_idx: res.roster_idx(),
+                        epoch: res.prior_epoch(),
+                        generation: u32::MAX, // handshake is the last of the generation
+                        handshake: res,
+                    },
                     state_counter,
-                );
+                };
+                payloads.push(payload);
+            } else if log.0.topics[0] == *STORE_ENCLAVE_KEY_CIPHERTEXT_EVENT {
+                let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
+                    Ok(d) => d,
+                    Err(e) => {
+                        error!("{}", e);
+                        continue;
+                    }
+                };
+
+                let res = match EnclaveKeyCiphertext::decode(&mut &bytes[..]) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        error!("{}", e);
+                        continue;
+                    }
+                };
+                let payload = PayloadType {
+                    payload: Payload::EnclaveKeyCiphertext(res),
+                    state_counter,
+                };
                 payloads.push(payload);
             } else {
                 error!("Invalid topics: {:?}", log.0.topics[0]);
@@ -269,18 +318,22 @@ impl InnerEnclaveLog {
         } else {
             let mut acc = vec![];
 
-            for e in self.payloads {
-                match e.payload {
-                    Payload::Ciphertext(ref ciphertext) => {
+            for e in &self.payloads {
+                match &e.payload {
+                    Payload::TreeKemCiphertext {
+                        roster_idx,
+                        epoch,
+                        generation,
+                        ref ciphertext,
+                    } => {
                         info!(
                             "Fetch a ciphertext: roster_idx: {}, epoch: {}, generation: {}",
-                            ciphertext.roster_idx(),
-                            ciphertext.epoch(),
-                            ciphertext.generation()
+                            roster_idx, epoch, generation,
                         );
 
                         let rt5 = std::time::SystemTime::now();
                         debug!("########## rt5: {:?}", rt5);
+                        let ciphertext = CommandCiphertext::TreeKem(ciphertext.clone());
                         let inp = host_input::InsertCiphertext::new(
                             ciphertext.clone(),
                             e.state_counter(),
@@ -289,78 +342,20 @@ impl InnerEnclaveLog {
 
                         let rt6 = std::time::SystemTime::now();
                         debug!("########## rt6: {:?}", rt6);
-                        match InsertCiphertextWorkflow::exec(inp, eid)
-                            .map_err(Into::into)
-                            .and_then(|e| {
-                                e.ecall_output.ok_or_else(|| HostError::EcallOutputNotSet)
-                            }) {
-                            Ok(notify) => {
-                                if let Some(notify_state) = notify.state {
-                                    let rt16 = std::time::SystemTime::now();
-                                    debug!("########## rt16: {:?}", rt16);
-                                    match bincode::deserialize::<Vec<u8>>(
-                                        &notify_state.into_vec()[..],
-                                    ) {
-                                        Ok(bytes) => match serde_json::from_slice(&bytes[..]) {
-                                            Ok(json) => acc.push(json),
-                                            Err(err) => error!(
-                                                "Error in serde_json::from_slice(&bytes[..]): {:?}",
-                                                err
-                                            ),
-                                        },
-                                        Err(err) => {
-                                            error!("Error in bincode::deserialize: {:?}", err)
-                                        }
-                                    }
-                                }
-                            }
-                            // Even if an error occurs in Enclave, it is unlikely that retry process will succeed,
-                            // so skip the event.
-                            Err(err) => {
-                                error!(
-                                    "Error in enclave (InsertCiphertextWorkflow::exec): {:?}",
-                                    err
-                                );
-
-                                // Logging a skipped event
-                                match (&self.logs)
-                                    .into_iter()
-                                    .find(|log| match decode_data(&log) {
-                                        Ok((bytes, _state_counter)) => match Ciphertext::decode(&mut &bytes[..]) {
-                                            Ok(ref res) => res == ciphertext,
-                                            Err(error) => {
-                                                error!("Ciphertext::decode error: {:?}", error);
-                                                false
-                                            }
-                                        },
-                                        Err(error) => {
-                                            error!("decode_data error: {:?}", error);
-                                            false
-                                        }
-                                    }) {
-                                    Some(skipped_log) => {
-                                        warn!(
-                                            "A event is skipped because of occurring error in enclave: {:?}",
-                                            skipped_log
-                                        )
-                                    }
-                                    None => {
-                                        error!(
-                                            "Not found the skipped event. The corresponding ciphertext is {:?}",
-                                            ciphertext
-                                        );
-                                    }
-                                }
-
-                                continue;
-                            }
-                        };
+                        match self.insert_ciphertext(inp, eid, &ciphertext) {
+                            Some(notification) => acc.push(notification),
+                            None => continue,
+                        }
                     }
-                    Payload::Handshake(ref handshake) => {
+                    Payload::Handshake {
+                        roster_idx,
+                        epoch,
+                        generation: _,
+                        ref handshake,
+                    } => {
                         info!(
                             "Fetch a handshake: roster_idx: {}, epoch: {}",
-                            handshake.roster_idx(),
-                            handshake.prior_epoch(),
+                            roster_idx, epoch,
                         );
 
                         if let Err(e) = Self::insert_handshake(
@@ -373,6 +368,21 @@ impl InnerEnclaveLog {
                             continue;
                         }
                     }
+                    Payload::EnclaveKeyCiphertext(ciphertext) => {
+                        info!("Fetch a enclave key ciphertext");
+
+                        let ciphertext = CommandCiphertext::EnclaveKey(ciphertext.clone());
+                        let inp = host_input::InsertCiphertext::new(
+                            ciphertext.clone(),
+                            e.state_counter(),
+                            fetch_ciphertext_cmd,
+                        );
+
+                        match self.insert_ciphertext(inp, eid, &ciphertext) {
+                            Some(notification) => acc.push(notification),
+                            None => continue,
+                        }
+                    }
                 }
             }
 
@@ -382,6 +392,72 @@ impl InnerEnclaveLog {
                 Some(acc)
             }
         }
+    }
+
+    fn insert_ciphertext(
+        &self,
+        inp: host_input::InsertCiphertext,
+        eid: sgx_enclave_id_t,
+        ciphertext: &CommandCiphertext,
+    ) -> Option<serde_json::Value> {
+        match InsertCiphertextWorkflow::exec(inp, eid)
+            .map_err(Into::into)
+            .and_then(|e| e.ecall_output.ok_or_else(|| HostError::EcallOutputNotSet))
+        {
+            Ok(notify) => {
+                if let Some(notify_state) = notify.state {
+                    match bincode::deserialize::<Vec<u8>>(&notify_state.into_vec()[..]) {
+                        Ok(bytes) => match serde_json::from_slice(&bytes[..]) {
+                            Ok(json) => return Some(json),
+                            Err(err) => {
+                                error!("Error in serde_json::from_slice(&bytes[..]): {:?}", err)
+                            }
+                        },
+                        Err(err) => error!("Error in bincode::deserialize: {:?}", err),
+                    }
+                }
+            }
+            // Even if an error occurs in Enclave, it is unlikely that retry process will succeed,
+            // so skip the event.
+            Err(err) => {
+                error!(
+                    "Error in enclave (InsertCiphertextWorkflow::exec): {:?}",
+                    err
+                );
+
+                // Logging a skipped event
+                match (&self.logs).into_iter().find(|log| {
+                    match log.decode_cipher_handshake_data() {
+                        Ok((bytes, _state_counter)) => {
+                            match TreeKemCiphertext::decode(&mut &bytes[..]) {
+                                Ok(res) => CommandCiphertext::TreeKem(res) == *ciphertext,
+                                Err(error) => {
+                                    error!("Ciphertext::decode error: {:?}", error);
+                                    false
+                                }
+                            }
+                        }
+                        Err(error) => {
+                            error!("decode_data error: {:?}", error);
+                            false
+                        }
+                    }
+                }) {
+                    Some(skipped_log) => warn!(
+                        "A event is skipped because of occurring error in enclave: {:?}",
+                        skipped_log
+                    ),
+                    None => {
+                        error!(
+                            "Not found the skipped event. The corresponding ciphertext is {:?}",
+                            ciphertext
+                        );
+                    }
+                }
+            }
+        }
+
+        None
     }
 
     fn insert_handshake(
@@ -424,178 +500,4 @@ impl EnclaveUpdatedState {
     pub fn notify_states(self) -> Option<Vec<serde_json::Value>> {
         self.notify_states
     }
-}
-
-#[derive(Debug, Clone, Hash)]
-pub struct PayloadType {
-    roster_idx: u32,
-    epoch: u32,
-    generation: u32,
-    payload: Payload,
-    state_counter: StateCounter,
-}
-
-impl PayloadType {
-    pub(crate) fn new(
-        roster_idx: u32,
-        epoch: u32,
-        generation: u32,
-        payload: Payload,
-        state_counter: StateCounter,
-    ) -> Self {
-        PayloadType {
-            roster_idx,
-            epoch,
-            generation,
-            payload,
-            state_counter,
-        }
-    }
-
-    /// other is the next of self
-    pub fn is_next(&self, other: &Self) -> bool {
-        self.roster_idx == other.roster_idx
-            && ((self.epoch == other.epoch && self.generation + 1 == other.generation) ||
-            (self.epoch == other.epoch && other.generation == u32::MAX) || // TODO: order gurantee with handshake
-            (self.epoch + 1 == other.epoch && self.generation == u32::MAX && other.generation == 0))
-    }
-
-    pub fn roster_idx(&self) -> u32 {
-        self.roster_idx
-    }
-
-    pub fn epoch(&self) -> u32 {
-        self.epoch
-    }
-
-    pub fn generation(&self) -> u32 {
-        self.generation
-    }
-
-    pub fn state_counter(&self) -> StateCounter {
-        self.state_counter
-    }
-}
-
-impl PartialEq for PayloadType {
-    fn eq(&self, other: &PayloadType) -> bool {
-        self.roster_idx == other.roster_idx
-            && self.epoch == other.epoch
-            && self.generation == other.generation
-    }
-}
-
-impl Eq for PayloadType {}
-
-/// Ordering PayloadType> like:
-/// epoch      | 0              1            2 ..
-/// generation | 0 1 2 3 .. MAX 0 1 2 .. MAX 0 ..
-impl PartialOrd for PayloadType {
-    fn partial_cmp(&self, other: &PayloadType) -> Option<Ordering> {
-        let roster_idx_ord = self.roster_idx.partial_cmp(&other.roster_idx)?;
-        if roster_idx_ord != Ordering::Equal {
-            return Some(roster_idx_ord);
-        }
-
-        let epoch_ord = self.epoch.partial_cmp(&other.epoch)?;
-        if epoch_ord != Ordering::Equal {
-            return Some(epoch_ord);
-        }
-
-        let gen_ord = self.generation.partial_cmp(&other.generation)?;
-        if gen_ord != Ordering::Equal {
-            return Some(gen_ord);
-        }
-
-        Some(Ordering::Equal)
-    }
-}
-
-impl Ord for PayloadType {
-    fn cmp(&self, other: &PayloadType) -> Ordering {
-        self.partial_cmp(&other)
-            .expect("PayloadType must be ordered")
-    }
-}
-
-#[derive(Debug, Clone, Hash)]
-pub(crate) enum Payload {
-    Ciphertext(Ciphertext),
-    Handshake(ExportHandshake),
-}
-
-impl Default for Payload {
-    fn default() -> Self {
-        Payload::Ciphertext(Default::default())
-    }
-}
-
-/// A type of events from ethererum network.
-#[derive(Debug)]
-pub struct EthEvent(Vec<Event>);
-
-impl EthEvent {
-    pub fn create_event() -> Self {
-        let events = vec![
-            Event {
-                name: "StoreCiphertext".to_owned(),
-                inputs: vec![
-                    EventParam {
-                        name: "ciphertext".to_owned(),
-                        kind: ParamType::Bytes,
-                        indexed: true,
-                    },
-                    EventParam {
-                        name: "stateCounter".to_owned(),
-                        kind: ParamType::Uint(256),
-                        indexed: true,
-                    },
-                ],
-                anonymous: false,
-            },
-            Event {
-                name: "StoreHandshake".to_owned(),
-                inputs: vec![
-                    EventParam {
-                        name: "handshake".to_owned(),
-                        kind: ParamType::Bytes,
-                        indexed: true,
-                    },
-                    EventParam {
-                        name: "stateCounter".to_owned(),
-                        kind: ParamType::Uint(256),
-                        indexed: true,
-                    },
-                ],
-                anonymous: false,
-            },
-        ];
-
-        EthEvent(events)
-    }
-
-    pub fn ciphertext_signature(&self) -> Hash {
-        self.0[0].signature()
-    }
-
-    pub fn handshake_signature(&self) -> Hash {
-        self.0[1].signature()
-    }
-}
-
-fn decode_data(log: &EthLog) -> Result<(Vec<u8>, StateCounter)> {
-    let tokens = decode(&[ParamType::Bytes, ParamType::Uint(256)], &log.0.data.0)?;
-    if tokens.len() != 2 {
-        return Err(HostError::InvalidNumberOfEthLogToken(2));
-    }
-    let bytes = tokens[0]
-        .clone()
-        .to_bytes()
-        .ok_or_else(|| HostError::InvalidEthLogToken)?;
-    let state_counter = tokens[1]
-        .clone()
-        .to_uint()
-        .ok_or_else(|| HostError::InvalidEthLogToken)?;
-
-    Ok((bytes, StateCounter::new(state_counter.as_u32())))
 }

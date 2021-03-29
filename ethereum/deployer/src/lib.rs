@@ -52,6 +52,7 @@ impl EthDeployer {
 
     pub async fn deploy_anonify_by_factory<P>(
         &self,
+        contract_type: &str,
         abi_path: P,
         signer: Address,
         gas: u64,
@@ -65,7 +66,7 @@ impl EthDeployer {
             create_contract_interface(self.web3_conn.get_eth_url(), abi_path, factory_address)?;
 
         Retry::new(
-            "deploy",
+            contract_type,
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
@@ -73,7 +74,7 @@ impl EthDeployer {
         .spawn_async(|| async {
             contract
                 .call_with_confirmations(
-                    "deploy",
+                    contract_type,
                     (),
                     signer,
                     Options::with(|opt| opt.gas = Some(gas.into())),

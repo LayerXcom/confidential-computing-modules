@@ -1,30 +1,25 @@
-use crate::error::Result;
+use super::executor::CommandExecutor;
+use super::plaintext::CommandPlaintext;
 use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{
-    crypto::{AccountId, Ciphertext, Sha256},
-    state_types::{NotifyState, ReturnState, StateType, UpdatedState, UserCounter},
+    crypto::{AccountId, Sha256},
+    state_types::StateType,
     AccessPolicy,
 };
 use frame_enclave::EnclaveEngine;
 use frame_runtime::traits::*;
 use serde::{Deserialize, Serialize};
-use std::{
-    marker::PhantomData,
-    string::{String, ToString},
-    vec::Vec,
-    time,
-};
-use log::debug;
+use std::marker::PhantomData;
 
 /// A message sender that encrypts commands
 #[derive(Debug, Clone, Default)]
-pub struct CmdSender<AP: AccessPolicy> {
+pub struct CommandByTreeKemSender<AP: AccessPolicy> {
     command_plaintext: CommandPlaintext<AP>,
     user_id: Option<AccountId>,
 }
 
-impl<AP> EnclaveEngine for CmdSender<AP>
+impl<AP> EnclaveEngine for CommandByTreeKemSender<AP>
 where
     AP: AccessPolicy,
 {
@@ -83,9 +78,9 @@ where
         let st4 = time::SystemTime::now();
         debug!("########## st4: {:?}", st4);
         let ciphertext = CommandExecutor::<R, C, AP>::new(my_account_id, self.command_plaintext)?
-            .encrypt(group_key, max_mem_size)?;
+            .encrypt_with_treekem(group_key, max_mem_size)?;
 
-        let msg = Sha256::hash_for_attested_tx(
+        let msg = Sha256::hash_for_attested_treekem_tx(
             &ciphertext.encode(),
             roster_idx,
             ciphertext.generation(),
@@ -95,74 +90,24 @@ where
         let st5 = time::SystemTime::now();
         debug!("########## st5: {:?}", st5);
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
-        let command_output = output::Command::new(ciphertext, enclave_sig.0, enclave_sig.1);
+        let command_output = output::Command::new(
+            CommandCiphertext::TreeKem(ciphertext),
+            enclave_sig.0,
+            enclave_sig.1,
+        );
 
         Ok(command_output)
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct CommandPlaintext<AP: AccessPolicy> {
-    #[serde(deserialize_with = "AP::deserialize")]
-    pub access_policy: AP,
-    pub runtime_params: serde_json::Value,
-    pub cmd_name: String,
-    pub counter: UserCounter,
-}
-
-impl<AP> Default for CommandPlaintext<AP>
-where
-    AP: AccessPolicy,
-{
-    fn default() -> Self {
-        Self {
-            access_policy: AP::default(),
-            runtime_params: serde_json::Value::Null,
-            cmd_name: String::default(),
-            counter: UserCounter::default(),
-        }
-    }
-}
-
-impl<AP> CommandPlaintext<AP>
-where
-    AP: AccessPolicy,
-{
-    pub fn new(
-        access_policy: AP,
-        runtime_params: serde_json::Value,
-        cmd_name: impl ToString,
-        counter: UserCounter,
-    ) -> Self {
-        CommandPlaintext {
-            access_policy,
-            runtime_params,
-            cmd_name: cmd_name.to_string(),
-            counter,
-        }
-    }
-
-    pub fn access_policy(&self) -> &AP {
-        &self.access_policy
-    }
-
-    pub fn cmd_name(&self) -> &str {
-        &self.cmd_name
-    }
-
-    pub fn counter(&self) -> UserCounter {
-        self.counter
-    }
-}
-
 /// A message receiver that decrypt commands and make state transition
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct CmdReceiver<AP> {
+pub struct CommandByTreeKemReceiver<AP> {
     ecall_input: input::InsertCiphertext,
     ap: PhantomData<AP>,
 }
 
-impl<AP> EnclaveEngine for CmdReceiver<AP>
+impl<AP> EnclaveEngine for CommandByTreeKemReceiver<AP>
 where
     AP: AccessPolicy,
 {
@@ -192,8 +137,13 @@ where
         let rt7 = std::time::SystemTime::now();
         debug!("########## rt7: {:?}", rt7);
         let group_key = &mut *enclave_context.write_group_key();
-        let roster_idx = self.ecall_input.ciphertext().roster_idx() as usize;
-        let msg_gen = self.ecall_input.ciphertext().generation();
+        let treekem_ciphertext = match self.ecall_input.ciphertext() {
+            CommandCiphertext::TreeKem(ciphertext) => ciphertext,
+            _ => return Err(anyhow!("CommandCiphertext is not for treekem")),
+        };
+
+        let roster_idx = treekem_ciphertext.roster_idx() as usize;
+        let msg_gen = treekem_ciphertext.generation();
 
         let rt8 = std::time::SystemTime::now();
         debug!("########## rt8: {:?}", rt8);
@@ -218,13 +168,13 @@ where
         debug!("########## rt10: {:?}", rt10);
         let mut output = output::ReturnNotifyState::default();
         let decrypted_cmds =
-            CommandExecutor::<R, C, AP>::decrypt(self.ecall_input.ciphertext(), group_key)?;
+            CommandExecutor::<R, C, AP>::decrypt_with_treekem(treekem_ciphertext, group_key)?;
         if let Some(cmds) = decrypted_cmds {
             let rt11 = std::time::SystemTime::now();
             debug!("########## rt11: {:?}", rt11);
             // Since the command data is valid for the error at the time of state transition,
             // `user_counter` must be verified and incremented before the state transition.
-            enclave_context.verify_user_counter_increment(cmds.my_account_id, cmds.counter)?;
+            enclave_context.verify_user_counter_increment(cmds.my_account_id(), cmds.counter())?;
             // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
             let state_iter = cmds.state_transition(enclave_context.clone())?;
 
@@ -240,6 +190,7 @@ where
         Ok(output)
     }
 }
+<<<<<<< HEAD:modules/anonify-enclave/src/commands.rs
 
 /// Command data which make state update
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -329,3 +280,5 @@ where
         }
     }
 }
+=======
+>>>>>>> master:modules/anonify-enclave/src/commands/treekem.rs

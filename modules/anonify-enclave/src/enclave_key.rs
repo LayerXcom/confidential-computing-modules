@@ -170,6 +170,12 @@ impl EnclaveKey {
         Ok(enclave_dec_key.public_key())
     }
 
+    pub fn enclave_decryption_key(&self) -> Result<&SodiumPrivateKey> {
+        self.decryption_privkey
+            .as_ref()
+            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)
+    }
+
     /// Generate a value of REPORTDATA field in REPORT struct.
     /// REPORTDATA consists of a hashed signing public key and a encryption public key.
     /// The hashed signing public key is used for verifying signature on-chain to attest enclave's execution w/o a whole REPORT data,

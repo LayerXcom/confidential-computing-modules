@@ -8,7 +8,7 @@ import "./utils/Secp256k1.sol";
 import "./utils/BytesUtils.sol";
 
 // Consider: Avoid inheritting
-contract Anonify is ReportHandle {
+contract AnonifyWithTreeKem is ReportHandle {
     using BytesUtils for bytes;
     using SafeMath for uint256;
 
@@ -25,8 +25,8 @@ contract Anonify is ReportHandle {
     // Counter for enforcing the order of state transitions
     mapping(uint32 => GroupKeyCounter) private _groupKeyCounter;
 
-    event StoreCiphertext(bytes ciphertext, uint256 stateCounter);
-    event StoreHandshake(bytes handshake, uint256 stateCounter);
+    event StoreTreeKemCiphertext(bytes ciphertext, uint256 stateCounter);
+    event StoreTreeKemHandshake(bytes handshake, uint256 stateCounter);
     event UpdateMrenclaveVer(uint32 newVersion);
 
     constructor() {
@@ -51,8 +51,12 @@ contract Anonify is ReportHandle {
         handleReport(_report, _reportSig);
         // It is assumed that the nodes participate in the order of roster index,
         // and all the nodes finish participating before the state transition.
+        for (uint32 i = 0; i < _rosterIdx; i++) {
+            uint32 _generation = _groupKeyCounter[i].generation;
+            _groupKeyCounter[i] = GroupKeyCounter(_generation, _rosterIdx + 1);
+        }
         _groupKeyCounter[_rosterIdx] = GroupKeyCounter(0, _rosterIdx + 1);
-        storeHandshake(_handshake);
+        storeTreeKemHandshake(_handshake);
     }
 
     // a recovered TEE node registers the report
@@ -79,7 +83,7 @@ contract Anonify is ReportHandle {
 
         updateMrenclaveInner(_report, _reportSig);
         _mrenclaveVer = _newVersion;
-        storeHandshake(_handshake);
+        storeTreeKemHandshake(_handshake);
         emit UpdateMrenclaveVer(_newVersion);
     }
 
@@ -93,7 +97,14 @@ contract Anonify is ReportHandle {
     ) public {
         address verifyingKey =
             Secp256k1.recover(
-                sha256(abi.encodePacked(_newCiphertext, _rosterIdx, _generation, _epoch)),
+                sha256(
+                    abi.encodePacked(
+                        _newCiphertext,
+                        _rosterIdx,
+                        _generation,
+                        _epoch
+                    )
+                ),
                 _enclaveSig
             );
         require(
@@ -117,7 +128,7 @@ contract Anonify is ReportHandle {
 
         _groupKeyCounter[_rosterIdx] = GroupKeyCounter(_generation, _epoch);
         _stateCounter = incremented_state_counter;
-        emit StoreCiphertext(_newCiphertext, incremented_state_counter);
+        emit StoreTreeKemCiphertext(_newCiphertext, incremented_state_counter);
     }
 
     function handshake(
@@ -129,7 +140,14 @@ contract Anonify is ReportHandle {
     ) public {
         address verifyingKey =
             Secp256k1.recover(
-                sha256(abi.encodePacked(_handshake, _rosterIdx, _generation, _epoch)),
+                sha256(
+                    abi.encodePacked(
+                        _handshake,
+                        _rosterIdx,
+                        _generation,
+                        _epoch
+                    )
+                ),
                 _enclaveSig
             );
         require(
@@ -140,22 +158,21 @@ contract Anonify is ReportHandle {
             verifyingKeyMapping[verifyingKey] == verifyingKey,
             "Invalid enclave signature."
         );
-        require(
-            _generation == 0,
-            "generation must be zero"
-        );
+        require(_generation == 0, "generation must be zero");
         require(
             _epoch > _groupKeyCounter[_rosterIdx].epoch,
             "epoch must be bigger than the counter"
         );
 
-        _groupKeyCounter[_rosterIdx] = GroupKeyCounter(_generation, _epoch);
-        storeHandshake(_handshake);
+        for (uint32 i = 0; i < _rosterIdx + 1; i++) {
+            _groupKeyCounter[i] = GroupKeyCounter(_generation, _epoch);
+        }
+        storeTreeKemHandshake(_handshake);
     }
 
-    function storeHandshake(bytes memory _handshake) private {
+    function storeTreeKemHandshake(bytes memory _handshake) private {
         uint256 incremented_state_counter = _stateCounter.add(1);
         _stateCounter = incremented_state_counter;
-        emit StoreHandshake(_handshake, incremented_state_counter);
+        emit StoreTreeKemHandshake(_handshake, incremented_state_counter);
     }
 }

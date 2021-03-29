@@ -1,6 +1,6 @@
 use anonify_ecall_types::*;
 use frame_common::{
-    crypto::{AccountId, Ciphertext, ExportHandshake},
+    crypto::{AccountId, ExportHandshake},
     state_types::StateCounter,
 };
 use frame_host::engine::*;
@@ -349,13 +349,17 @@ pub mod host_input {
     }
 
     pub struct InsertCiphertext {
-        ciphertext: Ciphertext,
+        ciphertext: CommandCiphertext,
         state_counter: StateCounter,
         ecall_cmd: u32,
     }
 
     impl InsertCiphertext {
-        pub fn new(ciphertext: Ciphertext, state_counter: StateCounter, ecall_cmd: u32) -> Self {
+        pub fn new(
+            ciphertext: CommandCiphertext,
+            state_counter: StateCounter,
+            ecall_cmd: u32,
+        ) -> Self {
             InsertCiphertext {
                 ciphertext,
                 state_counter,

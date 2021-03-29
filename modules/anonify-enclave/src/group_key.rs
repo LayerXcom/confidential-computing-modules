@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use frame_common::crypto::Ciphertext;
+use frame_common::TreeKemCiphertext;
 use frame_runtime::traits::*;
 use frame_treekem::{
     handshake::{HandshakeParams, PathSecretSource},
@@ -65,12 +65,12 @@ impl GroupKeyOps for GroupKey {
         Ok(())
     }
 
-    fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext> {
+    fn encrypt(&self, plaintext: Vec<u8>) -> Result<TreeKemCiphertext> {
         self.sender_keychain
             .encrypt_msg(plaintext, &self.group_state)
     }
 
-    fn decrypt(&self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>> {
+    fn decrypt(&self, app_msg: &TreeKemCiphertext) -> Result<Option<Vec<u8>>> {
         self.receiver_keychain
             .decrypt_msg(&app_msg, &self.group_state)
     }

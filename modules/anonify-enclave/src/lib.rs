@@ -13,16 +13,20 @@ mod enclave_key;
 mod error;
 mod group_key;
 mod handshake;
+mod join_group;
 mod kvs;
 mod notify;
 
 pub mod workflow {
     #[cfg(feature = "backup-enable")]
     pub use crate::backup::{PathSecretBackupper, PathSecretRecoverer};
-    pub use crate::commands::{CmdReceiver, CmdSender};
+    pub use crate::commands::treekem::{CommandByTreeKemReceiver, CommandByTreeKemSender};
     pub use crate::context::{GetState, GetUserCounter, ReportRegistration};
     pub use crate::enclave_key::EncryptionKeyGetter;
-    pub use crate::handshake::{HandshakeReceiver, HandshakeSender, JoinGroupSender};
+    pub use crate::handshake::{HandshakeReceiver, HandshakeSender};
+    pub use crate::join_group::{
+        enclave_key::JoinGroupWithEnclaveKey, treekem::JoinGroupWithTreeKem,
+    };
     pub use crate::notify::RegisterNotification;
 }
 

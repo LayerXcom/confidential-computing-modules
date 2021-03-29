@@ -6,9 +6,10 @@ use crate::localstd::{
 };
 use crate::serde::{de::DeserializeOwned, Serialize};
 use frame_common::{
-    crypto::{AccountId, Ciphertext},
+    crypto::AccountId,
     state_types::{MemId, NotifyState, ReturnState, StateCounter, UpdatedState, UserCounter},
     traits::*,
+    TreeKemCiphertext,
 };
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::key_vault::{
@@ -18,7 +19,7 @@ use frame_mra_tls::key_vault::{
     },
     response::RecoveredPathSecret,
 };
-use frame_sodium::{SodiumCiphertext, SodiumPubKey, StoreEnclaveDecryptionKey};
+use frame_sodium::{SodiumCiphertext, SodiumPrivateKey, SodiumPubKey, StoreEnclaveDecryptionKey};
 use frame_treekem::{handshake::HandshakeParams, PathSecret, StorePathSecrets};
 use remote_attestation::EncodedQuote;
 
@@ -85,6 +86,7 @@ pub trait ConfigGetter {
     fn store_path_secrets(&self) -> &StorePathSecrets;
     fn store_enclave_dec_key(&self) -> &StoreEnclaveDecryptionKey;
     fn ias_root_cert(&self) -> &[u8];
+    fn my_roster_idx(&self) -> usize;
 }
 
 /// A getter of state stored in enclave memory.
@@ -148,6 +150,8 @@ pub trait EnclaveKeyOps {
     fn decrypt(&self, ciphertext: &SodiumCiphertext) -> Result<Vec<u8>>;
 
     fn enclave_encryption_key(&self) -> Result<SodiumPubKey>;
+
+    fn enclave_decryption_key(&self) -> Result<&SodiumPrivateKey>;
 }
 
 pub trait GroupKeyOps: Sized {
@@ -162,9 +166,9 @@ pub trait GroupKeyOps: Sized {
         #[cfg(feature = "backup-enable")] recover_path_secret: F,
     ) -> Result<()>;
 
-    fn encrypt(&self, plaintext: Vec<u8>) -> Result<Ciphertext>;
+    fn encrypt(&self, plaintext: Vec<u8>) -> Result<TreeKemCiphertext>;
 
-    fn decrypt(&self, app_msg: &Ciphertext) -> Result<Option<Vec<u8>>>;
+    fn decrypt(&self, app_msg: &TreeKemCiphertext) -> Result<Option<Vec<u8>>>;
 
     /// Ratchet sender's keychain per a transaction
     fn sender_ratchet(&mut self, roster_idx: usize) -> Result<()>;
