@@ -4,19 +4,20 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
+use lazy_static::lazy_static;
 use std::backtrace;
 use std::prelude::v1::*;
 use test_utils::*;
 
-use once_cell::sync::Lazy;
-
-static ENABLE_BACKTRACE: Lazy<()> = Lazy::new(|| {
-    backtrace::enable_backtrace(
-        &*frame_config::ENCLAVE_SIGNED_SO,
-        backtrace::PrintFormat::Short,
-    )
-    .unwrap();
-});
+lazy_static! {
+    static ref ENABLE_BACKTRACE: () = {
+        backtrace::enable_backtrace(
+            &*frame_config::ENCLAVE_SIGNED_SO,
+            backtrace::PrintFormat::Short,
+        )
+        .unwrap();
+    };
+}
 
 #[no_mangle]
 pub fn ecall_run_tests() {

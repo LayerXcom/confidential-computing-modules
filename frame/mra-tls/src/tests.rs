@@ -1,7 +1,7 @@
 use crate::{AttestedTlsConfig, Client, ClientConfig, RequestHandler, Server, ServerConfig};
 use anyhow::Result;
 use frame_config::{ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
-use once_cell::sync::Lazy;
+use lazy_static::lazy_static;
 use serde_json::Value;
 use std::{
     env,
@@ -12,10 +12,12 @@ use std::{
 };
 use test_utils::*;
 
-static SERVER_ADDRESS: Lazy<String> = Lazy::new(|| {
-    let host = env::var("HOSTNAME").expect("failed to get env 'HOSTNAME'");
-    format!("{}:12345", host)
-});
+lazy_static! {
+    static ref SERVER_ADDRESS: String = {
+        let host = env::var("HOSTNAME").expect("failed to get env 'HOSTNAME'");
+        format!("{}:12345", host)
+    };
+}
 const LISTEN_ADDRESS: &str = "0.0.0.0:12345";
 
 pub fn run_tests() -> bool {
