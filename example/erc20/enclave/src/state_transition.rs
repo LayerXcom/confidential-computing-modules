@@ -1,6 +1,4 @@
 use frame_runtime::prelude::*;
-use log::debug;
-use std::time;
 
 pub const MAX_MEM_SIZE: usize = 100;
 
