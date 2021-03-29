@@ -156,7 +156,7 @@ impl Dispatcher {
     pub async fn fetch_events(
         &self,
         fetch_ciphertext_ecall_cmd: u32,
-        getch_handshake_ecall_cmd: u32,
+        fetch_handshake_ecall_cmd: u32,
     ) -> Result<Option<Vec<serde_json::Value>>> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
@@ -164,7 +164,7 @@ impl Dispatcher {
             .watcher
             .as_ref()
             .ok_or(HostError::EventWatcherNotSet)?
-            .fetch_events(eid, fetch_ciphertext_ecall_cmd, getch_handshake_ecall_cmd)
+            .fetch_events(eid, fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd)
             .await
     }
 
