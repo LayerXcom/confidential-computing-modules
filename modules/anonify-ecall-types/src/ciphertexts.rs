@@ -22,26 +22,30 @@ impl Default for CommandCiphertext {
 #[serde(crate = "crate::serde")]
 pub struct EnclaveKeyCiphertext {
     pub encrypted_state: SodiumCiphertext,
+    roster_idx: u32,
 }
 
 impl fmt::Debug for EnclaveKeyCiphertext {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "EnclaveKeyCiphertext {{ encrypted_state: 0x{} }}",
-            hex::encode(self.encode())
+            "EnclaveKeyCiphertext {{ encrypted_state: 0x{}, roster_idx: {:?} }}",
+            hex::encode(self.encode()),
+            self.roster_idx()
         )
     }
 }
 
 impl EnclaveKeyCiphertext {
-    pub fn new(encrypted_state: SodiumCiphertext) -> Self {
-        EnclaveKeyCiphertext { encrypted_state }
+    pub fn new(encrypted_state: SodiumCiphertext, roster_idx: u32) -> Self {
+        EnclaveKeyCiphertext {
+            encrypted_state,
+            roster_idx,
+        }
     }
 
     pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
-        let encrypted_state = SodiumCiphertext::decode(bytes)?;
-        Ok(Self { encrypted_state })
+        bincode::deserialize(bytes)
     }
 
     pub fn encode(&self) -> Vec<u8> {
@@ -50,5 +54,9 @@ impl EnclaveKeyCiphertext {
 
     pub fn encrypted_state(&self) -> &SodiumCiphertext {
         &self.encrypted_state
+    }
+
+    pub fn roster_idx(&self) -> u32 {
+        self.roster_idx
     }
 }

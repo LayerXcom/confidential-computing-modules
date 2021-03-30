@@ -151,7 +151,16 @@ impl Web3Contract {
                 )
                 .await
                 .map_err(Into::into),
-            _ => return Err(HostError::InvalidCiphertextError),
+            CommandCiphertext::EnclaveKey(ciphertext) => self
+                .contract
+                .call(
+                    "storeCommand",
+                    (ciphertext.encode(), enclave_sig, ciphertext.roster_idx()),
+                    output.signer,
+                    Options::with(|opt| opt.gas = Some(gas.into())),
+                )
+                .await
+                .map_err(Into::into),
         }
     }
 
