@@ -387,25 +387,6 @@ async fn test_node_recovery() {
         .expect("Failed to initialize enclave.");
     let recovered_eid = recovered_enclave.geteid();
 
-    // Do not run
-    let recovered_server = Arc::new(Server::new(recovered_eid).await);
-
-    let mut recovered_app = test::init_service(
-        App::new()
-            .data(recovered_server.clone())
-            .route("/api/v1/state", web::get().to(handle_get_state))
-            .route("/api/v1/state", web::post().to(handle_send_command))
-            .route(
-                "/api/v1/enclave_encryption_key",
-                web::get().to(handle_enclave_encryption_key),
-            )
-            .route(
-                "/api/v1/register_report",
-                web::post().to(handle_register_report),
-            ),
-    )
-    .await;
-
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
         .to_request();
@@ -468,11 +449,29 @@ async fn test_node_recovery() {
 
     my_turn();
 
-    let req = test::TestRequest::post()
-        .uri("/api/v1/register_report")
-        .to_request();
-    let resp = test::call_service(&mut recovered_app, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
+    let recovered_server = Arc::new(Server::new(recovered_eid).await.run().await);
+    let mut recovered_app = test::init_service(
+        App::new()
+            .data(recovered_server.clone())
+            .route("/api/v1/state", web::get().to(handle_get_state))
+            .route("/api/v1/state", web::post().to(handle_send_command))
+            .route(
+                "/api/v1/enclave_encryption_key",
+                web::get().to(handle_enclave_encryption_key),
+            )
+            // TODO: Move to treekem testing case
+            // .route(
+            //     "/api/v1/register_report",
+            //     web::post().to(handle_register_report),
+            // ),
+    )
+    .await;
+
+    // let req = test::TestRequest::post()
+    //     .uri("/api/v1/register_report")
+    //     .to_request();
+    // let resp = test::call_service(&mut recovered_app, req).await;
+    // assert!(resp.status().is_success(), "response: {:?}", resp);
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -556,7 +555,8 @@ async fn test_join_group_then_handshake() {
             .data(server2.clone())
             .route("/api/v1/state", web::post().to(handle_send_command))
             .route("/api/v1/state", web::get().to(handle_get_state))
-            .route("/api/v1/key_rotation", web::post().to(handle_key_rotation))
+            // TODO: Move to treekem-enabled testing case
+            // .route("/api/v1/key_rotation", web::post().to(handle_key_rotation))
             .route(
                 "/api/v1/enclave_encryption_key",
                 web::get().to(handle_enclave_encryption_key),
@@ -646,21 +646,21 @@ async fn test_join_group_then_handshake() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    let req = test::TestRequest::post()
-        .uri("/api/v1/key_rotation")
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
+    // let req = test::TestRequest::post()
+    //     .uri("/api/v1/key_rotation")
+    //     .to_request();
+    // let resp = test::call_service(&mut app2, req).await;
+    // assert!(resp.status().is_success(), "response: {:?}", resp);
+    // actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME)).await;
 
-    let req = test::TestRequest::get()
-        .uri("/api/v1/state")
-        .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
-        .to_request();
-    let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp);
-    let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
-    assert_eq!(balance.state, 100);
+    // let req = test::TestRequest::get()
+    //     .uri("/api/v1/state")
+    //     .set_json(&balance_of_req_fn(&mut csprng, &enc_key))
+    //     .to_request();
+    // let resp = test::call_service(&mut app2, req).await;
+    // assert!(resp.status().is_success(), "response: {:?}", resp);
+    // let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
+    // assert_eq!(balance.state, 100);
 
     let transfer_10_req = transfer_10_req_fn(&mut csprng, &enc_key, 2, None);
     let req = test::TestRequest::post()
