@@ -205,6 +205,7 @@ impl Web3Contract {
                 topic0: Topic::OneOf(vec![
                     *STORE_TREEKEM_CIPHERTEXT_EVENT,
                     *STORE_TREEKEM_HANDSHAKE_EVENT,
+                    *STORE_ENCLAVE_KEY_CIPHERTEXT_EVENT,
                 ]),
                 topic1: Topic::Any,
                 topic2: Topic::Any,
