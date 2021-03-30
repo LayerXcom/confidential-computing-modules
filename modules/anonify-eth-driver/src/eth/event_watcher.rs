@@ -156,7 +156,7 @@ impl Web3Logs {
                 let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
                     Ok(d) => d,
                     Err(e) => {
-                        error!("{}", e);
+                        error!("decode_cipher_handshake_data: {}", e);
                         continue;
                     }
                 };
@@ -164,7 +164,7 @@ impl Web3Logs {
                 let res = match TreeKemCiphertext::decode(&mut &bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
-                        error!("{}", e);
+                        error!("TreeKemCiphertext::decode: {}", e);
                         continue;
                     }
                 };
@@ -182,7 +182,7 @@ impl Web3Logs {
                 let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
                     Ok(d) => d,
                     Err(e) => {
-                        error!("{}", e);
+                        error!("decode_cipher_handshake_data: {}", e);
                         continue;
                     }
                 };
@@ -190,7 +190,7 @@ impl Web3Logs {
                 let res = match ExportHandshake::decode(&bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
-                        error!("{}", e);
+                        error!("ExportHandshake::decode: {}", e);
                         continue;
                     }
                 };
@@ -208,7 +208,7 @@ impl Web3Logs {
                 let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
                     Ok(d) => d,
                     Err(e) => {
-                        error!("{}", e);
+                        error!("decode_cipher_handshake_data: {}", e);
                         continue;
                     }
                 };
@@ -216,7 +216,7 @@ impl Web3Logs {
                 let res = match EnclaveKeyCiphertext::decode(&mut &bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
-                        error!("{}", e);
+                        error!("EnclaveKeyCiphertext::decode: {}", e);
                         continue;
                     }
                 };

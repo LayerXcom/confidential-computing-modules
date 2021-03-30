@@ -49,7 +49,7 @@ impl EnclaveKeyCiphertext {
     }
 
     pub fn encode(&self) -> Vec<u8> {
-        self.encrypted_state.encode()
+        bincode::serialize(&self).unwrap() //must not fail
     }
 
     pub fn encrypted_state(&self) -> &SodiumCiphertext {
