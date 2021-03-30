@@ -124,7 +124,6 @@ impl Web3Contract {
             .map_err(Into::into)
     }
 
-    // TODO: treekem
     pub async fn send_command(&self, output: host_output::Command) -> Result<H256> {
         let ecall_output = output
             .ecall_output
