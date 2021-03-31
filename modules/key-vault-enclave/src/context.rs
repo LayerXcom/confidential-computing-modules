@@ -1,4 +1,4 @@
-use frame_config::{ANONIFY_PARAMS_DIR, IAS_ROOT_CERT, PATH_SECRETS_DIR};
+use frame_config::{ANONIFY_PARAMS_DIR, IAS_ROOT_CERT, CMD_DEC_SECRET_DIR};
 use frame_runtime::traits::*;
 use frame_sodium::StoreEnclaveDecryptionKey;
 use frame_treekem::StorePathSecrets;
@@ -60,7 +60,7 @@ impl KeyVaultEnclaveContext {
         let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
         let key_vault_endpoint = env::var("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME")
             .expect("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME is not set");
-        let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
+        let store_path_secrets = StorePathSecrets::new(&*CMD_DEC_SECRET_DIR);
         let store_enclave_dec_key = StoreEnclaveDecryptionKey::new(&*ANONIFY_PARAMS_DIR);
 
         Self {

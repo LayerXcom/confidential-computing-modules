@@ -20,9 +20,9 @@ pub struct StorePathSecrets {
 }
 
 impl StorePathSecrets {
-    pub fn new<P: AsRef<Path>>(path_secrets_dir: P) -> Self {
-        let local_dir_path = (*PJ_ROOT_DIR).to_path_buf().join(path_secrets_dir);
-        fs::create_dir_all(&local_dir_path).expect("Failed to create PATH_SECRETS_DIR");
+    pub fn new<P: AsRef<Path>>(cmd_dec_secret_dir: P) -> Self {
+        let local_dir_path = (*PJ_ROOT_DIR).to_path_buf().join(cmd_dec_secret_dir);
+        fs::create_dir_all(&local_dir_path).expect("Failed to create CMD_DEC_SECRET_DIR");
         StorePathSecrets { local_dir_path }
     }
 

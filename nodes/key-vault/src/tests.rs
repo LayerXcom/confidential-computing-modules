@@ -48,7 +48,7 @@ async fn test_health_check() {
 
 #[actix_rt::test]
 async fn test_backup_enclave_key() {
-    
+
 }
 
 #[actix_rt::test]
@@ -92,8 +92,8 @@ async fn test_backup_path_secret() {
     )
     .await;
 
-    let path_secrets_dir =
-        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
+    let cmd_dec_secret_dir =
+        PJ_ROOT_DIR.join(&env::var("CMD_DEC_SECRET_DIR").expect("CMD_DEC_SECRET_DIR is not set"));
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -123,9 +123,9 @@ async fn test_backup_path_secret() {
     // check storing path_secret
     let id = get_local_id().unwrap();
     // local
-    assert!(path_secrets_dir.join(&id).exists());
+    assert!(cmd_dec_secret_dir.join(&id).exists());
     // remote
-    assert!(path_secrets_dir
+    assert!(cmd_dec_secret_dir
         .join(env::var("MY_ROSTER_IDX").unwrap().as_str())
         .join(&id)
         .exists());
@@ -156,9 +156,9 @@ async fn test_backup_path_secret() {
 
     clear_local_path_secrets();
     // local
-    assert!(!path_secrets_dir.join(&id).exists());
+    assert!(!cmd_dec_secret_dir.join(&id).exists());
     // remote
-    assert!(path_secrets_dir
+    assert!(cmd_dec_secret_dir
         .join(env::var("MY_ROSTER_IDX").unwrap().as_str())
         .join(&id)
         .exists());
@@ -214,8 +214,8 @@ async fn test_recover_without_key_vault() {
     )
     .await;
 
-    let path_secrets_dir =
-        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
+    let cmd_dec_secret_dir =
+        PJ_ROOT_DIR.join(&env::var("CMD_DEC_SECRET_DIR").expect("CMD_DEC_SECRET_DIR is not set"));
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -245,9 +245,9 @@ async fn test_recover_without_key_vault() {
     // check storing path_secret
     let id = get_local_id().unwrap();
     // local
-    assert!(path_secrets_dir.join(&id).exists());
+    assert!(cmd_dec_secret_dir.join(&id).exists());
     // remote
-    assert!(path_secrets_dir
+    assert!(cmd_dec_secret_dir
         .join(env::var("MY_ROSTER_IDX").unwrap().as_str())
         .join(&id)
         .exists());
@@ -560,7 +560,7 @@ fn set_env_vars() {
         "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report",
     );
     env::set_var("ENCLAVE_PKG_NAME", "key_vault");
-    env::set_var("PATH_SECRETS_DIR", ".anonify/test_pathsecrets");
+    env::set_var("CMD_DEC_SECRET_DIR", ".anonify/test_pathsecrets");
 }
 
 fn set_server_env_vars() {
@@ -571,7 +571,7 @@ fn set_server_env_vars() {
 
 fn clear_local_path_secrets() {
     let target_dir =
-        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
+        PJ_ROOT_DIR.join(&env::var("CMD_DEC_SECRET_DIR").expect("CMD_DEC_SECRET_DIR is not set"));
     let dir = fs::read_dir(&target_dir).unwrap();
 
     for path in dir {
@@ -585,7 +585,7 @@ fn clear_local_path_secrets() {
 
 fn clear_remote_path_secrets(roster_idx: String) {
     let target_dir = PJ_ROOT_DIR
-        .join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"))
+        .join(&env::var("CMD_DEC_SECRET_DIR").expect("CMD_DEC_SECRET_DIR is not set"))
         .join(roster_idx);
     let dir = fs::read_dir(&target_dir).unwrap();
 
@@ -600,7 +600,7 @@ fn clear_remote_path_secrets(roster_idx: String) {
 
 fn clear_path_secrets() {
     let target =
-        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"));
+        PJ_ROOT_DIR.join(&env::var("CMD_DEC_SECRET_DIR").expect("CMD_DEC_SECRET_DIR is not set"));
     if target.exists() {
         fs::remove_dir_all(target).unwrap();
     }
@@ -608,7 +608,7 @@ fn clear_path_secrets() {
 
 fn get_local_id() -> Option<String> {
     let paths = fs::read_dir(
-        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set")),
+        PJ_ROOT_DIR.join(&env::var("CMD_DEC_SECRET_DIR").expect("CMD_DEC_SECRET_DIR is not set")),
     )
     .unwrap();
     for path in paths {
@@ -624,7 +624,7 @@ fn get_local_id() -> Option<String> {
 fn get_local_ids() -> Vec<String> {
     let mut ids = vec![];
     let paths = fs::read_dir(
-        PJ_ROOT_DIR.join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set")),
+        PJ_ROOT_DIR.join(&env::var("CMD_DEC_SECRET_DIR").expect("CMD_DEC_SECRET_DIR is not set")),
     )
     .unwrap();
     for path in paths {
@@ -641,7 +641,7 @@ fn get_remote_ids(roster_idx: String) -> Vec<String> {
     let mut ids = vec![];
     let paths = fs::read_dir(
         PJ_ROOT_DIR
-            .join(&env::var("PATH_SECRETS_DIR").expect("PATH_SECRETS_DIR is not set"))
+            .join(&env::var("CMD_DEC_SECRET_DIR").expect("CMD_DEC_SECRET_DIR is not set"))
             .join(roster_idx),
     )
     .unwrap();
