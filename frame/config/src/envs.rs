@@ -23,8 +23,8 @@ lazy_static! {
             .parse::<u64>()
             .unwrap()
     };
-    pub static ref PATH_SECRETS_DIR: String =
-        env::var("PATH_SECRETS_DIR").unwrap_or(".anonify/pathsecrets".to_string());
+    pub static ref CMD_DEC_SECRET_DIR: String =
+        env::var("CMD_DEC_SECRET_DIR").unwrap_or(".anonify/cmd-dec-secret".to_string());
     pub static ref PJ_ROOT_DIR: PathBuf = {
         let pj_name = env::var("PJ_NAME").unwrap_or("anonify".to_string());
         let mut current_dir = env::current_dir().unwrap();

@@ -26,7 +26,7 @@ register_ecall!(
     (FETCH_HANDSHAKE_TREEKEM_CMD, HandshakeReceiver),
     // Get current state of the user represented the given public key from enclave memory database.
     (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
-    (JOIN_GROUP_TREEKEM_CMD, JoinGroupWithTreeKem),
+    (JOIN_GROUP_ENCLAVE_KEY_CMD, JoinGroupWithEnclaveKey),
     (SEND_HANDSHAKE_TREEKEM_CMD, HandshakeSender),
     (
         REGISTER_NOTIFICATION_CMD,
@@ -37,6 +37,14 @@ register_ecall!(
     (
         GET_USER_COUNTER_CMD,
         GetUserCounter<Ed25519ChallengeResponse>
+    ),
+    (
+        SEND_COMMAND_ENCLAVE_KEY_CMD,
+        CommandByEnclaveKeySender<Ed25519ChallengeResponse>
+    ),
+    (
+        FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD,
+        CommandByEnclaveKeyReceiver<Ed25519ChallengeResponse>
     ),
 );
 
@@ -59,7 +67,7 @@ register_ecall!(
     (FETCH_HANDSHAKE_TREEKEM_CMD, HandshakeReceiver),
     // Get current state of the user represented the given public key from enclave memory database.
     (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
-    (JOIN_GROUP_TREEKEM_CMD, JoinGroupWithTreeKem),
+    (JOIN_GROUP_ENCLAVE_KEY_CMD, JoinGroupWithEnclaveKey),
     (SEND_HANDSHAKE_TREEKEM_CMD, HandshakeSender),
     (
         REGISTER_NOTIFICATION_CMD,

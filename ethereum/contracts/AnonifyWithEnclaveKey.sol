@@ -62,13 +62,11 @@ contract AnonifyWithEnclaveKey is ReportHandle {
     function storeCommand(
         bytes memory _newCiphertext,
         bytes memory _enclaveSig,
-        uint32 _rosterIdx,
-        uint32 _generation,
-        uint32 _epoch
+        uint32 _rosterIdx
     ) public {
         address verifyingKey =
             Secp256k1.recover(
-                sha256(abi.encodePacked(_newCiphertext, _rosterIdx, _generation, _epoch)),
+                sha256(abi.encodePacked(_newCiphertext, _rosterIdx)),
                 _enclaveSig
             );
         require(

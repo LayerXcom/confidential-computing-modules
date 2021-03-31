@@ -117,7 +117,7 @@ impl Dispatcher {
         signer: Address,
         gas: u64,
         fetch_ciphertext_ecall_cmd: u32,
-        fetch_handshake_ecalll_cmd: u32,
+        fetch_handshake_ecalll_cmd: Option<u32>,
         join_group_ecall_cmd: u32,
     ) -> Result<Self> {
         let this = self.clone();
@@ -156,7 +156,7 @@ impl Dispatcher {
     pub async fn fetch_events(
         &self,
         fetch_ciphertext_ecall_cmd: u32,
-        fetch_handshake_ecall_cmd: u32,
+        fetch_handshake_ecall_cmd: Option<u32>,
     ) -> Result<Option<Vec<serde_json::Value>>> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;

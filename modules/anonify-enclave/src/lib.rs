@@ -20,7 +20,10 @@ mod notify;
 pub mod workflow {
     #[cfg(feature = "backup-enable")]
     pub use crate::backup::{PathSecretBackupper, PathSecretRecoverer};
-    pub use crate::commands::treekem::{CommandByTreeKemReceiver, CommandByTreeKemSender};
+    pub use crate::commands::{
+        enclave_key::{CommandByEnclaveKeyReceiver, CommandByEnclaveKeySender},
+        treekem::{CommandByTreeKemReceiver, CommandByTreeKemSender},
+    };
     pub use crate::context::{GetState, GetUserCounter, ReportRegistration};
     pub use crate::enclave_key::EncryptionKeyGetter;
     pub use crate::handshake::{HandshakeReceiver, HandshakeSender};

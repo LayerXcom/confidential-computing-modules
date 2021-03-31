@@ -81,7 +81,22 @@ impl Web3Contract {
                 )
                 .await
                 .map_err(Into::into),
-            None => unimplemented!(),
+            None => self
+                .contract
+                .call_with_confirmations(
+                    method,
+                    (
+                        report,
+                        report_sig,
+                        ecall_output.mrenclave_ver(),
+                        ecall_output.roster_idx(),
+                    ),
+                    output.signer,
+                    Options::with(|opt| opt.gas = Some(gas.into())),
+                    confirmations,
+                )
+                .await
+                .map_err(Into::into),
         }
     }
 
@@ -109,7 +124,6 @@ impl Web3Contract {
             .map_err(Into::into)
     }
 
-    // TODO: treekem
     pub async fn send_command(&self, output: host_output::Command) -> Result<H256> {
         let ecall_output = output
             .ecall_output
@@ -136,7 +150,16 @@ impl Web3Contract {
                 )
                 .await
                 .map_err(Into::into),
-            _ => return Err(HostError::InvalidCiphertextError),
+            CommandCiphertext::EnclaveKey(ciphertext) => self
+                .contract
+                .call(
+                    "storeCommand",
+                    (ciphertext.encode(), enclave_sig, ciphertext.roster_idx()),
+                    output.signer,
+                    Options::with(|opt| opt.gas = Some(gas.into())),
+                )
+                .await
+                .map_err(Into::into),
         }
     }
 
@@ -181,6 +204,7 @@ impl Web3Contract {
                 topic0: Topic::OneOf(vec![
                     *STORE_TREEKEM_CIPHERTEXT_EVENT,
                     *STORE_TREEKEM_HANDSHAKE_EVENT,
+                    *STORE_ENCLAVE_KEY_CIPHERTEXT_EVENT,
                 ]),
                 topic1: Topic::Any,
                 topic2: Topic::Any,

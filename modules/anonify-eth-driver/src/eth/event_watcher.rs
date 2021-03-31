@@ -42,7 +42,7 @@ impl EventWatcher {
         &self,
         eid: sgx_enclave_id_t,
         fetch_ciphertext_cmd: u32,
-        fetch_handshake_cmd: u32,
+        fetch_handshake_cmd: Option<u32>,
     ) -> Result<Option<Vec<serde_json::Value>>> {
         let enclave_updated_state = self
             .contract
@@ -156,7 +156,7 @@ impl Web3Logs {
                 let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
                     Ok(d) => d,
                     Err(e) => {
-                        error!("{}", e);
+                        error!("decode_cipher_handshake_data: {}", e);
                         continue;
                     }
                 };
@@ -164,7 +164,7 @@ impl Web3Logs {
                 let res = match TreeKemCiphertext::decode(&mut &bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
-                        error!("{}", e);
+                        error!("TreeKemCiphertext::decode: {}", e);
                         continue;
                     }
                 };
@@ -182,7 +182,7 @@ impl Web3Logs {
                 let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
                     Ok(d) => d,
                     Err(e) => {
-                        error!("{}", e);
+                        error!("decode_cipher_handshake_data: {}", e);
                         continue;
                     }
                 };
@@ -190,7 +190,7 @@ impl Web3Logs {
                 let res = match ExportHandshake::decode(&bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
-                        error!("{}", e);
+                        error!("ExportHandshake::decode: {}", e);
                         continue;
                     }
                 };
@@ -208,7 +208,7 @@ impl Web3Logs {
                 let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
                     Ok(d) => d,
                     Err(e) => {
-                        error!("{}", e);
+                        error!("decode_cipher_handshake_data: {}", e);
                         continue;
                     }
                 };
@@ -216,7 +216,7 @@ impl Web3Logs {
                 let res = match EnclaveKeyCiphertext::decode(&mut &bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
-                        error!("{}", e);
+                        error!("EnclaveKeyCiphertext::decode: {}", e);
                         continue;
                     }
                 };
@@ -265,7 +265,7 @@ impl EnclaveLog {
         self,
         eid: sgx_enclave_id_t,
         fetch_ciphertext_cmd: u32,
-        fetch_handshake_cmd: u32,
+        fetch_handshake_cmd: Option<u32>,
     ) -> EnclaveUpdatedState {
         match self.inner {
             Some(log) => {
@@ -302,7 +302,7 @@ impl InnerEnclaveLog {
         self,
         eid: sgx_enclave_id_t,
         fetch_ciphertext_cmd: u32,
-        fetch_handshake_cmd: u32,
+        fetch_handshake_cmd: Option<u32>,
     ) -> Option<Vec<serde_json::Value>> {
         if self.payloads.is_empty() {
             debug!("No logs to insert into the enclave.");
@@ -341,6 +341,11 @@ impl InnerEnclaveLog {
                         generation: _,
                         ref handshake,
                     } => {
+                        // fetch_handshake_cmd should be set
+                        let fetch_handshake_cmd = fetch_handshake_cmd.expect(
+                            "The StateRuntime node should look to AnonifyWithTreeKem contract",
+                        );
+
                         info!(
                             "Fetch a handshake: roster_idx: {}, epoch: {}",
                             roster_idx, epoch,

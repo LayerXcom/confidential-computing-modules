@@ -60,11 +60,12 @@ where
         csprng: &mut RNG,
         pubkey: SodiumPubKey,
         max_mem_size: usize,
+        roster_idx: u32,
     ) -> Result<EnclaveKeyCiphertext> {
         let mut buf = bincode::serialize(&self).unwrap(); // must not fail
         Self::append_padding(&mut buf, max_mem_size);
         let encrypted_state = SodiumCiphertext::encrypt(csprng, &pubkey, &buf)?;
-        Ok(EnclaveKeyCiphertext::new(encrypted_state))
+        Ok(EnclaveKeyCiphertext::new(encrypted_state, roster_idx))
     }
 
     pub fn decode(bytes: &[u8]) -> Result<Self> {

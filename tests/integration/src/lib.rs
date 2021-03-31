@@ -91,7 +91,7 @@ async fn test_integration_eth_construct() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
-            "deployAnonifyWithTreeKem",
+            "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -116,13 +116,13 @@ async fn test_integration_eth_construct() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
     // Get handshake from contract
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -138,14 +138,15 @@ async fn test_integration_eth_construct() {
         "counter": 1,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr.clone(),
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -154,7 +155,7 @@ async fn test_integration_eth_construct() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -164,7 +165,8 @@ async fn test_integration_eth_construct() {
         "state_name": "owner",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     // Get state from enclave
     let owner_account_id = dispatcher.get_state(encrypted_req).unwrap();
 
@@ -174,7 +176,8 @@ async fn test_integration_eth_construct() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let my_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -183,7 +186,8 @@ async fn test_integration_eth_construct() {
         "state_name": "total_supply",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let actual_total_supply = dispatcher.get_state(encrypted_req).unwrap();
     println!("owner_account_id: {:?}", owner_account_id);
     assert_eq!(
@@ -225,7 +229,7 @@ async fn test_auto_notification() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
-            "deployAnonifyWithTreeKem",
+            "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -250,13 +254,13 @@ async fn test_auto_notification() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
     // Get handshake from contract
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -272,14 +276,15 @@ async fn test_auto_notification() {
         "counter": 1,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr.clone(),
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -288,12 +293,13 @@ async fn test_auto_notification() {
         "access_policy": my_access_policy.clone(),
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     dispatcher.register_notification(encrypted_req).unwrap();
 
     // Get logs from contract and update state inside enclave.
     let updated_state = dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap()
         .unwrap();
@@ -326,14 +332,15 @@ async fn test_auto_notification() {
         "counter": 2,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr,
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -341,7 +348,7 @@ async fn test_auto_notification() {
 
     // Update state inside enclave
     let updated_state = dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap()
         .unwrap();
@@ -394,7 +401,7 @@ async fn test_integration_eth_transfer() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
-            "deployAnonifyWithTreeKem",
+            "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -419,13 +426,13 @@ async fn test_integration_eth_transfer() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
     // Get handshake from contract
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -442,14 +449,15 @@ async fn test_integration_eth_transfer() {
         "counter": 1,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr.clone(),
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -458,7 +466,7 @@ async fn test_integration_eth_transfer() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -469,7 +477,8 @@ async fn test_integration_eth_transfer() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let my_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -478,7 +487,8 @@ async fn test_integration_eth_transfer() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let other_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -487,7 +497,8 @@ async fn test_integration_eth_transfer() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let third_state = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, 0);
@@ -506,14 +517,15 @@ async fn test_integration_eth_transfer() {
         "counter": 2,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr,
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -521,7 +533,7 @@ async fn test_integration_eth_transfer() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -532,7 +544,8 @@ async fn test_integration_eth_transfer() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let my_updated_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -541,7 +554,8 @@ async fn test_integration_eth_transfer() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let other_updated_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -550,7 +564,8 @@ async fn test_integration_eth_transfer() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let third_updated_state = dispatcher.get_state(encrypted_req).unwrap();
 
     assert_eq!(my_updated_state, 70);
@@ -558,148 +573,153 @@ async fn test_integration_eth_transfer() {
     assert_eq!(third_updated_state, 0);
 }
 
-#[actix_rt::test]
-async fn test_key_rotation() {
-    set_env_vars();
-    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
-    let eid = enclave.geteid();
-    // just for testing
-    let mut csprng = rand::thread_rng();
-    let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+// TODO: Move to Treekem-enabled testing case
+// #[actix_rt::test]
+// async fn test_key_rotation() {
+//     set_env_vars();
+//     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+//     let eid = enclave.geteid();
+//     // just for testing
+//     let mut csprng = rand::thread_rng();
+//     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+//     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+//     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
-    let gas = 5_000_000;
-    let cache = EventCache::default();
+//     let gas = 5_000_000;
+//     let cache = EventCache::default();
 
-    // Deploy
-    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    let deployer_addr = deployer
-        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-        .await
-        .unwrap();
-    let factory_contract_addr = deployer
-        .deploy(
-            &*FACTORY_ABI_PATH,
-            &*FACTORY_BIN_PATH,
-            CONFIRMATIONS,
-            gas,
-            deployer_addr.clone(),
-        )
-        .await
-        .unwrap();
-    let tx_hash = deployer
-        .deploy_anonify_by_factory(
-            "deployAnonifyWithTreeKem",
-            &*FACTORY_ABI_PATH,
-            deployer_addr,
-            gas,
-            factory_contract_addr,
-            CONFIRMATIONS,
-        )
-        .await
-        .unwrap();
+//     // Deploy
+//     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+//     let deployer_addr = deployer
+//         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
+//         .await
+//         .unwrap();
+//     let factory_contract_addr = deployer
+//         .deploy(
+//             &*FACTORY_ABI_PATH,
+//             &*FACTORY_BIN_PATH,
+//             CONFIRMATIONS,
+//             gas,
+//             deployer_addr.clone(),
+//         )
+//         .await
+//         .unwrap();
+//     let tx_hash = deployer
+//         .deploy_anonify_by_factory(
+//             "deployAnonifyWithEnclaveKey",
+//             &*FACTORY_ABI_PATH,
+//             deployer_addr,
+//             gas,
+//             factory_contract_addr,
+//             CONFIRMATIONS,
+//         )
+//         .await
+//         .unwrap();
 
-    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
-        .set_anonify_contract_address(
-            &*FACTORY_ABI_PATH,
-            factory_contract_addr,
-            &*ANONIFY_ABI_PATH,
-        )
-        .await
-        .unwrap();
-    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+//     let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+//         .set_anonify_contract_address(
+//             &*FACTORY_ABI_PATH,
+//             factory_contract_addr,
+//             &*ANONIFY_ABI_PATH,
+//         )
+//         .await
+//         .unwrap();
+//     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
-    println!("Deployer account_id: {:?}", deployer_addr);
-    println!("factory contract address: {}", factory_contract_addr);
-    println!("anonify contract address: {}", anonify_contract_addr);
+//     println!("Deployer account_id: {:?}", deployer_addr);
+//     println!("factory contract address: {}", factory_contract_addr);
+//     println!("anonify contract address: {}", anonify_contract_addr);
 
-    dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
-        .await
-        .unwrap();
+//     dispatcher
+//         .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+//         .await
+//         .unwrap();
 
-    // Get handshake from contract
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
-        .await
-        .unwrap();
+//     // Get handshake from contract
+//     dispatcher
+//         .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
+//         .await
+//         .unwrap();
 
-    // Send handshake
-    let receipt = dispatcher
-        .handshake(deployer_addr.clone(), gas)
-        .await
-        .unwrap();
-    println!("handshake receipt: {:?}", receipt);
+//     // Send handshake
+//     let receipt = dispatcher
+//         .handshake(deployer_addr.clone(), gas)
+//         .await
+//         .unwrap();
+//     println!("handshake receipt: {:?}", receipt);
 
-    // Get handshake from contract
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
-        .await
-        .unwrap();
+//     // Get handshake from contract
+//     dispatcher
+//         .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
+//         .await
+//         .unwrap();
 
-    // init state
-    let total_supply: u64 = 100;
-    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
-    let req = json!({
-        "access_policy": my_access_policy.clone(),
-        "runtime_params": {
-            "total_supply": total_supply,
-        },
-        "cmd_name": "construct",
-        "counter": 1,
-    });
-    let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
-    let receipt = dispatcher
-        .send_command(
-            encrypted_command,
-            None,
-            deployer_addr.clone(),
-            gas,
-            SEND_COMMAND_TREEKEM_CMD,
-        )
-        .await
-        .unwrap();
-    println!("init state receipt: {:?}", receipt);
+//     // init state
+//     let total_supply: u64 = 100;
+//     let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
+//     let req = json!({
+//         "access_policy": my_access_policy.clone(),
+//         "runtime_params": {
+//             "total_supply": total_supply,
+//         },
+//         "cmd_name": "construct",
+//         "counter": 1,
+//     });
+//     let encrypted_command =
+//         SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+//             .unwrap();
+//     let receipt = dispatcher
+//         .send_command(
+//             encrypted_command,
+//             None,
+//             deployer_addr.clone(),
+//             gas,
+//             SEND_COMMAND_ENCLAVE_KEY_CMD,
+//         )
+//         .await
+//         .unwrap();
+//     println!("init state receipt: {:?}", receipt);
 
-    // Get logs from contract and update state inside enclave.
-    dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
-        .await
-        .unwrap();
+//     // Get logs from contract and update state inside enclave.
+//     dispatcher
+//         .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
+//         .await
+//         .unwrap();
 
-    // Get state from enclave
-    let req = json!({
-        "access_policy": my_access_policy.clone(),
-        "runtime_params": {},
-        "state_name": "balance_of",
-    });
-    let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
-    let my_state = dispatcher.get_state(encrypted_req).unwrap();
+//     // Get state from enclave
+//     let req = json!({
+//         "access_policy": my_access_policy.clone(),
+//         "runtime_params": {},
+//         "state_name": "balance_of",
+//     });
+//     let encrypted_req =
+//         SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+//             .unwrap();
+//     let my_state = dispatcher.get_state(encrypted_req).unwrap();
 
-    let req = json!({
-        "access_policy": other_access_policy.clone(),
-        "runtime_params": {},
-        "state_name": "balance_of",
-    });
-    let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
-    let other_state = dispatcher.get_state(encrypted_req).unwrap();
+//     let req = json!({
+//         "access_policy": other_access_policy.clone(),
+//         "runtime_params": {},
+//         "state_name": "balance_of",
+//     });
+//     let encrypted_req =
+//         SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+//             .unwrap();
+//     let other_state = dispatcher.get_state(encrypted_req).unwrap();
 
-    let req = json!({
-        "access_policy": third_access_policy.clone(),
-        "runtime_params": {},
-        "state_name": "balance_of",
-    });
-    let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
-    let third_state = dispatcher.get_state(encrypted_req).unwrap();
-    assert_eq!(my_state, total_supply);
-    assert_eq!(other_state, 0);
-    assert_eq!(third_state, 0);
-}
+//     let req = json!({
+//         "access_policy": third_access_policy.clone(),
+//         "runtime_params": {},
+//         "state_name": "balance_of",
+//     });
+//     let encrypted_req =
+//         SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+//             .unwrap();
+//     let third_state = dispatcher.get_state(encrypted_req).unwrap();
+//     assert_eq!(my_state, total_supply);
+//     assert_eq!(other_state, 0);
+//     assert_eq!(third_state, 0);
+// }
 
 #[actix_rt::test]
 async fn test_integration_eth_approve() {
@@ -732,7 +752,7 @@ async fn test_integration_eth_approve() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
-            "deployAnonifyWithTreeKem",
+            "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -757,12 +777,12 @@ async fn test_integration_eth_approve() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
     // Get handshake from contract
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -778,14 +798,15 @@ async fn test_integration_eth_approve() {
         "counter": 1,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr.clone(),
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -794,7 +815,7 @@ async fn test_integration_eth_approve() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -808,7 +829,8 @@ async fn test_integration_eth_approve() {
         "state_name": "approved",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let my_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -819,7 +841,8 @@ async fn test_integration_eth_approve() {
         "state_name": "approved",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let other_state = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(my_state, 0);
     assert_eq!(other_state, 0);
@@ -836,14 +859,15 @@ async fn test_integration_eth_approve() {
         "counter": 2,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr,
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -851,7 +875,7 @@ async fn test_integration_eth_approve() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -864,7 +888,8 @@ async fn test_integration_eth_approve() {
         "state_name": "approved",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let my_state = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -875,7 +900,8 @@ async fn test_integration_eth_approve() {
         "state_name": "approved",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let other_state = dispatcher.get_state(encrypted_req).unwrap();
 
     assert_eq!(my_state, amount);
@@ -914,7 +940,7 @@ async fn test_integration_eth_transfer_from() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
-            "deployAnonifyWithTreeKem",
+            "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -939,13 +965,13 @@ async fn test_integration_eth_transfer_from() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
     // Get handshake from contract
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -961,14 +987,15 @@ async fn test_integration_eth_transfer_from() {
         "counter": 1,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr.clone(),
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -977,7 +1004,7 @@ async fn test_integration_eth_transfer_from() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -988,7 +1015,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let my_state_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -997,7 +1025,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let other_state_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -1006,7 +1035,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let third_state_balance = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(my_state_balance, 100);
     assert_eq!(other_state_balance, 0);
@@ -1021,7 +1051,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let my_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -1032,7 +1063,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let other_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -1043,7 +1075,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let third_state_approved = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(my_state_approved, 0);
     assert_eq!(other_state_approved, 0);
@@ -1061,14 +1094,15 @@ async fn test_integration_eth_transfer_from() {
         "counter": 2,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr.clone(),
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -1076,7 +1110,7 @@ async fn test_integration_eth_transfer_from() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -1087,7 +1121,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let my_state_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -1096,7 +1131,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let other_state_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -1105,7 +1141,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let third_state_balance = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(my_state_balance, 100);
     assert_eq!(other_state_balance, 0);
@@ -1119,7 +1156,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let my_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -1130,7 +1168,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let other_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -1141,7 +1180,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let third_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     assert_eq!(my_state_approved, amount);
@@ -1163,14 +1203,15 @@ async fn test_integration_eth_transfer_from() {
         "counter": 1,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr,
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -1178,7 +1219,7 @@ async fn test_integration_eth_transfer_from() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -1189,7 +1230,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let my_state_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -1198,7 +1240,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let other_state_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -1207,7 +1250,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let third_state_balance = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(my_state_balance, 80);
     assert_eq!(other_state_balance, 0);
@@ -1221,7 +1265,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let my_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -1232,7 +1277,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let other_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -1243,7 +1289,8 @@ async fn test_integration_eth_transfer_from() {
         "state_name": "approved",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let third_state_approved = dispatcher.get_state(encrypted_req).unwrap();
 
     assert_eq!(my_state_approved, 10);
@@ -1282,7 +1329,7 @@ async fn test_integration_eth_mint() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
-            "deployAnonifyWithTreeKem",
+            "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -1307,13 +1354,13 @@ async fn test_integration_eth_mint() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
     // Get handshake from contract
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -1329,14 +1376,15 @@ async fn test_integration_eth_mint() {
         "counter": 1,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr.clone(),
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -1345,7 +1393,7 @@ async fn test_integration_eth_mint() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -1362,14 +1410,15 @@ async fn test_integration_eth_mint() {
         "counter": 2,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr,
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -1378,7 +1427,7 @@ async fn test_integration_eth_mint() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -1388,7 +1437,8 @@ async fn test_integration_eth_mint() {
         "state_name": "total_supply",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     // Check the final states
     let actual_total_supply = dispatcher.get_state(encrypted_req).unwrap();
 
@@ -1398,7 +1448,8 @@ async fn test_integration_eth_mint() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let owner_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -1407,7 +1458,8 @@ async fn test_integration_eth_mint() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let other_balance = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(actual_total_supply, 150);
     assert_eq!(owner_balance, 100);
@@ -1445,7 +1497,7 @@ async fn test_integration_eth_burn() {
         .unwrap();
     let tx_hash = deployer
         .deploy_anonify_by_factory(
-            "deployAnonifyWithTreeKem",
+            "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
             deployer_addr,
             gas,
@@ -1470,13 +1522,13 @@ async fn test_integration_eth_burn() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
     // Get handshake from contract
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -1492,14 +1544,15 @@ async fn test_integration_eth_burn() {
         "counter": 1,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr.clone(),
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -1508,7 +1561,7 @@ async fn test_integration_eth_burn() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -1525,14 +1578,15 @@ async fn test_integration_eth_burn() {
         "counter": 2,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr.clone(),
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -1540,7 +1594,7 @@ async fn test_integration_eth_burn() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -1555,14 +1609,15 @@ async fn test_integration_eth_burn() {
         "counter": 1,
     });
     let encrypted_command =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let receipt = dispatcher
         .send_command(
             encrypted_command,
             None,
             deployer_addr,
             gas,
-            SEND_COMMAND_TREEKEM_CMD,
+            SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
         .await
         .unwrap();
@@ -1570,7 +1625,7 @@ async fn test_integration_eth_burn() {
 
     // Update state inside enclave
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD)
+        .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
         .await
         .unwrap();
 
@@ -1580,7 +1635,8 @@ async fn test_integration_eth_burn() {
         "state_name": "total_supply",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     // Check the final states
     let actual_total_supply = dispatcher.get_state(encrypted_req).unwrap();
 
@@ -1590,7 +1646,8 @@ async fn test_integration_eth_burn() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let owner_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
@@ -1599,7 +1656,8 @@ async fn test_integration_eth_burn() {
         "state_name": "balance_of",
     });
     let encrypted_req =
-        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap()).unwrap();
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
     let other_balance = dispatcher.get_state(encrypted_req).unwrap();
     assert_eq!(actual_total_supply.as_u64().unwrap(), 80); // 100 - 20(burn)
     assert_eq!(owner_balance, 70); // 100 - 30(transfer)

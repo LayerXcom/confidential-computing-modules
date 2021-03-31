@@ -3,7 +3,7 @@ use crate::group_state::GroupState;
 use crate::handshake::{Handshake, PathSecretKVS, PathSecretSource};
 use crate::{PathSecret, StorePathSecrets};
 use anyhow::anyhow;
-use frame_config::PATH_SECRETS_DIR;
+use frame_config::CMD_DEC_SECRET_DIR;
 use rand_core::SeedableRng;
 use std::env;
 
@@ -27,7 +27,7 @@ pub fn do_handshake_three_party(
         .parse::<u32>()
         .unwrap();
     let (handshake, _) = my_group.create_handshake(source).unwrap();
-    let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
+    let store_path_secrets = StorePathSecrets::new(&*CMD_DEC_SECRET_DIR);
 
     let my_keychain = my_group
         .process_handshake(

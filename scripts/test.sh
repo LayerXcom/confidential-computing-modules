@@ -45,10 +45,10 @@ function exec_sr_node_tests() {
   for N in "$@"
   do
     cd ${ANONIFY_ROOT}/ethereum/deployer
-    cargo run anonify_tk "$FACTORY_CONTRACT_ADDRESS"
+    cargo run anonify_ek "$FACTORY_CONTRACT_ADDRESS"
     cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 
-    RUST_BACKTRACE=1 RUST_LOG=debug cargo test $N -- --nocapture
+    RUST_BACKTRACE=1 RUST_LOG=debug cargo test "$N" -- --nocapture
     sleep 1
   done
 }
@@ -73,10 +73,10 @@ function exec_kv_node_tests() {
   for N in "$@"
   do
     cd ${ANONIFY_ROOT}/ethereum/deployer
-    cargo run anonify_tk "$FACTORY_CONTRACT_ADDRESS"
+    cargo run anonify_ek "$FACTORY_CONTRACT_ADDRESS"
     cd ${ANONIFY_ROOT}/nodes/key-vault
 
-    RUST_BACKTRACE=1 RUST_LOG=debug cargo test $N -- --nocapture
+    RUST_BACKTRACE=1 RUST_LOG=debug cargo test "$N" -- --nocapture
     sleep 1
   done
 }

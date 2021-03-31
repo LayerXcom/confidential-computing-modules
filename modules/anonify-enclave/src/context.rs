@@ -16,7 +16,7 @@ use frame_common::{
 };
 #[cfg(feature = "backup-enable")]
 use frame_config::KEY_VAULT_ENCLAVE_MEASUREMENT;
-use frame_config::{ANONIFY_PARAMS_DIR, IAS_ROOT_CERT, PATH_SECRETS_DIR};
+use frame_config::{ANONIFY_PARAMS_DIR, IAS_ROOT_CERT, CMD_DEC_SECRET_DIR};
 use frame_enclave::EnclaveEngine;
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::{
@@ -368,7 +368,7 @@ impl AnonifyEnclaveContext {
                 )
         };
 
-        let store_path_secrets = StorePathSecrets::new(&*PATH_SECRETS_DIR);
+        let store_path_secrets = StorePathSecrets::new(&*CMD_DEC_SECRET_DIR);
         let store_enclave_dec_key = StoreEnclaveDecryptionKey::new(&*ANONIFY_PARAMS_DIR);
         let state_counter = Arc::new(SgxRwLock::new(StateCounter::default()));
 

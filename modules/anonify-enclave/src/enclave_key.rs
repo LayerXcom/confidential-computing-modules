@@ -29,6 +29,7 @@ const HASHED_PUBKEY_SIZE: usize = 20;
 const ENCLAVE_ENCRYPTION_KEY_SIZE: usize = SODIUM_PUBLIC_KEY_SIZE;
 const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCLAVE_ENCRYPTION_KEY_SIZE;
 const REPORT_DATA_SIZE: usize = 64;
+const DEC_KEY_FILE_NAME: &str = "sr_enclave_decryption_key";
 
 #[derive(Debug, Clone, Default)]
 pub struct EncryptionKeyGetter;
@@ -79,7 +80,7 @@ impl EnclaveKey {
         store_dec_key: &StoreEnclaveDecryptionKey,
     ) -> Result<Self> {
         let decryption_privkey = store_dec_key
-            .load_from_local_filesystem()?
+            .load_from_local_filesystem(DEC_KEY_FILE_NAME)?
             .into_sodium_priv_key()?;
 
         self.decryption_privkey = Some(decryption_privkey);
@@ -119,7 +120,7 @@ impl EnclaveKey {
         let sealed =
             SealedEnclaveDecryptionKey::decode(&encoded).map_err(|e| anyhow!("{:?}", e))?;
         store_dec_key
-            .save_to_local_filesystem(&sealed)
+            .save_to_local_filesystem(&sealed, DEC_KEY_FILE_NAME)
             .map_err(Into::into)
     }
 

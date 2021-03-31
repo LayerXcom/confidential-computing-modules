@@ -391,7 +391,6 @@ pub mod output {
         report: Vec<u8>,
         #[serde(with = "serde_bytes")]
         report_sig: Vec<u8>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         handshake: Option<Vec<u8>>,
         mrenclave_ver: u32,
         roster_idx: u32,

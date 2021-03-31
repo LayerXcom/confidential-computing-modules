@@ -64,16 +64,16 @@ where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let my_roster_idx = enclave_context.my_roster_idx();
+        let my_roster_idx = enclave_context.my_roster_idx() as u32;
         let pubkey = enclave_context.enclave_encryption_key()?;
         let my_account_id = self.command_plaintext.access_policy().into_account_id();
 
         let mut csprng = SgxRng::new()?;
-        let ciphertext = CommandExecutor::<R, C, AP>::new(my_account_id, self.command_plaintext)?
-            .encrypt_with_enclave_key(&mut csprng, pubkey, max_mem_size)?;
+        let ciphertext =
+            CommandExecutor::<R, C, AP>::new(my_account_id, self.command_plaintext)?
+                .encrypt_with_enclave_key(&mut csprng, pubkey, max_mem_size, my_roster_idx)?;
 
-        let msg =
-            Sha256::hash_for_attested_enclave_key_tx(&ciphertext.encode(), my_roster_idx as u32);
+        let msg = Sha256::hash_for_attested_enclave_key_tx(&ciphertext.encode(), my_roster_idx);
         let enclave_sig = enclave_context.sign(msg.as_bytes())?;
         let command_output = output::Command::new(
             CommandCiphertext::EnclaveKey(ciphertext),

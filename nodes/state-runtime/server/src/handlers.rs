@@ -29,6 +29,7 @@ pub async fn handle_send_command(
 ) -> Result<HttpResponse> {
     let ecall_cmd = match server.cmd_encryption_algo {
         CmdEncryptionAlgo::TreeKem => SEND_COMMAND_TREEKEM_CMD,
+        CmdEncryptionAlgo::EnclaveKey => SEND_COMMAND_ENCLAVE_KEY_CMD,
     };
 
     let tx_hash = server
@@ -63,7 +64,11 @@ pub async fn handle_get_state(
     req: web::Json<state_runtime_node_api::state::get::Request>,
 ) -> Result<HttpResponse> {
     let (fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd) = match server.cmd_encryption_algo {
-        CmdEncryptionAlgo::TreeKem => (FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD),
+        CmdEncryptionAlgo::EnclaveKey => (FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None),
+        CmdEncryptionAlgo::TreeKem => (
+            FETCH_CIPHERTEXT_TREEKEM_CMD,
+            Some(FETCH_HANDSHAKE_TREEKEM_CMD),
+        ),
     };
 
     server
@@ -86,7 +91,11 @@ pub async fn handle_get_user_counter(
     req: web::Json<state_runtime_node_api::user_counter::get::Request>,
 ) -> Result<HttpResponse> {
     let (fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd) = match server.cmd_encryption_algo {
-        CmdEncryptionAlgo::TreeKem => (FETCH_CIPHERTEXT_TREEKEM_CMD, FETCH_HANDSHAKE_TREEKEM_CMD),
+        CmdEncryptionAlgo::TreeKem => (
+            FETCH_CIPHERTEXT_TREEKEM_CMD,
+            Some(FETCH_HANDSHAKE_TREEKEM_CMD),
+        ),
+        CmdEncryptionAlgo::EnclaveKey => (FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None),
     };
 
     server
