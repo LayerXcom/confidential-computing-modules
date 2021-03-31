@@ -16,6 +16,8 @@ use frame_treekem::{PathSecret, StorePathSecrets};
 use serde_json::Value;
 use std::{string::ToString, vec::Vec};
 
+const DEC_KEY_FILE_NAME: &str = "kv_enclave_decryption_key";
+
 #[derive(Default, Clone)]
 pub struct KeyVaultHandler {
     store_path_secrets: StorePathSecrets,
@@ -68,7 +70,7 @@ impl KeyVaultHandler {
 
         self.store_enclave_dec_key
             .clone()
-            .save_to_local_filesystem(&sealed)?;
+            .save_to_local_filesystem(&sealed, DEC_KEY_FILE_NAME)?;
 
         serde_json::to_vec(&sealed).map_err(Into::into)
     }
@@ -89,7 +91,7 @@ impl KeyVaultHandler {
         let dec_key = self
             .store_enclave_dec_key
             .clone()
-            .load_from_local_filesystem()?
+            .load_from_local_filesystem(DEC_KEY_FILE_NAME)?
             .into_sodium_priv_key()?;
 
         serde_json::to_vec(&dec_key).map_err(Into::into)

@@ -47,6 +47,11 @@ async fn test_health_check() {
 }
 
 #[actix_rt::test]
+async fn test_backup_enclave_key() {
+    
+}
+
+#[actix_rt::test]
 async fn test_backup_path_secret() {
     set_env_vars();
     set_server_env_vars();

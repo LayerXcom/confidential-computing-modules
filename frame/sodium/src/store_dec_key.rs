@@ -10,8 +10,6 @@ use frame_config::PJ_ROOT_DIR;
 use serde_json_sgx as serde_json;
 use tracing::info;
 
-const DEC_KEY_FILE_NAME: &str = "enclave_decryption_key";
-
 #[derive(Debug, Clone, Default)]
 pub struct StoreEnclaveDecryptionKey {
     local_dir_path: PathBuf,
@@ -24,21 +22,16 @@ impl StoreEnclaveDecryptionKey {
         StoreEnclaveDecryptionKey { local_dir_path }
     }
 
-    pub fn create_dir_all<P: AsRef<Path>>(mut self, path: P) -> Result<Self> {
-        self.local_dir_path.push(path);
-        fs::create_dir_all(&self.local_dir_path)?;
-        Ok(self)
-    }
-
     pub fn local_dir_path(&self) -> &Path {
         &self.local_dir_path
     }
 
-    pub fn save_to_local_filesystem(
+    pub fn save_to_local_filesystem<P: AsRef<Path>>(
         &self,
         sealed_dec_key: &SealedEnclaveDecryptionKey<'_>,
+        file_name: P,
     ) -> Result<()> {
-        let file_path = self.local_dir_path.join(DEC_KEY_FILE_NAME);
+        let file_path = self.local_dir_path.join(file_name);
         info!(
             "Saving a sealed enclave decryption key to the path: {:?}",
             file_path
@@ -51,8 +44,11 @@ impl StoreEnclaveDecryptionKey {
         Ok(())
     }
 
-    pub fn load_from_local_filesystem(&self) -> Result<UnsealedEnclaveDecryptionKey> {
-        let file_path = self.local_dir_path.join(DEC_KEY_FILE_NAME);
+    pub fn load_from_local_filesystem<P: AsRef<Path>>(
+        &self,
+        file_name: P,
+    ) -> Result<UnsealedEnclaveDecryptionKey> {
+        let file_path = self.local_dir_path.join(file_name);
         info!(
             "Loading a sealed enclave decryption key from the path: {:?}",
             file_path
