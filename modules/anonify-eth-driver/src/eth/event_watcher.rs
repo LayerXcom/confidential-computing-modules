@@ -406,6 +406,8 @@ impl InnerEnclaveLog {
         {
             Ok(notify) => {
                 if let Some(notify_state) = notify.state {
+                    let rt16 = std::time::SystemTime::now();
+                        debug!("########## rt16: {:?}", rt16);
                     match bincode::deserialize::<Vec<u8>>(&notify_state.into_vec()[..]) {
                         Ok(bytes) => match serde_json::from_slice(&bytes[..]) {
                             Ok(json) => return Some(json),
