@@ -129,7 +129,7 @@ impl Web3Contract {
             CommandCiphertext::TreeKem(ciphertext) => self
                 .contract
                 .call(
-                    "storeCommand",
+                    "storeCommand",
                     (
                         ciphertext.encode(),
                         enclave_sig,
