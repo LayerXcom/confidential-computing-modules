@@ -123,11 +123,13 @@ impl Web3Contract {
         enclave_sig.push(recovery_id);
         let gas = output.gas;
 
+        let st8 = std::time::SystemTime::now();
+        println!("########## st8: {:?}", st8);
         match ecall_output.ciphertext() {
             CommandCiphertext::TreeKem(ciphertext) => self
                 .contract
                 .call(
-                    "storeCommand",
+                    "storeCommand",
                     (
                         ciphertext.encode(),
                         enclave_sig,
