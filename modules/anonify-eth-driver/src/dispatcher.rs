@@ -130,7 +130,7 @@ impl Dispatcher {
                         .fetch_events(fetch_ciphertext_ecall_cmd, fetch_handshake_ecalll_cmd)
                         .await
                     {
-                        Ok(updated_states) => info!("State updated: {:?}", updated_states),
+                        Ok(updated_states) => debug!("State updated: {:?}", updated_states),
                         Err(err) => error!("event fetched error: {:?}", err),
                     };
                     actix_rt::time::delay_for(time::Duration::from_millis(sync_time)).await;
