@@ -1,7 +1,7 @@
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::info;
+use tracing::debug;
 use web3::types::Address as ContractAddr;
 
 type BlockNum = u64;
