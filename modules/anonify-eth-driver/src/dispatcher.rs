@@ -14,7 +14,7 @@ use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{fmt::Debug, path::Path, sync::Arc, time};
-use tracing::{error, info};
+use tracing::{error, info, debug};
 use web3::{
     contract::Options,
     types::{Address, TransactionReceipt, H256},
@@ -130,7 +130,7 @@ impl Dispatcher {
                         .fetch_events(fetch_ciphertext_ecall_cmd, fetch_handshake_ecalll_cmd)
                         .await
                     {
-                        Ok(updated_states) => info!("State updated: {:?}", updated_states),
+                        Ok(updated_states) => debug!("State updated: {:?}", updated_states),
                         Err(err) => error!("event fetched error: {:?}", err),
                     };
                     actix_rt::time::delay_for(time::Duration::from_millis(sync_time)).await;

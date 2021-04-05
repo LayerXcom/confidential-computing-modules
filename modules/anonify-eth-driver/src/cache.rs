@@ -1,7 +1,7 @@
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::info;
+use tracing::debug;
 use web3::types::Address as ContractAddr;
 
 type BlockNum = u64;
@@ -31,13 +31,13 @@ impl InnerEventCache {
         contract_addr: ContractAddr,
         block_num: BlockNum,
     ) -> Option<BlockNum> {
-        info!("Insert: Cached block number: {}", block_num);
+        debug!("Insert: Cached block number: {}", block_num);
         self.block_num_counter.insert(contract_addr, block_num)
     }
 
     pub fn get_latest_block_num(&self, contract_addr: ContractAddr) -> Option<BlockNum> {
         let block_num = self.block_num_counter.get(&contract_addr).map(|e| *e);
-        info!("Get: Cached block number: {:?}", block_num);
+        debug!("Get: Cached block number: {:?}", block_num);
         block_num
     }
 }
