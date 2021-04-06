@@ -10,12 +10,6 @@ Please refer to [White Paper (JP)](https://layerx.co.jp/wp-content/uploads/2020/
 *Note: This is a prototype implementation and has not been tested for production.*
 
 ## Setup
-Building an Anonify contract.
-```
-$ git clone --depth 1 -b <TAG> https://github.com/LayerXcom/anonify-contracts
-$ solc -o contract-build --bin --abi --optimize --overwrite anonify-contracts/contracts/AnonifyWithTreeKem.sol anonify-contracts/contracts/AnonifyWithEnclaveKey.sol anonify-contracts/contracts/Factory.sol
-```
-
 Copy environment variables and set your `SPID` and `SUB_KEY`.
 ```
 $ cp .env.sample .env
