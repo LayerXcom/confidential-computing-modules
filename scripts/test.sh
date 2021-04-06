@@ -41,7 +41,7 @@ RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 
 # Deploy a FACTORY Contract
 cd ${ANONIFY_ROOT}/anonify-contracts/deployer
-FACTORY_CONTRACT_ADDRESS=$(cargo run factory)
+export FACTORY_CONTRACT_ADDRESS=$(cargo run factory)
 
 # ERC20 Application Tests
 
