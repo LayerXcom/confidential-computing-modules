@@ -20,7 +20,6 @@ members = [
     "nodes/key-vault",
     "nodes/state-runtime/api",
     "nodes/state-runtime/server",
-    "ethereum/deployer",
     "example/erc20/cli",
     "example/erc20/enclave",
     "example/erc20/server",

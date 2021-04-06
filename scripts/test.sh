@@ -10,7 +10,11 @@ ANONIFY_ROOT=/root/anonify
 
 dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/.."
-solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/AnonifyWithTreeKem.sol ethereum/contracts/AnonifyWithEnclaveKey.sol ethereum/contracts/Factory.sol
+git clone --depth 1 -b v0.5.10 https://github.com/LayerXcom/anonify-contracts
+solc -o contract-build --bin --abi --optimize --overwrite \
+  anonify-contracts/contracts/AnonifyWithTreeKem.sol \
+  anonify-contracts/contracts/AnonifyWithEnclaveKey.sol \
+  anonify-contracts/contracts/Factory.sol
 
 cd frame/types
 cargo build
@@ -36,7 +40,7 @@ cd ${ANONIFY_ROOT}/tests/integration
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 
 # Deploy a FACTORY Contract
-cd ${ANONIFY_ROOT}/ethereum/deployer
+cd ${ANONIFY_ROOT}/anonify-contracts/deployer
 export FACTORY_CONTRACT_ADDRESS=$(cargo run factory)
 
 # ERC20 Application Tests
@@ -44,7 +48,7 @@ export FACTORY_CONTRACT_ADDRESS=$(cargo run factory)
 function exec_sr_node_tests() {
   for N in "$@"
   do
-    cd ${ANONIFY_ROOT}/ethereum/deployer
+    cd ${ANONIFY_ROOT}/anonify-contracts/deployer
     cargo run anonify_ek "$FACTORY_CONTRACT_ADDRESS"
     cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 
@@ -72,7 +76,7 @@ make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 function exec_kv_node_tests() {
   for N in "$@"
   do
-    cd ${ANONIFY_ROOT}/ethereum/deployer
+    cd ${ANONIFY_ROOT}/anonify-contracts/deployer
     cargo run anonify_ek "$FACTORY_CONTRACT_ADDRESS"
     cd ${ANONIFY_ROOT}/nodes/key-vault
 

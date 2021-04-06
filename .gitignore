@@ -57,3 +57,4 @@ anonify-types.h
 /pathsecrets
 .env
 .anonify
+/anonify-contracts

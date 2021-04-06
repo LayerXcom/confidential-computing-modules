@@ -10,11 +10,6 @@ Please refer to [White Paper (JP)](https://layerx.co.jp/wp-content/uploads/2020/
 *Note: This is a prototype implementation and has not been tested for production.*
 
 ## Setup
-Building an Anonify contract.
-```
-$ solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/AnonifyWithTreeKem.sol ethereum/contracts/AnonifyWithEnclaveKey.sol ethereum/contracts/Factory.sol
-```
-
 Copy environment variables and set your `SPID` and `SUB_KEY`.
 ```
 $ cp .env.sample .env
