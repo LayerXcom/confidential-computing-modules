@@ -40,15 +40,15 @@ cd ${ANONIFY_ROOT}/tests/integration
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 
 # Deploy a FACTORY Contract
-cd ${ANONIFY_ROOT}/ethereum/deployer
-export FACTORY_CONTRACT_ADDRESS=$(cargo run factory)
+cd ${ANONIFY_ROOT}/anonify-contracts/deployer
+FACTORY_CONTRACT_ADDRESS=$(cargo run factory)
 
 # ERC20 Application Tests
 
 function exec_sr_node_tests() {
   for N in "$@"
   do
-    cd ${ANONIFY_ROOT}/ethereum/deployer
+    cd ${ANONIFY_ROOT}/anonify-contracts/deployer
     cargo run anonify_ek "$FACTORY_CONTRACT_ADDRESS"
     cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 
@@ -76,7 +76,7 @@ make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 function exec_kv_node_tests() {
   for N in "$@"
   do
-    cd ${ANONIFY_ROOT}/ethereum/deployer
+    cd ${ANONIFY_ROOT}/anonify-contracts/deployer
     cargo run anonify_ek "$FACTORY_CONTRACT_ADDRESS"
     cd ${ANONIFY_ROOT}/nodes/key-vault
 
