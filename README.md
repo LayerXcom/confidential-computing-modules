@@ -12,6 +12,7 @@ Please refer to [White Paper (JP)](https://layerx.co.jp/wp-content/uploads/2020/
 ## Setup
 Building an Anonify contract.
 ```
+$ git clone --depth 1 -b <TAG> https://github.com/LayerXcom/anonify-contracts
 $ solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/AnonifyWithTreeKem.sol ethereum/contracts/AnonifyWithEnclaveKey.sol ethereum/contracts/Factory.sol
 ```
 

@@ -22,7 +22,11 @@ RUN source /opt/sgxsdk/environment && \
     source /root/.cargo/env && \
     export SGX_MODE=HW && \
     export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
-    solc -o contract-build --bin --abi --optimize --overwrite ethereum/contracts/AnonifyWithTreeKem.sol ethereum/contracts/AnonifyWithEnclaveKey.sol ethereum/contracts/Factory.sol && \
+    git clone --depth 1 -b v0.5.10 https://github.com/LayerXcom/anonify-contracts && \
+    solc -o contract-build --bin --abi --optimize --overwrite \
+        anonify-contracts/contracts/AnonifyWithTreeKem.sol \
+        anonify-contracts/contracts/AnonifyWithEnclaveKey.sol \
+        anonify-contracts/contracts/Factory.sol && \
     cd scripts && \
     make ENCLAVE_DIR=example/erc20/enclave ENCLAVE_PKG_NAME=erc20 CARGO_FLAGS=--release && \
     cd ../example/erc20/server && \
