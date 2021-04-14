@@ -120,7 +120,7 @@ echo "Unit testing..."
 export ENCLAVE_PKG_NAME=units
 cd ${ANONIFY_ROOT}/scripts
 # make with backup disabled
-make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave FEATURE_FLAGS="runtime_enabled,enclave_key"
+make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave FEATURE_FLAGS="runtime_enabled"
 
 cd ${ANONIFY_ROOT}
 RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \
