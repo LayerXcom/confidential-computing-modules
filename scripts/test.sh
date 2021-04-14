@@ -7,10 +7,26 @@ export PATH=~/.cargo/bin:$PATH
 export SGX_MODE=HW
 export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
 ANONIFY_ROOT=/root/anonify
+ANONIFY_TAG=v0.5.10
 
 dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/.."
-git clone --depth 1 -b v0.5.10 https://github.com/LayerXcom/anonify-contracts
+if [ ! -d ${ANONIFY_ROOT}/anonify-contracts ]; then
+    git clone -b $ANONIFY_TAG https://github.com/LayerXcom/anonify.git
+    git clone --depth 1 -b $ANONIFY_TAG https://github.com/LayerXcom/anonify-contracts
+else
+    cd ${ANONIFY_ROOT}/anonify-contracts
+    tag_id=`git show $ANONIFY_TAG | grep commit | cut -f 2 -d ' '`
+    current_commit_id=`git rev-parse HEAD`
+    if [ $tag_id = $current_commit_id ]; then
+        echo "already cloned /anonify-contracts(skipped)"
+    else
+        echo "already exists /anonify-contracts directory, but doesn't match commit id with specified by tag"
+        exit 1
+    fi
+fi
+
+cd ${ANONIFY_ROOT}
 solc -o contract-build --bin --abi --optimize --overwrite \
   anonify-contracts/contracts/AnonifyWithTreeKem.sol \
   anonify-contracts/contracts/AnonifyWithEnclaveKey.sol \
