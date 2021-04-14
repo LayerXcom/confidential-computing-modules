@@ -27,6 +27,8 @@ env_logger = { git = "https://github.com/mesalock-linux/env_logger-sgx", default
 log = { git = "https://github.com/mesalock-linux/log-sgx" }
 
 [features]
-default = ["backup-enable", "runtime_enabled"]
+default = ["backup-enable", "runtime_enabled", "enclave_key"]
 backup-enable = ["anonify-enclave/backup-enable"]
 runtime_enabled = []
+enclave_key = []
+treekem = []

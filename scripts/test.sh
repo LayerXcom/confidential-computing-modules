@@ -39,12 +39,12 @@ cargo build
 
 echo "Integration testing..."
 cd ${ANONIFY_ROOT}/scripts
-unset BACKUP
 export ENCLAVE_PKG_NAME=key_vault
 make DEBUG=1 ENCLAVE_DIR=example/key-vault/enclave
-export BACKUP=disable
+
 export ENCLAVE_PKG_NAME=erc20
-make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
+# make with backup disabled
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,enclave_key"
 
 #
 # Integration Tests
@@ -54,6 +54,11 @@ make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
 cd ${ANONIFY_ROOT}/tests/integration
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
+
+cd ${ANONIFY_ROOT}/scripts
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,treekem"
+cd ${ANONIFY_ROOT}/tests/integration
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test --no-default-features --features treekem -- --nocapture
 
 # Deploy a FACTORY Contract
 cd ${ANONIFY_ROOT}/anonify-contracts/deployer
@@ -85,7 +90,6 @@ exec_sr_node_tests test_health_check \
 # Secret Backup Application Tests
 
 cd ${ANONIFY_ROOT}/scripts
-unset BACKUP
 export ENCLAVE_PKG_NAME=erc20
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
@@ -113,9 +117,9 @@ exec_kv_node_tests test_health_check \
 
 echo "Unit testing..."
 export ENCLAVE_PKG_NAME=units
-export BACKUP=disable
 cd ${ANONIFY_ROOT}/scripts
-make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave
+# make with backup disabled
+make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave FEATURE_FLAGS="runtime_enabled,enclave_key"
 
 cd ${ANONIFY_ROOT}
 RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \

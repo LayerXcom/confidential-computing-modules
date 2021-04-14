@@ -75,6 +75,7 @@ pub async fn get_enclave_encryption_key(
     enclave_encryption_key
 }
 
+#[cfg(feature = "enclave_key")]
 #[actix_rt::test]
 async fn test_integration_eth_construct() {
     set_env_vars();
@@ -213,6 +214,7 @@ async fn test_integration_eth_construct() {
     assert_eq!(actual_total_supply, total_supply);
 }
 
+#[cfg(feature = "enclave_key")]
 #[actix_rt::test]
 async fn test_auto_notification() {
     set_env_vars();
@@ -386,6 +388,7 @@ async fn test_auto_notification() {
     );
 }
 
+#[cfg(feature = "enclave_key")]
 #[actix_rt::test]
 async fn test_integration_eth_transfer() {
     set_env_vars();
@@ -590,6 +593,7 @@ async fn test_integration_eth_transfer() {
     assert_eq!(third_updated_state, 0);
 }
 
+#[cfg(feature = "treekem")]
 #[actix_rt::test]
 async fn test_key_rotation() {
     set_env_vars();
@@ -740,6 +744,7 @@ async fn test_key_rotation() {
     assert_eq!(third_state, 0);
 }
 
+#[cfg(feature = "enclave_key")]
 #[actix_rt::test]
 async fn test_integration_eth_approve() {
     set_env_vars();
@@ -928,6 +933,7 @@ async fn test_integration_eth_approve() {
     assert_eq!(other_state, 0);
 }
 
+#[cfg(feature = "enclave_key")]
 #[actix_rt::test]
 async fn test_integration_eth_transfer_from() {
     set_env_vars();
@@ -1319,6 +1325,7 @@ async fn test_integration_eth_transfer_from() {
     assert_eq!(third_state_approved, 0);
 }
 
+#[cfg(feature = "enclave_key")]
 #[actix_rt::test]
 async fn test_integration_eth_mint() {
     set_env_vars();
@@ -1488,6 +1495,7 @@ async fn test_integration_eth_mint() {
     assert_eq!(other_balance, amount);
 }
 
+#[cfg(feature = "enclave_key")]
 #[actix_rt::test]
 async fn test_integration_eth_burn() {
     set_env_vars();
@@ -1703,6 +1711,7 @@ pub fn set_env_vars() {
     env::set_var("BACKUP", "disable");
 }
 
+#[cfg(feature = "treekem")]
 pub fn set_env_vars_for_treekem() {
     env::set_var("ANONIFY_ABI_PATH", "contract-build/AnonifyWithTreeKem.abi");
     env::set_var("ANONIFY_BIN_PATH", "contract-build/AnonifyWithTreeKem.bin");
