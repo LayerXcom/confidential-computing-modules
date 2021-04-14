@@ -12,7 +12,6 @@ ANONIFY_TAG=v0.5.10
 dirpath=$(cd $(dirname $0) && pwd)
 cd "${dirpath}/.."
 if [ ! -d ${ANONIFY_ROOT}/anonify-contracts ]; then
-    git clone -b $ANONIFY_TAG https://github.com/LayerXcom/anonify.git
     git clone --depth 1 -b $ANONIFY_TAG https://github.com/LayerXcom/anonify-contracts
 else
     cd ${ANONIFY_ROOT}/anonify-contracts
