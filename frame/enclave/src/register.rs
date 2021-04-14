@@ -4,11 +4,14 @@ macro_rules! register_ecall {
         $max_mem: expr,
         $runtime_exec: ty,
         $ctx_ops: ty,
-        $( ($cmd: path, $handler: ty), )*
+        $(  $(#[$feature: meta])*
+            ($cmd: path, $handler: ty),
+        )*
     ) => {
         fn ecall_handler(cmd: u32, input: &mut [u8]) -> anyhow::Result<Vec<u8>> {
             match cmd {
                 $(
+                    $(#[$feature])*
                     $cmd => inner_ecall_handler::<$handler>(input),
                 )*
                 _ => anyhow::bail!("Not registered the ecall command"),
