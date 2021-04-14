@@ -13,6 +13,7 @@ pub mod user_counter {
 
         #[derive(Debug, Clone, Deserialize, Serialize)]
         pub struct Request {
+            #[serde(flatten)]
             pub ciphertext: SodiumCiphertext,
         }
 
@@ -37,6 +38,12 @@ pub mod state {
         pub struct Request {
             #[serde(flatten)]
             pub ciphertext: SodiumCiphertext,
+            #[serde(
+                default,
+                deserialize_with = "AccountId::from_hex_some",
+                serialize_with = "AccountId::to_hex_some",
+                skip_serializing_if = "Option::is_none"
+            )]
             pub user_id: Option<AccountId>,
         }
 
@@ -116,6 +123,7 @@ pub mod register_notification {
 
         #[derive(Debug, Clone, Deserialize, Serialize)]
         pub struct Request {
+            #[serde(flatten)]
             pub ciphertext: SodiumCiphertext,
         }
 
