@@ -573,153 +573,155 @@ async fn test_integration_eth_transfer() {
     assert_eq!(third_updated_state, 0);
 }
 
-// TODO: Move to Treekem-enabled testing case
-// #[actix_rt::test]
-// async fn test_key_rotation() {
-//     set_env_vars();
-//     let enclave = EnclaveDir::new().init_enclave(true).unwrap();
-//     let eid = enclave.geteid();
-//     // just for testing
-//     let mut csprng = rand::thread_rng();
-//     let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-//     let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-//     let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+#[actix_rt::test]
+async fn test_key_rotation() {
+    set_env_vars();
+    set_env_vars_for_treekem();
 
-//     let gas = 5_000_000;
-//     let cache = EventCache::default();
+    let enclave = EnclaveDir::new().init_enclave(true).unwrap();
+    let eid = enclave.geteid();
+    // just for testing
+    let mut csprng = rand::thread_rng();
+    let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+    let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+    let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
 
-//     // Deploy
-//     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-//     let deployer_addr = deployer
-//         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-//         .await
-//         .unwrap();
-//     let factory_contract_addr = deployer
-//         .deploy(
-//             &*FACTORY_ABI_PATH,
-//             &*FACTORY_BIN_PATH,
-//             CONFIRMATIONS,
-//             gas,
-//             deployer_addr.clone(),
-//         )
-//         .await
-//         .unwrap();
-//     let tx_hash = deployer
-//         .deploy_anonify_by_factory(
-//             "deployAnonifyWithEnclaveKey",
-//             &*FACTORY_ABI_PATH,
-//             deployer_addr,
-//             gas,
-//             factory_contract_addr,
-//             CONFIRMATIONS,
-//         )
-//         .await
-//         .unwrap();
+    let gas = 5_000_000;
+    let cache = EventCache::default();
 
-//     let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
-//         .set_anonify_contract_address(
-//             &*FACTORY_ABI_PATH,
-//             factory_contract_addr,
-//             &*ANONIFY_ABI_PATH,
-//         )
-//         .await
-//         .unwrap();
-//     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
+    // Deploy
+    let deployer = EthDeployer::new(&*ETH_URL).unwrap();
+    let deployer_addr = deployer
+        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
+        .await
+        .unwrap();
+    let factory_contract_addr = deployer
+        .deploy(
+            &*FACTORY_ABI_PATH,
+            &*FACTORY_BIN_PATH,
+            CONFIRMATIONS,
+            gas,
+            deployer_addr.clone(),
+        )
+        .await
+        .unwrap();
+    let receipt = deployer
+        .deploy_anonify_by_factory(
+            "deployAnonifyWithTreeKem",
+            &*FACTORY_ABI_PATH,
+            deployer_addr,
+            gas,
+            factory_contract_addr,
+            CONFIRMATIONS,
+        )
+        .await
+        .unwrap();
+    println!("receipt: {:?}", receipt);
 
-//     println!("Deployer account_id: {:?}", deployer_addr);
-//     println!("factory contract address: {}", factory_contract_addr);
-//     println!("anonify contract address: {}", anonify_contract_addr);
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+        .set_anonify_contract_address(
+            &*FACTORY_ABI_PATH,
+            factory_contract_addr,
+            &*ANONIFY_ABI_PATH,
+        )
+        .await
+        .unwrap();
+    let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
-//     dispatcher
-//         .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
-//         .await
-//         .unwrap();
+    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("factory contract address: {}", factory_contract_addr);
+    println!("anonify contract address: {}", anonify_contract_addr);
 
-//     // Get handshake from contract
-//     dispatcher
-//         .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
-//         .await
-//         .unwrap();
+    dispatcher
+        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .await
+        .unwrap();
 
-//     // Send handshake
-//     let receipt = dispatcher
-//         .handshake(deployer_addr.clone(), gas)
-//         .await
-//         .unwrap();
-//     println!("handshake receipt: {:?}", receipt);
+    // Get handshake from contract
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, None)
+        .await
+        .unwrap();
 
-//     // Get handshake from contract
-//     dispatcher
-//         .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
-//         .await
-//         .unwrap();
+    // Send handshake
+    let receipt = dispatcher
+        .handshake(deployer_addr.clone(), gas)
+        .await
+        .unwrap();
+    println!("handshake receipt: {:?}", receipt);
 
-//     // init state
-//     let total_supply: u64 = 100;
-//     let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
-//     let req = json!({
-//         "access_policy": my_access_policy.clone(),
-//         "runtime_params": {
-//             "total_supply": total_supply,
-//         },
-//         "cmd_name": "construct",
-//         "counter": 1,
-//     });
-//     let encrypted_command =
-//         SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
-//             .unwrap();
-//     let receipt = dispatcher
-//         .send_command(
-//             encrypted_command,
-//             None,
-//             deployer_addr.clone(),
-//             gas,
-//             SEND_COMMAND_ENCLAVE_KEY_CMD,
-//         )
-//         .await
-//         .unwrap();
-//     println!("init state receipt: {:?}", receipt);
+    // Get handshake from contract
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, None)
+        .await
+        .unwrap();
 
-//     // Get logs from contract and update state inside enclave.
-//     dispatcher
-//         .fetch_events(FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None)
-//         .await
-//         .unwrap();
+    // init state
+    let total_supply: u64 = 100;
+    let pubkey = get_enclave_encryption_key(anonify_contract_addr, &dispatcher).await;
+    let req = json!({
+        "access_policy": my_access_policy.clone(),
+        "runtime_params": {
+            "total_supply": total_supply,
+        },
+        "cmd_name": "construct",
+        "counter": 1,
+    });
+    let encrypted_command =
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
+    let receipt = dispatcher
+        .send_command(
+            encrypted_command,
+            None,
+            deployer_addr.clone(),
+            gas,
+            SEND_COMMAND_TREEKEM_CMD,
+        )
+        .await
+        .unwrap();
+    println!("init state receipt: {:?}", receipt);
 
-//     // Get state from enclave
-//     let req = json!({
-//         "access_policy": my_access_policy.clone(),
-//         "runtime_params": {},
-//         "state_name": "balance_of",
-//     });
-//     let encrypted_req =
-//         SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
-//             .unwrap();
-//     let my_state = dispatcher.get_state(encrypted_req).unwrap();
+    // Get logs from contract and update state inside enclave.
+    dispatcher
+        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, None)
+        .await
+        .unwrap();
 
-//     let req = json!({
-//         "access_policy": other_access_policy.clone(),
-//         "runtime_params": {},
-//         "state_name": "balance_of",
-//     });
-//     let encrypted_req =
-//         SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
-//             .unwrap();
-//     let other_state = dispatcher.get_state(encrypted_req).unwrap();
+    // Get state from enclave
+    let req = json!({
+        "access_policy": my_access_policy.clone(),
+        "runtime_params": {},
+        "state_name": "balance_of",
+    });
+    let encrypted_req =
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
+    let my_state = dispatcher.get_state(encrypted_req).unwrap();
 
-//     let req = json!({
-//         "access_policy": third_access_policy.clone(),
-//         "runtime_params": {},
-//         "state_name": "balance_of",
-//     });
-//     let encrypted_req =
-//         SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
-//             .unwrap();
-//     let third_state = dispatcher.get_state(encrypted_req).unwrap();
-//     assert_eq!(my_state, total_supply);
-//     assert_eq!(other_state, 0);
-//     assert_eq!(third_state, 0);
-// }
+    let req = json!({
+        "access_policy": other_access_policy.clone(),
+        "runtime_params": {},
+        "state_name": "balance_of",
+    });
+    let encrypted_req =
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
+    let other_state = dispatcher.get_state(encrypted_req).unwrap();
+
+    let req = json!({
+        "access_policy": third_access_policy.clone(),
+        "runtime_params": {},
+        "state_name": "balance_of",
+    });
+    let encrypted_req =
+        SodiumCiphertext::encrypt(&mut csprng, &pubkey, &serde_json::to_vec(&req).unwrap())
+            .unwrap();
+    let third_state = dispatcher.get_state(encrypted_req).unwrap();
+    assert_eq!(my_state, total_supply);
+    assert_eq!(other_state, 0);
+    assert_eq!(third_state, 0);
+}
 
 #[actix_rt::test]
 async fn test_integration_eth_approve() {
@@ -1678,4 +1680,9 @@ pub fn set_env_vars() {
     );
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
     env::set_var("BACKUP", "disable");
+}
+
+pub fn set_env_vars_for_treekem() {
+    env::set_var("ANONIFY_ABI_PATH", "contract-build/AnonifyWithTreeKem.abi");
+    env::set_var("ANONIFY_BIN_PATH", "contract-build/AnonifyWithTreeKem.bin");
 }
