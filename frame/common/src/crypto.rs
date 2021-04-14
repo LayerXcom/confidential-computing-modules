@@ -7,7 +7,7 @@ use crate::localstd::{
     string::String,
     vec::Vec,
 };
-use crate::serde::{Deserialize, Serialize};
+use crate::serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use crate::serde_big_array::big_array;
 use crate::serde_bytes;
 use crate::traits::{AccessPolicy, Hash256, IntoVec, StateDecoder};
@@ -48,10 +48,7 @@ lazy_static! {
         assert!(keypair.verify(&COMMON_CHALLENGE, &sig).is_ok());
         Ed25519ChallengeResponse::new(sig, keypair.public, COMMON_CHALLENGE)
     };
-
-    pub static ref OWNER_ACCOUNT_ID: AccountId = {
-        COMMON_ACCESS_POLICY.account_id()
-    };
+    pub static ref OWNER_ACCOUNT_ID: AccountId = COMMON_ACCESS_POLICY.account_id();
 }
 
 /// User account_id represents last 20 bytes of digest of user's public key.
@@ -181,6 +178,40 @@ impl AccountId {
 
     pub fn into_array(self) -> [u8; ACCOUNT_ID_SIZE] {
         self.0
+    }
+
+    pub fn from_hex<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use de::Error;
+        String::deserialize(deserializer).and_then(|string| {
+            let v = hex::decode(&string).map_err(|_| Error::custom("ParseError"))?;
+            let mut array = [0; ACCOUNT_ID_SIZE];
+            let bytes = &v[..array.len()]; // panics if not enough data
+            array.copy_from_slice(bytes);
+            Ok(AccountId(array))
+        })
+    }
+
+    pub fn from_hex_some<'de, D>(deserializer: D) -> Result<Option<Self>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Self::from_hex(deserializer).map(Some)
+    }
+
+    pub fn to_hex_some<S>(value: &Option<Self>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match value {
+            Some(account_id) => {
+                let s = hex::encode(account_id.as_bytes());
+                serializer.serialize_str(&s)
+            }
+            None => unreachable!("None of AccountId must be skipped to serialize"),
+        }
     }
 }
 

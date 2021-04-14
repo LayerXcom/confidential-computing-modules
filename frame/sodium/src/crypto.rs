@@ -2,14 +2,14 @@
 use crate::bincode;
 use crate::crypto_box::{self, aead::Aead, Box as CryptoBox, PublicKey, SecretKey, KEY_SIZE};
 use crate::local_anyhow::{anyhow, Result};
-use crate::localstd::{boxed::Box, fmt, vec::Vec};
+use crate::localstd::{boxed::Box, fmt, string::String, vec::Vec};
 use crate::rand_core::{CryptoRng, RngCore};
 #[cfg(feature = "sgx")]
 use crate::sealing::UnsealedEnclaveDecryptionKey;
 use crate::serde::{
     de::{self, SeqAccess, Unexpected},
     ser::{self, SerializeTuple},
-    Deserialize, Serialize, Serializer,
+    Deserialize, Deserializer, Serialize, Serializer,
 };
 use crate::xsalsa20poly1305::{Nonce, NONCE_SIZE};
 
@@ -100,6 +100,24 @@ impl SodiumNonce {
     {
         let inner = crypto_box::generate_nonce(csprng);
         Ok(SodiumNonce(inner))
+    }
+
+    fn from_hex<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use de::Error;
+        String::deserialize(deserializer).and_then(|string| {
+            let v = hex::decode(&string).map_err(|_| Error::custom("ParseError"))?;
+            Ok(Self::from_bytes(&v))
+        })
+    }
+
+    fn to_hex<S>(v: &Self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&hex::encode(v.as_slice()))
     }
 }
 
@@ -299,14 +317,46 @@ impl SodiumPubKey {
     pub fn to_bytes(&self) -> [u8; SODIUM_PUBLIC_KEY_SIZE] {
         self.0.to_bytes()
     }
+
+    fn from_hex<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use de::Error;
+        String::deserialize(deserializer).and_then(|string| {
+            let v = hex::decode(&string).map_err(|_| Error::custom("ParseError"))?;
+            Ok(Self::from_bytes(&v).map_err(|e| Error::custom(e))?)
+        })
+    }
+
+    fn to_hex<S>(v: &Self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&hex::encode(v.to_bytes()))
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[serde(crate = "crate::serde")]
 pub struct SodiumCiphertext {
+    #[serde(
+        default,
+        deserialize_with = "SodiumPubKey::from_hex",
+        serialize_with = "SodiumPubKey::to_hex"
+    )]
     ephemeral_public_key: SodiumPubKey,
+    #[serde(
+        default,
+        deserialize_with = "SodiumNonce::from_hex",
+        serialize_with = "SodiumNonce::to_hex"
+    )]
     nonce: SodiumNonce,
-    #[serde(with = "crate::serde_bytes")]
+    #[serde(
+        default,
+        deserialize_with = "from_hex_vec",
+        serialize_with = "to_hex_vec"
+    )]
     ciphertext: Vec<u8>,
 }
 
@@ -354,6 +404,22 @@ impl SodiumCiphertext {
     pub fn decode(bytes: &[u8]) -> crate::localstd::result::Result<Self, Box<bincode::ErrorKind>> {
         bincode::deserialize(&bytes[..])
     }
+}
+
+fn from_hex_vec<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    use de::Error;
+    String::deserialize(deserializer)
+        .and_then(|string| Ok(hex::decode(&string).map_err(|_| Error::custom("ParseError"))?))
+}
+
+fn to_hex_vec<S>(v: &Vec<u8>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_str(&hex::encode(v))
 }
 
 #[cfg(test)]
