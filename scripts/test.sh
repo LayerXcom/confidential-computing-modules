@@ -42,23 +42,24 @@ cd ${ANONIFY_ROOT}/scripts
 export ENCLAVE_PKG_NAME=key_vault
 make DEBUG=1 ENCLAVE_DIR=example/key-vault/enclave
 
-export ENCLAVE_PKG_NAME=erc20
-# make with backup disabled
-make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,enclave_key"
 
 #
 # Integration Tests
 #
 
 # Module Tests
+export ENCLAVE_PKG_NAME=erc20
 
-cd ${ANONIFY_ROOT}/tests/integration
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
-
-cd ${ANONIFY_ROOT}/scripts
+# make with backup disabled
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,treekem"
 cd ${ANONIFY_ROOT}/tests/integration
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test --no-default-features --features treekem -- --nocapture
+
+cd ${ANONIFY_ROOT}/scripts
+
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,enclave_key"
+cd ${ANONIFY_ROOT}/tests/integration
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test -- --nocapture
 
 # Deploy a FACTORY Contract
 cd ${ANONIFY_ROOT}/anonify-contracts/deployer
