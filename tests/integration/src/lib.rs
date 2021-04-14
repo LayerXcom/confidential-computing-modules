@@ -1,22 +1,33 @@
 #[macro_use]
 extern crate lazy_static;
+#[cfg(test)]
 use anonify_ecall_types::cmd::*;
-use anonify_eth_driver::{dispatcher::*, eth::*, EventCache};
+use anonify_eth_driver::dispatcher::*;
+#[cfg(test)]
+use anonify_eth_driver::EventCache;
+#[cfg(test)]
 use eth_deployer::EthDeployer;
 use ethabi::Contract as ContractABI;
+#[cfg(test)]
 use frame_common::{
-    crypto::{AccountId, Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
+    crypto::{Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
     state_types::NotifyState,
     traits::*,
 };
-use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH, FACTORY_BIN_PATH};
+use frame_config::ANONIFY_ABI_PATH;
+#[cfg(test)]
+use frame_config::{FACTORY_ABI_PATH, FACTORY_BIN_PATH};
+#[cfg(test)]
 use frame_host::EnclaveDir;
-use frame_runtime::primitives::{Approved, U64};
-use frame_sodium::{SodiumCiphertext, SodiumPubKey};
+#[cfg(test)]
+use frame_runtime::primitives::U64;
+#[cfg(test)]
+use frame_sodium::SodiumCiphertext;
+use frame_sodium::SodiumPubKey;
 use once_cell::sync::Lazy;
+#[cfg(test)]
 use serde_json::json;
-use sgx_types::*;
-use std::{collections::BTreeMap, env, fs::File, io::BufReader, str::FromStr};
+use std::{env, fs::File, io::BufReader};
 use web3::{
     contract::{Contract, Options},
     transports::Http,
@@ -24,8 +35,11 @@ use web3::{
     Web3,
 };
 
+#[cfg(test)]
 const ACCOUNT_INDEX: usize = 0;
+#[cfg(test)]
 const PASSWORD: &str = "anonify0101";
+#[cfg(test)]
 const CONFIRMATIONS: usize = 0;
 
 pub static ETH_URL: Lazy<String> =
@@ -89,7 +103,7 @@ async fn test_integration_eth_construct() {
         )
         .await
         .unwrap();
-    let tx_hash = deployer
+    let receipt = deployer
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
@@ -100,6 +114,7 @@ async fn test_integration_eth_construct() {
         )
         .await
         .unwrap();
+    println!("deployed receipt: {:?}", receipt);
 
     let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
         .set_anonify_contract_address(
@@ -227,7 +242,7 @@ async fn test_auto_notification() {
         )
         .await
         .unwrap();
-    let tx_hash = deployer
+    let receipt = deployer
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
@@ -238,6 +253,7 @@ async fn test_auto_notification() {
         )
         .await
         .unwrap();
+    println!("deployed receipt: {:?}", receipt);
 
     let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
         .set_anonify_contract_address(
@@ -288,6 +304,7 @@ async fn test_auto_notification() {
         )
         .await
         .unwrap();
+    println!("init state receipt: {:?}", receipt);
 
     let req = json!({
         "access_policy": my_access_policy.clone(),
@@ -399,7 +416,7 @@ async fn test_integration_eth_transfer() {
         )
         .await
         .unwrap();
-    let tx_hash = deployer
+    let receipt = deployer
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
@@ -410,6 +427,7 @@ async fn test_integration_eth_transfer() {
         )
         .await
         .unwrap();
+    println!("deployed receipt: {:?}", receipt);
 
     let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
         .set_anonify_contract_address(
@@ -461,7 +479,6 @@ async fn test_integration_eth_transfer() {
         )
         .await
         .unwrap();
-
     println!("init state receipt: {:?}", receipt);
 
     // Get logs from contract and update state inside enclave.
@@ -752,7 +769,7 @@ async fn test_integration_eth_approve() {
         )
         .await
         .unwrap();
-    let tx_hash = deployer
+    let receipt = deployer
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
@@ -763,6 +780,7 @@ async fn test_integration_eth_approve() {
         )
         .await
         .unwrap();
+    println!("deployed receipt: {:?}", receipt);
 
     let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
         .set_anonify_contract_address(
@@ -940,7 +958,7 @@ async fn test_integration_eth_transfer_from() {
         )
         .await
         .unwrap();
-    let tx_hash = deployer
+    let receipt = deployer
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
@@ -951,6 +969,7 @@ async fn test_integration_eth_transfer_from() {
         )
         .await
         .unwrap();
+    println!("deployed receipt: {:?}", receipt);
 
     let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
         .set_anonify_contract_address(
@@ -1329,7 +1348,7 @@ async fn test_integration_eth_mint() {
         )
         .await
         .unwrap();
-    let tx_hash = deployer
+    let receipt = deployer
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
@@ -1340,6 +1359,7 @@ async fn test_integration_eth_mint() {
         )
         .await
         .unwrap();
+    println!("deployed receipt: {:?}", receipt);
 
     let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
         .set_anonify_contract_address(
@@ -1497,7 +1517,7 @@ async fn test_integration_eth_burn() {
         )
         .await
         .unwrap();
-    let tx_hash = deployer
+    let receipt = deployer
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
@@ -1508,6 +1528,7 @@ async fn test_integration_eth_burn() {
         )
         .await
         .unwrap();
+    println!("deployed receipt: {:?}", receipt);
 
     let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
         .set_anonify_contract_address(
