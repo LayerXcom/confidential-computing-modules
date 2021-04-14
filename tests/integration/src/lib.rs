@@ -660,7 +660,10 @@ async fn test_key_rotation() {
 
     // Get handshake from contract
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, None)
+        .fetch_events(
+            FETCH_CIPHERTEXT_TREEKEM_CMD,
+            Some(FETCH_HANDSHAKE_TREEKEM_CMD),
+        )
         .await
         .unwrap();
 
@@ -673,7 +676,10 @@ async fn test_key_rotation() {
 
     // Get handshake from contract
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, None)
+        .fetch_events(
+            FETCH_CIPHERTEXT_TREEKEM_CMD,
+            Some(FETCH_HANDSHAKE_TREEKEM_CMD),
+        )
         .await
         .unwrap();
 
@@ -705,7 +711,10 @@ async fn test_key_rotation() {
 
     // Get logs from contract and update state inside enclave.
     dispatcher
-        .fetch_events(FETCH_CIPHERTEXT_TREEKEM_CMD, None)
+        .fetch_events(
+            FETCH_CIPHERTEXT_TREEKEM_CMD,
+            Some(FETCH_HANDSHAKE_TREEKEM_CMD),
+        )
         .await
         .unwrap();
 
