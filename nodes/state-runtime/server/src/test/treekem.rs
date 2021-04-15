@@ -21,7 +21,7 @@ async fn test_treekem_evaluate_access_policy_by_user_id_field() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    let server = Server::new(eid).await.run().await;
+    let server = Server::new(eid).await.use_treekem().run().await;
     let server = Arc::new(server);
     let mut app = test::init_service(
         App::new()
@@ -136,7 +136,7 @@ async fn test_treekem_multiple_messages() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    let server = Server::new(eid).await.run().await;
+    let server = Server::new(eid).await.use_treekem().run().await;
     let server = Arc::new(server);
     let mut app = test::init_service(
         App::new()
@@ -226,7 +226,7 @@ async fn test_treekem_skip_invalid_event() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    let server = Server::new(eid).await.run().await;
+    let server = Server::new(eid).await.use_treekem().run().await;
     let server = Arc::new(server);
     let mut app = test::init_service(
         App::new()
@@ -331,7 +331,7 @@ async fn test_treekem_node_recovery() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    let server = Server::new(eid).await.run().await;
+    let server = Server::new(eid).await.use_treekem().run().await;
     let server = Arc::new(server);
     let mut app = test::init_service(
         App::new()
@@ -412,7 +412,7 @@ async fn test_treekem_node_recovery() {
 
     my_turn();
 
-    let recovered_server = Arc::new(Server::new(recovered_eid).await.run().await);
+    let recovered_server = Arc::new(Server::new(recovered_eid).await.use_treekem().run().await);
     let mut recovered_app = test::init_service(
         App::new()
             .data(recovered_server.clone())
@@ -492,7 +492,7 @@ async fn test_treekem_join_group_then_handshake() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    let server1 = Server::new(eid1).await.run().await;
+    let server1 = Server::new(eid1).await.use_treekem().run().await;
     let server1 = Arc::new(server1);
     let mut app1 = test::init_service(
         App::new()
@@ -511,7 +511,7 @@ async fn test_treekem_join_group_then_handshake() {
         .init_enclave(true)
         .expect("Failed to initialize enclave.");
     let eid2 = enclave2.geteid();
-    let server2 = Server::new(eid2).await.run().await;
+    let server2 = Server::new(eid2).await.use_treekem().run().await;
     let server2 = Arc::new(server2);
     let mut app2 = test::init_service(
         App::new()
@@ -727,7 +727,7 @@ async fn test_treekem_duplicated_out_of_order_request_from_same_user() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    let server = Server::new(eid).await.run().await;
+    let server = Server::new(eid).await.use_treekem().run().await;
     let server = Arc::new(server);
     let mut app = test::init_service(
         App::new()

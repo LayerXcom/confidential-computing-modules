@@ -34,7 +34,7 @@ async fn test_backup_path_secret() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    let erc20_server = ERC20Server::new(app_eid).await.run().await;
+    let erc20_server = ERC20Server::new(app_eid).await.use_treekem().run().await;
     let erc20_server = Arc::new(erc20_server);
     let mut app = test::init_service(
         App::new()
@@ -154,7 +154,7 @@ async fn test_recover_without_key_vault() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    let erc20_server = ERC20Server::new(app_eid).await.run().await;
+    let erc20_server = ERC20Server::new(app_eid).await.use_treekem().run().await;
     let erc20_server = Arc::new(erc20_server);
     let mut app = test::init_service(
         App::new()
@@ -267,7 +267,7 @@ async fn test_manually_backup_all() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    let erc20_server = ERC20Server::new(app_eid).await.run().await;
+    let erc20_server = ERC20Server::new(app_eid).await.use_treekem().run().await;
     let erc20_server = Arc::new(erc20_server);
     let mut app = test::init_service(
         App::new()
@@ -397,7 +397,7 @@ async fn test_manually_recover_all() {
     // just for testing
     let mut csprng = rand::thread_rng();
 
-    let erc20_server = ERC20Server::new(app_eid).await.run().await;
+    let erc20_server = ERC20Server::new(app_eid).await.use_treekem().run().await;
     let erc20_server = Arc::new(erc20_server);
     let mut app = test::init_service(
         App::new()
