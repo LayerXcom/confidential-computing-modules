@@ -66,7 +66,10 @@ export FACTORY_CONTRACT_ADDRESS=$(cargo run factory)
 
 # ERC20 Application Tests
 
-function exec_sr_node_tests() {
+cd ${ANONIFY_ROOT}/nodes/state-runtime/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_health_check -- --nocapture
+
+function exec_sr_enclave_key_node_tests() {
   for N in "$@"
   do
     cd ${ANONIFY_ROOT}/anonify-contracts/deployer
@@ -78,14 +81,33 @@ function exec_sr_node_tests() {
   done
 }
 
-exec_sr_node_tests test_health_check \
-  test_evaluate_access_policy_by_user_id_field \
-  test_multiple_messages \
-  test_skip_invalid_event \
-  test_node_recovery \
-  test_join_group_then_handshake \
-  test_duplicated_out_of_order_request_from_same_user
+exec_sr_enclave_key_node_tests \
+  test_enclave_key_evaluate_access_policy_by_user_id_field \
+  test_enclave_key_multiple_messages \
+  test_enclave_key_skip_invalid_event \
+  test_enclave_key_node_recovery \
+  test_enclave_key_join_group_then_handshake \
+  test_enclave_key_duplicated_out_of_order_request_from_same_user
 
+function exec_sr_treekem_node_tests() {
+  for N in "$@"
+  do
+    cd ${ANONIFY_ROOT}/anonify-contracts/deployer
+    cargo run anonify_tk "$FACTORY_CONTRACT_ADDRESS"
+    cd ${ANONIFY_ROOT}/nodes/state-runtime/server
+
+    RUST_BACKTRACE=1 RUST_LOG=debug cargo test "$N" -- --nocapture
+    sleep 1
+  done
+}
+
+exec_sr_treekem_node_tests \
+  test_treekem_evaluate_access_policy_by_user_id_field \
+  test_treekem_multiple_messages \
+  test_treekem_skip_invalid_event \
+  test_treekem_node_recovery \
+  test_treekem_join_group_then_handshake \
+  test_treekem_duplicated_out_of_order_request_from_same_user
 
 # Secret Backup Application Tests
 
@@ -93,7 +115,10 @@ cd ${ANONIFY_ROOT}/scripts
 export ENCLAVE_PKG_NAME=erc20
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
-function exec_kv_node_tests() {
+cd ${ANONIFY_ROOT}/nodes/key-vault
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_health_check -- --nocapture
+
+function exec_kv_enclave_key_node_tests() {
   for N in "$@"
   do
     cd ${ANONIFY_ROOT}/anonify-contracts/deployer
@@ -105,11 +130,25 @@ function exec_kv_node_tests() {
   done
 }
 
-exec_kv_node_tests test_health_check \
-  test_backup_path_secret \
-  test_recover_without_key_vault \
-  test_manually_backup_all \
-  test_manually_recover_all
+exec_kv_enclave_key_node_tests test_enclave_key_backup
+
+function exec_kv_treekem_node_tests() {
+  for N in "$@"
+  do
+    cd ${ANONIFY_ROOT}/anonify-contracts/deployer
+    cargo run anonify_tk "$FACTORY_CONTRACT_ADDRESS"
+    cd ${ANONIFY_ROOT}/nodes/key-vault
+
+    RUST_BACKTRACE=1 RUST_LOG=debug cargo test "$N" -- --nocapture
+    sleep 1
+  done
+}
+
+exec_kv_treekem_node_tests test_health_check \
+  test_treekem_backup_path_secret \
+  test_treekem_recover_without_key_vault \
+  test_treekem_manually_backup_all \
+  test_treekem_manually_recover_all
 
 #
 # Unit Tests

@@ -8,7 +8,7 @@ use web3::types::Address;
 mod error;
 pub mod handlers;
 #[cfg(test)]
-mod tests;
+mod test;
 
 const DEFAULT_GAS: u64 = 5_000_000;
 
@@ -79,7 +79,7 @@ impl Server {
 
         let dispatcher = match self.cmd_encryption_algo {
             CmdEncryptionAlgo::EnclaveKey => self
-            .dispatcher
+                .dispatcher
                 .run(
                     sync_time,
                     self.sender_address,
