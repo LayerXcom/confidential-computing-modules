@@ -1,4 +1,3 @@
-#![cfg(test)]
 #[macro_use]
 extern crate lazy_static;
 use anonify_eth_driver::dispatcher::*;
@@ -17,11 +16,11 @@ use web3::{
 mod enclave_key;
 mod treekem;
 
-use enclave_key::*;
-use treekem::*;
-
+#[cfg(test)]
 const ACCOUNT_INDEX: usize = 0;
+#[cfg(test)]
 const PASSWORD: &str = "anonify0101";
+#[cfg(test)]
 const CONFIRMATIONS: usize = 0;
 
 pub static ETH_URL: Lazy<String> =
