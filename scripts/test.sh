@@ -66,9 +66,6 @@ export FACTORY_CONTRACT_ADDRESS=$(cargo run factory)
 
 # ERC20 Application Tests
 
-cd ${ANONIFY_ROOT}/nodes/state-runtime/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_health_check -- --nocapture
-
 function exec_sr_enclave_key_node_tests() {
   for N in "$@"
   do
@@ -81,7 +78,7 @@ function exec_sr_enclave_key_node_tests() {
   done
 }
 
-exec_sr_enclave_key_node_tests \
+exec_sr_enclave_key_node_tests test_health_check \
   test_enclave_key_evaluate_access_policy_by_user_id_field \
   test_enclave_key_multiple_messages \
   test_enclave_key_skip_invalid_event \
@@ -130,7 +127,8 @@ function exec_kv_enclave_key_node_tests() {
   done
 }
 
-exec_kv_enclave_key_node_tests test_enclave_key_backup
+exec_kv_enclave_key_node_tests test_health_check \
+  test_enclave_key_backup
 
 function exec_kv_treekem_node_tests() {
   for N in "$@"
@@ -144,7 +142,7 @@ function exec_kv_treekem_node_tests() {
   done
 }
 
-exec_kv_treekem_node_tests test_health_check \
+exec_kv_treekem_node_tests \
   test_treekem_backup_path_secret \
   test_treekem_recover_without_key_vault \
   test_treekem_manually_backup_all \

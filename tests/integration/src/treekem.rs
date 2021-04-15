@@ -9,7 +9,6 @@ use frame_config::{FACTORY_ABI_PATH, FACTORY_BIN_PATH};
 use frame_host::EnclaveDir;
 use frame_sodium::SodiumCiphertext;
 use serde_json::json;
-use std::env;
 
 use crate::{
     get_enclave_encryption_key, set_env_vars, set_env_vars_for_treekem, ACCOUNT_INDEX,
