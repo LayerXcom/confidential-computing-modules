@@ -7,75 +7,52 @@ use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_enclave::{register_ecall, EnclaveEngine};
 use std::{ptr, vec::Vec};
 
-#[cfg(not(feature = "backup-enable"))]
 register_ecall!(
     &*ENCLAVE_CONTEXT,
     MAX_MEM_SIZE,
     Runtime<AnonifyEnclaveContext>,
     AnonifyEnclaveContext,
-    (
-        SEND_COMMAND_TREEKEM_CMD,
-        CommandByTreeKemSender<Ed25519ChallengeResponse>
-    ),
-    // Fetch a ciphertext in event logs from blockchain nodes into enclave's memory database.
-    (
-        FETCH_CIPHERTEXT_TREEKEM_CMD,
-        CommandByTreeKemReceiver<Ed25519ChallengeResponse>
-    ),
-    // Fetch handshake received from blockchain nodes into enclave.
-    (FETCH_HANDSHAKE_TREEKEM_CMD, HandshakeReceiver),
-    // Get current state of the user represented the given public key from enclave memory database.
-    (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
-    (JOIN_GROUP_ENCLAVE_KEY_CMD, JoinGroupWithEnclaveKey),
-    (SEND_HANDSHAKE_TREEKEM_CMD, HandshakeSender),
-    (
-        REGISTER_NOTIFICATION_CMD,
-        RegisterNotification<Ed25519ChallengeResponse>
-    ),
-    (GET_ENCLAVE_ENCRYPTION_KEY_CMD, EncryptionKeyGetter),
-    (SEND_REGISTER_REPORT_CMD, ReportRegistration),
-    (
-        GET_USER_COUNTER_CMD,
-        GetUserCounter<Ed25519ChallengeResponse>
-    ),
+    #[cfg(feature = "enclave_key")]
     (
         SEND_COMMAND_ENCLAVE_KEY_CMD,
         CommandByEnclaveKeySender<Ed25519ChallengeResponse>
     ),
-    (
-        FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD,
-        CommandByEnclaveKeyReceiver<Ed25519ChallengeResponse>
-    ),
-);
-
-#[cfg(feature = "backup-enable")]
-register_ecall!(
-    &*ENCLAVE_CONTEXT,
-    MAX_MEM_SIZE,
-    Runtime<AnonifyEnclaveContext>,
-    AnonifyEnclaveContext,
+    #[cfg(feature = "treekem")]
     (
         SEND_COMMAND_TREEKEM_CMD,
         CommandByTreeKemSender<Ed25519ChallengeResponse>
     ),
+    #[cfg(feature = "enclave_key")]
+    (
+        FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD,
+        CommandByEnclaveKeyReceiver<Ed25519ChallengeResponse>
+    ),
     // Fetch a ciphertext in event logs from blockchain nodes into enclave's memory database.
+    #[cfg(feature = "treekem")]
     (
         FETCH_CIPHERTEXT_TREEKEM_CMD,
         CommandByTreeKemReceiver<Ed25519ChallengeResponse>
     ),
+    #[cfg(feature = "treekem")]
+    (SEND_HANDSHAKE_TREEKEM_CMD, HandshakeSender),
     // Fetch handshake received from blockchain nodes into enclave.
+    #[cfg(feature = "treekem")]
     (FETCH_HANDSHAKE_TREEKEM_CMD, HandshakeReceiver),
     // Get current state of the user represented the given public key from enclave memory database.
-    (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
+    #[cfg(feature = "enclave_key")]
     (JOIN_GROUP_ENCLAVE_KEY_CMD, JoinGroupWithEnclaveKey),
-    (SEND_HANDSHAKE_TREEKEM_CMD, HandshakeSender),
+    #[cfg(feature = "treekem")]
+    (JOIN_GROUP_TREEKEM_CMD, JoinGroupWithTreeKem),
+    (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
     (
         REGISTER_NOTIFICATION_CMD,
         RegisterNotification<Ed25519ChallengeResponse>
     ),
     (GET_ENCLAVE_ENCRYPTION_KEY_CMD, EncryptionKeyGetter),
     (SEND_REGISTER_REPORT_CMD, ReportRegistration),
+    #[cfg(feature = "backup-enable")]
     (BACKUP_PATH_SECRET_ALL_CMD, PathSecretBackupper),
+    #[cfg(feature = "backup-enable")]
     (RECOVER_PATH_SECRET_ALL_CMD, PathSecretRecoverer),
     (
         GET_USER_COUNTER_CMD,
