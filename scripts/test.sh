@@ -52,7 +52,7 @@ export ENCLAVE_PKG_NAME=erc20
 # make with backup disabled
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,treekem"
 cd ${ANONIFY_ROOT}/tests/integration
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_treekem --no-default-features --features treekem -- --nocapture
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_treekem --no-default-features -- --nocapture
 
 cd ${ANONIFY_ROOT}/scripts
 
