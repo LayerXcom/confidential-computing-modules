@@ -12,7 +12,8 @@ use serde_json::json;
 use std::env;
 
 use crate::{
-    get_enclave_encryption_key, set_env_vars, ACCOUNT_INDEX, CONFIRMATIONS, ETH_URL, PASSWORD,
+    get_enclave_encryption_key, set_env_vars, set_env_vars_for_treekem, ACCOUNT_INDEX,
+    CONFIRMATIONS, ETH_URL, PASSWORD,
 };
 
 #[actix_rt::test]
@@ -172,9 +173,4 @@ async fn test_treekem_key_rotation() {
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, 0);
     assert_eq!(third_state, 0);
-}
-
-pub fn set_env_vars_for_treekem() {
-    env::set_var("ANONIFY_ABI_PATH", "contract-build/AnonifyWithTreeKem.abi");
-    env::set_var("ANONIFY_BIN_PATH", "contract-build/AnonifyWithTreeKem.bin");
 }
