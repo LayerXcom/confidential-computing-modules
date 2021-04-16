@@ -8,7 +8,7 @@ use std::{env, path::PathBuf, str::FromStr, sync::Arc};
 use super::*;
 
 #[actix_rt::test]
-async fn test_backup_path_secret() {
+async fn test_treekem_backup_path_secret() {
     set_env_vars();
     set_server_env_vars();
     clear_path_secrets();
@@ -128,7 +128,7 @@ async fn test_backup_path_secret() {
 }
 
 #[actix_rt::test]
-async fn test_recover_without_key_vault() {
+async fn test_treekem_recover_without_key_vault() {
     set_env_vars();
     set_server_env_vars();
     clear_path_secrets();
@@ -242,7 +242,7 @@ async fn test_recover_without_key_vault() {
 }
 
 #[actix_rt::test]
-async fn test_manually_backup_all() {
+async fn test_treekem_manually_backup_all() {
     set_env_vars();
     set_server_env_vars();
     clear_path_secrets();
@@ -372,7 +372,7 @@ async fn test_manually_backup_all() {
 }
 
 #[actix_rt::test]
-async fn test_manually_recover_all() {
+async fn test_treekem_manually_recover_all() {
     set_env_vars();
     set_server_env_vars();
     clear_path_secrets();
