@@ -412,7 +412,7 @@ async fn test_treekem_node_recovery() {
 
     my_turn();
 
-    let recovered_server = Arc::new(Server::new(recovered_eid).await.use_treekem().run().await);
+    let recovered_server = Arc::new(Server::new(recovered_eid).await.use_treekem());
     let mut recovered_app = test::init_service(
         App::new()
             .data(recovered_server.clone())
