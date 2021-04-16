@@ -99,16 +99,16 @@ Crypto_Library_Name := sgx_tcrypto
 RustEnclave_Name := $(ANONIFY_BUILD_DIR)/$(ENCLAVE_PKG_NAME).enclave.so
 Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).signed.so
 Measurement_File_Name := $(ENCLAVE_PKG_NAME)_measurement.txt
-ifeq ($(BACKUP), disable)
-	Rust_Enclave_Lib_Name := $(ENCLAVE_PKG_NAME)backupdisabled
-	RustEnclave_Feature_Flags := --no-default-features --features runtime_enabled
+Rust_Enclave_Lib_Name := $(ENCLAVE_PKG_NAME)enclave
+ifdef FEATURE_FLAGS
+	RustEnclave_Feature_Flags := --no-default-features --features $(FEATURE_FLAGS)
 else
-	Rust_Enclave_Lib_Name := $(ENCLAVE_PKG_NAME)
 	RustEnclave_Feature_Flags := $(FEATURE_FLAGS)
 endif
 
+
 RustEnclave_Include_Paths := -I$(CUSTOM_COMMON_PATH)/inc -I$(CUSTOM_EDL_PATH) -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SDK)/include/epid -I $(ANONIFY_ENCLAVE_DIR) -I./include
-RustEnclave_Link_Libs := -L$(CUSTOM_LIBRARY_PATH) -l$(Rust_Enclave_Lib_Name)enclave
+RustEnclave_Link_Libs := -L$(CUSTOM_LIBRARY_PATH) -l$(Rust_Enclave_Lib_Name)
 RustEnclave_Compile_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(RustEnclave_Include_Paths)
 RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) \
 	-Wl,--whole-archive -l$(Trts_Library_Name) -Wl,--no-whole-archive \
@@ -118,7 +118,7 @@ RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nod
 	-Wl,--defsym,__ImageBase=0 \
 	-Wl,--gc-sections \
 	-Wl,--version-script=$(CONFIG_DIR)/Enclave.lds
-Rust_Enclave_Name := lib$(Rust_Enclave_Lib_Name)enclave.a
+Rust_Enclave_Name := lib$(Rust_Enclave_Lib_Name).a
 
 Rust_Enclave_Files := $(wildcard src/*.rs)
 
@@ -143,7 +143,7 @@ $(Rust_Enclave_Name): $(Rust_Enclave_Files)
 	@echo "Rust_Enclave_Name <= $(PWD)"
 	@cd $(ANONIFY_ROOT_DIR)/$(ENCLAVE_DIR) && RUST_LOG=debug cargo build $(CARGO_FLAGS) $(RustEnclave_Feature_Flags)
 	mkdir -p $(CUSTOM_LIBRARY_PATH)
-	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/lib$(Rust_Enclave_Lib_Name)enclave.a
+	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/lib$(Rust_Enclave_Lib_Name).a
 
 $(RustEnclave_Name): $(Rust_Enclave_Name) $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
 	@$(CXX) $(ANONIFY_BUILD_DIR)/$(T_O_FILE) -o $@ $(RustEnclave_Link_Flags)
