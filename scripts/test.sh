@@ -39,7 +39,7 @@ solc -o contract-build --bin --abi --optimize --overwrite \
 cd ${ANONIFY_ROOT}/anonify-contracts/deployer
 export FACTORY_CONTRACT_ADDRESS=$(cargo run factory)
 
-cd frame/types
+cd ${ANONIFY_ROOT}/frame/types
 cargo build
 
 # Generate key-vault's signed.so and measurement.txt
