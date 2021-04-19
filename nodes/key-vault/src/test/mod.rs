@@ -65,6 +65,11 @@ fn set_env_vars() {
     env::set_var("CMD_DEC_SECRET_DIR", ".anonify/test_pathsecrets");
 }
 
+fn set_env_vars_for_treekem() {
+    env::set_var("ANONIFY_ABI_PATH", "contract-build/AnonifyWithTreeKem.abi");
+    env::set_var("ANONIFY_BIN_PATH", "contract-build/AnonifyWithTreeKem.bin");
+}
+
 fn set_server_env_vars() {
     env::set_var("CONFIRMATIONS", "0");
     env::set_var("ACCOUNT_INDEX", "0");

@@ -54,6 +54,7 @@ make DEBUG=1 ENCLAVE_DIR=example/key-vault/enclave
 
 # Integration Tests
 export ENCLAVE_PKG_NAME=erc20
+# make with backup disabled
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,enclave_key"
 cd ${ANONIFY_ROOT}/tests/integration
 RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_enclave_key -- --nocapture
@@ -142,7 +143,7 @@ exec_sr_treekem_node_tests \
 
 cd ${ANONIFY_ROOT}/scripts
 export ENCLAVE_PKG_NAME=erc20
-make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,backup-enable,treekem"
 
 function exec_kv_treekem_node_tests() {
   for N in "$@"
@@ -170,7 +171,7 @@ echo "Unit testing..."
 export ENCLAVE_PKG_NAME=units
 cd ${ANONIFY_ROOT}/scripts
 # make with backup disabled
-make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave FEATURE_FLAGS="runtime_enabled"
+make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave FEATURE_FLAGS="runtime_enabled,enclave_key"
 
 cd ${ANONIFY_ROOT}
 RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \
