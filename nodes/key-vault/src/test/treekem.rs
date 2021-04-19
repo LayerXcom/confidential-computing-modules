@@ -15,7 +15,9 @@ async fn test_treekem_backup_path_secret() {
     clear_path_secrets();
 
     let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
-    let cmd_dec_secret_dir = PathBuf::from_str(&*CMD_DEC_SECRET_DIR).unwrap();
+    let cmd_dec_secret_dir = (*PJ_ROOT_DIR)
+        .to_path_buf()
+        .join(PathBuf::from_str(&*CMD_DEC_SECRET_DIR).unwrap());
 
     // Setup key-vault server
     let key_vault_server_enclave = EnclaveDir::new()
@@ -136,7 +138,9 @@ async fn test_treekem_recover_without_key_vault() {
     clear_path_secrets();
 
     let eth_url = env::var("ETH_URL").expect("ETH_URL is not set");
-    let cmd_dec_secret_dir = PathBuf::from_str(&*CMD_DEC_SECRET_DIR).unwrap();
+    let cmd_dec_secret_dir = (*PJ_ROOT_DIR)
+        .to_path_buf()
+        .join(PathBuf::from_str(&*CMD_DEC_SECRET_DIR).unwrap());
 
     // Setup key-vault server
     let key_vault_server_enclave = EnclaveDir::new()
