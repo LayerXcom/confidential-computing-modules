@@ -63,6 +63,7 @@ fn start_server(attested_tls_config: AttestedTlsConfig, ias_root_cert: Vec<u8>) 
 
     let mut server = Server::new(LISTEN_ADDRESS.to_string(), server_config);
     let handler = EchoHandler::default();
-    thread::spawn(move || server.run(handler).unwrap());
+    let builder = thread::Builder::new().name("mra-tls-test".into());
+    builder.spawn(move || server.run(handler).unwrap());
     thread::sleep(Duration::from_secs(1));
 }

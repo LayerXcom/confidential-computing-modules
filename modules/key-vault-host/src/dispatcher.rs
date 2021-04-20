@@ -25,7 +25,7 @@ impl Dispatcher {
         let eid = self.inner.read().enclave_id;
         let input = host_input::StartServer::new(START_SERVER_CMD);
 
-        let thread_name = format!("Enclave ID:  {}", eid);
+        let thread_name = format!("key-vault-host:{}", eid);
         let builder = std::thread::Builder::new().name(thread_name.into());
         builder.spawn(move || {
             let _host_output = StartServerWorkflow::exec(input, eid).unwrap();
