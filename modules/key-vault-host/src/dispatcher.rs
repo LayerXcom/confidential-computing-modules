@@ -1,4 +1,5 @@
 use crate::{error::Result, workflow::*};
+use anyhow::anyhow;
 use frame_host::engine::HostEngine;
 use key_vault_ecall_types::cmd::*;
 use parking_lot::RwLock;
@@ -27,9 +28,11 @@ impl Dispatcher {
 
         let thread_name = format!("key-vault-host:{}", eid);
         let builder = std::thread::Builder::new().name(thread_name.into());
-        builder.spawn(move || {
-            let _host_output = StartServerWorkflow::exec(input, eid).unwrap();
-        });
+        builder
+            .spawn(move || {
+                let _host_output = StartServerWorkflow::exec(input, eid).unwrap();
+            })
+            .map_err(|e| anyhow!("Failed to spawn new thread: {}", e))?;
 
         Ok(self)
     }
