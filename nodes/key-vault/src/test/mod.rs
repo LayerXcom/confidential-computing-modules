@@ -15,7 +15,7 @@ mod enclave_key;
 mod treekem;
 
 const SR_DEC_KEY_FILE_NAME: &'static str = "sr_enclave_decryption_key";
-const KV_DEC_KEY_FILE_NAME: &'static str = "kr_enclave_decryption_key";
+const KV_DEC_KEY_FILE_NAME: &'static str = "kv_enclave_decryption_key";
 
 #[actix_rt::test]
 async fn test_health_check() {
