@@ -1,23 +1,9 @@
-use crate::{handlers::handle_health_check, Server as KeyVaultServer};
-use actix_web::{http::StatusCode, test, web, App};
-use anonify_enclave::tests::DEC_KEY_FILE_NAME as SR_DEC_KEY_FILE_NAME;
-use anonify_eth_driver::utils::*;
-use frame_common::crypto::Ed25519ChallengeResponse;
-use frame_config::{ANONIFY_ABI_PATH, ANONIFY_PARAMS_DIR, FACTORY_ABI_PATH, PJ_ROOT_DIR};
+use crate::Server as KeyVaultServer;
+use actix_web::{test, web, App};
+use frame_config::{ANONIFY_ABI_PATH, ANONIFY_PARAMS_DIR, FACTORY_ABI_PATH};
 use frame_host::EnclaveDir;
-use frame_sodium::{SodiumCiphertext, SodiumPubKey};
-use key_vault_enclave::tests::DEC_KEY_FILE_NAME as KV_DEC_KEY_FILE_NAME;
-use once_cell::sync::Lazy;
-use rand_core::{CryptoRng, RngCore};
-use serde_json::json;
 use state_runtime_node_server::{handlers::*, Server as ERC20Server};
-use std::{
-    env, fs,
-    path::{Path, PathBuf},
-    str::FromStr,
-    sync::Arc,
-};
-use web3::{contract::Options, types::Address};
+use std::{env, sync::Arc};
 
 use super::*;
 
@@ -44,8 +30,6 @@ async fn test_enclave_key_backup() {
         .init_enclave(true)
         .expect("Failed to initialize client enclave.");
     let app_eid = app_enclave.geteid();
-    // just for testing
-    let mut csprng = rand::thread_rng();
 
     let erc20_server = ERC20Server::new(app_eid).await.run().await;
     let erc20_server = Arc::new(erc20_server);
@@ -63,7 +47,7 @@ async fn test_enclave_key_backup() {
 
     let enc_key_resp: state_runtime_node_api::enclave_encryption_key::get::Response =
         test::read_body_json(resp).await;
-    let enc_key = verify_enclave_encryption_key(
+    let _enc_key = verify_enclave_encryption_key(
         enc_key_resp.enclave_encryption_key,
         &*FACTORY_ABI_PATH,
         &*ANONIFY_ABI_PATH,
@@ -71,11 +55,11 @@ async fn test_enclave_key_backup() {
     )
     .await;
 
-    assert!(&*ANONIFY_PARAMS_DIR
+    assert!((&*ANONIFY_PARAMS_DIR)
         .to_path_buf()
         .join(SR_DEC_KEY_FILE_NAME)
         .exists());
-    assert!(&*ANONIFY_PARAMS_DIR
+    assert!((&*ANONIFY_PARAMS_DIR)
         .to_path_buf()
         .join(KV_DEC_KEY_FILE_NAME)
         .exists());

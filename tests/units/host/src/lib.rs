@@ -1,3 +1,4 @@
+#[cfg(test)]
 use frame_host::EnclaveDir;
 use sgx_types::{sgx_enclave_id_t, sgx_status_t};
 
