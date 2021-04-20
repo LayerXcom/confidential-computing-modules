@@ -24,7 +24,10 @@ impl Dispatcher {
     pub async fn start(self) -> Result<Self> {
         let eid = self.inner.read().enclave_id;
         let input = host_input::StartServer::new(START_SERVER_CMD);
-        std::thread::spawn(move || {
+
+        let thread_name = format!("key-vault-host:{}", eid);
+        let builder = std::thread::Builder::new().name(thread_name.into());
+        builder.spawn(move || {
             let _host_output = StartServerWorkflow::exec(input, eid).unwrap();
         });
 
