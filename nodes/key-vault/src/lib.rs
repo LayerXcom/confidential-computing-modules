@@ -4,7 +4,7 @@ use sgx_types::sgx_enclave_id_t;
 pub mod handlers;
 
 #[cfg(test)]
-mod tests;
+mod test;
 
 #[derive(Debug, Clone)]
 pub struct Server {

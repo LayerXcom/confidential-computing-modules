@@ -71,3 +71,8 @@ pub fn set_env_vars() {
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
     env::set_var("BACKUP", "disable");
 }
+
+pub fn set_env_vars_for_treekem() {
+    env::set_var("ANONIFY_ABI_PATH", "contract-build/AnonifyWithTreeKem.abi");
+    env::set_var("ANONIFY_BIN_PATH", "contract-build/AnonifyWithTreeKem.bin");
+}
