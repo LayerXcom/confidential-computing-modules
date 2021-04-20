@@ -2,7 +2,7 @@ use crate::{handlers::handle_health_check, Server as KeyVaultServer};
 use actix_web::{http::StatusCode, test, web, App};
 use anonify_eth_driver::utils::*;
 use frame_common::crypto::Ed25519ChallengeResponse;
-use frame_config::PJ_ROOT_DIR;
+use frame_config::{ANONIFY_PARAMS_DIR, PJ_ROOT_DIR};
 use frame_host::EnclaveDir;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use once_cell::sync::Lazy;
@@ -13,6 +13,9 @@ use web3::{contract::Options, types::Address};
 
 mod enclave_key;
 mod treekem;
+
+const SR_DEC_KEY_FILE_NAME: &'static str = "sr_enclave_decryption_key";
+const KV_DEC_KEY_FILE_NAME: &'static str = "kr_enclave_decryption_key";
 
 #[actix_rt::test]
 async fn test_health_check() {
@@ -111,6 +114,25 @@ fn clear_path_secrets() {
     if target.exists() {
         fs::remove_dir_all(target).unwrap();
     }
+}
+
+fn clear_local_dec_key_file() {
+    let target = ANONIFY_PARAMS_DIR.join(SR_DEC_KEY_FILE_NAME);
+    if target.exists() {
+        fs::remove_file(target).unwrap();
+    }
+}
+
+fn clear_remote_dec_key_file() {
+    let target = ANONIFY_PARAMS_DIR.join(KV_DEC_KEY_FILE_NAME);
+    if target.exists() {
+        fs::remove_file(target).unwrap();
+    }
+}
+
+fn clear_dec_key_files() {
+    clear_local_dec_key_file();
+    clear_remote_dec_key_file();
 }
 
 fn get_local_id() -> Option<String> {
