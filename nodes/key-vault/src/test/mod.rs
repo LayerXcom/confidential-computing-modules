@@ -8,6 +8,8 @@ use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use once_cell::sync::Lazy;
 use rand_core::{CryptoRng, RngCore};
 use serde_json::json;
+#[cfg(test)]
+use std::str::FromStr;
 use std::{env, fs, path::Path, sync::Arc};
 use web3::{contract::Options, types::Address};
 
