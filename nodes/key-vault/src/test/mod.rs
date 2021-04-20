@@ -8,7 +8,7 @@ use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use once_cell::sync::Lazy;
 use rand_core::{CryptoRng, RngCore};
 use serde_json::json;
-use std::{env, fs, path::Path, str::FromStr, sync::Arc};
+use std::{env, fs, path::Path, sync::Arc};
 use web3::{contract::Options, types::Address};
 
 mod enclave_key;
