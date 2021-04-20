@@ -14,7 +14,7 @@ use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{fmt::Debug, path::Path, sync::Arc, time};
-use tracing::{error, info, debug};
+use tracing::{debug, error, info};
 use web3::{
     contract::Options,
     types::{Address, TransactionReceipt, H256},
@@ -138,6 +138,8 @@ impl Dispatcher {
             });
         });
 
+        // the second and the subsequent state-runtime nodes must receive handshakes predecessors sent before it joins
+        actix_rt::time::delay_for(time::Duration::from_millis(sync_time)).await;
         let receipt = self.join_group(signer, gas, join_group_ecall_cmd).await?;
         info!("A transaction hash of join_group: {:?}", receipt);
 

@@ -506,6 +506,8 @@ async fn test_treekem_join_group_then_handshake() {
     )
     .await;
 
+    actix_rt::time::delay_for(time::Duration::from_millis(1000)).await;
+
     env::set_var("MY_ROSTER_IDX", "1");
     let enclave2 = EnclaveDir::new()
         .init_enclave(true)
@@ -563,7 +565,7 @@ async fn test_treekem_join_group_then_handshake() {
         .set_json(&balance_of_req_fn(&mut csprng, &enc_key1))
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
-    assert!(resp.status().is_success(), "response: {:?}", resp); // return 200 OK: becuse allowed same enclave encryption key
+    assert!(resp.status().is_success(), "response: {:?}", resp); // return 200 OK: because allowed same enclave encryption key
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
