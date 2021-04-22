@@ -37,7 +37,7 @@ pub mod workflow {
 pub mod tests {
     use super::*;
     use std::prelude::v1::*;
-    use test_utils::runner::*;
+    use test_utils::{runner::*, check_all_passed, run_tests};
 
     pub fn run_tests() -> bool {
         check_all_passed!(notify::tests::run_tests(),)

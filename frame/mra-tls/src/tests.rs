@@ -10,8 +10,8 @@ use std::{
     time::Duration,
     vec::Vec,
 };
-use test_utils::runner::*;
-
+use test_utils::{runner::*, check_all_passed, run_tests};
+ 
 lazy_static! {
     static ref SERVER_ADDRESS: String = {
         let host = env::var("HOSTNAME").expect("failed to get env 'HOSTNAME'");

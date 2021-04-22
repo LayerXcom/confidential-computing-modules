@@ -7,7 +7,7 @@ extern crate sgx_tstd as std;
 use lazy_static::lazy_static;
 use std::backtrace;
 use std::prelude::v1::*;
-use test_utils::runner::*;
+use test_utils::{runner::*, check_all_passed, run_tests};
 
 lazy_static! {
     static ref ENABLE_BACKTRACE: () = {
