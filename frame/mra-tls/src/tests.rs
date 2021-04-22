@@ -10,7 +10,7 @@ use std::{
     time::Duration,
     vec::Vec,
 };
-use test_utils::*;
+use test_utils::runner::*;
 
 lazy_static! {
     static ref SERVER_ADDRESS: String = {

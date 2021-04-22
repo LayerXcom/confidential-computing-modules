@@ -376,7 +376,7 @@ impl fmt::Debug for SealedPathSecret<'_> {
 pub(crate) mod tests {
     use super::*;
     use std::string::String;
-    use test_utils::*;
+    use test_utils::runner::*;
 
     pub(crate) fn run_tests() -> bool {
         run_tests!(test_seal_unseal_path_secret,)
