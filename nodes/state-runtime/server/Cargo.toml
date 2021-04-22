@@ -28,7 +28,6 @@ integration-tests = { path = "../../../tests/integration" }
 frame-sodium = { path = "../../../frame/sodium" }
 rand_core = "0.5"
 rand = "0.7"
-tracing-test = "0.1"
 
 [features]
 default = ["backup-enable"]

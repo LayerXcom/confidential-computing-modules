@@ -6,7 +6,6 @@ use frame_config::{ANONIFY_ABI_PATH, FACTORY_ABI_PATH};
 use frame_host::EnclaveDir;
 use integration_tests::set_env_vars;
 use std::{env, sync::Arc, time};
-use tracing_test::traced_test;
 
 #[actix_rt::test]
 async fn test_enclave_key_evaluate_access_policy_by_user_id_field() {
@@ -211,7 +210,6 @@ async fn test_enclave_key_multiple_messages() {
 }
 
 #[actix_rt::test]
-#[traced_test]
 async fn test_enclave_key_skip_invalid_event() {
     set_env_vars();
 
@@ -313,7 +311,6 @@ async fn test_enclave_key_skip_invalid_event() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90);
-    assert!(logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
