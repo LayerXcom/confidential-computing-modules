@@ -212,7 +212,7 @@ impl Web3Contract {
             })
             .from_block(BlockNumber::Number(latest_fetched_num.into()))
             .to_block(BlockNumber::Latest)
-            .limit(self.event_limit)
+            // .limit(self.event_limit) // not work with Besu
             .build();
 
         let logs = Retry::new(
