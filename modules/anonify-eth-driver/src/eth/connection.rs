@@ -16,7 +16,9 @@ use web3::{
     transports::Http,
     types::{Address, BlockNumber, Filter, FilterBuilder, Log, TransactionReceipt, H256},
     Web3,
+    signing::{Key,SecretKeyRef},
 };
+use secp256k1::key::SecretKey;
 
 // libsecp256k1 library generates RecoveryId as 0/1.
 // However Secp256k1 used in solidity use 27/28 as a value to make a public key unique to recover.
@@ -30,6 +32,7 @@ pub struct Web3Contract {
     address: Address, // contract address
     web3_conn: Web3Http,
     event_limit: usize,
+    web3_signer: Web3Signer,
 }
 
 impl Web3Contract {
@@ -41,12 +44,15 @@ impl Web3Contract {
             .unwrap_or_else(|_| "100".to_string())
             .parse::<usize>()
             .expect("Failed to parse EVENT_LIMIT");
+        let signer_pri_key = env::var("SIGNER_PRI_KEY").unwrap();
+        let web3_signer = Web3Signer::new(&signer_pri_key).unwrap();
 
         Ok(Web3Contract {
             contract,
             address,
             web3_conn,
             event_limit,
+            web3_signer,
         })
     }
 
@@ -315,5 +321,24 @@ impl Web3Http {
 
     pub fn get_eth_url(&self) -> &str {
         &self.eth_url
+    }
+}
+
+#[derive(Debug)]
+pub struct Web3Signer {
+    secret_key: SecretKey,
+    address: Address,
+}
+
+impl Web3Signer {
+    pub fn new(key: &str) -> Result<Self> {
+        let secret_key: SecretKey = key.parse().unwrap();
+        let secret_key_ref = SecretKeyRef::new(&secret_key);
+        let address = secret_key_ref.address();
+
+        Ok(Web3Signer {
+            secret_key,
+            address,
+        })
     }
 }
