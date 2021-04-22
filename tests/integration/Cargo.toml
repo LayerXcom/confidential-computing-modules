@@ -5,7 +5,7 @@ authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 
 [dependencies]
-eth-deployer = { git = "https://github.com/LayerXcom/anonify-contracts", tag = "v0.5.10" }
+eth-deployer = { git = "https://github.com/LayerXcom/anonify-contracts", rev = "b65bbe2a5fee0ee4451dbde93e316d2cb289c353" } # for-besu repository
 frame-sodium = { path = "../../frame/sodium" }
 frame-common = { path = "../../frame/common" }
 frame-runtime = { path = "../../frame/runtime" }
