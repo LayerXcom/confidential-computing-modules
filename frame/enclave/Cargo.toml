@@ -13,4 +13,3 @@ anyhow = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sg
 serde = { git = "https://github.com/mesalock-linux/serde-sgx.git", features = ["derive"] }
 thiserror = { git = "https://github.com/mesalock-linux/thiserror-sgx.git" }
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
-tracing = { version = "0.1", default-features = false }
