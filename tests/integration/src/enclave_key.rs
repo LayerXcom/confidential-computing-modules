@@ -44,7 +44,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
             CONFIRMATIONS,
             gas,
             *CHAIN_ID,
-            signer,
+            signer.clone(),
         )
         .await
         .unwrap();
@@ -52,7 +52,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            signer,
+            signer.clone(),
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
@@ -77,7 +77,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address.clone(), gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
@@ -105,7 +105,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -185,7 +185,7 @@ async fn test_enclave_key_auto_notification() {
             CONFIRMATIONS,
             gas,
             *CHAIN_ID,
-            signer,
+            signer.clone(),
         )
         .await
         .unwrap();
@@ -193,7 +193,7 @@ async fn test_enclave_key_auto_notification() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            signer,
+            signer.clone(),
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
@@ -217,7 +217,7 @@ async fn test_enclave_key_auto_notification() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address.clone(), gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
@@ -245,7 +245,7 @@ async fn test_enclave_key_auto_notification() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -302,7 +302,7 @@ async fn test_enclave_key_auto_notification() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -360,7 +360,7 @@ async fn test_enclave_key_integration_eth_transfer() {
             CONFIRMATIONS,
             gas,
             *CHAIN_ID,
-            signer,
+            signer.clone(),
         )
         .await
         .unwrap();
@@ -368,7 +368,7 @@ async fn test_enclave_key_integration_eth_transfer() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            signer,
+            signer.clone(),
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
@@ -392,7 +392,7 @@ async fn test_enclave_key_integration_eth_transfer() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address.clone(), gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
@@ -421,7 +421,7 @@ async fn test_enclave_key_integration_eth_transfer() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -488,7 +488,7 @@ async fn test_enclave_key_integration_eth_transfer() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -564,7 +564,7 @@ async fn test_enclave_key_integration_eth_approve() {
             CONFIRMATIONS,
             gas,
             *CHAIN_ID,
-            signer,
+            signer.clone(),
         )
         .await
         .unwrap();
@@ -572,7 +572,7 @@ async fn test_enclave_key_integration_eth_approve() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            signer,
+            signer.clone(),
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
@@ -596,7 +596,7 @@ async fn test_enclave_key_integration_eth_approve() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address.clone(), gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
     // Get handshake from contract
@@ -623,7 +623,7 @@ async fn test_enclave_key_integration_eth_approve() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -684,7 +684,7 @@ async fn test_enclave_key_integration_eth_approve() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -754,7 +754,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
             CONFIRMATIONS,
             gas,
             *CHAIN_ID,
-            signer,
+            signer.clone(),
         )
         .await
         .unwrap();
@@ -762,7 +762,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            signer,
+            signer.clone(),
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
@@ -786,7 +786,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address.clone(), gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
@@ -814,7 +814,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -921,7 +921,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -1030,7 +1030,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -1145,7 +1145,7 @@ async fn test_enclave_key_integration_eth_mint() {
             CONFIRMATIONS,
             gas,
             *CHAIN_ID,
-            signer,
+            signer.clone(),
         )
         .await
         .unwrap();
@@ -1153,7 +1153,7 @@ async fn test_enclave_key_integration_eth_mint() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            signer,
+            signer.clone(),
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
@@ -1177,7 +1177,7 @@ async fn test_enclave_key_integration_eth_mint() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address.clone(), gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
@@ -1205,7 +1205,7 @@ async fn test_enclave_key_integration_eth_mint() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -1239,7 +1239,7 @@ async fn test_enclave_key_integration_eth_mint() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -1315,7 +1315,7 @@ async fn test_enclave_key_integration_eth_burn() {
             CONFIRMATIONS,
             gas,
             *CHAIN_ID,
-            signer,
+            signer.clone(),
         )
         .await
         .unwrap();
@@ -1323,7 +1323,7 @@ async fn test_enclave_key_integration_eth_burn() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            signer,
+            signer.clone(),
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
@@ -1347,7 +1347,7 @@ async fn test_enclave_key_integration_eth_burn() {
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address.clone(), gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
@@ -1375,7 +1375,7 @@ async fn test_enclave_key_integration_eth_burn() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -1409,7 +1409,7 @@ async fn test_enclave_key_integration_eth_burn() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -1440,7 +1440,7 @@ async fn test_enclave_key_integration_eth_burn() {
         .send_command(
             encrypted_command,
             None,
-            signer.address,
+            signer.address.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
