@@ -57,7 +57,20 @@ pub async fn get_enclave_encryption_key(
 }
 
 lazy_static! {
-    pub static ref ENV_LOGGER_INIT: () = tracing_subscriber::fmt::init();
+    pub static ref ENV_LOGGER_INIT: () = {
+        use test_utils::tracing::{GLOBAL_TRACING_BUF, TracingWriter};
+        use tracing_subscriber::util::SubscriberInitExt;
+        use tracing_core::Dispatch;
+
+        let mock_writer = TracingWriter::new(&*GLOBAL_TRACING_BUF);
+
+        let subscriber: Dispatch = tracing_subscriber::fmt()
+            .with_writer(mock_writer)
+            .with_max_level(tracing::Level::INFO)
+            .with_level(true)
+            .into();
+        subscriber.init()
+    };
 }
 
 pub fn set_env_vars() {

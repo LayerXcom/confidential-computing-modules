@@ -13,9 +13,11 @@ frame-config = { path = "../../frame/config" }
 frame-host = { path = "../../frame/host" }
 anonify-eth-driver = { path = "../../modules/anonify-eth-driver" }
 anonify-ecall-types = { path = "../../modules/anonify-ecall-types" }
+test-utils = { path = "../utils" }
 actix-rt = "1.1"
 tracing = "0.1"
 tracing-subscriber = "0.2"
+tracing-core = "0.1"
 lazy_static = "1.4"
 web3 = "0.14"
 ethabi = "12.0.0"

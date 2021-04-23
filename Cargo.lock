@@ -2539,6 +2539,7 @@ dependencies = [
  "serde_json 1.0.59",
  "test-utils",
  "tracing",
+ "tracing-core",
  "tracing-subscriber",
  "web3",
 ]
