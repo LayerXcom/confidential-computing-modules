@@ -2,7 +2,7 @@
 use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::dispatcher::*;
 use anonify_eth_driver::EventCache;
-use eth_deployer::EthDeployer;
+use eth_deployer::{EthDeployer, Signer};
 use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_config::ANONIFY_ABI_PATH;
 use frame_config::{FACTORY_ABI_PATH, FACTORY_BIN_PATH};
