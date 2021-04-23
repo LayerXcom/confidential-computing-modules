@@ -51,7 +51,7 @@ macro_rules! register_ecall {
                 match ecall_handler(command, input) {
                     Ok(out) => out,
                     Err(e) => {
-                        println!("Error in enclave (ecall_entry_point): command: {:?}, error: {:?}", command, e);
+                        tracing::error!("Error in enclave (ecall_entry_point): command: {:?}, error: {:?}", command, e);
                         return frame_types::EnclaveStatus::error();
                     }
                 }
@@ -61,7 +61,7 @@ macro_rules! register_ecall {
             *output_len = res_len;
 
             if res_len > output_max_len {
-                println!("Result buffer length is over output_max: output_max={}, res_len={}", output_max_len, res_len);
+                tracing::error!("Result buffer length is over output_max: output_max={}, res_len={}", output_max_len, res_len);
                 return frame_types::EnclaveStatus::error();
             }
             unsafe {

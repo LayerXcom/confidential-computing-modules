@@ -6,6 +6,8 @@ use frame_config::{ANONIFY_ABI_PATH, FACTORY_ABI_PATH};
 use frame_host::EnclaveDir;
 use integration_tests::set_env_vars;
 use std::{env, sync::Arc, time};
+#[cfg(test)]
+use test_utils::tracing::logs_contain;
 
 #[actix_rt::test]
 async fn test_enclave_key_evaluate_access_policy_by_user_id_field() {
