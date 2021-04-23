@@ -71,12 +71,13 @@ pub async fn test_enclave_key_integration_eth_construct() {
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
-    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("Deployer account_id: {:?}", signer.address);
+    // println!("Deployer account_id: {:?}", deployer_addr);
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
@@ -104,7 +105,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr.clone(),
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -211,12 +212,12 @@ async fn test_enclave_key_auto_notification() {
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
-    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("Deployer account_id: {:?}", signer.address);
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
@@ -244,7 +245,7 @@ async fn test_enclave_key_auto_notification() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr.clone(),
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -301,7 +302,7 @@ async fn test_enclave_key_auto_notification() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr,
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -386,12 +387,12 @@ async fn test_enclave_key_integration_eth_transfer() {
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
-    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("Deployer account_id: {:?}", signer.address);
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
@@ -420,7 +421,7 @@ async fn test_enclave_key_integration_eth_transfer() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr.clone(),
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -487,7 +488,7 @@ async fn test_enclave_key_integration_eth_transfer() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr,
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -590,12 +591,12 @@ async fn test_enclave_key_integration_eth_approve() {
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
-    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("Deployer account_id: {:?}", signer.address);
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
     // Get handshake from contract
@@ -622,7 +623,7 @@ async fn test_enclave_key_integration_eth_approve() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr.clone(),
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -683,7 +684,7 @@ async fn test_enclave_key_integration_eth_approve() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr,
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -780,12 +781,12 @@ async fn test_enclave_key_integration_eth_transfer_from() {
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
-    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("Deployer account_id: {:?}", signer.address);
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
@@ -813,7 +814,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr.clone(),
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -920,7 +921,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr.clone(),
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -1029,7 +1030,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr,
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -1171,12 +1172,12 @@ async fn test_enclave_key_integration_eth_mint() {
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
-    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("Deployer account_id: {:?}", signer.address);
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
@@ -1204,7 +1205,7 @@ async fn test_enclave_key_integration_eth_mint() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr.clone(),
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -1238,7 +1239,7 @@ async fn test_enclave_key_integration_eth_mint() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr,
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -1341,12 +1342,12 @@ async fn test_enclave_key_integration_eth_burn() {
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
-    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("Deployer account_id: {:?}", signer.address);
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
+        .join_group(signer.address, gas, JOIN_GROUP_ENCLAVE_KEY_CMD)
         .await
         .unwrap();
 
@@ -1374,7 +1375,7 @@ async fn test_enclave_key_integration_eth_burn() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr.clone(),
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -1408,7 +1409,7 @@ async fn test_enclave_key_integration_eth_burn() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr.clone(),
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
@@ -1439,7 +1440,7 @@ async fn test_enclave_key_integration_eth_burn() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr,
+            signer.address,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
         )
