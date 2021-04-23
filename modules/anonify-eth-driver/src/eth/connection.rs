@@ -143,9 +143,9 @@ impl Web3Contract {
         let gas = output.gas;
 
         match ecall_output.ciphertext() {
-            CommandCiphertext::TreeKem(ciphertext) => self
-                .contract
-                .call(
+            CommandCiphertext::TreeKem(ciphertext) => {
+                let receipt = self.contract
+                .signed_call_with_confirmations(
                     "storeCommand",
                     (
                         ciphertext.encode(),
@@ -154,21 +154,31 @@ impl Web3Contract {
                         ciphertext.generation(),
                         ciphertext.epoch(),
                     ),
-                    output.signer,
                     Options::with(|opt| opt.gas = Some(gas.into())),
+                    self.confirmations,
+                    &self.web3_signer.secret_key,
                 )
-                .await
-                .map_err(Into::into),
-            CommandCiphertext::EnclaveKey(ciphertext) => self
-                .contract
-                .call(
+                .await?;
+
+                Ok(receipt.transaction_hash)
+            },
+            CommandCiphertext::EnclaveKey(ciphertext) => {
+                let receipt = self.contract
+                .signed_call_with_confirmations(
                     "storeCommand",
-                    (ciphertext.encode(), enclave_sig, ciphertext.roster_idx()),
-                    output.signer,
+                    (
+                        ciphertext.encode(),
+                        enclave_sig,
+                        ciphertext.roster_idx(),
+                    ),
                     Options::with(|opt| opt.gas = Some(gas.into())),
+                    self.confirmations,
+                    &self.web3_signer.secret_key,
                 )
-                .await
-                .map_err(Into::into),
+                .await?;
+
+                Ok(receipt.transaction_hash)
+            },
         }
     }
 
@@ -182,8 +192,8 @@ impl Web3Contract {
         enclave_sig.push(recovery_id);
         let gas = output.gas;
 
-        self.contract
-            .call(
+        let receipt = self.contract
+            .signed_call_with_confirmations(
                 "handshake",
                 (
                     handshake.encode(),
@@ -192,11 +202,13 @@ impl Web3Contract {
                     0 as u32,
                     handshake.prior_epoch() + 1,
                 ),
-                output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
+                self.confirmations,
+                &self.web3_signer.secret_key,
             )
-            .await
-            .map_err(Into::into)
+            .await?;
+
+        Ok(receipt.transaction_hash)
     }
 
     pub async fn get_event(&self, cache: EventCache, key: Address) -> Result<Web3Logs> {
