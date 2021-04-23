@@ -44,7 +44,7 @@ async fn test_treekem_key_rotation() {
             CONFIRMATIONS,
             gas,
             *CHAIN_ID,
-            signer,
+            signer.clone(),
         )
         .await
         .unwrap();
