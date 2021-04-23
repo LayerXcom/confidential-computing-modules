@@ -87,9 +87,10 @@ impl Dispatcher {
                 inner.enclave_id,
                 &inner.node_url,
                 anonify_contract_info.clone(),
+                inner.confirmations,
             )?;
             let watcher =
-                EventWatcher::new(&inner.node_url, anonify_contract_info, inner.cache.clone())?;
+                EventWatcher::new(&inner.node_url, anonify_contract_info, inner.cache.clone(), inner.confirmations)?;
             inner.sender = Some(sender);
             inner.watcher = Some(watcher);
         }
@@ -222,7 +223,7 @@ impl Dispatcher {
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .send_report_handshake(&host_output, method, inner.confirmations)
+            .send_report_handshake(&host_output, method)
             .await?;
 
         Ok(receipt)
