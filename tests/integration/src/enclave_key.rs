@@ -2,7 +2,7 @@
 use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::dispatcher::*;
 use anonify_eth_driver::EventCache;
-use eth_deployer::EthDeployer;
+use eth_deployer::{EthDeployer, Signer};
 use frame_common::{
     crypto::{Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
     state_types::NotifyState,
@@ -16,7 +16,7 @@ use frame_sodium::SodiumCiphertext;
 use serde_json::json;
 
 use crate::{
-    get_enclave_encryption_key, set_env_vars, ACCOUNT_INDEX, CONFIRMATIONS, ETH_URL, PASSWORD,
+    get_enclave_encryption_key, set_env_vars, ACCOUNT_INDEX, CONFIRMATIONS, ETH_URL, PASSWORD, CHAIN_ID, SIGNER_PRI_KEY,
 };
 
 #[actix_rt::test]
@@ -33,17 +33,18 @@ pub async fn test_enclave_key_integration_eth_construct() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    let deployer_addr = deployer
-        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-        .await
-        .unwrap();
+    // let deployer_addr = deployer
+    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
+    //     .await
+    //     .unwrap();
+    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
-            &*FACTORY_ABI_PATH,
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            deployer_addr.clone(),
+            &*CHAIN_ID,
+            signer,
         )
         .await
         .unwrap();
@@ -51,7 +52,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            deployer_addr,
+            signer,
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
@@ -172,17 +173,18 @@ async fn test_enclave_key_auto_notification() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    let deployer_addr = deployer
-        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-        .await
-        .unwrap();
+    // let deployer_addr = deployer
+    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
+    //     .await
+    //     .unwrap();
+    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
-            &*FACTORY_ABI_PATH,
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            deployer_addr.clone(),
+            &*CHAIN_ID,
+            signer,
         )
         .await
         .unwrap();
@@ -190,7 +192,7 @@ async fn test_enclave_key_auto_notification() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            deployer_addr,
+            signer,
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
@@ -346,17 +348,18 @@ async fn test_enclave_key_integration_eth_transfer() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    let deployer_addr = deployer
-        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-        .await
-        .unwrap();
+    // let deployer_addr = deployer
+    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
+    //     .await
+    //     .unwrap();
+    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
-            &*FACTORY_ABI_PATH,
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            deployer_addr.clone(),
+            &*CHAIN_ID,
+            signer,
         )
         .await
         .unwrap();
@@ -364,7 +367,7 @@ async fn test_enclave_key_integration_eth_transfer() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            deployer_addr,
+            signer,
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
@@ -549,17 +552,18 @@ async fn test_enclave_key_integration_eth_approve() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    let deployer_addr = deployer
-        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-        .await
-        .unwrap();
+    // let deployer_addr = deployer
+    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
+    //     .await
+    //     .unwrap();
+    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
-            &*FACTORY_ABI_PATH,
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            deployer_addr.clone(),
+            &*CHAIN_ID,
+            signer,
         )
         .await
         .unwrap();
@@ -567,7 +571,7 @@ async fn test_enclave_key_integration_eth_approve() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            deployer_addr,
+            signer,
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
@@ -738,17 +742,18 @@ async fn test_enclave_key_integration_eth_transfer_from() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    let deployer_addr = deployer
-        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-        .await
-        .unwrap();
+    // let deployer_addr = deployer
+    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
+    //     .await
+    //     .unwrap();
+    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
-            &*FACTORY_ABI_PATH,
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            deployer_addr.clone(),
+            &*CHAIN_ID,
+            signer,
         )
         .await
         .unwrap();
@@ -756,7 +761,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            deployer_addr,
+            signer,
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
@@ -1128,17 +1133,18 @@ async fn test_enclave_key_integration_eth_mint() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    let deployer_addr = deployer
-        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-        .await
-        .unwrap();
+    // let deployer_addr = deployer
+    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
+    //     .await
+    //     .unwrap();
+    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
-            &*FACTORY_ABI_PATH,
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            deployer_addr.clone(),
+            &*CHAIN_ID,
+            signer,
         )
         .await
         .unwrap();
@@ -1146,7 +1152,7 @@ async fn test_enclave_key_integration_eth_mint() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            deployer_addr,
+            signer,
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
@@ -1297,17 +1303,18 @@ async fn test_enclave_key_integration_eth_burn() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    let deployer_addr = deployer
-        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-        .await
-        .unwrap();
+    // let deployer_addr = deployer
+    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
+    //     .await
+    //     .unwrap();
+    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
-            &*FACTORY_ABI_PATH,
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            deployer_addr.clone(),
+            &*CHAIN_ID,
+            signer,
         )
         .await
         .unwrap();
@@ -1315,7 +1322,7 @@ async fn test_enclave_key_integration_eth_burn() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithEnclaveKey",
             &*FACTORY_ABI_PATH,
-            deployer_addr,
+            signer,
             gas,
             factory_contract_addr,
             CONFIRMATIONS,

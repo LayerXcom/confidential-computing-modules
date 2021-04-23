@@ -12,7 +12,7 @@ use serde_json::json;
 
 use crate::{
     get_enclave_encryption_key, set_env_vars, set_env_vars_for_treekem, ACCOUNT_INDEX,
-    CONFIRMATIONS, ETH_URL, PASSWORD,
+    CONFIRMATIONS, ETH_URL, PASSWORD, CHAIN_ID, SIGNER_PRI_KEY,
 };
 
 #[actix_rt::test]
@@ -37,13 +37,14 @@ async fn test_treekem_key_rotation() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
+    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
-            &*FACTORY_ABI_PATH,
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            deployer_addr.clone(),
+            &*CHAIN_ID,
+            signer,
         )
         .await
         .unwrap();
@@ -51,7 +52,7 @@ async fn test_treekem_key_rotation() {
         .deploy_anonify_by_factory(
             "deployAnonifyWithTreeKem",
             &*FACTORY_ABI_PATH,
-            deployer_addr,
+            signer,
             gas,
             factory_contract_addr,
             CONFIRMATIONS,
