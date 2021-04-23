@@ -2714,7 +2714,9 @@ dependencies = [
  "sgx_urts",
  "state-runtime-node-api",
  "state-runtime-node-server",
+ "test-utils",
  "tracing",
+ "tracing-core",
  "tracing-subscriber",
  "web3",
 ]
