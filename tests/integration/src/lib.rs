@@ -32,7 +32,7 @@ pub static CHAIN_ID: Lazy<u64> = Lazy::new(|| env::var("CHAIN_ID")
     .unwrap()
 );
 
-pub static SIGNER_PRI_KEY: String = Lazy::new(|| env::var("SIGNER_PRI_KEY")
+pub static SIGNER_PRI_KEY: Lazy<String> = Lazy::new(|| env::var("SIGNER_PRI_KEY")
         .unwrap_or("5c7a050c7b0e3a6896e9667a6dff3a6b389c665aaed218c352071890c05520ee"
         .to_string()
     )

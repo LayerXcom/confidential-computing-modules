@@ -43,7 +43,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            &*CHAIN_ID,
+            *CHAIN_ID,
             signer,
         )
         .await
@@ -183,7 +183,7 @@ async fn test_enclave_key_auto_notification() {
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            &*CHAIN_ID,
+            *CHAIN_ID,
             signer,
         )
         .await
@@ -358,7 +358,7 @@ async fn test_enclave_key_integration_eth_transfer() {
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            &*CHAIN_ID,
+            *CHAIN_ID,
             signer,
         )
         .await
@@ -562,7 +562,7 @@ async fn test_enclave_key_integration_eth_approve() {
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            &*CHAIN_ID,
+            *CHAIN_ID,
             signer,
         )
         .await
@@ -752,7 +752,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            &*CHAIN_ID,
+            *CHAIN_ID,
             signer,
         )
         .await
@@ -1143,7 +1143,7 @@ async fn test_enclave_key_integration_eth_mint() {
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            &*CHAIN_ID,
+            *CHAIN_ID,
             signer,
         )
         .await
@@ -1313,7 +1313,7 @@ async fn test_enclave_key_integration_eth_burn() {
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            &*CHAIN_ID,
+            *CHAIN_ID,
             signer,
         )
         .await

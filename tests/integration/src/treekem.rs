@@ -43,7 +43,7 @@ async fn test_treekem_key_rotation() {
             &*FACTORY_BIN_PATH,
             CONFIRMATIONS,
             gas,
-            &*CHAIN_ID,
+            *CHAIN_ID,
             signer,
         )
         .await
