@@ -10,7 +10,7 @@ use anyhow::anyhow;
 use ethabi::{Topic, TopicFilter};
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
-use std::{env, fs, path::Path};
+use std::env;
 use web3::{
     contract::{Contract, Options},
     transports::Http,
@@ -84,7 +84,7 @@ impl Web3Contract {
                     ),
                     Options::with(|opt| opt.gas = Some(gas.into())),
                     self.confirmations,
-                    self.web3_signer.secret_key,
+                    &self.web3_signer.secret_key,
                 )
                 .await
                 .map_err(Into::into),
@@ -126,26 +126,11 @@ impl Web3Contract {
                 ),
                 Options::with(|opt| opt.gas = Some(gas.into())),
                 self.confirmations,
-                self.web3_signer.secret_key,
+                &self.web3_signer.secret_key,
             )
-            .await
-            .map_err(Into::into);
+            .await?;
 
-
-        self.contract
-            .call(
-                "registerReport",
-                (
-                    report,
-                    report_sig,
-                    ecall_output.mrenclave_ver(),
-                    ecall_output.roster_idx(),
-                ),
-                output.signer,
-                Options::with(|opt| opt.gas = Some(gas.into())),
-            )
-            .await
-            .map_err(Into::into)
+        Ok(receipt.transaction_hash)
     }
 
     pub async fn send_command(&self, output: host_output::Command) -> Result<H256> {
@@ -317,24 +302,24 @@ impl Web3Http {
             .map_err(Into::into)
     }
 
-    pub async fn deploy<P: AsRef<Path>>(
-        &self,
-        abi_path: P,
-        bin_path: P,
-        gas: u64,
-        deployer: Address,
-    ) -> Result<Address> {
-        let abi = fs::read(abi_path)?;
-        let bin = fs::read_to_string(bin_path)?;
+    // pub async fn deploy<P: AsRef<Path>>(
+    //     &self,
+    //     abi_path: P,
+    //     bin_path: P,
+    //     gas: u64,
+    //     deployer: Address,
+    // ) -> Result<Address> {
+    //     let abi = fs::read(abi_path)?;
+    //     let bin = fs::read_to_string(bin_path)?;
 
-        let contract = Contract::deploy(self.web3.eth(), abi.as_slice())?
-            .options(Options::with(|opt| opt.gas = Some(gas.into())))
-            .confirmations(self.confirmations)
-            .execute(bin.as_str(), (), deployer)
-            .await?;
+    //     let contract = Contract::deploy(self.web3.eth(), abi.as_slice())?
+    //         .options(Options::with(|opt| opt.gas = Some(gas.into())))
+    //         .confirmations(self.confirmations)
+    //         .execute(bin.as_str(), (), deployer)
+    //         .await?;
 
-        Ok(contract.address())
-    }
+    //     Ok(contract.address())
+    // }
 
     pub fn get_eth_url(&self) -> &str {
         &self.eth_url
