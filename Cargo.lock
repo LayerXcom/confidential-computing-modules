@@ -1561,7 +1561,7 @@ dependencies = [
 [[package]]
 name = "eth-deployer"
 version = "0.5.4"
-source = "git+https://github.com/LayerXcom/anonify-contracts?rev=b65bbe2a5fee0ee4451dbde93e316d2cb289c353#b65bbe2a5fee0ee4451dbde93e316d2cb289c353"
+source = "git+https://github.com/LayerXcom/anonify-contracts?rev=2a5d80bfa6bcb5df4b62e37548779ff2972c628b#2a5d80bfa6bcb5df4b62e37548779ff2972c628b"
 dependencies = [
  "anyhow 1.0.34",
  "ethabi",
