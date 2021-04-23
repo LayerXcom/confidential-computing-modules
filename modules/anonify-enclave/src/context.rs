@@ -16,7 +16,7 @@ use frame_common::{
 };
 #[cfg(feature = "backup-enable")]
 use frame_config::KEY_VAULT_ENCLAVE_MEASUREMENT;
-use frame_config::{ANONIFY_PARAMS_DIR, IAS_ROOT_CERT, CMD_DEC_SECRET_DIR};
+use frame_config::{ANONIFY_PARAMS_DIR, CMD_DEC_SECRET_DIR, IAS_ROOT_CERT};
 use frame_enclave::EnclaveEngine;
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::{
@@ -178,7 +178,7 @@ impl StateOps for AnonifyEnclaveContext {
         let mut curr_state_counter = self.state_counter.write().unwrap();
         if !curr_state_counter.is_increment(received_state_counter) {
             bail!(
-                "Incremented stored state counter ({:?}) is not equal to a received state counter ({:?})",
+                "expected state counter is {:?}, but received {:?}",
                 curr_state_counter.increment(),
                 received_state_counter,
             );

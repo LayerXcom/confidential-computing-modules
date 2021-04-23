@@ -313,6 +313,8 @@ async fn test_enclave_key_skip_invalid_event() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90);
+
+    assert!(logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
