@@ -33,10 +33,11 @@ pub struct Web3Contract {
     web3_conn: Web3Http,
     event_limit: usize,
     web3_signer: Web3Signer,
+    confirmations: usize,
 }
 
 impl Web3Contract {
-    pub fn new(web3_conn: Web3Http, contract_info: ContractInfo) -> Result<Self> {
+    pub fn new(web3_conn: Web3Http, contract_info: ContractInfo, confirmations: usize) -> Result<Self> {
         let abi = contract_info.contract_abi()?;
         let address = contract_info.address();
         let contract = Contract::new(web3_conn.web3.eth(), address, abi);
@@ -53,6 +54,7 @@ impl Web3Contract {
             web3_conn,
             event_limit,
             web3_signer,
+            confirmations,
         })
     }
 
@@ -60,7 +62,6 @@ impl Web3Contract {
         &self,
         output: host_output::JoinGroup,
         method: &str,
-        confirmations: usize,
     ) -> Result<TransactionReceipt> {
         let ecall_output = output
             .ecall_output
@@ -72,7 +73,7 @@ impl Web3Contract {
         match ecall_output.handshake() {
             Some(handshake) => self
                 .contract
-                .call_with_confirmations(
+                .signed_call_with_confirmations(
                     method,
                     (
                         report,
@@ -81,9 +82,9 @@ impl Web3Contract {
                         ecall_output.mrenclave_ver(),
                         ecall_output.roster_idx(),
                     ),
-                    output.signer,
                     Options::with(|opt| opt.gas = Some(gas.into())),
-                    confirmations,
+                    self.confirmations,
+                    self.web3_signer.secret_key,
                 )
                 .await
                 .map_err(Into::into),
@@ -99,7 +100,7 @@ impl Web3Contract {
                     ),
                     output.signer,
                     Options::with(|opt| opt.gas = Some(gas.into())),
-                    confirmations,
+                    self.confirmations,
                 )
                 .await
                 .map_err(Into::into),
@@ -113,6 +114,23 @@ impl Web3Contract {
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
         let gas = output.gas;
+
+        let receipt = self.contract
+            .signed_call_with_confirmations(
+                "registerReport",
+                (
+                    report,
+                    report_sig,
+                    ecall_output.mrenclave_ver(),
+                    ecall_output.roster_idx(),
+                ),
+                Options::with(|opt| opt.gas = Some(gas.into())),
+                self.confirmations,
+                self.web3_signer.secret_key,
+            )
+            .await
+            .map_err(Into::into);
+
 
         self.contract
             .call(
@@ -303,7 +321,6 @@ impl Web3Http {
         &self,
         abi_path: P,
         bin_path: P,
-        confirmations: usize,
         gas: u64,
         deployer: Address,
     ) -> Result<Address> {
@@ -312,7 +329,7 @@ impl Web3Http {
 
         let contract = Contract::deploy(self.web3.eth(), abi.as_slice())?
             .options(Options::with(|opt| opt.gas = Some(gas.into())))
-            .confirmations(confirmations)
+            .confirmations(self.confirmations)
             .execute(bin.as_str(), (), deployer)
             .await?;
 
@@ -325,7 +342,7 @@ impl Web3Http {
 }
 
 #[derive(Debug)]
-pub struct Web3Signer {
+struct Web3Signer {
     secret_key: SecretKey,
     address: Address,
 }
