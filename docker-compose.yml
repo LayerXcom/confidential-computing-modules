@@ -54,6 +54,11 @@ services:
         - "${ETH_HOST_PORT}:${ETH_DOCKER_PORT}"
       volumes:
         - ./ganache_data:/ganache_data
+      entrypoint: 
+        - node
+        - /app/ganache-core.docker.cli.js
+        - --mnemonic
+        - 'stereo consider quality wild fat farm symptom bundle laundry side one lemon'
       networks:
         testing_net:
           ipv4_address: ${ETH_IP_ADDRESS}
