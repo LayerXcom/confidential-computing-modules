@@ -4562,8 +4562,10 @@ dependencies = [
  "serde_json 1.0.59",
  "sgx_types 1.1.1",
  "state-runtime-node-api",
+ "test-utils",
  "thiserror 1.0.22",
  "tracing",
+ "tracing-core",
  "tracing-subscriber",
  "web3",
 ]

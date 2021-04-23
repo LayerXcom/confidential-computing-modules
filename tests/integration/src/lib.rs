@@ -66,7 +66,7 @@ lazy_static! {
 
         let subscriber: Dispatch = tracing_subscriber::fmt()
             .with_writer(mock_writer)
-            .with_max_level(tracing::Level::INFO)
+            .with_max_level(tracing::Level::DEBUG)
             .with_level(true)
             .into();
         subscriber.init()
