@@ -26,9 +26,9 @@ pub struct EventWatcher {
 }
 
 impl EventWatcher {
-    pub fn new(node_url: &str, contract_info: ContractInfo, cache: EventCache) -> Result<Self> {
+    pub fn new(node_url: &str, contract_info: ContractInfo, cache: EventCache, confirmations: usize) -> Result<Self> {
         let web3_http = Web3Http::new(node_url)?;
-        let contract = Web3Contract::new(web3_http, contract_info)?;
+        let contract = Web3Contract::new(web3_http, contract_info, confirmations)?;
 
         Ok(EventWatcher { contract, cache })
     }

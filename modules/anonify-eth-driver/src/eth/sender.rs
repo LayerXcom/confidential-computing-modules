@@ -18,9 +18,10 @@ impl EthSender {
         enclave_id: sgx_enclave_id_t,
         node_url: &str,
         contract_info: ContractInfo,
+        confirmations: usize,
     ) -> Result<Self> {
         let web3_http = Web3Http::new(node_url)?;
-        let contract = Web3Contract::new(web3_http, contract_info)?;
+        let contract = Web3Contract::new(web3_http, contract_info, confirmations)?;
 
         Ok(EthSender {
             enclave_id,
@@ -50,7 +51,6 @@ impl EthSender {
         &self,
         host_output: &host_output::JoinGroup,
         method: &str,
-        confirmations: usize,
     ) -> Result<TransactionReceipt> {
         info!("Sending a handshake to blockchain: {:?}", host_output);
         Retry::new(
@@ -61,7 +61,7 @@ impl EthSender {
         .set_condition(call_with_conf_retry_condition)
         .spawn_async(|| async {
             self.contract
-                .send_report_handshake(host_output.clone(), method, confirmations)
+                .send_report_handshake(host_output.clone(), method)
                 .await
         })
         .await
