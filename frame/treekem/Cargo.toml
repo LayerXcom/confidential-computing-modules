@@ -8,7 +8,7 @@ edition = "2018"
 frame-config = { path = "../config", default-features = false, features = ["sgx"] }
 frame-common = { path = "../common", default-features = false, features = ["sgx"] }
 frame-mra-tls = { path = "../../frame/mra-tls" }
-test-utils = { path = "../../tests/utils" }
+test-utils = { path = "../../tests/utils", default-features = false, features = ["sgx"] }
 hex = { version = "0.4", default-features = false }
 anyhow = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
 libsecp256k1 = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/libsecp256k1-rs-sgx" }

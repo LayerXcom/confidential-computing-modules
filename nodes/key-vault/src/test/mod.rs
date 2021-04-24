@@ -54,7 +54,18 @@ async fn test_health_check() {
 }
 
 pub static SUBSCRIBER_INIT: Lazy<()> = Lazy::new(|| {
-    tracing_subscriber::fmt::init();
+    use test_utils::tracing::{GLOBAL_TRACING_BUF, TracingWriter};
+    use tracing_subscriber::util::SubscriberInitExt;
+    use tracing_core::Dispatch;
+
+    let mock_writer = TracingWriter::new(&*GLOBAL_TRACING_BUF);
+
+    let subscriber: Dispatch = tracing_subscriber::fmt()
+        .with_writer(mock_writer)
+        .with_max_level(tracing::Level::DEBUG)
+        .with_level(true)
+        .into();
+    subscriber.init()
 });
 
 fn set_env_vars() {

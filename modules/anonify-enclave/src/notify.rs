@@ -73,7 +73,7 @@ pub(crate) mod tests {
     };
     use frame_common::crypto::Ed25519ChallengeResponse;
     use std::{string::String, vec::Vec};
-    use test_utils::*;
+    use test_utils::{run_tests, runner::*};
 
     pub(crate) fn run_tests() -> bool {
         run_tests!(test_notifier,)

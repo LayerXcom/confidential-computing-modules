@@ -112,7 +112,7 @@ impl NonceSequence for OneNonceSequence {
 pub(crate) mod tests {
     use super::*;
     use std::string::String;
-    use test_utils::*;
+    use test_utils::{runner::*, check_all_passed, run_tests};
 
     pub(crate) fn run_tests() -> bool {
         run_tests!(test_ecies_correctness,)

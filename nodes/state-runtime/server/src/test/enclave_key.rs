@@ -6,6 +6,8 @@ use frame_config::{ANONIFY_ABI_PATH, FACTORY_ABI_PATH};
 use frame_host::EnclaveDir;
 use integration_tests::set_env_vars;
 use std::{env, sync::Arc, time};
+#[cfg(test)]
+use test_utils::tracing::{logs_clear, logs_contain};
 
 #[actix_rt::test]
 async fn test_enclave_key_evaluate_access_policy_by_user_id_field() {
@@ -278,6 +280,7 @@ async fn test_enclave_key_skip_invalid_event() {
     assert_eq!(balance.state, 100);
 
     // state transition should not be occured by this transaction.
+    logs_clear();
     let transfer_110_req = transfer_110_req_fn(&mut csprng, &enc_key, 2, None);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
@@ -294,6 +297,7 @@ async fn test_enclave_key_skip_invalid_event() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
+    assert!(logs_contain("ERROR"));
 
     let transfer_10_req = transfer_10_req_fn(&mut csprng, &enc_key, 3, None);
     let req = test::TestRequest::post()
