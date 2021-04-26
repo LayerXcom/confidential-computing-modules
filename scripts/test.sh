@@ -57,7 +57,7 @@ export ENCLAVE_PKG_NAME=erc20
 # make with backup disabled
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,enclave_key"
 cd ${ANONIFY_ROOT}/tests/integration
-RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_enclave_key -- --nocapture
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_enclave_key -- --nocapture --test-threads=1
 
 # ERC20 Application Tests
 
