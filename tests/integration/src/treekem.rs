@@ -91,7 +91,7 @@ async fn test_treekem_key_rotation() {
 
     // Send handshake
     let receipt = dispatcher
-        .handshake(signer.address..clone(), gas)
+        .handshake(signer.address.clone(), gas)
         .await
         .unwrap();
     println!("handshake receipt: {:?}", receipt);
