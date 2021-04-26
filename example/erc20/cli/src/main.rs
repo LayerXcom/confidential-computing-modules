@@ -76,10 +76,6 @@ fn subcommand_anonify<R, CR>(
             commands::register_report(state_runtime_url)
                 .expect("Failed to register_report command");
         }
-        ("update_mrenclave", Some(_)) => {
-            commands::update_mrenclave(state_runtime_url)
-                .expect("Failed to update_mrenclave command");
-        }
         ("init_state", Some(matches)) => {
             let keyfile_index: usize = matches
                 .value_of("keyfile-index")
@@ -364,10 +360,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         .about("Anonify operations")
         .subcommand(
             SubCommand::with_name("register_report").about("register a report to the blockchain"),
-        )
-        .subcommand(
-            SubCommand::with_name("update_mrenclave")
-                .about("update mrenclave a contract from anonify services."),
         )
         .subcommand(
             SubCommand::with_name("init_state")

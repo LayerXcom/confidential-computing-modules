@@ -56,6 +56,6 @@ pub fn logs_contain(s: &str) -> bool {
     false
 }
 
-pub fn logs_clear() -> io::Result<()> {
-    Ok(GLOBAL_TRACING_BUF.lock().unwrap().clear())
+pub fn logs_clear() -> () {
+    GLOBAL_TRACING_BUF.lock().unwrap().clear()
 }

@@ -133,7 +133,7 @@ impl Dispatcher {
                         Ok(updated_states) => debug!("State updated: {:?}", updated_states),
                         Err(err) => error!("event fetched error: {:?}", err),
                     };
-                    actix_rt::time::delay_for(time::Duration::from_millis(sync_time)).await;
+                    actix_rt::time::delay_for(time::Duration::from_millis(2 * sync_time)).await;
                 }
             });
         });
@@ -170,16 +170,6 @@ impl Dispatcher {
             .await
     }
 
-    pub async fn join_group(
-        &self,
-        signer: Address,
-        gas: u64,
-        ecall_cmd: u32,
-    ) -> Result<TransactionReceipt> {
-        self.send_report_handshake(signer, gas, "joinGroup", ecall_cmd)
-            .await
-    }
-
     pub async fn register_report(&self, signer: Address, gas: u64) -> Result<H256> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
@@ -196,21 +186,10 @@ impl Dispatcher {
         Ok(tx_hash)
     }
 
-    pub async fn update_mrenclave(
+    pub async fn join_group(
         &self,
         signer: Address,
         gas: u64,
-        ecall_cmd: u32,
-    ) -> Result<TransactionReceipt> {
-        self.send_report_handshake(signer, gas, "updateMrenclave", ecall_cmd)
-            .await
-    }
-
-    async fn send_report_handshake(
-        &self,
-        signer: Address,
-        gas: u64,
-        method: &str,
         ecall_cmd: u32,
     ) -> Result<TransactionReceipt> {
         let inner = self.inner.read();
@@ -222,7 +201,7 @@ impl Dispatcher {
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .send_report_handshake(&host_output, method, inner.confirmations)
+            .join_group(&host_output, inner.confirmations)
             .await?;
 
         Ok(receipt)

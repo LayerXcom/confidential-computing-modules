@@ -12,17 +12,6 @@ pub async fn handle_health_check(server: web::Data<Arc<Server>>) -> impl Respond
     }
 }
 
-pub async fn handle_update_mrenclave(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
-    let receipt = server
-        .dispatcher
-        .update_mrenclave(server.sender_address, DEFAULT_GAS, JOIN_GROUP_TREEKEM_CMD)
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
-    Ok(HttpResponse::Accepted()
-        .json(state_runtime_node_api::update_mrenclave::post::Response { receipt }))
-}
-
 pub async fn handle_send_command(
     server: web::Data<Arc<Server>>,
     req: web::Json<state_runtime_node_api::state::post::Request>,

@@ -95,7 +95,7 @@ impl fmt::LowerHex for EthLog {
 }
 
 impl EthLog {
-    fn decode_cipher_handshake_data(&self) -> Result<(Vec<u8>, StateCounter)> {
+    fn decode_ciphertext_event(&self) -> Result<(Vec<u8>, StateCounter)> {
         let tokens = ethabi::decode(&[ParamType::Bytes, ParamType::Uint(256)], &self.0.data.0)?;
         if tokens.len() != 2 {
             return Err(HostError::InvalidNumberOfEthLogToken(2));
@@ -153,10 +153,13 @@ impl Web3Logs {
 
             // Processing conditions by ciphertext or handshake event
             if log.0.topics[0] == *STORE_TREEKEM_CIPHERTEXT_EVENT {
-                let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
+                let (bytes, state_counter) = match log.decode_ciphertext_event() {
                     Ok(d) => d,
                     Err(e) => {
-                        error!("decode_cipher_handshake_data: {}", e);
+                        error!(
+                            "Failed decode_ciphertext_event for treekem ciphertext: {}",
+                            e
+                        );
                         continue;
                     }
                 };
@@ -164,7 +167,10 @@ impl Web3Logs {
                 let res = match TreeKemCiphertext::decode(&mut &bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
-                        error!("TreeKemCiphertext::decode: {}", e);
+                        error!(
+                            "Failed TreeKemCiphertext::decode for treekem ciphertext: {}",
+                            e
+                        );
                         continue;
                     }
                 };
@@ -179,10 +185,13 @@ impl Web3Logs {
                 };
                 payloads.push(payload);
             } else if log.0.topics[0] == *STORE_TREEKEM_HANDSHAKE_EVENT {
-                let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
+                let (bytes, state_counter) = match log.decode_ciphertext_event() {
                     Ok(d) => d,
                     Err(e) => {
-                        error!("decode_cipher_handshake_data: {}", e);
+                        error!(
+                            "Failed decode_ciphertext_event for treekem handshake: {}",
+                            e
+                        );
                         continue;
                     }
                 };
@@ -190,7 +199,10 @@ impl Web3Logs {
                 let res = match ExportHandshake::decode(&bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
-                        error!("ExportHandshake::decode: {}", e);
+                        error!(
+                            "Failed ExportHandshake::decode for treekem handshake: {}",
+                            e
+                        );
                         continue;
                     }
                 };
@@ -205,10 +217,10 @@ impl Web3Logs {
                 };
                 payloads.push(payload);
             } else if log.0.topics[0] == *STORE_ENCLAVE_KEY_CIPHERTEXT_EVENT {
-                let (bytes, state_counter) = match log.decode_cipher_handshake_data() {
+                let (bytes, state_counter) = match log.decode_ciphertext_event() {
                     Ok(d) => d,
                     Err(e) => {
-                        error!("decode_cipher_handshake_data: {}", e);
+                        error!("Failed decode_ciphertext_event for enclave_key: {}", e);
                         continue;
                     }
                 };
@@ -216,7 +228,7 @@ impl Web3Logs {
                 let res = match EnclaveKeyCiphertext::decode(&mut &bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
-                        error!("EnclaveKeyCiphertext::decode: {}", e);
+                        error!("EnclaveKeyCiphertext::decode for enclave_key: {}", e);
                         continue;
                     }
                 };
@@ -330,7 +342,8 @@ impl InnerEnclaveLog {
                             fetch_ciphertext_cmd,
                         );
 
-                        match self.insert_ciphertext(inp, eid, &ciphertext) {
+                        match self.insert_ciphertext(CiphertextKind::TreeKem, inp, eid, &ciphertext)
+                        {
                             Some(notification) => acc.push(notification),
                             None => continue,
                         }
@@ -371,7 +384,12 @@ impl InnerEnclaveLog {
                             fetch_ciphertext_cmd,
                         );
 
-                        match self.insert_ciphertext(inp, eid, &ciphertext) {
+                        match self.insert_ciphertext(
+                            CiphertextKind::EnclaveKey,
+                            inp,
+                            eid,
+                            &ciphertext,
+                        ) {
                             Some(notification) => acc.push(notification),
                             None => continue,
                         }
@@ -389,6 +407,7 @@ impl InnerEnclaveLog {
 
     fn insert_ciphertext(
         &self,
+        ciphertext_kind: CiphertextKind,
         inp: host_input::InsertCiphertext,
         eid: sgx_enclave_id_t,
         ciphertext: &CommandCiphertext,
@@ -419,23 +438,34 @@ impl InnerEnclaveLog {
                 );
 
                 // Logging a skipped event
-                match (&self.logs).into_iter().find(|log| {
-                    match log.decode_cipher_handshake_data() {
-                        Ok((bytes, _state_counter)) => {
-                            match TreeKemCiphertext::decode(&mut &bytes[..]) {
-                                Ok(res) => CommandCiphertext::TreeKem(res) == *ciphertext,
-                                Err(error) => {
-                                    error!("Ciphertext::decode error: {:?}", error);
-                                    false
+                match (&self.logs)
+                    .into_iter()
+                    .find(|log| match log.decode_ciphertext_event() {
+                        Ok((bytes, _state_counter)) => match ciphertext_kind {
+                            CiphertextKind::TreeKem => {
+                                match TreeKemCiphertext::decode(&mut &bytes[..]) {
+                                    Ok(res) => CommandCiphertext::TreeKem(res) == *ciphertext,
+                                    Err(e) => {
+                                        error!("TreeKemCiphertext::decode error: {:?}", e);
+                                        false
+                                    }
                                 }
                             }
-                        }
-                        Err(error) => {
-                            error!("decode_data error: {:?}", error);
+                            CiphertextKind::EnclaveKey => {
+                                match EnclaveKeyCiphertext::decode(&mut &bytes[..]) {
+                                    Ok(res) => CommandCiphertext::EnclaveKey(res) == *ciphertext,
+                                    Err(e) => {
+                                        error!("EnclaveKeyCiphertext::decode error: {:?}", e);
+                                        false
+                                    }
+                                }
+                            }
+                        },
+                        Err(e) => {
+                            error!("decode_ciphertext_event error: {:?}", e);
                             false
                         }
-                    }
-                }) {
+                    }) {
                     Some(skipped_log) => warn!(
                         "A event is skipped because of occurring error in enclave: {:?}",
                         skipped_log
@@ -491,4 +521,10 @@ impl EnclaveUpdatedState {
     pub fn notify_states(self) -> Option<Vec<serde_json::Value>> {
         self.notify_states
     }
+}
+
+#[derive(Debug, Clone)]
+pub enum CiphertextKind {
+    TreeKem,
+    EnclaveKey,
 }

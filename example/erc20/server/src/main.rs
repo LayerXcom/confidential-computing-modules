@@ -24,10 +24,6 @@ async fn main() -> io::Result<()> {
         App::new()
             .data(server.clone())
             .route("/api/v1/health", web::get().to(handle_health_check))
-            .route(
-                "/api/v1/update_mrenclave",
-                web::post().to(handle_update_mrenclave),
-            )
             .route("/api/v1/state", web::post().to(handle_send_command))
             .route("/api/v1/state", web::get().to(handle_get_state))
             .route(
