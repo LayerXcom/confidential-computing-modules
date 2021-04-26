@@ -196,16 +196,6 @@ impl Dispatcher {
         Ok(tx_hash)
     }
 
-    pub async fn update_mrenclave(
-        &self,
-        signer: Address,
-        gas: u64,
-        ecall_cmd: u32,
-    ) -> Result<TransactionReceipt> {
-        self.send_report_handshake(signer, gas, "updateMrenclave", ecall_cmd)
-            .await
-    }
-
     async fn send_report_handshake(
         &self,
         signer: Address,

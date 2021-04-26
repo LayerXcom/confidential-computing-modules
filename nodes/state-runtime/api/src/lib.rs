@@ -84,17 +84,6 @@ pub mod state {
     }
 }
 
-pub mod update_mrenclave {
-    pub mod post {
-        use super::super::*;
-
-        #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
-        pub struct Response {
-            pub receipt: TransactionReceipt,
-        }
-    }
-}
-
 pub mod enclave_encryption_key {
     pub mod get {
         use super::super::*;

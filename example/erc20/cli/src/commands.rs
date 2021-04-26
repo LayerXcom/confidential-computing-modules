@@ -25,16 +25,6 @@ pub(crate) fn register_report(state_runtime_url: String) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn update_mrenclave(state_runtime_url: String) -> Result<()> {
-    let res = Client::new()
-        .post(&format!("{}/api/v1/update_mrenclave", &state_runtime_url))
-        .send()?
-        .text()?;
-
-    println!("Transaction hash: {:?}", res);
-    Ok(())
-}
-
 pub(crate) fn get_enclave_encryption_key(state_runtime_url: String) -> Result<SodiumPubKey> {
     let resp: state_runtime_node_api::enclave_encryption_key::get::Response = Client::new()
         .get(&format!(
