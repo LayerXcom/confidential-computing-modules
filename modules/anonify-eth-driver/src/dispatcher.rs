@@ -170,16 +170,6 @@ impl Dispatcher {
             .await
     }
 
-    pub async fn join_group(
-        &self,
-        signer: Address,
-        gas: u64,
-        ecall_cmd: u32,
-    ) -> Result<TransactionReceipt> {
-        self.send_report_handshake(signer, gas, "joinGroup", ecall_cmd)
-            .await
-    }
-
     pub async fn register_report(&self, signer: Address, gas: u64) -> Result<H256> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
@@ -196,11 +186,10 @@ impl Dispatcher {
         Ok(tx_hash)
     }
 
-    async fn send_report_handshake(
+    pub async fn join_group(
         &self,
         signer: Address,
         gas: u64,
-        method: &str,
         ecall_cmd: u32,
     ) -> Result<TransactionReceipt> {
         let inner = self.inner.read();
@@ -212,7 +201,7 @@ impl Dispatcher {
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .send_report_handshake(&host_output, method, inner.confirmations)
+            .join_group(&host_output, inner.confirmations)
             .await?;
 
         Ok(receipt)

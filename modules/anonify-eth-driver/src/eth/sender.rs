@@ -46,22 +46,21 @@ impl EthSender {
         .await
     }
 
-    pub async fn send_report_handshake(
+    pub async fn join_group(
         &self,
         host_output: &host_output::JoinGroup,
-        method: &str,
         confirmations: usize,
     ) -> Result<TransactionReceipt> {
-        info!("Sending a handshake to blockchain: {:?}", host_output);
+        info!("join_group to blockchain: {:?}", host_output);
         Retry::new(
-            "send_report_handshake",
+            "join_group",
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(call_with_conf_retry_condition)
         .spawn_async(|| async {
             self.contract
-                .send_report_handshake(host_output.clone(), method, confirmations)
+                .join_group(host_output.clone(), confirmations)
                 .await
         })
         .await

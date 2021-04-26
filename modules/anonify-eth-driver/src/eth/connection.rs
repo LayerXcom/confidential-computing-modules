@@ -50,10 +50,9 @@ impl Web3Contract {
         })
     }
 
-    pub async fn send_report_handshake(
+    pub async fn join_group(
         &self,
         output: host_output::JoinGroup,
-        method: &str,
         confirmations: usize,
     ) -> Result<TransactionReceipt> {
         let ecall_output = output
@@ -67,7 +66,7 @@ impl Web3Contract {
             Some(handshake) => self
                 .contract
                 .call_with_confirmations(
-                    method,
+                    "joinGroup",
                     (
                         report,
                         report_sig,
@@ -84,7 +83,7 @@ impl Web3Contract {
             None => self
                 .contract
                 .call_with_confirmations(
-                    method,
+                    "joinGroup",
                     (
                         report,
                         report_sig,
