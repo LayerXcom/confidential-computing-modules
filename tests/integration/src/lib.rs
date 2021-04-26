@@ -22,6 +22,8 @@ const ACCOUNT_INDEX: usize = 0;
 const PASSWORD: &str = "anonify0101";
 #[cfg(test)]
 const CONFIRMATIONS: usize = 0;
+#[cfg(test)]
+const SIGNER_PRI_KEY: &str = "5c7a050c7b0e3a6896e9667a6dff3a6b389c665aaed218c352071890c05520ee";
 
 pub static ETH_URL: Lazy<String> =
     Lazy::new(|| env::var("ETH_URL").unwrap_or("http://172.16.0.2:8545".to_string()));
@@ -32,11 +34,6 @@ pub static CHAIN_ID: Lazy<u64> = Lazy::new(|| env::var("CHAIN_ID")
     .unwrap()
 );
 
-pub static SIGNER_PRI_KEY: Lazy<String> = Lazy::new(|| env::var("SIGNER_PRI_KEY")
-        .unwrap_or("5c7a050c7b0e3a6896e9667a6dff3a6b389c665aaed218c352071890c05520ee"
-        .to_string()
-    )
-);
 pub async fn get_enclave_encryption_key(
     contract_addr: Address,
     dispatcher: &Dispatcher,

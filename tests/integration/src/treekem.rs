@@ -37,7 +37,7 @@ async fn test_treekem_key_rotation() {
         .get_account(ACCOUNT_INDEX, Some(PASSWORD))
         .await
         .unwrap();
-    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
+    let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
             &*FACTORY_BIN_PATH,
@@ -71,12 +71,12 @@ async fn test_treekem_key_rotation() {
         .unwrap();
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
-    println!("Deployer account_id: {:?}", deployer_addr);
+    println!("Deployer account_id: {:?}", signer.address);
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
     dispatcher
-        .join_group(deployer_addr, gas, JOIN_GROUP_TREEKEM_CMD)
+        .join_group(signer.address.clone(), gas, JOIN_GROUP_TREEKEM_CMD)
         .await
         .unwrap();
 
@@ -91,7 +91,7 @@ async fn test_treekem_key_rotation() {
 
     // Send handshake
     let receipt = dispatcher
-        .handshake(deployer_addr.clone(), gas)
+        .handshake(signer.address..clone(), gas)
         .await
         .unwrap();
     println!("handshake receipt: {:?}", receipt);
@@ -123,7 +123,7 @@ async fn test_treekem_key_rotation() {
         .send_command(
             encrypted_command,
             None,
-            deployer_addr.clone(),
+            signer.address.clone(),
             gas,
             SEND_COMMAND_TREEKEM_CMD,
         )

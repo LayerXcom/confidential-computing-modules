@@ -37,7 +37,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
     //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
     //     .await
     //     .unwrap();
-    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
+    let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
             &*FACTORY_BIN_PATH,
@@ -178,7 +178,7 @@ async fn test_enclave_key_auto_notification() {
     //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
     //     .await
     //     .unwrap();
-    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
+    let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
             &*FACTORY_BIN_PATH,
@@ -353,7 +353,7 @@ async fn test_enclave_key_integration_eth_transfer() {
     //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
     //     .await
     //     .unwrap();
-    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
+    let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
             &*FACTORY_BIN_PATH,
@@ -557,7 +557,7 @@ async fn test_enclave_key_integration_eth_approve() {
     //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
     //     .await
     //     .unwrap();
-    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
+    let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
             &*FACTORY_BIN_PATH,
@@ -747,7 +747,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
     //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
     //     .await
     //     .unwrap();
-    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
+    let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
             &*FACTORY_BIN_PATH,
@@ -1138,7 +1138,7 @@ async fn test_enclave_key_integration_eth_mint() {
     //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
     //     .await
     //     .unwrap();
-    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
+    let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
             &*FACTORY_BIN_PATH,
@@ -1308,7 +1308,7 @@ async fn test_enclave_key_integration_eth_burn() {
     //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
     //     .await
     //     .unwrap();
-    let signer = Signer::new(&SIGNER_PRI_KEY).unwrap();
+    let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
             &*FACTORY_BIN_PATH,

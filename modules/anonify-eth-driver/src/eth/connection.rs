@@ -10,7 +10,7 @@ use anyhow::anyhow;
 use ethabi::{Topic, TopicFilter};
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
-use std::env;
+use std::{env, str::FromStr};
 use web3::{
     contract::{Contract, Options},
     transports::Http,
