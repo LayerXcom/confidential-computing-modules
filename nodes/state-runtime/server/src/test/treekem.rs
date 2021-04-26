@@ -506,7 +506,7 @@ async fn test_treekem_join_group_then_handshake() {
     )
     .await;
 
-    actix_rt::time::delay_for(time::Duration::from_millis(2000)).await;
+    actix_rt::time::delay_for(time::Duration::from_millis(2 * SYNC_TIME)).await;
 
     env::set_var("MY_ROSTER_IDX", "1");
     let enclave2 = EnclaveDir::new()

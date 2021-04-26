@@ -133,7 +133,7 @@ impl Dispatcher {
                         Ok(updated_states) => debug!("State updated: {:?}", updated_states),
                         Err(err) => error!("event fetched error: {:?}", err),
                     };
-                    actix_rt::time::delay_for(time::Duration::from_millis(sync_time)).await;
+                    actix_rt::time::delay_for(time::Duration::from_millis(2 * sync_time)).await;
                 }
             });
         });
