@@ -33,10 +33,6 @@ async fn test_treekem_key_rotation() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    let deployer_addr = deployer
-        .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-        .await
-        .unwrap();
     let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
