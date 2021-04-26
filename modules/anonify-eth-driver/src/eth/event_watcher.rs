@@ -454,7 +454,7 @@ impl InnerEnclaveLog {
                             CiphertextKind::EnclaveKey => {
                                 match EnclaveKeyCiphertext::decode(&mut &bytes[..]) {
                                     Ok(res) => CommandCiphertext::EnclaveKey(res) == *ciphertext,
-                                    Err(error) => {
+                                    Err(e) => {
                                         error!("EnclaveKeyCiphertext::decode error: {:?}", e);
                                         false
                                     }
