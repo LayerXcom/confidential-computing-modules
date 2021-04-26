@@ -90,7 +90,7 @@ impl Web3Contract {
                 .map_err(Into::into),
             None => self
                 .contract
-                .call_with_confirmations(
+                .signed_call_with_confirmations(
                     method,
                     (
                         report,
@@ -98,9 +98,9 @@ impl Web3Contract {
                         ecall_output.mrenclave_ver(),
                         ecall_output.roster_idx(),
                     ),
-                    output.signer,
                     Options::with(|opt| opt.gas = Some(gas.into())),
                     self.confirmations,
+                    &self.web3_signer.secret_key,
                 )
                 .await
                 .map_err(Into::into),
