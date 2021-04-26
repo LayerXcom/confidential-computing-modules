@@ -33,10 +33,6 @@ pub async fn test_enclave_key_integration_eth_construct() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    // let deployer_addr = deployer
-    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-    //     .await
-    //     .unwrap();
     let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
@@ -72,7 +68,6 @@ pub async fn test_enclave_key_integration_eth_construct() {
     let anonify_contract_addr = dispatcher.get_anonify_contract_address().unwrap();
 
     println!("Deployer account_id: {:?}", signer.address);
-    // println!("Deployer account_id: {:?}", deployer_addr);
     println!("factory contract address: {}", factory_contract_addr);
     println!("anonify contract address: {}", anonify_contract_addr);
 
@@ -174,10 +169,6 @@ async fn test_enclave_key_auto_notification() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    // let deployer_addr = deployer
-    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-    //     .await
-    //     .unwrap();
     let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
@@ -349,10 +340,6 @@ async fn test_enclave_key_integration_eth_transfer() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    // let deployer_addr = deployer
-    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-    //     .await
-    //     .unwrap();
     let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
@@ -553,10 +540,6 @@ async fn test_enclave_key_integration_eth_approve() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    // let deployer_addr = deployer
-    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-    //     .await
-    //     .unwrap();
     let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
@@ -743,10 +726,6 @@ async fn test_enclave_key_integration_eth_transfer_from() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    // let deployer_addr = deployer
-    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-    //     .await
-    //     .unwrap();
     let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
@@ -1134,10 +1113,6 @@ async fn test_enclave_key_integration_eth_mint() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    // let deployer_addr = deployer
-    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-    //     .await
-    //     .unwrap();
     let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
@@ -1304,10 +1279,6 @@ async fn test_enclave_key_integration_eth_burn() {
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
-    // let deployer_addr = deployer
-    //     .get_account(ACCOUNT_INDEX, Some(PASSWORD))
-    //     .await
-    //     .unwrap();
     let signer = Signer::new(SIGNER_PRI_KEY).unwrap();
     let factory_contract_addr = deployer
         .deploy(
