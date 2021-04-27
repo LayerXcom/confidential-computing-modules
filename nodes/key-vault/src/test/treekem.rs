@@ -2,7 +2,7 @@ use crate::Server as KeyVaultServer;
 use actix_web::{test, web, App};
 use frame_config::{ANONIFY_ABI_PATH, CMD_DEC_SECRET_DIR, FACTORY_ABI_PATH};
 use frame_host::EnclaveDir;
-use state_runtime_node_server::{handlers::*, Server as ERC20Server, SYNC_TIME};
+use state_runtime_node_server::{handlers::*, Server as ERC20Server};
 use std::{env, path::PathBuf, str::FromStr, sync::Arc, time};
 #[cfg(test)]
 use test_utils::tracing::logs_contain;

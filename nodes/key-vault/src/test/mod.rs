@@ -18,6 +18,9 @@ use web3::{contract::Options, types::Address};
 mod enclave_key;
 mod treekem;
 
+#[cfg(test)]
+const SYNC_TIME: u64 = 1500;
+
 const SR_DEC_KEY_FILE_NAME: &'static str = "sr_enclave_decryption_key";
 const KV_DEC_KEY_FILE_NAME: &'static str = "kv_enclave_decryption_key";
 

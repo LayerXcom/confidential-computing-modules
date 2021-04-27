@@ -12,9 +12,6 @@ mod test;
 
 const DEFAULT_GAS: u64 = 5_000_000;
 
-#[cfg(test)]
-pub use test::SYNC_TIME;
-
 #[derive(Debug, Clone)]
 pub struct Server {
     pub eid: sgx_enclave_id_t,

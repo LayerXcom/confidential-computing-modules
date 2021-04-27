@@ -19,7 +19,7 @@ mod enclave_key;
 mod treekem;
 
 #[cfg(test)]
-pub const SYNC_TIME: u64 = 1500;
+const SYNC_TIME: u64 = 1500;
 
 #[actix_rt::test]
 async fn test_health_check() {
