@@ -28,7 +28,7 @@ async fn test_treekem_backup_path_secret() {
     let key_vault_server_eid = key_vault_server_enclave.geteid();
     let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid).run().await);
     let _key_vault_app = test::init_service(App::new().data(key_vault_server.clone())).await;
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // Setup ERC20 application
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
@@ -53,6 +53,7 @@ async fn test_treekem_backup_path_secret() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -154,7 +155,7 @@ async fn test_treekem_recover_without_key_vault() {
     let key_vault_server_eid = key_vault_server_enclave.geteid();
     let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid).run().await);
     let _key_vault_app = test::init_service(App::new().data(key_vault_server.clone())).await;
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // Setup ERC20 application
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
@@ -179,6 +180,7 @@ async fn test_treekem_recover_without_key_vault() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -271,7 +273,7 @@ async fn test_treekem_manually_backup_all() {
     let key_vault_server_eid = key_vault_server_enclave.geteid();
     let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid).run().await);
     let _key_vault_app = test::init_service(App::new().data(key_vault_server.clone())).await;
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // Setup ERC20 application
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
@@ -300,6 +302,7 @@ async fn test_treekem_manually_backup_all() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -406,7 +409,7 @@ async fn test_treekem_manually_recover_all() {
     let key_vault_server_eid = key_vault_server_enclave.geteid();
     let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid).run().await);
     let _key_vault_app = test::init_service(App::new().data(key_vault_server.clone())).await;
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // Setup ERC20 application
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
@@ -435,6 +438,7 @@ async fn test_treekem_manually_recover_all() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
