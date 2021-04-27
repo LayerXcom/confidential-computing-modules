@@ -60,12 +60,6 @@ pub async fn handle_get_state(
         ),
     };
 
-    server
-        .dispatcher
-        .fetch_events(fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd)
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
     let state = server
         .dispatcher
         .get_state(req.ciphertext.clone())
