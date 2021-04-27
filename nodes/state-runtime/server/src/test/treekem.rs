@@ -36,6 +36,7 @@ async fn test_treekem_evaluate_access_policy_by_user_id_field() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -156,6 +157,7 @@ async fn test_treekem_multiple_messages() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -249,6 +251,7 @@ async fn test_treekem_skip_invalid_event() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -366,6 +369,7 @@ async fn test_treekem_node_recovery() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let recovered_enclave = EnclaveDir::new()
         .init_enclave(true)
@@ -532,7 +536,6 @@ async fn test_treekem_join_group_then_handshake() {
             ),
     )
     .await;
-
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     env::set_var("MY_ROSTER_IDX", "1");
@@ -554,6 +557,7 @@ async fn test_treekem_join_group_then_handshake() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // Party 1
 
@@ -778,6 +782,7 @@ async fn test_treekem_duplicated_out_of_order_request_from_same_user() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
