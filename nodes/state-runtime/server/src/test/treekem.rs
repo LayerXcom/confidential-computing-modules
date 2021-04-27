@@ -73,6 +73,7 @@ async fn test_treekem_evaluate_access_policy_by_user_id_field() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -96,6 +97,7 @@ async fn test_treekem_evaluate_access_policy_by_user_id_field() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -115,6 +117,7 @@ async fn test_treekem_evaluate_access_policy_by_user_id_field() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_server_error(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -185,6 +188,7 @@ async fn test_treekem_multiple_messages() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -204,6 +208,7 @@ async fn test_treekem_multiple_messages() {
             .to_request();
         let resp = test::call_service(&mut app, req).await;
         assert!(resp.status().is_success(), "response: {:?}", resp);
+        actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
     }
 
     let req = test::TestRequest::get()
@@ -276,6 +281,7 @@ async fn test_treekem_skip_invalid_event() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -295,6 +301,7 @@ async fn test_treekem_skip_invalid_event() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -319,6 +326,7 @@ async fn test_treekem_skip_invalid_event() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -395,6 +403,7 @@ async fn test_treekem_node_recovery() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -412,6 +421,7 @@ async fn test_treekem_node_recovery() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -448,6 +458,7 @@ async fn test_treekem_node_recovery() {
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -480,6 +491,7 @@ async fn test_treekem_node_recovery() {
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -615,6 +627,7 @@ async fn test_treekem_join_group_then_handshake() {
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -648,6 +661,7 @@ async fn test_treekem_join_group_then_handshake() {
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -676,6 +690,7 @@ async fn test_treekem_join_group_then_handshake() {
         .to_request();
     let resp = test::call_service(&mut app1, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // check the result of state transition in state-runtime 1
     let req = test::TestRequest::get()
@@ -706,6 +721,7 @@ async fn test_treekem_join_group_then_handshake() {
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // check the result of state transition in state-runtime 1
     env::set_var("ACCOUNT_INDEX", "0");
@@ -800,6 +816,7 @@ async fn test_treekem_duplicated_out_of_order_request_from_same_user() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -833,6 +850,7 @@ async fn test_treekem_duplicated_out_of_order_request_from_same_user() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -867,6 +885,7 @@ async fn test_treekem_duplicated_out_of_order_request_from_same_user() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -897,6 +916,7 @@ async fn test_treekem_duplicated_out_of_order_request_from_same_user() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -927,6 +947,7 @@ async fn test_treekem_duplicated_out_of_order_request_from_same_user() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
