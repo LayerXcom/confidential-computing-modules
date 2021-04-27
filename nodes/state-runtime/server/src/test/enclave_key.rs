@@ -322,6 +322,7 @@ async fn test_enclave_key_skip_invalid_event() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
