@@ -11,6 +11,8 @@ use integration_tests::set_env_vars;
 use rand_core::{CryptoRng, RngCore};
 use serde_json::json;
 use std::{env, path::Path, str::FromStr, sync::Arc};
+#[cfg(test)]
+use test_utils::tracing::logs_contain;
 use web3::{contract::Options, types::Address};
 
 mod enclave_key;
@@ -49,6 +51,7 @@ async fn test_health_check() {
     let req = test::TestRequest::get().uri("/api/v1/health").to_request();
     let resp = test::call_service(&mut healthy_app, req).await;
     assert_eq!(resp.status(), StatusCode::OK);
+    assert!(!logs_contain("ERROR"));
 }
 
 fn my_turn() {

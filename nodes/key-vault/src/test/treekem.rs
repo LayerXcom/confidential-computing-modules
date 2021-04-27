@@ -4,6 +4,8 @@ use frame_config::{ANONIFY_ABI_PATH, CMD_DEC_SECRET_DIR, FACTORY_ABI_PATH};
 use frame_host::EnclaveDir;
 use state_runtime_node_server::{handlers::*, Server as ERC20Server};
 use std::{env, path::PathBuf, str::FromStr, sync::Arc};
+#[cfg(test)]
+use test_utils::tracing::logs_contain;
 
 use super::*;
 
@@ -128,6 +130,7 @@ async fn test_treekem_backup_path_secret() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -245,6 +248,7 @@ async fn test_treekem_recover_without_key_vault() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -376,6 +380,7 @@ async fn test_treekem_manually_backup_all() {
     // check recovering remote path_secrets
     let recovered_remote_ids = get_remote_ids(env::var("MY_ROSTER_IDX").unwrap().to_string());
     assert_eq!(recovered_remote_ids, remote_ids);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -504,4 +509,5 @@ async fn test_treekem_manually_recover_all() {
     // check recovering local path_secrets
     let recovered_local_ids = get_local_ids();
     assert_eq!(recovered_local_ids, local_ids);
+    assert!(!logs_contain("ERROR"));
 }

@@ -4,6 +4,8 @@ use frame_config::{ANONIFY_ABI_PATH, ANONIFY_PARAMS_DIR, FACTORY_ABI_PATH};
 use frame_host::EnclaveDir;
 use state_runtime_node_server::{handlers::*, Server as ERC20Server};
 use std::{env, sync::Arc};
+#[cfg(test)]
+use test_utils::tracing::logs_contain;
 
 use super::*;
 
@@ -63,4 +65,5 @@ async fn test_enclave_key_backup() {
         .to_path_buf()
         .join(KV_DEC_KEY_FILE_NAME)
         .exists());
+    assert!(!logs_contain("ERROR"));
 }

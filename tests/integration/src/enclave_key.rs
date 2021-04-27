@@ -14,6 +14,8 @@ use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use frame_sodium::SodiumCiphertext;
 use serde_json::json;
+#[cfg(test)]
+use test_utils::tracing::logs_contain;
 
 use crate::{
     get_enclave_encryption_key, set_env_vars, ACCOUNT_INDEX, CONFIRMATIONS, ETH_URL, PASSWORD,
@@ -155,6 +157,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
     );
     assert_eq!(my_balance, total_supply);
     assert_eq!(actual_total_supply, total_supply);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -328,6 +331,7 @@ async fn test_enclave_key_auto_notification() {
         serde_json::from_value::<U64>(notified_state[0].state.clone()).unwrap(),
         U64::from_raw(70)
     );
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -532,6 +536,7 @@ async fn test_enclave_key_integration_eth_transfer() {
     assert_eq!(my_updated_state, 70);
     assert_eq!(other_updated_state, amount);
     assert_eq!(third_updated_state, 0);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -720,6 +725,7 @@ async fn test_enclave_key_integration_eth_approve() {
 
     assert_eq!(my_state, amount);
     assert_eq!(other_state, 0);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -1111,6 +1117,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
     assert_eq!(my_state_approved, 10);
     assert_eq!(other_state_approved, 0);
     assert_eq!(third_state_approved, 0);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -1280,6 +1287,7 @@ async fn test_enclave_key_integration_eth_mint() {
     assert_eq!(actual_total_supply, 150);
     assert_eq!(owner_balance, 100);
     assert_eq!(other_balance, amount);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -1479,4 +1487,5 @@ async fn test_enclave_key_integration_eth_burn() {
     assert_eq!(actual_total_supply.as_u64().unwrap(), 80); // 100 - 20(burn)
     assert_eq!(owner_balance, 70); // 100 - 30(transfer)
     assert_eq!(other_balance, 10); // 30 - 20(burn)
+    assert!(!logs_contain("ERROR"));
 }

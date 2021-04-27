@@ -9,6 +9,8 @@ use frame_config::{FACTORY_ABI_PATH, FACTORY_BIN_PATH};
 use frame_host::EnclaveDir;
 use frame_sodium::SodiumCiphertext;
 use serde_json::json;
+#[cfg(test)]
+use test_utils::tracing::logs_contain;
 
 use crate::{
     get_enclave_encryption_key, set_env_vars, set_env_vars_for_treekem, ACCOUNT_INDEX,
@@ -172,4 +174,5 @@ async fn test_treekem_key_rotation() {
     assert_eq!(my_state, total_supply);
     assert_eq!(other_state, 0);
     assert_eq!(third_state, 0);
+    assert!(!logs_contain("ERROR"));
 }

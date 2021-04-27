@@ -211,6 +211,7 @@ async fn test_enclave_key_multiple_messages() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 50);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -473,6 +474,7 @@ async fn test_enclave_key_node_recovery() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 80);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -691,6 +693,7 @@ async fn test_enclave_key_join_group_then_handshake() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 0);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
