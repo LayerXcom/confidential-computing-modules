@@ -135,7 +135,6 @@ exec_sr_treekem_node_tests \
   test_treekem_evaluate_access_policy_by_user_id_field \
   test_treekem_multiple_messages \
   test_treekem_skip_invalid_event \
-  test_treekem_node_recovery \
   test_treekem_join_group_then_handshake \
   test_treekem_duplicated_out_of_order_request_from_same_user
 
