@@ -52,20 +52,6 @@ pub async fn handle_get_state(
     server: web::Data<Arc<Server>>,
     req: web::Json<state_runtime_node_api::state::get::Request>,
 ) -> Result<HttpResponse> {
-    let (fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd) = match server.cmd_encryption_algo {
-        CmdEncryptionAlgo::EnclaveKey => (FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD, None),
-        CmdEncryptionAlgo::TreeKem => (
-            FETCH_CIPHERTEXT_TREEKEM_CMD,
-            Some(FETCH_HANDSHAKE_TREEKEM_CMD),
-        ),
-    };
-
-    server
-        .dispatcher
-        .fetch_events(fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd)
-        .await
-        .map_err(|e| ServerError::from(e))?;
-
     let state = server
         .dispatcher
         .get_state(req.ciphertext.clone())

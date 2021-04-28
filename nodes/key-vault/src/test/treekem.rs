@@ -3,7 +3,9 @@ use actix_web::{test, web, App};
 use frame_config::{ANONIFY_ABI_PATH, CMD_DEC_SECRET_DIR, FACTORY_ABI_PATH};
 use frame_host::EnclaveDir;
 use state_runtime_node_server::{handlers::*, Server as ERC20Server};
-use std::{env, path::PathBuf, str::FromStr, sync::Arc};
+use std::{env, path::PathBuf, str::FromStr, sync::Arc, time};
+#[cfg(test)]
+use test_utils::tracing::logs_contain;
 
 use super::*;
 
@@ -26,7 +28,7 @@ async fn test_treekem_backup_path_secret() {
     let key_vault_server_eid = key_vault_server_enclave.geteid();
     let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid).run().await);
     let _key_vault_app = test::init_service(App::new().data(key_vault_server.clone())).await;
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // Setup ERC20 application
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
@@ -51,6 +53,7 @@ async fn test_treekem_backup_path_secret() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -95,6 +98,7 @@ async fn test_treekem_backup_path_secret() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -110,6 +114,7 @@ async fn test_treekem_backup_path_secret() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     clear_local_path_secrets();
     // local
@@ -128,6 +133,7 @@ async fn test_treekem_backup_path_secret() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -149,7 +155,7 @@ async fn test_treekem_recover_without_key_vault() {
     let key_vault_server_eid = key_vault_server_enclave.geteid();
     let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid).run().await);
     let _key_vault_app = test::init_service(App::new().data(key_vault_server.clone())).await;
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // Setup ERC20 application
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
@@ -174,6 +180,7 @@ async fn test_treekem_recover_without_key_vault() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -218,6 +225,7 @@ async fn test_treekem_recover_without_key_vault() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -233,6 +241,7 @@ async fn test_treekem_recover_without_key_vault() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // stop key-vault server
     sgx_urts::rsgx_destroy_enclave(key_vault_server_eid).unwrap();
@@ -245,6 +254,7 @@ async fn test_treekem_recover_without_key_vault() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -263,7 +273,7 @@ async fn test_treekem_manually_backup_all() {
     let key_vault_server_eid = key_vault_server_enclave.geteid();
     let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid).run().await);
     let _key_vault_app = test::init_service(App::new().data(key_vault_server.clone())).await;
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // Setup ERC20 application
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
@@ -292,6 +302,7 @@ async fn test_treekem_manually_backup_all() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -326,6 +337,7 @@ async fn test_treekem_manually_backup_all() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -341,6 +353,7 @@ async fn test_treekem_manually_backup_all() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -372,10 +385,12 @@ async fn test_treekem_manually_backup_all() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // check recovering remote path_secrets
     let recovered_remote_ids = get_remote_ids(env::var("MY_ROSTER_IDX").unwrap().to_string());
     assert_eq!(recovered_remote_ids, remote_ids);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -394,7 +409,7 @@ async fn test_treekem_manually_recover_all() {
     let key_vault_server_eid = key_vault_server_enclave.geteid();
     let key_vault_server = Arc::new(KeyVaultServer::new(key_vault_server_eid).run().await);
     let _key_vault_app = test::init_service(App::new().data(key_vault_server.clone())).await;
-    std::thread::sleep(std::time::Duration::from_secs(1));
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // Setup ERC20 application
     env::set_var("ENCLAVE_PKG_NAME", "erc20");
@@ -423,6 +438,7 @@ async fn test_treekem_manually_recover_all() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/enclave_encryption_key")
@@ -457,6 +473,7 @@ async fn test_treekem_manually_recover_all() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -472,6 +489,7 @@ async fn test_treekem_manually_recover_all() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -500,8 +518,10 @@ async fn test_treekem_manually_recover_all() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // check recovering local path_secrets
     let recovered_local_ids = get_local_ids();
     assert_eq!(recovered_local_ids, local_ids);
+    assert!(!logs_contain("ERROR"));
 }

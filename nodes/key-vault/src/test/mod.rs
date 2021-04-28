@@ -11,10 +11,15 @@ use serde_json::json;
 #[cfg(test)]
 use std::str::FromStr;
 use std::{env, fs, path::Path, sync::Arc};
+#[cfg(test)]
+use test_utils::tracing::logs_contain;
 use web3::{contract::Options, types::Address};
 
 mod enclave_key;
 mod treekem;
+
+#[cfg(test)]
+const SYNC_TIME: u64 = 1500;
 
 const SR_DEC_KEY_FILE_NAME: &'static str = "sr_enclave_decryption_key";
 const KV_DEC_KEY_FILE_NAME: &'static str = "kv_enclave_decryption_key";
@@ -51,12 +56,13 @@ async fn test_health_check() {
     let req = test::TestRequest::get().uri("/api/v1/health").to_request();
     let resp = test::call_service(&mut healthy_app, req).await;
     assert_eq!(resp.status(), StatusCode::OK);
+    assert!(!logs_contain("ERROR"));
 }
 
 pub static SUBSCRIBER_INIT: Lazy<()> = Lazy::new(|| {
-    use test_utils::tracing::{GLOBAL_TRACING_BUF, TracingWriter};
-    use tracing_subscriber::util::SubscriberInitExt;
+    use test_utils::tracing::{TracingWriter, GLOBAL_TRACING_BUF};
     use tracing_core::Dispatch;
+    use tracing_subscriber::util::SubscriberInitExt;
 
     let mock_writer = TracingWriter::new(&*GLOBAL_TRACING_BUF);
 

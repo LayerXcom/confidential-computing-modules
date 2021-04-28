@@ -43,7 +43,7 @@ impl AppKeyChain {
         ))
     }
 
-    /// Decrypt messag with current member's application secret.
+    /// Decrypt message with current member's application secret.
     pub fn decrypt_msg(
         &self,
         app_msg: &TreeKemCiphertext,
@@ -58,7 +58,7 @@ impl AppKeyChain {
             _ => {
                 ensure!(
                     app_msg.epoch() == self.epoch,
-                    "The received messages's epoch ({:?}) differs from the current key_chain's ({:?})",
+                    "The received message's epoch ({:?}) differs from the current key_chain's ({:?})",
                     app_msg.epoch(),
                     self.epoch
                 );
@@ -67,7 +67,7 @@ impl AppKeyChain {
                     self.key_nonce_gen(app_msg.roster_idx() as usize)?;
                 ensure!(
                     app_msg.generation() == generation,
-                    "The received messages's generation ({:?}) differs from the current AppMemberSecret's ({:?})", app_msg.generation(), generation
+                    "The received message's generation ({:?}) differs from the current AppMemberSecret's ({:?})", app_msg.generation(), generation
                 );
 
                 let mut ciphertext = app_msg.encrypted_state_ref().to_vec();

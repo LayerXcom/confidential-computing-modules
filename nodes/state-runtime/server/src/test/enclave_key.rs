@@ -71,6 +71,7 @@ async fn test_enclave_key_evaluate_access_policy_by_user_id_field() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -94,6 +95,7 @@ async fn test_enclave_key_evaluate_access_policy_by_user_id_field() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -105,6 +107,7 @@ async fn test_enclave_key_evaluate_access_policy_by_user_id_field() {
     assert_eq!(balance.state, 90);
 
     // Sending invalid user_id, so this request should be failed
+    logs_clear();
     let transfer_10_req_json = transfer_10_req_fn(&mut csprng, &enc_key, 3, Some(INVALID_USER_ID));
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
@@ -112,6 +115,7 @@ async fn test_enclave_key_evaluate_access_policy_by_user_id_field() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_server_error(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -121,6 +125,7 @@ async fn test_enclave_key_evaluate_access_policy_by_user_id_field() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90);
+    assert!(logs_contain("Internal Server Error")); // Invalid user_id. user_id in the ciphertext
 }
 
 #[actix_rt::test]
@@ -180,6 +185,7 @@ async fn test_enclave_key_multiple_messages() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -199,6 +205,7 @@ async fn test_enclave_key_multiple_messages() {
             .to_request();
         let resp = test::call_service(&mut app, req).await;
         assert!(resp.status().is_success(), "response: {:?}", resp);
+        actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
     }
 
     let req = test::TestRequest::get()
@@ -209,6 +216,7 @@ async fn test_enclave_key_multiple_messages() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 50);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -269,6 +277,7 @@ async fn test_enclave_key_skip_invalid_event() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -279,7 +288,7 @@ async fn test_enclave_key_skip_invalid_event() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
 
-    // state transition should not be occured by this transaction.
+    // state transition should not be occurred by this transaction.
     logs_clear();
     let transfer_110_req = transfer_110_req_fn(&mut csprng, &enc_key, 2, None);
     let req = test::TestRequest::post()
@@ -288,6 +297,7 @@ async fn test_enclave_key_skip_invalid_event() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -297,8 +307,14 @@ async fn test_enclave_key_skip_invalid_event() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
-    assert!(logs_contain("ERROR"));
+    assert!(logs_contain(
+        "Error in enclave (InsertCiphertextWorkflow::exec)"
+    )); // transfer amount (U64(110)) exceeds balance (U64(100))
+    assert!(logs_contain(
+        "A event is skipped because of occurring error in enclave"
+    ));
 
+    logs_clear();
     let transfer_10_req = transfer_10_req_fn(&mut csprng, &enc_key, 3, None);
     let req = test::TestRequest::post()
         .uri("/api/v1/state")
@@ -306,6 +322,7 @@ async fn test_enclave_key_skip_invalid_event() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -315,6 +332,7 @@ async fn test_enclave_key_skip_invalid_event() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -380,6 +398,7 @@ async fn test_enclave_key_node_recovery() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -397,6 +416,7 @@ async fn test_enclave_key_node_recovery() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -455,6 +475,7 @@ async fn test_enclave_key_node_recovery() {
         .to_request();
     let resp = test::call_service(&mut recovered_app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -464,6 +485,7 @@ async fn test_enclave_key_node_recovery() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 80);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -493,6 +515,7 @@ async fn test_enclave_key_join_group_then_handshake() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     env::set_var("MY_ROSTER_IDX", "1");
     let enclave2 = EnclaveDir::new()
@@ -512,6 +535,7 @@ async fn test_enclave_key_join_group_then_handshake() {
             ),
     )
     .await;
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // Party 1
 
@@ -585,6 +609,7 @@ async fn test_enclave_key_join_group_then_handshake() {
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -602,6 +627,7 @@ async fn test_enclave_key_join_group_then_handshake() {
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -630,6 +656,7 @@ async fn test_enclave_key_join_group_then_handshake() {
         .to_request();
     let resp = test::call_service(&mut app1, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // check the result of state transition in state-runtime 1
     let req = test::TestRequest::get()
@@ -660,6 +687,7 @@ async fn test_enclave_key_join_group_then_handshake() {
         .to_request();
     let resp = test::call_service(&mut app2, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     // check the result of state transition in state-runtime 1
     env::set_var("ACCOUNT_INDEX", "0");
@@ -682,6 +710,7 @@ async fn test_enclave_key_join_group_then_handshake() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 0);
+    assert!(!logs_contain("ERROR"));
 }
 
 #[actix_rt::test]
@@ -752,6 +781,7 @@ async fn test_enclave_key_duplicated_out_of_order_request_from_same_user() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -785,6 +815,7 @@ async fn test_enclave_key_duplicated_out_of_order_request_from_same_user() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -806,6 +837,7 @@ async fn test_enclave_key_duplicated_out_of_order_request_from_same_user() {
     assert_eq!(user_counter.user_counter, 2);
 
     // try second duplicated request
+    logs_clear();
     let transfer_10 = transfer_10_req_fn(
         &mut csprng,
         &enc_key,
@@ -818,6 +850,7 @@ async fn test_enclave_key_duplicated_out_of_order_request_from_same_user() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -827,8 +860,15 @@ async fn test_enclave_key_duplicated_out_of_order_request_from_same_user() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90); // failed
+    assert!(logs_contain(
+        "Error in enclave (InsertCiphertextWorkflow::exec)"
+    )); // InvalidUserCounter
+    assert!(logs_contain(
+        "A event is skipped because of occurring error in enclave"
+    ));
 
     // send out of order request
+    logs_clear();
     let transfer_10 = transfer_10_req_fn(
         &mut csprng,
         &enc_key,
@@ -841,6 +881,7 @@ async fn test_enclave_key_duplicated_out_of_order_request_from_same_user() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -850,8 +891,15 @@ async fn test_enclave_key_duplicated_out_of_order_request_from_same_user() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90); // failed
+    assert!(logs_contain(
+        "Error in enclave (InsertCiphertextWorkflow::exec)"
+    )); // InvalidUserCounter
+    assert!(logs_contain(
+        "A event is skipped because of occurring error in enclave"
+    ));
 
     // then, send correct request
+    logs_clear();
     let transfer_10 = transfer_10_req_fn(
         &mut csprng,
         &enc_key,
@@ -864,6 +912,7 @@ async fn test_enclave_key_duplicated_out_of_order_request_from_same_user() {
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
+    actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
 
     let req = test::TestRequest::get()
         .uri("/api/v1/state")
@@ -873,4 +922,5 @@ async fn test_enclave_key_duplicated_out_of_order_request_from_same_user() {
     assert!(resp.status().is_success(), "response: {:?}", resp);
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 80); // success
+    assert!(!logs_contain("ERROR"));
 }
