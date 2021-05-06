@@ -3,7 +3,12 @@ use crate::{CmdEncryptionAlgo, Server, DEFAULT_GAS};
 use actix_web::{web, HttpResponse, Responder};
 use anonify_ecall_types::cmd::*;
 use std::sync::Arc;
+use uuid::Uuid;
 
+#[tracing::instrument(
+    skip(server),
+    fields(request_id = %Uuid::new_v4())
+)]
 pub async fn handle_health_check(server: web::Data<Arc<Server>>) -> impl Responder {
     if server.dispatcher.is_healthy() {
         HttpResponse::Ok().finish()
@@ -155,7 +160,7 @@ pub async fn handle_register_report(server: web::Data<Arc<Server>>) -> Result<Ht
 #[cfg(feature = "backup-enable")]
 #[tracing::instrument(
     skip(server),
-    fielads(request_id = %Uuid::new_v4())
+    fields(request_id = %Uuid::new_v4())
 )]
 pub async fn handle_all_backup_to(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     server.dispatcher.all_backup_to()?;
