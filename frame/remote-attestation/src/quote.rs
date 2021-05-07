@@ -131,7 +131,7 @@ impl QuoteTarget {
                 std::ptr::null(),                                     // p_sigrl
                 0,                                                    // sigrl_len
                 &self.enclave_report.unwrap() as *const sgx_report_t, // enclave_report must be set
-                sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE,      // quote_type
+                sgx_quote_sign_type_t::SGX_LINKABLE_SIGNATURE,        // quote_type
                 &spid as *const sgx_spid_t,                           // p_spid
                 std::ptr::null(),                                     // p_nonce
                 std::ptr::null_mut(),                                 // p_qe_report
