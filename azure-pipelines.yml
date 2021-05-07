@@ -19,3 +19,39 @@ stages:
     - script: docker-compose down
       condition: always()
       displayName: 'Shutdown'
+
+- stage: Docker_Build_and_Push
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  jobs:
+  - job: Docker
+    pool:
+      name: 'AnonifyDev'
+    steps:
+    - task: Docker@2
+      displayName: Build and Push erc20 image
+      inputs:
+        command: buildAndPush
+        containerRegistry: anonify-ci-cd-acr
+        repository: erc20-state-runtime
+        tags: latest
+        dockerfile: erc20.Dockerfile
+        buildContext: ./docker
+    - task: Docker@2
+      displayName: Build and Push key-vault for erc20 image
+      inputs:
+        command: buildAndPush
+        containerRegistry: anonify-ci-cd-acr
+        repository: key-vault-for-erc20
+        tags: latest
+        dockerfile: keyvault.Dockerfile
+        buildContext: ./docker
+    - script: docker image prune -f
+      displayName: Remove dangling images
+    - script: |
+        export SPID=$(SPID)
+        export SUB_KEY=$(SUB_KEY)
+        docker-compose -f prd-docker-compose.yml up -d
+      displayName: 'Run prd env compose tests'
+    - script: docker-compose -f prd-docker-compose.yml down
+      displayName: 'compose down'
+      
