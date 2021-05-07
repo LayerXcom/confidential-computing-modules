@@ -10,6 +10,7 @@ use anyhow::anyhow;
 use ethabi::{Topic, TopicFilter};
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
+use opentelemetry::{trace::TraceContextExt, Context};
 use std::{env, fs, path::Path};
 use web3::{
     contract::{Contract, Options},
@@ -131,6 +132,9 @@ impl Web3Contract {
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
         let gas = output.gas;
+        let ctx = Context::current();
+        let trace_id = ctx.span().span_context().trace_id().to_byte_array();
+        tracing::info!("trace_id in send_command: {:?}", trace_id);
 
         match ecall_output.ciphertext() {
             CommandCiphertext::TreeKem(ciphertext) => self

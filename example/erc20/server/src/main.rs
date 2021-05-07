@@ -1,11 +1,23 @@
 use actix_web::{web, App, HttpServer};
+use actix_web_opentelemetry::RequestTracing;
 use frame_host::EnclaveDir;
 use state_runtime_node_server::{handlers::*, Server};
 use std::{env, io, sync::Arc};
+use tracing_subscriber::{prelude::*, Registry};
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
-    tracing_subscriber::fmt::init();
+    let (tracer, _uninstall) = opentelemetry_jaeger::new_pipeline()
+        .with_service_name("erc20")
+        .install()
+        .unwrap();
+
+    Registry::default()
+        .with(tracing_subscriber::EnvFilter::new("INFO"))
+        .with(tracing_subscriber::fmt::layer())
+        .with(tracing_opentelemetry::layer().with_tracer(tracer))
+        .init();
+
     let my_node_url = env::var("MY_NODE_URL").expect("MY_NODE_URL is not set.");
     let num_workers: usize = env::var("NUM_WORKERS")
         .unwrap_or_else(|_| "16".to_string())
@@ -22,6 +34,7 @@ async fn main() -> io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .wrap(RequestTracing::new())
             .data(server.clone())
             .route("/api/v1/health", web::get().to(handle_health_check))
             .route("/api/v1/state", web::post().to(handle_send_command))

@@ -262,6 +262,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix-web-opentelemetry"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d10b9d36fd431016fb3ad4be804c7c35f685661a327bdc1a15aaff8eff8bcc4b"
+dependencies = [
+ "actix-http",
+ "actix-web",
+ "futures 0.3.7",
+ "opentelemetry 0.11.2",
+ "opentelemetry-semantic-conventions",
+ "serde 1.0.117",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -405,7 +419,7 @@ dependencies = [
  "frame-types",
  "hex",
  "once_cell 1.5.2",
- "opentelemetry",
+ "opentelemetry 0.13.0",
  "parking_lot 0.10.2",
  "serde_json 1.0.59",
  "sgx_types 1.1.3",
@@ -1329,6 +1343,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "dashmap"
+version = "4.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e77a43b28d0668df09411cb0bc9a8c2adc40f9a048afe863e05fd43251e8e39c"
+dependencies = [
+ "cfg-if 1.0.0",
+ "num_cpus",
+]
+
+[[package]]
 name = "derive_more"
 version = "0.99.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1542,9 +1566,11 @@ name = "erc20-server"
 version = "0.5.4"
 dependencies = [
  "actix-web",
+ "actix-web-opentelemetry",
  "anonify-eth-driver",
  "failure",
  "frame-host",
+ "opentelemetry-jaeger",
  "state-runtime-node-server",
  "tracing-subscriber",
 ]
@@ -2532,6 +2558,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "integer-encoding"
+version = "1.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "48dc51180a9b377fd75814d0cc02199c20f8e99433d6762f650d39cdbbd3b56f"
+
+[[package]]
 name = "integration-tests"
 version = "0.5.4"
 dependencies = [
@@ -3158,6 +3190,26 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3434e2a9d2aec539d91f4251bf9047cd53b4d3f386f9d336f4c8076c72a5256"
+dependencies = [
+ "async-trait",
+ "dashmap",
+ "fnv 1.0.7",
+ "futures 0.3.7",
+ "js-sys",
+ "lazy_static",
+ "percent-encoding 2.1.0",
+ "pin-project 0.4.27",
+ "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex 1.4.2",
+ "thiserror 1.0.22",
+ "tokio 0.2.22",
+]
+
+[[package]]
+name = "opentelemetry"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b91cea1dfd50064e52db033179952d18c770cbc5dfefc8eba45d619357ba3914"
@@ -3172,6 +3224,38 @@ dependencies = [
  "thiserror 1.0.22",
  "tokio 1.5.0",
  "tokio-stream",
+]
+
+[[package]]
+name = "opentelemetry-jaeger"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4c604a73595f605a852c431ef9c6bbacc7b911f094900905fd2f684b6fc44b4"
+dependencies = [
+ "async-trait",
+ "lazy_static",
+ "opentelemetry 0.11.2",
+ "thiserror 1.0.22",
+ "thrift",
+ "tokio 0.2.22",
+]
+
+[[package]]
+name = "opentelemetry-semantic-conventions"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3839dd2c931dc1aabcf964623ad74478fa97b3a88ad073d9e107aea36520c21d"
+dependencies = [
+ "opentelemetry 0.11.2",
+]
+
+[[package]]
+name = "ordered-float"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3305af35278dd29f46fcdd139e0b1fbfae2153f0e5928b39b035542dd31e37b7"
+dependencies = [
+ "num-traits 0.2.14",
 ]
 
 [[package]]
@@ -4922,6 +5006,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d050e60b33d41c19108b32cea32164033a9013fe3b46cbd4457559bfbf77afaa"
 dependencies = [
  "num_cpus",
+]
+
+[[package]]
+name = "thrift"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c6d965454947cc7266d22716ebfd07b18d84ebaf35eec558586bbb2a8cb6b5b"
+dependencies = [
+ "byteorder 1.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "integer-encoding",
+ "log 0.4.11",
+ "ordered-float",
+ "threadpool",
 ]
 
 [[package]]
