@@ -3,12 +3,8 @@ use crate::{CmdEncryptionAlgo, Server, DEFAULT_GAS};
 use actix_web::{web, HttpResponse, Responder};
 use anonify_ecall_types::cmd::*;
 use std::sync::Arc;
-use uuid::Uuid;
 
-#[tracing::instrument(
-    skip(server),
-    fields(request_id = %Uuid::new_v4())
-)]
+#[tracing::instrument(skip(server))]
 pub async fn handle_health_check(server: web::Data<Arc<Server>>) -> impl Responder {
     if server.dispatcher.is_healthy() {
         HttpResponse::Ok().finish()
@@ -17,10 +13,7 @@ pub async fn handle_health_check(server: web::Data<Arc<Server>>) -> impl Respond
     }
 }
 
-#[tracing::instrument(
-    skip(server, req),
-    fields(request_id = %Uuid::new_v4())
-)]
+#[tracing::instrument(skip(server, req))]
 pub async fn handle_send_command(
     server: web::Data<Arc<Server>>,
     req: web::Json<state_runtime_node_api::state::post::Request>,
@@ -45,10 +38,7 @@ pub async fn handle_send_command(
     Ok(HttpResponse::Accepted().json(state_runtime_node_api::state::post::Response { tx_hash }))
 }
 
-#[tracing::instrument(
-    skip(server),
-    fields(request_id = %Uuid::new_v4())
-)]
+#[tracing::instrument(skip(server))]
 pub async fn handle_key_rotation(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     let tx_hash = server
         .dispatcher
@@ -61,10 +51,7 @@ pub async fn handle_key_rotation(server: web::Data<Arc<Server>>) -> Result<HttpR
 }
 
 /// Fetch events from blockchain nodes manually, and then get the state data from enclave.
-#[tracing::instrument(
-    skip(server, req),
-    fields(request_id = %Uuid::new_v4())
-)]
+#[tracing::instrument(skip(server, req))]
 pub async fn handle_get_state(
     server: web::Data<Arc<Server>>,
     req: web::Json<state_runtime_node_api::state::get::Request>,
@@ -78,10 +65,7 @@ pub async fn handle_get_state(
 }
 
 /// Fetch events from blockchain nodes manually, and then get the user counter from enclave.
-#[tracing::instrument(
-    skip(server, req),
-    fields(request_id = %Uuid::new_v4())
-)]
+#[tracing::instrument(skip(server, req))]
 pub async fn handle_get_user_counter(
     server: web::Data<Arc<Server>>,
     req: web::Json<state_runtime_node_api::user_counter::get::Request>,
@@ -109,10 +93,7 @@ pub async fn handle_get_user_counter(
         .json(state_runtime_node_api::user_counter::get::Response { user_counter }))
 }
 
-#[tracing::instrument(
-    skip(server),
-    fields(request_id = %Uuid::new_v4())
-)]
+#[tracing::instrument(skip(server))]
 pub async fn handle_enclave_encryption_key(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     let enclave_encryption_key = server
         .dispatcher
@@ -126,10 +107,7 @@ pub async fn handle_enclave_encryption_key(server: web::Data<Arc<Server>>) -> Re
     ))
 }
 
-#[tracing::instrument(
-    skip(server, req),
-    fields(request_id = %Uuid::new_v4())
-)]
+#[tracing::instrument(skip(server, req))]
 pub async fn handle_register_notification(
     server: web::Data<Arc<Server>>,
     req: web::Json<state_runtime_node_api::register_notification::post::Request>,
@@ -142,10 +120,7 @@ pub async fn handle_register_notification(
     Ok(HttpResponse::Ok().finish())
 }
 
-#[tracing::instrument(
-    skip(server),
-    fields(request_id = %Uuid::new_v4())
-)]
+#[tracing::instrument(skip(server))]
 pub async fn handle_register_report(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     let tx_hash = server
         .dispatcher
@@ -158,10 +133,7 @@ pub async fn handle_register_report(server: web::Data<Arc<Server>>) -> Result<Ht
 }
 
 #[cfg(feature = "backup-enable")]
-#[tracing::instrument(
-    skip(server),
-    fields(request_id = %Uuid::new_v4())
-)]
+#[tracing::instrument(skip(server))]
 pub async fn handle_all_backup_to(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     server.dispatcher.all_backup_to()?;
 
@@ -169,10 +141,7 @@ pub async fn handle_all_backup_to(server: web::Data<Arc<Server>>) -> Result<Http
 }
 
 #[cfg(feature = "backup-enable")]
-#[tracing::instrument(
-    skip(server),
-    fields(request_id = %Uuid::new_v4())
-)]
+#[tracing::instrument(skip(server))]
 pub async fn handle_all_backup_from(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     server.dispatcher.all_backup_from()?;
 
