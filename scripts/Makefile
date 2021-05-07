@@ -128,6 +128,7 @@ all: $(Signed_RustEnclave_Name)
 ######## EDL Objects ########
 
 $(Enclave_EDL_Files): $(SGX_EDGER8R) $(ANONIFY_EDL_DIR)/$(EDL_FILE)
+	@echo "1"
 	mkdir -p $(ANONIFY_BUILD_DIR)
 	$(SGX_EDGER8R) --trusted $(ANONIFY_EDL_DIR)/$(EDL_FILE) --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --trusted-dir $(ANONIFY_BUILD_DIR)
 	$(SGX_EDGER8R) --untrusted $(ANONIFY_EDL_DIR)/$(EDL_FILE) --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --untrusted-dir $(ANONIFY_BUILD_DIR)
@@ -136,16 +137,19 @@ $(Enclave_EDL_Files): $(SGX_EDGER8R) $(ANONIFY_EDL_DIR)/$(EDL_FILE)
 ######## Enclave Objects ########
 
 $(ANONIFY_BUILD_DIR)/$(T_O_FILE): $(Enclave_EDL_Files)
+	@echo "2"
 	@$(CC) $(RustEnclave_Compile_Flags) -c $(ANONIFY_BUILD_DIR)/$(T_C_FILE) -o $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
 	@echo "CC   <=  $<"
 
 $(Rust_Enclave_Name): $(Rust_Enclave_Files)
+	@echo "3"
 	@echo "Rust_Enclave_Name <= $(PWD)"
 	@cd $(ANONIFY_ROOT_DIR)/$(ENCLAVE_DIR) && RUST_LOG=debug cargo build $(CARGO_FLAGS) $(RustEnclave_Feature_Flags)
 	mkdir -p $(CUSTOM_LIBRARY_PATH)
 	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/lib$(Rust_Enclave_Lib_Name).a
 
-$(RustEnclave_Name): $(Rust_Enclave_Name) $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
+$(RustEnclave_Name): $(ANONIFY_BUILD_DIR)/$(T_O_FILE) $(Rust_Enclave_Name)
+	@echo "4"
 	@$(CXX) $(ANONIFY_BUILD_DIR)/$(T_O_FILE) -o $@ $(RustEnclave_Link_Flags)
 	@echo "LINK =>  $@"
 
@@ -153,3 +157,19 @@ $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 	mkdir -p $(ANONIFY_BIN_DIR)
 	@$(SGX_ENCLAVE_SIGNER) sign -key $(CONFIG_DIR)/test_enclave_signing.pem -enclave $(RustEnclave_Name) -out $@ -config $(CONFIG_DIR)/$(Enclave_Config_File_Name) -dumpfile $(ANONIFY_BIN_DIR)/$(Measurement_File_Name)
 	@echo "SIGN =>  $@"
+
+# Azure Key Vault管理の鍵で署名: https://docs.microsoft.com/ja-jp/rest/api/keyvault/sign/sign
+gen-data.hex: $(RustEnclave_Name)
+	@echo "5"
+	mkdir -p $(ANONIFY_BIN_DIR)
+	@$(SGX_ENCLAVE_SIGNER) gendata -enclave $(RustEnclave_Name) -config $(CONFIG_DIR)/$(Enclave_Config_File_Name) -out $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).hex
+	@$(SGX_ENCLAVE_SIGNER) dump -enclave $(RustEnclave_Name) -dumpfile $(ANONIFY_BIN_DIR)/$(Measurement_File_Name)
+
+gen-signed.so:
+	@$(SGX_ENCLAVE_SIGNER) catsig \
+		-enclave $(RustEnclave_Name) \
+		-config $(CONFIG_DIR)/$(Enclave_Config_File_Name) \
+		-out $(Signed_RustEnclave_Name) \
+		-key $(CONFIG_DIR)/enclave_pub.pem \
+		-sig $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME)_signed.hex \
+		-unsigned $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).hex
