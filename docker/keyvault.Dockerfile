@@ -21,8 +21,9 @@ RUN source /opt/sgxsdk/environment && \
     export SGX_MODE=HW && \
     export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
     cd scripts && \
-    make ENCLAVE_DIR=nodes/key-vault/enclave ENCLAVE_PKG_NAME=key_vault CARGO_FLAGS=--release && \
-    cd ../nodes/key-vault/server && \
+    make ENCLAVE_DIR=example/erc20/enclave ENCLAVE_PKG_NAME=erc20 CARGO_FLAGS=--release && \
+    make ENCLAVE_DIR=example/key-vault/enclave ENCLAVE_PKG_NAME=key_vault CARGO_FLAGS=--release && \
+    cd ../example/key-vault/server && \
     RUST_BACKTRACE=1 RUST_LOG=debug /root/.cargo/bin/cargo build --release
 
 # ===== SECOND STAGE ======
@@ -32,7 +33,10 @@ LABEL maintainer="osuke.sudo@layerx.co.jp"
 WORKDIR /root/anonify
 
 RUN cd /root/anonify
+COPY --from=builder /root/anonify/config/ias_root_cert.pem ./config/ias_root_cert.pem
 COPY --from=builder /root/anonify/.anonify/key_vault.signed.so ./.anonify/key_vault.signed.so
-COPY --from=builder /root/anonify/target/release/key-vault-node-server ./target/release/
+COPY --from=builder /root/anonify/.anonify/erc20_measurement.txt ./.anonify/erc20_measurement.txt
+COPY --from=builder /root/anonify/.anonify/key_vault_measurement.txt ./.anonify/key_vault_measurement.txt
+COPY --from=builder /root/anonify/target/release/key-vault-server ./target/release/
 
-CMD ["./target/release/key-vault-node-server"]
+CMD ["./target/release/key-vault-server"]
