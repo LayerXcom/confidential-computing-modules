@@ -62,6 +62,11 @@ impl Web3Contract {
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
         let gas = output.gas;
+        let trace_id = Context::current()
+            .span()
+            .span_context()
+            .trace_id()
+            .to_byte_array();
 
         match ecall_output.handshake() {
             Some(handshake) => self
@@ -74,6 +79,7 @@ impl Web3Contract {
                         handshake.to_vec(),
                         ecall_output.mrenclave_ver(),
                         ecall_output.roster_idx(),
+                        trace_id,
                     ),
                     output.signer,
                     Options::with(|opt| opt.gas = Some(gas.into())),
@@ -90,6 +96,7 @@ impl Web3Contract {
                         report_sig,
                         ecall_output.mrenclave_ver(),
                         ecall_output.roster_idx(),
+                        trace_id,
                     ),
                     output.signer,
                     Options::with(|opt| opt.gas = Some(gas.into())),
@@ -111,12 +118,7 @@ impl Web3Contract {
         self.contract
             .call(
                 "registerReport",
-                (
-                    report,
-                    report_sig,
-                    ecall_output.mrenclave_ver(),
-                    ecall_output.roster_idx(),
-                ),
+                (report, report_sig, ecall_output.mrenclave_ver()),
                 output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
             )
@@ -132,9 +134,11 @@ impl Web3Contract {
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
         let gas = output.gas;
-        let ctx = Context::current();
-        let trace_id = ctx.span().span_context().trace_id().to_byte_array();
-        tracing::info!("trace_id in send_command: {:?}", trace_id);
+        let trace_id = Context::current()
+            .span()
+            .span_context()
+            .trace_id()
+            .to_byte_array();
 
         match ecall_output.ciphertext() {
             CommandCiphertext::TreeKem(ciphertext) => self
@@ -147,6 +151,7 @@ impl Web3Contract {
                         ciphertext.roster_idx(),
                         ciphertext.generation(),
                         ciphertext.epoch(),
+                        trace_id,
                     ),
                     output.signer,
                     Options::with(|opt| opt.gas = Some(gas.into())),
@@ -157,7 +162,12 @@ impl Web3Contract {
                 .contract
                 .call(
                     "storeCommand",
-                    (ciphertext.encode(), enclave_sig, ciphertext.roster_idx()),
+                    (
+                        ciphertext.encode(),
+                        enclave_sig,
+                        ciphertext.roster_idx(),
+                        trace_id,
+                    ),
                     output.signer,
                     Options::with(|opt| opt.gas = Some(gas.into())),
                 )
@@ -175,6 +185,11 @@ impl Web3Contract {
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
         let gas = output.gas;
+        let trace_id = Context::current()
+            .span()
+            .span_context()
+            .trace_id()
+            .to_byte_array();
 
         self.contract
             .call(
@@ -185,6 +200,7 @@ impl Web3Contract {
                     handshake.roster_idx(),
                     0 as u32,
                     handshake.prior_epoch() + 1,
+                    trace_id,
                 ),
                 output.signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),

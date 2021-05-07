@@ -13,6 +13,7 @@ failure = "0.1"
 tracing-subscriber = "0.2"
 actix-web-opentelemetry = "0.9"
 opentelemetry-jaeger = { version = "0.10", features = ["tokio"] }
+tracing-opentelemetry = "0.10"
 
 [features]
 default = ["backup-enable"]
