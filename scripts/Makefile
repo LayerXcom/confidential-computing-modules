@@ -155,12 +155,11 @@ $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 	@echo "SIGN =>  $@"
 
 # Azure Key Vault管理の鍵で署名: https://docs.microsoft.com/ja-jp/rest/api/keyvault/sign/sign
-gen-data.hex: $(RustEnclave_Name)
+gen-signed.so: $(RustEnclave_Name)
 	mkdir -p $(ANONIFY_BIN_DIR)
 	@$(SGX_ENCLAVE_SIGNER) gendata -enclave $(RustEnclave_Name) -config $(CONFIG_DIR)/$(Enclave_Config_File_Name) -out $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).hex
 	@$(SGX_ENCLAVE_SIGNER) dump -enclave $(RustEnclave_Name) -dumpfile $(ANONIFY_BIN_DIR)/$(Measurement_File_Name)
-
-gen-signed.so:
+	@python3 $(ANONIFY_ROOT_DIR)/scripts/req_sign_to_azkv.py $(ENCLAVE_PKG_NAME)
 	@$(SGX_ENCLAVE_SIGNER) catsig \
 		-enclave $(RustEnclave_Name) \
 		-config $(CONFIG_DIR)/$(Enclave_Config_File_Name) \
