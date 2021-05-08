@@ -3,23 +3,27 @@
 import sys
 import hashlib
 import base64
-import requests
 import os
-from azure.keyvault.keys.crypto import SignatureAlgorithm
+from azure.keyvault.keys.crypto import SignatureAlgorithm, CryptographyClient
+from azure.identity import DefaultAzureCredential
 
-path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../.anonify/{}.hex'.format(sys.argv[1]))
-with open(path, mode='rb') as f:
+# Generate a signing material for Azure Keyvault
+path_r = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../.anonify/{}.dat'.format(sys.argv[1]))
+with open(path_r, mode='rb') as f:
     data = f.read()
-
 digest = hashlib.sha256(data).digest()
-# ref: https://docs.microsoft.com/en-us/python/api/azure-keyvault-keys/azure.keyvault.keys.crypto.cryptographyclient?view=azure-python#sign-algorithm--digest----kwargs-
 
-value = base64.b64encode(hashdata)
-
+# Signed by Azure Keyvault
+# ref: https://docs.microsoft.com/en-us/python/api/overview/azure/keyvault-keys-readme?view=azure-python
+credential = DefaultAzureCredential()
 endpoint = os.environ.get('AZ_KV_ENDPOINT')
-headers = {
-    'Content-Type': 'application/json',
-}
-data = '{"alg": "RS256", "value": "{value}"}'
-response = requests.post(endpoint, headers=headers, data=data)
-print(response.json())
+# ref: https://docs.microsoft.com/en-us/python/api/azure-keyvault-keys/azure.keyvault.keys.crypto.cryptographyclient?view=azure-python#sign-algorithm--digest----kwargs-
+crypto_client = CryptographyClient(endpoint, credential)
+response = crypto_client.sign(SignatureAlgorithm.rs256, digest)
+
+print("Successfully signed by Azure Keyvault")
+
+# Save the signature
+path_w = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../.anonify/{}_signed.dat'.format(sys.argv[1]))
+with open(path_w, mode='wb') as f:
+    f.write(response.signature)
