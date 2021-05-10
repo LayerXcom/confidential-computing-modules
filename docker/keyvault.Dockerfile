@@ -18,6 +18,16 @@ RUN set -x && \
 COPY . /root/anonify
 WORKDIR /root/anonify
 
+# Define environment variables
+ARG AZ_KV_ENDPOINT
+ARG AZURE_CLIENT_ID
+ARG AZURE_CLIENT_SECRET
+ARG AZURE_TENANT_ID
+ENV AZ_KV_ENDPOINT=$AZ_KV_ENDPOINT \
+    AZURE_CLIENT_ID=$AZURE_CLIENT_ID \
+    AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET \
+    AZURE_TENANT_ID=$AZURE_TENANT_ID
+
 RUN source /opt/sgxsdk/environment && \
     source /root/.cargo/env && \
     export SGX_MODE=HW && \
