@@ -13,3 +13,4 @@ pub use cache::EventCache;
 pub use dispatcher::Dispatcher;
 pub use error::HostError;
 pub use eth::connection::Web3Http;
+pub use eth::connection::Web3Signer;
