@@ -339,9 +339,9 @@ impl Web3Http {
 }
 
 #[derive(Debug)]
-struct Web3Signer {
+pub struct Web3Signer {
     secret_key: SecretKey,
-    address: Address,
+    pub address: Address,
 }
 
 impl Web3Signer {
