@@ -97,8 +97,8 @@ impl fmt::LowerHex for EthLog {
 impl EthLog {
     fn decode_ciphertext_event(&self) -> Result<(Vec<u8>, StateCounter)> {
         let tokens = ethabi::decode(&[ParamType::Bytes, ParamType::Uint(256)], &self.0.data.0)?;
-        if tokens.len() != 2 {
-            return Err(HostError::InvalidNumberOfEthLogToken(2));
+        if tokens.len() != 3 {
+            return Err(HostError::InvalidNumberOfEthLogToken(3));
         }
         let bytes = tokens[0]
             .clone()
@@ -108,6 +108,13 @@ impl EthLog {
             .clone()
             .to_uint()
             .ok_or_else(|| HostError::InvalidEthLogToken)?;
+
+        let trace_id = tokens[2]
+            .clone()
+            .to_fixed_bytes()
+            .ok_or_else(|| HostError::InvalidEthLogToken)?;
+
+        info!("trace_id: {}", trace_id);
 
         Ok((bytes, StateCounter::new(state_counter.as_u32())))
     }
