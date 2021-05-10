@@ -29,8 +29,8 @@ RUN source /opt/sgxsdk/environment && \
         anonify-contracts/contracts/Factory.sol && \
     cd scripts && \
     pip3 install azure-keyvault-keys azure-identity && \
-    make ENCLAVE_DIR=example/erc20/enclave ENCLAVE_PKG_NAME=erc20 CARGO_FLAGS=--release && \
-    make ENCLAVE_DIR=example/key-vault/enclave ENCLAVE_PKG_NAME=key_vault CARGO_FLAGS=--release && \
+    make prd-signed.so ENCLAVE_DIR=example/erc20/enclave ENCLAVE_PKG_NAME=erc20 CARGO_FLAGS=--release && \
+    make prd-signed.so ENCLAVE_DIR=example/key-vault/enclave ENCLAVE_PKG_NAME=key_vault CARGO_FLAGS=--release && \
     cd ../example/erc20/server && \
     RUST_BACKTRACE=1 RUST_LOG=debug /root/.cargo/bin/cargo build --release
 

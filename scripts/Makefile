@@ -155,7 +155,7 @@ $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 	@echo "SIGN =>  $@"
 
 # Based on the 2-step signing process
-gen-signed.so: $(RustEnclave_Name)
+prd-signed.so: $(RustEnclave_Name)
 	mkdir -p $(ANONIFY_BIN_DIR)
 	@$(SGX_ENCLAVE_SIGNER) gendata -enclave $(RustEnclave_Name) -config $(CONFIG_DIR)/$(Enclave_Config_File_Name) -out $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).dat
 	@$(SGX_ENCLAVE_SIGNER) dump -enclave $(RustEnclave_Name) -dumpfile $(ANONIFY_BIN_DIR)/$(Measurement_File_Name)
