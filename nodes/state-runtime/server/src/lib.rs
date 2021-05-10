@@ -1,5 +1,5 @@
 use anonify_ecall_types::cmd::*;
-use anonify_eth_driver::{Dispatcher, EventCache};
+use anonify_eth_driver::{Dispatcher, EventCache, Web3Signer};
 use frame_config::{ANONIFY_ABI_PATH, ANONIFY_BIN_PATH, FACTORY_ABI_PATH};
 use sgx_types::sgx_enclave_id_t;
 use std::{env, str::FromStr};
@@ -39,6 +39,7 @@ impl Server {
             &env::var("FACTORY_CONTRACT_ADDRESS").expect("FACTORY_CONTRACT_ADDRESS is not set"),
         )
         .unwrap();
+        let siner_pri_key: String = env::var("SIGNER_PRI_KEY").expect("SIGNER_PRI_KEY is not set");
 
         let cache = EventCache::default();
         let dispatcher = Dispatcher::new(eid, &eth_url, confirmations, cache)
@@ -50,10 +51,12 @@ impl Server {
             .await
             .unwrap();
 
-        let sender_address = dispatcher
-            .get_account(account_index, password.as_deref())
-            .await
-            .unwrap();
+        let signer = Web3Signer::new(&siner_pri_key).unwrap();
+        let sender_address = signer.address;
+        // let sender_address = dispatcher
+        //     .get_account(account_index, password.as_deref())
+        //     .await
+        //     .unwrap();
 
         Server {
             eid,
