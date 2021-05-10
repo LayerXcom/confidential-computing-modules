@@ -18,11 +18,7 @@ stages:
         tags: latest
         dockerfile: ./docker/erc20.Dockerfile
         buildContext: .
-      env:
-        AZ_KV_ENDPOINT: $(AZ_KV_ENDPOINT)
-        AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
-        AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
-        AZURE_TENANT_ID: $(AZURE_TENANT_ID)
+        arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID)'
     - task: Docker@2
       displayName: Build and Push key-vault for erc20 image
       inputs:
@@ -32,11 +28,7 @@ stages:
         tags: latest
         dockerfile: ./docker/keyvault.Dockerfile
         buildContext: .
-      env:
-        AZ_KV_ENDPOINT: $(AZ_KV_ENDPOINT)
-        AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
-        AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
-        AZURE_TENANT_ID: $(AZURE_TENANT_ID)
+        arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID)'
     - script: |
         cp .env.sample .env
         export SPID=$(SPID)
