@@ -7,7 +7,7 @@ stages:
   jobs:
   - job: CI
     pool:
-      name: 'AnonifyDev'
+      name: 'AnonifyAgent'
     steps:
     - script: |
         cp .env.sample .env
@@ -53,7 +53,7 @@ stages:
   jobs:
   - job: Docker
     pool:
-      name: 'AnonifyDev'
+      name: 'AnonifyAgent'
     steps:
     - task: Docker@2
       displayName: Build and Push erc20 image
