@@ -10,9 +10,9 @@ stages:
       name: 'AnonifyAgent'
     steps:
     - task: Docker@2
-      displayName: Build and Push erc20 image
+      displayName: Build erc20 image
       inputs:
-        command: buildAndPush
+        command: build
         containerRegistry: anonify-ci-cd-acr
         repository: erc20-state-runtime
         tags: latest
@@ -20,15 +20,33 @@ stages:
         buildContext: .
         arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID)'
     - task: Docker@2
-      displayName: Build and Push key-vault for erc20 image
+      displayName: Push erc20 image
       inputs:
-        command: buildAndPush
+        command: push
+        containerRegistry: anonify-ci-cd-acr
+        repository: erc20-state-runtime
+        tags: latest
+        dockerfile: ./docker/erc20.Dockerfile
+        buildContext: .
+    - task: Docker@2
+      displayName: Build key-vault for erc20 image
+      inputs:
+        command: build
         containerRegistry: anonify-ci-cd-acr
         repository: key-vault-for-erc20
         tags: latest
         dockerfile: ./docker/keyvault.Dockerfile
         buildContext: .
         arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID)'
+    - task: Docker@2
+      displayName: Push key-vault for erc20 image
+      inputs:
+        command: push
+        containerRegistry: anonify-ci-cd-acr
+        repository: key-vault-for-erc20
+        tags: latest
+        dockerfile: ./docker/keyvault.Dockerfile
+        buildContext: .
     - script: |
         cp .env.sample .env
         export SPID=$(SPID)
