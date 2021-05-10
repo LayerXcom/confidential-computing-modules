@@ -19,6 +19,34 @@ stages:
     - script: docker-compose down
       condition: always()
       displayName: 'Shutdown'
+    - task: Docker@2
+      displayName: Build and Push erc20 image
+      inputs:
+        command: buildAndPush
+        containerRegistry: anonify-ci-cd-acr
+        repository: erc20-state-runtime
+        tags: latest
+        dockerfile: erc20.Dockerfile
+        buildContext: ./docker
+      env:
+        AZ_KV_ENDPOINT: $(AZ_KV_ENDPOINT)
+        AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+        AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+        AZURE_TENANT_ID: $(AZURE_TENANT_ID)
+    - task: Docker@2
+      displayName: Build and Push key-vault for erc20 image
+      inputs:
+        command: buildAndPush
+        containerRegistry: anonify-ci-cd-acr
+        repository: key-vault-for-erc20
+        tags: latest
+        dockerfile: keyvault.Dockerfile
+        buildContext: ./docker
+      env:
+        AZ_KV_ENDPOINT: $(AZ_KV_ENDPOINT)
+        AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+        AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+        AZURE_TENANT_ID: $(AZURE_TENANT_ID)
 
 - stage: Docker_Build_and_Push
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
@@ -50,6 +78,11 @@ stages:
         tags: latest
         dockerfile: keyvault.Dockerfile
         buildContext: ./docker
+      env:
+        AZ_KV_ENDPOINT: $(AZ_KV_ENDPOINT)
+        AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+        AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
+        AZURE_TENANT_ID: $(AZURE_TENANT_ID)
     - script: docker image prune -f
       displayName: Remove dangling images
     - script: |

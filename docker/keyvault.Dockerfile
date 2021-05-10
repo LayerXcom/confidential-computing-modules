@@ -8,7 +8,9 @@ RUN set -x && \
     rm -rf /root/sgx && \
     apt-get update && \
     apt-get upgrade -y --no-install-recommends && \
-    apt-get install -y --no-install-recommends libzmq3-dev llvm clang-3.9 llvm-3.9-dev libclang-3.9-dev software-properties-common nodejs && \
+    apt-get install -y --no-install-recommends libzmq3-dev llvm clang-3.9 llvm-3.9-dev libclang-3.9-dev software-properties-common nodejs python3-pip python3-setuptools && \
+    python3 -m pip install -U pip && \
+    python3 -m pip install --upgrade pip --target /usr/lib64/az/lib/python3.6/site-packages/ && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /root/.cargo/registry && rm -rf /root/.cargo/git && \
     git clone --depth 1 -b v1.1.3 https://github.com/baidu/rust-sgx-sdk.git sgx
@@ -20,7 +22,9 @@ RUN source /opt/sgxsdk/environment && \
     source /root/.cargo/env && \
     export SGX_MODE=HW && \
     export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
+    /root/.cargo/bin/cargo build -p frame-types --release && \
     cd scripts && \
+    pip3 install azure-keyvault-keys azure-identity && \
     make prd-signed.so ENCLAVE_DIR=example/erc20/enclave ENCLAVE_PKG_NAME=erc20 CARGO_FLAGS=--release && \
     make prd-signed.so ENCLAVE_DIR=example/key-vault/enclave ENCLAVE_PKG_NAME=key_vault CARGO_FLAGS=--release && \
     cd ../example/key-vault/server && \
