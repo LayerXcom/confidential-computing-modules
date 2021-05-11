@@ -121,9 +121,7 @@ impl EthLog {
             .to_fixed_bytes()
             .ok_or_else(|| HostError::InvalidEthLogToken)?;
 
-        info!("trace_id: {:?}", trace_id);
         Span::current().record("trace_id", &tracing::field::display(hex::encode(trace_id)));
-
         Ok((bytes, StateCounter::new(state_counter.as_u32())))
     }
 }
