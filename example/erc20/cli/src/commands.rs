@@ -37,9 +37,38 @@ pub(crate) fn get_enclave_encryption_key(state_runtime_url: String) -> Result<So
     Ok(resp.enclave_encryption_key)
 }
 
-pub(crate) fn get_user_counter(state_runtime_url: String) -> Result<u32> {
+pub(crate) fn get_user_counter<R, CR>(
+    term: &mut Term,
+    root_dir: PathBuf,
+    state_runtime_url: String,
+    index: usize,
+    enclave_encryption_key: &SodiumPubKey,
+    rng: &mut R,
+    csprng: &mut CR,
+) -> Result<u32>
+where
+    R: Rng,
+    CR: RngCore + CryptoRng,
+{
+    let password = prompt_password(term)?;
+    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+
+    let req = json!({
+        "access_policy": access_policy,
+    });
+    let ciphertext = SodiumCiphertext::encrypt(
+        csprng,
+        &enclave_encryption_key,
+        &serde_json::to_vec(&req).unwrap(),
+    )
+    .map_err(|e| anyhow!("{:?}", e))?;
+
     let resp: state_runtime_node_api::user_counter::get::Response = Client::new()
-        .get(&format!("{}/api/v1/get_user_counter", &state_runtime_url))
+        .get(&format!("{}/api/v1/user_counter", &state_runtime_url))
+        .json(&state_runtime_node_api::user_counter::get::Request::new(
+            ciphertext,
+        ))
         .send()?
         .json()?;
 

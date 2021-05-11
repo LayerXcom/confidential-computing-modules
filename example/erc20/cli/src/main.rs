@@ -349,9 +349,31 @@ fn subcommand_anonify<R, CR>(
             println!("{:?}", encoded);
         }
         ("get_user_counter", Some(_)) => {
-            let user_counter =
-                commands::get_user_counter(state_runtime_url.clone())
-                    .expect("Failed getting user counter");
+            let keyfile_index: usize = matches
+                .value_of("keyfile-index")
+                .expect("Not found keyfile-index.")
+                .parse()
+                .expect("Failed to parse keyfile-index");
+            let enclave_encryption_key_vec = base64::decode(
+                matches
+                    .value_of("enclave_encryption_key")
+                    .expect("Not found enclave_encryption_key"),
+            )
+            .expect("Failed to decode enclave_encryption_key as base64");
+            let enclave_encryption_key = SodiumPubKey::from_bytes(&enclave_encryption_key_vec)
+                .expect("Failed to convert SodiumPubKey");
+
+            let user_counter = commands::get_user_counter(
+                &mut term,
+                root_dir,
+                state_runtime_url,
+                keyfile_index,
+                &enclave_encryption_key,
+                rng,
+                csprng,
+            )
+            .expect("Failed getting user counter");
+
             println!("{:?}", user_counter);
         }
         _ => {
@@ -595,7 +617,20 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         )
         .subcommand(
             SubCommand::with_name("get_user_counter")
-                .about("Get current user_counter"),
+                .about("Get current user_counter")
+                .arg(
+                    Arg::with_name("keyfile-index")
+                        .short("i")
+                        .takes_value(true)
+                        .required(false)
+                        .default_value(DEFAULT_KEYFILE_INDEX),
+                )
+                .arg(
+                    Arg::with_name("enclave_encryption_key")
+                        .short("k")
+                        .takes_value(true)
+                        .required(true),
+                ),
         )
 }
 
