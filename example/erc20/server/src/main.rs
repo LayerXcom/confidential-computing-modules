@@ -12,8 +12,10 @@ async fn main() -> io::Result<()> {
         .install()
         .unwrap();
 
+    let log_level = env::var("RUST_LOG").unwrap_or_else(|_| "INFO".to_string());
+
     Registry::default()
-        .with(tracing_subscriber::EnvFilter::new("INFO"))
+        .with(tracing_subscriber::EnvFilter::new(log_level))
         .with(tracing_subscriber::fmt::layer())
         .with(tracing_opentelemetry::layer().with_tracer(tracer))
         .init();

@@ -160,7 +160,7 @@ impl Dispatcher {
 
     #[tracing::instrument(
         skip(self, fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd),
-        fields(trace_id)
+        fields(trace_id, fetched_trace_id)
     )]
     pub async fn fetch_events(
         &self,
