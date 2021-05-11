@@ -56,6 +56,7 @@ fn main() {
 
 const ANONIFY_COMMAND: &'static str = "anonify";
 const DEFAULT_KEYFILE_INDEX: &'static str = "0";
+const DEFAULT_USER_COUNTER: &'static str = "0";
 const DEFAULT_AMOUNT: &str = "10";
 const DEFAULT_BALANCE: &str = "100";
 const DEFAULT_TARGET: &str = "7H5cyDJ9CXBKOiM8tWnGaz5vqHY=";
@@ -87,6 +88,11 @@ fn subcommand_anonify<R, CR>(
                 .expect("Not found total_supply.")
                 .parse()
                 .expect("Failed to parse total_supply");
+            let user_counter: u32 = matches
+                .value_of("counter")
+                .expect("Not found counter.")
+                .parse()
+                .expect("Failed to parse counter");
             let enclave_encryption_key_vec = base64::decode(
                 matches
                     .value_of("enclave_encryption_key")
@@ -102,6 +108,7 @@ fn subcommand_anonify<R, CR>(
                 state_runtime_url,
                 keyfile_index,
                 total_supply,
+                user_counter,
                 &enclave_encryption_key,
                 rng,
                 csprng,
@@ -121,6 +128,11 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to parse amount");
             let target: &str = matches.value_of("target").expect("Not found target");
             let target_addr = AccountId::base64_decode(target);
+            let user_counter: u32 = matches
+                .value_of("counter")
+                .expect("Not found counter.")
+                .parse()
+                .expect("Failed to parse counter");
             let enclave_encryption_key_vec = base64::decode(
                 matches
                     .value_of("enclave_encryption_key")
@@ -137,6 +149,7 @@ fn subcommand_anonify<R, CR>(
                 keyfile_index,
                 target_addr,
                 amount,
+                user_counter,
                 &enclave_encryption_key,
                 rng,
                 csprng,
@@ -156,6 +169,11 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to parse amount");
             let target: &str = matches.value_of("target").expect("Not found target");
             let target_addr = AccountId::base64_decode(target);
+            let user_counter: u32 = matches
+                .value_of("counter")
+                .expect("Not found counter.")
+                .parse()
+                .expect("Failed to parse counter");
             let enclave_encryption_key_vec = base64::decode(
                 matches
                     .value_of("enclave_encryption_key")
@@ -172,6 +190,7 @@ fn subcommand_anonify<R, CR>(
                 keyfile_index,
                 target_addr,
                 amount,
+                user_counter,
                 &enclave_encryption_key,
                 rng,
                 csprng,
@@ -193,6 +212,11 @@ fn subcommand_anonify<R, CR>(
             let owner_addr = AccountId::base64_decode(owner);
             let target: &str = matches.value_of("target").expect("Not found target");
             let target_addr = AccountId::base64_decode(target);
+            let user_counter: u32 = matches
+                .value_of("counter")
+                .expect("Not found counter.")
+                .parse()
+                .expect("Failed to parse counter");
             let enclave_encryption_key_vec = base64::decode(
                 matches
                     .value_of("enclave_encryption_key")
@@ -210,6 +234,7 @@ fn subcommand_anonify<R, CR>(
                 owner_addr,
                 target_addr,
                 amount,
+                user_counter,
                 &enclave_encryption_key,
                 rng,
                 csprng,
@@ -229,6 +254,11 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to parse amount");
             let target: &str = matches.value_of("target").expect("Not found target");
             let target_addr = AccountId::base64_decode(target);
+            let user_counter: u32 = matches
+                .value_of("counter")
+                .expect("Not found counter.")
+                .parse()
+                .expect("Failed to parse counter");
             let enclave_encryption_key_vec = base64::decode(
                 matches
                     .value_of("enclave_encryption_key")
@@ -245,6 +275,7 @@ fn subcommand_anonify<R, CR>(
                 keyfile_index,
                 target_addr,
                 amount,
+                user_counter,
                 &enclave_encryption_key,
                 rng,
                 csprng,
@@ -262,6 +293,11 @@ fn subcommand_anonify<R, CR>(
                 .expect("Not found amount.")
                 .parse()
                 .expect("Failed to parse amount");
+            let user_counter: u32 = matches
+                .value_of("counter")
+                .expect("Not found counter.")
+                .parse()
+                .expect("Failed to parse counter");
             let enclave_encryption_key_vec = base64::decode(
                 matches
                     .value_of("enclave_encryption_key")
@@ -277,6 +313,7 @@ fn subcommand_anonify<R, CR>(
                 state_runtime_url,
                 keyfile_index,
                 amount,
+                user_counter,
                 &enclave_encryption_key,
                 rng,
                 csprng,
@@ -407,6 +444,13 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .default_value(DEFAULT_BALANCE),
                 )
                 .arg(
+                    Arg::with_name("counter")
+                        .short("c")
+                        .takes_value(true)
+                        .required(true)
+                        .default_value(DEFAULT_USER_COUNTER),
+                )
+                .arg(
                     Arg::with_name("enclave_encryption_key")
                         .short("k")
                         .takes_value(true)
@@ -438,6 +482,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .default_value(DEFAULT_TARGET),
                 )
                 .arg(
+                    Arg::with_name("counter")
+                        .short("c")
+                        .takes_value(true)
+                        .required(true),
+                )
+                .arg(
                     Arg::with_name("enclave_encryption_key")
                         .short("k")
                         .takes_value(true)
@@ -467,6 +517,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .takes_value(true)
                         .required(true)
                         .default_value(DEFAULT_TARGET),
+                )
+                .arg(
+                    Arg::with_name("counter")
+                        .short("c")
+                        .takes_value(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::with_name("enclave_encryption_key")
@@ -506,6 +562,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .default_value(DEFAULT_TARGET),
                 )
                 .arg(
+                    Arg::with_name("counter")
+                        .short("c")
+                        .takes_value(true)
+                        .required(true),
+                )
+                .arg(
                     Arg::with_name("enclave_encryption_key")
                         .short("k")
                         .takes_value(true)
@@ -537,6 +599,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .default_value(DEFAULT_TARGET),
                 )
                 .arg(
+                    Arg::with_name("counter")
+                        .short("c")
+                        .takes_value(true)
+                        .required(true),
+                )
+                .arg(
                     Arg::with_name("enclave_encryption_key")
                         .short("k")
                         .takes_value(true)
@@ -559,6 +627,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .takes_value(true)
                         .required(true)
                         .default_value(DEFAULT_AMOUNT),
+                )
+                .arg(
+                    Arg::with_name("counter")
+                        .short("c")
+                        .takes_value(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::with_name("enclave_encryption_key")

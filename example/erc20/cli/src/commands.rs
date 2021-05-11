@@ -86,6 +86,7 @@ pub(crate) fn init_state<R, CR>(
     state_runtime_url: String,
     index: usize,
     total_supply: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
@@ -103,6 +104,7 @@ where
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -130,6 +132,7 @@ pub(crate) fn transfer<R, CR>(
     index: usize,
     recipient: AccountId,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
@@ -148,6 +151,7 @@ where
             "recipient": recipient,
         },
         "cmd_name": "transfer",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -175,6 +179,7 @@ pub(crate) fn approve<R, CR>(
     index: usize,
     spender: AccountId,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
@@ -193,6 +198,7 @@ where
             "spender": spender,
         },
         "cmd_name": "approve",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -221,6 +227,7 @@ pub(crate) fn transfer_from<R, CR>(
     owner: AccountId,
     recipient: AccountId,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
@@ -240,6 +247,7 @@ where
             "recipient": recipient,
         },
         "cmd_name": "transfer_from",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -267,6 +275,7 @@ pub(crate) fn mint<R, CR>(
     index: usize,
     recipient: AccountId,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
@@ -285,6 +294,7 @@ where
             "recipient": recipient,
         },
         "cmd_name": "mint",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -311,6 +321,7 @@ pub(crate) fn burn<R, CR>(
     state_runtime_url: String,
     index: usize,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
@@ -328,6 +339,7 @@ where
             "amount": amount,
         },
         "cmd_name": "burn",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
