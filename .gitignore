@@ -58,3 +58,4 @@ anonify-types.h
 .env
 .anonify
 /anonify-contracts
+Enclave.prd.config.xml

@@ -11,9 +11,13 @@ async fn main() -> io::Result<()> {
         .unwrap_or_else(|_| "16".to_string())
         .parse()
         .expect("Failed to parse NUM_WORKERS");
+    let is_debug: bool = env::var("IS_DEBUG")
+        .unwrap_or_else(|_| "true".to_string())
+        .parse()
+        .expect("Failed to parse IS_DEBUG");
 
     let enclave = EnclaveDir::new()
-        .init_enclave(true)
+        .init_enclave(is_debug)
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
     let server = Arc::new(Server::new(eid).run().await);
