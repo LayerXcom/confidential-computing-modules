@@ -71,6 +71,7 @@ else
 	SGX_COMMON_CFLAGS += -O2
 	Host_Rust_Flags := --release
 	Rust_target_dir := release
+	Enclave_Config_File_Name := Enclave.prd.config.xml
 endif
 
 Host_Rust_Flags += $(if $(JOBS),-j$(JOBS), )
@@ -128,9 +129,9 @@ all: $(Signed_RustEnclave_Name)
 ######## EDL Objects ########
 
 $(Enclave_EDL_Files): $(SGX_EDGER8R) $(ANONIFY_EDL_DIR)/$(EDL_FILE)
-	mkdir -p $(ANONIFY_BUILD_DIR)
-	$(SGX_EDGER8R) --trusted $(ANONIFY_EDL_DIR)/$(EDL_FILE) --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --trusted-dir $(ANONIFY_BUILD_DIR)
-	$(SGX_EDGER8R) --untrusted $(ANONIFY_EDL_DIR)/$(EDL_FILE) --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --untrusted-dir $(ANONIFY_BUILD_DIR)
+	@mkdir -p $(ANONIFY_BUILD_DIR)
+	@$(SGX_EDGER8R) --trusted $(ANONIFY_EDL_DIR)/$(EDL_FILE) --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --trusted-dir $(ANONIFY_BUILD_DIR)
+	@$(SGX_EDGER8R) --untrusted $(ANONIFY_EDL_DIR)/$(EDL_FILE) --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --untrusted-dir $(ANONIFY_BUILD_DIR)
 	@echo "GEN  =>  $(Enclave_EDL_Files)"
 
 ######## Enclave Objects ########
@@ -142,7 +143,7 @@ $(ANONIFY_BUILD_DIR)/$(T_O_FILE): $(Enclave_EDL_Files)
 $(Rust_Enclave_Name): $(Rust_Enclave_Files)
 	@echo "Rust_Enclave_Name <= $(PWD)"
 	@cd $(ANONIFY_ROOT_DIR)/$(ENCLAVE_DIR) && RUST_LOG=debug cargo build $(CARGO_FLAGS) $(RustEnclave_Feature_Flags)
-	mkdir -p $(CUSTOM_LIBRARY_PATH)
+	@mkdir -p $(CUSTOM_LIBRARY_PATH)
 	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/lib$(Rust_Enclave_Lib_Name).a
 
 $(RustEnclave_Name): $(ANONIFY_BUILD_DIR)/$(T_O_FILE) $(Rust_Enclave_Name)
@@ -150,13 +151,18 @@ $(RustEnclave_Name): $(ANONIFY_BUILD_DIR)/$(T_O_FILE) $(Rust_Enclave_Name)
 	@echo "LINK =>  $@"
 
 $(Signed_RustEnclave_Name): $(RustEnclave_Name)
-	mkdir -p $(ANONIFY_BIN_DIR)
+	@mkdir -p $(ANONIFY_BIN_DIR)
 	@$(SGX_ENCLAVE_SIGNER) sign -key $(CONFIG_DIR)/test_enclave_signing.pem -enclave $(RustEnclave_Name) -out $@ -config $(CONFIG_DIR)/$(Enclave_Config_File_Name) -dumpfile $(ANONIFY_BIN_DIR)/$(Measurement_File_Name)
 	@echo "SIGN =>  $@"
 
 # Based on the 2-step signing process
 prd-signed.so: $(RustEnclave_Name)
-	mkdir -p $(ANONIFY_BIN_DIR)
+	@mkdir -p $(ANONIFY_BIN_DIR)
+	@cp -f $(CONFIG_DIR)/Enclave.config.xml $(CONFIG_DIR)/$(Enclave_Config_File_Name)
+	@sed -i "" -e "s|<ProdID>0</ProdID>|<ProdID>$(PROD_ID)</ProdID>|" $(CONFIG_DIR)/$(Enclave_Config_File_Name)
+	@sed -i "" -e "s|<ISVSVN>0</ISVSVN>|<ISVSVN>$(ISVSVN)</ISVSVN>|" $(CONFIG_DIR)/$(Enclave_Config_File_Name)
+	@sed -i "" -e "s|<DisableDebug>0</DisableDebug>|<DisableDebug>1</DisableDebug>|" $(CONFIG_DIR)/$(Enclave_Config_File_Name)
+
 	@$(SGX_ENCLAVE_SIGNER) gendata -enclave $(RustEnclave_Name) -config $(CONFIG_DIR)/$(Enclave_Config_File_Name) -out $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).dat
 	@$(SGX_ENCLAVE_SIGNER) dump -enclave $(RustEnclave_Name) -dumpfile $(ANONIFY_BIN_DIR)/$(Measurement_File_Name)
 	@python3 $(ANONIFY_ROOT_DIR)/scripts/req_sign_to_azkv.py $(ENCLAVE_PKG_NAME)
