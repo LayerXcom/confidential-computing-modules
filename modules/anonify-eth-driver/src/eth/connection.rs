@@ -12,6 +12,7 @@ use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use opentelemetry::{trace::TraceContextExt, Context};
 use std::{env, fs, path::Path};
+use tracing::Span;
 use web3::{
     contract::{Contract, Options},
     transports::Http,
@@ -62,11 +63,7 @@ impl Web3Contract {
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
         let gas = output.gas;
-        let trace_id = Context::current()
-            .span()
-            .span_context()
-            .trace_id()
-            .to_byte_array();
+        let trace_id = get_trace_id();
 
         match ecall_output.handshake() {
             Some(handshake) => self
@@ -134,11 +131,7 @@ impl Web3Contract {
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
         let gas = output.gas;
-        let trace_id = Context::current()
-            .span()
-            .span_context()
-            .trace_id()
-            .to_byte_array();
+        let trace_id = get_trace_id();
 
         match ecall_output.ciphertext() {
             CommandCiphertext::TreeKem(ciphertext) => self
@@ -185,11 +178,7 @@ impl Web3Contract {
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
         let gas = output.gas;
-        let trace_id = Context::current()
-            .span()
-            .span_context()
-            .trace_id()
-            .to_byte_array();
+        let trace_id = get_trace_id();
 
         self.contract
             .call(
@@ -335,4 +324,13 @@ impl Web3Http {
     pub fn get_eth_url(&self) -> &str {
         &self.eth_url
     }
+}
+
+fn get_trace_id() -> [u8; 16] {
+    Span::current()
+        .context()
+        .span()
+        .span_context()
+        .trace_id()
+        .to_byte_array()
 }
