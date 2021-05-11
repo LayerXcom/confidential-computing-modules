@@ -72,8 +72,6 @@ else
 	Host_Rust_Flags := --release
 	Rust_target_dir := release
 	Enclave_Config_File_Name := Enclave.prd.config.xml
-	PROD_ID := $(PROD_ID)
-	ISVSVN := $(ISVSVN)
 endif
 
 Host_Rust_Flags += $(if $(JOBS),-j$(JOBS), )
