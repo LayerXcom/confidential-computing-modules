@@ -20,8 +20,6 @@ RUN set -x && \
 COPY . /root/anonify
 WORKDIR /root/anonify
 
-RUN echo $PROD_ID
-
 # Define environment variables
 ARG AZ_KV_ENDPOINT
 ARG AZURE_CLIENT_ID
@@ -36,7 +34,7 @@ ENV AZ_KV_ENDPOINT=$AZ_KV_ENDPOINT \
 #    PROD_ID=$PROD_ID \
 #    ISVSVN=$ISVSVN
 
-RUN echo $PROD_ID
+RUN echo $($PROD_ID)
 
 RUN source /opt/sgxsdk/environment && \
     source /root/.cargo/env && \
