@@ -39,6 +39,7 @@ RUN source /opt/sgxsdk/environment && \
     /root/.cargo/bin/cargo build -p frame-types --release && \
     cd scripts && \
     pip3 install azure-keyvault-keys azure-identity && \
+    ./gen-enclave-config.sh && \
     make prd-signed.so ENCLAVE_DIR=example/erc20/enclave ENCLAVE_PKG_NAME=erc20 CARGO_FLAGS=--release && \
     make prd-signed.so ENCLAVE_DIR=example/key-vault/enclave ENCLAVE_PKG_NAME=key_vault CARGO_FLAGS=--release && \
     cd ../example/key-vault/server && \
