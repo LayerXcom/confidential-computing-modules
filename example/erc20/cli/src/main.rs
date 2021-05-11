@@ -348,7 +348,7 @@ fn subcommand_anonify<R, CR>(
             let encoded = base64::encode(&enclave_encryption_key.to_bytes());
             println!("{:?}", encoded);
         }
-        ("get_user_counter", Some(_)) => {
+        ("get_user_counter", Some(matches)) => {
             let keyfile_index: usize = matches
                 .value_of("keyfile-index")
                 .expect("Not found keyfile-index.")
