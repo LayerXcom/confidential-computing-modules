@@ -16,7 +16,6 @@ use frame_host::engine::HostEngine;
 use sgx_types::sgx_enclave_id_t;
 use std::fmt;
 use tracing::{debug, error, info, warn, Span};
-use tracing_opentelemetry::OpenTelemetrySpanExt;
 use web3::types::{Address, Log};
 
 /// Components needed to watch events
