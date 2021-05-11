@@ -425,6 +425,7 @@ dependencies = [
  "sgx_types 1.1.3",
  "thiserror 1.0.22",
  "tracing",
+ "tracing-futures",
  "tracing-opentelemetry",
  "web3",
 ]

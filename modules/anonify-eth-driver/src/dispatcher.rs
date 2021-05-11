@@ -158,7 +158,10 @@ impl Dispatcher {
         self.inner.read().is_healthy
     }
 
-    #[tracing::instrument(skip(server, req), fields(trace_id))]
+    #[tracing::instrument(
+        skip(self, fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd),
+        fields(trace_id)
+    )]
     pub async fn fetch_events(
         &self,
         fetch_ciphertext_ecall_cmd: u32,
