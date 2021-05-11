@@ -36,12 +36,7 @@ stages:
         tags: latest
         dockerfile: ./docker/erc20.Dockerfile
         buildContext: .
-        arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) \
-          --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) \
-          --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) \
-          --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) \
-          --build-arg PROD_ID=${PROD_ID} \
-          --build-arg ISVSVN=${ISVSVN}'
+        arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=${PROD_ID} --build-arg ISVSVN=${ISVSVN}'
     - task: Docker@2
       displayName: Push erc20 image
       inputs:
@@ -60,12 +55,7 @@ stages:
         tags: latest
         dockerfile: ./docker/keyvault.Dockerfile
         buildContext: .
-        arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) \
-          --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) \
-          --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) \
-          --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) \
-          --build-arg PROD_ID=${PROD_ID} \
-          --build-arg ISVSVN=${ISVSVN}'
+        arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=${PROD_ID} --build-arg ISVSVN=${ISVSVN}'
     - task: Docker@2
       displayName: Push key-vault for erc20 image
       inputs:
