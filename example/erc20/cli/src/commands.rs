@@ -37,6 +37,20 @@ pub(crate) fn get_enclave_encryption_key(state_runtime_url: String) -> Result<So
     Ok(resp.enclave_encryption_key)
 }
 
+pub(crate) fn get_user_counter(state_runtime_url: String) -> Result<u32> {
+    let resp: state_runtime_node_api::user_counter::get::Response = Client::new()
+        .get(&format!("{}/api/v1/get_user_counter", &state_runtime_url))
+        .send()?
+        .json()?;
+
+    let user_counter = resp
+        .user_counter
+        .as_u64()
+        .ok_or_else(|| anyhow!("failed to parse user_counter"))?;
+
+    Ok(user_counter as u32)
+}
+
 pub(crate) fn init_state<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,

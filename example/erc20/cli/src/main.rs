@@ -348,6 +348,12 @@ fn subcommand_anonify<R, CR>(
             let encoded = base64::encode(&enclave_encryption_key.to_bytes());
             println!("{:?}", encoded);
         }
+        ("get_user_counter", Some(_)) => {
+            let user_counter =
+                commands::get_user_counter(state_runtime_url.clone())
+                    .expect("Failed getting user counter");
+            println!("{:?}", user_counter);
+        }
         _ => {
             term.error(matches.usage()).unwrap();
             std::process::exit(1);
@@ -586,6 +592,10 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         .subcommand(
             SubCommand::with_name("get_enclave_encryption_key")
                 .about("Get base64 encoded enclave_encryption_key"),
+        )
+        .subcommand(
+            SubCommand::with_name("get_user_counter")
+                .about("Get current user_counter"),
         )
 }
 
