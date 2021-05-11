@@ -160,11 +160,6 @@ $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 # Based on the 2-step signing process
 prd-signed.so: $(RustEnclave_Name)
 	@mkdir -p $(ANONIFY_BIN_DIR)
-	@cp -f $(CONFIG_DIR)/Enclave.config.xml $(CONFIG_DIR)/$(Enclave_Config_File_Name)
-	@sed -i "" -e "s|<ProdID>0</ProdID>|<ProdID>$(PROD_ID)</ProdID>|" $(CONFIG_DIR)/$(Enclave_Config_File_Name)
-	@sed -i "" -e "s|<ISVSVN>0</ISVSVN>|<ISVSVN>$(ISVSVN)</ISVSVN>|" $(CONFIG_DIR)/$(Enclave_Config_File_Name)
-	@sed -i "" -e "s|<DisableDebug>0</DisableDebug>|<DisableDebug>1</DisableDebug>|" $(CONFIG_DIR)/$(Enclave_Config_File_Name)
-
 	@$(SGX_ENCLAVE_SIGNER) gendata -enclave $(RustEnclave_Name) -config $(CONFIG_DIR)/$(Enclave_Config_File_Name) -out $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).dat
 	@$(SGX_ENCLAVE_SIGNER) dump -enclave $(RustEnclave_Name) -dumpfile $(ANONIFY_BIN_DIR)/$(Measurement_File_Name)
 	@python3 $(ANONIFY_ROOT_DIR)/scripts/req_sign_to_azkv.py $(ENCLAVE_PKG_NAME)

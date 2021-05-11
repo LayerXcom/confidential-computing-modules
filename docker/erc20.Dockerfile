@@ -30,11 +30,9 @@ ARG ISVSVN
 ENV AZ_KV_ENDPOINT=$AZ_KV_ENDPOINT \
     AZURE_CLIENT_ID=$AZURE_CLIENT_ID \
     AZURE_CLIENT_SECRET=$AZURE_CLIENT_SECRET \
-    AZURE_TENANT_ID=$AZURE_TENANT_ID
-#    PROD_ID=$PROD_ID \
-#    ISVSVN=$ISVSVN
-
-RUN echo $($PROD_ID)
+    AZURE_TENANT_ID=$AZURE_TENANT_ID \
+    PROD_ID=$PROD_ID \
+    ISVSVN=$ISVSVN
 
 RUN source /opt/sgxsdk/environment && \
     source /root/.cargo/env && \
@@ -48,8 +46,9 @@ RUN source /opt/sgxsdk/environment && \
     /root/.cargo/bin/cargo build -p frame-types --release && \
     cd scripts && \
     pip3 install azure-keyvault-keys azure-identity && \
-    make prd-signed.so ENCLAVE_DIR=example/erc20/enclave ENCLAVE_PKG_NAME=erc20 CARGO_FLAGS=--release PROD_ID=$PROD_ID ISVSVN=$ISVSVN && \
-    make prd-signed.so ENCLAVE_DIR=example/key-vault/enclave ENCLAVE_PKG_NAME=key_vault CARGO_FLAGS=--release PROD_ID=$PROD_ID ISVSVN=$ISVSVN && \
+    ./gen-enclave-config.sh && \
+    make prd-signed.so ENCLAVE_DIR=example/erc20/enclave ENCLAVE_PKG_NAME=erc20 CARGO_FLAGS=--release && \
+    make prd-signed.so ENCLAVE_DIR=example/key-vault/enclave ENCLAVE_PKG_NAME=key_vault CARGO_FLAGS=--release && \
     cd ../example/erc20/server && \
     RUST_BACKTRACE=1 RUST_LOG=debug /root/.cargo/bin/cargo build --release
 
