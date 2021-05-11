@@ -34,7 +34,7 @@ ENV AZ_KV_ENDPOINT=$AZ_KV_ENDPOINT \
 #    PROD_ID=$PROD_ID \
 #    ISVSVN=$ISVSVN
 
-RUN echo $($PROD_ID)
+RUN echo ${${PROD_ID}}
 
 RUN source /opt/sgxsdk/environment && \
     source /root/.cargo/env && \
