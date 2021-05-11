@@ -7,7 +7,7 @@ export PATH=~/.cargo/bin:$PATH
 export SGX_MODE=HW
 export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
 ANONIFY_ROOT=/root/anonify
-ANONIFY_TAG=v0.5.10
+ANONIFY_TAG=v0.5.11
 
 #
 # Setup Tests

@@ -37,12 +37,56 @@ pub(crate) fn get_enclave_encryption_key(state_runtime_url: String) -> Result<So
     Ok(resp.enclave_encryption_key)
 }
 
+pub(crate) fn get_user_counter<R, CR>(
+    term: &mut Term,
+    root_dir: PathBuf,
+    state_runtime_url: String,
+    index: usize,
+    enclave_encryption_key: &SodiumPubKey,
+    rng: &mut R,
+    csprng: &mut CR,
+) -> Result<u32>
+where
+    R: Rng,
+    CR: RngCore + CryptoRng,
+{
+    let password = prompt_password(term)?;
+    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
+    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+
+    let req = json!({
+        "access_policy": access_policy,
+    });
+    let ciphertext = SodiumCiphertext::encrypt(
+        csprng,
+        &enclave_encryption_key,
+        &serde_json::to_vec(&req).unwrap(),
+    )
+    .map_err(|e| anyhow!("{:?}", e))?;
+
+    let resp: state_runtime_node_api::user_counter::get::Response = Client::new()
+        .get(&format!("{}/api/v1/user_counter", &state_runtime_url))
+        .json(&state_runtime_node_api::user_counter::get::Request::new(
+            ciphertext,
+        ))
+        .send()?
+        .json()?;
+
+    let user_counter = resp
+        .user_counter
+        .as_u64()
+        .ok_or_else(|| anyhow!("failed to parse user_counter"))?;
+
+    Ok(user_counter as u32)
+}
+
 pub(crate) fn init_state<R, CR>(
     term: &mut Term,
     root_dir: PathBuf,
     state_runtime_url: String,
     index: usize,
     total_supply: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
@@ -60,6 +104,7 @@ where
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -87,6 +132,7 @@ pub(crate) fn transfer<R, CR>(
     index: usize,
     recipient: AccountId,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
@@ -105,6 +151,7 @@ where
             "recipient": recipient,
         },
         "cmd_name": "transfer",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -132,6 +179,7 @@ pub(crate) fn approve<R, CR>(
     index: usize,
     spender: AccountId,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
@@ -150,6 +198,7 @@ where
             "spender": spender,
         },
         "cmd_name": "approve",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -178,6 +227,7 @@ pub(crate) fn transfer_from<R, CR>(
     owner: AccountId,
     recipient: AccountId,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
@@ -197,6 +247,7 @@ where
             "recipient": recipient,
         },
         "cmd_name": "transfer_from",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -224,6 +275,7 @@ pub(crate) fn mint<R, CR>(
     index: usize,
     recipient: AccountId,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
@@ -242,6 +294,7 @@ where
             "recipient": recipient,
         },
         "cmd_name": "mint",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -268,6 +321,7 @@ pub(crate) fn burn<R, CR>(
     state_runtime_url: String,
     index: usize,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
     rng: &mut R,
     csprng: &mut CR,
@@ -285,6 +339,7 @@ where
             "amount": amount,
         },
         "cmd_name": "burn",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,

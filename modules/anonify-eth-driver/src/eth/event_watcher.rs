@@ -15,7 +15,7 @@ use frame_common::{crypto::ExportHandshake, state_types::StateCounter, TreeKemCi
 use frame_host::engine::HostEngine;
 use sgx_types::sgx_enclave_id_t;
 use std::fmt;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, info, warn, Span};
 use web3::types::{Address, Log};
 
 /// Components needed to watch events
@@ -96,9 +96,16 @@ impl fmt::LowerHex for EthLog {
 
 impl EthLog {
     fn decode_ciphertext_event(&self) -> Result<(Vec<u8>, StateCounter)> {
-        let tokens = ethabi::decode(&[ParamType::Bytes, ParamType::Uint(256)], &self.0.data.0)?;
-        if tokens.len() != 2 {
-            return Err(HostError::InvalidNumberOfEthLogToken(2));
+        let tokens = ethabi::decode(
+            &[
+                ParamType::Bytes,
+                ParamType::Uint(256),
+                ParamType::FixedBytes(16),
+            ],
+            &self.0.data.0,
+        )?;
+        if tokens.len() != 3 {
+            return Err(HostError::InvalidNumberOfEthLogToken(3));
         }
         let bytes = tokens[0]
             .clone()
@@ -109,6 +116,12 @@ impl EthLog {
             .to_uint()
             .ok_or_else(|| HostError::InvalidEthLogToken)?;
 
+        let trace_id = tokens[2]
+            .clone()
+            .to_fixed_bytes()
+            .ok_or_else(|| HostError::InvalidEthLogToken)?;
+
+        Span::current().record("fetched_trace_id", &tracing::field::display(hex::encode(trace_id)));
         Ok((bytes, StateCounter::new(state_counter.as_u32())))
     }
 }
