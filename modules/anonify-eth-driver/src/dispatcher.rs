@@ -179,7 +179,7 @@ impl Dispatcher {
 
         let instance_id = match env::var("MY_ROSTER_IDX") {
             Ok(id) => id,
-            Err(err) => {
+            Err(e) => {
                 error!("Failed to get MY_ROSTER_IDX: {:?}", e);
                 UNKNOWN_INSTANCE_ID.to_string()
             }
