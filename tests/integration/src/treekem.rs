@@ -9,6 +9,7 @@ use frame_config::{FACTORY_ABI_PATH, FACTORY_BIN_PATH};
 use frame_host::EnclaveDir;
 use frame_sodium::SodiumCiphertext;
 use serde_json::json;
+use std::env;
 #[cfg(test)]
 use test_utils::tracing::logs_contain;
 
@@ -32,6 +33,7 @@ async fn test_treekem_key_rotation() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
+    let instance_id = env::var("MAX_ROSTER_IDX").unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -62,7 +64,7 @@ async fn test_treekem_key_rotation() {
         .unwrap();
     println!("receipt: {:?}", receipt);
 
-    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache, &instance_id)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
