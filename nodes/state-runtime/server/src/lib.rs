@@ -21,6 +21,7 @@ pub struct Server {
     pub sender_address: Address,
     pub dispatcher: Dispatcher,
     pub cmd_encryption_algo: CmdEncryptionAlgo,
+    pub instance_id: String,
 }
 
 impl Server {
@@ -39,9 +40,10 @@ impl Server {
             &env::var("FACTORY_CONTRACT_ADDRESS").expect("FACTORY_CONTRACT_ADDRESS is not set"),
         )
         .unwrap();
+        let instance_id = env::var("MY_ROSTER_IDX").expect("MY_ROSTER_IDX is not set");
 
         let cache = EventCache::default();
-        let dispatcher = Dispatcher::new(eid, &eth_url, confirmations, cache)
+        let dispatcher = Dispatcher::new(eid, &eth_url, confirmations, cache, instance_id)
             .set_anonify_contract_address(
                 &*FACTORY_ABI_PATH,
                 factory_contract_address,
@@ -63,6 +65,7 @@ impl Server {
             sender_address,
             dispatcher,
             cmd_encryption_algo: CmdEncryptionAlgo::EnclaveKey,
+            instance_id,
         }
     }
 

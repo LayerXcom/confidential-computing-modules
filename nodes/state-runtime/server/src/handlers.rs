@@ -3,15 +3,14 @@ use crate::{CmdEncryptionAlgo, Server, DEFAULT_GAS};
 use actix_web::{web, HttpResponse, Responder};
 use anonify_ecall_types::cmd::*;
 use opentelemetry::trace::TraceContextExt;
-use std::env::VarError;
-use std::{env, sync::Arc};
+use std::sync::Arc;
 use tracing::{error, Span};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 #[tracing::instrument(skip(server), fields(trace_id, instance_id))]
 pub async fn handle_health_check(server: web::Data<Arc<Server>>) -> impl Responder {
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
-    Span::current().record("instance_id", &tracing::field::display(&get_instance_id()));
+    Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
 
     if server.dispatcher.is_healthy() {
         HttpResponse::Ok().finish()
@@ -26,7 +25,7 @@ pub async fn handle_send_command(
     req: web::Json<state_runtime_node_api::state::post::Request>,
 ) -> Result<HttpResponse> {
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
-    Span::current().record("instance_id", &tracing::field::display(&get_instance_id()));
+    Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
 
     let ecall_cmd = match server.cmd_encryption_algo {
         CmdEncryptionAlgo::TreeKem => SEND_COMMAND_TREEKEM_CMD,
@@ -51,7 +50,7 @@ pub async fn handle_send_command(
 #[tracing::instrument(skip(server), fields(trace_id, instance_id))]
 pub async fn handle_key_rotation(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
-    Span::current().record("instance_id", &tracing::field::display(&get_instance_id()));
+    Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
 
     let tx_hash = server
         .dispatcher
@@ -87,7 +86,7 @@ pub async fn handle_get_user_counter(
     req: web::Json<state_runtime_node_api::user_counter::get::Request>,
 ) -> Result<HttpResponse> {
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
-    Span::current().record("instance_id", &tracing::field::display(&get_instance_id()));
+    Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
 
     let (fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd) = match server.cmd_encryption_algo {
         CmdEncryptionAlgo::TreeKem => (
@@ -115,7 +114,7 @@ pub async fn handle_get_user_counter(
 #[tracing::instrument(skip(server), fields(trace_id, instance_id))]
 pub async fn handle_enclave_encryption_key(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
-    Span::current().record("instance_id", &tracing::field::display(&get_instance_id()));
+    Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
 
     let enclave_encryption_key = server
         .dispatcher
@@ -135,7 +134,7 @@ pub async fn handle_register_notification(
     req: web::Json<state_runtime_node_api::register_notification::post::Request>,
 ) -> Result<HttpResponse> {
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
-    Span::current().record("instance_id", &tracing::field::display(&get_instance_id()));
+    Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
 
     server
         .dispatcher
@@ -148,7 +147,7 @@ pub async fn handle_register_notification(
 #[tracing::instrument(skip(server), fields(trace_id, instance_id))]
 pub async fn handle_register_report(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
-    Span::current().record("instance_id", &tracing::field::display(&get_instance_id()));
+    Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
 
     let tx_hash = server
         .dispatcher
@@ -164,7 +163,7 @@ pub async fn handle_register_report(server: web::Data<Arc<Server>>) -> Result<Ht
 #[tracing::instrument(skip(server), fields(trace_id, instance_id))]
 pub async fn handle_all_backup_to(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
-    Span::current().record("instance_id", &tracing::field::display(&get_instance_id()));
+    Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
 
     server.dispatcher.all_backup_to()?;
 
@@ -175,7 +174,7 @@ pub async fn handle_all_backup_to(server: web::Data<Arc<Server>>) -> Result<Http
 #[tracing::instrument(skip(server), fields(trace_id, instance_id))]
 pub async fn handle_all_backup_from(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
-    Span::current().record("instance_id", &tracing::field::display(&get_instance_id()));
+    Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
 
     server.dispatcher.all_backup_from()?;
 
@@ -189,16 +188,4 @@ fn get_trace_id() -> String {
         .span_context()
         .trace_id()
         .to_hex()
-}
-
-fn get_instance_id() -> String {
-    const UNKNOWN_INSTANCE_ID: &'static str = "9999";
-
-    match env::var("MY_ROSTER_IDX") {
-        Ok(id) => id,
-        Err(e) => {
-            error!("Failed to get MY_ROSTER_IDX: {:?}", e);
-            UNKNOWN_INSTANCE_ID.to_string()
-        }
-    }
 }
