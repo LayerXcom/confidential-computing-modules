@@ -43,7 +43,7 @@ impl Server {
         let instance_id = env::var("MY_ROSTER_IDX").expect("MY_ROSTER_IDX is not set");
 
         let cache = EventCache::default();
-        let dispatcher = Dispatcher::new(eid, &eth_url, confirmations, cache, instance_id)
+        let dispatcher = Dispatcher::new(eid, &eth_url, confirmations, cache, &instance_id)
             .set_anonify_contract_address(
                 &*FACTORY_ABI_PATH,
                 factory_contract_address,
