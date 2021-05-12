@@ -14,7 +14,7 @@ use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use opentelemetry::trace::TraceContextExt;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
-use std::{fmt::Debug, path::Path, sync::Arc, time};
+use std::{env, fmt::Debug, path::Path, sync::Arc, time};
 use tracing::Span;
 use tracing::{debug, error, info};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
@@ -22,6 +22,8 @@ use web3::{
     contract::Options,
     types::{Address, TransactionReceipt, H256},
 };
+
+const UNKNOWN_INSTANCE_ID: &'static str = "9999";
 
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug, Clone)]
@@ -160,7 +162,7 @@ impl Dispatcher {
 
     #[tracing::instrument(
         skip(self, fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd),
-        fields(trace_id, fetched_trace_id)
+        fields(trace_id, fetched_trace_id, instance_id)
     )]
     pub async fn fetch_events(
         &self,
@@ -174,6 +176,16 @@ impl Dispatcher {
             .trace_id()
             .to_hex();
         Span::current().record("trace_id", &tracing::field::display(trace_id));
+
+        let instance_id = match env::var("MY_ROSTER_IDX") {
+            Ok(id) => id,
+            Err(err) => {
+                error!("Failed to get MY_ROSTER_IDX: {:?}", e);
+                UNKNOWN_INSTANCE_ID.to_string()
+            }
+        };
+        Span::current().record("instance_id", &tracing::field::display(instance_id));
+
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         inner
