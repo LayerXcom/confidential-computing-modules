@@ -4,7 +4,7 @@ use actix_web::{web, HttpResponse, Responder};
 use anonify_ecall_types::cmd::*;
 use opentelemetry::trace::TraceContextExt;
 use std::sync::Arc;
-use tracing::{error, Span};
+use tracing::Span;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 #[tracing::instrument(skip(server), fields(trace_id, instance_id))]
@@ -69,7 +69,7 @@ pub async fn handle_get_state(
     req: web::Json<state_runtime_node_api::state::get::Request>,
 ) -> Result<HttpResponse> {
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
-    Span::current().record("instance_id", &tracing::field::display(&get_instance_id()));
+    Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
 
     let state = server
         .dispatcher

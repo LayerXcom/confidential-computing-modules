@@ -23,8 +23,6 @@ use web3::{
     types::{Address, TransactionReceipt, H256},
 };
 
-const UNKNOWN_INSTANCE_ID: &'static str = "9999";
-
 /// This dispatcher communicates with a blockchain node.
 #[derive(Debug, Clone)]
 pub struct Dispatcher {
