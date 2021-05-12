@@ -56,7 +56,7 @@ fn main() {
 
 const ANONIFY_COMMAND: &'static str = "anonify";
 const DEFAULT_KEYFILE_INDEX: &'static str = "0";
-const DEFAULT_USER_COUNTER: &'static str = "0";
+const DEFAULT_USER_COUNTER: &'static str = "1";
 const DEFAULT_AMOUNT: &str = "10";
 const DEFAULT_BALANCE: &str = "100";
 const DEFAULT_TARGET: &str = "7H5cyDJ9CXBKOiM8tWnGaz5vqHY=";
