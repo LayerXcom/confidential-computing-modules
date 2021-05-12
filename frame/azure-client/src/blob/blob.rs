@@ -4,8 +4,10 @@ use azure_storage::blob::container::PublicAccess;
 use azure_storage::blob::prelude::{AsBlobClient, AsContainerClient};
 use azure_storage::clients::AsStorageClient;
 use azure_storage::core::clients::{StorageAccountClient, StorageClient};
+use bytes::Bytes;
 use reqwest;
 use std::error::Error;
+use std::num::NonZeroU32;
 use std::sync::Arc;
 use url::Url;
 
@@ -25,7 +27,6 @@ impl BlobClient {
         })
     }
 
-    // uses for unit tests only
     pub fn new_emulator(
         blob_storage_url_str: impl Into<String>,
         table_storage_url_str: impl Into<String>,
@@ -58,6 +59,44 @@ impl BlobClient {
         Ok(())
     }
 
+    pub async fn list_containers(&self) -> Result<Vec<String>, Box<dyn Error + Send + Sync>> {
+        let max_results = NonZeroU32::new(1024).unwrap();
+        let iv = self
+            .client
+            .list_containers()
+            .max_results(max_results)
+            .execute()
+            .await?;
+
+        let mut vector: Vec<String> = Vec::with_capacity(iv.incomplete_vector.len());
+        for cont in iv.incomplete_vector.iter() {
+            vector.push(cont.name.clone());
+        }
+
+        Ok(vector)
+    }
+
+    pub async fn list_blobs(
+        &self,
+        container_name: impl Into<String>,
+    ) -> Result<Vec<String>, Box<dyn Error + Send + Sync>> {
+        let max_results = NonZeroU32::new(1024).unwrap();
+        let iv = self
+            .client
+            .as_container_client(container_name)
+            .list_blobs()
+            .max_results(max_results)
+            .execute()
+            .await?;
+
+        let mut vector: Vec<String> = Vec::with_capacity(iv.blobs.blobs.len());
+        for cont in iv.blobs.blobs.iter() {
+            vector.push(cont.name.clone());
+        }
+
+        Ok(vector)
+    }
+
     pub async fn get(
         &self,
         container_name: impl Into<String>,
@@ -77,5 +116,25 @@ impl BlobClient {
         let s_content = String::from_utf8(response.data.to_vec())?;
 
         Ok(s_content)
+    }
+
+    pub async fn put(
+        &self,
+        container_name: impl Into<String>,
+        blob_name: impl Into<String>,
+        data: impl Into<Bytes>,
+    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+        let blob_client = self
+            .client
+            .as_container_client(container_name)
+            .as_blob_client(blob_name);
+
+        let _res = blob_client
+            .put_block_blob(data)
+            .content_type("text/plain")
+            .execute()
+            .await?;
+
+        Ok(())
     }
 }
