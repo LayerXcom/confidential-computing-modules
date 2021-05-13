@@ -33,7 +33,7 @@ async fn test_treekem_key_rotation() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
-    let instance_id = env::var("MAX_ROSTER_IDX").unwrap();
+    let instance_id = env::var("MY_ROSTER_IDX").unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
