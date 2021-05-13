@@ -14,6 +14,7 @@ use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
 use frame_sodium::SodiumCiphertext;
 use serde_json::json;
+use std::env;
 #[cfg(test)]
 use test_utils::tracing::logs_contain;
 
@@ -32,6 +33,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
+    let instance_id = env::var("MY_ROSTER_IDX").unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -62,7 +64,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
         .unwrap();
     println!("deployed receipt: {:?}", receipt);
 
-    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache, &instance_id)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
@@ -172,6 +174,7 @@ async fn test_enclave_key_auto_notification() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
+    let instance_id = env::var("MY_ROSTER_IDX").unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -202,7 +205,7 @@ async fn test_enclave_key_auto_notification() {
         .unwrap();
     println!("deployed receipt: {:?}", receipt);
 
-    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache, &instance_id)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
@@ -347,6 +350,7 @@ async fn test_enclave_key_integration_eth_transfer() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
+    let instance_id = env::var("MY_ROSTER_IDX").unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -377,7 +381,7 @@ async fn test_enclave_key_integration_eth_transfer() {
         .unwrap();
     println!("deployed receipt: {:?}", receipt);
 
-    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache, &instance_id)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
@@ -551,6 +555,7 @@ async fn test_enclave_key_integration_eth_approve() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
+    let instance_id = env::var("MY_ROSTER_IDX").unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -581,7 +586,7 @@ async fn test_enclave_key_integration_eth_approve() {
         .unwrap();
     println!("deployed receipt: {:?}", receipt);
 
-    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache, &instance_id)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
@@ -741,6 +746,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
+    let instance_id = env::var("MY_ROSTER_IDX").unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -771,7 +777,7 @@ async fn test_enclave_key_integration_eth_transfer_from() {
         .unwrap();
     println!("deployed receipt: {:?}", receipt);
 
-    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache, &instance_id)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
@@ -1132,6 +1138,7 @@ async fn test_enclave_key_integration_eth_mint() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
+    let instance_id = env::var("MY_ROSTER_IDX").unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -1162,7 +1169,7 @@ async fn test_enclave_key_integration_eth_mint() {
         .unwrap();
     println!("deployed receipt: {:?}", receipt);
 
-    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache, &instance_id)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,
@@ -1302,6 +1309,7 @@ async fn test_enclave_key_integration_eth_burn() {
 
     let gas = 5_000_000;
     let cache = EventCache::default();
+    let instance_id = env::var("MY_ROSTER_IDX").unwrap();
 
     // Deploy
     let deployer = EthDeployer::new(&*ETH_URL).unwrap();
@@ -1332,7 +1340,7 @@ async fn test_enclave_key_integration_eth_burn() {
         .unwrap();
     println!("deployed receipt: {:?}", receipt);
 
-    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache)
+    let dispatcher = Dispatcher::new(eid, &*ETH_URL, CONFIRMATIONS, cache, &instance_id)
         .set_anonify_contract_address(
             &*FACTORY_ABI_PATH,
             factory_contract_addr,

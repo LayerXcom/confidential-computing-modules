@@ -40,6 +40,7 @@ struct InnerDispatcher {
     is_healthy: bool,
     #[cfg(feature = "backup-enable")]
     backup: SecretBackup,
+    instance_id: String,
 }
 
 impl Dispatcher {
@@ -48,6 +49,7 @@ impl Dispatcher {
         node_url: &str,
         confirmations: usize,
         cache: EventCache,
+        instance_id: &str,
     ) -> Self {
         let inner = Arc::new(RwLock::new(InnerDispatcher {
             enclave_id,
@@ -59,6 +61,7 @@ impl Dispatcher {
             is_healthy: false,
             #[cfg(feature = "backup-enable")]
             backup: SecretBackup::default(),
+            instance_id: instance_id.to_string(),
         }));
 
         Dispatcher { inner }
@@ -160,7 +163,7 @@ impl Dispatcher {
 
     #[tracing::instrument(
         skip(self, fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd),
-        fields(trace_id, fetched_trace_id)
+        fields(trace_id, fetched_trace_id, instance_id)
     )]
     pub async fn fetch_events(
         &self,
@@ -174,6 +177,11 @@ impl Dispatcher {
             .trace_id()
             .to_hex();
         Span::current().record("trace_id", &tracing::field::display(trace_id));
+        Span::current().record(
+            "instance_id",
+            &tracing::field::display(&self.inner.read().instance_id),
+        );
+
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         inner
