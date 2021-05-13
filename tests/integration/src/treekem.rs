@@ -3,7 +3,6 @@ use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::dispatcher::*;
 use anonify_eth_driver::EventCache;
 use eth_deployer::EthDeployer;
-use frame_common::crypto::Ed25519ChallengeResponse;
 use frame_config::ANONIFY_ABI_PATH;
 use frame_config::{FACTORY_ABI_PATH, FACTORY_BIN_PATH};
 use frame_host::EnclaveDir;
@@ -14,9 +13,10 @@ use std::env;
 use test_utils::tracing::logs_contain;
 
 use crate::{
-    get_enclave_encryption_key, set_env_vars, set_env_vars_for_treekem, ACCOUNT_INDEX,
-    CONFIRMATIONS, ETH_URL, PASSWORD,
+    generate_account_id_from_rng, get_enclave_encryption_key, set_env_vars,
+    set_env_vars_for_treekem, ACCOUNT_INDEX, CONFIRMATIONS, ETH_URL, PASSWORD,
 };
+use frame_common::crypto::NoAuth;
 
 #[actix_rt::test]
 async fn test_treekem_key_rotation() {
@@ -27,9 +27,9 @@ async fn test_treekem_key_rotation() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+    let my_access_policy = NoAuth::new(generate_account_id_from_rng());
+    let other_access_policy = NoAuth::new(generate_account_id_from_rng());
+    let third_access_policy = NoAuth::new(generate_account_id_from_rng());
 
     let gas = 5_000_000;
     let cache = EventCache::default();

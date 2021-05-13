@@ -2,6 +2,7 @@
 extern crate lazy_static;
 use anonify_eth_driver::dispatcher::*;
 use ethabi::Contract as ContractABI;
+use frame_common::crypto::{AccountId, ACCOUNT_ID_SIZE};
 use frame_config::ANONIFY_ABI_PATH;
 use frame_sodium::SodiumPubKey;
 use once_cell::sync::Lazy;
@@ -58,9 +59,9 @@ pub async fn get_enclave_encryption_key(
 
 lazy_static! {
     pub static ref ENV_LOGGER_INIT: () = {
-        use test_utils::tracing::{GLOBAL_TRACING_BUF, TracingWriter};
-        use tracing_subscriber::util::SubscriberInitExt;
+        use test_utils::tracing::{TracingWriter, GLOBAL_TRACING_BUF};
         use tracing_core::Dispatch;
+        use tracing_subscriber::util::SubscriberInitExt;
 
         let mock_writer = TracingWriter::new(&*GLOBAL_TRACING_BUF);
 
@@ -88,4 +89,10 @@ pub fn set_env_vars() {
 pub fn set_env_vars_for_treekem() {
     env::set_var("ANONIFY_ABI_PATH", "contract-build/AnonifyWithTreeKem.abi");
     env::set_var("ANONIFY_BIN_PATH", "contract-build/AnonifyWithTreeKem.bin");
+}
+
+pub fn generate_account_id_from_rng() -> AccountId {
+    use rand::Rng;
+    let array = rand::thread_rng().gen::<[u8; ACCOUNT_ID_SIZE]>();
+    AccountId::from_array(array)
 }

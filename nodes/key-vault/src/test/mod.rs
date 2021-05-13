@@ -1,7 +1,7 @@
 use crate::{handlers::handle_health_check, Server as KeyVaultServer};
 use actix_web::{http::StatusCode, test, web, App};
 use anonify_eth_driver::utils::*;
-use frame_common::crypto::Ed25519ChallengeResponse;
+use frame_common::crypto::{AccountId, NoAuth};
 use frame_config::{ANONIFY_PARAMS_DIR, PJ_ROOT_DIR};
 use frame_host::EnclaveDir;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
@@ -250,21 +250,9 @@ fn init_100_req<CR>(
 where
     CR: RngCore + CryptoRng,
 {
-    let sig = [
-        236, 103, 17, 252, 166, 199, 9, 46, 200, 107, 188, 0, 37, 111, 83, 105, 175, 81, 231, 14,
-        81, 100, 221, 89, 102, 172, 30, 96, 15, 128, 117, 146, 181, 221, 149, 206, 163, 208, 113,
-        198, 241, 16, 150, 248, 99, 170, 85, 122, 165, 197, 14, 120, 110, 37, 69, 32, 36, 218, 100,
-        64, 224, 226, 99, 2,
-    ];
-    let pubkey = [
-        164, 189, 195, 42, 48, 163, 27, 74, 84, 147, 25, 254, 16, 14, 206, 134, 153, 148, 33, 189,
-        55, 149, 7, 15, 11, 101, 106, 28, 48, 130, 133, 143,
-    ];
-    let challenge = [
-        244, 158, 183, 202, 237, 236, 27, 67, 39, 95, 178, 136, 235, 162, 188, 106, 52, 56, 6, 245,
-        3, 101, 33, 155, 58, 175, 168, 63, 73, 125, 205, 225,
-    ];
-    let access_policy = Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge);
+    let access_policy = NoAuth::new(AccountId::from_array([
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+    ]));
 
     let req = json!({
         "access_policy": access_policy,
@@ -291,21 +279,9 @@ fn balance_of_req<CR>(
 where
     CR: RngCore + CryptoRng,
 {
-    let sig = [
-        21, 54, 136, 84, 150, 59, 196, 71, 164, 136, 222, 128, 100, 84, 208, 219, 84, 7, 61, 11,
-        230, 220, 25, 138, 67, 247, 95, 97, 30, 76, 120, 160, 73, 48, 110, 43, 94, 79, 192, 195,
-        82, 199, 73, 80, 48, 148, 233, 143, 87, 237, 159, 97, 252, 226, 68, 160, 137, 127, 195,
-        116, 128, 181, 47, 2,
-    ];
-    let pubkey = [
-        164, 189, 195, 42, 48, 163, 27, 74, 84, 147, 25, 254, 16, 14, 206, 134, 153, 148, 33, 189,
-        55, 149, 7, 15, 11, 101, 106, 28, 48, 130, 133, 143,
-    ];
-    let challenge = [
-        119, 177, 182, 220, 100, 44, 96, 179, 173, 47, 220, 49, 105, 204, 132, 230, 211, 24, 166,
-        219, 82, 76, 27, 205, 211, 232, 142, 98, 66, 130, 150, 202,
-    ];
-    let access_policy = Ed25519ChallengeResponse::new_from_bytes(sig, pubkey, challenge);
+    let access_policy = NoAuth::new(AccountId::from_array([
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+    ]));
     let req = json!({
         "access_policy": access_policy,
         "runtime_params": {},

@@ -3,11 +3,9 @@ use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::dispatcher::*;
 use anonify_eth_driver::EventCache;
 use eth_deployer::EthDeployer;
-use frame_common::{
-    crypto::{Ed25519ChallengeResponse, COMMON_ACCESS_POLICY},
-    state_types::NotifyState,
-    traits::*,
-};
+use frame_common::{crypto::{
+    OWNER_ACCOUNT_ID, NoAuth
+}, state_types::NotifyState, traits::*};
 use frame_config::ANONIFY_ABI_PATH;
 use frame_config::{FACTORY_ABI_PATH, FACTORY_BIN_PATH};
 use frame_host::EnclaveDir;
@@ -19,7 +17,8 @@ use std::env;
 use test_utils::tracing::logs_contain;
 
 use crate::{
-    get_enclave_encryption_key, set_env_vars, ACCOUNT_INDEX, CONFIRMATIONS, ETH_URL, PASSWORD,
+    generate_account_id_from_rng, get_enclave_encryption_key, set_env_vars, ACCOUNT_INDEX,
+    CONFIRMATIONS, ETH_URL, PASSWORD,
 };
 
 #[actix_rt::test]
@@ -29,8 +28,8 @@ pub async fn test_enclave_key_integration_eth_construct() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-
+    let my_access_policy = NoAuth::new(generate_account_id_from_rng());
+    
     let gas = 5_000_000;
     let cache = EventCache::default();
     let instance_id = env::var("MY_ROSTER_IDX").unwrap();
@@ -123,7 +122,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
         .unwrap();
 
     let req = json!({
-        "access_policy": COMMON_ACCESS_POLICY.clone(),
+        "access_policy": NoAuth::new(OWNER_ACCOUNT_ID.clone()),
         "runtime_params": {},
         "state_name": "owner",
     });
@@ -144,7 +143,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
     let my_balance = dispatcher.get_state(encrypted_req).unwrap();
 
     let req = json!({
-        "access_policy": COMMON_ACCESS_POLICY.clone(),
+        "access_policy": NoAuth::new(OWNER_ACCOUNT_ID.clone()),
         "runtime_params": {},
         "state_name": "total_supply",
     });
@@ -169,8 +168,8 @@ async fn test_enclave_key_auto_notification() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+    let my_access_policy = NoAuth::new(generate_account_id_from_rng());
+    let other_access_policy = NoAuth::new(generate_account_id_from_rng());
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -344,9 +343,9 @@ async fn test_enclave_key_integration_eth_transfer() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+    let my_access_policy = NoAuth::new(generate_account_id_from_rng());
+    let other_access_policy = NoAuth::new(generate_account_id_from_rng());
+    let third_access_policy = NoAuth::new(generate_account_id_from_rng());
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -550,8 +549,8 @@ async fn test_enclave_key_integration_eth_approve() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+    let my_access_policy = NoAuth::new(generate_account_id_from_rng());
+    let other_access_policy = NoAuth::new(generate_account_id_from_rng());
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -740,9 +739,9 @@ async fn test_enclave_key_integration_eth_transfer_from() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let third_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+    let my_access_policy = NoAuth::new(generate_account_id_from_rng());
+    let other_access_policy = NoAuth::new(generate_account_id_from_rng());
+    let third_access_policy = NoAuth::new(generate_account_id_from_rng());
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -1133,8 +1132,8 @@ async fn test_enclave_key_integration_eth_mint() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+    let my_access_policy = NoAuth::new(generate_account_id_from_rng());
+    let other_access_policy = NoAuth::new(generate_account_id_from_rng());
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -1262,7 +1261,7 @@ async fn test_enclave_key_integration_eth_mint() {
         .unwrap();
 
     let req = json!({
-        "access_policy": COMMON_ACCESS_POLICY.clone(),
+        "access_policy": NoAuth::new(OWNER_ACCOUNT_ID.clone()),
         "runtime_params": {},
         "state_name": "total_supply",
     });
@@ -1304,8 +1303,8 @@ async fn test_enclave_key_integration_eth_burn() {
     let eid = enclave.geteid();
     // just for testing
     let mut csprng = rand::thread_rng();
-    let my_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
-    let other_access_policy = Ed25519ChallengeResponse::new_from_rng().unwrap();
+    let my_access_policy = NoAuth::new(generate_account_id_from_rng());
+    let other_access_policy = NoAuth::new(generate_account_id_from_rng());
 
     let gas = 5_000_000;
     let cache = EventCache::default();
@@ -1463,7 +1462,7 @@ async fn test_enclave_key_integration_eth_burn() {
         .unwrap();
 
     let req = json!({
-        "access_policy": COMMON_ACCESS_POLICY.clone(),
+        "access_policy": NoAuth::new(OWNER_ACCOUNT_ID.clone()),
         "runtime_params": {},
         "state_name": "total_supply",
     });

@@ -3,7 +3,7 @@ use crate::ENCLAVE_CONTEXT;
 use anonify_ecall_types::cmd::*;
 use anonify_enclave::{context::AnonifyEnclaveContext, workflow::*};
 use anyhow::anyhow;
-use frame_common::crypto::Ed25519ChallengeResponse;
+use frame_common::crypto::NoAuth;
 use frame_enclave::{register_ecall, EnclaveEngine};
 use std::{ptr, vec::Vec};
 
@@ -15,23 +15,23 @@ register_ecall!(
     #[cfg(feature = "enclave_key")]
     (
         SEND_COMMAND_ENCLAVE_KEY_CMD,
-        CommandByEnclaveKeySender<Ed25519ChallengeResponse>
+        CommandByEnclaveKeySender<NoAuth>
     ),
     #[cfg(feature = "treekem")]
     (
         SEND_COMMAND_TREEKEM_CMD,
-        CommandByTreeKemSender<Ed25519ChallengeResponse>
+        CommandByTreeKemSender<NoAuth>
     ),
     #[cfg(feature = "enclave_key")]
     (
         FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD,
-        CommandByEnclaveKeyReceiver<Ed25519ChallengeResponse>
+        CommandByEnclaveKeyReceiver<NoAuth>
     ),
     // Fetch a ciphertext in event logs from blockchain nodes into enclave's memory database.
     #[cfg(feature = "treekem")]
     (
         FETCH_CIPHERTEXT_TREEKEM_CMD,
-        CommandByTreeKemReceiver<Ed25519ChallengeResponse>
+        CommandByTreeKemReceiver<NoAuth>
     ),
     #[cfg(feature = "treekem")]
     (SEND_HANDSHAKE_TREEKEM_CMD, HandshakeSender),
@@ -43,10 +43,10 @@ register_ecall!(
     (JOIN_GROUP_ENCLAVE_KEY_CMD, JoinGroupWithEnclaveKey),
     #[cfg(feature = "treekem")]
     (JOIN_GROUP_TREEKEM_CMD, JoinGroupWithTreeKem),
-    (GET_STATE_CMD, GetState<Ed25519ChallengeResponse>),
+    (GET_STATE_CMD, GetState<NoAuth>),
     (
         REGISTER_NOTIFICATION_CMD,
-        RegisterNotification<Ed25519ChallengeResponse>
+        RegisterNotification<NoAuth>
     ),
     (GET_ENCLAVE_ENCRYPTION_KEY_CMD, EncryptionKeyGetter),
     (SEND_REGISTER_REPORT_CMD, ReportRegistration),
@@ -56,6 +56,6 @@ register_ecall!(
     (RECOVER_PATH_SECRET_ALL_CMD, PathSecretRecoverer),
     (
         GET_USER_COUNTER_CMD,
-        GetUserCounter<Ed25519ChallengeResponse>
+        GetUserCounter<NoAuth>
     ),
 );
