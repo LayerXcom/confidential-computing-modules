@@ -1525,7 +1525,6 @@ dependencies = [
  "console 0.7.7",
  "dialoguer",
  "dirs",
- "ed25519-dalek",
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "ethabi",
  "frame-common",
