@@ -6,25 +6,23 @@ mod tests {
             "http://127.0.0.1:10000",
             "http://127.0.0.1:10002",
         );
+
         // コンテナがなければ作成する失敗しても無視
         let _res = client.create_container("devstoreaccount1/emulcont").await;
 
+        // emulcontコンテナが存在することを確認する
         let res = client.list_containers().await.unwrap();
+        assert_eq!(vec!("emulcont"), res);
 
-        println!("{:?}", res);
-
-        let data = "aaaaa";
+        // blobにデータをputする
+        let data = "bbbbb";
         let _res = client
             .put("emulcont", "test.txt", data.as_bytes())
             .await
             .unwrap();
 
-        let res = client.list_blobs("emulcont").await.unwrap();
-
-        println!("{:?}", res);
-
+        // putしたデータを取得できることを確認する
         let res = client.get("emulcont", "test.txt").await.unwrap();
-
-        println!("{}", res);
+        assert_eq!(data, res);
     }
 }

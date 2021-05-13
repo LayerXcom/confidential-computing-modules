@@ -27,6 +27,7 @@ impl BlobClient {
         })
     }
 
+    // uses for Azurite.
     pub fn new_emulator(
         blob_storage_url_str: impl Into<String>,
         table_storage_url_str: impl Into<String>,
@@ -70,27 +71,6 @@ impl BlobClient {
 
         let mut vector: Vec<String> = Vec::with_capacity(iv.incomplete_vector.len());
         for cont in iv.incomplete_vector.iter() {
-            vector.push(cont.name.clone());
-        }
-
-        Ok(vector)
-    }
-
-    pub async fn list_blobs(
-        &self,
-        container_name: impl Into<String>,
-    ) -> Result<Vec<String>, Box<dyn Error + Send + Sync>> {
-        let max_results = NonZeroU32::new(1024).unwrap();
-        let iv = self
-            .client
-            .as_container_client(container_name)
-            .list_blobs()
-            .max_results(max_results)
-            .execute()
-            .await?;
-
-        let mut vector: Vec<String> = Vec::with_capacity(iv.blobs.blobs.len());
-        for cont in iv.blobs.blobs.iter() {
             vector.push(cont.name.clone());
         }
 
