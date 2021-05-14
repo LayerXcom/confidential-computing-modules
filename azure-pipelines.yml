@@ -1,15 +1,16 @@
 trigger:
 - master
 
-- stages: E2E_Test
+stages:
+- stage:
   condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
   jobs:
-    - job: E2E
-      pool:
-        name: 'AnonifyAgent'
-      steps:
-        - script: ./scripts/e2e-test.sh"
-          displayName: 'Run E2E tests'
+  - job: E2E
+    pool:
+      name: 'AnonifyAgent'
+    steps:
+      - script: ./scripts/e2e-test.sh"
+        displayName: 'Run E2E tests'
 
 #- stage: Test
 #  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
