@@ -1,6 +1,9 @@
 # frame::azure-client
+The frame::azure-client is wrapper library of azure sdk.
 
-## Azure Client for Azure Storage
+- [azure-sdk-for-rust](https://github.com/Azure/azure-sdk-for-rust)
+
+## Features
 - Blob Client
   - gets a blob
   - puts a blob
