@@ -6,8 +6,7 @@ use crate::{
 use anonify_wallet::{DirOperations, KeyFile, KeystoreDirectory, WalletDirectory};
 use anyhow::anyhow;
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
-use ed25519_dalek::Keypair;
-use frame_common::crypto::{AccountId, Ed25519ChallengeResponse};
+use frame_common::crypto::{AccountId, NoAuth, ACCOUNT_ID_SIZE};
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use rand::Rng;
 use rand_core::{CryptoRng, RngCore};
@@ -37,29 +36,60 @@ pub(crate) fn get_enclave_encryption_key(state_runtime_url: String) -> Result<So
     Ok(resp.enclave_encryption_key)
 }
 
-pub(crate) fn init_state<R, CR>(
-    term: &mut Term,
-    root_dir: PathBuf,
+pub(crate) fn get_user_counter<CR>(
     state_runtime_url: String,
-    index: usize,
-    total_supply: u64,
     enclave_encryption_key: &SodiumPubKey,
-    rng: &mut R,
+    csprng: &mut CR,
+) -> Result<u32>
+where
+    CR: RngCore + CryptoRng,
+{
+    let access_policy = NoAuth::new(generate_account_id_from_rng());
+
+    let req = json!({
+        "access_policy": access_policy,
+    });
+    let ciphertext = SodiumCiphertext::encrypt(
+        csprng,
+        &enclave_encryption_key,
+        &serde_json::to_vec(&req).unwrap(),
+    )
+    .map_err(|e| anyhow!("{:?}", e))?;
+
+    let resp: state_runtime_node_api::user_counter::get::Response = Client::new()
+        .get(&format!("{}/api/v1/user_counter", &state_runtime_url))
+        .json(&state_runtime_node_api::user_counter::get::Request::new(
+            ciphertext,
+        ))
+        .send()?
+        .json()?;
+
+    let user_counter = resp
+        .user_counter
+        .as_u64()
+        .ok_or_else(|| anyhow!("failed to parse user_counter"))?;
+
+    Ok(user_counter as u32)
+}
+
+pub(crate) fn init_state<CR>(
+    state_runtime_url: String,
+    total_supply: u64,
+    counter: u32,
+    enclave_encryption_key: &SodiumPubKey,
     csprng: &mut CR,
 ) -> Result<()>
 where
-    R: Rng,
     CR: RngCore + CryptoRng,
 {
-    let password = prompt_password(term)?;
-    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let access_policy = NoAuth::new(generate_account_id_from_rng());
     let req = json!({
         "access_policy": access_policy,
         "runtime_params": {
             "total_supply": total_supply,
         },
         "cmd_name": "construct",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -80,24 +110,18 @@ where
     Ok(())
 }
 
-pub(crate) fn transfer<R, CR>(
-    term: &mut Term,
-    root_dir: PathBuf,
+pub(crate) fn transfer<CR>(
     state_runtime_url: String,
-    index: usize,
     recipient: AccountId,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
-    rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
 where
-    R: Rng,
     CR: RngCore + CryptoRng,
 {
-    let password = prompt_password(term)?;
-    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let access_policy = NoAuth::new(generate_account_id_from_rng());
     let req = json!({
         "access_policy": access_policy,
         "runtime_params": {
@@ -105,6 +129,7 @@ where
             "recipient": recipient,
         },
         "cmd_name": "transfer",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -125,24 +150,18 @@ where
     Ok(())
 }
 
-pub(crate) fn approve<R, CR>(
-    term: &mut Term,
-    root_dir: PathBuf,
+pub(crate) fn approve<CR>(
     state_runtime_url: String,
-    index: usize,
     spender: AccountId,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
-    rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
 where
-    R: Rng,
     CR: RngCore + CryptoRng,
 {
-    let password = prompt_password(term)?;
-    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let access_policy = NoAuth::new(generate_account_id_from_rng());
     let req = json!({
         "access_policy": access_policy,
         "runtime_params": {
@@ -150,6 +169,7 @@ where
             "spender": spender,
         },
         "cmd_name": "approve",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -170,25 +190,19 @@ where
     Ok(())
 }
 
-pub(crate) fn transfer_from<R, CR>(
-    term: &mut Term,
-    root_dir: PathBuf,
+pub(crate) fn transfer_from<CR>(
     state_runtime_url: String,
-    index: usize,
     owner: AccountId,
     recipient: AccountId,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
-    rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
 where
-    R: Rng,
     CR: RngCore + CryptoRng,
 {
-    let password = prompt_password(term)?;
-    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let access_policy = NoAuth::new(generate_account_id_from_rng());
     let req = json!({
         "access_policy": access_policy,
         "runtime_params": {
@@ -197,6 +211,7 @@ where
             "recipient": recipient,
         },
         "cmd_name": "transfer_from",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -217,24 +232,18 @@ where
     Ok(())
 }
 
-pub(crate) fn mint<R, CR>(
-    term: &mut Term,
-    root_dir: PathBuf,
+pub(crate) fn mint<CR>(
     state_runtime_url: String,
-    index: usize,
     recipient: AccountId,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
-    rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
 where
-    R: Rng,
     CR: RngCore + CryptoRng,
 {
-    let password = prompt_password(term)?;
-    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let access_policy = NoAuth::new(generate_account_id_from_rng());
     let req = json!({
         "access_policy": access_policy,
         "runtime_params": {
@@ -242,6 +251,7 @@ where
             "recipient": recipient,
         },
         "cmd_name": "mint",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -262,29 +272,24 @@ where
     Ok(())
 }
 
-pub(crate) fn burn<R, CR>(
-    term: &mut Term,
-    root_dir: PathBuf,
+pub(crate) fn burn<CR>(
     state_runtime_url: String,
-    index: usize,
     amount: u64,
+    counter: u32,
     enclave_encryption_key: &SodiumPubKey,
-    rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
 where
-    R: Rng,
     CR: RngCore + CryptoRng,
 {
-    let password = prompt_password(term)?;
-    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let access_policy = NoAuth::new(generate_account_id_from_rng());
     let req = json!({
         "access_policy": access_policy,
         "runtime_params": {
             "amount": amount,
         },
         "cmd_name": "burn",
+        "counter": counter,
     });
     let ciphertext = SodiumCiphertext::encrypt(
         csprng,
@@ -316,23 +321,16 @@ pub(crate) fn key_rotation(state_runtime_url: String) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn allowance<R, CR>(
-    term: &mut Term,
-    root_dir: PathBuf,
+pub(crate) fn allowance<CR>(
     state_runtime_url: String,
-    index: usize,
     spender: AccountId,
     enclave_encryption_key: &SodiumPubKey,
-    rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
 where
-    R: Rng,
     CR: RngCore + CryptoRng,
 {
-    let password = prompt_password(term)?;
-    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let access_policy = NoAuth::new(generate_account_id_from_rng());
 
     let req = json!({
         "access_policy": access_policy,
@@ -359,22 +357,15 @@ where
     Ok(())
 }
 
-pub(crate) fn balance_of<R, CR>(
-    term: &mut Term,
-    root_dir: PathBuf,
+pub(crate) fn balance_of<CR>(
     state_runtime_url: String,
-    index: usize,
     enclave_encryption_key: &SodiumPubKey,
-    rng: &mut R,
     csprng: &mut CR,
 ) -> Result<()>
 where
-    R: Rng,
     CR: RngCore + CryptoRng,
 {
-    let password = prompt_password(term)?;
-    let keypair = get_keypair_from_keystore(root_dir, &password, index)?;
-    let access_policy = Ed25519ChallengeResponse::new_from_keypair(keypair, rng);
+    let access_policy = NoAuth::new(generate_account_id_from_rng());
 
     let req = json!({
         "access_policy": access_policy,
@@ -527,20 +518,7 @@ fn wallet_keystore_dirs(root_dir: &PathBuf) -> Result<(WalletDirectory, Keystore
     Ok((wallet_dir, keystore_dir))
 }
 
-pub fn prompt_password(term: &mut Term) -> Result<Vec<u8>> {
-    // enter password
-    term.info("Enter the wallet password.\n")?;
-    let password = term.password("wallet password")?;
-    Ok(password)
-}
-
-pub fn get_keypair_from_keystore(
-    root_dir: PathBuf,
-    password: &[u8],
-    keyfile_index: usize,
-) -> Result<Keypair> {
-    let (_wallet_dir, keystore_dir) = wallet_keystore_dirs(&root_dir)?;
-    let keyfile = &keystore_dir.load_all()?[keyfile_index];
-    let keypair = keyfile.get_key_pair(password)?;
-    Ok(keypair)
+pub fn generate_account_id_from_rng() -> AccountId {
+    let array = rand::thread_rng().gen::<[u8; ACCOUNT_ID_SIZE]>();
+    AccountId::from_array(array)
 }

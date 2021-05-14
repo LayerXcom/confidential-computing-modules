@@ -47,6 +47,7 @@ impl Term {
             .map(|e| e.into_bytes())
     }
 
+    #[allow(dead_code)]
     pub fn password(&mut self, prompt: &str) -> io::Result<Vec<u8>> {
         dialoguer::PasswordInput::new()
             .with_prompt(prompt)

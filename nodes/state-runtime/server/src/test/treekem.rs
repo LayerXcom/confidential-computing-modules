@@ -1,4 +1,6 @@
-use crate::{handlers::*, Server};
+#[cfg(test)]
+use crate::handlers::*;
+use crate::Server;
 use actix_web::{test, web, App};
 use frame_common::AccessPolicy;
 use frame_config::{ANONIFY_ABI_PATH, FACTORY_ABI_PATH};

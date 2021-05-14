@@ -11,10 +11,13 @@ use anonify_ecall_types::cmd::*;
 use frame_common::crypto::AccountId;
 use frame_host::engine::HostEngine;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
+use opentelemetry::trace::TraceContextExt;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
 use std::{fmt::Debug, path::Path, sync::Arc, time};
+use tracing::Span;
 use tracing::{debug, error, info};
+use tracing_opentelemetry::OpenTelemetrySpanExt;
 use web3::{
     contract::Options,
     types::{Address, TransactionReceipt, H256},
@@ -37,6 +40,7 @@ struct InnerDispatcher {
     is_healthy: bool,
     #[cfg(feature = "backup-enable")]
     backup: SecretBackup,
+    instance_id: String,
 }
 
 impl Dispatcher {
@@ -45,6 +49,7 @@ impl Dispatcher {
         node_url: &str,
         confirmations: usize,
         cache: EventCache,
+        instance_id: &str,
     ) -> Self {
         let inner = Arc::new(RwLock::new(InnerDispatcher {
             enclave_id,
@@ -56,6 +61,7 @@ impl Dispatcher {
             is_healthy: false,
             #[cfg(feature = "backup-enable")]
             backup: SecretBackup::default(),
+            instance_id: instance_id.to_string(),
         }));
 
         Dispatcher { inner }
@@ -155,11 +161,27 @@ impl Dispatcher {
         self.inner.read().is_healthy
     }
 
+    #[tracing::instrument(
+        skip(self, fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd),
+        fields(trace_id, fetched_trace_id, instance_id)
+    )]
     pub async fn fetch_events(
         &self,
         fetch_ciphertext_ecall_cmd: u32,
         fetch_handshake_ecall_cmd: Option<u32>,
     ) -> Result<Option<Vec<serde_json::Value>>> {
+        let trace_id = Span::current()
+            .context()
+            .span()
+            .span_context()
+            .trace_id()
+            .to_hex();
+        Span::current().record("trace_id", &tracing::field::display(trace_id));
+        Span::current().record(
+            "instance_id",
+            &tracing::field::display(&self.inner.read().instance_id),
+        );
+
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         inner

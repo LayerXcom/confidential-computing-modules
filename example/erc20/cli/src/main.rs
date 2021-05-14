@@ -40,7 +40,7 @@ fn main() {
 
     match matches.subcommand() {
         (ANONIFY_COMMAND, Some(matches)) => {
-            subcommand_anonify(term, root_dir, state_runtime_url, matches, rng, &mut csprng)
+            subcommand_anonify(term, state_runtime_url, matches, &mut csprng)
         }
         (WALLET_COMMAND, Some(matches)) => subcommand_wallet(term, root_dir, matches, rng),
         _ => {
@@ -55,20 +55,17 @@ fn main() {
 //
 
 const ANONIFY_COMMAND: &'static str = "anonify";
-const DEFAULT_KEYFILE_INDEX: &'static str = "0";
+const DEFAULT_USER_COUNTER: &'static str = "1";
 const DEFAULT_AMOUNT: &str = "10";
 const DEFAULT_BALANCE: &str = "100";
 const DEFAULT_TARGET: &str = "7H5cyDJ9CXBKOiM8tWnGaz5vqHY=";
 
-fn subcommand_anonify<R, CR>(
+fn subcommand_anonify<CR>(
     mut term: Term,
-    root_dir: PathBuf,
     state_runtime_url: String,
     matches: &ArgMatches,
-    rng: &mut R,
     csprng: &mut CR,
 ) where
-    R: Rng,
     CR: RngCore + CryptoRng,
 {
     match matches.subcommand() {
@@ -77,16 +74,16 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to register_report command");
         }
         ("init_state", Some(matches)) => {
-            let keyfile_index: usize = matches
-                .value_of("keyfile-index")
-                .expect("Not found keyfile-index.")
-                .parse()
-                .expect("Failed to parse keyfile-index");
             let total_supply: u64 = matches
                 .value_of("total_supply")
                 .expect("Not found total_supply.")
                 .parse()
                 .expect("Failed to parse total_supply");
+            let user_counter: u32 = matches
+                .value_of("counter")
+                .expect("Not found counter.")
+                .parse()
+                .expect("Failed to parse counter");
             let enclave_encryption_key_vec = base64::decode(
                 matches
                     .value_of("enclave_encryption_key")
@@ -97,23 +94,15 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to convert SodiumPubKey");
 
             commands::init_state(
-                &mut term,
-                root_dir,
                 state_runtime_url,
-                keyfile_index,
                 total_supply,
+                user_counter,
                 &enclave_encryption_key,
-                rng,
                 csprng,
             )
             .expect("Failed to init_state command");
         }
         ("transfer", Some(matches)) => {
-            let keyfile_index: usize = matches
-                .value_of("keyfile-index")
-                .expect("Not found keyfile-index.")
-                .parse()
-                .expect("Failed to parse keyfile-index");
             let amount: u64 = matches
                 .value_of("amount")
                 .expect("Not found amount.")
@@ -121,6 +110,11 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to parse amount");
             let target: &str = matches.value_of("target").expect("Not found target");
             let target_addr = AccountId::base64_decode(target);
+            let user_counter: u32 = matches
+                .value_of("counter")
+                .expect("Not found counter.")
+                .parse()
+                .expect("Failed to parse counter");
             let enclave_encryption_key_vec = base64::decode(
                 matches
                     .value_of("enclave_encryption_key")
@@ -131,24 +125,16 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to convert SodiumPubKey");
 
             commands::transfer(
-                &mut term,
-                root_dir,
                 state_runtime_url,
-                keyfile_index,
                 target_addr,
                 amount,
+                user_counter,
                 &enclave_encryption_key,
-                rng,
                 csprng,
             )
             .expect("Failed to transfer command");
         }
         ("approve", Some(matches)) => {
-            let keyfile_index: usize = matches
-                .value_of("keyfile-index")
-                .expect("Not found keyfile-index.")
-                .parse()
-                .expect("Failed to parse keyfile-index");
             let amount: u64 = matches
                 .value_of("amount")
                 .expect("Not found amount.")
@@ -156,6 +142,11 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to parse amount");
             let target: &str = matches.value_of("target").expect("Not found target");
             let target_addr = AccountId::base64_decode(target);
+            let user_counter: u32 = matches
+                .value_of("counter")
+                .expect("Not found counter.")
+                .parse()
+                .expect("Failed to parse counter");
             let enclave_encryption_key_vec = base64::decode(
                 matches
                     .value_of("enclave_encryption_key")
@@ -166,24 +157,16 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to convert SodiumPubKey");
 
             commands::approve(
-                &mut term,
-                root_dir,
                 state_runtime_url,
-                keyfile_index,
                 target_addr,
                 amount,
+                user_counter,
                 &enclave_encryption_key,
-                rng,
                 csprng,
             )
             .expect("Failed to approve command");
         }
         ("transfer_from", Some(matches)) => {
-            let keyfile_index: usize = matches
-                .value_of("keyfile-index")
-                .expect("Not found keyfile-index.")
-                .parse()
-                .expect("Failed to parse keyfile-index");
             let amount: u64 = matches
                 .value_of("amount")
                 .expect("Not found amount.")
@@ -193,6 +176,11 @@ fn subcommand_anonify<R, CR>(
             let owner_addr = AccountId::base64_decode(owner);
             let target: &str = matches.value_of("target").expect("Not found target");
             let target_addr = AccountId::base64_decode(target);
+            let user_counter: u32 = matches
+                .value_of("counter")
+                .expect("Not found counter.")
+                .parse()
+                .expect("Failed to parse counter");
             let enclave_encryption_key_vec = base64::decode(
                 matches
                     .value_of("enclave_encryption_key")
@@ -203,25 +191,17 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to convert SodiumPubKey");
 
             commands::transfer_from(
-                &mut term,
-                root_dir,
                 state_runtime_url,
-                keyfile_index,
                 owner_addr,
                 target_addr,
                 amount,
+                user_counter,
                 &enclave_encryption_key,
-                rng,
                 csprng,
             )
             .expect("Failed to transfer_from command");
         }
         ("mint", Some(matches)) => {
-            let keyfile_index: usize = matches
-                .value_of("keyfile-index")
-                .expect("Not found keyfile-index.")
-                .parse()
-                .expect("Failed to parse keyfile-index");
             let amount: u64 = matches
                 .value_of("amount")
                 .expect("Not found amount.")
@@ -229,6 +209,11 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to parse amount");
             let target: &str = matches.value_of("target").expect("Not found target");
             let target_addr = AccountId::base64_decode(target);
+            let user_counter: u32 = matches
+                .value_of("counter")
+                .expect("Not found counter.")
+                .parse()
+                .expect("Failed to parse counter");
             let enclave_encryption_key_vec = base64::decode(
                 matches
                     .value_of("enclave_encryption_key")
@@ -239,29 +224,26 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to convert SodiumPubKey");
 
             commands::mint(
-                &mut term,
-                root_dir,
                 state_runtime_url,
-                keyfile_index,
                 target_addr,
                 amount,
+                user_counter,
                 &enclave_encryption_key,
-                rng,
                 csprng,
             )
             .expect("Failed to mint command");
         }
         ("burn", Some(matches)) => {
-            let keyfile_index: usize = matches
-                .value_of("keyfile-index")
-                .expect("Not found keyfile-index.")
-                .parse()
-                .expect("Failed to parse keyfile-index");
             let amount: u64 = matches
                 .value_of("amount")
                 .expect("Not found amount.")
                 .parse()
                 .expect("Failed to parse amount");
+            let user_counter: u32 = matches
+                .value_of("counter")
+                .expect("Not found counter.")
+                .parse()
+                .expect("Failed to parse counter");
             let enclave_encryption_key_vec = base64::decode(
                 matches
                     .value_of("enclave_encryption_key")
@@ -272,13 +254,10 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to convert SodiumPubKey");
 
             commands::burn(
-                &mut term,
-                root_dir,
                 state_runtime_url,
-                keyfile_index,
                 amount,
+                user_counter,
                 &enclave_encryption_key,
-                rng,
                 csprng,
             )
             .expect("Failed to burn command");
@@ -287,11 +266,6 @@ fn subcommand_anonify<R, CR>(
             commands::key_rotation(state_runtime_url).expect("Failed to key_rotation command");
         }
         ("allowance", Some(matches)) => {
-            let keyfile_index: usize = matches
-                .value_of("keyfile-index")
-                .expect("Not found keyfile-index.")
-                .parse()
-                .expect("Failed to parse keyfile-index");
             let spender = matches.value_of("spender").expect("Not found spender");
             let spender_addr = AccountId::base64_decode(spender);
             let enclave_encryption_key_vec = base64::decode(
@@ -304,23 +278,14 @@ fn subcommand_anonify<R, CR>(
                 .expect("Failed to convert SodiumPubKey");
 
             commands::allowance(
-                &mut term,
-                root_dir,
                 state_runtime_url,
-                keyfile_index,
                 spender_addr,
                 &enclave_encryption_key,
-                rng,
                 csprng,
             )
             .expect("Failed allowance command");
         }
         ("balance_of", Some(matches)) => {
-            let keyfile_index: usize = matches
-                .value_of("keyfile-index")
-                .expect("Not found keyfile-index.")
-                .parse()
-                .expect("Failed to parse keyfile-index");
             let enclave_encryption_key_vec = base64::decode(
                 matches
                     .value_of("enclave_encryption_key")
@@ -330,16 +295,8 @@ fn subcommand_anonify<R, CR>(
             let enclave_encryption_key = SodiumPubKey::from_bytes(&enclave_encryption_key_vec)
                 .expect("Failed to convert SodiumPubKey");
 
-            commands::balance_of(
-                &mut term,
-                root_dir,
-                state_runtime_url,
-                keyfile_index,
-                &enclave_encryption_key,
-                rng,
-                csprng,
-            )
-            .expect("Failed balance_of command");
+            commands::balance_of(state_runtime_url, &enclave_encryption_key, csprng)
+                .expect("Failed balance_of command");
         }
         ("get_enclave_encryption_key", Some(_)) => {
             let enclave_encryption_key =
@@ -347,6 +304,22 @@ fn subcommand_anonify<R, CR>(
                     .expect("Failed getting encryption key");
             let encoded = base64::encode(&enclave_encryption_key.to_bytes());
             println!("{:?}", encoded);
+        }
+        ("get_user_counter", Some(matches)) => {
+            let enclave_encryption_key_vec = base64::decode(
+                matches
+                    .value_of("enclave_encryption_key")
+                    .expect("Not found enclave_encryption_key"),
+            )
+            .expect("Failed to decode enclave_encryption_key as base64");
+            let enclave_encryption_key = SodiumPubKey::from_bytes(&enclave_encryption_key_vec)
+                .expect("Failed to convert SodiumPubKey");
+
+            let user_counter =
+                commands::get_user_counter(state_runtime_url, &enclave_encryption_key, csprng)
+                    .expect("Failed getting user counter");
+
+            println!("{:?}", user_counter);
         }
         _ => {
             term.error(matches.usage()).unwrap();
@@ -365,18 +338,18 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name("init_state")
                 .about("init_state from anonify services.")
                 .arg(
-                    Arg::with_name("keyfile-index")
-                        .short("i")
-                        .takes_value(true)
-                        .required(false)
-                        .default_value(DEFAULT_KEYFILE_INDEX),
-                )
-                .arg(
                     Arg::with_name("total_supply")
                         .short("t")
                         .takes_value(true)
                         .required(true)
                         .default_value(DEFAULT_BALANCE),
+                )
+                .arg(
+                    Arg::with_name("counter")
+                        .short("c")
+                        .takes_value(true)
+                        .required(true)
+                        .default_value(DEFAULT_USER_COUNTER),
                 )
                 .arg(
                     Arg::with_name("enclave_encryption_key")
@@ -389,13 +362,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name("transfer")
                 .about("Transfer the specified amount to the address")
                 .arg(
-                    Arg::with_name("keyfile-index")
-                        .short("i")
-                        .takes_value(true)
-                        .required(false)
-                        .default_value(DEFAULT_KEYFILE_INDEX),
-                )
-                .arg(
                     Arg::with_name("amount")
                         .short("a")
                         .takes_value(true)
@@ -408,6 +374,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .takes_value(true)
                         .required(true)
                         .default_value(DEFAULT_TARGET),
+                )
+                .arg(
+                    Arg::with_name("counter")
+                        .short("c")
+                        .takes_value(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::with_name("enclave_encryption_key")
@@ -420,13 +392,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name("approve")
                 .about("Approve the target address to spend token from owner's balance")
                 .arg(
-                    Arg::with_name("keyfile-index")
-                        .short("i")
-                        .takes_value(true)
-                        .required(false)
-                        .default_value(DEFAULT_KEYFILE_INDEX),
-                )
-                .arg(
                     Arg::with_name("amount")
                         .short("a")
                         .takes_value(true)
@@ -441,6 +406,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .default_value(DEFAULT_TARGET),
                 )
                 .arg(
+                    Arg::with_name("counter")
+                        .short("c")
+                        .takes_value(true)
+                        .required(true),
+                )
+                .arg(
                     Arg::with_name("enclave_encryption_key")
                         .short("k")
                         .takes_value(true)
@@ -450,13 +421,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         .subcommand(
             SubCommand::with_name("transfer_from")
                 .about("Transfer the specified amount to the target address from owner's address")
-                .arg(
-                    Arg::with_name("keyfile-index")
-                        .short("i")
-                        .takes_value(true)
-                        .required(false)
-                        .default_value(DEFAULT_KEYFILE_INDEX),
-                )
                 .arg(
                     Arg::with_name("amount")
                         .short("a")
@@ -478,6 +442,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .default_value(DEFAULT_TARGET),
                 )
                 .arg(
+                    Arg::with_name("counter")
+                        .short("c")
+                        .takes_value(true)
+                        .required(true),
+                )
+                .arg(
                     Arg::with_name("enclave_encryption_key")
                         .short("k")
                         .takes_value(true)
@@ -487,13 +457,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         .subcommand(
             SubCommand::with_name("mint")
                 .about("Create new coins and assign to the target address")
-                .arg(
-                    Arg::with_name("keyfile-index")
-                        .short("i")
-                        .takes_value(true)
-                        .required(false)
-                        .default_value(DEFAULT_KEYFILE_INDEX),
-                )
                 .arg(
                     Arg::with_name("amount")
                         .short("a")
@@ -509,6 +472,12 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
                         .default_value(DEFAULT_TARGET),
                 )
                 .arg(
+                    Arg::with_name("counter")
+                        .short("c")
+                        .takes_value(true)
+                        .required(true),
+                )
+                .arg(
                     Arg::with_name("enclave_encryption_key")
                         .short("k")
                         .takes_value(true)
@@ -519,18 +488,17 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name("burn")
                 .about("Burn the coins")
                 .arg(
-                    Arg::with_name("keyfile-index")
-                        .short("i")
-                        .takes_value(true)
-                        .required(false)
-                        .default_value(DEFAULT_KEYFILE_INDEX),
-                )
-                .arg(
                     Arg::with_name("amount")
                         .short("a")
                         .takes_value(true)
                         .required(true)
                         .default_value(DEFAULT_AMOUNT),
+                )
+                .arg(
+                    Arg::with_name("counter")
+                        .short("c")
+                        .takes_value(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::with_name("enclave_encryption_key")
@@ -546,13 +514,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         .subcommand(
             SubCommand::with_name("allowance")
                 .about("Get approved balance of the spender address from anonify services.")
-                .arg(
-                    Arg::with_name("keyfile-index")
-                        .short("i")
-                        .takes_value(true)
-                        .required(false)
-                        .default_value(DEFAULT_KEYFILE_INDEX),
-                )
                 .arg(
                     Arg::with_name("spender")
                         .short("to")
@@ -570,13 +531,6 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
             SubCommand::with_name("balance_of")
                 .about("Get balance of the address from anonify services.")
                 .arg(
-                    Arg::with_name("keyfile-index")
-                        .short("i")
-                        .takes_value(true)
-                        .required(false)
-                        .default_value(DEFAULT_KEYFILE_INDEX),
-                )
-                .arg(
                     Arg::with_name("enclave_encryption_key")
                         .short("k")
                         .takes_value(true)
@@ -586,6 +540,16 @@ fn anonify_commands_definition<'a, 'b>() -> App<'a, 'b> {
         .subcommand(
             SubCommand::with_name("get_enclave_encryption_key")
                 .about("Get base64 encoded enclave_encryption_key"),
+        )
+        .subcommand(
+            SubCommand::with_name("get_user_counter")
+                .about("Get current user_counter")
+                .arg(
+                    Arg::with_name("enclave_encryption_key")
+                        .short("k")
+                        .takes_value(true)
+                        .required(true),
+                ),
         )
 }
 
