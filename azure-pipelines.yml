@@ -1,7 +1,7 @@
 trigger:
 - master
 
-stages: E2E_Test
+- stages: E2E_Test
   condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
   jobs:
     - job: E2E
