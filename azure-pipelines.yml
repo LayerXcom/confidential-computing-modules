@@ -14,7 +14,7 @@ stages:
             displayName: 'Run E2E tests'
           - script: |
               echo 'hello E2E test with condition'
-            condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e')
+            condition: contains(variables['System.PullRequest.SourceBranch'], 'e2ehoge')
             displayName: 'Run E2E tests'
 
 #- stage: Test
