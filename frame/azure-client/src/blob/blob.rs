@@ -1,4 +1,3 @@
-use azure_core::prelude::Range;
 use azure_core::HttpClient;
 use azure_storage::blob::container::PublicAccess;
 use azure_storage::blob::prelude::{AsBlobClient, AsContainerClient};
@@ -7,7 +6,6 @@ use azure_storage::core::clients::{StorageAccountClient, StorageClient};
 use bytes::Bytes;
 use reqwest;
 use std::error::Error;
-use std::num::NonZeroU32;
 use std::sync::Arc;
 use url::Url;
 
@@ -34,6 +32,7 @@ impl BlobClient {
         blob_storage_url_str: impl Into<String>,
         table_storage_url_str: impl Into<String>,
     ) -> Arc<Self> {
+        // Panic occurs if URL parsing fails
         let blob_storage_url = Url::parse(&blob_storage_url_str.into()).unwrap();
         let table_storage_url = Url::parse(&table_storage_url_str.into()).unwrap();
 
@@ -58,11 +57,7 @@ impl BlobClient {
             .as_container_client(container_name)
             .as_blob_client(blob_name);
 
-        let response = blob_client
-            .get()
-            .range(Range::new(0, 128000))
-            .execute()
-            .await?;
+        let response = blob_client.get().execute().await?;
 
         let s_content = String::from_utf8(response.data.to_vec())?;
 
@@ -92,13 +87,7 @@ impl BlobClient {
 
     /// list_containers gets list of container names.
     pub async fn list_containers(&self) -> Result<Vec<String>, Box<dyn Error + Send + Sync>> {
-        let max_results = NonZeroU32::new(1024).unwrap();
-        let iv = self
-            .client
-            .list_containers()
-            .max_results(max_results)
-            .execute()
-            .await?;
+        let iv = self.client.list_containers().execute().await?;
 
         let mut vector: Vec<String> = Vec::with_capacity(iv.incomplete_vector.len());
         for cont in iv.incomplete_vector.iter() {

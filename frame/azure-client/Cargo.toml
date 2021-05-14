@@ -1,10 +1,11 @@
 [package]
 name = "azure_client"
 version = "0.1.0"
-authors = ["glassonion1 <taisuke.fujita@layerx.co.jp>"]
+authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 
 [dependencies]
+anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
 bytes = "1.0"
 url = "2.2"

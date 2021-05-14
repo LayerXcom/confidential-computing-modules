@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+
     #[tokio::test]
     async fn test_blob() {
         let client = azure_client::blob::BlobClient::new_emulator(
