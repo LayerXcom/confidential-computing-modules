@@ -20,7 +20,7 @@ impl BlobClient {
     pub fn new(account_name: impl Into<String>, account_key: impl Into<String>) -> Arc<Self> {
         let http_client: Arc<Box<dyn HttpClient>> = Arc::new(Box::new(reqwest::Client::new()));
         let storage_account_client =
-            StorageAccountClient::new_access_key(http_client.clone(), account_name, account_key);
+            StorageAccountClient::new_access_key(http_client, account_name, account_key);
 
         Arc::new(Self {
             client: storage_account_client.as_storage_client(),
