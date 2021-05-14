@@ -5,6 +5,9 @@ variables:
   branch: $[variables['Build.SourceBranch']]
   branch_name: $[variables['Build.SourceBranchName']]
   source_branch: $[variables['SourceBranchName']]
+  pr_source_branch: $[variables['System.PullRequest.SourceBranch']]
+  pr_target_branch: $[variables['System.PullRequest.TargetBranch']]
+
 
 stages:
   - stage:
@@ -19,6 +22,8 @@ stages:
               echo $(branch)
               echo $(branch_name)
               echo $(source_branch)
+              echo $(pr_source_branch
+              echo $(pr_target_branch
               sleep 30
             displayName: 'Run E2E tests'
 

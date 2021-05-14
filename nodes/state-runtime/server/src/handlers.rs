@@ -17,7 +17,7 @@ pub async fn handle_health_check(server: web::Data<Arc<Server>>) -> impl Respond
     } else {
         HttpResponse::ServiceUnavailable().finish()
     }
-} 
+}
 
 #[tracing::instrument(skip(server, req), fields(trace_id, instance_id))]
 pub async fn handle_send_command(
