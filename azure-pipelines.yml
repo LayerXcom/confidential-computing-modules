@@ -11,9 +11,9 @@ stages:
         steps:
           - script: |
               echo 'hello E2E test'
-              echo variables['Build.SourceBranch']
-              echo variables['Build.SourceBranchName']
-              echo variables['SourceBranchName']
+              echo $(variables['Build.SourceBranch'])
+              echo $(variables['Build.SourceBranchName'])
+              echo $(variables['SourceBranchName'])
               sleep 30
             displayName: 'Run E2E tests'
 
