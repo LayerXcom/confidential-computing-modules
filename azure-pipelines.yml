@@ -3,7 +3,7 @@ trigger:
 
 stages:
   - stage:
-    condition: eq(variables['Build.SourceBranch'], 'feature/e2e-test1')
+#    condition: eq(variables['Build.SourceBranch'], 'feature/e2e-test1')
     jobs:
       - job: E2E
         pool:
@@ -11,6 +11,9 @@ stages:
         steps:
           - script: |
               echo 'hello E2E test'
+              echo variables['Build.SourceBranch']
+              echo variables['Build.SourceBranchName']
+              echo variables['SourceBranchName']
               sleep 30
             displayName: 'Run E2E tests'
 
