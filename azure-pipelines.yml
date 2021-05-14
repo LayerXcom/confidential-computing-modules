@@ -2,9 +2,9 @@ trigger:
   - master
 
 variables:
-  branch: $[variables['Build.SourceBranch']
-  branch_name: $[variables['Build.SourceBranchName']
-  source_branch: $[variables['SourceBranchName']
+  branch: $[variables['Build.SourceBranch']]
+  branch_name: $[variables['Build.SourceBranchName']]
+  source_branch: $[variables['SourceBranchName']]
 
 stages:
   - stage:
