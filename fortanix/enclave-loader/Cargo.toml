@@ -1,0 +1,10 @@
+[package]
+name = "frame-enclave-loader"
+version = "0.5.4"
+authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
+edition = "2018"
+
+[dependencies]
+aesm-client = { version = "0.5.3", features = ["sgxs"] }
+enclave-runner = "0.4.1"
+sgxs-loaders = "0.3.1"

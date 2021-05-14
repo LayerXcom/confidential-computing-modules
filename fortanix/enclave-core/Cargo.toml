@@ -1,0 +1,10 @@
+[package]
+name = "enclave-core"
+version = "0.5.4"
+authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
+edition = "2018"
+
+[dependencies]
+tracing = "0.1"
+anyhow = "1.0"
+frame-schema = { path = "../schema"}

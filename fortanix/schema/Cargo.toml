@@ -1,0 +1,9 @@
+[package]
+name = "frame-schema"
+version = "0.5.4"
+authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
+edition = "2018"
+
+[dependencies]
+serde = "1.0"
+serde_bytes = "0.11"

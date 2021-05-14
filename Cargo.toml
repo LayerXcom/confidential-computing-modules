@@ -30,4 +30,8 @@ members = [
     "tests/units/enclave",
     "tests/units/host",
     "tests/utils",
+
+    "fortanix/enclave-core",
+    "fortanix/enclave-loader",
+    "fortanix/schema",
 ]
