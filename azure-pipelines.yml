@@ -9,7 +9,7 @@ stages:
     pool:
       name: 'AnonifyAgent'
     steps:
-      - script: ./scripts/e2e-test.sh"
+      - script: ./scripts/e2e-test.sh
         displayName: 'Run E2E tests'
 
 #- stage: Test
