@@ -3,15 +3,18 @@ trigger:
 
 stages:
   - stage:
-    condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e')
+#    condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e')
     jobs:
       - job: E2E
         pool:
           name: 'AnonifyAgent'
         steps:
           - script: |
-              echo 'hello E2E test'
-              sleep 30
+              echo 'hello E2E test always'
+            displayName: 'Run E2E tests'
+          - script: |
+              echo 'hello E2E test with condition'
+            condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e')
             displayName: 'Run E2E tests'
 
 #- stage: Test
