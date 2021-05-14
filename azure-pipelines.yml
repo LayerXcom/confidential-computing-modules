@@ -1,6 +1,11 @@
 trigger:
   - master
 
+variables:
+  branch: $[variables['Build.SourceBranch']
+  branch_name: $[variables['Build.SourceBranchName']
+  source_branch: $[variables['SourceBranchName']
+
 stages:
   - stage:
 #    condition: eq(variables['Build.SourceBranch'], 'feature/e2e-test1')
@@ -11,9 +16,9 @@ stages:
         steps:
           - script: |
               echo 'hello E2E test'
-              echo $(variables['Build.SourceBranch'])
-              echo $(variables['Build.SourceBranchName'])
-              echo $(variables['SourceBranchName'])
+              echo $(branch)
+              echo $(branch_name)
+              echo $(source_branch)
               sleep 30
             displayName: 'Run E2E tests'
 
