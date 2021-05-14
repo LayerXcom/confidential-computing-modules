@@ -3,7 +3,7 @@ trigger:
 
 stages:
   - stage:
-#    condition: contains(variables['Build.SourceBranchName'], 'e2e')
+    condition: eq(variables['Build.SourceBranchName'], 'feature/e2e-test1')
     jobs:
       - job: E2E
         pool:
