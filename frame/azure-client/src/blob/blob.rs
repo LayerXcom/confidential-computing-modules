@@ -11,12 +11,14 @@ use std::num::NonZeroU32;
 use std::sync::Arc;
 use url::Url;
 
+/// BlobClient is to access the Azure Storage APIs
 #[derive(Debug, Clone)]
 pub struct BlobClient {
     client: Arc<StorageClient>,
 }
 
 impl BlobClient {
+    /// new instantiates a BlobClient object.
     pub fn new(account_name: impl Into<String>, account_key: impl Into<String>) -> Arc<Self> {
         let http_client: Arc<Box<dyn HttpClient>> = Arc::new(Box::new(reqwest::Client::new()));
         let storage_account_client =
@@ -27,7 +29,7 @@ impl BlobClient {
         })
     }
 
-    // uses for Azurite.
+    /// new_emulator instantiates a BlobClient object that is for use Azurite only.
     pub fn new_emulator(
         blob_storage_url_str: impl Into<String>,
         table_storage_url_str: impl Into<String>,
@@ -45,6 +47,7 @@ impl BlobClient {
         })
     }
 
+    /// get gets a blob data.
     pub async fn get(
         &self,
         container_name: impl Into<String>,
@@ -66,6 +69,7 @@ impl BlobClient {
         Ok(s_content)
     }
 
+    /// put puts a blob data.
     pub async fn put(
         &self,
         container_name: impl Into<String>,
@@ -86,6 +90,7 @@ impl BlobClient {
         Ok(())
     }
 
+    /// list_containers gets list of container names.
     pub async fn list_containers(&self) -> Result<Vec<String>, Box<dyn Error + Send + Sync>> {
         let max_results = NonZeroU32::new(1024).unwrap();
         let iv = self
@@ -103,6 +108,7 @@ impl BlobClient {
         Ok(vector)
     }
 
+    /// create_container creates a container.
     pub async fn create_container(
         &self,
         container_name: impl Into<String>,

@@ -4,7 +4,7 @@
 - Blob Client
   - gets a blob
   - puts a blob
-  - lists containers
+  - gets list of container names
   - creates a container
   
 ## Usage
