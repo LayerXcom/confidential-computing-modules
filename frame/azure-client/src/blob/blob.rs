@@ -45,38 +45,6 @@ impl BlobClient {
         })
     }
 
-    pub async fn create_container(
-        &self,
-        container_name: impl Into<String>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let container_client = self.client.as_container_client(container_name);
-
-        let _res = container_client
-            .create()
-            .public_access(PublicAccess::None)
-            .execute()
-            .await?;
-
-        Ok(())
-    }
-
-    pub async fn list_containers(&self) -> Result<Vec<String>, Box<dyn Error + Send + Sync>> {
-        let max_results = NonZeroU32::new(1024).unwrap();
-        let iv = self
-            .client
-            .list_containers()
-            .max_results(max_results)
-            .execute()
-            .await?;
-
-        let mut vector: Vec<String> = Vec::with_capacity(iv.incomplete_vector.len());
-        for cont in iv.incomplete_vector.iter() {
-            vector.push(cont.name.clone());
-        }
-
-        Ok(vector)
-    }
-
     pub async fn get(
         &self,
         container_name: impl Into<String>,
@@ -112,6 +80,38 @@ impl BlobClient {
         let _res = blob_client
             .put_block_blob(data)
             .content_type("text/plain")
+            .execute()
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn list_containers(&self) -> Result<Vec<String>, Box<dyn Error + Send + Sync>> {
+        let max_results = NonZeroU32::new(1024).unwrap();
+        let iv = self
+            .client
+            .list_containers()
+            .max_results(max_results)
+            .execute()
+            .await?;
+
+        let mut vector: Vec<String> = Vec::with_capacity(iv.incomplete_vector.len());
+        for cont in iv.incomplete_vector.iter() {
+            vector.push(cont.name.clone());
+        }
+
+        Ok(vector)
+    }
+
+    pub async fn create_container(
+        &self,
+        container_name: impl Into<String>,
+    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+        let container_client = self.client.as_container_client(container_name);
+
+        let _res = container_client
+            .create()
+            .public_access(PublicAccess::None)
             .execute()
             .await?;
 
