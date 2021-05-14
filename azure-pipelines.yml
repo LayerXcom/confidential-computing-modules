@@ -22,8 +22,8 @@ stages:
               echo $(branch)
               echo $(branch_name)
               echo $(source_branch)
-              echo $(pr_source_branch
-              echo $(pr_target_branch
+              echo $(pr_source_branch)
+              echo $(pr_target_branch)
               sleep 30
             displayName: 'Run E2E tests'
 
