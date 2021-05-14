@@ -1,4 +1,5 @@
 mod service;
+mod handler;
 
 #[cfg(test)]
 mod tests {

@@ -1,15 +1,43 @@
+use anyhow::Result;
+use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
+use std::io::Read;
+
 /// A Message type to communication between enclave and host
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct EnclaveMessage {
     /// Unique message identifier
-    id: u64,
+    pub id: u64,
     /// Request or Respone
-    message_type: MessageType,
+    pub message_type: MessageType,
     /// Data body of the message
-    body: Body,
+    pub body: Body,
     /// Tracing context serialized in binary format
     #[serde(with = "serde_bytes")]
-    span_context: Vec<u8>,
+    pub span_context: Vec<u8>,
+}
+
+impl EnclaveMessage {
+    pub fn new(id: u64, message_type: MessageType, body: Body, span_context: Vec<u8>) -> Self {
+        Self {
+            id,
+            message_type,
+            body,
+            span_context,
+        }
+    }
+
+    pub fn decode_msg<R: Read>(mut reader: R) -> Result<Self> {
+        // TODO: message size check
+
+        serde_cbor::from_reader(reader).map_err(Into::into)
+    }
+
+    pub fn encode_msg(&self) -> Result<Vec<u8>> {
+        // TODO: message size check
+
+        serde_cbor::to_vec(self);
+        unimplemented!();
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -41,7 +69,7 @@ impl<'de> serde::Deserialize<'de> for MessageType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Body {
     Test { test: String },
 }

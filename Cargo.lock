@@ -1514,6 +1514,7 @@ version = "0.5.4"
 dependencies = [
  "anyhow 1.0.34",
  "frame-schema",
+ "serde_cbor",
  "tracing",
 ]
 
@@ -1961,8 +1962,10 @@ dependencies = [
 name = "frame-schema"
 version = "0.5.4"
 dependencies = [
+ "anyhow 1.0.34",
  "serde 1.0.117",
  "serde_bytes 0.11.5",
+ "serde_cbor",
 ]
 
 [[package]]
@@ -2281,6 +2284,12 @@ dependencies = [
  "tracing",
  "tracing-futures",
 ]
+
+[[package]]
+name = "half"
+version = "1.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62aca2aba2d62b4a7f5b33f3712cb1b0692779a56fb510499d5c0aa594daeaf3"
 
 [[package]]
 name = "hashbrown"
@@ -4452,6 +4461,16 @@ version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16ae07dd2f88a366f15bd0632ba725227018c69a1c8550a927324f8eb8368bb9"
 dependencies = [
+ "serde 1.0.117",
+]
+
+[[package]]
+name = "serde_cbor"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e18acfa2f90e8b735b2836ab8d538de304cbb6729a7360729ea5a895d15a622"
+dependencies = [
+ "half",
  "serde 1.0.117",
 ]
 
