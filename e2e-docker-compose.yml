@@ -22,7 +22,7 @@ services:
       MY_ROSTER_IDX: "0"
       MAX_ROSTER_IDX: "1"
       IAS_URL: "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report"
-      KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME: "key-vault.com:12345"
+      KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME: "key-vault.com:12346"
       ENCLAVE_PKG_NAME: "erc20"
       STATE_RUNTIME_ENCLAVE_PKG_NAME: "erc20"
       KEY_VAULT_ENCLAVE_PKG_NAME: "key_vault"
@@ -69,8 +69,8 @@ services:
       SPID: ${SPID}
       SUB_KEY: ${SUB_KEY}
       IAS_URL: "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report"
-      KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME: "key-vault.com:12345" # TODO: Remove
-      KEY_VAULT_ENDPOINT_FOR_KEY_VAULT: "172.16.14.5:12345"
+      KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME: "key-vault.com:12346" # TODO: Remove
+      KEY_VAULT_ENDPOINT_FOR_KEY_VAULT: "172.16.14.5:12346"
       ENCLAVE_PKG_NAME: "key_vault"
       STATE_RUNTIME_ENCLAVE_PKG_NAME: "erc20"
       KEY_VAULT_ENCLAVE_PKG_NAME: "key_vault"
