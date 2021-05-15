@@ -26,17 +26,16 @@ impl EnclaveMessage {
         }
     }
 
-    pub fn decode_msg<R: Read>(mut reader: R) -> Result<Self> {
+    pub fn cbor_decode<R: Read>(mut reader: R) -> Result<Self> {
         // TODO: message size check
 
         serde_cbor::from_reader(reader).map_err(Into::into)
     }
 
-    pub fn encode_msg(&self) -> Result<Vec<u8>> {
+    pub fn cbor_encode(&self) -> Result<Vec<u8>> {
         // TODO: message size check
 
-        serde_cbor::to_vec(self);
-        unimplemented!();
+        serde_cbor::to_vec(self).map_err(Into::into)
     }
 }
 

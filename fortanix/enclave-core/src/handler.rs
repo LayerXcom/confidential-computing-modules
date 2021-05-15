@@ -33,7 +33,7 @@ impl EnclaveHandler {
     }
 
     fn handle_msg<R: Read>(&self, reader: R) -> Result<()> {
-        let msg = EnclaveMessage::decode_msg(reader)?;
+        let msg = EnclaveMessage::cbor_decode(reader)?;
         match msg.message_type {
             MessageType::Request => {
                 // TODO: add tracing
@@ -60,7 +60,7 @@ impl EnclaveHandler {
 
     fn write_msg(&self, msg: EnclaveMessage) -> Result<()> {
         let mut writer = BufWriter::new(&self.stream);
-        let buffer = serde_cbor::to_vec(&msg)?;
+        let buffer = msg.cbor_encode()?;
 
         // TODO: check message size
 
