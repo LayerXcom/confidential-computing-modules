@@ -14,13 +14,12 @@ docker-compose -f e2e-docker-compose.yml up -d ganache
 sleep 5
 
 echo "deploying factory contract..."
-docker run --network e2e_test_net -e CONFIRMATIONS=0 -e ETH_URL="$ETH_URL" --rm -it anonify.azurecr.io/deployer:$ANONIFY_TAG factory
-FACTORY_CONTRACT_ADDRESS=$(docker run --network e2e_test_net -e CONFIRMATIONS=0 -e ETH_URL="$ETH_URL" --rm -it anonify.azurecr.io/deployer:$ANONIFY_TAG factory)
+FACTORY_CONTRACT_ADDRESS=$(docker run --network e2e_test_net -e CONFIRMATIONS=0 -e ETH_URL="$ETH_URL" --rm anonify.azurecr.io/deployer:$ANONIFY_TAG factory)
 export FACTORY_CONTRACT_ADDRESS=$FACTORY_CONTRACT_ADDRESS
 echo "FACTORY_CONTRACT_ADDRESS: ""$FACTORY_CONTRACT_ADDRESS"
 
 echo "deploying anonify contract..."
-docker run --network e2e_test_net -e CONFIRMATIONS=0 -e ETH_URL="$ETH_URL" --rm -it anonify.azurecr.io/deployer:$ANONIFY_TAG anonify_ek "$FACTORY_CONTRACT_ADDRESS"
+docker run --network e2e_test_net -e CONFIRMATIONS=0 -e ETH_URL="$ETH_URL" --rm anonify.azurecr.io/deployer:$ANONIFY_TAG anonify_ek "$FACTORY_CONTRACT_ADDRESS"
 
 sleep 10
 
