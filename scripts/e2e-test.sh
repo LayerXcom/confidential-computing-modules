@@ -21,10 +21,15 @@ echo "FACTORY_CONTRACT_ADDRESS: ""$FACTORY_CONTRACT_ADDRESS"
 echo "deploying anonify contract..."
 docker run --network e2e_test_net -e CONFIRMATIONS=0 -e ETH_URL="$ETH_URL" --rm -it anonify.azurecr.io/deployer:$ANONIFY_TAG anonify_ek "$FACTORY_CONTRACT_ADDRESS"
 
+sleep 10
+
 echo "key_vault is starting..."
-docker-compose -f e2e-docker-compose.yml up -d key_vault
+FACTORY_CONTRACT_ADDRESS=$FACTORY_CONTRACT_ADDRESS docker-compose -f e2e-docker-compose.yml up -d key_vault
+
+sleep 10
+
 echo "state_runtime_1 is starting..."
-docker-compose -f e2e-docker-compose.yml up -d state_runtime
+FACTORY_CONTRACT_ADDRESS=$FACTORY_CONTRACT_ADDRESS docker-compose -f e2e-docker-compose.yml up -d state_runtime
 sleep 10
 
 # create working directory
