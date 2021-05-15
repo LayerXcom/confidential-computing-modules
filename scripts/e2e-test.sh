@@ -32,6 +32,10 @@ echo "state_runtime_1 is starting..."
 FACTORY_CONTRACT_ADDRESS=$FACTORY_CONTRACT_ADDRESS docker-compose -f e2e-docker-compose.yml up -d state_runtime
 sleep 10
 
+docker ps -a
+
+sleep 10
+
 # create working directory
 #if [ ! -d "$ANONIFY_ROOT"/_work ]; then
 #  mkdir "$ANONIFY_ROOT"/_work
