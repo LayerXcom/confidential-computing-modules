@@ -43,7 +43,7 @@ services:
       EVENT_LIMIT: "100"
       UNLOCK_DURATION: "60"
       PJ_NAME: "anonify" # PJ ROOT DIR探索のため
-      IS_DEBUG: false
+      IS_DEBUG: "false"
     # Add an lookup from the IP Adress to FQDN because of the following limition of rustls
     # https://github.com/ctz/rustls/issues/184
     # https://github.com/briansmith/webpki/issues/54
@@ -80,7 +80,7 @@ services:
       CMD_DEC_SECRET_DIR: ".anonify/cmd-dec-secret"
       IAS_ROOT_CERT_PATH: "config/ias_root_cert.pem"
       PJ_NAME: "anonify" # PJ ROOT DIR探索のため
-      IS_DEBUG: false
+      IS_DEBUG: "false"
     # Add an lookup from the IP Address to FQDN because of the following limitation of rustls
     # https://github.com/ctz/rustls/issues/184
     # https://github.com/briansmith/webpki/issues/54
