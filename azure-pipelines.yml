@@ -29,7 +29,10 @@ stages:
 #          dockerfile: ./docker/keyvault.Dockerfile
 #          buildContext: .
 #          arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
-      - script: ./scripts/e2e-test.sh
+      - script: |
+          ./scripts/e2e-test.sh
+          export SPID=$(SPID)
+          export SUB_KEY=$(SUB_KEY)
         displayName: 'Run E2E tests'
 #      - script: docker image prune -f
 #        displayName: Remove dangling images
