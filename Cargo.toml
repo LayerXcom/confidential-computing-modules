@@ -30,4 +30,6 @@ members = [
     "tests/units/enclave",
     "tests/units/host",
     "tests/utils",
+
+    "occlum/grpc",
 ]
