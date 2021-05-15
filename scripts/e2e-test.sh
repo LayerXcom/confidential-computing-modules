@@ -34,6 +34,12 @@ sleep 10
 
 docker ps -a
 
+echo "---------------------------------"
+docker logs s_key_vault_1
+
+echo "---------------------------------"
+docker logs s_state_runtime_1
+
 sleep 10
 
 # create working directory
