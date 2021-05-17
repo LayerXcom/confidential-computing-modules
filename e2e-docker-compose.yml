@@ -1,0 +1,104 @@
+version: "3.7"
+services:
+  state_runtime:
+    image: anonify.azurecr.io/erc20-state-runtime:latest
+    volumes:
+      - /var/run/aesmd:/var/run/aesmd
+    devices:
+      - "/dev/sgx/enclave"
+    ports:
+      - "18550:8080"
+    environment:
+      RUST_BACKTRACE: 1
+      RUST_LOG: debug
+      SPID: ${SPID}
+      SUB_KEY: ${SUB_KEY}
+      MY_ROSTER_IDX: "0"
+      MAX_ROSTER_IDX: "1"
+      IAS_URL: "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report"
+      KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME: "key-vault.com:12346"
+      ENCLAVE_PKG_NAME: "erc20"
+      STATE_RUNTIME_ENCLAVE_PKG_NAME: "erc20"
+      KEY_VAULT_ENCLAVE_PKG_NAME: "key_vault"
+      ETH_URL: "http://172.16.14.2:8545"
+      MY_NODE_URL: "172.16.14.3:8080"
+      ANONIFY_ABI_PATH: "contract-build/AnonifyWithEnclaveKey.abi"
+      ANONIFY_BIN_PATH: "contract-build/AnonifyWithEnclaveKey.bin"
+      FACTORY_ABI_PATH: "contract-build/DeployAnonify.abi"
+      FACTORY_BIN_PATH: "contract-build/DeployAnonify.bin"
+      FACTORY_CONTRACT_ADDRESS: ${FACTORY_CONTRACT_ADDRESS}
+      CONFIRMATIONS: "0" # Set 0 if using ganache, otherwise 1 or more
+      ACCOUNT_INDEX: "0" # Set 0 if using ganache, otherwise 1 or more
+      PASSWORD: "anonify0101" # just for testing
+      REQUEST_RETRIES: "10"
+      RETRY_DELAY_MILLS: "100"
+      CMD_DEC_SECRET_DIR: ".anonify/cmd-dec-secret"
+      IAS_ROOT_CERT_PATH: "config/ias_root_cert.pem"
+      EVENT_LIMIT: "100"
+      UNLOCK_DURATION: "60"
+      PJ_NAME: "anonify" # PJ ROOT DIR探索のため
+      IS_DEBUG: "false"
+    # Add an lookup from the IP Adress to FQDN because of the following limition of rustls
+    # https://github.com/ctz/rustls/issues/184
+    # https://github.com/briansmith/webpki/issues/54
+    extra_hosts:
+      - "key-vault.com:172.16.14.5"
+    stdin_open: true
+    tty: true
+    networks:
+      e2e_test_net:
+        ipv4_address: "172.16.14.3"
+
+  key_vault:
+    image: anonify.azurecr.io/key-vault-for-erc20:latest
+    volumes:
+      - /var/run/aesmd:/var/run/aesmd
+    devices:
+      - "/dev/sgx/enclave"
+    ports:
+      - "18549:12345"
+    environment:
+      RUST_BACKTRACE: 1
+      RUST_LOG: debug
+      SPID: ${SPID}
+      SUB_KEY: ${SUB_KEY}
+      IAS_URL: "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report"
+      KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME: "key-vault.com:12346" # TODO: Remove
+      KEY_VAULT_ENDPOINT_FOR_KEY_VAULT: "172.16.14.5:12346"
+      ENCLAVE_PKG_NAME: "key_vault"
+      STATE_RUNTIME_ENCLAVE_PKG_NAME: "erc20"
+      KEY_VAULT_ENCLAVE_PKG_NAME: "key_vault"
+      MY_NODE_URL: "172.16.14.5:12345"
+      REQUEST_RETRIES: "10"
+      RETRY_DELAY_MILLS: "100"
+      CMD_DEC_SECRET_DIR: ".anonify/cmd-dec-secret"
+      IAS_ROOT_CERT_PATH: "config/ias_root_cert.pem"
+      PJ_NAME: "anonify" # PJ ROOT DIR探索のため
+      IS_DEBUG: "false"
+    # Add an lookup from the IP Address to FQDN because of the following limitation of rustls
+    # https://github.com/ctz/rustls/issues/184
+    # https://github.com/briansmith/webpki/issues/54
+    extra_hosts:
+      - "key-vault.com:172.16.14.5"
+    stdin_open: true
+    tty: true
+    networks:
+      e2e_test_net:
+        ipv4_address: "172.16.14.5"
+
+  ganache:
+    image: trufflesuite/ganache-cli:latest
+    ports:
+      - "18548:8545"
+    volumes:
+      - ./ganache_data:/ganache_data
+    networks:
+      e2e_test_net:
+        ipv4_address: 172.16.14.2
+
+networks:
+  e2e_test_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.14.0/24
