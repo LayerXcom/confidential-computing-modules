@@ -39,5 +39,3 @@ else
   echo "failed to fetch enclave_encryption_key"
   exit 1
 fi
-
-sleep 60
