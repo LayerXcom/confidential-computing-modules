@@ -19,8 +19,6 @@ echo "FACTORY_CONTRACT_ADDRESS: ""$FACTORY_CONTRACT_ADDRESS"
 echo "deploying anonify contract..."
 docker run --network s_e2e_test_net -e CONFIRMATIONS=0 -e ETH_URL="$ETH_URL" --rm anonify.azurecr.io/deployer:$DEPLOYER_TAG anonify_ek "$FACTORY_CONTRACT_ADDRESS"
 
-sleep 10
-
 echo "key_vault is starting..."
 FACTORY_CONTRACT_ADDRESS=$FACTORY_CONTRACT_ADDRESS docker-compose -f e2e-docker-compose.yml up -d key_vault
 
@@ -37,3 +35,5 @@ if ! curl "$STATE_RUNTIME_URL"/api/v1/enclave_encryption_key -s -f -k -X GET -H 
 fi
 
 cat pubkey.json
+
+sleep 10
