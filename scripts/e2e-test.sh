@@ -40,4 +40,4 @@ echo "cat pubkey.json"
 
 cat pubkey.json
 
-sleep 10
+sleep 60
