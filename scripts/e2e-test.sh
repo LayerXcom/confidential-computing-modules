@@ -30,18 +30,10 @@ echo "state_runtime_1 is starting..."
 FACTORY_CONTRACT_ADDRESS=$FACTORY_CONTRACT_ADDRESS docker-compose -f e2e-docker-compose.yml up -d state_runtime
 sleep 10
 
-
-cd "$CI_ROOT_DIR"/example/erc20/cli
-cargo build
-
 cd "$CI_ROOT_DIR"
 if ! curl "$STATE_RUNTIME_URL"/api/v1/enclave_encryption_key -s -f -k -X GET -H "Content-Type: application/json" -d '' 1> pubkey.json; then
   echo "failed to fetch pubkey.json"
   exit 1
 fi
-#"$CI_ROOT_DIR"/target/debug/erc-cli fixture enc -k pubkey.json -i "$CI_ROOT_DIR"/tools/fixtures/init.json
-#
-#if ! curl "$STATE_RUNTIME_URL"/api/v1/state -k -s -X POST -H "Content-Type: application/json" -d @encrypted_init.json; then
-#  echo "failed to send init.json"
-#  exit 1
-#fi
+
+cat pubkey.json
