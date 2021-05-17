@@ -8,12 +8,6 @@ services:
       - "/dev/sgx/enclave"
     ports:
       - "18550:8080"
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://172.16.14.5:18549/api/v1/health" ]
-      interval: 3s
-      timeout: 3s
-      retries: 10
-      start_period: 5s
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug

@@ -4,10 +4,10 @@ set -e
 ANONIFY_ROOT=$(pwd)
 echo "$ANONIFY_ROOT"
 
-ANONIFY_TAG=v0.5.12
+export ANONIFY_TAG=v0.5.12
 #ANONIFY_ROOT=/root/anonify
-STATE_RUNTIME_URL=http://172.16.14.3:18550
-ETH_URL=http://172.16.14.2:8545
+export STATE_RUNTIME_URL=http://172.16.14.3:18550
+export ETH_URL=http://172.16.14.2:8545
 
 echo "ganache is starting..."
 docker-compose -f e2e-docker-compose.yml up -d ganache
