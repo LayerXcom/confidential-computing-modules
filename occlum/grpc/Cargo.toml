@@ -5,12 +5,20 @@ authors = ["osuketh <dish230@gmail.com>"]
 edition = "2018"
 
 [[bin]]
+name = "tcp-client"
+path = "src/tcp_client.rs"
+
+[[bin]]
+name = "tcp-server"
+path = "src/tcp_server.rs"
+
+[[bin]]
 name = "uds-client"
-path = "src/client.rs"
+path = "src/uds_client.rs"
 
 [[bin]]
 name = "uds-server"
-path = "src/server.rs"
+path = "src/uds_server.rs"
 
 [dependencies]
 tonic = "0.4"
