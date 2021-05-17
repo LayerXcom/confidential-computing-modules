@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use azure_core::HttpClient;
 use azure_storage::blob::container::PublicAccess;
 use azure_storage::blob::prelude::{AsBlobClient, AsContainerClient};
@@ -5,7 +6,6 @@ use azure_storage::clients::AsStorageClient;
 use azure_storage::core::clients::{StorageAccountClient, StorageClient};
 use bytes::Bytes;
 use reqwest;
-use std::error::Error;
 use std::sync::Arc;
 use url::Url;
 
@@ -51,13 +51,17 @@ impl BlobClient {
         &self,
         container_name: impl Into<String>,
         blob_name: impl Into<String>,
-    ) -> Result<String, Box<dyn Error + Send + Sync>> {
+    ) -> anyhow::Result<String> {
         let blob_client = self
             .client
             .as_container_client(container_name)
             .as_blob_client(blob_name);
 
-        let response = blob_client.get().execute().await?;
+        let response = blob_client
+            .get()
+            .execute()
+            .await
+            .map_err(|err| anyhow!(err))?;
 
         let s_content = String::from_utf8(response.data.to_vec())?;
 
@@ -70,7 +74,7 @@ impl BlobClient {
         container_name: impl Into<String>,
         blob_name: impl Into<String>,
         data: impl Into<Bytes>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> anyhow::Result<()> {
         let blob_client = self
             .client
             .as_container_client(container_name)
@@ -80,14 +84,20 @@ impl BlobClient {
             .put_block_blob(data)
             .content_type("text/plain")
             .execute()
-            .await?;
+            .await
+            .map_err(|err| anyhow!(err))?;
 
         Ok(())
     }
 
     /// list_containers gets list of container names.
-    pub async fn list_containers(&self) -> Result<Vec<String>, Box<dyn Error + Send + Sync>> {
-        let iv = self.client.list_containers().execute().await?;
+    pub async fn list_containers(&self) -> anyhow::Result<Vec<String>> {
+        let iv = self
+            .client
+            .list_containers()
+            .execute()
+            .await
+            .map_err(|err| anyhow!(err))?;
 
         let mut vector: Vec<String> = Vec::with_capacity(iv.incomplete_vector.len());
         for cont in iv.incomplete_vector.iter() {
@@ -98,17 +108,15 @@ impl BlobClient {
     }
 
     /// create_container creates a container.
-    pub async fn create_container(
-        &self,
-        container_name: impl Into<String>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    pub async fn create_container(&self, container_name: impl Into<String>) -> anyhow::Result<()> {
         let container_client = self.client.as_container_client(container_name);
 
         let _res = container_client
             .create()
             .public_access(PublicAccess::None)
             .execute()
-            .await?;
+            .await
+            .map_err(|err| anyhow!(err))?;
 
         Ok(())
     }
