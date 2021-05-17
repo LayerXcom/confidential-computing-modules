@@ -34,6 +34,10 @@ if ! curl "$STATE_RUNTIME_URL"/api/v1/enclave_encryption_key -s -f -k -X GET -H 
   exit 1
 fi
 
+echo $?
+
+echo "cat pubkey.json"
+
 cat pubkey.json
 
 sleep 10
