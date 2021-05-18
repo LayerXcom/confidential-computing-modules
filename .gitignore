@@ -59,3 +59,4 @@ anonify-types.h
 .anonify
 /anonify-contracts
 Enclave.prd.config.xml
+occlum-instance/

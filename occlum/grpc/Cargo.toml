@@ -1,0 +1,32 @@
+[package]
+name = "grpc"
+version = "0.1.0"
+authors = ["osuketh <dish230@gmail.com>"]
+edition = "2018"
+
+[[bin]]
+name = "tcp-client"
+path = "src/tcp_client.rs"
+
+[[bin]]
+name = "tcp-server"
+path = "src/tcp_server.rs"
+
+[[bin]]
+name = "uds-client"
+path = "src/uds_client.rs"
+
+[[bin]]
+name = "uds-server"
+path = "src/uds_server.rs"
+
+[dependencies]
+tonic = "0.4"
+prost = "0.7"
+tower = "0.4"
+futures = { version = "0.3", default-features = false, features = ["alloc"] }
+tokio = { version = "1.0", features = ["rt-multi-thread", "time", "fs", "macros", "net"] }
+async-stream = "0.3"
+
+[build-dependencies]
+tonic-build = { version = "0.4", features = ["prost"] }
