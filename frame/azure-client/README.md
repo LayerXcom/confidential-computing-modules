@@ -37,6 +37,6 @@ Local unit tests run on Azurite.
 - [Azurite](https://github.com/Azure/Azurite)
 
 ```
-$ docker-compose run -d
+$ docker compose run -d
 $ cargo test -- --nocapture
 ```
