@@ -140,7 +140,7 @@ mod tests {
         assert_eq!(vec!("emulcont"), res);
 
         // blobにデータをputする
-        let data = "bbbbb";
+        let data = "testdatatestdata";
         let _res = client
             .put("emulcont", "test.txt", data.as_bytes())
             .await
