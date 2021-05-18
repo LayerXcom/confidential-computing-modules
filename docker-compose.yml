@@ -58,16 +58,6 @@ services:
         testing_net:
           ipv4_address: ${ETH_IP_ADDRESS}
 
-  azurite:
-    image: mcr.microsoft.com/azure-storage/azurite
-    ports:
-      - "10000:10000"
-      - "10001:10001"
-      - "10002:10002"
-    command: ["azurite", "-L", "-l", "/data", "--blobHost", "0.0.0.0","--queueHost", "0.0.0.0", "--tableHost", "0.0.0.0", "-d", "/data/debug.log", "--skipApiVersionCheck"]
-    volumes:
-      - ./testdata:/data
-
 networks:
   testing_net:
     ipam:
