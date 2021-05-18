@@ -1,1 +1,2 @@
-testdata
+testdata/__*
+testdata/debug.log
