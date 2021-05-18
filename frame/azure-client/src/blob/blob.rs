@@ -93,6 +93,7 @@ impl BlobClient {
     }
 
     /// list_containers gets list of container names.
+    #[cfg(test)]
     pub async fn list_containers(&self) -> anyhow::Result<Vec<String>> {
         let iv = self
             .client
