@@ -1,5 +1,5 @@
 [package]
-name = "azure_client"
+name = "azure-client"
 version = "0.1.0"
 authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
