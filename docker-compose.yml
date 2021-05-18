@@ -67,6 +67,9 @@ services:
     command: ["azurite", "-L", "-l", "/data", "--blobHost", "0.0.0.0","--queueHost", "0.0.0.0", "--tableHost", "0.0.0.0", "-d", "/data/debug.log", "--skipApiVersionCheck"]
     volumes:
       - ./testdata:/data
+    networks:
+        testing_net:
+          ipv4_address: ${AZURITE_IP_ADDRESS}
 
 networks:
   testing_net:
