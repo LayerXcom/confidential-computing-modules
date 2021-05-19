@@ -4,6 +4,7 @@ use azure_storage::blob::container::PublicAccess;
 use azure_storage::blob::prelude::{AsBlobClient, AsContainerClient};
 use azure_storage::clients::AsStorageClient;
 use azure_storage::core::clients::{StorageAccountClient, StorageClient};
+use azure_core::prelude::Range;
 use bytes::Bytes;
 use reqwest;
 use std::sync::Arc;
@@ -61,6 +62,7 @@ impl BlobClient {
 
         let response = blob_client
             .get()
+            .range(Range::new(0, 1024)) // TODO: Fix range nums
             .execute()
             .await
             .map_err(|err| anyhow!(err))?;
@@ -131,6 +133,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_blob() {
+        env_logger::init();
+
         let ip = std::env::var("AZURITE_IP_ADDRESS").unwrap_or("127.0.0.1".to_string());
 
         let client = BlobClient::new_emulator(

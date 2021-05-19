@@ -9,7 +9,7 @@ The frame::azure-client is wrapper library of azure sdk.
   - puts a blob
   - gets list of container names
   - creates a container
-  
+
 ## Usage
 Puts a blob data
 ```rust
@@ -31,12 +31,12 @@ let client = azure_client::blob::BlobClient::new("account", "key");
 let data = "testdata";
 let res = client.get("emulcont", "test.txt").await.unwrap();
 ```
-  
+
 ## Run unit tests
 Local unit tests run on Azurite.
 - [Azurite](https://github.com/Azure/Azurite)
 
 ```
-$ docker compose run -d
-$ cargo test -- --nocapture
+$ docker-compose up -d
+$ RUST_LOG=debug cargo test -- --nocapture
 ```

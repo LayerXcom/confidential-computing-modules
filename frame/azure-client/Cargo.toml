@@ -16,6 +16,7 @@ azure_storage = { version = "0.1", git = "https://github.com/Azure/azure-sdk-for
 [dev-dependencies]
 azure_core = { version = "0.1", git = "https://github.com/Azure/azure-sdk-for-rust.git",  default-features = false, features = ["azurite_workaround"]}
 azure_storage = { version = "0.1", git = "https://github.com/Azure/azure-sdk-for-rust.git", default-features = false, features = ["blob", "azurite_workaround"] }
+env_logger = "0.8"
 
 [features]
 default = ["blob"]
