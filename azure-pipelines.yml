@@ -3,7 +3,7 @@ trigger:
 
 stages:
 - stage: Test
-  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
+  condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/master'), not(startsWith(variables['Build.SourceBranch'], 'skiptest-')))
   jobs:
     - job: CI
       pool:
