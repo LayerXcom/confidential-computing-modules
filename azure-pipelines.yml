@@ -2,23 +2,23 @@ trigger:
 - master
 
 stages:
-- stage: Test
-  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
-  jobs:
-    - job: CI
-      pool:
-        name: 'AnonifyAgent'
-      steps:
-        - script: |
-            cp .env.sample .env
-            export SPID=$(SPID)
-            export SUB_KEY=$(SUB_KEY)
-            docker-compose up -d
-            docker-compose exec -T sgx_machine bash -c "cd anonify && ./scripts/test.sh"
-          displayName: 'Run tests'
-        - script: docker-compose down
-          condition: always()
-          displayName: 'Shutdown'
+  #- stage: Test
+  #  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
+  #  jobs:
+  #    - job: CI
+  #      pool:
+  #        name: 'AnonifyAgent'
+  #      steps:
+  #        - script: |
+  #            cp .env.sample .env
+  #            export SPID=$(SPID)
+  #            export SUB_KEY=$(SUB_KEY)
+  #            docker-compose up -d
+  #            docker-compose exec -T sgx_machine bash -c "cd anonify && ./scripts/test.sh"
+  #          displayName: 'Run tests'
+  #        - script: docker-compose down
+  #          condition: always()
+  #          displayName: 'Shutdown'
 
 - stage:
   condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e')
@@ -52,8 +52,8 @@ stages:
           export SUB_KEY=$(SUB_KEY)
           ./scripts/e2e-test.sh
         displayName: 'Run E2E tests'
-      - script: docker image prune -f
-        displayName: Remove dangling images
+#      - script: docker image prune -f
+#        displayName: Remove dangling images
       - script: docker-compose -f e2e-docker-compose.yml down
         condition: always()
         displayName: 'Shutdown'
