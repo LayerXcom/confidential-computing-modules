@@ -19,7 +19,6 @@ stages:
 #        - script: docker-compose down
 #          condition: always()
 #          displayName: 'Shutdown'
-
 - stage:
   condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e')
   jobs:
