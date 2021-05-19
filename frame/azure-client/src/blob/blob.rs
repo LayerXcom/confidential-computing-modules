@@ -131,7 +131,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_blob() {
-        let client = BlobClient::new_emulator("http://127.0.0.1:10000", "http://127.0.0.1:10002");
+        let ip = std::env::var("AZURITE_IP_ADDRESS").unwrap_or("127.0.0.1".to_string());
+
+        let client = BlobClient::new_emulator(
+            format!("http://{}:10000", ip),
+            format!("http://{}:10002", ip),
+        );
 
         // コンテナがなければ作成する失敗しても無視
         let _res = client.create_container("devstoreaccount1/emulcont").await;
