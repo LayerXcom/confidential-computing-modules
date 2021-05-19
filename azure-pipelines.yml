@@ -1,7 +1,7 @@
 trigger:
 - master
 
-#stages:
+stages:
 #- stage: Test
 #  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
 #  jobs:
