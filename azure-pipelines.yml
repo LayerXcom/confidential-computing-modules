@@ -2,23 +2,6 @@ trigger:
 - master
 
 stages:
-#- stage: Test
-#  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
-#  jobs:
-#    - job: CI
-#      pool:
-#        name: 'AnonifyAgent'
-#      steps:
-#        - script: |
-#            cp .env.sample .env
-#            export SPID=$(SPID)
-#            export SUB_KEY=$(SUB_KEY)
-#            docker-compose up -d
-#            docker-compose exec -T sgx_machine bash -c "cd anonify && ./scripts/test.sh"
-#          displayName: 'Run tests'
-#        - script: docker-compose down
-#          condition: always()
-#          displayName: 'Shutdown'
 - stage:
   condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e')
   jobs:
@@ -56,6 +39,25 @@ stages:
       - script: docker-compose -f e2e-docker-compose.yml down
         condition: always()
         displayName: 'Shutdown'
+
+  #- stage: Test
+  #  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
+  #  jobs:
+  #    - job: CI
+  #      pool:
+  #        name: 'AnonifyAgent'
+  #      steps:
+  #        - script: |
+  #            cp .env.sample .env
+  #            export SPID=$(SPID)
+  #            export SUB_KEY=$(SUB_KEY)
+  #            docker-compose up -d
+  #            docker-compose exec -T sgx_machine bash -c "cd anonify && ./scripts/test.sh"
+  #          displayName: 'Run tests'
+  #        - script: docker-compose down
+  #          condition: always()
+  #          displayName: 'Shutdown'
+
 
 - stage: Docker_Build_and_Push
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
