@@ -32,3 +32,9 @@ members = [
     "tests/units/host",
     "tests/utils",
 ]
+
+[profile.dev.package.encrypted_sql_ops]
+
+[profile.release.package.encrypted_sql_ops]
+opt-level = 3
+codegen-units = 1

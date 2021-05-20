@@ -20,12 +20,3 @@ pgx-macros = "0.1.21"
 
 [dev-dependencies]
 pgx-tests = "0.1.21"
-
-[profile.dev]
-panic = "unwind"
-
-[profile.release]
-panic = "unwind"
-opt-level = 3
-lto = "fat"
-codegen-units = 1
