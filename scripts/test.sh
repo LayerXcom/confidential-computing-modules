@@ -49,6 +49,25 @@ export ENCLAVE_PKG_NAME=key_vault
 make DEBUG=1 ENCLAVE_DIR=example/key-vault/enclave
 
 #
+# Unit Tests
+#
+
+env
+echo "Unit testing..."
+export ENCLAVE_PKG_NAME=units
+cd ${ANONIFY_ROOT}/scripts
+# make with backup disabled
+make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave FEATURE_FLAGS="runtime_enabled"
+
+cd ${ANONIFY_ROOT}
+RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \
+  -p unit-tests-host \
+  -p frame-runtime \
+  -p frame-retrier \
+  -p frame-azure-client \
+  -p frame-sodium -- --nocapture
+
+#
 # Tests for enclave key
 #
 
@@ -161,24 +180,6 @@ exec_kv_treekem_node_tests \
   test_treekem_recover_without_key_vault \
   test_treekem_manually_backup_all \
   test_treekem_manually_recover_all
-
-#
-# Unit Tests
-#
-
-echo "Unit testing..."
-export ENCLAVE_PKG_NAME=units
-cd ${ANONIFY_ROOT}/scripts
-# make with backup disabled
-make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave FEATURE_FLAGS="runtime_enabled"
-
-cd ${ANONIFY_ROOT}
-RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \
-  -p unit-tests-host \
-  -p frame-runtime \
-  -p frame-retrier \
-  -p frame-azure-client \
-  -p frame-sodium -- --nocapture
 
 #
 # Compile Checks
