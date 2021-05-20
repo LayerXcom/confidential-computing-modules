@@ -17,6 +17,8 @@ pg_test = []
 [dependencies]
 pgx = "0.1.21"
 pgx-macros = "0.1.21"
+serde = {version = "1.0", features = ["derive"]}
+aes = "0.7.2"
 
 [dev-dependencies]
 pgx-tests = "0.1.21"
