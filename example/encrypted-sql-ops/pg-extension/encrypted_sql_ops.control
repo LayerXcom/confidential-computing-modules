@@ -1,0 +1,5 @@
+comment = 'encrypted_sql_ops:  Created by pgx'
+default_version = '1.0'
+module_pathname = '$libdir/encrypted_sql_ops'
+relocatable = false
+superuser = false
