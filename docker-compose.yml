@@ -38,7 +38,7 @@ services:
       UNLOCK_DURATION: ${UNLOCK_DURATION}
       PJ_NAME: ${PJ_NAME}
       AZURITE_IP_ADDRESS: ${AZURITE_IP_ADDRESS}
-    # Add an lookup from the IP Adress to FQDN because of the following limition of rustls
+    # Add an lookup from the IP Adress to FQDN because of the following limitation of rustls
     # https://github.com/ctz/rustls/issues/184
     # https://github.com/briansmith/webpki/issues/54
     extra_hosts:
