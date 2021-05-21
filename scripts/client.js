@@ -100,7 +100,9 @@ const generate_balance_of_request = () => {
                 return state;
             })
             .then((result) => {
-                if (JSON.parse(result).state !== 90) {
+                const balance = JSON.parse(result).state;
+                if (balance !== 90) {
+                        console.log('expected balance is 100, but got ' + balance);
                         process.exit(1);
                 }
             })
