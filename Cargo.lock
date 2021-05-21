@@ -1666,7 +1666,12 @@ name = "encrypted-sql-ops-enclave"
 version = "0.1.0"
 dependencies = [
  "aes 0.7.2",
- "serde 1.0.126",
+ "encrypted-sql-ops-ecall-types",
+ "frame-common",
+ "frame-config",
+ "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
+ "sgx_tstd",
+ "thiserror 1.0.9",
 ]
 
 [[package]]

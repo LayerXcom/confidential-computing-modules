@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 pub struct EncInteger(Vec<u8>);
 
 impl EncInteger {
-    pub(crate) fn as_slice(&self) -> &[u8] {
+    /// Get raw representation of encrypted INTEGER.
+    pub fn as_slice(&self) -> &[u8] {
         &self.0
     }
 }
