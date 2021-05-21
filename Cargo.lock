@@ -1655,6 +1655,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "encrypted-sql-ops-enclave"
+version = "0.1.0"
+dependencies = [
+ "env_logger 0.7.1 (git+https://github.com/mesalock-linux/env_logger-sgx)",
+ "lazy_static",
+ "log 0.4.14",
+ "module-encrypted-sql-ops-ecall-types",
+ "module-encrypted-sql-ops-enclave",
+ "sgx_tstd",
+]
+
+[[package]]
 name = "encrypted-sql-ops-pg-extension"
 version = "0.1.0"
 dependencies = [
