@@ -101,9 +101,9 @@ const generate_balance_of_request = () => {
             })
             .then((result) => {
                 const balance = JSON.parse(result).state;
-                if (balance !== 90) {
-                        console.log('expected balance is 100, but got ' + balance);
-                        process.exit(1);
+                if (balance !== 100) {
+                    console.log('go unexpected balance');
+                    process.exit(1);
                 }
             })
     }, 1000);

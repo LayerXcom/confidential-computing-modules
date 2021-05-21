@@ -2,23 +2,23 @@ trigger:
 - master
 
 stages:
-  #- stage: Test
-  #  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
-  #  jobs:
-  #    - job: CI
-  #      pool:
-  #        name: 'AnonifyAgent'
-  #      steps:
-  #        - script: |
-  #            cp .env.sample .env
-  #            export SPID=$(SPID)
-  #            export SUB_KEY=$(SUB_KEY)
-  #            docker-compose up -d
-  #            docker-compose exec -T sgx_machine bash -c "cd anonify && ./scripts/test.sh"
-  #          displayName: 'Run tests'
-  #        - script: docker-compose down
-  #          condition: always()
-  #          displayName: 'Shutdown'
+- stage: Test
+  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
+  jobs:
+    - job: CI
+      pool:
+        name: 'AnonifyAgent'
+      steps:
+        - script: |
+            cp .env.sample .env
+            export SPID=$(SPID)
+            export SUB_KEY=$(SUB_KEY)
+            docker-compose up -d
+            docker-compose exec -T sgx_machine bash -c "cd anonify && ./scripts/test.sh"
+          displayName: 'Run tests'
+        - script: docker-compose down
+          condition: always()
+          displayName: 'Shutdown'
 
 - stage:
   condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e')
@@ -27,33 +27,33 @@ stages:
     pool:
       name: 'AnonifyAgent'
     steps:
-#      - task: Docker@2
-#        displayName: Build erc20 image
-#        inputs:
-#          command: build
-#          containerRegistry: anonify-ci-cd-acr
-#          repository: erc20-state-runtime
-#          tags: latest
-#          dockerfile: ./docker/erc20.Dockerfile
-#          buildContext: .
-#          arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
-#      - task: Docker@2
-#        displayName: Build key-vault for erc20 image
-#        inputs:
-#          command: build
-#          containerRegistry: anonify-ci-cd-acr
-#          repository: key-vault-for-erc20
-#          tags: latest
-#          dockerfile: ./docker/keyvault.Dockerfile
-#          buildContext: .
-#          arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
+      - task: Docker@2
+        displayName: Build erc20 image
+        inputs:
+          command: build
+          containerRegistry: anonify-ci-cd-acr
+          repository: erc20-state-runtime
+          tags: latest
+          dockerfile: ./docker/erc20.Dockerfile
+          buildContext: .
+          arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
+      - task: Docker@2
+        displayName: Build key-vault for erc20 image
+        inputs:
+          command: build
+          containerRegistry: anonify-ci-cd-acr
+          repository: key-vault-for-erc20
+          tags: latest
+          dockerfile: ./docker/keyvault.Dockerfile
+          buildContext: .
+          arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
       - script: |
           export SPID=$(SPID)
           export SUB_KEY=$(SUB_KEY)
           ./scripts/e2e-test.sh
         displayName: 'Run E2E tests'
-#      - script: docker image prune -f
-#        displayName: Remove dangling images
+      - script: docker image prune -f
+        displayName: Remove dangling images
       - script: docker-compose -f e2e-docker-compose.yml down
         condition: always()
         displayName: 'Shutdown'
