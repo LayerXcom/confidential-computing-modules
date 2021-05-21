@@ -1,4 +1,4 @@
-use frame_config::{ANONIFY_PARAMS_DIR, IAS_ROOT_CERT, CMD_DEC_SECRET_DIR};
+use frame_config::{ANONIFY_PARAMS_DIR, CMD_DEC_SECRET_DIR, IAS_ROOT_CERT};
 use frame_runtime::traits::*;
 use frame_sodium::StoreEnclaveDecryptionKey;
 use frame_treekem::StorePathSecrets;
@@ -56,8 +56,14 @@ impl ConfigGetter for KeyVaultEnclaveContext {
 impl KeyVaultEnclaveContext {
     pub fn new(version: usize) -> Self {
         let spid = env::var("SPID").expect("SPID is not set");
+        if spid.is_empty() {
+            panic!("SPID shouldn't be empty");
+        }
         let ias_url = env::var("IAS_URL").expect("IAS_URL is not set");
         let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
+        if sub_key.is_empty() {
+            panic!("SUB_KEY shouldn't be empty");
+        }
         let key_vault_endpoint = env::var("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME")
             .expect("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME is not set");
         let store_path_secrets = StorePathSecrets::new(&*CMD_DEC_SECRET_DIR);

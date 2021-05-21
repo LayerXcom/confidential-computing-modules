@@ -108,7 +108,13 @@ fn recover_path_secret_from_key_vault_for_test(
     let key_vault_endpoint = env::var("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME")
         .expect("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME is not set");
     let spid = env::var("SPID").expect("SPID is not set");
+    if spid.is_empty() {
+        panic!("SPID shouldn't be empty");
+    }
     let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
+    if sub_key.is_empty() {
+        panic!("SUB_KEY shouldn't be empty");
+    }
 
     let attested_tls_config =
         AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;

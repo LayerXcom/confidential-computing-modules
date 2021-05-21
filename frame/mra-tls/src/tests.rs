@@ -10,8 +10,8 @@ use std::{
     time::Duration,
     vec::Vec,
 };
-use test_utils::{runner::*, check_all_passed, run_tests};
- 
+use test_utils::{check_all_passed, run_tests, runner::*};
+
 lazy_static! {
     static ref SERVER_ADDRESS: String = {
         let host = env::var("HOSTNAME").expect("failed to get env 'HOSTNAME'");
@@ -37,8 +37,14 @@ impl RequestHandler for EchoHandler {
 fn test_request_response() {
     set_env_vars();
     let spid = env::var("SPID").unwrap();
+    if spid.is_empty() {
+        panic!("SPID shouldn't be empty");
+    }
     let ias_url = env::var("IAS_URL").unwrap();
     let sub_key = env::var("SUB_KEY").unwrap();
+    if sub_key.is_empty() {
+        panic!("SUB_KEY shouldn't be empty");
+    }
 
     let attested_tls_config =
         AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec()).unwrap();
