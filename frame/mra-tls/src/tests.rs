@@ -37,10 +37,10 @@ impl RequestHandler for EchoHandler {
 fn test_request_response() {
     set_env_vars();
     let spid = env::var("SPID").unwrap();
-    assert!(spid.is_empty(), "SPID shouldn't be empty");
+    assert!(!spid.is_empty(), "SPID shouldn't be empty");
     let ias_url = env::var("IAS_URL").unwrap();
     let sub_key = env::var("SUB_KEY").unwrap();
-    assert!(sub_key.is_empty(), "SUB_KEY shouldn't be empty");
+    assert!(!sub_key.is_empty(), "SUB_KEY shouldn't be empty");
 
     let attested_tls_config =
         AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec()).unwrap();
