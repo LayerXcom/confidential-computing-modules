@@ -177,6 +177,7 @@ RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \
   -p unit-tests-host \
   -p frame-runtime \
   -p frame-retrier \
+  -p frame-azure-client \
   -p frame-sodium -- --nocapture
 
 #

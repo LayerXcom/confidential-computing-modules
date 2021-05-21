@@ -37,7 +37,8 @@ services:
       EVENT_LIMIT: ${EVENT_LIMIT}
       UNLOCK_DURATION: ${UNLOCK_DURATION}
       PJ_NAME: ${PJ_NAME}
-    # Add an lookup from the IP Address to FQDN because of the following limitation of rustls
+      AZURITE_IP_ADDRESS: ${AZURITE_IP_ADDRESS}
+    # Add an lookup from the IP Adress to FQDN because of the following limitation of rustls
     # https://github.com/ctz/rustls/issues/184
     # https://github.com/briansmith/webpki/issues/54
     extra_hosts:
@@ -57,6 +58,19 @@ services:
       networks:
         testing_net:
           ipv4_address: ${ETH_IP_ADDRESS}
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    command: ["azurite", "-L", "-l", "/data", "--blobHost", "0.0.0.0","--queueHost", "0.0.0.0", "--tableHost", "0.0.0.0", "-d", "/data/debug.log", "--skipApiVersionCheck"]
+    volumes:
+      - ./frame/azure-client/testdata:/data
+    networks:
+        testing_net:
+          ipv4_address: ${AZURITE_IP_ADDRESS}
 
 networks:
   testing_net:
