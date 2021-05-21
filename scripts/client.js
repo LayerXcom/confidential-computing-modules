@@ -100,7 +100,7 @@ const generate_balance_of_request = () => {
                 return state;
             })
             .then((result) => {
-                if (JSON.parse(result).state !== 100) {
+                if (JSON.parse(result).state !== 90) {
                         process.exit(1);
                 }
             })
