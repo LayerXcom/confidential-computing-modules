@@ -1655,6 +1655,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "encrypted-sql-ops-enclave"
+version = "0.1.0"
+
+[[package]]
 name = "encrypted-sql-ops-host"
 version = "0.1.0"
 dependencies = [
