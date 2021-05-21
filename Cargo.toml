@@ -19,6 +19,7 @@ members = [
     "modules/key-vault-ecall-types",
     "modules/encrypted-sql-ops-enclave",
     "modules/encrypted-sql-ops-host",
+    "modules/encrypted-sql-ops-ecall-types",
     "nodes/key-vault",
     "nodes/state-runtime/api",
     "nodes/state-runtime/server",

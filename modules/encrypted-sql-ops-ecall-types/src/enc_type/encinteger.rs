@@ -11,7 +11,7 @@ impl EncInteger {
 }
 
 impl From<Vec<u8>> for EncInteger {
-    fn from(bytes: Vec<u8>) -> Self {
-        Self(bytes)
+    fn from(encrypted: Vec<u8>) -> Self {
+        Self(encrypted)
     }
 }

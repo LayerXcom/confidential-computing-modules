@@ -1655,15 +1655,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "encrypted-sql-ops-ecall-types"
+version = "0.1.0"
+dependencies = [
+ "serde 1.0.126",
+]
+
+[[package]]
 name = "encrypted-sql-ops-enclave"
 version = "0.1.0"
+dependencies = [
+ "aes 0.7.2",
+ "serde 1.0.126",
+]
 
 [[package]]
 name = "encrypted-sql-ops-host"
 version = "0.1.0"
-dependencies = [
- "aes 0.7.2",
-]
 
 [[package]]
 name = "encrypted_sql_ops"
