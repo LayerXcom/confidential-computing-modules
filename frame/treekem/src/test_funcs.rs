@@ -36,7 +36,7 @@ pub fn do_handshake_three_party(
             source,
             max_roster_idx,
             #[cfg(feature = "backup-enable")]
-            recover_path_secret_from_key_vault_for_test,
+                recover_path_secret_from_key_vault_for_test,
         )
         .unwrap();
     let others_keychain1 = others_group1
@@ -46,7 +46,7 @@ pub fn do_handshake_three_party(
             source,
             max_roster_idx,
             #[cfg(feature = "backup-enable")]
-            recover_path_secret_from_key_vault_for_test,
+                recover_path_secret_from_key_vault_for_test,
         )
         .unwrap();
     let others_keychain2 = others_group2
@@ -56,7 +56,7 @@ pub fn do_handshake_three_party(
             source,
             max_roster_idx,
             #[cfg(feature = "backup-enable")]
-            recover_path_secret_from_key_vault_for_test,
+                recover_path_secret_from_key_vault_for_test,
         )
         .unwrap();
 
@@ -108,7 +108,9 @@ fn recover_path_secret_from_key_vault_for_test(
     let key_vault_endpoint = env::var("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME")
         .expect("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME is not set");
     let spid = env::var("SPID").expect("SPID is not set");
+    assert!(!spid.is_empty(), "SPID shouldn't be empty");
     let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
+    assert!(!sub_key.is_empty(), "SUB_KEY shouldn't be empty");
 
     let attested_tls_config =
         AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
