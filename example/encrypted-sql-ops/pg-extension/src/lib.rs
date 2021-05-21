@@ -1,5 +1,11 @@
-mod enclave;
-mod host;
+//! Anti-corruption layer facing pgx.
+//! All user-defined functions, types, operations, and aggregates are defined here.
+//!
+//! This crate should not include any substantial logics.
+
+mod typ;
+
+mod encinteger_avg;
 
 use pgx::*;
 
