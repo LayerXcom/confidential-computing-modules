@@ -1655,34 +1655,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "encrypted-sql-ops-ecall-types"
+name = "encrypted-sql-ops-pg-extension"
 version = "0.1.0"
 dependencies = [
- "frame-common",
- "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
- "serde 1.0.126",
- "sgx_tstd",
-]
-
-[[package]]
-name = "encrypted-sql-ops-enclave"
-version = "0.1.0"
-dependencies = [
- "aes 0.7.2",
- "encrypted-sql-ops-ecall-types",
- "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
- "sgx_tstd",
- "thiserror 1.0.9",
-]
-
-[[package]]
-name = "encrypted-sql-ops-host"
-version = "0.1.0"
-
-[[package]]
-name = "encrypted_sql_ops"
-version = "0.1.0"
-dependencies = [
+ "module-encrypted-sql-ops-ecall-types",
  "pgx",
  "pgx-macros",
  "pgx-tests",
@@ -3376,6 +3352,31 @@ checksum = "b9f1c5b025cda876f66ef43a113f91ebc9f4ccef34843000e0adf6ebbab84e21"
 dependencies = [
  "winapi 0.3.9",
 ]
+
+[[package]]
+name = "module-encrypted-sql-ops-ecall-types"
+version = "0.1.0"
+dependencies = [
+ "frame-common",
+ "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
+ "serde 1.0.126",
+ "sgx_tstd",
+]
+
+[[package]]
+name = "module-encrypted-sql-ops-enclave"
+version = "0.1.0"
+dependencies = [
+ "aes 0.7.2",
+ "module-encrypted-sql-ops-ecall-types",
+ "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
+ "sgx_tstd",
+ "thiserror 1.0.9",
+]
+
+[[package]]
+name = "module-encrypted-sql-ops-host"
+version = "0.1.0"
 
 [[package]]
 name = "native-tls"

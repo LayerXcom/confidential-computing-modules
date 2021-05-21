@@ -36,8 +36,8 @@ members = [
     "tests/utils",
 ]
 
-[profile.dev.package.encrypted_sql_ops]
+[profile.dev.package.encrypted-sql-ops-pg-extension]
 
-[profile.release.package.encrypted_sql_ops]
+[profile.release.package.encrypted-sql-ops-pg-extension]
 opt-level = 3
 codegen-units = 1

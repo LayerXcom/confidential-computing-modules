@@ -1,5 +1,5 @@
 [package]
-name = "encrypted-sql-ops-host"
+name = "module-encrypted-sql-ops-host"
 version = "0.1.0"
 authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
