@@ -3,9 +3,9 @@
 //!
 //! This crate should not include any substantial logics.
 
+mod aggregate;
+mod func;
 mod typ;
-
-mod encinteger_avg;
 
 use pgx::*;
 
