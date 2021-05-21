@@ -1658,8 +1658,10 @@ dependencies = [
 name = "encrypted-sql-ops-ecall-types"
 version = "0.1.0"
 dependencies = [
+ "frame-common",
  "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
  "serde 1.0.126",
+ "sgx_tstd",
 ]
 
 [[package]]

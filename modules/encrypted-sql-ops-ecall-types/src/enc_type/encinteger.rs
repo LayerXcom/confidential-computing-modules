@@ -1,7 +1,9 @@
-use serde::{Deserialize, Serialize};
+use crate::serde::{Deserialize, Serialize};
+use std::vec::Vec;
 
 /// Encrypted INTEGER type.
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub struct EncInteger(Vec<u8>);
 
 impl EncInteger {
