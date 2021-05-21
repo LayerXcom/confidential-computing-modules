@@ -6,18 +6,18 @@ const encrypt = async ([pubkey, msg]) => {
     await _sodium.ready;
     const sodium = _sodium;
 
-    let pk_server_raw = Buffer.from(
+    const pk_server_raw = Buffer.from(
         JSON.parse(pubkey).enclave_encryption_key
     ).toString('hex');
-    let pair_client = sodium.crypto_box_keypair();
-    let sk_client = pair_client.privateKey;
-    let pk_client = pair_client.publicKey;
+    const pair_client = sodium.crypto_box_keypair();
+    const sk_client = pair_client.privateKey;
+    const pk_client = pair_client.publicKey;
 
-    let pk_server = sodium.from_hex(pk_server_raw);
+    const pk_server = sodium.from_hex(pk_server_raw);
 
-    let nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
+    const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
 
-    let ciphertext = sodium.crypto_box_easy(msg, nonce, pk_server, sk_client);
+    const ciphertext = sodium.crypto_box_easy(msg, nonce, pk_server, sk_client);
     const encrypted = {
         "ciphertext": Buffer.from(ciphertext).toString('hex'),
         "ephemeral_public_key": Buffer.from(pk_client).toString('hex'),
@@ -28,7 +28,7 @@ const encrypt = async ([pubkey, msg]) => {
 };
 
 const generate_init_state_request = () => {
-    let init = {
+    const init = {
         "access_policy": {
             "account_id": [216, 211, 74, 222, 192, 13, 199, 12, 37, 58, 141, 38, 252, 74, 55, 83, 152, 119, 212, 147]
         },
@@ -42,7 +42,7 @@ const generate_init_state_request = () => {
 }
 
 const generate_balance_of_request = () => {
-    let init = {
+    const init = {
         "access_policy": {
             "account_id": [216, 211, 74, 222, 192, 13, 199, 12, 37, 58, 141, 38, 252, 74, 55, 83, 152, 119, 212, 147]
         },
@@ -99,6 +99,10 @@ const generate_balance_of_request = () => {
                     });
                 return state;
             })
-            .then((result) => { console.log('result:' + JSON.stringify(result)) })
+            .then((result) => {
+                if (JSON.parse(result).state !== 100) {
+                        process.exit(1);
+                }
+            })
     }, 1000);
 })();
