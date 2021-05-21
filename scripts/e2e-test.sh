@@ -44,4 +44,8 @@ npm install axios
 npm install
 npm install libsodium-wrappers
 
-node ./scripts/client.js
+result=$(node ./scripts/client.js)
+if [ "$result" -ne 0 ]; then
+    echo "js client failed..."
+    exit 1
+fi
