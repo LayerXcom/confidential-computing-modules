@@ -1655,10 +1655,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "encrypted_sql_ops"
+name = "encrypted-sql-ops-host"
 version = "0.1.0"
 dependencies = [
  "aes 0.7.2",
+]
+
+[[package]]
+name = "encrypted_sql_ops"
+version = "0.1.0"
+dependencies = [
  "pgx",
  "pgx-macros",
  "pgx-tests",
