@@ -1,11 +1,7 @@
-const _sodium = require('libsodium-wrappers');
-const axios = require('axios');
+const sodium = require('libsodium-wrappers');
 const axiosBase = require('axios');
 
-const encrypt = async ([pubkey, msg]) => {
-    await _sodium.ready;
-    const sodium = _sodium;
-
+const encrypt = ([pubkey, msg]) => {
     const pk_server_raw = Buffer.from(
         JSON.parse(pubkey).enclave_encryption_key
     ).toString('hex');
