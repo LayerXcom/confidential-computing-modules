@@ -6,5 +6,11 @@
 //! Ideally, everything in this crate serves for any RDBMS's extension development.
 
 #![deny(missing_debug_implementations, missing_docs)]
+#![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 
 pub mod enc_type;
+
+#[cfg(all(feature = "sgx", not(feature = "std")))]
+use serde_sgx as serde;
+#[cfg(feature = "std")]
+use serde_std as serde;
