@@ -99,6 +99,6 @@ const generate_balance_of_request = () => {
                     });
                 return state;
             })
-            .then((result) => { console.log('result:' + JSON.stringify(res)) })
+            .then((result) => { console.log('result:' + JSON.stringify(result)) })
     }, 1000);
 })();
