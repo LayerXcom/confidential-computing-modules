@@ -41,7 +41,6 @@ fi
 cd "$CI_ROOT_DIR"
 npm init -y
 npm install axios
-npm install
 npm install libsodium-wrappers
 
 if ! node ./scripts/client.js; then
