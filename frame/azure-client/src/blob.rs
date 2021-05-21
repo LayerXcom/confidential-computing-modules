@@ -1,12 +1,11 @@
 use anyhow::anyhow;
+use azure_core::prelude::Range;
 use azure_core::HttpClient;
 use azure_storage::blob::container::PublicAccess;
 use azure_storage::blob::prelude::{AsBlobClient, AsContainerClient};
 use azure_storage::clients::AsStorageClient;
 use azure_storage::core::clients::{StorageAccountClient, StorageClient};
-use azure_core::prelude::Range;
 use bytes::Bytes;
-use reqwest;
 use std::sync::Arc;
 #[cfg(test)]
 use url::Url;
@@ -135,7 +134,7 @@ mod tests {
     async fn test_blob() {
         env_logger::init();
 
-        let ip = std::env::var("AZURITE_IP_ADDRESS").unwrap_or("127.0.0.1".to_string());
+        let ip = std::env::var("AZURITE_IP_ADDRESS").unwrap_or_else(|_| "127.0.0.1".to_string());
 
         let client = BlobClient::new_emulator(
             format!("http://{}:10000", ip),
