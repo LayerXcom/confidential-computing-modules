@@ -12,6 +12,7 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
+pub mod aggregate_state;
 pub mod enc_type;
 
 #[cfg(all(feature = "sgx", not(feature = "std")))]

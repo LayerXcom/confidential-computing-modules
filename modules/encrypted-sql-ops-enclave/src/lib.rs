@@ -12,6 +12,6 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
-pub mod aggregate;
+pub mod aggregate_calc;
 pub mod error;
 pub mod type_crypt;

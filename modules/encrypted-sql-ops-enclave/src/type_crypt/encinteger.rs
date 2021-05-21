@@ -4,7 +4,7 @@ use crate::error::{EnclaveError, Result};
 use aes::{
     cipher::generic_array::GenericArray, Aes128, BlockDecrypt, BlockEncrypt, NewBlockCipher,
 };
-use encrypted_sql_ops_ecall_types::enc_type::EncInteger;
+use module_encrypted_sql_ops_ecall_types::enc_type::EncInteger;
 use std::{convert::TryInto, vec::Vec};
 
 // 128-bit key
