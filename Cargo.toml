@@ -29,7 +29,6 @@ members = [
     "example/key-vault/enclave",
     "example/key-vault/server",
     "example/encrypted-sql-ops/enclave",
-    "example/encrypted-sql-ops/pg-extension",
     "example/wallet",
     "tests/integration",
     "tests/units/enclave",
