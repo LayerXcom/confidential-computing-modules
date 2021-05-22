@@ -108,7 +108,7 @@ impl Dispatcher {
         let address = inner
             .sender
             .as_ref()
-            .ok_or_else(|| HostError::AddressNotSet)?
+            .ok_or(HostError::AddressNotSet)?
             .get_contract()
             .address();
         Ok(address)

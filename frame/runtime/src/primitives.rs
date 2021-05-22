@@ -185,7 +185,7 @@ impl Approved {
     }
 
     pub fn get(&self, account_id: AccountId) -> U64 {
-        self.0.get(&account_id).map(|e| *e).unwrap_or_default()
+        self.0.get(&account_id).copied().unwrap_or_default()
     }
 
     pub fn approve(&mut self, account_id: AccountId, amount: U64) {
@@ -212,7 +212,7 @@ impl Approved {
                 self.0.insert(account_id, existing_amount - amount);
                 Ok(())
             }
-            None => return Err(anyhow!("{:?} doesn't have any balance.", account_id)),
+            None => Err(anyhow!("{:?} doesn't have any balance.", account_id)),
         }
     }
 

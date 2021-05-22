@@ -110,16 +110,16 @@ impl EthLog {
         let bytes = tokens[0]
             .clone()
             .to_bytes()
-            .ok_or_else(|| HostError::InvalidEthLogToken)?;
+            .ok_or(HostError::InvalidEthLogToken)?;
         let state_counter = tokens[1]
             .clone()
             .to_uint()
-            .ok_or_else(|| HostError::InvalidEthLogToken)?;
+            .ok_or(HostError::InvalidEthLogToken)?;
 
         let trace_id = tokens[2]
             .clone()
             .to_fixed_bytes()
-            .ok_or_else(|| HostError::InvalidEthLogToken)?;
+            .ok_or(HostError::InvalidEthLogToken)?;
 
         Span::current().record(
             "fetched_trace_id",
@@ -459,7 +459,7 @@ impl InnerEnclaveLog {
                     .find(|log| match log.decode_ciphertext_event() {
                         Ok((bytes, _state_counter)) => match ciphertext_kind {
                             CiphertextKind::TreeKem => {
-                                match TreeKemCiphertext::decode(&mut &bytes[..]) {
+                                match TreeKemCiphertext::decode(&bytes[..]) {
                                     Ok(res) => CommandCiphertext::TreeKem(res) == *ciphertext,
                                     Err(e) => {
                                         error!("TreeKemCiphertext::decode error: {:?}", e);
@@ -468,7 +468,7 @@ impl InnerEnclaveLog {
                                 }
                             }
                             CiphertextKind::EnclaveKey => {
-                                match EnclaveKeyCiphertext::decode(&mut &bytes[..]) {
+                                match EnclaveKeyCiphertext::decode(&bytes[..]) {
                                     Ok(res) => CommandCiphertext::EnclaveKey(res) == *ciphertext,
                                     Err(e) => {
                                         error!("EnclaveKeyCiphertext::decode error: {:?}", e);

@@ -7,6 +7,7 @@ use std::sync::Arc;
 use tracing::Span;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
+#[allow(clippy::async_yields_async)]
 #[tracing::instrument(skip(server), fields(trace_id, instance_id))]
 pub async fn handle_health_check(server: web::Data<Arc<Server>>) -> impl Responder {
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
