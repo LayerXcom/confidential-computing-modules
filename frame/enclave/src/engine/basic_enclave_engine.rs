@@ -6,7 +6,7 @@ pub trait BasicEnclaveEngine: Sized + Default {
     type EI: EcallInput + DeserializeOwned + Default;
     type EO: EcallOutput + Serialize + Default;
 
-    fn decrypt<C>(_ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
