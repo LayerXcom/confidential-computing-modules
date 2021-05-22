@@ -3400,6 +3400,7 @@ dependencies = [
 name = "module-encrypted-sql-ops-host"
 version = "0.1.0"
 dependencies = [
+ "anyhow 1.0.34",
  "frame-host",
  "module-encrypted-sql-ops-ecall-types",
 ]

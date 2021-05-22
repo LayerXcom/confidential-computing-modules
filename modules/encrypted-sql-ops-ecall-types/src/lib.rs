@@ -12,14 +12,15 @@
 #[macro_use]
 extern crate sgx_tstd as std;
 
+#[cfg(feature = "sgx")]
+use serde_sgx as serde;
+#[cfg(all(not(feature = "sgx"), feature = "std"))]
+use serde_std as serde;
+
 pub mod aggregate_state;
 pub mod enc_type;
+pub mod enclave_types;
 
 mod ecall_cmd;
 
 pub use ecall_cmd::EcallCmd;
-
-#[cfg(all(feature = "sgx", not(feature = "std")))]
-use serde_sgx as serde;
-#[cfg(feature = "std")]
-use serde_std as serde;

@@ -2,12 +2,13 @@
 //!
 //! FIXME: EcallController would be better name.
 
-mod enclave_input;
-mod enclave_output;
 mod host_input;
 mod host_output;
 
 use frame_host::engine::*;
+use module_encrypted_sql_ops_ecall_types::enclave_types::{
+    EncIntegerWrapper as EnclaveEncIntegerWrapper, RawInteger as EnclaveRawInteger,
+};
 
 /// Constructor of `ENCINTEGER` custom type.
 ///
@@ -31,8 +32,8 @@ pub struct EncIntegerFromWorkflow;
 
 impl HostEngine for EncIntegerFromWorkflow {
     type HI = host_input::RawInteger;
-    type EI = enclave_input::RawInteger;
-    type EO = enclave_output::EncIntegerWrapper;
+    type EI = EnclaveRawInteger;
+    type EO = EnclaveEncIntegerWrapper;
     type HO = host_output::EncIntegerWrapper;
     const OUTPUT_MAX_LEN: usize = 64;
 }
