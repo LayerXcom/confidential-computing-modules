@@ -26,7 +26,7 @@ where
     type EI = input::Command;
     type EO = output::Command;
 
-    fn decrypt<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
@@ -103,12 +103,12 @@ where
     type EI = input::InsertCiphertext;
     type EO = output::ReturnNotifyState;
 
-    fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
         Ok(Self {
-            ecall_input: ciphertext,
+            ecall_input,
             ap: PhantomData,
         })
     }

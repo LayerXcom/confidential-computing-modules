@@ -69,12 +69,12 @@ impl StateRuntimeEnclaveEngine for HandshakeReceiver {
     type EI = input::InsertHandshake;
     type EO = output::Empty;
 
-    fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
         Ok(Self {
-            ecall_input: ciphertext,
+            ecall_input,
         })
     }
 
