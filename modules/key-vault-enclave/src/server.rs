@@ -49,10 +49,9 @@ impl BasicEnclaveEngine for ServerStopper {
     type EI = input::CallServerStopper;
     type EO = output::Empty;
 
-    fn handle<R, C>(self, _enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn handle<C>(self, _enclave_context: &C) -> anyhow::Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
-        C: ContextOps<S = StateType> + Clone,
+        C: ConfigGetter,
     {
         Ok(output::Empty::default())
     }
