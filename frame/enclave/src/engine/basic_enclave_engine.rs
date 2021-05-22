@@ -1,5 +1,5 @@
-use frame_common::{state_types::StateType, EcallInput, EcallOutput};
-use frame_runtime::{ConfigGetter, ContextOps, RuntimeExecutor};
+use frame_common::{EcallInput, EcallOutput};
+use frame_runtime::ConfigGetter;
 use serde::{de::DeserializeOwned, Serialize};
 
 pub trait BasicEnclaveEngine: Sized + Default {
@@ -8,7 +8,7 @@ pub trait BasicEnclaveEngine: Sized + Default {
 
     fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
-        C: ContextOps<S = StateType> + Clone,
+        C: ConfigGetter,
     {
         Ok(Self::default())
     }
