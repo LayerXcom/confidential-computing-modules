@@ -445,11 +445,11 @@ impl<AP: AccessPolicy> StateRuntimeEnclaveEngine for GetState<AP> {
     type EI = SodiumCiphertext;
     type EO = output::ReturnState;
 
-    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(&ciphertext)?;
+        let buf = enclave_context.decrypt(&ecall_input)?;
         let ecall_input = serde_json::from_slice(&buf[..])?;
 
         Ok(Self { ecall_input })
@@ -489,11 +489,11 @@ impl<AP: AccessPolicy> StateRuntimeEnclaveEngine for GetUserCounter<AP> {
     type EI = SodiumCiphertext;
     type EO = output::ReturnUserCounter;
 
-    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(&ciphertext)?;
+        let buf = enclave_context.decrypt(&ecall_input)?;
         let ecall_input = serde_json::from_slice(&buf[..])?;
 
         Ok(Self { ecall_input })
