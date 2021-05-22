@@ -1,10 +1,13 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
+
 #[cfg(feature = "sgx")]
 #[macro_use]
 extern crate sgx_tstd as localstd;
-#[cfg(feature = "std")]
+
+#[cfg(all(not(feature = "sgx"), feature = "std"))]
 use std as localstd;
-#[cfg(all(not(feature = "std"), not(feature = "sgx")))]
+
+#[cfg(all(not(feature = "sgx"), not(feature = "std")))]
 extern crate core as localstd;
 
 pub mod envs;
