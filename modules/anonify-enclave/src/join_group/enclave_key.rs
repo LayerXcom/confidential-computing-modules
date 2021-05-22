@@ -1,14 +1,14 @@
 use anonify_ecall_types::*;
 use anyhow::Result;
 use frame_common::state_types::StateType;
-use frame_enclave::EnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveEngine;
 use frame_runtime::traits::*;
 
 /// A add handshake Sender
 #[derive(Debug, Clone, Default)]
 pub struct JoinGroupWithEnclaveKey;
 
-impl EnclaveEngine for JoinGroupWithEnclaveKey {
+impl StateRuntimeEnclaveEngine for JoinGroupWithEnclaveKey {
     type EI = input::Empty;
     type EO = output::ReturnJoinGroup;
 
