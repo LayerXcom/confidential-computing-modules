@@ -171,7 +171,7 @@ pub(crate) mod tests {
     use super::*;
     use crate::handshake::{PathSecretKVS, PathSecretSource};
     use crate::test_funcs;
-    use test_utils::{runner::*, check_all_passed, run_tests};
+    use test_utils::{check_all_passed, run_tests, runner::*};
 
     pub(crate) fn run_tests() -> bool {
         run_tests!(test_app_msg_correctness,)

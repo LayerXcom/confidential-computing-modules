@@ -10,18 +10,25 @@ ANONIFY_ROOT=/root/anonify
 ANONIFY_TAG=v0.5.11
 
 #
+# Lints checks
+#
+
+cd ${ANONIFY_ROOT}
+cargo fmt --all -- --check
+cargo clippy -p erc20-server -p key-vault-server --all-targets --all-features -- -D warnings
+
+#
 # Setup Tests
 #
 
-dirpath=$(cd $(dirname $0) && pwd)
-cd "${dirpath}/.."
+cd ${ANONIFY_ROOT}
 if [ ! -d ${ANONIFY_ROOT}/anonify-contracts ]; then
     git clone --depth 1 -b $ANONIFY_TAG https://github.com/LayerXcom/anonify-contracts
 else
     cd ${ANONIFY_ROOT}/anonify-contracts
-    tag_id=`git show $ANONIFY_TAG | grep commit | cut -f 2 -d ' '`
-    current_commit_id=`git rev-parse HEAD`
-    if [ $tag_id = $current_commit_id ]; then
+    tag_id=$(git show $ANONIFY_TAG | grep commit | cut -f 2 -d ' ')
+    current_commit_id=$(git rev-parse HEAD)
+    if [ "$tag_id" = "$current_commit_id" ]; then
         echo "already cloned /anonify-contracts(skipped)"
     else
         echo "already exists /anonify-contracts directory, but doesn't match commit id with specified by tag"
