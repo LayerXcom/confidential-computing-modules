@@ -14,7 +14,7 @@ pub trait BasicEnclaveEngine: Sized + Default {
     }
 
     /// Handler for basic engine
-    fn handle<C>(_enclave_context: &C) -> anyhow::Result<Self::EO>
+    fn handle<C>(self, _enclave_context: &C) -> anyhow::Result<Self::EO>
     where
         C: ConfigGetter,
     {
