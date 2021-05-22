@@ -13,6 +13,7 @@
 extern crate sgx_tstd as std;
 
 pub mod aggregate_state;
+pub mod ecall_cmd;
 pub mod enc_type;
 
 #[cfg(all(feature = "sgx", not(feature = "std")))]

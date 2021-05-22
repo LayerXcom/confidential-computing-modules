@@ -4,7 +4,7 @@
 /// TODO: introduce exit-less mechanism.
 #[allow(missing_docs)]
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
-pub enum Cmd {
+pub enum EcallCmd {
     ENCINTEGER_FROM = 1,
     ENCINTEGER_AVG_STATE_FUNC = 2,
     ENCINTEGER_AVG_FINAL_FUNC = 3,

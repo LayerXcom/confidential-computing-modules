@@ -3399,6 +3399,10 @@ dependencies = [
 [[package]]
 name = "module-encrypted-sql-ops-host"
 version = "0.1.0"
+dependencies = [
+ "frame-host",
+ "module-encrypted-sql-ops-ecall-types",
+]
 
 [[package]]
 name = "native-tls"

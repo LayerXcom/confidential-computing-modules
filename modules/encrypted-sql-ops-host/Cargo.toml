@@ -5,3 +5,5 @@ authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 
 [dependencies]
+frame-host = { path = "../../frame/host" }
+module-encrypted-sql-ops-ecall-types = { path = "../encrypted-sql-ops-ecall-types", features = ["std"] }
