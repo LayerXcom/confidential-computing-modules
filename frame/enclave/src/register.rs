@@ -18,21 +18,33 @@ macro_rules! register_ecall {
             }
         }
 
+        #[cfg(feature = "runtime_enabled")]
         fn inner_ecall_handler<EE>(input_payload: &[u8]) -> anyhow::Result<Vec<u8>>
         where
-            EE: EnclaveEngine,
+            EE: StateRuntimeEnclaveEngine,
         {
-            #[cfg(feature = "runtime_enabled")]
             let res = {
-                let ciphertext = bincode::deserialize(&input_payload[..])
+                let ecall_input = bincode::deserialize(&input_payload[..])
                     .map_err(|e| anyhow!("{:?}", e))?;
-                let input = EE::decrypt::<$ctx_ops>(ciphertext, $ctx)?;
-                EE::eval_policy(&input)?;
-                EE::handle::<$runtime_exec, $ctx_ops>(input, $ctx, $max_mem)?
+                let slf = EE::new::<$ctx_ops>(ecall_input, $ctx)?;
+                EE::eval_policy(&slf)?;
+                EE::handle::<$runtime_exec, $ctx_ops>(slf, $ctx, $max_mem)?
             };
 
-            #[cfg(not(feature = "runtime_enabled"))]
-            let res = EE::handle_without_runtime::<$ctx_ops>($ctx)?;
+            bincode::serialize(&res).map_err(Into::into)
+        }
+
+        #[cfg(not(feature = "runtime_enabled"))]
+        fn inner_ecall_handler<EE>(input_payload: &[u8]) -> anyhow::Result<Vec<u8>>
+        where
+            EE: BasicEnclaveEngine,
+        {
+            let res = {
+                let ecall_input = bincode::deserialize(&input_payload[..])
+                    .map_err(|e| anyhow!("{:?}", e))?;
+                let slf = EE::new::<$ctx_ops>(ecall_input, $ctx)?;
+                EE::handle::<$ctx_ops>(slf, $ctx)?
+            };
 
             bincode::serialize(&res).map_err(Into::into)
         }

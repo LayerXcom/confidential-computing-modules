@@ -1,7 +1,6 @@
 use crate::handlers::KeyVaultHandler;
-use frame_common::state_types::StateType;
 use frame_config::{ANONIFY_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
-use frame_enclave::EnclaveEngine;
+use frame_enclave::BasicEnclaveEngine;
 use frame_mra_tls::{AttestedTlsConfig, Server, ServerConfig};
 use frame_runtime::traits::*;
 use key_vault_ecall_types::*;
@@ -11,11 +10,11 @@ use std::env;
 #[derive(Debug, Clone, Default)]
 pub struct ServerStarter;
 
-impl EnclaveEngine for ServerStarter {
+impl BasicEnclaveEngine for ServerStarter {
     type EI = input::CallServerStarter;
     type EO = output::Empty;
 
-    fn handle_without_runtime<C>(enclave_context: &C) -> anyhow::Result<Self::EO>
+    fn handle<C>(self, enclave_context: &C) -> anyhow::Result<Self::EO>
     where
         C: ConfigGetter,
     {
@@ -45,14 +44,13 @@ impl EnclaveEngine for ServerStarter {
 #[derive(Debug, Clone, Default)]
 pub struct ServerStopper;
 
-impl EnclaveEngine for ServerStopper {
+impl BasicEnclaveEngine for ServerStopper {
     type EI = input::CallServerStopper;
     type EO = output::Empty;
 
-    fn handle<R, C>(self, _enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn handle<C>(self, _enclave_context: &C) -> anyhow::Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
-        C: ContextOps<S = StateType> + Clone,
+        C: ConfigGetter,
     {
         Ok(output::Empty::default())
     }

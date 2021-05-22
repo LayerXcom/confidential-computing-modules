@@ -11,6 +11,7 @@ members = [
     "frame/mra-tls",
     "frame/retrier",
     "frame/config",
+    "frame/azure-client",
     "modules/anonify-enclave",
     "modules/anonify-eth-driver",
     "modules/anonify-ecall-types",
