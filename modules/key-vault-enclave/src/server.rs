@@ -15,7 +15,7 @@ impl BasicEnclaveEngine for ServerStarter {
     type EI = input::CallServerStarter;
     type EO = output::Empty;
 
-    fn handle_without_runtime<C>(enclave_context: &C) -> anyhow::Result<Self::EO>
+    fn handle<C>(enclave_context: &C) -> anyhow::Result<Self::EO>
     where
         C: ConfigGetter,
     {

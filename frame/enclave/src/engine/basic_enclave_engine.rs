@@ -13,22 +13,8 @@ pub trait BasicEnclaveEngine: Sized + Default {
         Ok(Self::default())
     }
 
-    /// Evaluate policies like authentication and idempotency
-    fn eval_policy(&self) -> anyhow::Result<()> {
-        Ok(())
-    }
-
-    /// If the module have a state transition runtime, use this handler.
-    fn handle<R, C>(self, _enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
-    where
-        R: RuntimeExecutor<C, S = StateType>,
-        C: ContextOps<S = StateType> + Clone,
-    {
-        Ok(Self::EO::default())
-    }
-
-    /// If the module doesn't have a state transition runtime, use this handler.
-    fn handle_without_runtime<C>(_enclave_context: &C) -> anyhow::Result<Self::EO>
+    /// Handler for basic engine
+    fn handle<C>(_enclave_context: &C) -> anyhow::Result<Self::EO>
     where
         C: ConfigGetter,
     {
