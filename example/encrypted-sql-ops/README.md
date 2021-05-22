@@ -52,8 +52,3 @@ SELECT AVG(c_plain), AVG(c_enc) from t;
  2.5000000000000000 | 2.5000000000000000
 (1 rows)
 ```
-
-## Development
-
-Note that `example/encrypted-sql-ops/pg-extension/` is not a member of Cargo workspace.
-If adding it to workspace, top-level `cargo check` needs `pgx` installed and initialized.

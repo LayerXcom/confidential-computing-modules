@@ -35,9 +35,7 @@ members = [
     "tests/units/host",
     "tests/utils",
 ]
-
-[profile.dev.package.encrypted-sql-ops-pg-extension]
-
-[profile.release.package.encrypted-sql-ops-pg-extension]
-opt-level = 3
-codegen-units = 1
+exclude = [
+    # If adding this to workspace, top-level `cargo check` needs `pgx` installed and initialized.
+    "example/encrypted-sql-ops/pg-extension",
+]
