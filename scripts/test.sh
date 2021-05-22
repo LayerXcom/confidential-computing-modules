@@ -15,7 +15,7 @@ ANONIFY_TAG=v0.5.11
 
 cd ${ANONIFY_ROOT}
 cargo fmt --all -- --check
-cargo clippy -p erc20-server -p key-vault-server --all-targets --all-features -- -D warnings
+`RUSTFLAGS='-D warnings'  cargo clippy -p erc20-server -p key-vault-server --all-targets --all-features
 
 #
 # Setup Tests
