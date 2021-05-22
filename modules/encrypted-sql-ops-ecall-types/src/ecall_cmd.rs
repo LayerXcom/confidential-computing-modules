@@ -5,7 +5,7 @@
 #[allow(missing_docs)]
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub enum EcallCmd {
-    ENCINTEGER_FROM = 1,
-    ENCINTEGER_AVG_STATE_FUNC = 2,
-    ENCINTEGER_AVG_FINAL_FUNC = 3,
+    EncintegerFrom = 1,
+    EncintegerAvgStateFunc = 2,
+    EncintegerAvgFinalFunc = 3,
 }

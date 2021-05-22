@@ -13,8 +13,11 @@
 extern crate sgx_tstd as std;
 
 pub mod aggregate_state;
-pub mod ecall_cmd;
 pub mod enc_type;
+
+mod ecall_cmd;
+
+pub use ecall_cmd::EcallCmd;
 
 #[cfg(all(feature = "sgx", not(feature = "std")))]
 use serde_sgx as serde;
