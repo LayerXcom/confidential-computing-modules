@@ -121,7 +121,10 @@ impl EthLog {
             .to_fixed_bytes()
             .ok_or_else(|| HostError::InvalidEthLogToken)?;
 
-        Span::current().record("fetched_trace_id", &tracing::field::display(hex::encode(trace_id)));
+        Span::current().record(
+            "fetched_trace_id",
+            &tracing::field::display(hex::encode(trace_id)),
+        );
         Ok((bytes, StateCounter::new(state_counter.as_u32())))
     }
 }
@@ -177,7 +180,7 @@ impl Web3Logs {
                     }
                 };
 
-                let res = match TreeKemCiphertext::decode(&mut &bytes[..]) {
+                let res = match TreeKemCiphertext::decode(&bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
                         error!(
@@ -238,7 +241,7 @@ impl Web3Logs {
                     }
                 };
 
-                let res = match EnclaveKeyCiphertext::decode(&mut &bytes[..]) {
+                let res = match EnclaveKeyCiphertext::decode(&bytes[..]) {
                     Ok(c) => c,
                     Err(e) => {
                         error!("EnclaveKeyCiphertext::decode for enclave_key: {}", e);
@@ -427,7 +430,7 @@ impl InnerEnclaveLog {
     ) -> Option<serde_json::Value> {
         match InsertCiphertextWorkflow::exec(inp, eid)
             .map_err(Into::into)
-            .and_then(|e| e.ecall_output.ok_or_else(|| HostError::EcallOutputNotSet))
+            .and_then(|e| e.ecall_output.ok_or(HostError::EcallOutputNotSet))
         {
             Ok(notify) => {
                 if let Some(notify_state) = notify.state {
@@ -452,7 +455,7 @@ impl InnerEnclaveLog {
 
                 // Logging a skipped event
                 match (&self.logs)
-                    .into_iter()
+                    .iter()
                     .find(|log| match log.decode_ciphertext_event() {
                         Ok((bytes, _state_counter)) => match ciphertext_kind {
                             CiphertextKind::TreeKem => {

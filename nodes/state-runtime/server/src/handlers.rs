@@ -42,7 +42,7 @@ pub async fn handle_send_command(
             ecall_cmd,
         )
         .await
-        .map_err(|e| ServerError::from(e))?;
+        .map_err(ServerError::from)?;
 
     Ok(HttpResponse::Accepted().json(state_runtime_node_api::state::post::Response { tx_hash }))
 }
@@ -56,7 +56,7 @@ pub async fn handle_key_rotation(server: web::Data<Arc<Server>>) -> Result<HttpR
         .dispatcher
         .handshake(server.sender_address, DEFAULT_GAS)
         .await
-        .map_err(|e| ServerError::from(e))?;
+        .map_err(ServerError::from)?;
 
     Ok(HttpResponse::Accepted()
         .json(state_runtime_node_api::key_rotation::post::Response { tx_hash }))
@@ -74,7 +74,7 @@ pub async fn handle_get_state(
     let state = server
         .dispatcher
         .get_state(req.ciphertext.clone())
-        .map_err(|e| ServerError::from(e))?;
+        .map_err(ServerError::from)?;
 
     Ok(HttpResponse::Ok().json(state_runtime_node_api::state::get::Response { state }))
 }
@@ -100,12 +100,12 @@ pub async fn handle_get_user_counter(
         .dispatcher
         .fetch_events(fetch_ciphertext_ecall_cmd, fetch_handshake_ecall_cmd)
         .await
-        .map_err(|e| ServerError::from(e))?;
+        .map_err(ServerError::from)?;
 
     let user_counter = server
         .dispatcher
         .get_user_counter(req.ciphertext.clone())
-        .map_err(|e| ServerError::from(e))?;
+        .map_err(ServerError::from)?;
 
     Ok(HttpResponse::Ok()
         .json(state_runtime_node_api::user_counter::get::Response { user_counter }))
@@ -119,7 +119,7 @@ pub async fn handle_enclave_encryption_key(server: web::Data<Arc<Server>>) -> Re
     let enclave_encryption_key = server
         .dispatcher
         .get_enclave_encryption_key()
-        .map_err(|e| ServerError::from(e))?;
+        .map_err(ServerError::from)?;
 
     Ok(HttpResponse::Ok().json(
         state_runtime_node_api::enclave_encryption_key::get::Response {
@@ -139,7 +139,7 @@ pub async fn handle_register_notification(
     server
         .dispatcher
         .register_notification(req.ciphertext.clone())
-        .map_err(|e| ServerError::from(e))?;
+        .map_err(ServerError::from)?;
 
     Ok(HttpResponse::Ok().finish())
 }
@@ -153,7 +153,7 @@ pub async fn handle_register_report(server: web::Data<Arc<Server>>) -> Result<Ht
         .dispatcher
         .register_report(server.sender_address, DEFAULT_GAS)
         .await
-        .map_err(|e| ServerError::from(e))?;
+        .map_err(ServerError::from)?;
 
     Ok(HttpResponse::Accepted()
         .json(state_runtime_node_api::register_report::post::Response { tx_hash }))

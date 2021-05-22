@@ -11,6 +11,7 @@ use tracing::info;
 
 const ENCLAVE_TOKEN: &str = "enclave.token";
 
+#[derive(Default)]
 pub struct EnclaveDir(PathBuf);
 
 impl EnclaveDir {

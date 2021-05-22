@@ -36,10 +36,7 @@ impl EnclaveStatus {
     }
 
     pub fn is_err(&self) -> bool {
-        match self.0 {
-            0 => false,
-            _ => true,
-        }
+        !matches!(self.0, 0)
     }
 }
 
@@ -64,10 +61,7 @@ impl UntrustedStatus {
     }
 
     pub fn is_err(&self) -> bool {
-        match self.0 {
-            0 => false,
-            _ => true,
-        }
+        !matches!(self.0, 0)
     }
 }
 
