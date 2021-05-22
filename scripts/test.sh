@@ -62,6 +62,7 @@ RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p erc20-server -p key-vault
 #
 
 # Integration Tests
+cd ${ANONIFY_ROOT}/scripts
 export ENCLAVE_PKG_NAME=erc20
 # make with backup disabled
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,enclave_key"
