@@ -10,14 +10,6 @@ ANONIFY_ROOT=/root/anonify
 ANONIFY_TAG=v0.5.11
 
 #
-# Lints checks
-#
-
-cd ${ANONIFY_ROOT}
-cargo fmt --all -- --check
-`RUSTFLAGS='-D warnings'  cargo clippy -p erc20-server -p key-vault-server --all-targets --all-features
-
-#
 # Setup Tests
 #
 
@@ -54,6 +46,16 @@ echo "Integration testing..."
 cd ${ANONIFY_ROOT}/scripts
 export ENCLAVE_PKG_NAME=key_vault
 make DEBUG=1 ENCLAVE_DIR=example/key-vault/enclave
+
+
+#
+# Lints checks
+#
+
+cd ${ANONIFY_ROOT}
+RUST_LOG=error cargo fmt --all -- --check
+RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p erc20-server -p key-vault-server --all-targets --all-features
+
 
 #
 # Tests for enclave key
