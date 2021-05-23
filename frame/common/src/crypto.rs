@@ -201,6 +201,7 @@ impl AccountId {
         Self::from_hex(deserializer).map(Some)
     }
 
+    #[allow(clippy::wrong_self_convention)]
     pub fn to_hex_some<S>(value: &Option<Self>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,

@@ -36,7 +36,7 @@ pub fn do_handshake_three_party(
             source,
             max_roster_idx,
             #[cfg(feature = "backup-enable")]
-                recover_path_secret_from_key_vault_for_test,
+            recover_path_secret_from_key_vault_for_test,
         )
         .unwrap();
     let others_keychain1 = others_group1
@@ -46,7 +46,7 @@ pub fn do_handshake_three_party(
             source,
             max_roster_idx,
             #[cfg(feature = "backup-enable")]
-                recover_path_secret_from_key_vault_for_test,
+            recover_path_secret_from_key_vault_for_test,
         )
         .unwrap();
     let others_keychain2 = others_group2
@@ -56,7 +56,7 @@ pub fn do_handshake_three_party(
             source,
             max_roster_idx,
             #[cfg(feature = "backup-enable")]
-                recover_path_secret_from_key_vault_for_test,
+            recover_path_secret_from_key_vault_for_test,
         )
         .unwrap();
 

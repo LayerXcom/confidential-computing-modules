@@ -46,8 +46,8 @@ macro_rules! impl_uint {
                 if s.len() == 0 {
                     return Ok(Default::default());
                 }
-                let mut buf = s.into_vec();
-                $name::decode_s(&mut buf)
+                let buf = s.into_vec();
+                $name::decode_s(&buf)
             }
         }
 
@@ -89,15 +89,15 @@ macro_rules! impl_uint {
 
         impl StateDecoder for $name {
             fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
-                if v.len() == 0 {
+                if v.is_empty() {
                     return Ok(Default::default());
                 }
-                let mut buf = v;
-                $name::decode_s(&mut buf)
+                let buf = v;
+                $name::decode_s(&buf)
             }
 
             fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
-                if b.len() == 0 {
+                if b.is_empty() {
                     return Ok(Default::default());
                 }
                 $name::decode_s(b)
@@ -150,15 +150,15 @@ impl Bytes {
 
 impl StateDecoder for Bytes {
     fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
-        if v.len() == 0 {
+        if v.is_empty() {
             return Ok(Default::default());
         }
-        let mut buf = v;
-        Bytes::decode_s(&mut buf)
+        let buf = v;
+        Bytes::decode_s(&buf)
     }
 
     fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
-        if b.len() == 0 {
+        if b.is_empty() {
             return Ok(Default::default());
         }
         Bytes::decode_s(b)
@@ -185,7 +185,7 @@ impl Approved {
     }
 
     pub fn get(&self, account_id: AccountId) -> U64 {
-        self.0.get(&account_id).map(|e| *e).unwrap_or_default()
+        self.0.get(&account_id).copied().unwrap_or_default()
     }
 
     pub fn approve(&mut self, account_id: AccountId, amount: U64) {
@@ -212,7 +212,7 @@ impl Approved {
                 self.0.insert(account_id, existing_amount - amount);
                 Ok(())
             }
-            None => return Err(anyhow!("{:?} doesn't have any balance.", account_id)),
+            None => Err(anyhow!("{:?} doesn't have any balance.", account_id)),
         }
     }
 
@@ -233,15 +233,15 @@ impl From<Approved> for StateType {
 
 impl StateDecoder for Approved {
     fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
-        if v.len() == 0 {
+        if v.is_empty() {
             return Ok(Default::default());
         }
-        let mut buf = v;
-        Approved::decode_s(&mut buf)
+        let buf = v;
+        Approved::decode_s(&buf)
     }
 
     fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
-        if b.len() == 0 {
+        if b.is_empty() {
             return Ok(Default::default());
         }
         Approved::decode_s(b)

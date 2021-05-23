@@ -58,9 +58,7 @@ impl Web3Contract {
         output: host_output::JoinGroup,
         confirmations: usize,
     ) -> Result<TransactionReceipt> {
-        let ecall_output = output
-            .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?;
+        let ecall_output = output.ecall_output.ok_or(HostError::EcallOutputNotSet)?;
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
         let gas = output.gas;
@@ -106,9 +104,7 @@ impl Web3Contract {
     }
 
     pub async fn register_report(&self, output: host_output::RegisterReport) -> Result<H256> {
-        let ecall_output = output
-            .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?;
+        let ecall_output = output.ecall_output.ok_or(HostError::EcallOutputNotSet)?;
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
         let gas = output.gas;
@@ -125,9 +121,7 @@ impl Web3Contract {
     }
 
     pub async fn send_command(&self, output: host_output::Command) -> Result<H256> {
-        let ecall_output = output
-            .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?;
+        let ecall_output = output.ecall_output.ok_or(HostError::EcallOutputNotSet)?;
         let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
@@ -171,9 +165,7 @@ impl Web3Contract {
     }
 
     pub async fn handshake(&self, output: host_output::Handshake) -> Result<H256> {
-        let ecall_output = output
-            .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?;
+        let ecall_output = output.ecall_output.ok_or(HostError::EcallOutputNotSet)?;
         let handshake = ecall_output.handshake();
         let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;

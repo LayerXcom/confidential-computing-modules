@@ -24,9 +24,9 @@ lazy_static! {
             .unwrap()
     };
     pub static ref CMD_DEC_SECRET_DIR: String =
-        env::var("CMD_DEC_SECRET_DIR").unwrap_or(".anonify/cmd-dec-secret".to_string());
+        env::var("CMD_DEC_SECRET_DIR").unwrap_or_else(|_| ".anonify/cmd-dec-secret".to_string());
     pub static ref PJ_ROOT_DIR: PathBuf = {
-        let pj_name = env::var("PJ_NAME").unwrap_or("anonify".to_string());
+        let pj_name = env::var("PJ_NAME").unwrap_or_else(|_| "anonify".to_string());
         let mut current_dir = env::current_dir().unwrap();
         loop {
             if current_dir.file_name() == Some(OsStr::new(pj_name.as_str())) {
