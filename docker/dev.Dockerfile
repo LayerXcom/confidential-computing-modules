@@ -1,6 +1,5 @@
 # inherit the baidu sdk image
 FROM baiduxlab/sgx-rust:1804-1.1.3
-MAINTAINER osuke
 WORKDIR /root
 
 RUN rm -rf /root/sgx && \
