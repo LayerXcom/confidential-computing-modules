@@ -7,7 +7,7 @@ use frame_common::{
     state_types::StateType,
     AccessPolicy,
 };
-use frame_enclave::EnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveEngine;
 use frame_runtime::traits::*;
 use frame_sodium::{rng::SgxRng, SodiumCiphertext};
 use serde::{Deserialize, Serialize};
@@ -20,14 +20,14 @@ pub struct CommandByEnclaveKeySender<AP: AccessPolicy> {
     user_id: Option<AccountId>,
 }
 
-impl<AP> EnclaveEngine for CommandByEnclaveKeySender<AP>
+impl<AP> StateRuntimeEnclaveEngine for CommandByEnclaveKeySender<AP>
 where
     AP: AccessPolicy,
 {
     type EI = input::Command;
     type EO = output::Command;
 
-    fn decrypt<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
@@ -92,19 +92,19 @@ pub struct CommandByEnclaveKeyReceiver<AP> {
     ap: PhantomData<AP>,
 }
 
-impl<AP> EnclaveEngine for CommandByEnclaveKeyReceiver<AP>
+impl<AP> StateRuntimeEnclaveEngine for CommandByEnclaveKeyReceiver<AP>
 where
     AP: AccessPolicy,
 {
     type EI = input::InsertCiphertext;
     type EO = output::ReturnNotifyState;
 
-    fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
         Ok(Self {
-            ecall_input: ciphertext,
+            ecall_input,
             ap: PhantomData,
         })
     }
