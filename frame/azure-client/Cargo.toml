@@ -5,6 +5,8 @@ authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 
 [dependencies]
+frame-retrier = { path = "../retrier" }
+frame-config = { path = "../../frame/config" }
 anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
 bytes = "1.0"

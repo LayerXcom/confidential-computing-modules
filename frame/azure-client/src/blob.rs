@@ -1,11 +1,14 @@
 use anyhow::anyhow;
 use azure_core::prelude::Range;
 use azure_core::HttpClient;
+#[cfg(test)]
 use azure_storage::blob::container::PublicAccess;
 use azure_storage::blob::prelude::{AsBlobClient, AsContainerClient};
 use azure_storage::clients::AsStorageClient;
 use azure_storage::core::clients::{StorageAccountClient, StorageClient};
 use bytes::Bytes;
+use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
+use frame_retrier::{strategy, Retry};
 use std::sync::Arc;
 #[cfg(test)]
 use url::Url;
@@ -58,13 +61,17 @@ impl BlobClient {
             .client
             .as_container_client(container_name)
             .as_blob_client(blob_name);
+        let request = blob_client.get().range(Range::new(0, 1024)); // TODO: Fix range nums
 
-        let response = blob_client
-            .get()
-            .range(Range::new(0, 1024)) // TODO: Fix range nums
-            .execute()
-            .await
-            .map_err(|err| anyhow!(err))?;
+        let response = Retry::new(
+            "get_blob",
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
+        )
+        .set_condition(|res| matches!(res, Err(_err))) // TODO: Set concrete retry conditions
+        .spawn_async(|| async { request.execute().await })
+        .await
+        .map_err(|err| anyhow!(err))?;
 
         let s_content = String::from_utf8(response.data.to_vec())?;
 
@@ -82,13 +89,17 @@ impl BlobClient {
             .client
             .as_container_client(container_name)
             .as_blob_client(blob_name);
+        let request = blob_client.put_block_blob(data).content_type("text/plain");
 
-        let _res = blob_client
-            .put_block_blob(data)
-            .content_type("text/plain")
-            .execute()
-            .await
-            .map_err(|err| anyhow!(err))?;
+        let _response = Retry::new(
+            "put_blob",
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
+        )
+        .set_condition(|res| matches!(res, Err(_err))) // TODO: Set concrete retry conditions
+        .spawn_async(|| async { request.execute().await })
+        .await
+        .map_err(|err| anyhow!(err))?;
 
         Ok(())
     }
@@ -96,12 +107,16 @@ impl BlobClient {
     /// list_containers gets list of container names.
     #[cfg(test)]
     pub async fn list_containers(&self) -> anyhow::Result<Vec<String>> {
-        let iv = self
-            .client
-            .list_containers()
-            .execute()
-            .await
-            .map_err(|err| anyhow!(err))?;
+        let request = self.client.list_containers();
+        let iv = Retry::new(
+            "list containers",
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
+        )
+        .set_condition(|res| matches!(res, Err(_err))) // TODO: Set concrete retry conditions
+        .spawn_async(|| async { request.execute().await })
+        .await
+        .map_err(|err| anyhow!(err))?;
 
         let mut vector: Vec<String> = Vec::with_capacity(iv.incomplete_vector.len());
         for cont in iv.incomplete_vector.iter() {
@@ -112,15 +127,20 @@ impl BlobClient {
     }
 
     /// create_container creates a container.
+    #[cfg(test)]
     pub async fn create_container(&self, container_name: impl Into<String>) -> anyhow::Result<()> {
         let container_client = self.client.as_container_client(container_name);
+        let request = container_client.create().public_access(PublicAccess::None);
 
-        let _res = container_client
-            .create()
-            .public_access(PublicAccess::None)
-            .execute()
-            .await
-            .map_err(|err| anyhow!(err))?;
+        let _response = Retry::new(
+            "create containers",
+            *REQUEST_RETRIES,
+            strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
+        )
+        .set_condition(|res| matches!(res, Err(_err))) // TODO: Set concrete retry conditions
+        .spawn_async(|| async { request.execute().await })
+        .await
+        .map_err(|err| anyhow!(err))?;
 
         Ok(())
     }

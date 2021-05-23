@@ -1828,6 +1828,8 @@ dependencies = [
  "azure_storage",
  "bytes 1.0.1",
  "env_logger 0.8.3",
+ "frame-config",
+ "frame-retrier",
  "reqwest 0.11.3",
  "tokio 1.6.0",
  "url 2.2.0",
