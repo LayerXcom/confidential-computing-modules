@@ -10,6 +10,15 @@ stages:
         name: 'AnonifyAgent'
       steps:
         - script: |
+            docker-compose up -d
+            cargo test -- --nocapture
+          workingDirectory: frame/azure-client
+          displayName: 'Run azure-client tests'
+        - script: docker-compose down
+          workingDirectory: frame/azure-client
+          condition: always()
+          displayName: 'azure client docker-compose down'
+        - script: |
             cp .env.sample .env
             export SPID=$(SPID)
             export SUB_KEY=$(SUB_KEY)
