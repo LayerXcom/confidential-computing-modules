@@ -12,7 +12,7 @@ mod ecalls;
 
 use lazy_static::lazy_static;
 use log::debug;
-use module_encrypted_sql_ops_enclave::context::EncryptedSqlOpsEnclaveContext;
+use module_encrypted_sql_ops_enclave::enclave_context::EncryptedSqlOpsEnclaveContext;
 use std::backtrace;
 
 const ENCRYPTED_SQL_OPS_MRENCLAVE_VERSION: usize = 0;

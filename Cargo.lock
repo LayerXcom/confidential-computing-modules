@@ -3279,6 +3279,7 @@ name = "module-encrypted-sql-ops-enclave"
 version = "0.1.0"
 dependencies = [
  "aes 0.7.2",
+ "anyhow 1.0.28",
  "frame-config",
  "frame-enclave",
  "frame-runtime",

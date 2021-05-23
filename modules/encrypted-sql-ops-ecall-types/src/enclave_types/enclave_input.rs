@@ -13,3 +13,9 @@ impl From<i32> for RawInteger {
         Self(integer)
     }
 }
+
+impl Default for RawInteger {
+    fn default() -> Self {
+        unreachable!("FIXME stop requiring Default for *EnclaveEngine::EI")
+    }
+}

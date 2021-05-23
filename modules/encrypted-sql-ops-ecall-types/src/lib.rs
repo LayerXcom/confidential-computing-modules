@@ -20,7 +20,4 @@ use serde_std as serde;
 pub mod aggregate_state;
 pub mod enc_type;
 pub mod enclave_types;
-
-mod ecall_cmd;
-
-pub use ecall_cmd::EcallCmd;
+pub mod ecall_cmd;

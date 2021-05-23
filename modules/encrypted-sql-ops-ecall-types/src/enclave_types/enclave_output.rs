@@ -4,10 +4,17 @@ use crate::{
 };
 use frame_common::EcallOutput;
 
-
 /// Output from enclave
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
 pub struct EncIntegerWrapper(EncInteger);
 
 impl EcallOutput for EncIntegerWrapper {}
+
+impl Default for EncIntegerWrapper {
+    fn default() -> Self {
+        unreachable!(
+            "FIXME stop requiring Default for *EnclaveEngine::EO (must be created via handle())"
+        )
+    }
+}
