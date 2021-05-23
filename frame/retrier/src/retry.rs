@@ -13,6 +13,7 @@ pub struct Retry<I, T, E> {
     tries: usize,
     strategy: I,
     condition: Condition<T, E>,
+    is_tokio_rt: bool,
 }
 
 impl<I, T, E> Retry<I, T, E>
@@ -27,6 +28,7 @@ where
             tries,
             strategy,
             condition: Condition::Always,
+            is_tokio_rt: false,
         }
     }
 
@@ -36,6 +38,12 @@ where
         F: Fn(&Result<T, E>) -> bool + 'static + Send,
     {
         self.condition = Condition::Custom(Box::new(custom));
+        self
+    }
+
+    /// Use tokio runtime to retry
+    pub fn use_tokio_rt(mut self) -> Self {
+        self.is_tokio_rt = true;
         self
     }
 
@@ -86,7 +94,12 @@ where
                         curr_tries + 1,
                         res
                     );
-                    actix_rt::time::delay_for(delay).await;
+                    if self.is_tokio_rt {
+                        tokio::time::sleep(delay).await;
+                    } else {
+                        actix_rt::time::delay_for(delay).await;
+                    }
+
                 } else {
                     // if it overs the number of retries
                     return res;

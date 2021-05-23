@@ -68,6 +68,7 @@ impl BlobClient {
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
+        .use_tokio_rt()
         .set_condition(|res| matches!(res, Err(_err))) // TODO: Set concrete retry conditions
         .spawn_async(|| async { request.execute().await })
         .await
@@ -96,6 +97,7 @@ impl BlobClient {
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
+        .use_tokio_rt()
         .set_condition(|res| matches!(res, Err(_err))) // TODO: Set concrete retry conditions
         .spawn_async(|| async { request.execute().await })
         .await
@@ -113,6 +115,7 @@ impl BlobClient {
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
+        .use_tokio_rt()
         .set_condition(|res| matches!(res, Err(_err))) // TODO: Set concrete retry conditions
         .spawn_async(|| async { request.execute().await })
         .await
@@ -134,6 +137,7 @@ impl BlobClient {
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
+        .use_tokio_rt()
         .set_condition(|res| matches!(res, Err(_err))) // TODO: Set concrete retry conditions
         .spawn_async(|| async {
             let container_client = self.client.as_container_client(container_name);
