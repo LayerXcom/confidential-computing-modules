@@ -128,17 +128,21 @@ impl BlobClient {
 
     /// create_container creates a container.
     #[cfg(test)]
-    pub async fn create_container(&self, container_name: impl Into<String>) -> anyhow::Result<()> {
-        let container_client = self.client.as_container_client(container_name);
-        let request = container_client.create().public_access(PublicAccess::None);
-
+    pub async fn create_container(&self, container_name: &str) -> anyhow::Result<()> {
         let _response = Retry::new(
             "create containers",
             *REQUEST_RETRIES,
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(|res| matches!(res, Err(_err))) // TODO: Set concrete retry conditions
-        .spawn_async(|| async { request.execute().await })
+        .spawn_async(|| async {
+            let container_client = self.client.as_container_client(container_name);
+            container_client
+                .create()
+                .public_access(PublicAccess::None)
+                .execute()
+                .await
+        })
         .await
         .map_err(|err| anyhow!(err))?;
 
