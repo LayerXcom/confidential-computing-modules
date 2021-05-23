@@ -36,7 +36,7 @@ impl InnerEventCache {
     }
 
     pub fn get_latest_block_num(&self, contract_addr: ContractAddr) -> Option<BlockNum> {
-        let block_num = self.block_num_counter.get(&contract_addr).map(|e| *e);
+        let block_num = self.block_num_counter.get(&contract_addr).copied();
         debug!("Get: Cached block number: {:?}", block_num);
         block_num
     }

@@ -108,7 +108,7 @@ impl Dispatcher {
         let address = inner
             .sender
             .as_ref()
-            .ok_or_else(|| HostError::AddressNotSet)?
+            .ok_or(HostError::AddressNotSet)?
             .get_contract()
             .address();
         Ok(address)
@@ -253,7 +253,7 @@ impl Dispatcher {
         let input = host_input::GetState::new(ciphertext, GET_STATE_CMD);
         let state = GetStateWorkflow::exec(input, eid)?
             .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?;
+            .ok_or(HostError::EcallOutputNotSet)?;
 
         let bytes: Vec<u8> = bincode::deserialize(&state.state.as_bytes())?;
         serde_json::from_slice(&bytes[..]).map_err(Into::into)
@@ -264,7 +264,7 @@ impl Dispatcher {
         let input = host_input::GetUserCounter::new(ciphertext, GET_USER_COUNTER_CMD);
         let user_counter = GetUserCounterWorkflow::exec(input, eid)?
             .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?;
+            .ok_or(HostError::EcallOutputNotSet)?;
 
         serde_json::to_value(user_counter.user_counter).map_err(Into::into)
     }
@@ -302,7 +302,7 @@ impl Dispatcher {
 
         Ok(enclave_encryption_key
             .ecall_output
-            .ok_or_else(|| HostError::EcallOutputNotSet)?
+            .ok_or(HostError::EcallOutputNotSet)?
             .enclave_encryption_key())
     }
 

@@ -330,6 +330,7 @@ impl AnonifyEnclaveContext {
         };
 
         let spid = env::var("SPID").expect("SPID is not set");
+        assert!(!spid.is_empty(), "SPID shouldn't be empty");
         let my_roster_idx: usize = env::var("MY_ROSTER_IDX")
             .expect("MY_ROSTER_IDX is not set")
             .parse()
@@ -348,6 +349,7 @@ impl AnonifyEnclaveContext {
 
         let ias_url = env::var("IAS_URL").expect("IAS_URL is not set");
         let sub_key = env::var("SUB_KEY").expect("SUB_KEY is not set");
+        assert!(!sub_key.is_empty(), "SUB_KEY shouldn't be empty");
 
         #[cfg(feature = "backup-enable")]
         let key_vault_endpoint = env::var("KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME")

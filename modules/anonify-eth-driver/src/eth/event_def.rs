@@ -21,7 +21,7 @@ pub static STORE_TREEKEM_CIPHERTEXT_EVENT: Lazy<Hash> = Lazy::new(|| {
                 name: "_traceId".to_owned(),
                 kind: ParamType::FixedBytes(16),
                 indexed: true,
-            }
+            },
         ],
         anonymous: false,
     }
@@ -46,7 +46,7 @@ pub static STORE_TREEKEM_HANDSHAKE_EVENT: Lazy<Hash> = Lazy::new(|| {
                 name: "_traceId".to_owned(),
                 kind: ParamType::FixedBytes(16),
                 indexed: true,
-            }
+            },
         ],
         anonymous: false,
     }
@@ -71,7 +71,7 @@ pub static STORE_ENCLAVE_KEY_CIPHERTEXT_EVENT: Lazy<Hash> = Lazy::new(|| {
                 name: "_traceId".to_owned(),
                 kind: ParamType::FixedBytes(16),
                 indexed: true,
-            }
+            },
         ],
         anonymous: false,
     }
