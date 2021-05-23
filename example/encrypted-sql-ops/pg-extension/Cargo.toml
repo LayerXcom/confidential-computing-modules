@@ -13,6 +13,7 @@ pg13 = ["pgx/pg13", "pgx-tests/pg13" ]
 pg_test = []
 
 [dependencies]
+frame-host = { path = "../../../frame/host" }
 module-encrypted-sql-ops-ecall-types = { path = "../../../modules/encrypted-sql-ops-ecall-types", features = ["std"] }
 pgx = "0.1.21"
 pgx-macros = "0.1.21"

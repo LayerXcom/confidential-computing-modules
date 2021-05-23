@@ -7,6 +7,7 @@
 
 mod aggregate;
 mod func;
+mod init;
 mod typ;
 
 use pgx::*;

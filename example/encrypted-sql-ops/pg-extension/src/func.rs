@@ -4,7 +4,7 @@ use crate::typ::{AvgState, EncInteger};
 
 #[pg_extern]
 fn encinteger_from(raw_integer: i32) -> EncInteger {
-    EncInteger::encrypt(raw_integer)
+    EncIntegerFromWorkflow::exec()
 }
 
 #[pg_extern]
