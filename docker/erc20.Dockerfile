@@ -1,5 +1,4 @@
-# inherit the baidu sdk image
-FROM baiduxlab/sgx-rust:1804-1.1.3 as builder
+FROM anonify.azurecr.io/rust-sgx-sdk-rootless:latest
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 SHELL ["/bin/bash", "-c"]
