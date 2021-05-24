@@ -10,7 +10,7 @@ pub struct EnclaveMeasurement {
 #[cfg(feature = "sgx")]
 impl EnclaveMeasurement {
     pub fn new_from_dumpfile(content: String) -> Self {
-        let lines: Vec<&str> = content.split("\n").collect();
+        let lines: Vec<&str> = content.split('\n').collect();
         let mr_signer_index = lines
             .iter()
             .position(|&line| line == "mrsigner->value:")

@@ -67,7 +67,7 @@ pub trait Asn1Ty {
     const TAG: yasna::Tag;
 
     fn dump(writer: Writer<'_>, value: Self::ValueTy) -> ();
-    fn load<'a>(reader: Reader<'a, '_>) -> ASN1Result<Self::ValueTy>;
+    fn load(reader: Reader<'_, '_>) -> ASN1Result<Self::ValueTy>;
 }
 
 pub trait Asn1ConsTy
@@ -182,7 +182,7 @@ impl<T: Asn1Tag, S: Asn1Ty> Asn1Ty for Tagged<T, S> {
         writer.write_tagged(T::TAG, |writer| S::dump(writer, value));
     }
 
-    fn load<'a>(reader: Reader<'a, '_>) -> ASN1Result<Self::ValueTy> {
+    fn load(reader: Reader<'_, '_>) -> ASN1Result<Self::ValueTy> {
         reader.read_tagged(T::TAG, S::load)
     }
 }
@@ -198,7 +198,7 @@ impl<U: Asn1Ty, V: Asn1ConsTy> Asn1Ty for Sequence<U, V> {
         });
     }
 
-    fn load<'a>(reader: Reader<'a, '_>) -> ASN1Result<Self::ValueTy> {
+    fn load(reader: Reader<'_, '_>) -> ASN1Result<Self::ValueTy> {
         reader.read_sequence(|reader| {
             let first = U::load(reader.next())?;
             let second = V::load(reader)?;
@@ -218,7 +218,7 @@ impl<U: Asn1Ty, V: Asn1ConsTy> Asn1Ty for Set<U, V> {
         });
     }
 
-    fn load<'a>(reader: Reader<'a, '_>) -> ASN1Result<Self::ValueTy> {
+    fn load(reader: Reader<'_, '_>) -> ASN1Result<Self::ValueTy> {
         reader.read_set(|reader| {
             let first = U::load(reader.next(&[U::TAG])?)?;
             let second = V::load(reader)?;
@@ -235,7 +235,7 @@ impl Asn1Ty for U8 {
         writer.write_u8(value);
     }
 
-    fn load<'a>(reader: Reader<'a, '_>) -> ASN1Result<Self::ValueTy> {
+    fn load(reader: Reader<'_, '_>) -> ASN1Result<Self::ValueTy> {
         reader.read_u8()
     }
 }
@@ -248,7 +248,7 @@ impl Asn1Ty for I8 {
         writer.write_i8(value);
     }
 
-    fn load<'a>(reader: Reader<'a, '_>) -> ASN1Result<Self::ValueTy> {
+    fn load(reader: Reader<'_, '_>) -> ASN1Result<Self::ValueTy> {
         reader.read_i8()
     }
 }
@@ -261,7 +261,7 @@ impl Asn1Ty for BigUint {
         writer.write_biguint(&value);
     }
 
-    fn load<'a>(reader: Reader<'a, '_>) -> ASN1Result<Self::ValueTy> {
+    fn load(reader: Reader<'_, '_>) -> ASN1Result<Self::ValueTy> {
         reader.read_biguint()
     }
 }
@@ -274,7 +274,7 @@ impl Asn1Ty for Utf8Str {
         writer.write_utf8_string(value.as_str());
     }
 
-    fn load<'a>(reader: Reader<'a, '_>) -> ASN1Result<Self::ValueTy> {
+    fn load(reader: Reader<'_, '_>) -> ASN1Result<Self::ValueTy> {
         reader.read_utf8string()
     }
 }
@@ -287,7 +287,7 @@ impl Asn1Ty for Oid {
         writer.write_oid(&value);
     }
 
-    fn load<'a>(reader: Reader<'a, '_>) -> ASN1Result<Self::ValueTy> {
+    fn load(reader: Reader<'_, '_>) -> ASN1Result<Self::ValueTy> {
         reader.read_oid()
     }
 }
@@ -300,7 +300,7 @@ impl Asn1Ty for UtcTime {
         writer.write_utctime(&value);
     }
 
-    fn load<'a>(reader: Reader<'a, '_>) -> ASN1Result<Self::ValueTy> {
+    fn load(reader: Reader<'_, '_>) -> ASN1Result<Self::ValueTy> {
         reader.read_utctime()
     }
 }
@@ -313,7 +313,7 @@ impl Asn1Ty for BitVec {
         writer.write_bitvec(&value);
     }
 
-    fn load<'a>(reader: Reader<'a, '_>) -> ASN1Result<Self::ValueTy> {
+    fn load(reader: Reader<'_, '_>) -> ASN1Result<Self::ValueTy> {
         reader.read_bitvec()
     }
 }
@@ -326,7 +326,7 @@ impl Asn1Ty for Bytes {
         writer.write_bytes(&value.as_slice());
     }
 
-    fn load<'a>(reader: Reader<'a, '_>) -> ASN1Result<Self::ValueTy> {
+    fn load(reader: Reader<'_, '_>) -> ASN1Result<Self::ValueTy> {
         reader.read_bytes()
     }
 }
