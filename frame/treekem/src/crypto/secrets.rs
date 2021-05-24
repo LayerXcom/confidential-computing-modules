@@ -392,8 +392,7 @@ pub(crate) mod tests {
         let encoded_sealed_path_secret = UnsealedPathSecret::from(path_secret.clone())
             .encoded_seal()
             .unwrap();
-        let sealed_path_secret =
-            SealedPathSecret::decode(&encoded_sealed_path_secret[..]).unwrap();
+        let sealed_path_secret = SealedPathSecret::decode(&encoded_sealed_path_secret[..]).unwrap();
         let unsealed_path_secret = sealed_path_secret.unseal().unwrap();
         assert_eq!(path_secret, unsealed_path_secret.into());
     }
