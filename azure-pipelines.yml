@@ -1,9 +1,9 @@
 trigger:
-- master
+- main
 
 stages:
 - stage: Test
-  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
+  condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
     - job: CI
       pool:
@@ -59,7 +59,7 @@ stages:
         displayName: 'Shutdown'
 
 - stage: Docker_Build_and_Push
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
   - job: Docker
     pool:

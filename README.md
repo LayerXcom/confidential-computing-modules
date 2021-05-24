@@ -86,4 +86,4 @@ Currently, documents are only available in Japanese.
 
 ## License
 
-Anonify is primarily distributed under the terms of the [Apache License (Version 2.0)], see [LICENSE](https://github.com/LayerXcom/anonify/blob/master/LICENSE) for details.
+Anonify is primarily distributed under the terms of the [Apache License (Version 2.0)], see [LICENSE](https://github.com/LayerXcom/anonify/blob/main/LICENSE) for details.
