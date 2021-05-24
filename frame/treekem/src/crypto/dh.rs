@@ -73,6 +73,7 @@ impl<'de> Deserialize<'de> for DhPrivateKey {
                 Ok(DhPrivateKey(sk))
             }
 
+            #[allow(clippy::needless_range_loop)]
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
             where
                 A: SeqAccess<'de>,
@@ -81,7 +82,7 @@ impl<'de> Deserialize<'de> for DhPrivateKey {
                 for i in 0..SECRET_KEY_SIZE {
                     bytes[i] = seq
                         .next_element()?
-                        .ok_or(de::Error::invalid_length(i, &"expected 32 bytes"))?;
+                        .ok_or_else(|| de::Error::invalid_length(i, &"expected 32 bytes"))?;
                 }
                 let sk = SecretKey::parse(&bytes).map_err(|_e| {
                     de::Error::invalid_value(
@@ -130,6 +131,7 @@ impl<'de> Deserialize<'de> for DhPubKey {
                 )
             }
 
+            #[allow(clippy::needless_range_loop)]
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
             where
                 A: SeqAccess<'de>,
@@ -138,7 +140,7 @@ impl<'de> Deserialize<'de> for DhPubKey {
                 for i in 0..COMPRESSED_PUBLIC_KEY_SIZE {
                     bytes[i] = seq
                         .next_element()?
-                        .ok_or(de::Error::invalid_length(i, &"expected 33 bytes"))?;
+                        .ok_or_else(|| de::Error::invalid_length(i, &"expected 33 bytes"))?;
                 }
                 let pk = PublicKey::parse_compressed(&bytes).map_err(|_e| {
                     de::Error::invalid_value(

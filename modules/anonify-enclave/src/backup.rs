@@ -3,7 +3,7 @@
 use anonify_ecall_types::*;
 use anyhow::Result;
 use frame_common::state_types::StateType;
-use frame_enclave::EnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveEngine;
 use frame_mra_tls::key_vault::request::{
     BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody, RecoverAllPathSecretsRequestbody,
 };
@@ -15,7 +15,7 @@ use std::vec::Vec;
 #[derive(Debug, Clone, Default)]
 pub struct PathSecretBackupper;
 
-impl EnclaveEngine for PathSecretBackupper {
+impl StateRuntimeEnclaveEngine for PathSecretBackupper {
     type EI = input::Empty;
     type EO = output::Empty;
 
@@ -55,7 +55,7 @@ impl EnclaveEngine for PathSecretBackupper {
 #[derive(Debug, Clone, Default)]
 pub struct PathSecretRecoverer;
 
-impl EnclaveEngine for PathSecretRecoverer {
+impl StateRuntimeEnclaveEngine for PathSecretRecoverer {
     type EI = input::Empty;
     type EO = output::Empty;
 

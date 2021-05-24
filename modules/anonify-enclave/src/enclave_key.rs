@@ -4,7 +4,7 @@ use crate::error::{EnclaveError, Result};
 use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
-use frame_enclave::EnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveEngine;
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::{
     key_vault::request::{
@@ -34,7 +34,7 @@ const DEC_KEY_FILE_NAME: &str = "sr_enclave_decryption_key";
 #[derive(Debug, Clone, Default)]
 pub struct EncryptionKeyGetter;
 
-impl EnclaveEngine for EncryptionKeyGetter {
+impl StateRuntimeEnclaveEngine for EncryptionKeyGetter {
     type EI = input::Empty;
     type EO = output::ReturnEncryptionKey;
 
@@ -115,7 +115,7 @@ impl EnclaveKey {
         let encoded = self
             .decryption_privkey
             .as_ref()
-            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?
+            .ok_or(EnclaveError::NotSetEnclaveDecKeyError)?
             .try_into_sealing()?;
         let sealed =
             SealedEnclaveDecryptionKey::decode(&encoded).map_err(|e| anyhow!("{:?}", e))?;
@@ -135,7 +135,7 @@ impl EnclaveKey {
         let dec_key = self
             .decryption_privkey
             .as_ref()
-            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?;
+            .ok_or(EnclaveError::NotSetEnclaveDecKeyError)?;
         let key_vault_request = KeyVaultRequest::new(
             KeyVaultCmd::StoreEnclaveDecryptionKey,
             BackupEnclaveDecryptionKeyRequestBody::new(dec_key.clone()),
@@ -155,7 +155,7 @@ impl EnclaveKey {
         let dec_key = self
             .decryption_privkey
             .as_ref()
-            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?;
+            .ok_or(EnclaveError::NotSetEnclaveDecKeyError)?;
         ciphertext.decrypt(&dec_key).map_err(Into::into)
     }
 
@@ -167,14 +167,14 @@ impl EnclaveKey {
         let enclave_dec_key = self
             .decryption_privkey
             .as_ref()
-            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?;
+            .ok_or(EnclaveError::NotSetEnclaveDecKeyError)?;
         Ok(enclave_dec_key.public_key())
     }
 
     pub fn enclave_decryption_key(&self) -> Result<&SodiumPrivateKey> {
         self.decryption_privkey
             .as_ref()
-            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)
+            .ok_or(EnclaveError::NotSetEnclaveDecKeyError)
     }
 
     /// Generate a value of REPORTDATA field in REPORT struct.

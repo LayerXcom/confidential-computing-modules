@@ -121,7 +121,7 @@ pub enum PathSecretSource {
     LocalTestKV(PathSecretKVS),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PathSecretKVS(HashMap<AccessKey, PathSecret>);
 
 #[derive(Serialize, Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]

@@ -47,16 +47,4 @@ impl UserStateDB {
         let key = DBKey::new(updated_state.account_id, updated_state.mem_id);
         tmp.insert(key, updated_state.state);
     }
-
-    pub fn insert(&self, account_id: AccountId, mem_id: MemId, state: StateType) {
-        let mut tmp = self.0.write().unwrap();
-        let key = DBKey::new(account_id, mem_id);
-        tmp.insert(key, state);
-    }
-
-    pub fn delete(&self, account_id: AccountId, mem_id: MemId) {
-        let mut tmp = self.0.write().unwrap();
-        let key = DBKey::new(account_id, mem_id);
-        tmp.remove(&key);
-    }
 }
