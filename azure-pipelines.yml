@@ -85,22 +85,22 @@ stages:
         buildContext: .
 
     - task: Docker@2
-      displayName: Build dev image
+      displayName: Build anonify-dev image
       inputs:
         command: build
         containerRegistry: anonify-ci-cd-acr
-        repository: dev
+        repository: anonify-dev
         tags: latest
-        dockerfile: ./docker/dev.Dockerfile
+        dockerfile: ./docker/anonify-dev.Dockerfile
         buildContext: .
     - task: Docker@2
-      displayName: Push dev image
+      displayName: Push anonify-dev image
       inputs:
         command: push
         containerRegistry: anonify-ci-cd-acr
-        repository: dev
+        repository: anonify-dev
         tags: latest
-        dockerfile: ./docker/dev.Dockerfile
+        dockerfile: ./docker/anonify-dev.Dockerfile
         buildContext: .
 
     # - task: Docker@2
