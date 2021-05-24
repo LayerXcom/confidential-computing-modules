@@ -55,7 +55,7 @@ make DEBUG=1 ENCLAVE_DIR=example/key-vault/enclave
 cd ${ANONIFY_ROOT}
 RUST_LOG=error cargo fmt --all -- --check
 RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p erc20-server -p key-vault-server --all-targets --all-features
-RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p erc20-enclave --all-targets --all-features
+RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p erc20-enclave -p key-vault-enclave --all-features
 
 #
 # Tests for enclave key
