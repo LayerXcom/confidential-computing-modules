@@ -66,7 +66,7 @@ stages:
       name: 'AnonifyAgent'
     steps:
     - task: Docker@2
-      displayName: Build base image
+      displayName: Build rust-sgx-sdk-rootless image
       inputs:
         command: build
         containerRegistry: anonify-ci-cd-acr
@@ -75,7 +75,7 @@ stages:
         dockerfile: ./docker/rust-sgx-sdk-rootless.Dockerfile
         buildContext: .
     - task: Docker@2
-      displayName: Push base image
+      displayName: Push rust-sgx-sdk-rootless image
       inputs:
         command: push
         containerRegistry: anonify-ci-cd-acr
@@ -83,6 +83,26 @@ stages:
         tags: latest
         dockerfile: ./docker/rust-sgx-sdk-rootless.Dockerfile
         buildContext: .
+
+    - task: Docker@2
+      displayName: Build dev image
+      inputs:
+        command: build
+        containerRegistry: anonify-ci-cd-acr
+        repository: dev
+        tags: latest
+        dockerfile: ./docker/dev.Dockerfile
+        buildContext: .
+    - task: Docker@2
+      displayName: Push dev image
+      inputs:
+        command: push
+        containerRegistry: anonify-ci-cd-acr
+        repository: dev
+        tags: latest
+        dockerfile: ./docker/dev.Dockerfile
+        buildContext: .
+
     # - task: Docker@2
     #   displayName: Build erc20 image
     #   inputs:

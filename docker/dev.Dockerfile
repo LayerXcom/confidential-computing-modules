@@ -1,4 +1,4 @@
-FROM anonify-base
+FROM anonify.azurecr.io/rust-sgx-sdk-rootless:latest
 
 WORKDIR ${HOME}
 
