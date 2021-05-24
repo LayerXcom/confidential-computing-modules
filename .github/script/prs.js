@@ -13,7 +13,7 @@ module.exports = async ({ github, path }) => {
     const { data } = await github.pulls.list({
         owner: 'LayerXcom',
         repo: 'anonify',
-        base: 'master',
+        base: 'main',
         state: 'closed',
     })
     const res = data.map(d => {
