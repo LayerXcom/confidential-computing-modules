@@ -56,7 +56,7 @@ impl AttestedReportVerifier {
     fn verify_pubkey_eq(pubkey: <PubKey as Asn1Ty>::ValueTy, report_data: [u8; 64]) -> Result<()> {
         let raw_pubkey = (pubkey.1).0.to_bytes();
         let is_uncompressed = raw_pubkey[0] == 4;
-        if !is_uncompressed || &raw_pubkey[1..] != &report_data[..] {
+        if !is_uncompressed || raw_pubkey[1..] != report_data[..] {
             return Err(MraTLSError::Error(anyhow!(
                 "ee_cert's pubkey is not equal to report data"
             )));

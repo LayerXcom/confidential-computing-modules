@@ -115,7 +115,7 @@ impl EnclaveKey {
         let encoded = self
             .decryption_privkey
             .as_ref()
-            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?
+            .ok_or(EnclaveError::NotSetEnclaveDecKeyError)?
             .try_into_sealing()?;
         let sealed =
             SealedEnclaveDecryptionKey::decode(&encoded).map_err(|e| anyhow!("{:?}", e))?;
@@ -135,7 +135,7 @@ impl EnclaveKey {
         let dec_key = self
             .decryption_privkey
             .as_ref()
-            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?;
+            .ok_or(EnclaveError::NotSetEnclaveDecKeyError)?;
         let key_vault_request = KeyVaultRequest::new(
             KeyVaultCmd::StoreEnclaveDecryptionKey,
             BackupEnclaveDecryptionKeyRequestBody::new(dec_key.clone()),
@@ -155,7 +155,7 @@ impl EnclaveKey {
         let dec_key = self
             .decryption_privkey
             .as_ref()
-            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?;
+            .ok_or(EnclaveError::NotSetEnclaveDecKeyError)?;
         ciphertext.decrypt(&dec_key).map_err(Into::into)
     }
 
@@ -167,14 +167,14 @@ impl EnclaveKey {
         let enclave_dec_key = self
             .decryption_privkey
             .as_ref()
-            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)?;
+            .ok_or(EnclaveError::NotSetEnclaveDecKeyError)?;
         Ok(enclave_dec_key.public_key())
     }
 
     pub fn enclave_decryption_key(&self) -> Result<&SodiumPrivateKey> {
         self.decryption_privkey
             .as_ref()
-            .ok_or_else(|| EnclaveError::NotSetEnclaveDecKeyError)
+            .ok_or(EnclaveError::NotSetEnclaveDecKeyError)
     }
 
     /// Generate a value of REPORTDATA field in REPORT struct.

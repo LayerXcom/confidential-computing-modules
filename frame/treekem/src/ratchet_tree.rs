@@ -278,7 +278,7 @@ impl RatchetTree {
         fn helper(tree: &RatchetTree, idx: usize, acc: &mut Vec<usize>) {
             if let RatchetTreeNode::Blank = tree.nodes[idx] {
                 match tree_math::node_level(idx) {
-                    0 => return,
+                    0 => {},
                     _ => {
                         let num_leaves = tree_math::num_leaves_in_tree(tree.size());
                         helper(tree, tree_math::node_left_child(idx), acc);

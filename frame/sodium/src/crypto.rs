@@ -228,7 +228,7 @@ impl SodiumPrivateKey {
     }
 
     #[cfg(feature = "sgx")]
-    pub fn try_into_sealing<'a>(&self) -> Result<Vec<u8>> {
+    pub fn try_into_sealing(&self) -> Result<Vec<u8>> {
         UnsealedEnclaveDecryptionKey::from_sodium_priv_key(&self).encoded_sealing()
     }
 }

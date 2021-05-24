@@ -359,8 +359,8 @@ impl AnonifyEnclaveContext {
         let client_config = {
             let attested_tls_config = AttestedTlsConfig::new_by_ra(
                 &spid,
-                &ias_url.clone(),
-                &sub_key.clone(),
+                &ias_url,
+                &sub_key,
                 IAS_ROOT_CERT.to_vec(),
             )?;
             ClientConfig::from_attested_tls_config(attested_tls_config)?

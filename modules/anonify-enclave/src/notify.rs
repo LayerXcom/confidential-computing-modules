@@ -90,7 +90,7 @@ pub(crate) mod tests {
             account_id
         );
         assert!(
-            notifier.register(account_id.clone()),
+            notifier.register(account_id),
             "Failed to register account_id: {:?}",
             account_id
         );
