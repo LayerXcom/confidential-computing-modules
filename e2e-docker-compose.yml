@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   state_runtime:
-    image: anonify.azurecr.io/erc20-state-runtime:latest
+    image: anonify.azurecr.io/erc20-state-runtime:latest-test
     volumes:
       - /var/run/aesmd:/var/run/aesmd
     devices:
@@ -50,7 +50,7 @@ services:
         ipv4_address: "172.16.14.3"
 
   key_vault:
-    image: anonify.azurecr.io/key-vault-for-erc20:latest
+    image: anonify.azurecr.io/key-vault-for-erc20:latest-test
     volumes:
       - /var/run/aesmd:/var/run/aesmd
     devices:
