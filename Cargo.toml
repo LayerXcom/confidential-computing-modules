@@ -18,6 +18,8 @@ members = [
     "modules/key-vault-enclave",
     "modules/key-vault-host",
     "modules/key-vault-ecall-types",
+    "modules/occlum-enclave",
+    "modules/occlum-host",
     "nodes/key-vault",
     "nodes/state-runtime/api",
     "nodes/state-runtime/server",

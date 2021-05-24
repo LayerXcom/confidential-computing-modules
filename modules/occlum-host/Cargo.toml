@@ -1,0 +1,7 @@
+[package]
+name = "occlum-host"
+version = "0.5.4"
+authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
+edition = "2018"
+
+[dependencies]
