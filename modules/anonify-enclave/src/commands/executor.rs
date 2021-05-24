@@ -13,6 +13,9 @@ use rand_core::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
 use std::{marker::PhantomData, vec::Vec};
 
+type UpdatedStates = Vec<UpdatedState<StateType>>;
+type NotifyStates = Vec<Option<NotifyState>>;
+
 /// Command data which make state update
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommandExecutor<R: RuntimeExecutor<CTX>, CTX: ContextOps<S = StateType>, AP> {
@@ -105,10 +108,7 @@ where
             .and_then(|bytes| CommandExecutor::decode(&bytes[..]))
     }
 
-    fn stf_call(
-        self,
-        ctx: CTX,
-    ) -> Result<(Vec<UpdatedState<StateType>>, Vec<Option<NotifyState>>)> {
+    fn stf_call(self, ctx: CTX) -> Result<(UpdatedStates, NotifyStates)> {
         let res = R::new(ctx).execute(self.call_kind, self.my_account_id)?;
 
         match res {
