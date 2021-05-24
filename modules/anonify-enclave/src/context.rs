@@ -17,7 +17,7 @@ use frame_common::{
 #[cfg(feature = "backup-enable")]
 use frame_config::KEY_VAULT_ENCLAVE_MEASUREMENT;
 use frame_config::{ANONIFY_PARAMS_DIR, CMD_DEC_SECRET_DIR, IAS_ROOT_CERT};
-use frame_enclave::EnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveEngine;
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::{
     key_vault::{
@@ -357,12 +357,8 @@ impl AnonifyEnclaveContext {
 
         #[cfg(feature = "backup-enable")]
         let client_config = {
-            let attested_tls_config = AttestedTlsConfig::new_by_ra(
-                &spid,
-                &ias_url.clone(),
-                &sub_key.clone(),
-                IAS_ROOT_CERT.to_vec(),
-            )?;
+            let attested_tls_config =
+                AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
             ClientConfig::from_attested_tls_config(attested_tls_config)?
                 .set_attestation_report_verifier(
                     IAS_ROOT_CERT.to_vec(),
@@ -441,15 +437,15 @@ pub struct GetState<AP: AccessPolicy> {
     ecall_input: input::GetState<AP>,
 }
 
-impl<AP: AccessPolicy> EnclaveEngine for GetState<AP> {
+impl<AP: AccessPolicy> StateRuntimeEnclaveEngine for GetState<AP> {
     type EI = SodiumCiphertext;
     type EO = output::ReturnState;
 
-    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(&ciphertext)?;
+        let buf = enclave_context.decrypt(&ecall_input)?;
         let ecall_input = serde_json::from_slice(&buf[..])?;
 
         Ok(Self { ecall_input })
@@ -485,15 +481,15 @@ pub struct GetUserCounter<AP: AccessPolicy> {
     ecall_input: input::GetUserCounter<AP>,
 }
 
-impl<AP: AccessPolicy> EnclaveEngine for GetUserCounter<AP> {
+impl<AP: AccessPolicy> StateRuntimeEnclaveEngine for GetUserCounter<AP> {
     type EI = SodiumCiphertext;
     type EO = output::ReturnUserCounter;
 
-    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(&ciphertext)?;
+        let buf = enclave_context.decrypt(&ecall_input)?;
         let ecall_input = serde_json::from_slice(&buf[..])?;
 
         Ok(Self { ecall_input })
@@ -519,7 +515,7 @@ impl<AP: AccessPolicy> EnclaveEngine for GetUserCounter<AP> {
 #[derive(Debug, Clone, Default)]
 pub struct ReportRegistration;
 
-impl EnclaveEngine for ReportRegistration {
+impl StateRuntimeEnclaveEngine for ReportRegistration {
     type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
 

@@ -2,7 +2,7 @@
 //! binary trees. For more info, see section 5.1 of the MLS spec.
 //! referemnce: https://github.com/trailofbits/molasses/blob/master/src/tree_math.rs
 
-use std::{iter, usize, vec::Vec};
+use std::{cmp::Ordering, iter, usize, vec::Vec};
 
 // Suppose usize is u64. If there are k := 2^(63)+1 leaves, then there are a total of 2(k-1) + 1 =
 // 2(2^(63))+1 = 2^(64)+1 nodes in the tree, which is outside the representable range. So our upper
@@ -212,15 +212,13 @@ pub(crate) fn node_sibling(idx: usize, num_leaves: usize) -> usize {
     // xyz...1011...1, respectively. The former is less than the initial index, and the latter is
     // greater. So left is smaller, right is greater.
     let parent = node_parent(idx, num_leaves);
-    if idx < parent {
-        // We were on the left child, so return the right
-        node_right_child(parent, num_leaves)
-    } else if idx > parent {
+    match idx.cmp(&parent) {
         // We were on the right child, so return the left
-        node_left_child(parent)
-    } else {
+        Ordering::Greater => node_left_child(parent),
+        // We were on the left child, so return the right
+        Ordering::Less => node_right_child(parent, num_leaves),
         // We're at the root, so return the root
-        parent
+        Ordering::Equal => parent,
     }
 }
 

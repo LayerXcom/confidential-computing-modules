@@ -1,7 +1,7 @@
 use anonify_ecall_types::*;
 use anyhow::{anyhow, Result};
 use frame_common::{crypto::Sha256, state_types::StateType};
-use frame_enclave::EnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveEngine;
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::key_vault::request::BackupPathSecretRequestBody;
 use frame_runtime::traits::*;
@@ -11,7 +11,7 @@ use frame_treekem::handshake::HandshakeParams;
 #[derive(Debug, Clone, Default)]
 pub struct HandshakeSender;
 
-impl EnclaveEngine for HandshakeSender {
+impl StateRuntimeEnclaveEngine for HandshakeSender {
     type EI = input::Empty;
     type EO = output::ReturnHandshake;
 
@@ -65,17 +65,15 @@ pub struct HandshakeReceiver {
     ecall_input: input::InsertHandshake,
 }
 
-impl EnclaveEngine for HandshakeReceiver {
+impl StateRuntimeEnclaveEngine for HandshakeReceiver {
     type EI = input::InsertHandshake;
     type EO = output::Empty;
 
-    fn decrypt<C>(ciphertext: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        Ok(Self {
-            ecall_input: ciphertext,
-        })
+        Ok(Self { ecall_input })
     }
 
     fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>

@@ -119,6 +119,7 @@ impl<'de> Deserialize<'de> for SealedEnclaveDecryptionKey<'de> {
                 Ok(SealedEnclaveDecryptionKey::new(sealed_data))
             }
 
+            #[allow(clippy::needless_range_loop)]
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
             where
                 A: SeqAccess<'de>,
@@ -127,7 +128,7 @@ impl<'de> Deserialize<'de> for SealedEnclaveDecryptionKey<'de> {
                 for i in 0..SEALED_DATA_SIZE {
                     bytes[i] = seq
                         .next_element()?
-                        .ok_or(de::Error::invalid_length(i, &"32"))?;
+                        .ok_or_else(|| de::Error::invalid_length(i, &"32"))?;
                 }
 
                 let sealed_data = unsafe {

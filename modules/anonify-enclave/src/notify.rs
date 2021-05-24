@@ -1,6 +1,6 @@
 use anonify_ecall_types::*;
 use frame_common::{crypto::AccountId, state_types::StateType, AccessPolicy};
-use frame_enclave::EnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveEngine;
 use frame_runtime::traits::*;
 use frame_sodium::SodiumCiphertext;
 use std::{
@@ -36,15 +36,15 @@ pub struct RegisterNotification<AP: AccessPolicy> {
     ecall_input: input::RegisterNotification<AP>,
 }
 
-impl<AP: AccessPolicy> EnclaveEngine for RegisterNotification<AP> {
+impl<AP: AccessPolicy> StateRuntimeEnclaveEngine for RegisterNotification<AP> {
     type EI = SodiumCiphertext;
     type EO = output::Empty;
 
-    fn decrypt<C>(ciphertext: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(&ciphertext)?;
+        let buf = enclave_context.decrypt(&ecall_input)?;
         let ecall_input = serde_json::from_slice(&buf[..])?;
         Ok(Self { ecall_input })
     }
@@ -90,7 +90,7 @@ pub(crate) mod tests {
             account_id
         );
         assert!(
-            notifier.register(account_id.clone()),
+            notifier.register(account_id),
             "Failed to register account_id: {:?}",
             account_id
         );

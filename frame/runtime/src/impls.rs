@@ -152,16 +152,16 @@ macro_rules! __impl_inner_runtime {
                 name: &str
             ) -> Result<S> {
                 let mem_id = MemName::as_id(name);
-                let mut tmp = self.db.get_state_by_mem_id(key, mem_id).into_vec();
+                let tmp = self.db.get_state_by_mem_id(key, mem_id).into_vec();
                 if tmp.is_empty() {
                     Ok(S::default())
                 } else {
-                    S::decode_s(&mut tmp)
+                    S::decode_s(&tmp)
                 }
             }
 
-            pub fn values<S: State>(mut self) -> Result<Vec<S>> {
-                self.db.values().into_iter().map(|e| S::decode_s(&mut e.into_vec())).collect()
+            pub fn values<S: State>(self) -> Result<Vec<S>> {
+                self.db.values().into_iter().map(|e| S::decode_s(&e.into_vec())).collect()
             }
 
             $(
