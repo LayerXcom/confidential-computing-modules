@@ -1,6 +1,6 @@
 FROM anonify.azurecr.io/rust-sgx-sdk-rootless:latest-test
 
-WORKDIR ${HOME}
+WORKDIR /home/anonify-dev
 
 RUN set -x && \
     sudo apt-get update && \
