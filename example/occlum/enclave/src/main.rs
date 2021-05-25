@@ -1,4 +1,7 @@
-use occlum_enclave::EnclaveGrpcServer;
+use handler::MyGreeter;
+use occlum_enclave::service::EnclaveGrpcServer;
+use occlum_rpc_types::hello_world::greeter_server::GreeterServer;
+mod handler;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -6,4 +9,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let test_service = GreeterServer::new(MyGreeter::default());
 
     EnclaveGrpcServer::new(addr, test_service).start().await?;
+
+    Ok(())
 }
