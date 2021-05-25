@@ -14,7 +14,7 @@ stages:
             export SPID=$(SPID)
             export SUB_KEY=$(SUB_KEY)
             docker-compose up -d
-            docker-compose exec -T sgx_machine bash -c "cd anonify && ./scripts/test.sh"
+            docker-compose exec -T sgx_machine bash -c "sudo chown -R anonify-dev:anonify-dev anonify ; cd anonify && ./scripts/test.sh"
           displayName: 'Run tests'
         - script: docker-compose down
           condition: always()
@@ -58,7 +58,55 @@ stages:
         condition: always()
         displayName: 'Shutdown'
 
-- stage: Docker_Build_and_Push
+- stage: Build_and_Push_Base_Docker_Images
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  jobs:
+  - job: Docker
+    pool:
+      name: 'AnonifyAgent'
+    steps:
+    - task: Docker@2
+      displayName: Build rust-sgx-sdk-rootless image
+      inputs:
+        command: build
+        containerRegistry: anonify-ci-cd-acr
+        repository: rust-sgx-sdk-rootless
+        tags: latest
+        dockerfile: ./docker/base-rust-sgx-sdk-rootless.Dockerfile
+        buildContext: .
+    - task: Docker@2
+      displayName: Push rust-sgx-sdk-rootless image
+      inputs:
+        command: push
+        containerRegistry: anonify-ci-cd-acr
+        repository: rust-sgx-sdk-rootless
+        tags: latest
+        dockerfile: ./docker/base-rust-sgx-sdk-rootless.Dockerfile
+        buildContext: .
+
+    - task: Docker@2
+      displayName: Build anonify-dev image
+      inputs:
+        command: build
+        containerRegistry: anonify-ci-cd-acr
+        repository: anonify-dev
+        tags: latest
+        dockerfile: ./docker/base-anonify-dev.Dockerfile
+        buildContext: .
+    - task: Docker@2
+      displayName: Push anonify-dev image
+      inputs:
+        command: push
+        containerRegistry: anonify-ci-cd-acr
+        repository: anonify-dev
+        tags: latest
+        dockerfile: ./docker/base-anonify-dev.Dockerfile
+        buildContext: .
+
+    - script: docker image prune -f
+      displayName: Remove dangling images
+
+- stage: Build_and_Push_Example_Docker
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
   - job: Docker
@@ -72,7 +120,7 @@ stages:
         containerRegistry: anonify-ci-cd-acr
         repository: erc20-state-runtime
         tags: latest
-        dockerfile: ./docker/erc20.Dockerfile
+        dockerfile: ./docker/example-erc20.Dockerfile
         buildContext: .
         arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
     - task: Docker@2
@@ -82,7 +130,7 @@ stages:
         containerRegistry: anonify-ci-cd-acr
         repository: erc20-state-runtime
         tags: latest
-        dockerfile: ./docker/erc20.Dockerfile
+        dockerfile: ./docker/example-erc20.Dockerfile
         buildContext: .
     - task: Docker@2
       displayName: Build key-vault for erc20 image
@@ -91,7 +139,7 @@ stages:
         containerRegistry: anonify-ci-cd-acr
         repository: key-vault-for-erc20
         tags: latest
-        dockerfile: ./docker/keyvault.Dockerfile
+        dockerfile: ./docker/example-keyvault.Dockerfile
         buildContext: .
         arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
     - task: Docker@2
@@ -101,7 +149,7 @@ stages:
         containerRegistry: anonify-ci-cd-acr
         repository: key-vault-for-erc20
         tags: latest
-        dockerfile: ./docker/keyvault.Dockerfile
+        dockerfile: ./docker/example-keyvault.Dockerfile
         buildContext: .
     - script: docker image prune -f
       displayName: Remove dangling images
