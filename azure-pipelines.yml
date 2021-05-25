@@ -14,7 +14,7 @@ stages:
             export SPID=$(SPID)
             export SUB_KEY=$(SUB_KEY)
             docker-compose up -d
-            docker-compose exec -T sgx_machine bash -c "cd anonify && ./scripts/test.sh"
+            docker-compose exec -T sgx_machine bash -c "sudo chown -R anonify-dev:anonify-dev anonify ; cd anonify && ./scripts/test.sh"
           displayName: 'Run tests'
         - script: docker-compose down
           condition: always()
