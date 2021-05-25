@@ -129,3 +129,8 @@ RUN git clone --depth 1 -b 0.22.0 https://github.com/occlum/occlum && \
     OCCLUM_RELEASE_BUILD=1 make && \
     make install && \
     rm -rf /root/occlum
+
+ENV PATH="/opt/occlum/build/bin:/usr/local/occlum/bin:/opt/occlum/toolchains/rust/bin:$PATH"
+
+# https://github.com/occlum/occlum/blob/2a45fdd3b0263bfa2fcadc16f9aba2fb85ddfd8b/tools/occlum#L113-L117
+LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service
