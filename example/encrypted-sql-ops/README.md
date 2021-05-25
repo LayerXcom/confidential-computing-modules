@@ -9,21 +9,18 @@ Plain data are visible only to data holders (who executes DML) and SGX Enclave. 
 
 ## Getting started
 
-### Install [`pgx`](https://github.com/zombodb/pgx)
-
 This extension is developed using [`pgx`](https://github.com/zombodb/pgx), which provides highly useful toolkit to develop PostgreSQL extensions in Rust.
-Install it at first.
 
-### Running
-
-Use machine with SGX enabled (and PostgreSQL instance not launched).
+Docker image with `pgx` is available.
 
 ```bash
-cd anonify
-cd example/encrypted-sql-ops/pg-extension
+host> cd anonify
+host> docker run --env-file .env -v `pwd`:/home/anonify-dev/anonify --rm -it anonify.azurecr.io/encrypted-sql-ops-pg:latest
 
-cargo pgx run pg13
+container> cargo pgx run pg13
 ```
+
+And then issue SQLs:
 
 ```sql
 DROP TABLE IF EXISTS t;
