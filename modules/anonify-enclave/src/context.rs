@@ -409,7 +409,7 @@ impl AnonifyEnclaveContext {
                     #[cfg(feature = "backup-enable")]
                     match enc_key
                         .clone()
-                        .get_dec_key_from_remotelly_sealed(&client_config, &key_vault_endpoint)
+                        .get_dec_key_from_remotely_sealed(&client_config, &key_vault_endpoint)
                     {
                         Ok(enclave_key) => enclave_key,
                         Err(_e) => {

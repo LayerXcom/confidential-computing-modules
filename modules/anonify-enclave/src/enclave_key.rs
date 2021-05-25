@@ -89,7 +89,7 @@ impl EnclaveKey {
 
     /// Get dec_key from key-vault node in initialization when joining newly.
     #[cfg(feature = "backup-enable")]
-    pub fn get_dec_key_from_remotelly_sealed(
+    pub fn get_dec_key_from_remotely_sealed(
         mut self,
         client_config: &ClientConfig,
         key_vault_endpoint: &str,
