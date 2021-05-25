@@ -20,6 +20,7 @@ members = [
     "modules/key-vault-ecall-types",
     "modules/occlum-enclave",
     "modules/occlum-host",
+    "modules/occlum-rpc-types",
     "nodes/key-vault",
     "nodes/state-runtime/api",
     "nodes/state-runtime/server",
