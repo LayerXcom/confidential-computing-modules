@@ -12,11 +12,14 @@ See: [e2e-docker-compose.yml](https://github.com/LayerXcom/anonify/blob/main/e2e
 You just need to edit `docker/*.Dockerfile` and make PR.
 CI will automatically build the new docker images and push them to Azure Container Registry.
 
-### Images
+### Base Images
 
 - `rust-sgx-sdk-rootless.Dockerfile`
   - Creates root-less version of `baiduxlab/sgx-rust` image. Works as base image for other ones using Rust SGX SDK.
 - `anonify-dev.Dockerfile`
   - Includes tools to develop anonify (SGX SDK, for example). Used for both SGX HW mode and SW simulation (build-only) mode.
-- `erc20.Dockerfile`
-- `keyvault.Dockerfile`
+
+### Application Images
+
+- `example-erc20.Dockerfile`
+- `example-keyvault.Dockerfile`

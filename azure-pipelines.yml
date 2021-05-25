@@ -110,7 +110,7 @@ stages:
         containerRegistry: anonify-ci-cd-acr
         repository: erc20-state-runtime
         tags: latest-test
-        dockerfile: ./docker/erc20.Dockerfile
+        dockerfile: ./docker/example-erc20.Dockerfile
         buildContext: .
         arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
     - task: Docker@2
@@ -120,7 +120,7 @@ stages:
         containerRegistry: anonify-ci-cd-acr
         repository: erc20-state-runtime
         tags: latest-test
-        dockerfile: ./docker/erc20.Dockerfile
+        dockerfile: ./docker/example-erc20.Dockerfile
         buildContext: .
 
     - task: Docker@2
@@ -130,7 +130,7 @@ stages:
         containerRegistry: anonify-ci-cd-acr
         repository: key-vault-for-erc20
         tags: latest-test
-        dockerfile: ./docker/keyvault.Dockerfile
+        dockerfile: ./docker/example-keyvault.Dockerfile
         buildContext: .
         arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
     - task: Docker@2
@@ -140,7 +140,7 @@ stages:
         containerRegistry: anonify-ci-cd-acr
         repository: key-vault-for-erc20
         tags: latest-test
-        dockerfile: ./docker/keyvault.Dockerfile
+        dockerfile: ./docker/example-keyvault.Dockerfile
         buildContext: .
 
     - script: docker image prune -f
