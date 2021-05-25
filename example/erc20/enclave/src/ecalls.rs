@@ -52,10 +52,10 @@ register_ecall!(
     (SEND_REGISTER_REPORT_CMD, ReportRegistration),
     #[cfg(feature = "treekem")]
     #[cfg(feature = "backup-enable")]
-    (BACKUP_PATH_SECRET_ALL_CMD, PathSecretBackupper),
+    (BACKUP_PATH_SECRETS_CMD, PathSecretsBackupper),
     #[cfg(feature = "treekem")]
     #[cfg(feature = "backup-enable")]
-    (RECOVER_PATH_SECRET_ALL_CMD, PathSecretRecoverer),
+    (RECOVER_PATH_SECRETS_CMD, PathSecretsRecoverer),
     (
         GET_USER_COUNTER_CMD,
         GetUserCounter<NoAuth>

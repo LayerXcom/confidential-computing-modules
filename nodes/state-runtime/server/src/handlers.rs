@@ -162,22 +162,30 @@ pub async fn handle_register_report(server: web::Data<Arc<Server>>) -> Result<Ht
 
 #[cfg(feature = "backup-enable")]
 #[tracing::instrument(skip(server), fields(trace_id, instance_id))]
-pub async fn handle_all_backup_to(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
+pub async fn handle_backup(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
     Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
 
-    server.dispatcher.all_backup_to()?;
+    let ecall_cmd = match server.cmd_encryption_algo {
+        CmdEncryptionAlgo::TreeKem => BACKUP_ENCLAVE_KEY_CMD,
+        CmdEncryptionAlgo::EnclaveKey => BACKUP_PATH_SECRETS_CMD,
+    };
+    server.dispatcher.backup(ecall_cmd)?;
 
     Ok(HttpResponse::Ok().finish())
 }
 
 #[cfg(feature = "backup-enable")]
 #[tracing::instrument(skip(server), fields(trace_id, instance_id))]
-pub async fn handle_all_backup_from(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
+pub async fn handle_recover(server: web::Data<Arc<Server>>) -> Result<HttpResponse> {
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
     Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
+    let ecall_cmd = match server.cmd_encryption_algo {
+        CmdEncryptionAlgo::TreeKem => RECOVER_ENCLAVE_KEY_CMD,
+        CmdEncryptionAlgo::EnclaveKey => RECOVER_PATH_SECRETS_CMD,
+    };
 
-    server.dispatcher.all_backup_from()?;
+    server.dispatcher.recover(ecall_cmd)?;
 
     Ok(HttpResponse::Ok().finish())
 }

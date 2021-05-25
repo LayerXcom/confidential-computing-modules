@@ -16,9 +16,9 @@ use std::vec::Vec;
 
 /// A PathSecret Backupper
 #[derive(Debug, Clone, Default)]
-pub struct PathSecretBackupper;
+pub struct PathSecretsBackupper;
 
-impl StateRuntimeEnclaveEngine for PathSecretBackupper {
+impl StateRuntimeEnclaveEngine for PathSecretsBackupper {
     type EI = input::Empty;
     type EO = output::Empty;
 
@@ -56,9 +56,9 @@ impl StateRuntimeEnclaveEngine for PathSecretBackupper {
 
 /// A PathSecret Recoverer
 #[derive(Debug, Clone, Default)]
-pub struct PathSecretRecoverer;
+pub struct PathSecretsRecoverer;
 
-impl StateRuntimeEnclaveEngine for PathSecretRecoverer {
+impl StateRuntimeEnclaveEngine for PathSecretsRecoverer {
     type EI = input::Empty;
     type EO = output::Empty;
 

@@ -296,10 +296,7 @@ async fn test_treekem_manually_backup_all() {
                 "/api/v1/enclave_encryption_key",
                 web::get().to(handle_enclave_encryption_key),
             )
-            .route(
-                "/api/v1/all_backup_to",
-                web::post().to(handle_all_backup_to),
-            ),
+            .route("/api/v1/backup", web::post().to(handle_backup())),
     )
     .await;
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
@@ -380,9 +377,7 @@ async fn test_treekem_manually_backup_all() {
     );
 
     // backup all path_secrets to key-vault server
-    let req = test::TestRequest::post()
-        .uri("/api/v1/all_backup_to")
-        .to_request();
+    let req = test::TestRequest::post().uri("/api/v1/backup").to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
@@ -432,10 +427,7 @@ async fn test_treekem_manually_recover_all() {
                 "/api/v1/enclave_encryption_key",
                 web::get().to(handle_enclave_encryption_key),
             )
-            .route(
-                "/api/v1/all_backup_from",
-                web::post().to(handle_all_backup_from),
-            ),
+            .route("/api/v1/recover", web::post().to(handle_recover)),
     )
     .await;
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
@@ -514,7 +506,7 @@ async fn test_treekem_manually_recover_all() {
 
     // recover all path_secrets from key-vault server
     let req = test::TestRequest::post()
-        .uri("/api/v1/all_backup_from")
+        .uri("/api/v1/recover")
         .to_request();
     let resp = test::call_service(&mut app, req).await;
     assert!(resp.status().is_success(), "response: {:?}", resp);
