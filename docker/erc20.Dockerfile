@@ -11,7 +11,9 @@ RUN set -x && \
     sudo python3 -m pip install --upgrade pip --target /usr/lib64/az/lib/python3.6/site-packages/ && \
     sudo rm -rf /var/lib/apt/lists/*
 
-COPY . ${HOME}/anonify
+ARG user_name=anonify-dev
+ARG group_name=anonify-dev
+COPY --chown=${user_name}:${group_name} . ${HOME}/anonify
 WORKDIR ${HOME}/anonify
 
 # Define environment variables
@@ -31,7 +33,6 @@ ENV AZ_KV_ENDPOINT=$AZ_KV_ENDPOINT \
 RUN set -x && \
     export SGX_MODE=HW && \
     export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
-    ls -ld && ls -l && \
     git clone --depth 1 -b v0.5.11 https://github.com/LayerXcom/anonify-contracts && \
     solc -o contract-build --bin --abi --optimize --overwrite \
         anonify-contracts/contracts/AnonifyWithTreeKem.sol \

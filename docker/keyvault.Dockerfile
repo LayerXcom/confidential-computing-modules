@@ -11,7 +11,9 @@ RUN set -x && \
     sudo python3 -m pip install --upgrade pip --target /usr/lib64/az/lib/python3.6/site-packages/ && \
     sudo rm -rf /var/lib/apt/lists/*
 
-COPY . ${HOME}/anonify
+ARG user_name=anonify-dev
+ARG group_name=anonify-dev
+COPY --chown=${user_name}:${group_name} . ${HOME}/anonify
 WORKDIR ${HOME}/anonify
 
 # Define environment variables
