@@ -2444,10 +2444,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "host"
-version = "0.1.0"
-
-[[package]]
 name = "hostname"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3423,6 +3419,16 @@ dependencies = [
 [[package]]
 name = "occlum-host"
 version = "0.5.4"
+
+[[package]]
+name = "occlum-host-node"
+version = "0.5.4"
+dependencies = [
+ "occlum-rpc-types",
+ "tokio 1.6.0",
+ "tonic",
+ "tracing",
+]
 
 [[package]]
 name = "occlum-rpc-types"

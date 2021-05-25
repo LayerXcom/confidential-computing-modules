@@ -1,0 +1,43 @@
+version: "3.7"
+services:
+  enclave:
+    image: anonify.azurecr.io/base-occlum:latest
+    volumes:
+      - .:/root/anonify
+      - /var/run/aesmd:/var/run/aesmd
+    devices:
+      - "/dev/sgx/enclave"
+    ports:
+        - "50052:50051"
+    environment:
+      RUST_BACKTRACE: 1
+      RUST_LOG: debug
+      OCCLUM_LOG_LEVEL: debug
+    stdin_open: true
+    tty: true
+    networks:
+      osuke2_testing_net:
+        ipv4_address: "172.16.15.2"
+
+  host:
+    image: rust:1.52.1
+    volumes:
+      - .:/root/anonify
+    ports:
+      - "50053:50051"
+    environment:
+      RUST_BACKTRACE: 1
+      RUST_LOG: debug
+      OCCLUM_LOG_LEVEL: debug
+    stdin_open: true
+    tty: true
+    networks:
+      osuke2_testing_net:
+        ipv4_address: "172.16.15.3"
+
+networks:
+  osuke2_testing_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.15.0/24

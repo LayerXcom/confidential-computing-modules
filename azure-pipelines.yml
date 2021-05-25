@@ -15,10 +15,17 @@ stages:
             export SUB_KEY=$(SUB_KEY)
             docker-compose up -d
             docker-compose exec -T sgx_machine bash -c "sudo chown -R anonify-dev:anonify-dev anonify ; cd anonify && ./scripts/test.sh"
-          displayName: 'Run tests'
+          displayName: 'Run rust-sgx-sdk tests'
         - script: docker-compose down
           condition: always()
-          displayName: 'Shutdown'
+          displayName: 'rust-sgx-sdk docker-compose down'
+        - script: |
+            docker-compose -f occlum-docker-compose.yml up -d
+            docker-compose -f occlum-docker-compose.yml exec -T enclave bash -c "./anonify/scripts/occlum-test.sh"
+          displayName: 'Run occlum tests'
+        - script: docker-compose -f occlum-docker-compose.yml down
+          condition: always()
+          displayName: 'occlum docker-compose down'
 
 - stage:
   condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e')
