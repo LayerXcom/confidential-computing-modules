@@ -3,7 +3,7 @@ services:
   sgx_machine:
     image: anonify.azurecr.io/anonify-dev:latest
     volumes:
-      - .:/root/anonify
+      - .:/home/anonify-dev/anonify
       - /var/run/aesmd:/var/run/aesmd
     devices:
       - "/dev/sgx/enclave"
