@@ -8,7 +8,7 @@ services:
     devices:
       - "/dev/sgx/enclave"
     ports:
-        - "50052:50051"
+        - ${DOCKER_ENCLAVE_PORT}:${HOST_PORT}
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug
@@ -17,14 +17,14 @@ services:
     tty: true
     networks:
       osuke2_testing_net:
-        ipv4_address: "172.16.15.2"
+        ipv4_address: ${DOCKER_ENCLAVE_IP_ADDRESS}
 
   host:
     image: rust:1.52.1
     volumes:
       - .:/root/anonify
     ports:
-      - "50053:50051"
+      - ${DOCKER_HOST_PORT}:${HOST_PORT}
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug
@@ -33,11 +33,11 @@ services:
     tty: true
     networks:
       osuke2_testing_net:
-        ipv4_address: "172.16.15.3"
+        ipv4_address: ${DOCKER_HOST_IP_ADDRESS}
 
 networks:
-  osuke2_testing_net:
+  occlum_testing_net:
     ipam:
       driver: default
       config:
-        - subnet: 172.16.15.0/24
+        - subnet: ${COMPOSE_NETWORK_SUBNET}
