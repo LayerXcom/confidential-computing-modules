@@ -14,12 +14,16 @@ CI will automatically build the new docker images and push them to Azure Contain
 
 ### Base Images
 
-- `rust-sgx-sdk-rootless.Dockerfile`
+Should match to the name: `docker/base-*.Dockerfile` in order for CI to build & push only when Dockerfile has been changed.
+
+- `base-rust-sgx-sdk-rootless.Dockerfile`
   - Creates root-less version of `baiduxlab/sgx-rust` image. Works as base image for other ones using Rust SGX SDK.
-- `anonify-dev.Dockerfile`
+- `base-anonify-dev.Dockerfile`
   - Includes tools to develop anonify (SGX SDK, for example). Used for both SGX HW mode and SW simulation (build-only) mode.
 
 ### Application Images
+
+Should match to the name: `docker/example-*.Dockerfile` in order for CI to build & push every time main branch has been changed (supposing app codes have been modified).
 
 - `example-erc20.Dockerfile`
 - `example-keyvault.Dockerfile`
