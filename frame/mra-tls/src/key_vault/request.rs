@@ -105,7 +105,7 @@ impl RecoverAllPathSecretsRequestbody {
 
 impl RequestBody for RecoverAllPathSecretsRequestbody {}
 
-/// A Request body to store enclave decryption key to key-vault encalve
+/// A Request body to store enclave decryption key to key-vault enclave
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct BackupEnclaveDecryptionKeyRequestBody {
     dec_key: SodiumPrivateKey,
@@ -123,7 +123,7 @@ impl BackupEnclaveDecryptionKeyRequestBody {
 
 impl RequestBody for BackupEnclaveDecryptionKeyRequestBody {}
 
-/// A Request body to recover enclave decryption key from key-vault encalve
+/// A Request body to recover enclave decryption key from key-vault enclave
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RecoverEnclaveDecryptionKeyRequestBody;
 
