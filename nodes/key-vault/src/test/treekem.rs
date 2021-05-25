@@ -258,7 +258,7 @@ async fn test_treekem_recover_without_key_vault() {
 }
 
 #[actix_rt::test]
-async fn test_treekem_manually_backup_all() {
+async fn test_treekem_manually_backup() {
     set_env_vars();
     set_env_vars_for_treekem();
     set_server_env_vars();
@@ -389,7 +389,7 @@ async fn test_treekem_manually_backup_all() {
 }
 
 #[actix_rt::test]
-async fn test_treekem_manually_recover_all() {
+async fn test_treekem_manually_recover() {
     set_env_vars();
     set_env_vars_for_treekem();
     set_server_env_vars();
