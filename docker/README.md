@@ -24,6 +24,3 @@ Should match to the name: `docker/base-*.Dockerfile` in order for CI to build & 
 ### Application Images
 
 Should match to the name: `docker/example-*.Dockerfile` in order for CI to build & push every time main branch has been changed (supposing app codes have been modified).
-
-- `example-erc20.Dockerfile`
-- `example-keyvault.Dockerfile`
