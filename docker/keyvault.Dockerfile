@@ -1,4 +1,4 @@
-FROM anonify.azurecr.io/anonify-dev:latest
+FROM anonify.azurecr.io/anonify-dev:latest as builder
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 SHELL ["/bin/bash", "-c"]
