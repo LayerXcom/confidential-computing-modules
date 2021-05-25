@@ -43,7 +43,7 @@ RUN set -x && \
     RUST_BACKTRACE=1 RUST_LOG=debug cargo build --release
 
 # ===== SECOND STAGE ======
-FROM baiduxlab/sgx-rust:1804-1.1.3
+FROM anonify.azurecr.io/anonify-dev:latest
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 WORKDIR ${HOME}/anonify
