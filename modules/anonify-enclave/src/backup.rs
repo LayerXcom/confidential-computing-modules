@@ -6,8 +6,7 @@ use anyhow::{anyhow, Result};
 use frame_common::state_types::StateType;
 use frame_enclave::StateRuntimeEnclaveEngine;
 use frame_mra_tls::key_vault::request::{
-    BackupAllPathSecretsRequestBody, BackupEnclaveDecryptionKeyRequestBody,
-    BackupPathSecretRequestBody, RecoverAllPathSecretsRequestbody,
+    BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody, RecoverAllPathSecretsRequestbody,
 };
 use frame_runtime::traits::*;
 use frame_sodium::SealedEnclaveDecryptionKey;
@@ -101,12 +100,7 @@ impl StateRuntimeEnclaveEngine for EnclaveKeyBackupper {
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
-        let store_path_secrets = enclave_context.store_enclave_dec_key();
-        let dec_key = store_path_secrets
-            .load_from_local_filesystem(DEC_KEY_FILE_NAME)?
-            .into_sodium_priv_key()?;
-        enclave_context.backup_enclave_key(BackupEnclaveDecryptionKeyRequestBody::new(dec_key))?;
-
+        enclave_context.backup_enclave_key()?;
         Ok(output::Empty::default())
     }
 }

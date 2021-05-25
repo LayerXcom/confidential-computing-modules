@@ -22,10 +22,8 @@ use frame_enclave::StateRuntimeEnclaveEngine;
 use frame_mra_tls::{
     key_vault::{
         request::{
-            BackupAllPathSecretsRequestBody, BackupEnclaveDecryptionKeyRequestBody,
-            BackupPathSecretRequestBody, KeyVaultCmd, KeyVaultRequest,
-            RecoverAllPathSecretsRequestbody, RecoverEnclaveDecryptionKeyRequestBody,
-            RecoverPathSecretRequestBody,
+            BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody, KeyVaultCmd,
+            KeyVaultRequest, RecoverAllPathSecretsRequestbody, RecoverPathSecretRequestBody,
         },
         response::RecoveredPathSecret,
     },
@@ -310,27 +308,19 @@ impl KeyVaultOps for AnonifyEnclaveContext {
         Ok(path_secrets)
     }
 
-    fn backup_enclave_key(
-        &self,
-        backup_enclave_key: BackupEnclaveDecryptionKeyRequestBody,
-    ) -> anyhow::Result<()> {
-        let mut mra_tls_client = Client::new(self.key_vault_endpoint(), &self.client_config)?;
-        let key_vault_request =
-            KeyVaultRequest::new(KeyVaultCmd::StoreEnclaveDecryptionKey, backup_enclave_key);
-        let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
-
-        Ok(())
+    fn backup_enclave_key(&self) -> anyhow::Result<()> {
+        self.enclave_key
+            .store_dec_key_to_remote(&self.client_config, &self.key_vault_endpoint())
+            .map_err(|e| anyhow!("Failed to backup enclave_key: {:?}", e))
     }
 
     fn recover_enclave_key(&self) -> anyhow::Result<SodiumPrivateKey> {
-        let mut mra_tls_client = Client::new(self.key_vault_endpoint(), &self.client_config)?;
-        let key_vault_request = KeyVaultRequest::new(
-            KeyVaultCmd::RecoverEnclaveDecryptionKey,
-            RecoverEnclaveDecryptionKeyRequestBody::default(),
-        );
-        let dec_key: SodiumPrivateKey = mra_tls_client.send_json(key_vault_request)?;
-
-        Ok(dec_key)
+        let enclave_key = self
+            .enclave_key
+            .clone()
+            .get_dec_key_from_remotely_sealed(&self.client_config, &self.key_vault_endpoint())?;
+        let dec_key = enclave_key.enclave_decryption_key()?;
+        Ok(dec_key.clone())
     }
 }
 
