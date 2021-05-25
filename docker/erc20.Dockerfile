@@ -11,8 +11,8 @@ RUN set -x && \
     sudo python3 -m pip install --upgrade pip --target /usr/lib64/az/lib/python3.6/site-packages/ && \
     sudo rm -rf /var/lib/apt/lists/*
 
-COPY . ${HOME}
-WORKDIR ${HOME}
+COPY . ${HOME}/anonify
+WORKDIR ${HOME}/anonify
 
 # Define environment variables
 ARG AZ_KV_ENDPOINT
@@ -49,9 +49,8 @@ RUN set -x && \
 FROM anonify.azurecr.io/anonify-dev:latest
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
-WORKDIR ${HOME}
+WORKDIR ${HOME}/anonify
 
-RUN cd ${HOME}/anonify
 COPY --from=builder ${HOME}/anonify/config/ias_root_cert.pem ./config/ias_root_cert.pem
 COPY --from=builder ${HOME}/anonify/.anonify/erc20.signed.so ./.anonify/erc20.signed.so
 COPY --from=builder ${HOME}/anonify/.anonify/erc20_measurement.txt ./.anonify/erc20_measurement.txt

@@ -11,8 +11,8 @@ RUN set -x && \
     sudo python3 -m pip install --upgrade pip --target /usr/lib64/az/lib/python3.6/site-packages/ && \
     sudo rm -rf /var/lib/apt/lists/*
 
-COPY . ${HOME}
-WORKDIR ${HOME}
+COPY . ${HOME}/anonify
+WORKDIR ${HOME}/anonify
 
 # Define environment variables
 ARG AZ_KV_ENDPOINT
@@ -28,7 +28,8 @@ ENV AZ_KV_ENDPOINT=$AZ_KV_ENDPOINT \
     PROD_ID=$PROD_ID \
     ISVSVN=$ISVSVN
 
-RUN export SGX_MODE=HW && \
+RUN set -x && \
+    export SGX_MODE=HW && \
     export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
     cargo build -p frame-types --release && \
     cd scripts && \
@@ -43,9 +44,8 @@ RUN export SGX_MODE=HW && \
 FROM baiduxlab/sgx-rust:1804-1.1.3
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
-WORKDIR ${HOME}
+WORKDIR ${HOME}/anonify
 
-RUN cd ${HOME}/anonify
 COPY --from=builder ${HOME}/anonify/config/ias_root_cert.pem ./config/ias_root_cert.pem
 COPY --from=builder ${HOME}/anonify/.anonify/key_vault.signed.so ./.anonify/key_vault.signed.so
 COPY --from=builder ${HOME}/anonify/.anonify/erc20_measurement.txt ./.anonify/erc20_measurement.txt
