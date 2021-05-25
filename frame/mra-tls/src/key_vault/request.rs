@@ -136,7 +136,7 @@ pub enum KeyVaultCmd {
     ManuallyStoreAllPathSecrets,
     ManuallyRecoverAllPathSecrets,
     StoreEnclaveDecryptionKey,
-    RecoverEnclaveDecrptionKey,
+    RecoverEnclaveDecryptionKey,
 }
 
 #[derive(Debug, Clone, Serialize)]

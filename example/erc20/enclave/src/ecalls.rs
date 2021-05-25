@@ -50,12 +50,20 @@ register_ecall!(
     ),
     (GET_ENCLAVE_ENCRYPTION_KEY_CMD, EncryptionKeyGetter),
     (SEND_REGISTER_REPORT_CMD, ReportRegistration),
+    #[cfg(feature = "treekem")]
     #[cfg(feature = "backup-enable")]
     (BACKUP_PATH_SECRET_ALL_CMD, PathSecretBackupper),
+    #[cfg(feature = "treekem")]
     #[cfg(feature = "backup-enable")]
     (RECOVER_PATH_SECRET_ALL_CMD, PathSecretRecoverer),
     (
         GET_USER_COUNTER_CMD,
         GetUserCounter<NoAuth>
     ),
+    #[cfg(feature = "enclave_key")]
+    #[cfg(feature = "backup-enable")]
+    (BACKUP_ENCLAVE_KEY_CMD, EnclaveKeyBackupper),
+    #[cfg(feature = "enclave_key")]
+    #[cfg(feature = "backup-enable")]
+    (RECOVER_ENCLAVE_KEY_CMD, EnclaveKeyRecoverer),
 );

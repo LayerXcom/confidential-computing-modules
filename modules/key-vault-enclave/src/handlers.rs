@@ -43,7 +43,7 @@ impl RequestHandler for KeyVaultHandler {
             "StoreEnclaveDecryptionKey" => {
                 self.store_enclave_decryption_key(decoded["body"].clone())
             }
-            "RecoverEnclaveDecrptionKey" => {
+            "RecoverEnclaveDecryptionKey" => {
                 self.recover_enclave_decryption_key(decoded["body"].clone())
             }
             _ => unreachable!("got unknown command: {:?}", cmd),
