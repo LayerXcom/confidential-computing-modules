@@ -11,6 +11,8 @@ export PATH="/opt/occlum/build/bin:/usr/local/occlum/bin:/opt/occlum/toolchains/
 occlum-cargo build -p occlume-enclave-node
 
 # TODO: Remove
+# 現状、コンテナ内でaesm serviceの起動が必要
+# https://github.com/occlum/occlum/blob/2a45fdd3b0263bfa2fcadc16f9aba2fb85ddfd8b/tools/occlum#L113-L117
 LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service
 
 if [ -d occlum-instance ]; then
