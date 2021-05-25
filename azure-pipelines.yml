@@ -58,9 +58,8 @@ stages:
         condition: always()
         displayName: 'Shutdown'
 
-- stage: Build_and_Push_Base_Docker
-  #condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
-  # TODO check diff
+- stage: 'Build and push base docker images only if any image defs has diff'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
   - job: Docker
     pool:
