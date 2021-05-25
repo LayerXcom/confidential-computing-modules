@@ -12,8 +12,8 @@ use crate::serde_big_array::big_array;
 use crate::serde_bytes;
 use crate::traits::{AccessPolicy, Hash256, IntoVec, StateDecoder};
 use ed25519_dalek::{
-    Keypair, PublicKey, SecretKey, Signature, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH,
-    SIGNATURE_LENGTH,
+    ed25519::signature::Signature, Keypair, PublicKey, SecretKey, Signature, Signer, Verifier,
+    PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SIGNATURE_LENGTH,
 };
 use lazy_static::lazy_static;
 #[cfg(feature = "std")]
