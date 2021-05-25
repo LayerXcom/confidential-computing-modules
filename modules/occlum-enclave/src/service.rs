@@ -1,26 +1,34 @@
 use crate::handler::*;
 use anyhow::Result;
-use occlum_rpc_types::hello_world::greeter_server::GreeterServer;
 use std::net::SocketAddr;
-use tonic::transport::Server;
+use tonic::body::BoxBody;
+use tonic::codegen::{
+    http::{Request, Response},
+    Service,
+};
+use tonic::transport::{Body, NamedService, Server};
 use tracing::info;
 
-pub struct EnclaveService {
+pub struct EnclaveGrpcServer<S> {
     addr: SocketAddr,
+    service: S,
 }
 
-impl EnclaveService {
-    pub fn new(addr: SocketAddr) -> Self {
-        Self { addr }
+impl<S> EnclaveGrpcServer<S>
+where
+    S: Service<Request<Body>, Response = Response<BoxBody>> + NamedService + Clone + Send + 'static,
+    S::Future: Send + 'static,
+    S::Error: Into<Box<dyn std::error::Error + Send + Sync>> + Send,
+{
+    pub fn new(addr: SocketAddr, service: S) -> Self {
+        Self { addr, service }
     }
 
     pub async fn start(self) -> Result<()> {
-        let greeter = MyGreeter::default();
-
-        info!("GreeterServer listening on {}", self.addr);
+        info!("EnclaveGrpcServer listening on {}", self.addr);
 
         Server::builder()
-            .add_service(GreeterServer::new(greeter))
+            .add_service(self.service) // TODO: get mutiple
             .serve(self.addr)
             .await?;
 

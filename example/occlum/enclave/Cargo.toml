@@ -1,10 +1,11 @@
 [package]
-name = "occlum-enclave"
+name = "occlume-enclave-node"
 version = "0.5.4"
 authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 
 [dependencies]
+occlum-enclave = { path = "../../../modules/occlum-encalve" }
 tonic = "0.4"
 anyhow = "1.0"
 tracing = "0.1"
