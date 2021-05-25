@@ -31,6 +31,7 @@ ENV AZ_KV_ENDPOINT=$AZ_KV_ENDPOINT \
 RUN set -x && \
     export SGX_MODE=HW && \
     export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3 && \
+    ls -ld && ls -l && \
     git clone --depth 1 -b v0.5.11 https://github.com/LayerXcom/anonify-contracts && \
     solc -o contract-build --bin --abi --optimize --overwrite \
         anonify-contracts/contracts/AnonifyWithTreeKem.sol \
