@@ -5,6 +5,8 @@ set -e
 ANONIFY_ROOT="$(cd $(dirname $0); pwd)/.."
 
 cd "$ANONIFY_ROOT"
+# TODO: Remove
+export PATH="/opt/occlum/build/bin:/usr/local/occlum/bin:/opt/occlum/toolchains/rust/bin:$PATH"
 # TODO: Don't use "occlum-cargo"
 occlum-cargo build -p occlume-enclave-node
 
