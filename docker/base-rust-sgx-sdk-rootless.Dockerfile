@@ -33,3 +33,13 @@ ENV PATH $PATH:$HOME/.cargo/bin
 RUN rustup component add rust-src rls rust-analysis clippy rustfmt && \
     cargo install xargo bindgen cargo-audit && \
     rm -rf ~/.cargo/registry && rm -rf ~/.cargo/git
+
+# docker-compose's `volume:` mounts files as owned by different UID:GID than ${user_id}:${group_id} here.
+# (Basically it mouts using host-side `UID:GID`)
+# Chown home directory.
+COPY --chown=${user_name}:${group_name} ./entrypoint/chown-home.sh ${HOME}
+RUN chmod +x ${HOME}/chown-home.sh
+## necessary to pass ARG to ENTRYPOINT
+ENV user_name ${user_name}
+ENV group_name ${group_name}
+ENTRYPOINT ["sh", "-c", "${HOME}/chown-home.sh ${user_name} ${group_name}"]
