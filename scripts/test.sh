@@ -113,7 +113,9 @@ function exec_kv_enclave_key_node_tests() {
 }
 
 exec_kv_enclave_key_node_tests test_health_check \
-  test_enclave_key_backup
+  test_enclave_key_backup \
+  test_enclave_key_manually_backup \
+  test_enclave_key_manually_recover
 
 #
 # Tests for treekem

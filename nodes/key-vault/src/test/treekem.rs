@@ -296,7 +296,7 @@ async fn test_treekem_manually_backup() {
                 "/api/v1/enclave_encryption_key",
                 web::get().to(handle_enclave_encryption_key),
             )
-            .route("/api/v1/backup", web::post().to(handle_backup())),
+            .route("/api/v1/backup", web::post().to(handle_backup)),
     )
     .await;
     actix_rt::time::delay_for(time::Duration::from_millis(SYNC_TIME + 500)).await;
