@@ -53,15 +53,15 @@ impl RequestBody for BackupPathSecretRequestBody {}
 
 /// A request body to backup all path secrets to key-vault server
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct BackupAllPathSecretsRequestBody(pub Vec<BackupPathSecretRequestBody>);
+pub struct BackupPathSecretsRequestBody(pub Vec<BackupPathSecretRequestBody>);
 
-impl BackupAllPathSecretsRequestBody {
+impl BackupPathSecretsRequestBody {
     pub fn new(body: Vec<BackupPathSecretRequestBody>) -> Self {
         Self(body)
     }
 }
 
-impl RequestBody for BackupAllPathSecretsRequestBody {}
+impl RequestBody for BackupPathSecretsRequestBody {}
 
 /// A Request body to recover a PathSecret specified by roster_idx and id from key-vault server
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -89,11 +89,11 @@ impl RequestBody for RecoverPathSecretRequestBody {}
 
 /// A Request body to recover all PathSecrets specified by roster_idx from key-vault server
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct RecoverAllPathSecretsRequestbody {
+pub struct RecoverPathSecretsRequestBody {
     roster_idx: u32,
 }
 
-impl RecoverAllPathSecretsRequestbody {
+impl RecoverPathSecretsRequestBody {
     pub fn new(roster_idx: u32) -> Self {
         Self { roster_idx }
     }
@@ -103,7 +103,7 @@ impl RecoverAllPathSecretsRequestbody {
     }
 }
 
-impl RequestBody for RecoverAllPathSecretsRequestbody {}
+impl RequestBody for RecoverPathSecretsRequestBody {}
 
 /// A Request body to store enclave decryption key to key-vault enclave
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -133,8 +133,8 @@ impl RequestBody for RecoverEnclaveDecryptionKeyRequestBody {}
 pub enum KeyVaultCmd {
     StorePathSecret,
     RecoverPathSecret,
-    ManuallyStoreAllPathSecrets,
-    ManuallyRecoverAllPathSecrets,
+    ManuallyStorePathSecrets,
+    ManuallyRecoverPathSecrets,
     StoreEnclaveDecryptionKey,
     RecoverEnclaveDecryptionKey,
 }

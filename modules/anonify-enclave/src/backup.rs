@@ -6,7 +6,7 @@ use anyhow::{anyhow, Result};
 use frame_common::state_types::StateType;
 use frame_enclave::StateRuntimeEnclaveEngine;
 use frame_mra_tls::key_vault::request::{
-    BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody, RecoverAllPathSecretsRequestbody,
+    BackupPathSecretRequestBody, BackupPathSecretsRequestBody, RecoverPathSecretsRequestBody,
 };
 use frame_runtime::traits::*;
 use frame_sodium::SealedEnclaveDecryptionKey;
@@ -45,9 +45,8 @@ impl StateRuntimeEnclaveEngine for PathSecretsBackupper {
             backup_path_secrets.push(backup_path_secret);
         }
 
-        enclave_context.manually_backup_path_secrets_all(BackupAllPathSecretsRequestBody::new(
-            backup_path_secrets,
-        ))?;
+        enclave_context
+            .manually_backup_path_secrets(BackupPathSecretsRequestBody::new(backup_path_secrets))?;
 
         Ok(output::Empty::default())
     }
@@ -69,9 +68,9 @@ impl StateRuntimeEnclaveEngine for PathSecretsRecoverer {
         // fetch path_secrets from key-vault server
         let group_key = &*enclave_context.read_group_key();
         let roster_idx = group_key.my_roster_idx();
-        let recover_all_request = RecoverAllPathSecretsRequestbody::new(roster_idx);
+        let recover_request = RecoverPathSecretsRequestBody::new(roster_idx);
         let recovered_path_secrets =
-            enclave_context.manually_recover_path_secrets_all(recover_all_request)?;
+            enclave_context.manually_recover_path_secrets(recover_request)?;
 
         // save path_secrets to own file system
         for rps in recovered_path_secrets {
