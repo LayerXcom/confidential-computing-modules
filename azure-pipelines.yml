@@ -58,7 +58,7 @@ stages:
         condition: always()
         displayName: 'Shutdown'
 
-- stage: 'Build and push base docker images only if any image defs has diff'
+- stage: 'Build and push base docker images'
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
   - job: Docker
