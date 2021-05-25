@@ -73,9 +73,7 @@ impl StateRuntimeEnclaveEngine for HandshakeReceiver {
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        Ok(Self {
-            ecall_input,
-        })
+        Ok(Self { ecall_input })
     }
 
     fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>

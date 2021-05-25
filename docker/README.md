@@ -1,14 +1,29 @@
 # Anonify docker files
 
-In the project root directory, you can build docker files by following commands.
-`erc20.Dockerfile` and `keyvault.Dockerfile` can be built in a SGX-enabled environment because it builds in HW mode.
+## Getting Started
 
-```
-// For develop environment in SW or HW mode
-$ docker build -t anonify-dev -f docker/dev.Dockerfile ./
+Docker images built here are pushed to Azure Container Registry.
+In most cases, you just need to pull & run them.
 
-// For node containers
-$ docker build -t osuketh/anonify-erc20:latest -f docker/erc20.Dockerfile --build-arg AZ_KV_ENDPOINT=${AZ_KV_ENDPOINT} --build-arg AZURE_CLIENT_ID=${AZURE_CLIENT_ID} --build-arg AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET} --build-arg AZURE_TENANT_ID=${AZURE_TENANT_ID} --build-arg PROD_ID=${PROD_ID} --build-arg ISVSVN=${ISVSVN} ./
+See: [e2e-docker-compose.yml](https://github.com/LayerXcom/anonify/blob/main/e2e-docker-compose.yml).
 
-$ docker build -t osuketh/anonify-key-vault:latest -f docker/keyvault.server.Dockerfile --build-arg AZ_KV_ENDPOINT=${AZ_KV_ENDPOINT} --build-arg AZURE_CLIENT_ID=${AZURE_CLIENT_ID} --build-arg AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET} --build-arg AZURE_TENANT_ID=${AZURE_TENANT_ID} --build-arg PROD_ID=${PROD_ID} --build-arg ISVSVN=${ISVSVN} ./
-```
+## Docker Image Development
+
+You just need to edit `docker/*.Dockerfile` and make PR.
+CI will automatically build the new docker images and push them to Azure Container Registry.
+
+### Base Images
+
+Should match to the name: `docker/base-*.Dockerfile` in order for CI to build & push only when Dockerfile has been changed.
+
+- `base-rust-sgx-sdk-rootless.Dockerfile`
+  - Creates root-less version of `baiduxlab/sgx-rust` image. Works as base image for other ones using Rust SGX SDK.
+- `base-anonify-dev.Dockerfile`
+  - Includes tools to develop anonify (SGX SDK, for example). Used for both SGX HW mode and SW simulation (build-only) mode.
+
+### Application Images
+
+Should match to the name: `docker/example-*.Dockerfile` in order for CI to build & push every time main branch has been changed (supposing app codes have been modified).
+
+- `example-erc20.Dockerfile`
+- `example-keyvault.Dockerfile`

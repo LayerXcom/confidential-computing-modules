@@ -2,26 +2,24 @@
 
 set -e
 
-source /root/.docker_bashrc
 export PATH=~/.cargo/bin:$PATH
 export SGX_MODE=HW
 export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
-ANONIFY_ROOT=/root/anonify
+ANONIFY_ROOT="$(cd $(dirname $0); pwd)/.."
 ANONIFY_TAG=v0.5.11
 
 #
 # Setup Tests
 #
 
-dirpath=$(cd $(dirname $0) && pwd)
-cd "${dirpath}/.."
+cd ${ANONIFY_ROOT}
 if [ ! -d ${ANONIFY_ROOT}/anonify-contracts ]; then
     git clone --depth 1 -b $ANONIFY_TAG https://github.com/LayerXcom/anonify-contracts
 else
     cd ${ANONIFY_ROOT}/anonify-contracts
-    tag_id=`git show $ANONIFY_TAG | grep commit | cut -f 2 -d ' '`
-    current_commit_id=`git rev-parse HEAD`
-    if [ $tag_id = $current_commit_id ]; then
+    tag_id=$(git show $ANONIFY_TAG | grep commit | cut -f 2 -d ' ')
+    current_commit_id=$(git rev-parse HEAD)
+    if [ "$tag_id" = "$current_commit_id" ]; then
         echo "already cloned /anonify-contracts(skipped)"
     else
         echo "already exists /anonify-contracts directory, but doesn't match commit id with specified by tag"
@@ -48,11 +46,22 @@ cd ${ANONIFY_ROOT}/scripts
 export ENCLAVE_PKG_NAME=key_vault
 make DEBUG=1 ENCLAVE_DIR=example/key-vault/enclave
 
+
+#
+# Lints checks
+#
+
+cd ${ANONIFY_ROOT}
+RUST_LOG=error cargo fmt --all -- --check
+RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p erc20-server -p key-vault-server --all-targets --all-features
+RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p erc20-enclave -p key-vault-enclave --all-features
+
 #
 # Tests for enclave key
 #
 
 # Integration Tests
+cd ${ANONIFY_ROOT}/scripts
 export ENCLAVE_PKG_NAME=erc20
 # make with backup disabled
 make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,enclave_key"
@@ -177,7 +186,6 @@ RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \
   -p unit-tests-host \
   -p frame-runtime \
   -p frame-retrier \
-  -p frame-azure-client \
   -p frame-sodium -- --nocapture
 
 #

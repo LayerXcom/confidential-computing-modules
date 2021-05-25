@@ -4,7 +4,7 @@ use crate::serde::{Deserialize, Serialize};
 use crate::serde_bytes;
 
 /// Application message broadcasted to other members.
-#[derive(Clone, Serialize, Deserialize, Eq, Ord, Hash, Default)]
+#[derive(Clone, Serialize, Deserialize, Eq, Default)]
 #[serde(crate = "crate::serde")]
 pub struct TreeKemCiphertext {
     generation: u32,

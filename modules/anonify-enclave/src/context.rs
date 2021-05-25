@@ -357,12 +357,8 @@ impl AnonifyEnclaveContext {
 
         #[cfg(feature = "backup-enable")]
         let client_config = {
-            let attested_tls_config = AttestedTlsConfig::new_by_ra(
-                &spid,
-                &ias_url.clone(),
-                &sub_key.clone(),
-                IAS_ROOT_CERT.to_vec(),
-            )?;
+            let attested_tls_config =
+                AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
             ClientConfig::from_attested_tls_config(attested_tls_config)?
                 .set_attestation_report_verifier(
                     IAS_ROOT_CERT.to_vec(),

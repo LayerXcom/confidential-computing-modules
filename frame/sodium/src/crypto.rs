@@ -67,6 +67,7 @@ impl<'de> Deserialize<'de> for SodiumNonce {
                 Ok(SodiumNonce::from_bytes(value))
             }
 
+            #[allow(clippy::needless_range_loop)]
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
             where
                 A: SeqAccess<'de>,
@@ -75,7 +76,7 @@ impl<'de> Deserialize<'de> for SodiumNonce {
                 for i in 0..NONCE_SIZE {
                     bytes[i] = seq
                         .next_element()?
-                        .ok_or(de::Error::invalid_length(i, &"24"))?;
+                        .ok_or_else(|| de::Error::invalid_length(i, &"24"))?;
                 }
                 Ok(SodiumNonce::from_bytes(&bytes))
             }
@@ -168,11 +169,12 @@ impl<'de> Deserialize<'de> for SodiumPrivateKey {
             where
                 E: de::Error,
             {
-                let sk = SodiumPrivateKey::from_bytes(value).map_err(|e| E::custom(e))?;
+                let sk = SodiumPrivateKey::from_bytes(value).map_err(E::custom)?;
 
                 Ok(sk)
             }
 
+            #[allow(clippy::needless_range_loop)]
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
             where
                 A: SeqAccess<'de>,
@@ -181,7 +183,7 @@ impl<'de> Deserialize<'de> for SodiumPrivateKey {
                 for i in 0..KEY_SIZE {
                     bytes[i] = seq
                         .next_element()?
-                        .ok_or(de::Error::invalid_length(i, &"32"))?;
+                        .ok_or_else(|| de::Error::invalid_length(i, &"32"))?;
                 }
                 let sk = SodiumPrivateKey::from_bytes(&bytes).map_err(|_e| {
                     de::Error::invalid_value(
@@ -226,7 +228,7 @@ impl SodiumPrivateKey {
     }
 
     #[cfg(feature = "sgx")]
-    pub fn try_into_sealing<'a>(&self) -> Result<Vec<u8>> {
+    pub fn try_into_sealing(&self) -> Result<Vec<u8>> {
         UnsealedEnclaveDecryptionKey::from_sodium_priv_key(&self).encoded_sealing()
     }
 }
@@ -274,6 +276,7 @@ impl<'de> Deserialize<'de> for SodiumPubKey {
                 formatter.write_str("a SodiumPubKey must be 32 bytes length")
             }
 
+            #[allow(clippy::needless_range_loop)]
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
             where
                 A: SeqAccess<'de>,
@@ -282,7 +285,7 @@ impl<'de> Deserialize<'de> for SodiumPubKey {
                 for i in 0..SODIUM_PUBLIC_KEY_SIZE {
                     bytes[i] = seq
                         .next_element()?
-                        .ok_or(de::Error::invalid_length(i, &"32"))?;
+                        .ok_or_else(|| de::Error::invalid_length(i, &"32"))?;
                 }
                 let pk = SodiumPubKey::from_bytes(&bytes).map_err(|_e| {
                     de::Error::invalid_value(
@@ -325,7 +328,7 @@ impl SodiumPubKey {
         use de::Error;
         String::deserialize(deserializer).and_then(|string| {
             let v = hex::decode(&string).map_err(|_| Error::custom("ParseError"))?;
-            Ok(Self::from_bytes(&v).map_err(|e| Error::custom(e))?)
+            Ok(Self::from_bytes(&v).map_err(Error::custom)?)
         })
     }
 
@@ -415,7 +418,7 @@ where
         .and_then(|string| Ok(hex::decode(&string).map_err(|_| Error::custom("ParseError"))?))
 }
 
-fn to_hex_vec<S>(v: &Vec<u8>, serializer: S) -> Result<S::Ok, S::Error>
+fn to_hex_vec<S>(v: &[u8], serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {

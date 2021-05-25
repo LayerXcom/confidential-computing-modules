@@ -11,7 +11,7 @@ use std::{fs, path::Path};
 use web3::{
     contract::Contract,
     transports::Http,
-    types::{Address, TransactionReceipt, H256, Log},
+    types::{Address, Log, TransactionReceipt, H256},
 };
 
 /// Define a retry condition of deploying contracts.
@@ -20,14 +20,12 @@ pub const fn deployer_retry_condition(res: &Result<Address>) -> bool {
     match res {
         Ok(_) => false,
         Err(err) => match err {
-            HostError::Web3ContractError(web3_err) => match web3_err {
-                web3::contract::Error::Abi(_) => false,
-                _ => true,
-            },
-            HostError::Web3ContractDeployError(web3_err) => match web3_err {
-                web3::contract::deploy::Error::Abi(_) => false,
-                _ => true,
-            },
+            HostError::Web3ContractError(web3_err) => {
+                !matches!(web3_err, web3::contract::Error::Abi(_))
+            }
+            HostError::Web3ContractDeployError(web3_err) => {
+                !matches!(web3_err, web3::contract::deploy::Error::Abi(_))
+            }
             HostError::EcallOutputNotSet => false,
             // error reading abi and bin path
             HostError::IoError(_) => false,
@@ -42,10 +40,9 @@ pub const fn sender_retry_condition(res: &Result<H256>) -> bool {
     match res {
         Ok(_) => false,
         Err(err) => match err {
-            HostError::Web3ContractError(web3_err) => match web3_err {
-                web3::contract::Error::Abi(_) => false,
-                _ => true,
-            },
+            HostError::Web3ContractError(web3_err) => {
+                !matches!(web3_err, web3::contract::Error::Abi(_))
+            }
             HostError::EcallOutputNotSet => false,
             _ => true,
         },
@@ -56,10 +53,9 @@ pub const fn call_with_conf_retry_condition(res: &Result<TransactionReceipt>) ->
     match res {
         Ok(_) => false,
         Err(err) => match err {
-            HostError::Web3ContractError(web3_err) => match web3_err {
-                web3::contract::Error::Abi(_) => false,
-                _ => true,
-            },
+            HostError::Web3ContractError(web3_err) => {
+                !matches!(web3_err, web3::contract::Error::Abi(_))
+            }
             HostError::EcallOutputNotSet => false,
             _ => true,
         },
@@ -70,10 +66,9 @@ pub const fn event_fetch_retry_condition(res: &Result<Vec<Log>>) -> bool {
     match res {
         Ok(_) => false,
         Err(err) => match err {
-            HostError::Web3ContractError(web3_err) => match web3_err {
-                web3::contract::Error::Abi(_) => false,
-                _ => true,
-            },
+            HostError::Web3ContractError(web3_err) => {
+                !matches!(web3_err, web3::contract::Error::Abi(_))
+            }
             HostError::EcallOutputNotSet => false,
             _ => true,
         },

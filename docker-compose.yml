@@ -1,9 +1,9 @@
 version: "3.7"
 services:
   sgx_machine:
-    image: osuketh/anonify:20210310-1804-1.1.3
+    image: anonify.azurecr.io/anonify-dev:latest
     volumes:
-      - .:/root/anonify
+      - .:/home/anonify-dev/anonify
       - /var/run/aesmd:/var/run/aesmd
     devices:
       - "/dev/sgx/enclave"

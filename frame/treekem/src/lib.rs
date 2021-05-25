@@ -26,7 +26,7 @@ pub use store_path_secrets::StorePathSecrets;
 pub mod tests {
     use super::*;
     use std::prelude::v1::*;
-    use test_utils::{runner::*, check_all_passed, run_tests};
+    use test_utils::{check_all_passed, run_tests, runner::*};
 
     pub fn run_tests() -> bool {
         check_all_passed!(

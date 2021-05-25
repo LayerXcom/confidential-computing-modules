@@ -208,6 +208,10 @@ impl PathSecret {
         self.as_bytes().len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn try_into_exporting(self, epoch: u32, id: &[u8]) -> Result<ExportPathSecret> {
         let encoded_sealed = UnsealedPathSecret::from(self).encoded_seal()?;
         let mut id_arr = [0u8; EXPORT_ID_SIZE];
@@ -217,7 +221,7 @@ impl PathSecret {
     }
 
     pub fn try_from_importing(imp_path_secret: ExportPathSecret) -> Result<Self> {
-        let sealed_path_secret = SealedPathSecret::decode(&mut imp_path_secret.encoded_sealed())
+        let sealed_path_secret = SealedPathSecret::decode(&imp_path_secret.encoded_sealed())
             .map_err(|e| anyhow!("error: {:?}", e))?
             .unseal()?;
 
@@ -334,6 +338,7 @@ impl<'de> Deserialize<'de> for SealedPathSecret<'de> {
                 Ok(SealedPathSecret::new(sealed_data))
             }
 
+            #[allow(clippy::needless_range_loop)]
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
             where
                 A: SeqAccess<'de>,
@@ -342,7 +347,7 @@ impl<'de> Deserialize<'de> for SealedPathSecret<'de> {
                 for i in 0..SEALED_DATA_SIZE {
                     bytes[i] = seq
                         .next_element()?
-                        .ok_or(de::Error::invalid_length(i, &"32"))?;
+                        .ok_or_else(|| de::Error::invalid_length(i, &"32"))?;
                 }
 
                 let sealed_data = unsafe {
@@ -376,7 +381,7 @@ impl fmt::Debug for SealedPathSecret<'_> {
 pub(crate) mod tests {
     use super::*;
     use std::string::String;
-    use test_utils::{runner::*, check_all_passed, run_tests};
+    use test_utils::{check_all_passed, run_tests, runner::*};
 
     pub(crate) fn run_tests() -> bool {
         run_tests!(test_seal_unseal_path_secret,)
@@ -387,8 +392,7 @@ pub(crate) mod tests {
         let encoded_sealed_path_secret = UnsealedPathSecret::from(path_secret.clone())
             .encoded_seal()
             .unwrap();
-        let sealed_path_secret =
-            SealedPathSecret::decode(&mut &encoded_sealed_path_secret[..]).unwrap();
+        let sealed_path_secret = SealedPathSecret::decode(&encoded_sealed_path_secret[..]).unwrap();
         let unsealed_path_secret = sealed_path_secret.unseal().unwrap();
         assert_eq!(path_secret, unsealed_path_secret.into());
     }

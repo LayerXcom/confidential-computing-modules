@@ -3,9 +3,11 @@ use anonify_ecall_types::cmd::*;
 use anonify_eth_driver::dispatcher::*;
 use anonify_eth_driver::EventCache;
 use eth_deployer::EthDeployer;
-use frame_common::{crypto::{
-    OWNER_ACCOUNT_ID, NoAuth
-}, state_types::NotifyState, traits::*};
+use frame_common::{
+    crypto::{NoAuth, OWNER_ACCOUNT_ID},
+    state_types::NotifyState,
+    traits::*,
+};
 use frame_config::ANONIFY_ABI_PATH;
 use frame_config::{FACTORY_ABI_PATH, FACTORY_BIN_PATH};
 use frame_host::EnclaveDir;
@@ -29,7 +31,7 @@ pub async fn test_enclave_key_integration_eth_construct() {
     // just for testing
     let mut csprng = rand::thread_rng();
     let my_access_policy = NoAuth::new(generate_account_id_from_rng());
-    
+
     let gas = 5_000_000;
     let cache = EventCache::default();
     let instance_id = env::var("MY_ROSTER_IDX").unwrap();

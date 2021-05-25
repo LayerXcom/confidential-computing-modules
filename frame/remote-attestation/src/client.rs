@@ -79,17 +79,12 @@ impl<'a> RAClient<'a> {
                     // 503: Service unavailable
                     //      - Service is currently not able to process the request (due to a temporary overloading or maintenance).
                     //        This is a temporary state – the same request can be repeated after some time.
-                    if resp.status_code().is_server_err() {
-                        true
-                    } else {
-                        false
-                    }
+                    resp.status_code().is_server_err()
                 }
                 Err(err) => match err {
-                    FrameRAError::HttpReqError(http_err) => match http_err {
-                        http_req::error::Error::IO(_) => true,
-                        _ => false,
-                    },
+                    FrameRAError::HttpReqError(http_err) => {
+                        matches!(http_err, http_req::error::Error::IO(_))
+                    }
                     _ => false,
                 },
             }
@@ -139,7 +134,6 @@ impl AttestedReport {
     /// 2. report's signature
     /// 3. report's version
     /// 4. quote status
-    #[must_use]
     pub fn verify_attested_report(self, root_cert: Vec<u8>) -> Result<Self> {
         let now_func = webpki::Time::try_from(SystemTime::now()).map_err(|e| anyhow!("{:?}", e))?;
 

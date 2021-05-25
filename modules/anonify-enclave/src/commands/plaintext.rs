@@ -1,6 +1,6 @@
 use frame_common::{state_types::UserCounter, AccessPolicy};
 use serde::{Deserialize, Serialize};
-use std::string::{String, ToString};
+use std::string::String;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CommandPlaintext<AP: AccessPolicy> {
@@ -29,20 +29,6 @@ impl<AP> CommandPlaintext<AP>
 where
     AP: AccessPolicy,
 {
-    pub fn new(
-        access_policy: AP,
-        runtime_params: serde_json::Value,
-        cmd_name: impl ToString,
-        counter: UserCounter,
-    ) -> Self {
-        CommandPlaintext {
-            access_policy,
-            runtime_params,
-            cmd_name: cmd_name.to_string(),
-            counter,
-        }
-    }
-
     pub fn access_policy(&self) -> &AP {
         &self.access_policy
     }

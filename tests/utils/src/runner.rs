@@ -90,8 +90,8 @@ macro_rules! should_panic {
 
 #[allow(clippy::print_literal)]
 pub fn test<F, R>(ncases: &mut u64, failurecases: &mut Vec<String>, f: F, name: &str)
-    where
-        F: FnOnce() -> R + std::panic::UnwindSafe,
+where
+    F: FnOnce() -> R + std::panic::UnwindSafe,
 {
     *ncases += 1;
     let t = || {
