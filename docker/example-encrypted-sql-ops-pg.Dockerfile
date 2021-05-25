@@ -7,6 +7,7 @@ ARG group_name=anonify-dev
 COPY --chown=${user_name}:${group_name} . ${HOME}/anonify
 WORKDIR ${HOME}/anonify
 
-RUN set -x && \
-    cargo install cargo-pgx && \
-    cargo pgx init
+RUN cargo install cargo-pgx
+RUN sudo apt-get update && \
+    sudo apt-get install -y --no-install-recommends libreadline-dev
+RUN cargo pgx init
