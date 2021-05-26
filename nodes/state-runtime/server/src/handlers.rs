@@ -167,8 +167,8 @@ pub async fn handle_backup(server: web::Data<Arc<Server>>) -> Result<HttpRespons
     Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
 
     let ecall_cmd = match server.cmd_encryption_algo {
-        CmdEncryptionAlgo::TreeKem => BACKUP_ENCLAVE_KEY_CMD,
-        CmdEncryptionAlgo::EnclaveKey => BACKUP_PATH_SECRETS_CMD,
+        CmdEncryptionAlgo::TreeKem => BACKUP_PATH_SECRETS_CMD,
+        CmdEncryptionAlgo::EnclaveKey => BACKUP_ENCLAVE_KEY_CMD,
     };
     server.dispatcher.backup(ecall_cmd)?;
 
@@ -181,8 +181,8 @@ pub async fn handle_recover(server: web::Data<Arc<Server>>) -> Result<HttpRespon
     Span::current().record("trace_id", &tracing::field::display(&get_trace_id()));
     Span::current().record("instance_id", &tracing::field::display(&server.instance_id));
     let ecall_cmd = match server.cmd_encryption_algo {
-        CmdEncryptionAlgo::TreeKem => RECOVER_ENCLAVE_KEY_CMD,
-        CmdEncryptionAlgo::EnclaveKey => RECOVER_PATH_SECRETS_CMD,
+        CmdEncryptionAlgo::TreeKem => RECOVER_PATH_SECRETS_CMD,
+        CmdEncryptionAlgo::EnclaveKey => RECOVER_ENCLAVE_KEY_CMD,
     };
 
     server.dispatcher.recover(ecall_cmd)?;
