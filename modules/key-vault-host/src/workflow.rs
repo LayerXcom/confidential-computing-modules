@@ -1,7 +1,7 @@
 use frame_host::engine::*;
 use key_vault_ecall_types::*;
 
-pub const ECALL_MAX_SIZE: usize = 1_048_576;
+pub const ECALL_MAX_SIZE: usize = 2048;
 
 pub struct StartServerWorkflow;
 
