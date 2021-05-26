@@ -1,7 +1,7 @@
 use frame_host::engine::*;
 use key_vault_ecall_types::*;
 
-pub const OUTPUT_MAX_LEN: usize = 2048;
+pub const ECALL_MAX_SIZE: usize = 2048;
 
 pub struct StartServerWorkflow;
 
@@ -10,7 +10,7 @@ impl HostEngine for StartServerWorkflow {
     type EI = input::CallServerStarter;
     type EO = output::Empty;
     type HO = host_output::StartServer;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct StopServerWorkflow;
@@ -20,7 +20,7 @@ impl HostEngine for StopServerWorkflow {
     type EI = input::CallServerStopper;
     type EO = output::Empty;
     type HO = host_output::StopServer;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub mod host_input {
