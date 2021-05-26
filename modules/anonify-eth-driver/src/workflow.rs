@@ -99,23 +99,23 @@ impl HostEngine for GetEncryptionKeyWorkflow {
     const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
-pub struct BackupPathSecretAllWorkflow;
+pub struct BackupWorkflow;
 
-impl HostEngine for BackupPathSecretAllWorkflow {
-    type HI = host_input::BackupPathSecretAll;
+impl HostEngine for BackupWorkflow {
+    type HI = host_input::Backup;
     type EI = input::Empty;
     type EO = output::Empty;
-    type HO = host_output::BackupPathSecretAll;
+    type HO = host_output::Backup;
     const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
-pub struct RecoverPathSecretAllWorkflow;
+pub struct RecoverWorkflow;
 
-impl HostEngine for RecoverPathSecretAllWorkflow {
-    type HI = host_input::RecoverPathSecretAll;
+impl HostEngine for RecoverWorkflow {
+    type HI = host_input::Recover;
     type EI = input::Empty;
     type EO = output::Empty;
-    type HO = host_output::RecoverPathSecretAll;
+    type HO = host_output::Recover;
     const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
@@ -441,19 +441,19 @@ pub mod host_input {
         }
     }
 
-    pub struct BackupPathSecretAll {
+    pub struct Backup {
         ecall_cmd: u32,
     }
 
-    impl BackupPathSecretAll {
+    impl Backup {
         pub fn new(ecall_cmd: u32) -> Self {
-            BackupPathSecretAll { ecall_cmd }
+            Backup { ecall_cmd }
         }
     }
 
-    impl HostInput for BackupPathSecretAll {
+    impl HostInput for Backup {
         type EcallInput = input::Empty;
-        type HostOutput = host_output::BackupPathSecretAll;
+        type HostOutput = host_output::Backup;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             Ok((Self::EcallInput::default(), Self::HostOutput::default()))
@@ -464,19 +464,19 @@ pub mod host_input {
         }
     }
 
-    pub struct RecoverPathSecretAll {
+    pub struct Recover {
         ecall_cmd: u32,
     }
 
-    impl RecoverPathSecretAll {
+    impl Recover {
         pub fn new(ecall_cmd: u32) -> Self {
-            RecoverPathSecretAll { ecall_cmd }
+            Recover { ecall_cmd }
         }
     }
 
-    impl HostInput for RecoverPathSecretAll {
+    impl HostInput for Recover {
         type EcallInput = input::Empty;
-        type HostOutput = host_output::RecoverPathSecretAll;
+        type HostOutput = host_output::Recover;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             Ok((Self::EcallInput::default(), Self::HostOutput::default()))
@@ -694,16 +694,16 @@ pub mod host_output {
     }
 
     #[derive(Default)]
-    pub struct BackupPathSecretAll;
+    pub struct Backup;
 
-    impl HostOutput for BackupPathSecretAll {
+    impl HostOutput for Backup {
         type EcallOutput = output::Empty;
     }
 
     #[derive(Default)]
-    pub struct RecoverPathSecretAll;
+    pub struct Recover;
 
-    impl HostOutput for RecoverPathSecretAll {
+    impl HostOutput for Recover {
         type EcallOutput = output::Empty;
     }
 }

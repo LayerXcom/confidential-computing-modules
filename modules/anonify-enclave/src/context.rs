@@ -22,8 +22,8 @@ use frame_enclave::StateRuntimeEnclaveEngine;
 use frame_mra_tls::{
     key_vault::{
         request::{
-            BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody, KeyVaultCmd,
-            KeyVaultRequest, RecoverAllPathSecretsRequestbody, RecoverPathSecretRequestBody,
+            BackupPathSecretRequestBody, BackupPathSecretsRequestBody, KeyVaultCmd,
+            KeyVaultRequest, RecoverPathSecretRequestBody, RecoverPathSecretsRequestBody,
         },
         response::RecoveredPathSecret,
     },
@@ -280,32 +280,45 @@ impl KeyVaultOps for AnonifyEnclaveContext {
         Ok(PathSecret::from(recovered_path_secret.path_secret()))
     }
 
-    fn manually_backup_path_secrets_all(
+    fn manually_backup_path_secrets(
         &self,
-        backup_path_secrets: BackupAllPathSecretsRequestBody,
+        backup_path_secrets: BackupPathSecretsRequestBody,
     ) -> anyhow::Result<()> {
         let mut mra_tls_client = Client::new(self.key_vault_endpoint(), &self.client_config)?;
-        let key_vault_request = KeyVaultRequest::new(
-            KeyVaultCmd::ManuallyStoreAllPathSecrets,
-            backup_path_secrets,
-        );
+        let key_vault_request =
+            KeyVaultRequest::new(KeyVaultCmd::ManuallyStorePathSecrets, backup_path_secrets);
         let _resp: serde_json::Value = mra_tls_client.send_json(key_vault_request)?;
 
         Ok(())
     }
 
-    fn manually_recover_path_secrets_all(
+    fn manually_recover_path_secrets(
         &self,
-        recover_path_secrets_all: RecoverAllPathSecretsRequestbody,
+        recover_path_secrets: RecoverPathSecretsRequestBody,
     ) -> anyhow::Result<Vec<RecoveredPathSecret>> {
         let mut mra_tls_client = Client::new(self.key_vault_endpoint(), &self.client_config)?;
         let key_vault_request = KeyVaultRequest::new(
-            KeyVaultCmd::ManuallyRecoverAllPathSecrets,
-            recover_path_secrets_all,
+            KeyVaultCmd::ManuallyRecoverPathSecrets,
+            recover_path_secrets,
         );
         let path_secrets: Vec<RecoveredPathSecret> = mra_tls_client.send_json(key_vault_request)?;
 
         Ok(path_secrets)
+    }
+
+    fn backup_enclave_key(&self) -> anyhow::Result<()> {
+        self.enclave_key
+            .store_dec_key_to_remote(&self.client_config, &self.key_vault_endpoint())
+            .map_err(|e| anyhow!("Failed to backup enclave_key: {:?}", e))
+    }
+
+    fn recover_enclave_key(&self) -> anyhow::Result<SodiumPrivateKey> {
+        let enclave_key = self
+            .enclave_key
+            .clone()
+            .get_dec_key_from_remotely_sealed(&self.client_config, &self.key_vault_endpoint())?;
+        let dec_key = enclave_key.enclave_decryption_key()?;
+        Ok(dec_key.clone())
     }
 }
 
@@ -384,7 +397,7 @@ impl AnonifyEnclaveContext {
                     #[cfg(feature = "backup-enable")]
                     match enc_key
                         .clone()
-                        .get_dec_key_from_remotelly_sealed(&client_config, &key_vault_endpoint)
+                        .get_dec_key_from_remotely_sealed(&client_config, &key_vault_endpoint)
                     {
                         Ok(enclave_key) => enclave_key,
                         Err(_e) => {
