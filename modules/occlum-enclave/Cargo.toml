@@ -5,6 +5,7 @@ authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 
 [dependencies]
+remote-attestation = { path = "../../frame/remote-attestation" }
 tonic = "0.4"
 anyhow = "1.0"
 tracing = "0.1"

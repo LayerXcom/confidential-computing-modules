@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 frame-common = { path = "../common", default-features = false }
-remote-attestation = { path = "../remote-attestation", optional = true }
+remote-attestation = { path = "../remote-attestation", default-features = false, optional = true }
 frame-types = { path = "../types" }
 frame-treekem = { path = "../treekem", default-features = false, optional = true }
 frame-mra-tls = { path = "../mra-tls", optional = true }
@@ -42,7 +42,7 @@ sgx = [
     "anyhow-sgx",
     "serde-sgx",
     "serde-sgx/derive",
-    "remote-attestation",
+    "remote-attestation/sgx",
     "serde_json",
     "bincode-sgx",
     "serde_bytes_sgx",

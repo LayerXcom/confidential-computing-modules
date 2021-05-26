@@ -5,20 +5,50 @@ authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 
 [dependencies]
-frame-config = { path = "../config", default-features = false, features = ["sgx"] }
+frame-config = { path = "../config", default-features = false }
 frame-types = { path = "../types" }
-frame-retrier = { path = "../retrier", default-features = false, features = ["sgx"]}
-anyhow = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sgx.git" }
-webpki = { branch = "mesalock_sgx", git = "https://github.com/mesalock-linux/webpki" } # Specify branch name due to rustls dependency
-sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net"] }
-http_req = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/http_req-sgx" }
-serde_json = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx" }
-serde = { git = "https://github.com/mesalock-linux/serde-sgx.git", features = ["derive"] } # Don't specify version due to serde_json dependency
-base64 = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rust-base64-sgx" }
-rustls = { branch = "mesalock_sgx", version = "^0.19", git = "https://github.com/mesalock-linux/rustls" }
-thiserror = { git = "https://github.com/mesalock-linux/thiserror-sgx.git" }
+frame-retrier = { path = "../retrier", default-features = false }
+anyhow-std = { package = "anyhow", version = "1.0", optional = true }
+anyhow-sgx = { package = "anyhow", rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/anyhow-sgx.git", optional = true }
+webpki-std = { package = "webpki", version = "0.21", optional = true }
+webpki-sgx = { package = "webpki", branch = "mesalock_sgx", git = "https://github.com/mesalock-linux/webpki", optional = true } # Specify branch name due to rustls dependency
+sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net"], optional = true }
+http_req_std = { package = "http_req", version = "0.7", optional = true }
+http_req_sgx = { package = "http_req", rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/http_req-sgx", optional = true }
+serde_json_std = { package = "serde_json", version = "1.0", optional = true }
+serde_json_sgx = { package = "serde_json", rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/serde-json-sgx", optional = true }
+serde-std = { package = "serde", version = "", optional = true }
+serde-sgx = { package = "serde", git = "https://github.com/mesalock-linux/serde-sgx.git", features = ["derive"], optional = true } # Don't specify version due to serde_json dependency
+base64-std = { package = "base64", version = "0.13", optional = true }
+base64-sgx = { package = "base64", rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rust-base64-sgx", optional = true }
+rustls-std = { package = "rustls", version = "0.19", optional = true }
+rustls-sgx = { package = "rustls", branch = "mesalock_sgx", version = "^0.19", git = "https://github.com/mesalock-linux/rustls", optional = true }
 hex = { version = "0.4", default-features = false }
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_tse = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
-sgx_trts = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
-sgx_tcrypto = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
+
+[features]
+default = ["std"]
+std = [
+  "frame-config/std",
+  "frame-retrier/std",
+  "anyhow-std",
+  "webpki-std",
+  "http_req_std",
+  "serde_json_std",
+  "serde-std",
+  "base64-std",
+  "rustls-std",
+]
+sgx = [
+  "frame-config/sgx",
+  "frame-retrier/sgx",
+  "anyhow-sgx",
+  "sgx_tstd",
+  "webpki-sgx",
+  "http_req_sgx",
+  "serde_json_sgx",
+  "serde-sgx",
+  "base64-sgx",
+  "rustls-sgx",
+]
