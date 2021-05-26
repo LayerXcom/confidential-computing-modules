@@ -1,8 +1,10 @@
 use crate::error::{FrameHostError, Result};
+use bincode::Options;
 use frame_common::{EcallInput, EcallOutput};
 use frame_types::EnclaveStatus;
 use serde::{de::DeserializeOwned, Serialize};
 use sgx_types::{sgx_enclave_id_t, sgx_status_t};
+
 
 extern "C" {
     fn ecall_entry_point(
@@ -19,14 +21,14 @@ extern "C" {
 
 pub struct EnclaveConnector {
     eid: sgx_enclave_id_t,
-    output_max_len: usize,
+    ecall_max_size: usize,
 }
 
 impl EnclaveConnector {
-    pub fn new(eid: sgx_enclave_id_t, output_max_len: usize) -> Self {
+    pub fn new(eid: sgx_enclave_id_t, ecall_max_size: usize) -> Self {
         EnclaveConnector {
             eid,
-            output_max_len,
+            ecall_max_size,
         }
     }
 
@@ -35,7 +37,9 @@ impl EnclaveConnector {
         E: Serialize + EcallInput,
         D: DeserializeOwned + EcallOutput,
     {
-        let input_payload = bincode::serialize(&input)?;
+        let input_payload = bincode::DefaultOptions::new()
+            .with_limit(self.ecall_max_size as u64)
+            .serialize(&input)?;
         let result = self.inner_invoke_ecall(cmd, input_payload)?;
         bincode::deserialize(&result[..]).map_err(Into::into)
     }
@@ -43,7 +47,7 @@ impl EnclaveConnector {
     fn inner_invoke_ecall(&self, cmd: u32, mut input: Vec<u8>) -> Result<Vec<u8>> {
         let input_ptr = input.as_mut_ptr();
         let input_len = input.len();
-        let output_max = self.output_max_len;
+        let output_max = self.ecall_max_size;
         let mut output_len = output_max;
         let mut output_buf = Vec::with_capacity(output_max);
         let output_ptr = output_buf.as_mut_ptr();

@@ -5,6 +5,7 @@ use anonify_enclave::{context::AnonifyEnclaveContext, workflow::*};
 use anyhow::anyhow;
 use frame_common::crypto::NoAuth;
 use frame_enclave::{register_ecall, StateRuntimeEnclaveEngine};
+use log::error;
 use std::{ptr, vec::Vec};
 
 register_ecall!(
