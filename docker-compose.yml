@@ -62,9 +62,8 @@ services:
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
     ports:
-      - "${AZURITE_HOST_PORT1}:10000"
-      - "${AZURITE_HOST_PORT2}:10001"
-      - "${AZURITE_HOST_PORT3}:10002"
+      - "${AZURITE_BLOB_HOST_PORT}:10000"
+      - "${AZURITE_TABLE_HOST_PORT}:10002"
     command: ["azurite", "-L", "-l", "/data", "--blobHost", "0.0.0.0","--queueHost", "0.0.0.0", "--tableHost", "0.0.0.0", "-d", "/data/debug.log", "--skipApiVersionCheck"]
     volumes:
       - ./frame/azure-client/testdata:/data
