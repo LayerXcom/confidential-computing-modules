@@ -5,7 +5,6 @@ use frame_types::EnclaveStatus;
 use serde::{de::DeserializeOwned, Serialize};
 use sgx_types::{sgx_enclave_id_t, sgx_status_t};
 
-
 extern "C" {
     fn ecall_entry_point(
         eid: sgx_enclave_id_t,

@@ -7,7 +7,7 @@ macro_rules! register_ecall {
         $(  $(#[$feature: meta])*
             ($cmd: path, $handler: ty),
         )*
-    ) => {        
+    ) => {
         fn ecall_handler(cmd: u32, input: &mut [u8]) -> anyhow::Result<Vec<u8>> {
             match cmd {
                 $(
