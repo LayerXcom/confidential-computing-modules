@@ -177,7 +177,8 @@ async fn test_enclave_key_manually_recover() {
                 "/api/v1/enclave_encryption_key",
                 web::get().to(handle_enclave_encryption_key),
             )
-            .route("/api/v1/backup", web::post().to(handle_backup)),
+            .route("/api/v1/backup", web::post().to(handle_backup))
+            .route("/api/v1/recover", web::post().to(handle_recover)),
     )
     .await;
 
