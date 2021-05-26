@@ -7,7 +7,7 @@ use frame_host::engine::*;
 use frame_sodium::SodiumCiphertext;
 use web3::types::Address;
 
-pub const OUTPUT_MAX_LEN: usize = 2048;
+pub const ECALL_MAX_SIZE: usize = 2048;
 
 pub struct CommandWorkflow;
 
@@ -16,7 +16,7 @@ impl HostEngine for CommandWorkflow {
     type EI = input::Command;
     type EO = output::Command;
     type HO = host_output::Command;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct JoinGroupWorkflow;
@@ -26,7 +26,7 @@ impl HostEngine for JoinGroupWorkflow {
     type EI = input::Empty;
     type EO = output::ReturnJoinGroup;
     type HO = host_output::JoinGroup;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct RegisterReportWorkflow;
@@ -36,7 +36,7 @@ impl HostEngine for RegisterReportWorkflow {
     type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
     type HO = host_output::RegisterReport;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct HandshakeWorkflow;
@@ -46,7 +46,7 @@ impl HostEngine for HandshakeWorkflow {
     type EI = input::Empty;
     type EO = output::ReturnHandshake;
     type HO = host_output::Handshake;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct RegisterNotificationWorkflow;
@@ -56,7 +56,7 @@ impl HostEngine for RegisterNotificationWorkflow {
     type EI = SodiumCiphertext;
     type EO = output::Empty;
     type HO = host_output::RegisterNotification;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct GetStateWorkflow;
@@ -66,7 +66,7 @@ impl HostEngine for GetStateWorkflow {
     type EI = SodiumCiphertext;
     type EO = output::ReturnState;
     type HO = host_output::GetState;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct InsertCiphertextWorkflow;
@@ -76,7 +76,7 @@ impl HostEngine for InsertCiphertextWorkflow {
     type EI = input::InsertCiphertext;
     type EO = output::ReturnNotifyState;
     type HO = host_output::InsertCiphertext;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct InsertHandshakeWorkflow;
@@ -86,7 +86,7 @@ impl HostEngine for InsertHandshakeWorkflow {
     type EI = input::InsertHandshake;
     type EO = output::Empty;
     type HO = host_output::InsertHandshake;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct GetEncryptionKeyWorkflow;
@@ -96,7 +96,7 @@ impl HostEngine for GetEncryptionKeyWorkflow {
     type EI = input::Empty;
     type EO = output::ReturnEncryptionKey;
     type HO = host_output::ReturnEncryptionKey;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct BackupPathSecretAllWorkflow;
@@ -106,7 +106,7 @@ impl HostEngine for BackupPathSecretAllWorkflow {
     type EI = input::Empty;
     type EO = output::Empty;
     type HO = host_output::BackupPathSecretAll;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct RecoverPathSecretAllWorkflow;
@@ -116,7 +116,7 @@ impl HostEngine for RecoverPathSecretAllWorkflow {
     type EI = input::Empty;
     type EO = output::Empty;
     type HO = host_output::RecoverPathSecretAll;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct GetUserCounterWorkflow;
@@ -126,7 +126,7 @@ impl HostEngine for GetUserCounterWorkflow {
     type EI = SodiumCiphertext;
     type EO = output::ReturnUserCounter;
     type HO = host_output::GetUserCounter;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub mod host_input {

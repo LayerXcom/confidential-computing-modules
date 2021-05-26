@@ -3,8 +3,10 @@ use crate::ENCLAVE_CONTEXT;
 use anonify_ecall_types::cmd::*;
 use anonify_enclave::{context::AnonifyEnclaveContext, workflow::*};
 use anyhow::anyhow;
+use bincode::Options;
 use frame_common::crypto::NoAuth;
 use frame_enclave::{register_ecall, StateRuntimeEnclaveEngine};
+use log::error;
 use std::{ptr, vec::Vec};
 
 register_ecall!(
