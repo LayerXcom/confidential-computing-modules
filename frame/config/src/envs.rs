@@ -77,6 +77,20 @@ lazy_static! {
         measurement_file_path.push(".anonify");
         measurement_file_path
     };
+    pub static ref IAS_ROOT_CERT: Vec<u8> = {
+        let ias_root_cert_path =
+            env::var("IAS_ROOT_CERT_PATH").expect("IAS_ROOT_CERT_PATH is not set");
+        let mut file_path = PJ_ROOT_DIR.clone();
+        file_path.push(ias_root_cert_path);
+
+        #[cfg(feature = "sgx")]
+        let ias_root_cert = crate::localstd::untrusted::fs::read(file_path).unwrap();
+        #[cfg(feature = "std")]
+        let ias_root_cert = crate::localstd::fs::read(file_path).unwrap();
+
+        let pem = crate::pem::parse(ias_root_cert).expect("Cannot parse PEM File");
+        pem.contents
+    };
 }
 
 #[cfg(feature = "sgx")]
@@ -115,15 +129,5 @@ lazy_static! {
         let content = crate::localstd::untrusted::fs::read_to_string(&measurement_file_path)
             .expect("Cannot read measurement file");
         EnclaveMeasurement::new_from_dumpfile(content)
-    };
-    pub static ref IAS_ROOT_CERT: Vec<u8> = {
-        let ias_root_cert_path =
-            env::var("IAS_ROOT_CERT_PATH").expect("IAS_ROOT_CERT_PATH is not set");
-        let mut file_path = PJ_ROOT_DIR.clone();
-        file_path.push(ias_root_cert_path);
-
-        let ias_root_cert = crate::localstd::untrusted::fs::read(file_path).unwrap();
-        let pem = pem::parse(ias_root_cert).expect("Cannot parse PEM File");
-        pem.contents
     };
 }

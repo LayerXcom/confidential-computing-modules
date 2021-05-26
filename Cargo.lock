@@ -1896,7 +1896,8 @@ version = "0.5.4"
 dependencies = [
  "hex",
  "lazy_static",
- "pem",
+ "pem 0.8.2",
+ "pem 0.8.3",
  "sgx_tstd",
 ]
 
@@ -1948,7 +1949,7 @@ dependencies = [
  "lazy_static",
  "log 0.4.14",
  "num-bigint",
- "pem",
+ "pem 0.8.2",
  "remote-attestation",
  "rustls 0.19.0 (git+https://github.com/mesalock-linux/rustls?branch=mesalock_sgx)",
  "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
@@ -3422,7 +3423,9 @@ name = "occlum-enclave"
 version = "0.5.4"
 dependencies = [
  "anyhow 1.0.34",
+ "frame-config",
  "remote-attestation",
+ "sgx_types 1.1.3",
  "tonic",
  "tracing",
 ]
@@ -3739,6 +3742,17 @@ dependencies = [
  "once_cell 1.4.0",
  "regex 1.3.1",
  "sgx_tstd",
+]
+
+[[package]]
+name = "pem"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd56cbd21fea48d0c440b41cd69c589faacade08c992d9a54e471b79d0fd13eb"
+dependencies = [
+ "base64 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "once_cell 1.7.2",
+ "regex 1.4.2",
 ]
 
 [[package]]

@@ -8,13 +8,16 @@ edition = "2018"
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 lazy_static = { version = "1.4", features = ["spin_no_std"] }
 hex = { version = "0.4", default-features = false, optional = true }
-pem = { version = "0.8.2", git = "https://github.com/mesalock-linux/pem-rs-sgx", optional = true }
+pem-std = { package = "pem", version = "0.8.2", optional = true }
+pem-sgx = { package = "pem", version = "0.8.2", git = "https://github.com/mesalock-linux/pem-rs-sgx", optional = true }
 
 [features]
 default = ["std"]
-std = []
+std = [
+    "pem-std"
+]
 sgx = [
     "sgx_tstd",
     "hex",
-    "pem",
+    "pem-sgx",
 ]

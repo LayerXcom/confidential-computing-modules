@@ -1,3 +1,4 @@
+use crate::context::OcclumEnclaveContext;
 use anyhow::Result;
 use std::net::SocketAddr;
 use tonic::body::BoxBody;
@@ -11,6 +12,7 @@ use tracing::info;
 pub struct EnclaveGrpcServer<S> {
     addr: SocketAddr,
     service: S,
+    context: OcclumEnclaveContext,
 }
 
 impl<S> EnclaveGrpcServer<S>
@@ -20,10 +22,18 @@ where
     S::Error: Into<Box<dyn std::error::Error + Send + Sync>> + Send,
 {
     pub fn new(addr: SocketAddr, service: S) -> Self {
-        Self { addr, service }
+        let context = OcclumEnclaveContext::new();
+        Self {
+            addr,
+            service,
+            context,
+        }
     }
 
     pub async fn start(self) -> Result<()> {
+        let report = self.context.do_remote_attestation()?;
+        println!("Remote attested report: {:?}", report);
+
         info!("EnclaveGrpcServer listening on {}", self.addr);
 
         Server::builder()
