@@ -46,9 +46,9 @@ impl EnclaveConnector {
     fn inner_invoke_ecall(&self, cmd: u32, mut input: Vec<u8>) -> Result<Vec<u8>> {
         let input_ptr = input.as_mut_ptr();
         let input_len = input.len();
-        let output_max = self.ecall_max_size;
-        let mut output_len = output_max;
-        let mut output_buf = Vec::with_capacity(output_max);
+        let ecall_max_size = self.ecall_max_size;
+        let mut output_len = ecall_max_size;
+        let mut output_buf = Vec::with_capacity(ecall_max_size);
         let output_ptr = output_buf.as_mut_ptr();
 
         let mut ret = EnclaveStatus::default();
@@ -61,7 +61,7 @@ impl EnclaveConnector {
                 input_ptr,
                 input_len,
                 output_ptr,
-                output_max,
+                ecall_max_size,
                 &mut output_len,
             )
         };
@@ -80,7 +80,7 @@ impl EnclaveConnector {
                 cmd,
             });
         }
-        assert!(output_len < output_max);
+        assert!(output_len < ecall_max_size);
 
         unsafe {
             output_buf.set_len(output_len);
