@@ -6,6 +6,6 @@ services:
     ports:
       - "10012:10000"
       - "10013:10002"
-    command: ["azurite", "-L", "-l", "/data", "--blobHost", "0.0.0.0","--queueHost", "0.0.0.0", "--tableHost", "0.0.0.0", "-d", "/data/debug.log", "--skipApiVersionCheck"]
+    command: ["azurite", "-L", "-l", "/data", "--blobHost", "0.0.0.0", "--tableHost", "0.0.0.0", "-d", "/data/debug.log", "--skipApiVersionCheck"]
     volumes:
       - ./testdata:/data
