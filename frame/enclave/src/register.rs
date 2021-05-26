@@ -8,24 +8,27 @@ macro_rules! register_ecall {
             ($cmd: path, $handler: ty),
         )*
     ) => {
-        fn ecall_handler(cmd: u32, input: &mut [u8]) -> anyhow::Result<Vec<u8>> {
+        fn ecall_handler(cmd: u32, input: &mut [u8], ecall_max_size: usize) -> anyhow::Result<Vec<u8>> {
             match cmd {
                 $(
                     $(#[$feature])*
-                    $cmd => inner_ecall_handler::<$handler>(input),
+                    $cmd => inner_ecall_handler::<$handler>(input, ecall_max_size),
                 )*
                 _ => anyhow::bail!("Not registered the ecall command"),
             }
         }
 
         #[cfg(feature = "runtime_enabled")]
-        fn inner_ecall_handler<EE>(input_payload: &[u8]) -> anyhow::Result<Vec<u8>>
+        fn inner_ecall_handler<EE>(input_payload: &[u8], ecall_max_size: usize) -> anyhow::Result<Vec<u8>>
         where
             EE: StateRuntimeEnclaveEngine,
         {
             let res = {
-                let ecall_input = bincode::deserialize(&input_payload[..])
+                let ecall_input = bincode::DefaultOptions::new()
+                    .with_limit(ecall_max_size as u64)
+                    .deserialize(&input_payload[..])
                     .map_err(|e| anyhow!("{:?}", e))?;
+
                 let slf = EE::new::<$ctx_ops>(ecall_input, $ctx)?;
                 EE::eval_policy(&slf)?;
                 EE::handle::<$runtime_exec, $ctx_ops>(slf, $ctx, $max_mem)?
@@ -35,13 +38,16 @@ macro_rules! register_ecall {
         }
 
         #[cfg(not(feature = "runtime_enabled"))]
-        fn inner_ecall_handler<EE>(input_payload: &[u8]) -> anyhow::Result<Vec<u8>>
+        fn inner_ecall_handler<EE>(input_payload: &[u8], ecall_max_size: usize) -> anyhow::Result<Vec<u8>>
         where
             EE: BasicEnclaveEngine,
         {
             let res = {
-                let ecall_input = bincode::deserialize(&input_payload[..])
+                let ecall_input = bincode::DefaultOptions::new()
+                    .with_limit(ecall_max_size as u64)
+                    .deserialize(&input_payload[..])
                     .map_err(|e| anyhow!("{:?}", e))?;
+
                 let slf = EE::new::<$ctx_ops>(ecall_input, $ctx)?;
                 EE::handle::<$ctx_ops>(slf, $ctx)?
             };
@@ -55,15 +61,15 @@ macro_rules! register_ecall {
             input_buf: *mut u8,
             input_len: usize,
             output_buf: *mut u8,
-            output_max_len: usize,
+            ecall_max_size: usize,
             output_len: &mut usize,
         ) -> frame_types::EnclaveStatus {
             let input = unsafe { std::slice::from_raw_parts_mut(input_buf, input_len) };
             let res = unsafe {
-                match ecall_handler(command, input) {
+                match ecall_handler(command, input, ecall_max_size) {
                     Ok(out) => out,
                     Err(e) => {
-                        println!("Error in enclave (ecall_entry_point): command: {:?}, error: {:?}", command, e);
+                        error!("Error in enclave (ecall_entry_point): command: {:?}, error: {:?}", command, e);
                         return frame_types::EnclaveStatus::error();
                     }
                 }
@@ -72,8 +78,8 @@ macro_rules! register_ecall {
             let res_len = res.len();
             *output_len = res_len;
 
-            if res_len > output_max_len {
-                println!("Result buffer length is over output_max: output_max={}, res_len={}", output_max_len, res_len);
+            if res_len > ecall_max_size {
+                error!("Result buffer length is over ecall_max_size: ecall_max_size={}, res_len={}", ecall_max_size, res_len);
                 return frame_types::EnclaveStatus::error();
             }
             unsafe {
