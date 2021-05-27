@@ -9,6 +9,7 @@ use crate::localstd::{
 #[cfg(feature = "sgx")]
 use crate::measurement::EnclaveMeasurement;
 use lazy_static::lazy_static;
+use tracing::warn;
 
 lazy_static! {
     pub static ref REQUEST_RETRIES: usize = {
@@ -25,20 +26,26 @@ lazy_static! {
     };
     pub static ref CMD_DEC_SECRET_DIR: String =
         env::var("CMD_DEC_SECRET_DIR").unwrap_or_else(|_| ".anonify/cmd-dec-secret".to_string());
-    pub static ref PJ_ROOT_DIR: PathBuf = {
-        let pj_name = env::var("PJ_NAME").unwrap_or_else(|_| "anonify".to_string());
-        let mut current_dir = env::current_dir().unwrap();
-        loop {
-            if current_dir.file_name() == Some(OsStr::new(pj_name.as_str())) {
-                break;
+    pub static ref PJ_ROOT_DIR: PathBuf = env::var("PJ_ROOT_DIR").map(PathBuf::from)
+    .or_else(|_| {
+        // Search directory from CWD that matches to PJ_NAME to the root
+        warn!("PJ_NAME is deprecated. Use PJ_ROOT_DIR instead");
+        env::var("PJ_NAME").map(|pj_name| {
+            let mut current_dir = env::current_dir().unwrap();
+            loop {
+                if current_dir.file_name() == Some(OsStr::new(pj_name.as_str())) {
+                    break;
+                }
+                if !current_dir.pop() {
+                    break;
+                }
             }
-            if !current_dir.pop() {
-                break;
-            }
-        }
 
-        current_dir
-    };
+            current_dir
+        })
+    })
+    .or_else(|_| env::var("HOME").map(PathBuf::from))
+        .unwrap_or_else(|_| { panic!("PJ_ROOT_DIR is not set") });
     pub static ref BUILD_DIR: PathBuf = {
         let mut build_dir = PJ_ROOT_DIR.clone();
         build_dir.push("build");
