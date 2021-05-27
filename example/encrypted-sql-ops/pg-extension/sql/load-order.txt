@@ -1,3 +1,3 @@
-aggregate.generated.sql
-func.generated.sql
 typ.generated.sql
+func.generated.sql
+aggregate.generated.sql
