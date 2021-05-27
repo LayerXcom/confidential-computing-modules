@@ -2,8 +2,8 @@
 //!
 //! FIXME: EcallController would be better name.
 
-mod host_input;
-mod host_output;
+pub mod host_input;
+pub mod host_output;
 
 use frame_host::engine::*;
 use module_encrypted_sql_ops_ecall_types::enclave_types::{
@@ -35,5 +35,5 @@ impl HostEngine for EncIntegerFromWorkflow {
     type EI = EnclaveRawInteger;
     type EO = EnclaveEncIntegerWrapper;
     type HO = host_output::EncIntegerWrapper;
-    const OUTPUT_MAX_LEN: usize = 64;
+    const ECALL_MAX_SIZE: usize = 64;
 }

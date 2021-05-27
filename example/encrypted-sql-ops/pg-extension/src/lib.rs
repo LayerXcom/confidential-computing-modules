@@ -3,7 +3,7 @@
 //!
 //! This crate should not include any substantial logics.
 
-#![deny(missing_debug_implementations, missing_docs)]
+#![deny(missing_debug_implementations)]
 
 mod aggregate;
 mod func;

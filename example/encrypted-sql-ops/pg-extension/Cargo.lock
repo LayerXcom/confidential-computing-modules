@@ -576,6 +576,7 @@ version = "0.1.0"
 dependencies = [
  "frame-host",
  "module-encrypted-sql-ops-ecall-types",
+ "module-encrypted-sql-ops-host",
  "pgx",
  "pgx-macros",
  "pgx-tests",
@@ -1426,6 +1427,15 @@ version = "0.1.0"
 dependencies = [
  "frame-common",
  "serde",
+]
+
+[[package]]
+name = "module-encrypted-sql-ops-host"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "frame-host",
+ "module-encrypted-sql-ops-ecall-types",
 ]
 
 [[package]]

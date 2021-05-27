@@ -6,8 +6,14 @@ use serde::{Deserialize, Serialize};
 
 /// `ENCINTEGER` custom SQL type, which is encrypted version of `INTEGER`.
 #[derive(Serialize, Deserialize, PostgresType)]
-pub(crate) struct EncInteger(ModuleEncInteger);
+pub struct EncInteger(ModuleEncInteger);
 
 /// Used as intermediate state on calculating AVG for `ENCINTEGER`.
 #[derive(Serialize, Deserialize, PostgresType)]
-pub(crate) struct AvgState(ModuleAvgState);
+pub struct AvgState(ModuleAvgState);
+
+impl From<ModuleEncInteger> for EncInteger {
+    fn from(e: ModuleEncInteger) -> Self {
+        Self(e)
+    }
+}

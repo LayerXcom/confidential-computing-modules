@@ -1,22 +1,26 @@
-use pgx::*;
-
 use crate::typ::{AvgState, EncInteger};
+use frame_host::engine::HostEngine;
+use module_encrypted_sql_ops_ecall_types::enc_type::EncInteger as ModuleEncInteger;
+use module_encrypted_sql_ops_host::workflow::{host_input::RawInteger, EncIntegerFromWorkflow};
+use pgx::*;
 
 #[pg_extern]
 fn encinteger_from(raw_integer: i32) -> EncInteger {
-    EncIntegerFromWorkflow::exec()
+    let eid = unsafe { crate::init::EID };
+    let host_input = RawInteger::from(raw_integer);
+
+    let host_output = EncIntegerFromWorkflow::exec(host_input, eid)
+        .expect("failed to encrypt raw INTEGER in enclave");
+
+    EncInteger::from(ModuleEncInteger::from(host_output))
 }
 
 #[pg_extern]
-fn encinteger_avg_state_func(
-    internal_state: AvgState,
-    next_data_value: EncInteger,
-) -> IntegerAvgState {
-    let v = next_data_value.decrypt().unwrap();
-    internal_state.acc(v)
+fn encinteger_avg_state_func(_internal_state: AvgState, _next_data_value: EncInteger) -> AvgState {
+    todo!("create Workflow")
 }
 
 #[pg_extern]
-fn encinteger_avg_final_func(internal_state: IntegerAvgState) -> i32 {
-    internal_state.finalize()
+fn encinteger_avg_final_func(_internal_state: AvgState) -> i32 {
+    todo!("create Workflow")
 }
