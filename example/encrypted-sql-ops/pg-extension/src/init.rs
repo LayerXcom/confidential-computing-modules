@@ -21,6 +21,14 @@ impl Enclave {
     }
 }
 
+impl Deref for Enclave {
+    type Target = SgxEnclave;
+
+    fn deref(&self) -> &SgxEnclave {
+        &self.0
+    }
+}
+
 #[pg_guard]
 pub extern "C" fn _PG_init() {
     let is_debug: bool = env::var("IS_DEBUG")
