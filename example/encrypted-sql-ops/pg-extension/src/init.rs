@@ -3,7 +3,7 @@
 use frame_host::EnclaveDir;
 use pgx::*;
 use std::env;
-use tracing::info;
+use log::info;
 
 /// Enclave ID.
 /// Mutation occurs only here.

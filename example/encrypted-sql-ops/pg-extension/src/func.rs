@@ -12,7 +12,7 @@ fn encinteger_from(raw_integer: i32) -> EncInteger {
     let host_input = RawInteger::new(raw_integer, ENCINTEGER_FROM);
 
     let host_output = EncIntegerFromWorkflow::exec(host_input, eid)
-        .expect("failed to encrypt raw INTEGER in enclave");
+        .expect("failed to encrypt raw INTEGER in enclave (Enclave ID: {})", eid);
 
     EncInteger::from(ModuleEncInteger::from(host_output))
 }
