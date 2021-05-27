@@ -4,7 +4,7 @@ use frame_host::EnclaveDir;
 use once_cell::sync::OnceCell;
 use pgx::*;
 use sgx_urts::SgxEnclave;
-use std::env;
+use std::{env, ops::Deref};
 
 static ENCLAVE: OnceCell<Enclave> = OnceCell::new();
 
