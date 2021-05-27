@@ -37,6 +37,7 @@ services:
       EVENT_LIMIT: ${EVENT_LIMIT}
       UNLOCK_DURATION: ${UNLOCK_DURATION}
       PJ_ROOT_DIR: ${PJ_ROOT_DIR}
+      PJ_NAME: anonify  # TODO: rm PJ_NAME (deprecated) after anonify-contracts stop using it.
       AZURITE_IP_ADDRESS: ${AZURITE_IP_ADDRESS}
     # Add an lookup from the IP Adress to FQDN because of the following limitation of rustls
     # https://github.com/ctz/rustls/issues/184
