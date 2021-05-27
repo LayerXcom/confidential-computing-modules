@@ -20,6 +20,8 @@ Should match to the name: `docker/base-*.Dockerfile` in order for CI to build & 
   - Creates root-less version of `baiduxlab/sgx-rust` image. Works as base image for other ones using Rust SGX SDK.
 - `base-anonify-dev.Dockerfile`
   - Includes tools to develop anonify (SGX SDK, for example). Used for both SGX HW mode and SW simulation (build-only) mode.
+- `base-anonify-dev-pgx.Dockerfile`
+  - Additionally [pgx](https://github.com/zombodb/pgx) is installed.
 
 ### Application Images
 

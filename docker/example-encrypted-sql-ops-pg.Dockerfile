@@ -1,4 +1,4 @@
-FROM anonify.azurecr.io/anonify-dev:latest-test as builder
+FROM anonify.azurecr.io/anonify-dev:latest as builder
 
 SHELL ["/bin/bash", "-c"]
 
@@ -39,12 +39,7 @@ RUN set -x && \
     make prd-signed.so ENCLAVE_DIR=example/encrypted-sql-ops/enclave ENCLAVE_PKG_NAME=encrypted_sql_ops CARGO_FLAGS=--release
 
 # ===== SECOND STAGE ======
-FROM anonify.azurecr.io/anonify-dev:latest
-
-RUN cargo install cargo-pgx
-RUN sudo apt-get update && \
-    sudo apt-get install -y --no-install-recommends libreadline-dev
-RUN cargo pgx init
+FROM anonify.azurecr.io/anonify-dev-pgx:latest
 
 WORKDIR ${HOME}/anonify
 

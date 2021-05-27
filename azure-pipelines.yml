@@ -58,13 +58,13 @@ stages:
 #         condition: always()
 #         displayName: 'Shutdown'
 
-# - stage: Build_and_Push_Base_Docker_Images
-#   # condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
-#   jobs:
-#   - job: Docker
-#     pool:
-#       name: 'AnonifyAgent'
-#     steps:
+- stage: Build_and_Push_Base_Docker_Images
+  # condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  jobs:
+  - job: Docker
+    pool:
+      name: 'AnonifyAgent'
+    steps:
 #     - task: Docker@2
 #       displayName: Build rust-sgx-sdk-rootless image
 #       inputs:
@@ -102,6 +102,25 @@ stages:
 #         tags: latest-test
 #         dockerfile: ./docker/base-anonify-dev.Dockerfile
 #         buildContext: .
+
+    - task: Docker@2
+      displayName: Build anonify-dev-pgx image
+      inputs:
+        command: build
+        containerRegistry: anonify-ci-cd-acr
+        repository: anonify-dev-pgx
+        tags: latest
+        dockerfile: ./docker/base-anonify-dev-pgx.Dockerfile
+        buildContext: .
+    - task: Docker@2
+      displayName: Push anonify-dev-pgx image
+      inputs:
+        command: push
+        containerRegistry: anonify-ci-cd-acr
+        repository: anonify-dev-pgx
+        tags: latest
+        dockerfile: ./docker/base-anonify-dev-pgx.Dockerfile
+        buildContext: .
 
 #     - script: docker image prune -f
 #       displayName: Remove dangling images
