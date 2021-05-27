@@ -1,6 +1,7 @@
 //! Initialization on extension library load.
 
 use frame_host::EnclaveDir;
+use once_cell::sync::OnceCell;
 use pgx::*;
 use sgx_urts::SgxEnclave;
 use std::env;
