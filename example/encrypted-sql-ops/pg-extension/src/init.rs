@@ -3,7 +3,6 @@
 use frame_host::EnclaveDir;
 use pgx::*;
 use std::env;
-use log::info;
 
 /// Enclave ID.
 /// Mutation occurs only here.
@@ -24,7 +23,7 @@ pub extern "C" fn _PG_init() {
         EID = enclave.geteid();
     }
 
-    info!(
+    log::info!(
         "Initialized encrypted-sql-ops-pg extension. Enclave ID: {}",
         unsafe { EID }
     );

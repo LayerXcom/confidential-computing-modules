@@ -19,8 +19,6 @@ module-encrypted-sql-ops-ecall-types = { path = "../../../modules/encrypted-sql-
 pgx = "0.1.21"
 pgx-macros = "0.1.21"
 serde = {version = "1.0", features = ["derive"]}
-log = "0.4"
-env_logger = "0.8"
 
 [dev-dependencies]
 pgx-tests = "0.1.21"
