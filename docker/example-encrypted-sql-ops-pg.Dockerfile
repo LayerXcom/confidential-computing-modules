@@ -36,9 +36,7 @@ RUN set -x && \
     cd scripts && \
     pip3 install azure-keyvault-keys azure-identity && \
     ./gen-enclave-config.sh && \
-    make prd-signed.so ENCLAVE_DIR=example/encrypted-sql-ops/enclave ENCLAVE_PKG_NAME=encrypted_sql_ops CARGO_FLAGS=--release && \
-    cd ../example/encrypted-sql-ops/pg-extension && \
-    RUST_BACKTRACE=1 RUST_LOG=debug cargo build --release
+    make prd-signed.so ENCLAVE_DIR=example/encrypted-sql-ops/enclave ENCLAVE_PKG_NAME=encrypted_sql_ops CARGO_FLAGS=--release
 
 # ===== SECOND STAGE ======
 FROM anonify.azurecr.io/anonify-dev:latest
@@ -53,6 +51,9 @@ WORKDIR ${HOME}/anonify
 COPY --from=builder ${HOME}/anonify/config/ias_root_cert.pem ./config/ias_root_cert.pem
 COPY --from=builder ${HOME}/anonify/.anonify/encrypted_sql_ops.signed.so ./.anonify/encrypted_sql_ops.signed.so
 COPY --from=builder ${HOME}/anonify/.anonify/encrypted_sql_ops_measurement.txt ./.anonify/encrypted_sql_ops_measurement.txt
+
+RUN cd ../example/encrypted-sql-ops/pg-extension && \
+    RUST_BACKTRACE=1 RUST_LOG=debug cargo pgx build pg13
 
 # TODO load extension
 CMD ["cd example/encrypted-sql-ops/pg-extension", "cargo pgx run pg13"]
