@@ -1,4 +1,4 @@
-FROM anonify.azurecr.io/anonify-dev:latest as builder
+FROM anonify.azurecr.io/anonify-dev:latest-test as builder
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 SHELL ["/bin/bash", "-c"]
@@ -43,7 +43,7 @@ RUN set -x && \
     RUST_BACKTRACE=1 RUST_LOG=debug cargo build --release
 
 # ===== SECOND STAGE ======
-FROM anonify.azurecr.io/anonify-dev:latest
+FROM anonify.azurecr.io/anonify-dev:latest-test
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 WORKDIR ${HOME}/anonify
