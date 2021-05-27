@@ -131,3 +131,16 @@ RUN git clone --depth 1 -b 0.22.0 https://github.com/occlum/occlum && \
     rm -rf /root/occlum
 
 ENV PATH="/opt/occlum/build/bin:/usr/local/occlum/bin:/opt/occlum/toolchains/rust/bin:$PATH"
+
+# Download and Build OpenSSL 1.1.1 for musl
+WORKDIR /root/deps/musl
+RUN wget https://github.com/openssl/openssl/archive/OpenSSL_1_1_1f.tar.gz && \
+    tar zxvf OpenSSL_1_1_1f.tar.gz && \
+    cd openssl-OpenSSL_1_1_1f && \
+    CC="occlum-gcc -fPIE -pie" ./Configure no-shared no-async --prefix=/root/deps/musl --openssldir=/root/deps/musl/ssl --with-rand-seed=rdcpu linux-x86_64 && \
+    make depend && \
+    make -j$(nproc) && \
+    make install
+ENV PKG_CONFIG_ALLOW_CROSS=1
+ENV OPENSSL_STATIC=true
+ENV OPENSSL_DIR=/root/deps/musl
