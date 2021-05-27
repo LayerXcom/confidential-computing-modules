@@ -23,7 +23,7 @@ pub extern "C" fn _PG_init() {
         EID = enclave.geteid();
     }
 
-    log::info!(
+    pgx::log::info!(
         "Initialized encrypted-sql-ops-pg extension. Enclave ID: {}",
         unsafe { EID }
     );
