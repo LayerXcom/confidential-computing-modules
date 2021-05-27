@@ -2,7 +2,6 @@
 use crate::localstd::vec::Vec;
 use crate::localstd::{
     env,
-    ffi::OsStr,
     path::PathBuf,
     string::{String, ToString},
 };
@@ -25,20 +24,10 @@ lazy_static! {
     };
     pub static ref CMD_DEC_SECRET_DIR: String =
         env::var("CMD_DEC_SECRET_DIR").unwrap_or_else(|_| ".anonify/cmd-dec-secret".to_string());
-    pub static ref PJ_ROOT_DIR: PathBuf = env::var("PJ_ROOT_DIR").unwrap_or_else(|| {
-        let pj_name = env::var("PJ_NAME").unwrap_or_else(|_| "anonify".to_string());
-        let mut current_dir = env::current_dir().unwrap();
-        loop {
-            if current_dir.file_name() == Some(OsStr::new(pj_name.as_str())) {
-                break;
-            }
-            if !current_dir.pop() {
-                break;
-            }
-        }
-
-        current_dir
-    });
+    pub static ref PJ_ROOT_DIR: PathBuf = env::var("PJ_ROOT_DIR")
+        .or_else(|_| env::var("HOME"))
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| { panic!("PJ_ROOT_DIR is not set") });
     pub static ref BUILD_DIR: PathBuf = {
         let mut build_dir = PJ_ROOT_DIR.clone();
         build_dir.push("build");
