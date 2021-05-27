@@ -11,8 +11,12 @@ fn encinteger_from(raw_integer: i32) -> EncInteger {
     let eid = unsafe { crate::init::EID };
     let host_input = RawInteger::new(raw_integer, ENCINTEGER_FROM);
 
-    let host_output = EncIntegerFromWorkflow::exec(host_input, eid)
-        .expect("failed to encrypt raw INTEGER in enclave (Enclave ID: {})", eid);
+    let host_output = EncIntegerFromWorkflow::exec(host_input, eid).unwrap_or_else(|e| {
+        panic!(
+            "failed to encrypt raw INTEGER in enclave (Enclave ID: {}), {:?}",
+            eid, e
+        )
+    });
 
     EncInteger::from(ModuleEncInteger::from(host_output))
 }
