@@ -5,7 +5,7 @@ authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 
 [lib]
-name = "encrypted_sql_ops"
+name = "anonifyenclave"
 crate-type = ["staticlib"]
 
 [dependencies]
