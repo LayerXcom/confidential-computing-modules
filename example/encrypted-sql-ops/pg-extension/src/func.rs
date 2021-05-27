@@ -1,13 +1,15 @@
 use crate::typ::{AvgState, EncInteger};
 use frame_host::engine::HostEngine;
-use module_encrypted_sql_ops_ecall_types::enc_type::EncInteger as ModuleEncInteger;
+use module_encrypted_sql_ops_ecall_types::{
+    ecall_cmd::ENCINTEGER_FROM, enc_type::EncInteger as ModuleEncInteger,
+};
 use module_encrypted_sql_ops_host::workflow::{host_input::RawInteger, EncIntegerFromWorkflow};
 use pgx::*;
 
 #[pg_extern]
 fn encinteger_from(raw_integer: i32) -> EncInteger {
     let eid = unsafe { crate::init::EID };
-    let host_input = RawInteger::from(raw_integer);
+    let host_input = RawInteger::new(raw_integer, ENCINTEGER_FROM);
 
     let host_output = EncIntegerFromWorkflow::exec(host_input, eid)
         .expect("failed to encrypt raw INTEGER in enclave");

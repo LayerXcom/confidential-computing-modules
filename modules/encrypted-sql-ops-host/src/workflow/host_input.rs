@@ -6,7 +6,10 @@ use module_encrypted_sql_ops_ecall_types::enclave_types::RawInteger as EnclaveRa
 
 /// Raw represation in Rust of SQL INTEGER.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-pub struct RawInteger(i32);
+pub struct RawInteger {
+    integer: i32,
+    ecall_cmd: u32,
+}
 
 impl HostInput for RawInteger {
     type EcallInput = EnclaveRawInteger;
@@ -14,18 +17,22 @@ impl HostInput for RawInteger {
 
     fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
         Ok((
-            EnclaveRawInteger::from(self.0),
+            EnclaveRawInteger::from(self.integer),
             host_output::EncIntegerWrapper(None),
         ))
     }
 
     fn ecall_cmd(&self) -> u32 {
-        todo!()
+        self.ecall_cmd
     }
 }
 
-impl From<i32> for RawInteger {
-    fn from(integer: i32) -> Self {
-        Self(integer)
+impl RawInteger {
+    /// Constructor
+    pub fn new(integer: i32, ecall_cmd: u32) {
+        Self {
+            integer, 
+            ecall_cmd 
+        }
     }
 }
