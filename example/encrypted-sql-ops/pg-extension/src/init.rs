@@ -2,11 +2,10 @@
 
 use frame_host::EnclaveDir;
 use pgx::*;
+use sgx_urts::SgxEnclave;
 use std::env;
 
-/// Enclave ID.
-/// Mutation occurs only here.
-pub(crate) static mut EID: u64 = 0;
+pub(crate) static ENCLAVE: OnceCell<SgxEnclave> = OnceCell::new();
 
 #[pg_guard]
 pub extern "C" fn _PG_init() {
@@ -18,13 +17,5 @@ pub extern "C" fn _PG_init() {
     let enclave = EnclaveDir::new()
         .init_enclave(is_debug)
         .expect("Failed to initialize enclave.");
-
-    unsafe {
-        EID = enclave.geteid();
-    }
-
-    info!(
-        "Initialized encrypted-sql-ops-pg extension. Enclave ID: {}",
-        unsafe { EID }
-    );
+    ENCLAVE.set(enclave).unwrap();
 }

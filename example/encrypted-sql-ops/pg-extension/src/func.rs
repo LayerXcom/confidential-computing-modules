@@ -8,8 +8,8 @@ use pgx::*;
 
 #[pg_extern]
 fn encinteger_from(raw_integer: i32) -> EncInteger {
-    let eid = unsafe { crate::init::EID };
     let host_input = RawInteger::new(raw_integer, ENCINTEGER_FROM);
+    let eid = crate::init::ENCLAVE.geteid();
 
     let host_output = EncIntegerFromWorkflow::exec(host_input, eid).unwrap_or_else(|e| {
         panic!(
