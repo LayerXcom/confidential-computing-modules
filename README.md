@@ -77,6 +77,14 @@ $ docker-compose exec sgx_machine bash
 $ cd anonify && ./scripts/test.sh
 ```
 
+#### occlum
+
+```sh
+docker-compose -f occlum-docker-compose.yml up -d
+docker-compose -f occlum-docker-compose.yml exec enclave bash -c "(./anonify/scripts/occlum-enclave-test.sh) &"
+docker-compose -f occlum-docker-compose.yml exec host bash -c "./root/anonify/scripts/occlum-host-test.sh"
+```
+
 ## Documentations
 Currently, documents are only available in Japanese.
 

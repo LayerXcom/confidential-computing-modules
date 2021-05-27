@@ -43,4 +43,4 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: ${COMPOSE_NETWORK_SUBNET}
+        - subnet: ${OCCLUM_COMPOSE_NETWORK_SUBNET}
