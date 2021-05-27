@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 export PATH=~/.cargo/bin:$PATH
 export SGX_MODE=HW
