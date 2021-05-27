@@ -29,7 +29,7 @@ impl HostInput for RawInteger {
 
 impl RawInteger {
     /// Constructor
-    pub fn new(integer: i32, ecall_cmd: u32) {
+    pub fn new(integer: i32, ecall_cmd: u32) -> Self {
         Self {
             integer, 
             ecall_cmd 
