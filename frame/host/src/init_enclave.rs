@@ -18,7 +18,8 @@ impl EnclaveDir {
     pub fn new() -> Self {
         let enclave_dir = &*ANONIFY_PARAMS_DIR;
         if !enclave_dir.is_dir() {
-            fs::create_dir_all(&enclave_dir).expect("Cannot create enclave directory.");
+            fs::create_dir_all(&enclave_dir)
+                .unwrap_or_else(|_| panic!("Cannot create enclave directory: {:?}", enclave_dir));
         }
 
         EnclaveDir(enclave_dir.to_path_buf())
