@@ -41,8 +41,8 @@ RUN set -x && \
 # ===== SECOND STAGE ======
 FROM anonify.azurecr.io/anonify-dev-pgx:latest
 
-WORKDIR ${HOME}/anonify
+WORKDIR ${HOME}
 
-COPY --from=builder ${HOME}/anonify/config/ias_root_cert.pem ./config/ias_root_cert.pem
-COPY --from=builder ${HOME}/anonify/.anonify/encrypted_sql_ops.signed.so ./.anonify/encrypted_sql_ops.signed.so
-COPY --from=builder ${HOME}/anonify/.anonify/encrypted_sql_ops_measurement.txt ./.anonify/encrypted_sql_ops_measurement.txt
+COPY --from=builder ${HOME}/anonify/config/ias_root_cert.pem ${HOME}/anonify/config/ias_root_cert.pem
+COPY --from=builder ${HOME}/anonify/.anonify/encrypted_sql_ops.signed.so ${HOME}/.anonify/encrypted_sql_ops.signed.so
+COPY --from=builder ${HOME}/anonify/.anonify/encrypted_sql_ops_measurement.txt ${HOME}/.anonify/encrypted_sql_ops_measurement.txt
