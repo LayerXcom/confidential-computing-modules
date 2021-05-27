@@ -46,9 +46,3 @@ WORKDIR ${HOME}/anonify
 COPY --from=builder ${HOME}/anonify/config/ias_root_cert.pem ./config/ias_root_cert.pem
 COPY --from=builder ${HOME}/anonify/.anonify/encrypted_sql_ops.signed.so ./.anonify/encrypted_sql_ops.signed.so
 COPY --from=builder ${HOME}/anonify/.anonify/encrypted_sql_ops_measurement.txt ./.anonify/encrypted_sql_ops_measurement.txt
-
-RUN cd example/encrypted-sql-ops/pg-extension && \
-    RUST_BACKTRACE=1 RUST_LOG=debug cargo pgx build pg13
-
-# TODO load extension
-CMD ["cd example/encrypted-sql-ops/pg-extension", "cargo pgx run pg13"]
