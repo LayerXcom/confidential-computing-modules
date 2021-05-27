@@ -6,7 +6,7 @@ use pgx::*;
 use sgx_urts::SgxEnclave;
 use std::env;
 
-static ENCLAVE: OnceCell<SgxEnclave> = OnceCell::new();
+static ENCLAVE: OnceCell<Enclave> = OnceCell::new();
 
 #[derive(Debug)]
 pub(crate) struct Enclave(SgxEnclave);
@@ -17,7 +17,7 @@ impl Enclave {
     }
 
     fn init(enclave: SgxEnclave) {
-        ENCLAVE.set(enclave).unwrap();
+        ENCLAVE.set(Self(enclave)).unwrap();
     }
 }
 
