@@ -52,7 +52,7 @@ COPY --from=builder ${HOME}/anonify/config/ias_root_cert.pem ./config/ias_root_c
 COPY --from=builder ${HOME}/anonify/.anonify/encrypted_sql_ops.signed.so ./.anonify/encrypted_sql_ops.signed.so
 COPY --from=builder ${HOME}/anonify/.anonify/encrypted_sql_ops_measurement.txt ./.anonify/encrypted_sql_ops_measurement.txt
 
-RUN cd ../example/encrypted-sql-ops/pg-extension && \
+RUN cd example/encrypted-sql-ops/pg-extension && \
     RUST_BACKTRACE=1 RUST_LOG=debug cargo pgx build pg13
 
 # TODO load extension
