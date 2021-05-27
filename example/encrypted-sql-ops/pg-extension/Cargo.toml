@@ -16,6 +16,7 @@ pg_test = []
 frame-host = { path = "../../../frame/host" }
 module-encrypted-sql-ops-host = { path = "../../../modules/encrypted-sql-ops-host" }
 module-encrypted-sql-ops-ecall-types = { path = "../../../modules/encrypted-sql-ops-ecall-types" }
+sgx_urts = "1.1.1"
 pgx = "0.1.21"
 pgx-macros = "0.1.21"
 serde = {version = "1.0", features = ["derive"]}
