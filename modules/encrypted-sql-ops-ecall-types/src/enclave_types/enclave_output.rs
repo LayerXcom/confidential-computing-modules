@@ -11,6 +11,12 @@ pub struct EncIntegerWrapper(EncInteger);
 
 impl EcallOutput for EncIntegerWrapper {}
 
+impl From<EncInteger> for EncIntegerWrapper {
+    fn from(e: EncInteger) -> Self {
+        Self(e)
+    }
+}
+
 impl Default for EncIntegerWrapper {
     fn default() -> Self {
         unreachable!(
