@@ -3,8 +3,10 @@ use crate::ENCLAVE_CONTEXT;
 use anonify_ecall_types::cmd::*;
 use anonify_enclave::{context::AnonifyEnclaveContext, workflow::*};
 use anyhow::anyhow;
+use bincode::Options;
 use frame_common::crypto::NoAuth;
 use frame_enclave::{register_ecall, StateRuntimeEnclaveEngine};
+use log::error;
 use std::{ptr, vec::Vec};
 
 register_ecall!(
@@ -50,12 +52,20 @@ register_ecall!(
     ),
     (GET_ENCLAVE_ENCRYPTION_KEY_CMD, EncryptionKeyGetter),
     (SEND_REGISTER_REPORT_CMD, ReportRegistration),
+    #[cfg(feature = "treekem")]
     #[cfg(feature = "backup-enable")]
-    (BACKUP_PATH_SECRET_ALL_CMD, PathSecretBackupper),
+    (BACKUP_PATH_SECRETS_CMD, PathSecretsBackupper),
+    #[cfg(feature = "treekem")]
     #[cfg(feature = "backup-enable")]
-    (RECOVER_PATH_SECRET_ALL_CMD, PathSecretRecoverer),
+    (RECOVER_PATH_SECRETS_CMD, PathSecretsRecoverer),
     (
         GET_USER_COUNTER_CMD,
         GetUserCounter<NoAuth>
     ),
+    #[cfg(feature = "enclave_key")]
+    #[cfg(feature = "backup-enable")]
+    (BACKUP_ENCLAVE_KEY_CMD, EnclaveKeyBackupper),
+    #[cfg(feature = "enclave_key")]
+    #[cfg(feature = "backup-enable")]
+    (RECOVER_ENCLAVE_KEY_CMD, EnclaveKeyRecoverer),
 );

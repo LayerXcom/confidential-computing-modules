@@ -29,7 +29,7 @@ const HASHED_PUBKEY_SIZE: usize = 20;
 const ENCLAVE_ENCRYPTION_KEY_SIZE: usize = SODIUM_PUBLIC_KEY_SIZE;
 const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCLAVE_ENCRYPTION_KEY_SIZE;
 const REPORT_DATA_SIZE: usize = 64;
-const DEC_KEY_FILE_NAME: &str = "sr_enclave_decryption_key";
+pub const DEC_KEY_FILE_NAME: &str = "sr_enclave_decryption_key";
 
 #[derive(Debug, Clone, Default)]
 pub struct EncryptionKeyGetter;
@@ -89,14 +89,14 @@ impl EnclaveKey {
 
     /// Get dec_key from key-vault node in initialization when joining newly.
     #[cfg(feature = "backup-enable")]
-    pub fn get_dec_key_from_remotelly_sealed(
+    pub fn get_dec_key_from_remotely_sealed(
         mut self,
         client_config: &ClientConfig,
         key_vault_endpoint: &str,
     ) -> Result<Self> {
         let mut mra_tls_client = Client::new(key_vault_endpoint, &client_config)?;
         let get_dec_key_request = KeyVaultRequest::new(
-            KeyVaultCmd::RecoverEnclaveDecrptionKey,
+            KeyVaultCmd::RecoverEnclaveDecryptionKey,
             RecoverEnclaveDecryptionKeyRequestBody::default(),
         );
         let decryption_privkey: SodiumPrivateKey = mra_tls_client.send_json(get_dec_key_request)?;

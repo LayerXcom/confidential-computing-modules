@@ -41,7 +41,7 @@ impl StateType {
 
 impl From<AccountId> for StateType {
     fn from(account_id: AccountId) -> Self {
-        Self(bincode::serialize(&account_id).unwrap())
+        Self(bincode::serialize(&account_id).unwrap()) // must not fail
     }
 }
 

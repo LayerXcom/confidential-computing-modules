@@ -14,8 +14,7 @@ use frame_common::{
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::key_vault::{
     request::{
-        BackupAllPathSecretsRequestBody, BackupPathSecretRequestBody,
-        RecoverAllPathSecretsRequestbody,
+        BackupPathSecretRequestBody, BackupPathSecretsRequestBody, RecoverPathSecretsRequestBody,
     },
     response::RecoveredPathSecret,
 };
@@ -195,13 +194,17 @@ pub trait KeyVaultOps {
 
     fn recover_path_secret(&self, ps_id: &[u8], roster_idx: u32) -> Result<PathSecret>;
 
-    fn manually_backup_path_secrets_all(
+    fn manually_backup_path_secrets(
         &self,
-        backup_path_secrets: BackupAllPathSecretsRequestBody,
+        backup_path_secrets: BackupPathSecretsRequestBody,
     ) -> Result<()>;
 
-    fn manually_recover_path_secrets_all(
+    fn manually_recover_path_secrets(
         &self,
-        recover_path_secrets_all: RecoverAllPathSecretsRequestbody,
+        recover_path_secrets_all: RecoverPathSecretsRequestBody,
     ) -> Result<Vec<RecoveredPathSecret>>;
+
+    fn backup_enclave_key(&self) -> Result<()>;
+
+    fn recover_enclave_key(&self) -> Result<SodiumPrivateKey>;
 }

@@ -1,4 +1,5 @@
 use crate::error::{FrameHostError, Result};
+use bincode::Options;
 use frame_common::{EcallInput, EcallOutput};
 use frame_types::EnclaveStatus;
 use serde::{de::DeserializeOwned, Serialize};
@@ -19,14 +20,14 @@ extern "C" {
 
 pub struct EnclaveConnector {
     eid: sgx_enclave_id_t,
-    output_max_len: usize,
+    ecall_max_size: usize,
 }
 
 impl EnclaveConnector {
-    pub fn new(eid: sgx_enclave_id_t, output_max_len: usize) -> Self {
+    pub fn new(eid: sgx_enclave_id_t, ecall_max_size: usize) -> Self {
         EnclaveConnector {
             eid,
-            output_max_len,
+            ecall_max_size,
         }
     }
 
@@ -35,7 +36,9 @@ impl EnclaveConnector {
         E: Serialize + EcallInput,
         D: DeserializeOwned + EcallOutput,
     {
-        let input_payload = bincode::serialize(&input)?;
+        let input_payload = bincode::DefaultOptions::new()
+            .with_limit(self.ecall_max_size as u64)
+            .serialize(&input)?;
         let result = self.inner_invoke_ecall(cmd, input_payload)?;
         bincode::deserialize(&result[..]).map_err(Into::into)
     }
@@ -43,9 +46,9 @@ impl EnclaveConnector {
     fn inner_invoke_ecall(&self, cmd: u32, mut input: Vec<u8>) -> Result<Vec<u8>> {
         let input_ptr = input.as_mut_ptr();
         let input_len = input.len();
-        let output_max = self.output_max_len;
-        let mut output_len = output_max;
-        let mut output_buf = Vec::with_capacity(output_max);
+        let ecall_max_size = self.ecall_max_size;
+        let mut output_len = ecall_max_size;
+        let mut output_buf = Vec::with_capacity(ecall_max_size);
         let output_ptr = output_buf.as_mut_ptr();
 
         let mut ret = EnclaveStatus::default();
@@ -58,7 +61,7 @@ impl EnclaveConnector {
                 input_ptr,
                 input_len,
                 output_ptr,
-                output_max,
+                ecall_max_size,
                 &mut output_len,
             )
         };
@@ -77,7 +80,7 @@ impl EnclaveConnector {
                 cmd,
             });
         }
-        assert!(output_len < output_max);
+        assert!(output_len < ecall_max_size);
 
         unsafe {
             output_buf.set_len(output_len);

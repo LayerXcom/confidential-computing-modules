@@ -316,18 +316,16 @@ impl Dispatcher {
     }
 
     #[cfg(feature = "backup-enable")]
-    pub fn all_backup_to(&self) -> Result<()> {
+    pub fn backup(&self, ecall_cmd: u32) -> Result<()> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
-        inner.backup.all_backup_to(eid, BACKUP_PATH_SECRET_ALL_CMD)
+        inner.backup.backup(eid, ecall_cmd)
     }
 
     #[cfg(feature = "backup-enable")]
-    pub fn all_backup_from(&self) -> Result<()> {
+    pub fn recover(&self, ecall_cmd: u32) -> Result<()> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
-        inner
-            .backup
-            .all_backup_from(eid, RECOVER_PATH_SECRET_ALL_CMD)
+        inner.backup.recover(eid, ecall_cmd)
     }
 }

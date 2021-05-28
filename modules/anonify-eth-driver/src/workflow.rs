@@ -7,7 +7,7 @@ use frame_host::engine::*;
 use frame_sodium::SodiumCiphertext;
 use web3::types::Address;
 
-pub const OUTPUT_MAX_LEN: usize = 2048;
+pub const ECALL_MAX_SIZE: usize = 2048;
 
 pub struct CommandWorkflow;
 
@@ -16,7 +16,7 @@ impl HostEngine for CommandWorkflow {
     type EI = input::Command;
     type EO = output::Command;
     type HO = host_output::Command;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct JoinGroupWorkflow;
@@ -26,7 +26,7 @@ impl HostEngine for JoinGroupWorkflow {
     type EI = input::Empty;
     type EO = output::ReturnJoinGroup;
     type HO = host_output::JoinGroup;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct RegisterReportWorkflow;
@@ -36,7 +36,7 @@ impl HostEngine for RegisterReportWorkflow {
     type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
     type HO = host_output::RegisterReport;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct HandshakeWorkflow;
@@ -46,7 +46,7 @@ impl HostEngine for HandshakeWorkflow {
     type EI = input::Empty;
     type EO = output::ReturnHandshake;
     type HO = host_output::Handshake;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct RegisterNotificationWorkflow;
@@ -56,7 +56,7 @@ impl HostEngine for RegisterNotificationWorkflow {
     type EI = SodiumCiphertext;
     type EO = output::Empty;
     type HO = host_output::RegisterNotification;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct GetStateWorkflow;
@@ -66,7 +66,7 @@ impl HostEngine for GetStateWorkflow {
     type EI = SodiumCiphertext;
     type EO = output::ReturnState;
     type HO = host_output::GetState;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct InsertCiphertextWorkflow;
@@ -76,7 +76,7 @@ impl HostEngine for InsertCiphertextWorkflow {
     type EI = input::InsertCiphertext;
     type EO = output::ReturnNotifyState;
     type HO = host_output::InsertCiphertext;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct InsertHandshakeWorkflow;
@@ -86,7 +86,7 @@ impl HostEngine for InsertHandshakeWorkflow {
     type EI = input::InsertHandshake;
     type EO = output::Empty;
     type HO = host_output::InsertHandshake;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct GetEncryptionKeyWorkflow;
@@ -96,27 +96,27 @@ impl HostEngine for GetEncryptionKeyWorkflow {
     type EI = input::Empty;
     type EO = output::ReturnEncryptionKey;
     type HO = host_output::ReturnEncryptionKey;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
-pub struct BackupPathSecretAllWorkflow;
+pub struct BackupWorkflow;
 
-impl HostEngine for BackupPathSecretAllWorkflow {
-    type HI = host_input::BackupPathSecretAll;
+impl HostEngine for BackupWorkflow {
+    type HI = host_input::Backup;
     type EI = input::Empty;
     type EO = output::Empty;
-    type HO = host_output::BackupPathSecretAll;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    type HO = host_output::Backup;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
-pub struct RecoverPathSecretAllWorkflow;
+pub struct RecoverWorkflow;
 
-impl HostEngine for RecoverPathSecretAllWorkflow {
-    type HI = host_input::RecoverPathSecretAll;
+impl HostEngine for RecoverWorkflow {
+    type HI = host_input::Recover;
     type EI = input::Empty;
     type EO = output::Empty;
-    type HO = host_output::RecoverPathSecretAll;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    type HO = host_output::Recover;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub struct GetUserCounterWorkflow;
@@ -126,7 +126,7 @@ impl HostEngine for GetUserCounterWorkflow {
     type EI = SodiumCiphertext;
     type EO = output::ReturnUserCounter;
     type HO = host_output::GetUserCounter;
-    const OUTPUT_MAX_LEN: usize = OUTPUT_MAX_LEN;
+    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
 }
 
 pub mod host_input {
@@ -441,19 +441,19 @@ pub mod host_input {
         }
     }
 
-    pub struct BackupPathSecretAll {
+    pub struct Backup {
         ecall_cmd: u32,
     }
 
-    impl BackupPathSecretAll {
+    impl Backup {
         pub fn new(ecall_cmd: u32) -> Self {
-            BackupPathSecretAll { ecall_cmd }
+            Backup { ecall_cmd }
         }
     }
 
-    impl HostInput for BackupPathSecretAll {
+    impl HostInput for Backup {
         type EcallInput = input::Empty;
-        type HostOutput = host_output::BackupPathSecretAll;
+        type HostOutput = host_output::Backup;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             Ok((Self::EcallInput::default(), Self::HostOutput::default()))
@@ -464,19 +464,19 @@ pub mod host_input {
         }
     }
 
-    pub struct RecoverPathSecretAll {
+    pub struct Recover {
         ecall_cmd: u32,
     }
 
-    impl RecoverPathSecretAll {
+    impl Recover {
         pub fn new(ecall_cmd: u32) -> Self {
-            RecoverPathSecretAll { ecall_cmd }
+            Recover { ecall_cmd }
         }
     }
 
-    impl HostInput for RecoverPathSecretAll {
+    impl HostInput for Recover {
         type EcallInput = input::Empty;
-        type HostOutput = host_output::RecoverPathSecretAll;
+        type HostOutput = host_output::Recover;
 
         fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
             Ok((Self::EcallInput::default(), Self::HostOutput::default()))
@@ -694,16 +694,16 @@ pub mod host_output {
     }
 
     #[derive(Default)]
-    pub struct BackupPathSecretAll;
+    pub struct Backup;
 
-    impl HostOutput for BackupPathSecretAll {
+    impl HostOutput for Backup {
         type EcallOutput = output::Empty;
     }
 
     #[derive(Default)]
-    pub struct RecoverPathSecretAll;
+    pub struct Recover;
 
-    impl HostOutput for RecoverPathSecretAll {
+    impl HostOutput for Recover {
         type EcallOutput = output::Empty;
     }
 }

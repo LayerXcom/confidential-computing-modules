@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 export PATH=~/.cargo/bin:$PATH
 export SGX_MODE=HW
@@ -112,7 +112,9 @@ function exec_kv_enclave_key_node_tests() {
 }
 
 exec_kv_enclave_key_node_tests test_health_check \
-  test_enclave_key_backup
+  test_enclave_key_backup \
+  test_enclave_key_manually_backup \
+  test_enclave_key_manually_recover
 
 #
 # Tests for treekem
@@ -168,8 +170,8 @@ function exec_kv_treekem_node_tests() {
 exec_kv_treekem_node_tests \
   test_treekem_backup_path_secret \
   test_treekem_recover_without_key_vault \
-  test_treekem_manually_backup_all \
-  test_treekem_manually_recover_all
+  test_treekem_manually_backup \
+  test_treekem_manually_recover
 
 #
 # Unit Tests
