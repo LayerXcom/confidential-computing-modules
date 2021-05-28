@@ -1,21 +1,23 @@
 version: "3.7"
 services:
   enclave:
-    image: anonify.azurecr.io/base-occlum:latest
+    image: anonify.azurecr.io/base-occlum-enclave:latest
     volumes:
       - .:/root/anonify
       - /var/run/aesmd:/var/run/aesmd
     devices:
       - "/dev/sgx/enclave"
     ports:
-        - ${DOCKER_ENCLAVE_PORT}:${HOST_PORT}
+      - ${OCCLUM_ENCLAVE_PORT}:${OCCLUM_ENCLAVE_PORT}
     environment:
-      SPID: ${SPID}
-      SUB_KEY: ${SUB_KEY}
-      IAS_URL: ${IAS_URL}
       RUST_BACKTRACE: 1
       RUST_LOG: debug
       OCCLUM_LOG_LEVEL: debug
+      SPID: ${SPID}
+      SUB_KEY: ${SUB_KEY}
+      IAS_URL: ${IAS_URL}
+      DOCKER_ENCLAVE_IP_ADDRESS: ${DOCKER_ENCLAVE_IP_ADDRESS}
+      OCCLUM_ENCLAVE_PORT: ${OCCLUM_ENCLAVE_PORT}
     stdin_open: true
     tty: true
     networks:
@@ -23,15 +25,16 @@ services:
         ipv4_address: ${DOCKER_ENCLAVE_IP_ADDRESS}
 
   host:
-    image: rust:1.52.1
+    image: anonify.azurecr.io/base-occlum-host:latest
     volumes:
       - .:/root/anonify
     ports:
-      - ${DOCKER_HOST_PORT}:${HOST_PORT}
+      - ${OCCLUM_HOST_PORT}:${OCCLUM_HOST_PORT}
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug
-      OCCLUM_LOG_LEVEL: debug
+      DOCKER_ENCLAVE_IP_ADDRESS: ${DOCKER_ENCLAVE_IP_ADDRESS}
+      OCCLUM_ENCLAVE_PORT: ${OCCLUM_ENCLAVE_PORT}
     stdin_open: true
     tty: true
     networks:
