@@ -15,6 +15,7 @@ impl From<i32> for RawInteger {
 }
 
 impl RawInteger {
+    /// Gets raw representation
     pub fn to_i32(&self) -> i32 {
         self.0
     }
