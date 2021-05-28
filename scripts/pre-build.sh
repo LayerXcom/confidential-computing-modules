@@ -5,12 +5,7 @@ set -e
 export PATH=~/.cargo/bin:$PATH
 export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
 
-user=$(whoami)
-if [ "$user" == "root" ]; then
-    ANONIFY_ROOT=/root/anonify
-else
-    ANONIFY_ROOT=/home/"$user"/anonify
-fi
+ANONIFY_ROOT="$(cd $(dirname $0); pwd)/.."
 
 echo 'build frame/types...'
 cd ${ANONIFY_ROOT}/frame/types
