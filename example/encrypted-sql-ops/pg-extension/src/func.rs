@@ -1,6 +1,6 @@
 use crate::{
     init::Enclave,
-    typ::{AvgState, EncInteger},
+    typ::{EncAvgState, EncInteger},
 };
 use frame_host::engine::HostEngine;
 use module_encrypted_sql_ops_ecall_types::{
@@ -27,8 +27,8 @@ fn encinteger_from(raw_integer: i32) -> EncInteger {
 }
 
 #[pg_extern]
-fn encinteger_avg_state_func(internal_state: AvgState, next_data_value: EncInteger) -> AvgState {
-    let avg_state = internal_state.into_inner();
+fn encinteger_avg_state_func(internal_state: EncAvgState, next_data_value: EncInteger) -> EncAvgState {
+    let enc_avg_state = internal_state.into_inner();
 
     todo!()
 
@@ -46,6 +46,6 @@ fn encinteger_avg_state_func(internal_state: AvgState, next_data_value: EncInteg
 }
 
 #[pg_extern]
-fn encinteger_avg_final_func(_internal_state: AvgState) -> i32 {
+fn encinteger_avg_final_func(_internal_state: EncAvgState) -> i32 {
     todo!("create Workflow")
 }

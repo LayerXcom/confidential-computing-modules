@@ -5,7 +5,7 @@ extension_sql!(
     CREATE AGGREGATE AVG (EncInteger)
     (
         sfunc = encinteger_avg_state_func,
-        stype = AvgState,
+        stype = EncAvgState,
         finalfunc = encinteger_avg_final_func,
         initcond = '{"sum": 0, "n": 0}'
     );

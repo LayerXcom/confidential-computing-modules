@@ -16,9 +16,9 @@ impl From<ModuleEncInteger> for EncInteger {
 
 /// Used as intermediate state on calculating AVG for `ENCINTEGER`.
 #[derive(Serialize, Deserialize, PostgresType)]
-pub struct AvgState(ModuleEncAvgState);
+pub struct EncAvgState(ModuleEncAvgState);
 
-impl AvgState {
+impl EncAvgState {
     pub(crate) fn into_inner(self) -> ModuleEncAvgState {
         self.0
     }
