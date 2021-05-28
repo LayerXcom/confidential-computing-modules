@@ -2,9 +2,9 @@
 //!
 //! FIXME: Workflow -> Controller
 
+use super::host_types::{HostEncInteger, HostPlainInteger};
 use frame_host::engine::*;
 use module_encrypted_sql_ops_ecall_types::enclave_types::{EnclaveEncInteger, EnclavePlainInteger};
-use super::host_types::{host_input::HostPlainInteger, host_output::HostEncInteger};
 
 /// Constructor of `ENCINTEGER` custom type.
 ///

@@ -7,7 +7,7 @@ use module_encrypted_sql_ops_ecall_types::{
     ecall_cmd::ENCINTEGER_FROM, enc_type::EncInteger as ModuleEncInteger,
 };
 use module_encrypted_sql_ops_host::workflow::{
-    encinteger_from::EncIntegerFromWorkflow, host_types::host_input::HostPlainInteger,
+    encinteger_from::EncIntegerFromWorkflow, host_types::HostPlainInteger,
 };
 use pgx::*;
 
@@ -27,7 +27,10 @@ fn encinteger_from(raw_integer: i32) -> EncInteger {
 }
 
 #[pg_extern]
-fn encinteger_avg_state_func(internal_state: EncAvgState, next_data_value: EncInteger) -> EncAvgState {
+fn encinteger_avg_state_func(
+    internal_state: EncAvgState,
+    next_data_value: EncInteger,
+) -> EncAvgState {
     let enc_avg_state = internal_state.into_inner();
 
     todo!()

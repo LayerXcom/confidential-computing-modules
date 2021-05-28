@@ -9,9 +9,9 @@ use frame_host::engine::*;
 pub struct EncIntegerAvgStateFuncWorkflow;
 
 // impl HostEngine for EncIntegerAvgStateFuncWorkflow {
-//     type HI = HostPlainInteger;
-//     type EI = PlainInteger;
-//     type EO = EnclaveEncInteger;
-//     type HO = host_output::EncIntegerWrapper;
-//     const ECALL_MAX_SIZE: usize = 64;
+//     type HI = HostEncAvgState;
+//     type EI = EnclaveEncAvgState;
+//     type EO = EnclaveEncAvgState;
+//     type HO = HostEncAvgState;
+//     const ECALL_MAX_SIZE: usize = 1024;
 // }
