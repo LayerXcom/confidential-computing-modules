@@ -4,7 +4,7 @@ use crate::{
 };
 use frame_common::EcallOutput;
 
-/// Output from enclave
+/// Encrypted INTEGER.
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
 pub struct EnclaveEncInteger(EncInteger);

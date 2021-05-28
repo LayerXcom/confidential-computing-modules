@@ -3,7 +3,7 @@ use frame_common::EcallInput;
 
 
 
-/// Input to enclave
+/// Plain-text INTEGER.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
 pub struct EnclavePlainInteger(i32);
