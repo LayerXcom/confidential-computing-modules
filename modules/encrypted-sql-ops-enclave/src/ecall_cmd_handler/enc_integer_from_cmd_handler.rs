@@ -3,18 +3,18 @@ use frame_enclave::BasicEnclaveEngine;
 use frame_runtime::ConfigGetter;
 use module_encrypted_sql_ops_ecall_types::{
     enc_type::EncInteger,
-    enclave_types::{EncIntegerWrapper, RawInteger},
+    enclave_types::{EnclaveEncInteger, EnclavePlainInteger},
 };
 
 /// EncIntegerFrom command running inside enclave.
 #[derive(Clone, Hash, Debug)]
 pub struct EncIntegerFromCmdHandler {
-    enclave_input: RawInteger,
+    enclave_input: EnclavePlainInteger,
 }
 
 impl BasicEnclaveEngine for EncIntegerFromCmdHandler {
-    type EI = RawInteger;
-    type EO = EncIntegerWrapper;
+    type EI = EnclavePlainInteger;
+    type EO = EnclaveEncInteger;
 
     fn new<C>(ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
@@ -30,7 +30,7 @@ impl BasicEnclaveEngine for EncIntegerFromCmdHandler {
         C: ConfigGetter,
     {
         let encinteger = EncInteger::encrypt(self.enclave_input.to_i32());
-        Ok(EncIntegerWrapper::from(encinteger))
+        Ok(EnclaveEncInteger::from(encinteger))
     }
 }
 

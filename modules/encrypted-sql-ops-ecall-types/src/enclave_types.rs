@@ -3,5 +3,5 @@
 mod enclave_input;
 mod enclave_output;
 
-pub use enclave_input::RawInteger;
-pub use enclave_output::EncIntegerWrapper;
+pub use enclave_input::EnclavePlainInteger;
+pub use enclave_output::EnclaveEncInteger;
