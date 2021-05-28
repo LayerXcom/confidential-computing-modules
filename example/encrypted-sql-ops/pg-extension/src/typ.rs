@@ -16,16 +16,20 @@ impl From<ModuleEncInteger> for EncInteger {
 
 /// Used as intermediate state on calculating AVG for `ENCINTEGER`.
 #[derive(Serialize, Deserialize, PostgresType)]
-pub struct EncAvgState(ModuleEncAvgState);
+pub struct EncAvgState {
+    current_state: Option<ModuleEncAvgState>,
+}
 
 impl EncAvgState {
     pub(crate) fn into_inner(self) -> ModuleEncAvgState {
-        self.0
+        self.current_state.expect("should be already initialized")
     }
 }
 
 impl From<ModuleEncAvgState> for EncAvgState {
     fn from(e: ModuleEncAvgState) -> Self {
-        Self(e)
+        Self {
+            current_state: Some(e),
+        }
     }
 }

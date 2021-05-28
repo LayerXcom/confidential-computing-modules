@@ -10,9 +10,7 @@ use module_encrypted_sql_ops_ecall_types::{
     },
 };
 use module_encrypted_sql_ops_host::workflow::{
-    encinteger_from::EncIntegerFromWorkflow,
-    host_types::{HostEmpty, HostPlainInteger},
-    init_enc_avg_state_func::InitEncAvgStateFuncWorkflow,
+    encinteger_from::EncIntegerFromWorkflow, host_types::HostPlainInteger,
 };
 use pgx::*;
 
@@ -29,21 +27,6 @@ fn encinteger_from(raw_integer: i32) -> EncInteger {
     });
 
     EncInteger::from(ModuleEncInteger::from(host_output))
-}
-
-#[pg_extern]
-fn init_enc_avg_state_func() -> EncAvgState {
-    let host_input = HostEmpty::new(INIT_ENC_AVG_STATE_FUNC);
-    let eid = Enclave::global().geteid();
-
-    let host_output = InitEncAvgStateFuncWorkflow::exec(host_input, eid).unwrap_or_else(|e| {
-        panic!(
-            "failed to create initial EncAvgState in enclave (Enclave ID: {}), {:?}",
-            eid, e
-        )
-    });
-
-    EncAvgState::from(ModuleEncAvgState::from(host_output))
 }
 
 #[pg_extern]
