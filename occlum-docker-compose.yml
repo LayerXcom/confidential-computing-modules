@@ -39,7 +39,7 @@ services:
     tty: true
     networks:
       occlum_testing_net:
-        ipv4_address: ${DOCKER_HOST_IP_ADDRESS}
+        ipv4_address: ${OCCLUM_HOST_IP_ADDRESS}
 
 networks:
   occlum_testing_net:
