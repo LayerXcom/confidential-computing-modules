@@ -10,3 +10,4 @@ example/server/target
 
 docker/
 .dockerignore
+.git

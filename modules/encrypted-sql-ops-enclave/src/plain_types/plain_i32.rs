@@ -1,5 +1,10 @@
-use module_encrypted_sql_ops_ecall_types::enc_type::EncInteger;
+use crate::type_crypt::{Pad16BytesDecrypt, Pad16BytesEncrypt};
+use module_encrypted_sql_ops_ecall_types::{
+    enc_type::EncInteger, enclave_types::EnclavePlainInteger,
+};
+use std::{convert::TryInto, vec::Vec};
 
+/// Plain representation of INTEGER.
 #[derive(Clone, PartialEq, Debug, Default)]
 pub struct PlainI32(i32);
 

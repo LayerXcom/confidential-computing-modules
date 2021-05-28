@@ -2,12 +2,11 @@ use crate::error::{EnclaveError, Result};
 use aes::{
     cipher::generic_array::GenericArray, Aes128, BlockDecrypt, BlockEncrypt, NewBlockCipher,
 };
-use module_encrypted_sql_ops_ecall_types::enc_type::EncInteger;
 use std::{convert::TryInto, vec::Vec};
 
 use super::MASTER_KEY;
 
-pub(super) trait Pad16BytesDecrypt
+pub(crate) trait Pad16BytesDecrypt
 where
     Self: Sized + Into<Vec<u8>>,
 {
@@ -43,7 +42,7 @@ where
     }
 }
 
-pub(super) trait Pad16BytesEncrypt
+pub(crate) trait Pad16BytesEncrypt
 where
     Self: Sized + Into<Vec<u8>>,
 {
@@ -66,8 +65,4 @@ where
         };
         Self::Encrypted::from(enc_block.to_vec())
     }
-}
-
-impl Pad16BytesEncrypt for i32 {
-    const SELF_SIZE: usize = 4;
 }

@@ -1,10 +1,10 @@
-use crate::type_crypt::{enc_avg_state::EncAvgStateEncrypt, encinteger::EncIntegerEncrypt};
 use frame_enclave::BasicEnclaveEngine;
 use frame_runtime::ConfigGetter;
 use module_encrypted_sql_ops_ecall_types::{
-    enc_type::EncInteger,
     enclave_types::{EnclaveEncInteger, EnclavePlainInteger},
 };
+
+use crate::{plain_types::PlainI32, type_crypt::Pad16BytesEncrypt};
 
 /// EncIntegerFrom command running inside enclave.
 #[derive(Clone, Hash, Debug)]
@@ -25,7 +25,7 @@ impl BasicEnclaveEngine for EncIntegerFromCmdHandler {
         })
     }
 
-    fn handle<C>(self, enclave_context: &C) -> anyhow::Result<Self::EO>
+    fn handle<C>(self, _enclave_context: &C) -> anyhow::Result<Self::EO>
     where
         C: ConfigGetter,
     {

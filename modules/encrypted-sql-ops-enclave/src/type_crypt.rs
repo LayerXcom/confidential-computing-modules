@@ -8,4 +8,4 @@ pub mod enc_avg_state;
 
 mod pad16bytes_crypt;
 
-use pad16bytes_crypt::{Pad16BytesDecrypt, Pad16BytesEncrypt};
+pub(crate) use pad16bytes_crypt::{Pad16BytesDecrypt, Pad16BytesEncrypt};

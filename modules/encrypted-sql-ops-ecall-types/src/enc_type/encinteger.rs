@@ -18,3 +18,9 @@ impl From<Vec<u8>> for EncInteger {
         Self(encrypted)
     }
 }
+
+impl From<EncInteger> for Vec<u8> {
+    fn from(e: EncInteger) -> Self {
+        e.0
+    }
+}
