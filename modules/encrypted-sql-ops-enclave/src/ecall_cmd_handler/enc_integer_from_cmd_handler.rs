@@ -1,3 +1,4 @@
+use crate::type_crypt::encinteger::EncIntegerEncrypt;
 use frame_enclave::BasicEnclaveEngine;
 use frame_runtime::ConfigGetter;
 use module_encrypted_sql_ops_ecall_types::{
