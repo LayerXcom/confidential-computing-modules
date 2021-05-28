@@ -144,3 +144,5 @@ RUN wget https://github.com/openssl/openssl/archive/OpenSSL_1_1_1f.tar.gz && \
 ENV PKG_CONFIG_ALLOW_CROSS=1
 ENV OPENSSL_STATIC=true
 ENV OPENSSL_DIR=/root/deps/musl
+
+WORKDIR /root

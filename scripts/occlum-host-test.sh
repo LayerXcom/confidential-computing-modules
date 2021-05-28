@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 ANONIFY_ROOT="$(cd $(dirname $0); pwd)/.."
 

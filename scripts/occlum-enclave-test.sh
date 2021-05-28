@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 ANONIFY_ROOT="$(cd $(dirname $0); pwd)/.."
 
@@ -22,9 +22,19 @@ fi
 mkdir occlum-instance
 cd "$ANONIFY_ROOT"/occlum-instance
 occlum init
+cp Occlum.json Default-occlum.json
 
-# Enlarge libos kernel space heap size to 64bytes
-sed -i -e "s/\"kernel_space_heap_size\": \"32MB\"/\"kernel_space_heap_size\": \"64MB\"/" Occlum.json
+# Enlarge libos kernel space heap size to 128bytes.
+# Set envinronment variables passed to the "root" LibOS processes.
+jq '.resource_limits.kernel_space_heap_size|="128MB" |
+  .env.default|=.+["SPID='$SPID'"] |
+  .env.default|=.+["SUB_KEY='$SUB_KEY'"] |
+  .env.default|=.+["IAS_URL='$IAS_URL'"] |
+  .env.default|=.+["OCCLUM_ENCLAVE_IP_ADDRESS='$OCCLUM_ENCLAVE_IP_ADDRESS'"] |
+  .env.default|=.+["OCCLUM_ENCLAVE_PORT='$OCCLUM_ENCLAVE_PORT'"]' \
+  < Default-occlum.json \
+  > Occlum.json
+
 cp ../target/x86_64-unknown-linux-musl/debug/occlume-enclave-node image/bin
 occlum build
 occlum run /bin/occlume-enclave-node
