@@ -4,11 +4,12 @@ use crate::{
     anyhow::anyhow,
     base64,
     http_req::uri::Uri,
-    localstd::{string::String, vec::Vec, ptr},
+    localstd::{ptr, string::String, vec::Vec},
 };
 use frame_types::UntrustedStatus;
 use sgx_types::*;
 
+#[cfg(all(feature = "sgx", not(feature = "std")))]
 extern "C" {
     fn ocall_sgx_init_quote(
         retval: *mut UntrustedStatus,
@@ -76,6 +77,7 @@ impl QuoteTarget {
         let mut target_info = sgx_target_info_t::default();
         let mut gid = sgx_epid_group_id_t::default();
 
+        #[cfg(all(feature = "sgx", not(feature = "std")))]
         let status = unsafe {
             ocall_sgx_init_quote(
                 &mut rt as *mut UntrustedStatus,
@@ -83,6 +85,8 @@ impl QuoteTarget {
                 &mut gid as *mut sgx_epid_group_id_t,
             )
         };
+        #[cfg(all(not(feature = "sgx"), feature = "std"))]
+        let status = sgx_status_t::SGX_SUCCESS; // TODO
 
         if status != sgx_status_t::SGX_SUCCESS {
             return Err(FrameRAError::OcallError {
@@ -104,6 +108,7 @@ impl QuoteTarget {
     }
 
     pub fn set_enclave_report(mut self, report_data: &sgx_report_data_t) -> Result<Self> {
+        #[cfg(all(feature = "sgx", not(feature = "std")))]
         let enclave_report =
             sgx_tse::rsgx_create_report(&self.target_info, &report_data).map_err(|err| {
                 FrameRAError::OcallError {
@@ -111,6 +116,9 @@ impl QuoteTarget {
                     function: "sgx_tse::rsgx_create_report",
                 }
             })?;
+        #[cfg(all(not(feature = "sgx"), feature = "std"))]
+        let enclave_report = Default::default(); // TODO
+
         self.enclave_report = Some(enclave_report);
         Ok(self)
     }
@@ -127,21 +135,25 @@ impl QuoteTarget {
         id.copy_from_slice(&spid_vec);
         let spid: sgx_spid_t = sgx_spid_t { id };
 
+        #[cfg(all(feature = "sgx", not(feature = "std")))]
         let status = unsafe {
             ocall_get_quote(
                 &mut rt as *mut UntrustedStatus,
-                ptr::null(),                                     // p_sigrl
+                ptr::null(),                                          // p_sigrl
                 0,                                                    // sigrl_len
                 &self.enclave_report.unwrap() as *const sgx_report_t, // enclave_report must be set
                 sgx_quote_sign_type_t::SGX_LINKABLE_SIGNATURE,        // quote_type
                 &spid as *const sgx_spid_t,                           // p_spid
-                ptr::null(),                                     // p_nonce
-                ptr::null_mut(),                                 // p_qe_report
+                ptr::null(),                                          // p_nonce
+                ptr::null_mut(),                                      // p_qe_report
                 quote.as_mut_ptr() as *mut sgx_quote_t,
                 RET_QUOTE_BUF_LEN, // maxlen
                 &mut quote_len as *mut u32,
             )
         };
+        #[cfg(all(not(feature = "sgx"), feature = "std"))]
+        let status = sgx_status_t::SGX_SUCCESS; // TODO
+
         if status != sgx_status_t::SGX_SUCCESS {
             return Err(FrameRAError::OcallError {
                 status,

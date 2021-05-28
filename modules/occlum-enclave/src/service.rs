@@ -31,12 +31,15 @@ where
     }
 
     pub async fn start(self) -> Result<()> {
-        let report = self.context.do_remote_attestation()?;
-        println!("Remote attested report: {:?}", report);
+        // TODO: Add RA
+        // let report = self.context.do_remote_attestation()?;
+        // println!("Remote attested report: {:?}", report);
 
         info!("EnclaveGrpcServer listening on {}", self.addr);
+        let (_health_reporter, health_service) = tonic_health::server::health_reporter();
 
         Server::builder()
+            .add_service(health_service)
             .add_service(self.service) // TODO: get mutiple
             .serve(self.addr)
             .await?;
