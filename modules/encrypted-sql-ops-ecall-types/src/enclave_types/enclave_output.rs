@@ -18,6 +18,7 @@ impl From<EncInteger> for EncIntegerWrapper {
 }
 
 impl EncIntegerWrapper {
+    /// Get inner representation
     pub fn into_encinteger(self) -> EncInteger {
         self.0
     }
