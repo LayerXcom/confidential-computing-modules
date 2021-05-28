@@ -4,7 +4,7 @@ use std::env;
 #[tokio::test]
 async fn test_hello() -> Result<(), Box<dyn std::error::Error>> {
     let enclave_ip =
-        env::var("DOCKER_ENCLAVE_IP_ADDRESS").expect("DOCKER_ENCLAVE_IP_ADDRESS is not set.");
+        env::var("OCCLUM_ENCLAVE_IP_ADDRESS").expect("OCCLUM_ENCLAVE_IP_ADDRESS is not set.");
     let enclave_port = env::var("OCCLUM_ENCLAVE_PORT").expect("OCCLUM_ENCLAVE_PORT is not set.");
     let mut client =
         GreeterClient::connect(format!("http://{}:{}", enclave_ip, enclave_port)).await?;

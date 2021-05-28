@@ -16,13 +16,13 @@ services:
       SPID: ${SPID}
       SUB_KEY: ${SUB_KEY}
       IAS_URL: ${IAS_URL}
-      DOCKER_ENCLAVE_IP_ADDRESS: ${DOCKER_ENCLAVE_IP_ADDRESS}
+      OCCLUM_ENCLAVE_IP_ADDRESS: ${OCCLUM_ENCLAVE_IP_ADDRESS}
       OCCLUM_ENCLAVE_PORT: ${OCCLUM_ENCLAVE_PORT}
     stdin_open: true
     tty: true
     networks:
       occlum_testing_net:
-        ipv4_address: ${DOCKER_ENCLAVE_IP_ADDRESS}
+        ipv4_address: ${OCCLUM_ENCLAVE_IP_ADDRESS}
 
   host:
     image: anonify.azurecr.io/base-occlum-host:latest
@@ -33,7 +33,7 @@ services:
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug
-      DOCKER_ENCLAVE_IP_ADDRESS: ${DOCKER_ENCLAVE_IP_ADDRESS}
+      OCCLUM_ENCLAVE_IP_ADDRESS: ${OCCLUM_ENCLAVE_IP_ADDRESS}
       OCCLUM_ENCLAVE_PORT: ${OCCLUM_ENCLAVE_PORT}
     stdin_open: true
     tty: true
