@@ -17,6 +17,12 @@ impl From<EncInteger> for EncIntegerWrapper {
     }
 }
 
+impl EncIntegerWrapper {
+    pub fn into_encinteger(self) -> EncInteger {
+        self.0
+    }
+}
+
 impl Default for EncIntegerWrapper {
     fn default() -> Self {
         unreachable!(
