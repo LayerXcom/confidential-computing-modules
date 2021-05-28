@@ -577,10 +577,12 @@ dependencies = [
  "frame-host",
  "module-encrypted-sql-ops-ecall-types",
  "module-encrypted-sql-ops-host",
+ "once_cell",
  "pgx",
  "pgx-macros",
  "pgx-tests",
  "serde",
+ "sgx_urts",
 ]
 
 [[package]]
@@ -758,6 +760,7 @@ name = "frame-config"
 version = "0.5.4"
 dependencies = [
  "lazy_static",
+ "tracing",
 ]
 
 [[package]]
