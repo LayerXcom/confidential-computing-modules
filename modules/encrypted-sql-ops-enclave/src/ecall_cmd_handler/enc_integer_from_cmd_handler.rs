@@ -1,6 +1,9 @@
 use frame_enclave::BasicEnclaveEngine;
 use frame_runtime::ConfigGetter;
-use module_encrypted_sql_ops_ecall_types::enclave_types::{EncIntegerWrapper, RawInteger};
+use module_encrypted_sql_ops_ecall_types::{
+    enc_type::EncInteger,
+    enclave_types::{EncIntegerWrapper, RawInteger},
+};
 
 /// EncIntegerFrom command running inside enclave.
 #[derive(Clone, Hash, Debug)]
