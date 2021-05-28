@@ -1,4 +1,4 @@
-use crate::type_crypt::encinteger::EncIntegerEncrypt;
+use crate::type_crypt::{enc_avg_state::EncAvgStateEncrypt, encinteger::EncIntegerEncrypt};
 use frame_enclave::BasicEnclaveEngine;
 use frame_runtime::ConfigGetter;
 use module_encrypted_sql_ops_ecall_types::{
@@ -29,7 +29,8 @@ impl BasicEnclaveEngine for EncIntegerFromCmdHandler {
     where
         C: ConfigGetter,
     {
-        let encinteger = EncInteger::encrypt(self.enclave_input.to_i32());
+        let plain_i32 = PlainI32::from(self.enclave_input);
+        let encinteger = plain_i32.encrypt();
         Ok(EnclaveEncInteger::from(encinteger))
     }
 }
