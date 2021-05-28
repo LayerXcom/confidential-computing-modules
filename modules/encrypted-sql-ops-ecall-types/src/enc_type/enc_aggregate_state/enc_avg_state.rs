@@ -1,4 +1,5 @@
 use crate::serde::{Deserialize, Serialize};
+use std::vec::Vec;
 
 /// Intermediate state to calculate average (Encrypted).
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
