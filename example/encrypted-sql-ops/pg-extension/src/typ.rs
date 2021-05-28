@@ -1,5 +1,5 @@
-use module_encrypted_sql_ops_ecall_types::{
-    enc_type::{EncInteger as ModuleEncInteger, enc_aggregate_state::EncAvgState as ModuleEncAvgState},
+use module_encrypted_sql_ops_ecall_types::enc_type::{
+    enc_aggregate_state::EncAvgState as ModuleEncAvgState, EncInteger as ModuleEncInteger,
 };
 use pgx::*;
 use serde::{Deserialize, Serialize};
@@ -21,5 +21,11 @@ pub struct EncAvgState(ModuleEncAvgState);
 impl EncAvgState {
     pub(crate) fn into_inner(self) -> ModuleEncAvgState {
         self.0
+    }
+}
+
+impl From<ModuleEncAvgState> for EncAvgState {
+    fn from(e: ModuleEncAvgState) -> Self {
+        Self(e)
     }
 }

@@ -39,7 +39,7 @@ impl HostInputEncAvgState {
 }
 
 /// Encrypted average state.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct HostOutputEncAvgState(Option<EncAvgState>);
 
 impl HostOutput for HostOutputEncAvgState {

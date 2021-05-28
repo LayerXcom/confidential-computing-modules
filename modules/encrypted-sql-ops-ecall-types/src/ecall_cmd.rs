@@ -6,5 +6,6 @@
 #![allow(missing_docs)]
 
 pub const ENCINTEGER_FROM: u32 = 1;
-pub const ENCINTEGER_AVG_STATE_FUNC: u32 = 2;
-pub const ENCINTEGER_AVG_FINAL_FUNC: u32 = 3;
+pub const INIT_ENC_AVG_STATE_FUNC: u32 = 2;
+pub const ENCINTEGER_AVG_STATE_FUNC: u32 = 3;
+pub const ENCINTEGER_AVG_FINAL_FUNC: u32 = 4;
