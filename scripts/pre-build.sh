@@ -2,10 +2,15 @@
 
 set -e
 
-source /root/.docker_bashrc
 export PATH=~/.cargo/bin:$PATH
 export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
-ANONIFY_ROOT=/root/anonify
+
+user=$(whoami)
+if [ "$user" == "root" ]; then
+    ANONIFY_ROOT=/root/anonify
+else
+    ANONIFY_ROOT=/home/"$user"/anonify
+fi
 
 echo 'build frame/types...'
 cd ${ANONIFY_ROOT}/frame/types
