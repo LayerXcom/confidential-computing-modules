@@ -3,7 +3,13 @@
 FROM rust:1.52.1
 LABEL maintainer="div-labs@layerx.co.jp"
 
+WORKDIR /tmp/grpcurl
 RUN rustup component add rustfmt && \
-    GRPC_HEALTH_PROBE_VERSION=v0.4.2 && \
-    wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
-    chmod +x /bin/grpc_health_probe
+    GRPCURL_VERSION=1.8.0 && \
+    wget -q https://github.com/fullstorydev/grpcurl/releases/download/v${GRPCURL_VERSION}/grpcurl_${GRPCURL_VERSION}_linux_x86_64.tar.gz && \
+    tar xvf grpcurl_${GRPCURL_VERSION}_linux_x86_64.tar.gz && \
+    cp grpcurl /usr/bin/ && \
+    chmod +x /bin/grpcurl && \
+    rm -rf /tmp/grpcurl
+
+WORKDIR /root

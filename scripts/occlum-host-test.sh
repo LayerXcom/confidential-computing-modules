@@ -8,7 +8,7 @@ ANONIFY_ROOT="$(cd $(dirname $0); pwd)/.."
 set +e
 while true;
 do
-    grpc_health_probe -addr "$OCCLUM_ENCLAVE_IP_ADDRESS:$OCCLUM_ENCLAVE_PORT"
+    grpcurl -plaintext -d '{ "service": "helloworld.Greeter" }' "$OCCLUM_ENCLAVE_IP_ADDRESS:$OCCLUM_ENCLAVE_PORT" grpc.health.v1.Health/Check
     if [[ $? -eq 0 ]];
     then
         echo "enclave is ready"
