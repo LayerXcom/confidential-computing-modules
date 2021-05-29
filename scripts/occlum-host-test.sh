@@ -14,7 +14,7 @@ do
         echo "enclave is ready"
         break;
     fi
-    sleep 5
+    sleep 10
 done
 set -e
 
