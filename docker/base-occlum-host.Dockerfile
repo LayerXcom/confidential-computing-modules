@@ -9,7 +9,7 @@ RUN rustup component add rustfmt && \
     wget -q https://github.com/fullstorydev/grpcurl/releases/download/v${GRPCURL_VERSION}/grpcurl_${GRPCURL_VERSION}_linux_x86_64.tar.gz && \
     tar xvf grpcurl_${GRPCURL_VERSION}_linux_x86_64.tar.gz && \
     cp grpcurl /usr/bin/ && \
-    chmod +x /bin/grpcurl && \
+    chmod +x /usr/bin/grpcurl && \
     rm -rf /tmp/grpcurl
 
 WORKDIR /root
