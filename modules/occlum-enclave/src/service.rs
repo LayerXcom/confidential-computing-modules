@@ -9,6 +9,12 @@ use tonic::codegen::{
 use tonic::transport::{Body, NamedService, Server};
 use tracing::info;
 
+// TODO: Remove the reflection service for health check once https://github.com/hyperium/tonic/pull/620 merged.
+mod proto {
+    pub(crate) const FILE_DESCRIPTOR_SET: &'static [u8] =
+        tonic::include_file_descriptor_set!("health");
+}
+
 pub struct EnclaveGrpcServer<S> {
     addr: SocketAddr,
     service: S,
@@ -38,9 +44,13 @@ where
         info!("EnclaveGrpcServer listening on {}", self.addr);
         let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
         health_reporter.set_serving::<S>().await;
+        let reflection_service = tonic_reflection::server::Builder::configure()
+            .register_encoded_file_descriptor_set(proto::FILE_DESCRIPTOR_SET)
+            .build()?;
 
         Server::builder()
             .add_service(health_service)
+            .add_service(reflection_service)
             .add_service(self.service) // TODO: get mutiple
             .serve(self.addr)
             .await?;

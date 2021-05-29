@@ -11,7 +11,7 @@ async fn test_health_check() -> Result<(), Box<dyn std::error::Error>> {
         HealthClient::connect(format!("http://{}:{}", enclave_ip, enclave_port)).await?;
 
     let request = tonic::Request::new(HealthCheckRequest {
-        service: "Greeter",
+        service: "Greeter".to_string(),
     });
 
     let response = client.check(request).await?;
