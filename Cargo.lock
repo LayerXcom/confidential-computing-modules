@@ -3445,6 +3445,7 @@ dependencies = [
  "occlum-rpc-types",
  "tokio 1.6.0",
  "tonic",
+ "tonic-health",
  "tracing",
 ]
 

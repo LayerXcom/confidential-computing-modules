@@ -10,3 +10,6 @@ occlum-rpc-types = { path = "../rpc-types" }
 tonic = "0.4"
 tracing = "0.1"
 tokio = { version = "1.0", features = ["rt-multi-thread", "time", "fs", "macros", "net"] }
+
+[dev-dependencies]
+tonic-health = "0.3"
