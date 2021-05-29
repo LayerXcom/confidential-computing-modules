@@ -36,7 +36,8 @@ where
         // println!("Remote attested report: {:?}", report);
 
         info!("EnclaveGrpcServer listening on {}", self.addr);
-        let (_health_reporter, health_service) = tonic_health::server::health_reporter();
+        let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
+        health_reporter.set_serving::<S>().await;
 
         Server::builder()
             .add_service(health_service)
