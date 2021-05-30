@@ -13,6 +13,10 @@ stages:
             cp .env.sample .env
             export SPID=$(SPID)
             export SUB_KEY=$(SUB_KEY)
+
+            # TODO: Workaround for duplicate aesm service
+            # Remove here once https://github.com/occlum/occlum/pull/443 merged.
+            LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service
             docker-compose up -d
             docker-compose exec -T sgx_machine bash -c "sudo chown -R anonify-dev:anonify-dev anonify ; cd anonify && ./scripts/test.sh"
           displayName: 'Run rust-sgx-sdk tests'
