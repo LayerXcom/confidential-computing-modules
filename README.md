@@ -82,7 +82,7 @@ $ cd anonify && ./scripts/test.sh
 ```sh
 docker-compose -f occlum-docker-compose.yml up -d
 docker-compose -f occlum-docker-compose.yml exec enclave bash -c "(./anonify/scripts/occlum-enclave-test.sh) &"
-docker-compose -f occlum-docker-compose.yml exec host bash -c "./root/anonify/scripts/occlum-host-test.sh"
+docker-compose -f occlum-docker-compose.yml exec host bash -c "./anonify/scripts/occlum-host-test.sh"
 ```
 
 ## Documentations

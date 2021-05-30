@@ -22,7 +22,7 @@ stages:
         - script: |
             docker-compose -f occlum-docker-compose.yml up -d
             docker-compose -f occlum-docker-compose.yml exec -T enclave bash -c "(./anonify/scripts/occlum-enclave-test.sh) &"
-            docker-compose -f occlum-docker-compose.yml exec -T host bash -c "./root/anonify/scripts/occlum-host-test.sh"
+            docker-compose -f occlum-docker-compose.yml exec -T host bash -c "./anonify/scripts/occlum-host-test.sh"
           displayName: 'Run occlum tests'
         - script: docker-compose -f occlum-docker-compose.yml down
           condition: always()
