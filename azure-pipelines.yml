@@ -20,9 +20,13 @@ stages:
           condition: always()
           displayName: 'rust-sgx-sdk docker-compose down'
         - script: |
+            cp .env.sample .env
+            export SPID=$(SPID)
+            export SUB_KEY=$(SUB_KEY)
             docker-compose -f occlum-docker-compose.yml up -d
+
             # TODO: Remove the dettached mode flag once the enclave runs as the embedded mode.
-            docker-compose -f occlum-docker-compose.yml exec -T enclave bash -c "./anonify/scripts/occlum-enclave-test.sh"
+            docker-compose -f occlum-docker-compose.yml exec -d -T enclave bash -c "./anonify/scripts/occlum-enclave-test.sh"
             docker-compose -f occlum-docker-compose.yml exec -T host bash -c "./anonify/scripts/occlum-host-test.sh"
           displayName: 'Run occlum tests'
         - script: docker-compose -f occlum-docker-compose.yml down
