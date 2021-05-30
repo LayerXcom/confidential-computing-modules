@@ -4,6 +4,7 @@ use occlum_rpc_types::hello_world::greeter_server::GreeterServer;
 use std::env;
 mod handler;
 
+// TODO: Move to test. Test binaries can be executable in encalave.
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let enclave_ip =
