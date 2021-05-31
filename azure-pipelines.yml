@@ -71,7 +71,7 @@ stages:
         command: build
         containerRegistry: anonify-ci-cd-acr
         repository: rust-sgx-sdk-rootless
-        tags: test-2021-0531-01
+        tags: test-2021-0531-02
         dockerfile: ./docker/base-rust-sgx-sdk-rootless.Dockerfile
         buildContext: .
     - task: Docker@2
@@ -80,7 +80,7 @@ stages:
         command: push
         containerRegistry: anonify-ci-cd-acr
         repository: rust-sgx-sdk-rootless
-        tags: test-2021-0531-01
+        tags: test-2021-0531-02
         dockerfile: ./docker/base-rust-sgx-sdk-rootless.Dockerfile
         buildContext: .
 
@@ -90,7 +90,7 @@ stages:
         command: build
         containerRegistry: anonify-ci-cd-acr
         repository: anonify-dev
-        tags: test-2021-0531-01
+        tags: test-2021-0531-02
         dockerfile: ./docker/base-anonify-dev.Dockerfile
         buildContext: .
     - task: Docker@2
@@ -99,7 +99,7 @@ stages:
         command: push
         containerRegistry: anonify-ci-cd-acr
         repository: anonify-dev
-        tags: test-2021-0531-01
+        tags: test-2021-0531-02
         dockerfile: ./docker/base-anonify-dev.Dockerfile
         buildContext: .
 
