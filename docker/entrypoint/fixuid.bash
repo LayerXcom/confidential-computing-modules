@@ -1,3 +1,10 @@
 #!/bin/bash
-[ "$DISABLE_FIXUID" = 1 ] && echo 'skip fixuid' || fixuid
+
+if [ "$DISABLE_FIXUID" = 1 ]; then
+  echo 'skip fixuid'
+else
+  echo 'Running fixuid. Wait a while...'
+  fixuid -q
+fi
+
 bash
