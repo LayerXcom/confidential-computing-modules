@@ -9,4 +9,6 @@ example/server/target
 !example/server/target/debug/anonify-server
 
 docker/
+!docker/entrypoint
+
 .dockerignore

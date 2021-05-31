@@ -46,4 +46,5 @@ RUN rustup component add rust-src rls rust-analysis clippy rustfmt && \
     cargo install xargo bindgen cargo-audit && \
     rm -rf ~/.cargo/registry && rm -rf ~/.cargo/git
 
-ENTRYPOINT ["fixuid"]
+COPY ./docker/entrypoint/fixuid.bash ./
+ENTRYPOINT ["./fixuid.bash"]
