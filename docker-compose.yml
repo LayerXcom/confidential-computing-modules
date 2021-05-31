@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   sgx_machine:
-    image: anonify.azurecr.io/anonify-dev:latest
+    image: anonify.azurecr.io/encrypted-sql-ops-pg:latest
     volumes:
       - .:/home/anonify-dev/anonify
       - /var/run/aesmd:/var/run/aesmd
@@ -9,6 +9,7 @@ services:
       - "/dev/sgx/enclave"
     user: "${UID}:${GID}"
     environment:
+      IS_DEBUG: "false"
       RUST_BACKTRACE: 1
       RUST_LOG: debug
       SPID: ${SPID}

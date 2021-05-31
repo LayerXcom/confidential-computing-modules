@@ -1,7 +1,9 @@
 //! Input/Output types of enclave side.
 
-mod enclave_input;
-mod enclave_output;
+mod enclave_enc_avg_state;
+mod enclave_enc_integer;
+mod enclave_plain_integer;
 
-pub use enclave_input::RawInteger;
-pub use enclave_output::EncIntegerWrapper;
+pub use enclave_enc_avg_state::EnclaveEncAvgState;
+pub use enclave_enc_integer::EnclaveEncInteger;
+pub use enclave_plain_integer::EnclavePlainInteger;

@@ -38,7 +38,7 @@ RUN echo '. /opt/sgxsdk/environment' >> ~/.bashrc
 
 # Install rust-toolchain for the non-root user.
 # See: https://github.com/apache/incubator-teaclave-sgx-sdk/blob/master/dockerfile/05_rust.sh
-ARG rust_toolchain=nightly-2021-05-18
+ARG rust_toolchain=nightly-2020-10-25
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${rust_toolchain}
 RUN echo '. ~/.cargo/env' >> ~/.bashrc
 ENV PATH $PATH:$HOME/.cargo/bin

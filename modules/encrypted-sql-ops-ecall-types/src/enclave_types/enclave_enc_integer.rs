@@ -4,27 +4,27 @@ use crate::{
 };
 use frame_common::EcallOutput;
 
-/// Output from enclave
+/// Encrypted INTEGER.
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
-pub struct EncIntegerWrapper(EncInteger);
+pub struct EnclaveEncInteger(EncInteger);
 
-impl EcallOutput for EncIntegerWrapper {}
+impl EcallOutput for EnclaveEncInteger {}
 
-impl From<EncInteger> for EncIntegerWrapper {
+impl From<EncInteger> for EnclaveEncInteger {
     fn from(e: EncInteger) -> Self {
         Self(e)
     }
 }
 
-impl EncIntegerWrapper {
+impl EnclaveEncInteger {
     /// Get inner representation
     pub fn into_encinteger(self) -> EncInteger {
         self.0
     }
 }
 
-impl Default for EncIntegerWrapper {
+impl Default for EnclaveEncInteger {
     fn default() -> Self {
         unreachable!(
             "FIXME stop requiring Default for *EnclaveEngine::EO (must be created via handle())"

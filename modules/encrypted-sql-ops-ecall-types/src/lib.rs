@@ -17,7 +17,6 @@ use serde_sgx as serde;
 #[cfg(all(not(feature = "sgx"), feature = "std"))]
 use serde_std as serde;
 
-pub mod aggregate_state;
 pub mod enc_type;
 pub mod enclave_types;
 pub mod ecall_cmd;

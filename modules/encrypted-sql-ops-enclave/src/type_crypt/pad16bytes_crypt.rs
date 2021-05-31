@@ -1,27 +1,20 @@
-//! Encryption / Decryption logic for EncInteger
-
 use crate::error::{EnclaveError, Result};
 use aes::{
     cipher::generic_array::GenericArray, Aes128, BlockDecrypt, BlockEncrypt, NewBlockCipher,
 };
-use module_encrypted_sql_ops_ecall_types::enc_type::EncInteger;
 use std::{convert::TryInto, vec::Vec};
 
-// 128-bit key
-// TODO: Generate inside enclave or acquire from sealed one.
-const MASTER_KEY: [u8; 16] = [0u8, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+use super::MASTER_KEY;
 
-pub(crate) trait EncIntegerDecrypt {
-    fn decrypt(self) -> Result<i32>;
-}
+pub(crate) trait Pad16BytesDecrypt
+where
+    Self: Sized + Into<Vec<u8>>,
+{
+    type Decrypted: From<Vec<u8>>;
+    const DECRYPTED_SIZE: usize;
 
-pub(crate) trait EncIntegerEncrypt {
-    fn encrypt(integer: i32) -> Self;
-}
-
-impl EncIntegerDecrypt for EncInteger {
-    fn decrypt(self) -> Result<i32> {
-        let encrypted = self.as_slice();
+    fn decrypt(self) -> Result<Self::Decrypted> {
+        let encrypted = self.into();
 
         let key = GenericArray::from_slice(&MASTER_KEY);
         let mut enc_block = GenericArray::clone_from_slice(&encrypted);
@@ -38,24 +31,30 @@ impl EncIntegerDecrypt for EncInteger {
                 .try_into()
                 .map_err(|orig_vec: Vec<u8>| EnclaveError::DecryptError {
                     decrypted_size: orig_vec.len(),
-                    plain_size: 4,
+                    plain_size: Self::DECRYPTED_SIZE,
                 })?;
 
-        Ok(i32::from_be_bytes(
-            decrypted[..4].try_into().expect("length already checked"),
+        Ok(Self::Decrypted::from(
+            decrypted[..Self::DECRYPTED_SIZE]
+                .try_into()
+                .expect("length already checked"),
         ))
     }
 }
 
-impl EncIntegerEncrypt for EncInteger {
-    fn encrypt(integer: i32) -> Self {
+pub(crate) trait Pad16BytesEncrypt
+where
+    Self: Sized + Into<Vec<u8>>,
+{
+    type Encrypted: From<Vec<u8>>;
+
+    fn encrypt(self) -> Self::Encrypted {
         let key = GenericArray::from_slice(&MASTER_KEY);
 
         let mut plain_block = {
-            let bytes4 = integer.to_be_bytes();
-            let mut bytes16 = bytes4.to_vec();
-            bytes16.extend_from_slice(&[0u8; 12]);
-            GenericArray::clone_from_slice(&bytes16)
+            let mut bytes: Vec<u8> = self.into();
+            bytes.resize(16, 0);
+            GenericArray::clone_from_slice(&bytes)
         };
 
         let cipher = Aes128::new(&key);
@@ -64,6 +63,6 @@ impl EncIntegerEncrypt for EncInteger {
             cipher.encrypt_block(&mut plain_block);
             plain_block
         };
-        Self::from(enc_block.to_vec())
+        Self::Encrypted::from(enc_block.to_vec())
     }
 }
