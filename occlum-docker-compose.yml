@@ -1,0 +1,49 @@
+version: "3.7"
+services:
+  enclave:
+    image: anonify.azurecr.io/base-occlum-enclave:latest
+    volumes:
+      - .:/root/anonify
+      - /var/run/aesmd:/var/run/aesmd
+    devices:
+      - "/dev/sgx/enclave"
+    ports:
+      - ${OCCLUM_ENCLAVE_PORT}:${OCCLUM_ENCLAVE_PORT}
+    environment:
+      RUST_BACKTRACE: 1
+      RUST_LOG: debug
+      OCCLUM_LOG_LEVEL: debug
+      SPID: ${SPID}
+      SUB_KEY: ${SUB_KEY}
+      IAS_URL: ${IAS_URL}
+      OCCLUM_ENCLAVE_IP_ADDRESS: ${OCCLUM_ENCLAVE_IP_ADDRESS}
+      OCCLUM_ENCLAVE_PORT: ${OCCLUM_ENCLAVE_PORT}
+    stdin_open: true
+    tty: true
+    networks:
+      occlum_testing_net:
+        ipv4_address: ${OCCLUM_ENCLAVE_IP_ADDRESS}
+
+  host:
+    image: anonify.azurecr.io/base-occlum-host:latest
+    volumes:
+      - .:/root/anonify
+    ports:
+      - ${OCCLUM_HOST_PORT}:${OCCLUM_HOST_PORT}
+    environment:
+      RUST_BACKTRACE: 1
+      RUST_LOG: debug
+      OCCLUM_ENCLAVE_IP_ADDRESS: ${OCCLUM_ENCLAVE_IP_ADDRESS}
+      OCCLUM_ENCLAVE_PORT: ${OCCLUM_ENCLAVE_PORT}
+    stdin_open: true
+    tty: true
+    networks:
+      occlum_testing_net:
+        ipv4_address: ${OCCLUM_HOST_IP_ADDRESS}
+
+networks:
+  occlum_testing_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: ${OCCLUM_COMPOSE_NETWORK_SUBNET}

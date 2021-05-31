@@ -77,6 +77,7 @@ $ docker-compose exec sgx_machine bash
 $ cd anonify && ./scripts/test.sh
 ```
 
+
 ## Documentations
 Currently, documents are only available in Japanese.
 

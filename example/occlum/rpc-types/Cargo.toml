@@ -1,0 +1,12 @@
+[package]
+name = "occlum-rpc-types"
+version = "0.5.4"
+authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
+edition = "2018"
+
+[dependencies]
+tonic = "0.4"
+prost = "0.7"
+
+[build-dependencies]
+tonic-build = { version = "0.4", features = ["prost"] }

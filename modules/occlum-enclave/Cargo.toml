@@ -1,0 +1,19 @@
+[package]
+name = "occlum-enclave"
+version = "0.5.4"
+authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
+edition = "2018"
+build = "build.rs"
+
+[dependencies]
+remote-attestation = { path = "../../frame/remote-attestation" }
+frame-config = { path = "../../frame/config" }
+tonic = "0.4"
+tonic-reflection = "0.1"
+tonic-health = "0.3"
+anyhow = "1.0"
+tracing = "0.1"
+sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
+
+[build-dependencies]
+tonic-build = { version = "0.4", features = ["prost"] }

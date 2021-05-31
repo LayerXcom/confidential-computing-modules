@@ -22,6 +22,10 @@ Should match to the name: `docker/base-*.Dockerfile` in order for CI to build & 
     - On macOS, set `DISABLE_FIXUID=1` environmental variable because Docker for Mac does user mapping between host and container.
 - `base-anonify-dev.Dockerfile`
   - Includes tools to develop anonify (SGX SDK, for example). Used for both SGX HW mode and SW simulation (build-only) mode.
+- `base-occlum-enclave.Dockerfile`
+  - for developing in the occlum-enable environment
+- `base-occlum-host.Dockerfile`
+  - for a non-sgx environment to communicate with occlum enclave
 
 #### Example `docker run` command
 

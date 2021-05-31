@@ -13,12 +13,32 @@ stages:
             cp .env.sample .env
             export SPID=$(SPID)
             export SUB_KEY=$(SUB_KEY)
+
+            # TODO: Workaround for duplicate aesm service
+            # Remove here once https://github.com/occlum/occlum/pull/443 merged.
             docker-compose up -d
             docker-compose exec -T sgx_machine bash -c "sudo chown -R anonify-dev:anonify-dev anonify ; cd anonify && ./scripts/test.sh"
-          displayName: 'Run tests'
+          displayName: 'Run rust-sgx-sdk tests'
         - script: docker-compose down
           condition: always()
-          displayName: 'Shutdown'
+          displayName: 'rust-sgx-sdk docker-compose down'
+        - script: |
+            cp .env.sample .env
+            export SPID=$(SPID)
+            export SUB_KEY=$(SUB_KEY)
+            docker-compose -f occlum-docker-compose.yml up -d
+
+            # TODO: Remove the dettached mode flag once the enclave runs as the embedded mode.
+            docker-compose -f occlum-docker-compose.yml exec -d -T enclave bash -c "./anonify/scripts/occlum-enclave-test.sh"
+            docker-compose -f occlum-docker-compose.yml exec -T host bash -c "./anonify/scripts/occlum-host-test.sh"
+          displayName: 'Run occlum tests'
+        - script: |
+            sudo systemctl restart aesmd
+            LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service
+
+            docker-compose -f occlum-docker-compose.yml down
+          condition: always()
+          displayName: 'occlum docker-compose down'
 
 - stage:
   condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e')

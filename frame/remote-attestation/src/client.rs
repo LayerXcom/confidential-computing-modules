@@ -1,15 +1,21 @@
 use crate::error::{FrameRAError, Result};
-use anyhow::anyhow;
+use crate::{
+    anyhow::anyhow,
+    base64,
+    http_req::{
+        self,
+        request::{Method, Request},
+        response::{Headers, Response},
+        uri::Uri,
+    },
+    localstd::{io::Write, prelude::v1::*, str, string::String, time::SystemTime},
+    rustls,
+    serde::{Deserialize, Serialize},
+    serde_json::{self, Value},
+    webpki,
+};
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
-use http_req::{
-    request::{Method, Request},
-    response::{Headers, Response},
-    uri::Uri,
-};
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::{io::Write, prelude::v1::*, str, string::String, time::SystemTime};
 
 type SignatureAlgorithms = &'static [&'static webpki::SignatureAlgorithm];
 static SUPPORTED_SIG_ALGS: SignatureAlgorithms = &[
@@ -95,6 +101,7 @@ impl<'a> RAClient<'a> {
 
 /// A response from IAS
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
 pub struct AttestedReport {
     /// A report returned from Attestation Service
     report: Vec<u8>,
