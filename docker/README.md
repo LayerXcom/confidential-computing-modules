@@ -22,7 +22,7 @@ Should match to the name: `docker/base-*.Dockerfile` in order for CI to build & 
   - Includes tools to develop anonify (SGX SDK, for example). Used for both SGX HW mode and SW simulation (build-only) mode.
 - `base-occlum-enclave.Dockerfile`
   - for developing in the occlum-enable environment
-- `base-ocllum-host.Dockerfile`
+- `base-occlum-host.Dockerfile`
   - for a non-sgx environment to communicate with occlum enclave
 
 ### Application Images
