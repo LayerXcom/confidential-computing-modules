@@ -72,10 +72,11 @@ LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aes
 
 Running intel SGX environment, and then, you can build in HW mode.
 ```
-$ docker-compose up -d
+$ UID=`id -u` GID=`id -g` docker-compose up -d
 $ docker-compose exec sgx_machine bash
 $ cd anonify && ./scripts/test.sh
 ```
+
 
 ## Documentations
 Currently, documents are only available in Japanese.

@@ -1,0 +1,15 @@
+[package]
+name = "occlum-host-node"
+version = "0.5.4"
+authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
+edition = "2018"
+
+# TODO: move to [dev-dependencies]
+[dependencies]
+occlum-rpc-types = { path = "../rpc-types" }
+tonic = "0.4"
+tracing = "0.1"
+tokio = { version = "1.0", features = ["rt-multi-thread", "time", "fs", "macros", "net"] }
+
+[dev-dependencies]
+tonic-health = "0.3"

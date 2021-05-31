@@ -1,0 +1,13 @@
+[package]
+name = "occlume-enclave-node"
+version = "0.5.4"
+authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
+edition = "2018"
+
+[dependencies]
+occlum-enclave = { path = "../../../modules/occlum-enclave" }
+occlum-rpc-types = { path = "../rpc-types" }
+tonic = "0.4"
+anyhow = "1.0"
+tracing = "0.1"
+tokio = { version = "1.0", features = ["rt-multi-thread", "time", "fs", "macros", "net"] }
