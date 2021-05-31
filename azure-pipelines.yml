@@ -33,7 +33,9 @@ stages:
             docker-compose -f occlum-docker-compose.yml exec -T host bash -c "./anonify/scripts/occlum-host-test.sh"
           displayName: 'Run occlum tests'
         - script: |
+            sudo systemctl restart aesmd
             LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service
+
             docker-compose -f occlum-docker-compose.yml down
           condition: always()
           displayName: 'occlum docker-compose down'
