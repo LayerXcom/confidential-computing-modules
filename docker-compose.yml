@@ -7,6 +7,7 @@ services:
       - /var/run/aesmd:/var/run/aesmd
     devices:
       - "/dev/sgx/enclave"
+    user: "${UID}:${GID}"
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug
