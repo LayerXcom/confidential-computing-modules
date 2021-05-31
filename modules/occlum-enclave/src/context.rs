@@ -4,7 +4,7 @@ use remote_attestation::{AttestedReport, EncodedQuote, QuoteTarget};
 use sgx_types::sgx_report_data_t;
 use std::env;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct OcclumEnclaveContext {
     ias_url: String,
     spid: String,

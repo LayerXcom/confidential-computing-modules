@@ -15,6 +15,7 @@ mod proto {
         tonic::include_file_descriptor_set!("health");
 }
 
+#[derive(Debug)]
 pub struct EnclaveGrpcServer<S> {
     addr: SocketAddr,
     service: S,

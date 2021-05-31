@@ -1,3 +1,5 @@
+#![deny(missing_debug_implementations)]
+
 use handler::MyGreeter;
 use occlum_enclave::service::EnclaveGrpcServer;
 use occlum_rpc_types::hello_world::greeter_server::GreeterServer;

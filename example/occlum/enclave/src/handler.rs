@@ -2,7 +2,7 @@ use occlum_rpc_types::hello_world::{greeter_server::Greeter, HelloReply, HelloRe
 use tonic::{Request, Response, Status};
 use tracing::info;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub(crate) struct MyGreeter {}
 
 #[tonic::async_trait]
