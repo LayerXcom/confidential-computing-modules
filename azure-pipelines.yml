@@ -16,7 +16,6 @@ stages:
 
             # TODO: Workaround for duplicate aesm service
             # Remove here once https://github.com/occlum/occlum/pull/443 merged.
-            LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service
             docker-compose up -d
             docker-compose exec -T sgx_machine bash -c "sudo chown -R anonify-dev:anonify-dev anonify ; cd anonify && ./scripts/test.sh"
           displayName: 'Run rust-sgx-sdk tests'
@@ -33,7 +32,9 @@ stages:
             docker-compose -f occlum-docker-compose.yml exec -d -T enclave bash -c "./anonify/scripts/occlum-enclave-test.sh"
             docker-compose -f occlum-docker-compose.yml exec -T host bash -c "./anonify/scripts/occlum-host-test.sh"
           displayName: 'Run occlum tests'
-        - script: docker-compose -f occlum-docker-compose.yml down
+        - script: |
+            LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service
+            docker-compose -f occlum-docker-compose.yml down
           condition: always()
           displayName: 'occlum docker-compose down'
 
