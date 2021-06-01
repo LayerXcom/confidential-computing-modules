@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   sgx_machine:
-    image: anonify.azurecr.io/encrypted-sql-ops-pg:latest
+    image: anonify.azurecr.io/anonify-dev:latest
     volumes:
       - .:/home/anonify-dev/anonify
       - /var/run/aesmd:/var/run/aesmd
