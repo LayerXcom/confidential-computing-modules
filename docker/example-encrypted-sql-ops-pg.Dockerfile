@@ -1,4 +1,4 @@
-FROM anonify.azurecr.io/anonify-dev:latest as builder
+FROM anonify.azurecr.io/anonify-dev:test-2021-0531-02 as builder
 
 SHELL ["/bin/bash", "-c"]
 
