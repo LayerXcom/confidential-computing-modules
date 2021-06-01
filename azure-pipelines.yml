@@ -129,10 +129,10 @@ stages:
 - stage: Build_and_Push_Example_Docker
   # condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
-  # - job: Docker
-  #   pool:
-  #     name: 'AnonifyAgent'
-  #   steps:
+  - job: Docker
+    pool:
+      name: 'AnonifyAgent'
+    steps:
   #   - task: Docker@2
   #     displayName: Build erc20 image
   #     inputs:
