@@ -174,8 +174,13 @@ stages:
     # - script: docker image prune -f
     #   displayName: Remove dangling images
 
-    - script: docker pull anonify.azurecr.io/anonify-dev:latest
-      displayName: docker pull
+    - task: Docker@2
+      displayName: pull anonify-dev:latest
+      inputs:
+        command: pull
+        containerRegistry: anonify-ci-cd-acr
+        repository: anonify-dev
+        tags: latest
     - task: Docker@2
       displayName: Build encrypted-sql-ops-pg image
       inputs:
