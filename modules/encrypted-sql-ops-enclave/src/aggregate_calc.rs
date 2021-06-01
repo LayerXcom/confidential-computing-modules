@@ -3,8 +3,8 @@
 /// TODO: use generics
 pub trait AggregateCalc {
     /// Takes a non-NULL value
-    fn accumulate(&mut self, val: i64);
+    fn accumulate(&mut self, val: i32);
 
     /// Emits an aggregated value
-    fn finalize(self) -> f64;
+    fn finalize(self) -> f32;
 }

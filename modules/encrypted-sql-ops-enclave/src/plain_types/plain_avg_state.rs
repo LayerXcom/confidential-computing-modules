@@ -1,25 +1,27 @@
 use crate::aggregate_calc::AggregateCalc;
 
+use super::PlainI32;
+
 /// Intermediate state to calculate average.
 ///
-/// FIXME: Currently `i64` input and `f64` output is only supported.
+/// FIXME: Currently `i32` input and `f32` output is only supported.
 #[derive(Clone, PartialEq, Debug, Default)]
 pub struct PlainAvgState {
     /// current total
-    pub sum: i64,
+    pub sum: PlainI32,
 
     /// current number of values
-    pub n: u64,
+    pub n: PlainI32,
 }
 
 impl AggregateCalc for PlainAvgState {
-    fn accumulate(&mut self, val: i64) {
-        self.sum += val;
-        self.n += 1;
+    fn accumulate(&mut self, val: i32) {
+        self.sum = PlainI32::new(self.sum.to_i32() + val);
+        self.n = PlainI32::new(self.n.to_i32() + 1);
     }
 
-    fn finalize(self) -> f64 {
-        (self.sum as f64) / (self.n as f64)
+    fn finalize(self) -> f32 {
+        (self.sum.to_i32() as f32) / (self.n.to_i32() as f32)
     }
 }
 

@@ -8,6 +8,18 @@ use std::{convert::TryInto, vec::Vec};
 #[derive(Clone, PartialEq, Debug, Default)]
 pub struct PlainI32(i32);
 
+impl PlainI32 {
+    /// Constructor
+    pub fn new(i: i32) -> Self {
+        Self(i)
+    }
+
+    /// Get raw representation
+    pub fn to_i32(&self) -> i32 {
+        self.0
+    }
+}
+
 impl From<PlainI32> for Vec<u8> {
     fn from(p: PlainI32) -> Self {
         p.0.to_be_bytes().to_vec()
