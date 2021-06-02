@@ -1,10 +1,6 @@
 SGX_SDK_RUST ?= $(HOME)/sgx
 ANONIFY_ROOT_DIR := ..
-ANONIFY_CORE_ROOT := $(ANONIFY_ROOT_DIR)/core
-FRAME_ROOT := $(ANONIFY_ROOT_DIR)/frame
 CONFIG_DIR := $(ANONIFY_ROOT_DIR)/config
-ANONIFY_ENCLAVE_DIR := $(ANONIFY_CORE_ROOT)/enclave
-ANONIFY_HOST_DIR := $(ANONIFY_CORE_ROOT)/host
 ANONIFY_BIN_DIR := $(ANONIFY_ROOT_DIR)/.anonify
 ANONIFY_EDL_DIR := $(ANONIFY_ROOT_DIR)/edl
 ANONIFY_BUILD_DIR := $(ANONIFY_ROOT_DIR)/build
@@ -84,7 +80,7 @@ CUSTOM_COMMON_PATH := $(SGX_SDK_RUST)/common
 
 ######## EDL Settings ########
 
-Enclave_EDL_Files := $(ANONIFY_ENCLAVE_DIR)/$(T_C_FILE) $(ANONIFY_ENCLAVE_DIR)/$(T_H_FILE) $(ANONIFY_HOST_DIR)/$(U_C_FILE) $(ANONIFY_HOST_DIR)/$(U_H_FILE)
+Enclave_EDL_Files := $(ANONIFY_BUILD_DIR)/$(T_C_FILE) $(ANONIFY_BUILD_DIR)/$(T_H_FILE) $(ANONIFY_BUILD_DIR)/$(U_C_FILE) $(ANONIFY_BUILD_DIR)/$(U_H_FILE)
 
 ######## Enclave Settings ########
 
@@ -107,8 +103,7 @@ else
 	RustEnclave_Feature_Flags := $(FEATURE_FLAGS)
 endif
 
-
-RustEnclave_Include_Paths := -I$(CUSTOM_COMMON_PATH)/inc -I$(CUSTOM_EDL_PATH) -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SDK)/include/epid -I $(ANONIFY_ENCLAVE_DIR) -I./include
+RustEnclave_Include_Paths := -I$(CUSTOM_COMMON_PATH)/inc -I$(CUSTOM_EDL_PATH) -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SDK)/include/epid -I./include
 RustEnclave_Link_Libs := -L$(CUSTOM_LIBRARY_PATH) -l$(Rust_Enclave_Lib_Name)
 RustEnclave_Compile_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(RustEnclave_Include_Paths)
 RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) \
@@ -132,13 +127,13 @@ $(Enclave_EDL_Files): $(SGX_EDGER8R) $(ANONIFY_EDL_DIR)/$(EDL_FILE)
 	@mkdir -p $(ANONIFY_BUILD_DIR)
 	@$(SGX_EDGER8R) --trusted $(ANONIFY_EDL_DIR)/$(EDL_FILE) --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --trusted-dir $(ANONIFY_BUILD_DIR)
 	@$(SGX_EDGER8R) --untrusted $(ANONIFY_EDL_DIR)/$(EDL_FILE) --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --untrusted-dir $(ANONIFY_BUILD_DIR)
-	@echo "GEN  =>  $(Enclave_EDL_Files)"
+	@echo "GEN  =>  $@"
 
 ######## Enclave Objects ########
 
 $(ANONIFY_BUILD_DIR)/$(T_O_FILE): $(Enclave_EDL_Files)
 	@$(CC) $(RustEnclave_Compile_Flags) -c $(ANONIFY_BUILD_DIR)/$(T_C_FILE) -o $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
-	@echo "CC   <=  $<"
+	@echo "CC   <=  $(ANONIFY_BUILD_DIR)/$(T_C_FILE) with $(ANONIFY_BUILD_DIR)/$(T_O_FILE)"
 
 $(Rust_Enclave_Name): $(Rust_Enclave_Files)
 	@echo "Rust_Enclave_Name <= $(PWD)"
