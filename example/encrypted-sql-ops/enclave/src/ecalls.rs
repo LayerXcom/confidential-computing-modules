@@ -5,7 +5,10 @@ use frame_enclave::{register_ecall, BasicEnclaveEngine};
 use log::error;
 use module_encrypted_sql_ops_ecall_types::ecall_cmd::*;
 use module_encrypted_sql_ops_enclave::{
-    ecall_cmd_handler::{EncIntegerAvgStateFuncCmdHandler, EncIntegerFromCmdHandler},
+    ecall_cmd_handler::{
+        EncIntegerAvgFinalFuncCmdHandler, EncIntegerAvgStateFuncCmdHandler,
+        EncIntegerFromCmdHandler,
+    },
     enclave_context::EncryptedSqlOpsEnclaveContext,
 };
 use std::{ptr, vec::Vec};
@@ -20,4 +23,5 @@ register_ecall!(
     EncryptedSqlOpsEnclaveContext,
     (ENCINTEGER_FROM, EncIntegerFromCmdHandler),
     (ENCINTEGER_AVG_STATE_FUNC, EncIntegerAvgStateFuncCmdHandler),
+    (ENCINTEGER_AVG_FINAL_FUNC, EncIntegerAvgFinalFuncCmdHandler),
 );

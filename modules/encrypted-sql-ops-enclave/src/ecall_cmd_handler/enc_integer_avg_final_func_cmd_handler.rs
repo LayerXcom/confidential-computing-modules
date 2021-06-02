@@ -1,9 +1,9 @@
 use crate::aggregate_calc::AggregateCalc;
 use crate::plain_types::PlainAvgState;
-use crate::type_crypt::Pad16BytesDecrypt;
 use frame_enclave::BasicEnclaveEngine;
 use frame_runtime::ConfigGetter;
 use module_encrypted_sql_ops_ecall_types::enclave_types::EnclaveEncAvgState;
+use module_encrypted_sql_ops_ecall_types::enclave_types::EnclavePlainReal;
 
 /// EncIntegerAvgStateFunc command running inside enclave.
 #[derive(Clone, Debug)]
@@ -13,7 +13,7 @@ pub struct EncIntegerAvgFinalFuncCmdHandler {
 
 impl BasicEnclaveEngine for EncIntegerAvgFinalFuncCmdHandler {
     type EI = EnclaveEncAvgState;
-    type EO = EnclavePlainInteger;
+    type EO = EnclavePlainReal;
 
     fn new<C>(ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
@@ -28,15 +28,11 @@ impl BasicEnclaveEngine for EncIntegerAvgFinalFuncCmdHandler {
     where
         C: ConfigGetter,
     {
-        let (enc_current_state, enc_next) = self.enclave_input.into_inner();
+        let enc_current_state = self.enclave_input.into_enc_avg_state();
+        let plain_current_state = PlainAvgState::from_encrypted(enc_current_state)?;
 
-        let mut plain_current_state = PlainAvgState::from_encrypted(enc_current_state)?;
-        let plain_next = enc_next.decrypt()?;
-
-        plain_current_state.accumulate(plain_next.to_i32());
-
-        let enc_next_state = plain_current_state.to_encrypted();
-        Ok(EnclaveEncAvgState::from(enc_next_state))
+        let avg = plain_current_state.finalize();
+        Ok(EnclavePlainReal::from(avg))
     }
 }
 
