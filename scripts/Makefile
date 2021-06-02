@@ -131,7 +131,7 @@ $(Enclave_EDL_Files): $(SGX_EDGER8R) $(ANONIFY_EDL_DIR)/$(EDL_FILE)
 
 ######## Enclave Objects ########
 
-$(ANONIFY_BUILD_DIR)/$(T_O_FILE): $(Enclave_EDL_Files)
+$(ANONIFY_BUILD_DIR)/$(T_O_FILE): $(Lib_Enclave) $(Enclave_EDL_Files)
 	@$(CC) $(RustEnclave_Compile_Flags) -c $(ANONIFY_BUILD_DIR)/$(T_C_FILE) -o $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
 	@echo "CC   <=  $(ANONIFY_BUILD_DIR)/$(T_C_FILE) with $(ANONIFY_BUILD_DIR)/$(T_O_FILE)"
 
@@ -142,7 +142,7 @@ $(Lib_Enclave): $(Rust_Enclave_Files)
 	@mkdir -p $(CUSTOM_LIBRARY_PATH)
 	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/lib$(Lib_Enclave_Name).a
 
-$(Enclave_SO): $(ANONIFY_BUILD_DIR)/$(T_O_FILE) $(Lib_Enclave)
+$(Enclave_SO): $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
 	@$(CXX) $(ANONIFY_BUILD_DIR)/$(T_O_FILE) -o $@ $(RustEnclave_Link_Flags)
 	@echo "LINK =>  $@"
 

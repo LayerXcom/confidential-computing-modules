@@ -37,15 +37,11 @@ solc -o contract-build --bin --abi --optimize --overwrite \
 cd ${ANONIFY_ROOT}/anonify-contracts/deployer
 export FACTORY_CONTRACT_ADDRESS=$(cargo run factory)
 
-cd ${ANONIFY_ROOT}/frame/types
-cargo build
-
 # Generate key-vault's signed.so and measurement.txt
 echo "Integration testing..."
 cd ${ANONIFY_ROOT}/scripts
 export ENCLAVE_PKG_NAME=key_vault
 make DEBUG=1 ENCLAVE_DIR=example/key-vault/enclave
-
 
 #
 # Lints checks
