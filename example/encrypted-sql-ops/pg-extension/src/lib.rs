@@ -25,3 +25,28 @@ pub mod pg_test {
         vec![]
     }
 }
+
+#[cfg(any(test, feature = "pg_test"))]
+mod tests {
+    use pgx::*;
+
+    fn prepare() {
+        Spi::run("CREATE TABLE t (id INTEGER, c_enc ENCINTEGER)");
+        Spi::run("INSERT INTO t (id, c_enc) VALUES (1, ENCINTEGER_FROM(1)), (2, ENCINTEGER_FROM(2)), (3, ENCINTEGER_FROM(3)), (4, ENCINTEGER_FROM(4))");
+    }
+
+    fn encinteger_avg() -> f32 {
+        Spi::get_one::<f32>("SELECT AVG(c_enc) FROM t;").unwrap()
+    }
+
+    fn encinteger_avg_empty() -> f32 {
+        Spi::get_one::<f32>("SELECT AVG(c_enc) FROM t WHERE id > 4;").unwrap()
+    }
+
+    #[pg_test]
+    fn test_encinteger_avg() {
+        prepare();
+        assert_eq!(encinteger_avg(), 2.5);
+        assert!(encinteger_avg_empty().is_nan());
+    }
+}
