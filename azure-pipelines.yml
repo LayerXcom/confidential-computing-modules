@@ -78,13 +78,13 @@ stages:
 #         condition: always()
 #         displayName: 'Shutdown'
 
-- stage: Build_and_Push_Base_Docker_Images
+# - stage: Build_and_Push_Base_Docker_Images
 #   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
-  jobs:
-  - job: Docker
-    pool:
-      name: 'AnonifyAgent'
-    steps:
+  # jobs:
+  # - job: Docker
+  #   pool:
+  #     name: 'AnonifyAgent'
+  #   steps:
 #     - task: Docker@2
 #       displayName: Build rust-sgx-sdk-rootless image
 #       inputs:
