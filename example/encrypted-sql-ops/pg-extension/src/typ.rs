@@ -5,7 +5,7 @@ use pgx::*;
 use serde::{Deserialize, Serialize};
 
 /// `ENCINTEGER` custom SQL type, which is encrypted version of `INTEGER`.
-#[derive(Serialize, Deserialize, PostgresType)]
+#[derive(Debug, Serialize, Deserialize, PostgresType)]
 pub struct EncInteger(ModuleEncInteger);
 
 impl From<ModuleEncInteger> for EncInteger {
@@ -14,22 +14,32 @@ impl From<ModuleEncInteger> for EncInteger {
     }
 }
 
-/// Used as intermediate state on calculating AVG for `ENCINTEGER`.
-#[derive(Serialize, Deserialize, PostgresType)]
-pub struct EncAvgState {
-    current_state: Option<ModuleEncAvgState>,
+impl From<EncInteger> for ModuleEncInteger {
+    fn from(e: EncInteger) -> Self {
+        e.0
+    }
 }
 
-impl EncAvgState {
-    pub(crate) fn into_inner(self) -> ModuleEncAvgState {
-        self.current_state.expect("should be already initialized")
-    }
+/// Used as intermediate state on calculating AVG for `ENCINTEGER`.
+#[derive(Debug, Serialize, Deserialize, PostgresType)]
+pub struct EncAvgState {
+    // cannot use enum here to make initial value via `CREATE AGGREGATE`.
+    current_state: Option<ModuleEncAvgState>,
 }
 
 impl From<ModuleEncAvgState> for EncAvgState {
     fn from(e: ModuleEncAvgState) -> Self {
         Self {
             current_state: Some(e),
+        }
+    }
+}
+
+impl From<EncAvgState> for ModuleEncAvgState {
+    fn from(e: EncAvgState) -> Self {
+        match e.current_state {
+            Some(mod_e) => mod_e,
+            None => ModuleEncAvgState::Initial,
         }
     }
 }

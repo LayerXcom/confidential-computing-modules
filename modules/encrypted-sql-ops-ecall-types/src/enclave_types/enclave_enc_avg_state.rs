@@ -1,4 +1,4 @@
-use frame_common::{EcallInput, EcallOutput};
+use frame_common::EcallOutput;
 
 use crate::{
     enc_type::enc_aggregate_state::EncAvgState,
@@ -10,7 +10,6 @@ use crate::{
 #[serde(crate = "crate::serde")]
 pub struct EnclaveEncAvgState(EncAvgState);
 
-impl EcallInput for EnclaveEncAvgState {}
 impl EcallOutput for EnclaveEncAvgState {}
 
 impl From<EncAvgState> for EnclaveEncAvgState {

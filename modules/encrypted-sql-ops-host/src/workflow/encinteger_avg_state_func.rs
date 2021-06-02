@@ -2,12 +2,10 @@
 //!
 //! FIXME: Workflow -> Controller
 
-use super::host_types::{
-    HostEncInteger, HostInputEncAvgState, HostOutputEncAvgState, HostPlainInteger,
-};
+use super::host_types::{HostEncAvgState, HostEncAvgStateWithNext};
 use frame_host::engine::*;
 use module_encrypted_sql_ops_ecall_types::enclave_types::{
-    EnclaveEncAvgState, EnclaveEncInteger, EnclavePlainInteger,
+    EnclaveEncAvgState, EnclaveEncAvgStateWithNext,
 };
 
 /// State function of `AVG(ENCINTEGER)` custom aggregate.
@@ -15,9 +13,9 @@ use module_encrypted_sql_ops_ecall_types::enclave_types::{
 pub struct EncIntegerAvgStateFuncWorkflow;
 
 impl HostEngine for EncIntegerAvgStateFuncWorkflow {
-    type HI = HostInputEncAvgState;
-    type EI = EnclaveEncAvgState;
+    type HI = HostEncAvgStateWithNext;
+    type EI = EnclaveEncAvgStateWithNext;
     type EO = EnclaveEncAvgState;
-    type HO = HostOutputEncAvgState;
+    type HO = HostEncAvgState;
     const ECALL_MAX_SIZE: usize = 64;
 }

@@ -10,8 +10,11 @@ use module_encrypted_sql_ops_ecall_types::{
     },
 };
 use module_encrypted_sql_ops_host::workflow::{
-    host_types::HostPlainInteger,
-    {encinteger_avg_state_func::EncIntegerAvgStateFuncWorkflow, encinteger_from::EncIntegerFromWorkflow},
+    host_types::{HostEncAvgStateWithNext, HostPlainInteger},
+    {
+        encinteger_avg_state_func::EncIntegerAvgStateFuncWorkflow,
+        encinteger_from::EncIntegerFromWorkflow,
+    },
 };
 use pgx::*;
 
@@ -33,24 +36,23 @@ fn encinteger_from(raw_integer: i32) -> EncInteger {
 #[pg_extern]
 fn encinteger_avg_state_func(
     internal_state: EncAvgState,
-    _next_data_value: EncInteger,
+    next_data_value: EncInteger,
 ) -> EncAvgState {
-    // let host_input = HostInputEncAvgState::new(
-    //     EnclaveEncAvgState::from(internal_state),
-    //     ENCINTEGER_AVG_STATE_FUNC,
-    // );
-    // let eid = Enclave::global().geteid();
+    let host_input = HostEncAvgStateWithNext::new(
+        ModuleEncAvgState::from(internal_state),
+        ModuleEncInteger::from(next_data_value),
+        ENCINTEGER_AVG_STATE_FUNC,
+    );
+    let eid = Enclave::global().geteid();
 
-    // let host_output = EncIntegerAvgStateFuncWorkflow::exec(host_input, eid).unwrap_or_else(|e| {
-    //     panic!(
-    //         "failed to calculate next avg state in enclave (Enclave ID: {}), {:?}",
-    //         eid, e
-    //     )
-    // });
+    let host_output = EncIntegerAvgStateFuncWorkflow::exec(host_input, eid).unwrap_or_else(|e| {
+        panic!(
+            "failed to calculate next avg state in enclave (Enclave ID: {}), {:?}",
+            eid, e
+        )
+    });
 
-    // EncAvgState::from(ModuleEncAvgState::from(host_output))
-
-    todo!()
+    EncAvgState::from(ModuleEncAvgState::from(host_output))
 }
 
 #[pg_extern]

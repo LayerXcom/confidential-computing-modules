@@ -3,10 +3,19 @@ use crate::{
     serde::{Deserialize, Serialize},
 };
 
-/// Intermediate state to calculate average (Encrypted).
+/// State to calculate average (Encrypted).
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
-pub struct EncAvgState {
-    sum: EncInteger,
-    n: EncInteger,
+pub enum EncAvgState {
+    /// Intermediate state
+    Interm {
+        /// current total
+        sum: EncInteger,
+
+        /// current number of values
+        n: EncInteger,
+    },
+
+    /// sum == 0, n == 0
+    Initial,
 }
