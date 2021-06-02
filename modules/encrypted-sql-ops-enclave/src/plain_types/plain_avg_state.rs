@@ -1,4 +1,7 @@
+use module_encrypted_sql_ops_ecall_types::enc_type::enc_aggregate_state::EncAvgState;
+
 use crate::aggregate_calc::AggregateCalc;
+use crate::error::Result;
 
 use super::PlainI32;
 
@@ -12,6 +15,18 @@ pub struct PlainAvgState {
 
     /// current number of values
     pub n: PlainI32,
+}
+
+impl PlainAvgState {
+    /// Constructor from EncAvgState
+    pub fn from_encrypted(encrypted: EncAvgState) -> Result<Self> {
+        todo!()
+    }
+
+    /// Encrypt to EncAvgState
+    pub fn to_encrypted(self) -> EncAvgState {
+        todo!()
+    }
 }
 
 impl AggregateCalc for PlainAvgState {
