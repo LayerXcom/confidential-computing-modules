@@ -78,7 +78,7 @@ stages:
 #         condition: always()
 #         displayName: 'Shutdown'
 
-# - stage: Build_and_Push_Base_Docker_Images
+# 
 #   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   # jobs:
   # - job: Docker

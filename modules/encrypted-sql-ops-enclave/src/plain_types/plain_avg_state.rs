@@ -1,7 +1,7 @@
-use module_encrypted_sql_ops_ecall_types::enc_type::enc_aggregate_state::EncAvgState;
-
 use crate::aggregate_calc::AggregateCalc;
 use crate::error::Result;
+use crate::type_crypt::{Pad16BytesDecrypt, Pad16BytesEncrypt};
+use module_encrypted_sql_ops_ecall_types::enc_type::enc_aggregate_state::EncAvgState;
 
 use super::PlainI32;
 
@@ -20,12 +20,27 @@ pub struct PlainAvgState {
 impl PlainAvgState {
     /// Constructor from EncAvgState
     pub fn from_encrypted(encrypted: EncAvgState) -> Result<Self> {
-        todo!()
+        match encrypted {
+            EncAvgState::Interm { sum, n } => {
+                let plain_sum = sum.decrypt()?;
+                let plain_n = n.decrypt()?;
+                Ok(Self {
+                    sum: plain_sum,
+                    n: plain_n,
+                })
+            }
+            EncAvgState::Initial => Ok(Self::default()),
+        }
     }
 
     /// Encrypt to EncAvgState
     pub fn to_encrypted(self) -> EncAvgState {
-        todo!()
+        let enc_sum = self.sum.encrypt();
+        let enc_n = self.n.encrypt();
+        EncAvgState::Interm {
+            sum: enc_sum,
+            n: enc_n,
+        }
     }
 }
 
