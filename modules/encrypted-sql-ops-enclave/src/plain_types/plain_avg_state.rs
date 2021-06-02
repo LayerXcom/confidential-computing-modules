@@ -3,7 +3,7 @@ use crate::error::Result;
 use crate::type_crypt::{Pad16BytesDecrypt, Pad16BytesEncrypt};
 use module_encrypted_sql_ops_ecall_types::enc_type::enc_aggregate_state::EncAvgState;
 
-use super::PlainI32;
+use super::PlainInteger;
 
 /// Intermediate state to calculate average.
 ///
@@ -11,10 +11,10 @@ use super::PlainI32;
 #[derive(Clone, PartialEq, Debug, Default)]
 pub struct PlainAvgState {
     /// current total
-    pub sum: PlainI32,
+    pub sum: PlainInteger,
 
     /// current number of values
-    pub n: PlainI32,
+    pub n: PlainInteger,
 }
 
 impl PlainAvgState {
@@ -46,8 +46,8 @@ impl PlainAvgState {
 
 impl AggregateCalc for PlainAvgState {
     fn accumulate(&mut self, val: i32) {
-        self.sum = PlainI32::new(self.sum.to_i32() + val);
-        self.n = PlainI32::new(self.n.to_i32() + 1);
+        self.sum = PlainInteger::new(self.sum.to_i32() + val);
+        self.n = PlainInteger::new(self.n.to_i32() + 1);
     }
 
     fn finalize(self) -> f32 {

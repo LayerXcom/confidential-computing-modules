@@ -4,7 +4,7 @@ use module_encrypted_sql_ops_ecall_types::{
     enclave_types::{EnclaveEncInteger, EnclavePlainInteger},
 };
 
-use crate::{plain_types::PlainI32, type_crypt::Pad16BytesEncrypt};
+use crate::{plain_types::PlainInteger, type_crypt::Pad16BytesEncrypt};
 
 /// EncIntegerFrom command running inside enclave.
 #[derive(Clone, Hash, Debug)]
@@ -29,7 +29,7 @@ impl BasicEnclaveEngine for EncIntegerFromCmdHandler {
     where
         C: ConfigGetter,
     {
-        let plain_i32 = PlainI32::from(self.enclave_input);
+        let plain_i32 = PlainInteger::from(self.enclave_input);
         let encinteger = plain_i32.encrypt();
         Ok(EnclaveEncInteger::from(encinteger))
     }
