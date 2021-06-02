@@ -11,11 +11,11 @@ Plain data are visible only to data holders (who executes DML) and SGX Enclave. 
 
 This extension is developed using [`pgx`](https://github.com/zombodb/pgx), which provides highly useful toolkit to develop PostgreSQL extensions in Rust.
 
-Docker image with `pgx` is available.
+Docker image with `pgx` and compiled enclave library is available.
 
 ```bash
 host> cd anonify
-host> docker run --env-file .env -v `pwd`:/home/anonify-dev/anonify --rm -it anonify.azurecr.io/encrypted-sql-ops-pg:latest
+host> docker run -u `id -u`:`id -g` --device /dev/sgx/enclave --env-file .env -e IS_DEBUG=false -v `pwd`:/home/anonify-dev/anonify --rm -it anonify.azurecr.io/encrypted-sql-ops-pg:latest
 
 container> cargo pgx run pg13
 ```
@@ -46,6 +46,6 @@ SELECT AVG(c_plain), AVG(c_enc) from t;
 
        AVG(c_plain) |     AVG(c_enc)
 --------------------+--------------------
- 2.5000000000000000 | 2.5000000000000000
+ 2.5000000000000000 | 2.5
 (1 rows)
 ```
