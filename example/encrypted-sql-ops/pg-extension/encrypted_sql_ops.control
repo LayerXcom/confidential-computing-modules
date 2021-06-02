@@ -1,5 +1,0 @@
-comment = 'encrypted_sql_ops: Runs operations to encrypted columns in SGX Enclave'
-default_version = '0.1.0'
-module_pathname = '$libdir/encrypted_sql_ops'
-relocatable = false
-superuser = false
