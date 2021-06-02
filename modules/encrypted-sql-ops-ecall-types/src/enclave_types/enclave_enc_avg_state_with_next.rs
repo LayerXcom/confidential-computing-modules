@@ -20,4 +20,15 @@ impl EnclaveEncAvgStateWithNext {
     pub fn new(state: EncAvgState, next: EncInteger) -> Self {
         Self { state, next }
     }
+
+    /// Get raw representation
+    pub fn into_inner(self) -> (EncAvgState, EncInteger) {
+        (self.state, self.next)
+    }
+}
+
+impl Default for EnclaveEncAvgStateWithNext {
+    fn default() -> Self {
+        unreachable!("FIXME stop requiring Default for *EnclaveEngine::EI")
+    }
 }

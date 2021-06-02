@@ -24,3 +24,11 @@ impl EnclaveEncAvgState {
         self.0
     }
 }
+
+impl Default for EnclaveEncAvgState {
+    fn default() -> Self {
+        unreachable!(
+            "FIXME stop requiring Default for *EnclaveEngine::EO (must be created via handle())"
+        )
+    }
+}
