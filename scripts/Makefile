@@ -135,6 +135,7 @@ $(ANONIFY_BUILD_DIR)/$(T_O_FILE): $(Enclave_EDL_Files)
 	@$(CC) $(RustEnclave_Compile_Flags) -c $(ANONIFY_BUILD_DIR)/$(T_C_FILE) -o $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
 	@echo "CC   <=  $(ANONIFY_BUILD_DIR)/$(T_C_FILE) with $(ANONIFY_BUILD_DIR)/$(T_O_FILE)"
 
+# cargo build also generates frame-types.h
 $(Lib_Enclave): $(Rust_Enclave_Files)
 	@echo "Lib_Enclave <= $(PWD)"
 	@cd $(ANONIFY_ROOT_DIR)/$(ENCLAVE_DIR) && RUST_LOG=debug cargo build $(CARGO_FLAGS) $(RustEnclave_Feature_Flags)
