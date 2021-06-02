@@ -1,8 +1,6 @@
 use crate::serde::{Deserialize, Serialize};
 use frame_common::EcallInput;
 
-
-
 /// Plain-text INTEGER.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]

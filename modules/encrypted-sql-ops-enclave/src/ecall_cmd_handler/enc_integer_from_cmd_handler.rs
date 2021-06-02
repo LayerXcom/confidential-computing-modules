@@ -1,8 +1,6 @@
 use frame_enclave::BasicEnclaveEngine;
 use frame_runtime::ConfigGetter;
-use module_encrypted_sql_ops_ecall_types::{
-    enclave_types::{EnclaveEncInteger, EnclavePlainInteger},
-};
+use module_encrypted_sql_ops_ecall_types::enclave_types::{EnclaveEncInteger, EnclavePlainInteger};
 
 use crate::{plain_types::PlainInteger, type_crypt::Pad16BytesEncrypt};
 
