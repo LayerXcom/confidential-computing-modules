@@ -1,4 +1,4 @@
-FROM anonify.azurecr.io/rust-sgx-sdk-rootless:latest-test
+FROM anonify.azurecr.io/rust-sgx-sdk-rootless:latest
 
 WORKDIR ${HOME}
 
