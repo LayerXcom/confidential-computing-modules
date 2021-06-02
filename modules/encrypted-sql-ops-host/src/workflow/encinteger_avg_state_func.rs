@@ -2,7 +2,7 @@
 //!
 //! FIXME: Workflow -> Controller
 
-use super::host_types::{HostEncAvgState, HostEncAvgStateWithNext};
+use super::host_types::{HostEncAvgStateWithNext, HostOutputEncAvgState};
 use frame_host::engine::*;
 use module_encrypted_sql_ops_ecall_types::enclave_types::{
     EnclaveEncAvgState, EnclaveEncAvgStateWithNext,
@@ -16,6 +16,6 @@ impl HostEngine for EncIntegerAvgStateFuncWorkflow {
     type HI = HostEncAvgStateWithNext;
     type EI = EnclaveEncAvgStateWithNext;
     type EO = EnclaveEncAvgState;
-    type HO = HostEncAvgState;
-    const ECALL_MAX_SIZE: usize = 64;
+    type HO = HostOutputEncAvgState;
+    const ECALL_MAX_SIZE: usize = 256;
 }

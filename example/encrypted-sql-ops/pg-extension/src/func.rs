@@ -10,8 +10,9 @@ use module_encrypted_sql_ops_ecall_types::{
     },
 };
 use module_encrypted_sql_ops_host::workflow::{
-    host_types::{HostEncAvgStateWithNext, HostPlainInteger},
+    host_types::{HostEncAvgStateWithNext, HostInputEncAvgState, HostPlainInteger},
     {
+        encinteger_avg_final_func::EncIntegerAvgFinalFuncWorkflow,
         encinteger_avg_state_func::EncIntegerAvgStateFuncWorkflow,
         encinteger_from::EncIntegerFromWorkflow,
     },
@@ -56,6 +57,18 @@ fn encinteger_avg_state_func(
 }
 
 #[pg_extern]
-fn encinteger_avg_final_func(_internal_state: EncAvgState) -> i32 {
-    todo!("create Workflow")
+fn encinteger_avg_final_func(internal_state: EncAvgState) -> f32 {
+    let host_input = HostInputEncAvgState::new(
+        ModuleEncAvgState::from(internal_state),
+        ENCINTEGER_AVG_FINAL_FUNC,
+    );
+    let eid = Enclave::global().geteid();
+
+    let host_output = EncIntegerAvgFinalFuncWorkflow::exec(host_input, eid).unwrap_or_else(|e| {
+        panic!(
+            "failed to finalize avg state in enclave (Enclave ID: {}), {:?}",
+            eid, e
+        )
+    });
+    f32::from(host_output)
 }

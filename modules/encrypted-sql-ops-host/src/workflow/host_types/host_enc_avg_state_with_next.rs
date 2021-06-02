@@ -6,7 +6,7 @@ use module_encrypted_sql_ops_ecall_types::{
     enclave_types::EnclaveEncAvgStateWithNext,
 };
 
-use super::HostEncAvgState;
+use super::HostOutputEncAvgState;
 
 /// Encrypted average state.
 #[derive(Clone, Debug)]
@@ -18,12 +18,12 @@ pub struct HostEncAvgStateWithNext {
 
 impl HostInput for HostEncAvgStateWithNext {
     type EcallInput = EnclaveEncAvgStateWithNext;
-    type HostOutput = HostEncAvgState;
+    type HostOutput = HostOutputEncAvgState;
 
     fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
         Ok((
             EnclaveEncAvgStateWithNext::new(self.state, self.next),
-            HostEncAvgState(None),
+            HostOutputEncAvgState(None),
         ))
     }
 
