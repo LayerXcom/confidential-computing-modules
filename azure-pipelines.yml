@@ -63,7 +63,7 @@ stages:
           docker-compose -f esop-docker-compose.yml up --exit-code-from encrypted_sql_ops_pg
         displayName: 'Run E2E tests for encrypted-sql-ops-pg'
       - script: |
-          docker-compose exec encrypted_sql_ops_pg cat /home/anonify-dev/.pgx/13.log
+          docker-compose -f esop-docker-compose.yml exec encrypted_sql_ops_pg cat /home/anonify-dev/.pgx/13.log
         condition: always()
         displayName: show postgres log
       - script: docker image prune -f
