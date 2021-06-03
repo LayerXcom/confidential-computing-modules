@@ -21,6 +21,7 @@ services:
       IAS_ROOT_CERT_PATH: "config/ias_root_cert.pem"
       PJ_ROOT_DIR: "/home/anonify-dev/anonify"
       IS_DEBUG: "false"
+      FIXUID_MODE: skip  # workaround: fixuid to many files is too slow
     # Add an lookup from the IP Address to FQDN because of the following limitation of rustls
     # https://github.com/ctz/rustls/issues/184
     # https://github.com/briansmith/webpki/issues/54
@@ -28,6 +29,7 @@ services:
     tty: true
     command: |
       bash -c '
+        chown -R anonify-dev:anonify-dev ~/
         cd anonify/example/encrypted-sql-ops/pg-extension
         USER=anonify-dev cargo pgx test pg13
       '
