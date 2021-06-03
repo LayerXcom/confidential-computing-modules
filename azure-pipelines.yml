@@ -64,8 +64,10 @@ stages:
         displayName: 'Run E2E tests for encrypted-sql-ops-pg'
       - script: |
           docker-compose exec encrypted_sql_ops_pg cat /home/anonify-dev/.pgx/13.log
+        condition: always()
         displayName: show postgres log
       - script: docker image prune -f
+        condition: always()
         displayName: Remove dangling images
       - script: docker-compose -f esop-docker-compose.yml down
         condition: always()
