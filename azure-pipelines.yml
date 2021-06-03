@@ -41,6 +41,35 @@ stages:
           displayName: 'occlum docker-compose down'
 
 - stage:
+  # condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e-esop')
+  jobs:
+  - job: E2E_encrypted_sql_ops_pg
+    pool:
+      name: 'AnonifyAgent'
+    steps:
+      - task: Docker@2
+        displayName: Build encrypted-sql-ops-pg image
+        inputs:
+          command: build
+          containerRegistry: anonify-ci-cd-acr
+          repository: encrypted-sql-ops-pg
+          tags: latest
+          dockerfile: ./docker/encrypted-sql-ops-pg.Dockerfile
+          buildContext: .
+          arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
+      - script: |
+          export SPID=$(SPID)
+          export SUB_KEY=$(SUB_KEY)
+          docker-compose -f esop-docker-compose.yml up -d encrypted_sql_ops_pg
+          docker-compose -f esop-docker-compose.yml exec bash -c 'cd anonify/example/encrypted-sql-ops/pg-extension ; USER=anonify-dev cargo pgx test pg13'
+        displayName: 'Run E2E tests for encrypted-sql-ops-pg'
+      - script: docker image prune -f
+        displayName: Remove dangling images
+      - script: docker-compose -f esop-docker-compose.yml down
+        condition: always()
+        displayName: 'Shutdown'
+
+- stage:
   condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e')
   jobs:
   - job: E2E
@@ -48,23 +77,13 @@ stages:
       name: 'AnonifyAgent'
     steps:
       - task: Docker@2
-        displayName: Build erc20 image
+        displayName: Build encrypted-sql-ops-pg image
         inputs:
           command: build
           containerRegistry: anonify-ci-cd-acr
-          repository: erc20-state-runtime
+          repository: encrypted-sql-ops-pg
           tags: latest
-          dockerfile: ./docker/erc20.Dockerfile
-          buildContext: .
-          arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
-      - task: Docker@2
-        displayName: Build key-vault for erc20 image
-        inputs:
-          command: build
-          containerRegistry: anonify-ci-cd-acr
-          repository: key-vault-for-erc20
-          tags: latest
-          dockerfile: ./docker/keyvault.Dockerfile
+          dockerfile: ./docker/encrypted-sql-ops-pg.Dockerfile
           buildContext: .
           arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
       - script: |
@@ -77,7 +96,7 @@ stages:
       - script: docker-compose -f e2e-docker-compose.yml down
         condition: always()
         displayName: 'Shutdown'
-
+        
 - stage: Build_and_Push_Base_Docker_Images
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:

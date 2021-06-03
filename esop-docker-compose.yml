@@ -1,0 +1,28 @@
+# esop: encrypted-sql-ops-pg
+
+version: "3.7"
+services:
+  encrypted_sql_ops_pg:
+    image: anonify.azurecr.io/encrypted-sql-ops-pg:latest
+    volumes:
+      - /var/run/aesmd:/var/run/aesmd
+    devices:
+      - "/dev/sgx/enclave"
+    environment:
+      RUST_BACKTRACE: 1
+      RUST_LOG: debug
+      SPID: ${SPID}
+      SUB_KEY: ${SUB_KEY}
+      IAS_URL: "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report"
+      ENCLAVE_PKG_NAME: "encrypted_sql_ops"
+      REQUEST_RETRIES: "10"
+      RETRY_DELAY_MILLS: "100"
+      CMD_DEC_SECRET_DIR: ".anonify/cmd-dec-secret"
+      IAS_ROOT_CERT_PATH: "config/ias_root_cert.pem"
+      PJ_ROOT_DIR: "/home/anonify-dev/anonify"
+      IS_DEBUG: "false"
+    # Add an lookup from the IP Address to FQDN because of the following limitation of rustls
+    # https://github.com/ctz/rustls/issues/184
+    # https://github.com/briansmith/webpki/issues/54
+    stdin_open: true
+    tty: true
