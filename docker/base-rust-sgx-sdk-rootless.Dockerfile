@@ -48,3 +48,4 @@ RUN rustup component add rust-src rls rust-analysis clippy rustfmt && \
 
 COPY ./docker/entrypoint/fixuid.bash ./
 ENTRYPOINT ["./fixuid.bash"]
+CMD ["bash"]

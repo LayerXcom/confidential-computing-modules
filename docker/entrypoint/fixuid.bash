@@ -13,4 +13,4 @@ else
   echo "\$FIXUID_MODE='$FIXUID_MODE', which should be one of: 'skip', 'verbose', and 'quiet' (default)."
 fi
 
-bash
+exec "$@"
