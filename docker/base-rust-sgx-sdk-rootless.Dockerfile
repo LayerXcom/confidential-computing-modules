@@ -25,7 +25,7 @@ RUN USER=${user_name} && \
     chown root:root /usr/local/bin/fixuid && \
     chmod 4755 /usr/local/bin/fixuid && \
     mkdir -p /etc/fixuid && \
-    printf "user: $USER\ngroup: $GROUP\n" > /etc/fixuid/config.yml
+    printf "user: $USER\ngroup: $GROUP\npaths:\n  - /home/$USER\n  - /home/$USER/anonify" > /etc/fixuid/config.yml
 
 # Switch to the non-root
 USER ${user_name}
