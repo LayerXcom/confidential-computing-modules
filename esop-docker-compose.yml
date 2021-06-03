@@ -30,5 +30,5 @@ services:
     command: |
       bash -c '
         cd anonify/example/encrypted-sql-ops/pg-extension
-        USER=anonify-dev cargo pgx test pg13
+        USER=anonify-dev cargo pgx test pg13 || (cat ~/.pgx/13.log ; false)
       '
