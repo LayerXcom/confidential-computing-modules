@@ -53,7 +53,7 @@ fn encinteger_avg_state_func(
         )
     });
 
-    EncAvgState::from(ModuleEncAvgState::from(host_output))
+    ModuleEncAvgState::from(host_output).into()
 }
 
 #[pg_extern]
