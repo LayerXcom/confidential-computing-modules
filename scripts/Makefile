@@ -1,10 +1,6 @@
 SGX_SDK_RUST ?= $(HOME)/sgx
 ANONIFY_ROOT_DIR := ..
-ANONIFY_CORE_ROOT := $(ANONIFY_ROOT_DIR)/core
-FRAME_ROOT := $(ANONIFY_ROOT_DIR)/frame
 CONFIG_DIR := $(ANONIFY_ROOT_DIR)/config
-ANONIFY_ENCLAVE_DIR := $(ANONIFY_CORE_ROOT)/enclave
-ANONIFY_HOST_DIR := $(ANONIFY_CORE_ROOT)/host
 ANONIFY_BIN_DIR := $(ANONIFY_ROOT_DIR)/.anonify
 ANONIFY_EDL_DIR := $(ANONIFY_ROOT_DIR)/edl
 ANONIFY_BUILD_DIR := $(ANONIFY_ROOT_DIR)/build
@@ -84,7 +80,7 @@ CUSTOM_COMMON_PATH := $(SGX_SDK_RUST)/common
 
 ######## EDL Settings ########
 
-Enclave_EDL_Files := $(ANONIFY_ENCLAVE_DIR)/$(T_C_FILE) $(ANONIFY_ENCLAVE_DIR)/$(T_H_FILE) $(ANONIFY_HOST_DIR)/$(U_C_FILE) $(ANONIFY_HOST_DIR)/$(U_H_FILE)
+Enclave_EDL_Files := $(ANONIFY_BUILD_DIR)/$(T_C_FILE) $(ANONIFY_BUILD_DIR)/$(T_H_FILE) $(ANONIFY_BUILD_DIR)/$(U_C_FILE) $(ANONIFY_BUILD_DIR)/$(U_H_FILE)
 
 ######## Enclave Settings ########
 
@@ -97,19 +93,18 @@ else
 endif
 Crypto_Library_Name := sgx_tcrypto
 
-RustEnclave_Name := $(ANONIFY_BUILD_DIR)/$(ENCLAVE_PKG_NAME).enclave.so
-Signed_RustEnclave_Name := $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).signed.so
+Enclave_SO := $(ANONIFY_BUILD_DIR)/$(ENCLAVE_PKG_NAME).enclave.so
+Signed_Enclave_SO := $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).signed.so
 Measurement_File_Name := $(ENCLAVE_PKG_NAME)_measurement.txt
-Rust_Enclave_Lib_Name := $(ENCLAVE_PKG_NAME)enclave
+Lib_Enclave_Name := $(ENCLAVE_PKG_NAME)enclave
 ifdef FEATURE_FLAGS
 	RustEnclave_Feature_Flags := --no-default-features --features $(FEATURE_FLAGS)
 else
 	RustEnclave_Feature_Flags := $(FEATURE_FLAGS)
 endif
 
-
-RustEnclave_Include_Paths := -I$(CUSTOM_COMMON_PATH)/inc -I$(CUSTOM_EDL_PATH) -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SDK)/include/epid -I $(ANONIFY_ENCLAVE_DIR) -I./include
-RustEnclave_Link_Libs := -L$(CUSTOM_LIBRARY_PATH) -l$(Rust_Enclave_Lib_Name)
+RustEnclave_Include_Paths := -I$(CUSTOM_COMMON_PATH)/inc -I$(CUSTOM_EDL_PATH) -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SDK)/include/epid -I./include
+RustEnclave_Link_Libs := -L$(CUSTOM_LIBRARY_PATH) -l$(Lib_Enclave_Name)
 RustEnclave_Compile_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(RustEnclave_Include_Paths)
 RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) \
 	-Wl,--whole-archive -l$(Trts_Library_Name) -Wl,--no-whole-archive \
@@ -119,12 +114,12 @@ RustEnclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nod
 	-Wl,--defsym,__ImageBase=0 \
 	-Wl,--gc-sections \
 	-Wl,--version-script=$(CONFIG_DIR)/Enclave.lds
-Rust_Enclave_Name := lib$(Rust_Enclave_Lib_Name).a
+Lib_Enclave := lib$(Lib_Enclave_Name).a
 
 Rust_Enclave_Files := $(wildcard src/*.rs)
 
 .PHONY: all
-all: $(Signed_RustEnclave_Name)
+all: $(Signed_Enclave_SO)
 
 ######## EDL Objects ########
 
@@ -136,34 +131,35 @@ $(Enclave_EDL_Files): $(SGX_EDGER8R) $(ANONIFY_EDL_DIR)/$(EDL_FILE)
 
 ######## Enclave Objects ########
 
-$(ANONIFY_BUILD_DIR)/$(T_O_FILE): $(Enclave_EDL_Files)
+$(ANONIFY_BUILD_DIR)/$(T_O_FILE): $(Lib_Enclave) $(Enclave_EDL_Files)
 	@$(CC) $(RustEnclave_Compile_Flags) -c $(ANONIFY_BUILD_DIR)/$(T_C_FILE) -o $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
-	@echo "CC   <=  $<"
+	@echo "CC   <=  $(ANONIFY_BUILD_DIR)/$(T_C_FILE) with $(ANONIFY_BUILD_DIR)/$(T_O_FILE)"
 
-$(Rust_Enclave_Name): $(Rust_Enclave_Files)
-	@echo "Rust_Enclave_Name <= $(PWD)"
+# cargo build also generates frame-types.h
+$(Lib_Enclave): $(Rust_Enclave_Files)
+	@echo "Lib_Enclave <= $(PWD)"
 	@cd $(ANONIFY_ROOT_DIR)/$(ENCLAVE_DIR) && RUST_LOG=debug cargo build $(CARGO_FLAGS) $(RustEnclave_Feature_Flags)
 	@mkdir -p $(CUSTOM_LIBRARY_PATH)
-	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/lib$(Rust_Enclave_Lib_Name).a
+	@cp $(ANONIFY_ROOT_DIR)/target/$(Rust_target_dir)/libanonifyenclave.a $(CUSTOM_LIBRARY_PATH)/lib$(Lib_Enclave_Name).a
 
-$(RustEnclave_Name): $(ANONIFY_BUILD_DIR)/$(T_O_FILE) $(Rust_Enclave_Name)
+$(Enclave_SO): $(ANONIFY_BUILD_DIR)/$(T_O_FILE)
 	@$(CXX) $(ANONIFY_BUILD_DIR)/$(T_O_FILE) -o $@ $(RustEnclave_Link_Flags)
 	@echo "LINK =>  $@"
 
-$(Signed_RustEnclave_Name): $(RustEnclave_Name)
+$(Signed_Enclave_SO): $(Enclave_SO)
 	@mkdir -p $(ANONIFY_BIN_DIR)
-	@$(SGX_ENCLAVE_SIGNER) sign -key $(CONFIG_DIR)/test_enclave_signing.pem -enclave $(RustEnclave_Name) -out $@ -config $(CONFIG_DIR)/$(Enclave_Config_File_Name) -dumpfile $(ANONIFY_BIN_DIR)/$(Measurement_File_Name)
+	@$(SGX_ENCLAVE_SIGNER) sign -key $(CONFIG_DIR)/test_enclave_signing.pem -enclave $(Enclave_SO) -out $@ -config $(CONFIG_DIR)/$(Enclave_Config_File_Name) -dumpfile $(ANONIFY_BIN_DIR)/$(Measurement_File_Name)
 	@echo "SIGN =>  $@"
 
 # Based on the 2-step signing process
-prd-signed.so: $(RustEnclave_Name)
+prd-signed.so: $(Enclave_SO)
 	@mkdir -p $(ANONIFY_BIN_DIR)
-	@$(SGX_ENCLAVE_SIGNER) gendata -enclave $(RustEnclave_Name) -config $(CONFIG_DIR)/$(Enclave_Config_File_Name) -out $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).dat
+	@$(SGX_ENCLAVE_SIGNER) gendata -enclave $(Enclave_SO) -config $(CONFIG_DIR)/$(Enclave_Config_File_Name) -out $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).dat
 	@python3 $(ANONIFY_ROOT_DIR)/scripts/req_sign_to_azkv.py $(ENCLAVE_PKG_NAME)
 	@$(SGX_ENCLAVE_SIGNER) catsig \
-		-enclave $(RustEnclave_Name) \
+		-enclave $(Enclave_SO) \
 		-config $(CONFIG_DIR)/$(Enclave_Config_File_Name) \
-		-out $(Signed_RustEnclave_Name) \
+		-out $(Signed_Enclave_SO) \
 		-key $(CONFIG_DIR)/enclave_pub.pem \
 		-sig $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME)_signed.dat \
 		-unsigned $(ANONIFY_BIN_DIR)/$(ENCLAVE_PKG_NAME).dat \
