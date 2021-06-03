@@ -14,6 +14,7 @@ services:
       SPID: ${SPID}
       SUB_KEY: ${SUB_KEY}
       IAS_URL: "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report"
+      KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME: "key-vault.com:12346" # TODO: Remove
       ENCLAVE_PKG_NAME: "encrypted_sql_ops"
       REQUEST_RETRIES: "10"
       RETRY_DELAY_MILLS: "100"
@@ -30,5 +31,5 @@ services:
     command: |
       bash -c '
         cd anonify/example/encrypted-sql-ops/pg-extension
-        USER=anonify-dev cargo pgx test pg13 || (cat ~/.pgx/13.log ; false)
+        USER=anonify-dev cargo pgx test pg13
       '
