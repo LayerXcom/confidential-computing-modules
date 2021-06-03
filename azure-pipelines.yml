@@ -41,7 +41,7 @@ stages:
 #           displayName: 'occlum docker-compose down'
 
 - stage:
-  condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e-esop')
+  # condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e-esop')
   jobs:
   - job: E2E_encrypted_sql_ops_pg
     pool:
