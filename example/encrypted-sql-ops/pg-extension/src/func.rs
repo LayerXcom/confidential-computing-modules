@@ -64,11 +64,12 @@ fn encinteger_avg_final_func(internal_state: EncAvgState) -> f32 {
     );
     let eid = Enclave::global().geteid();
 
-    let host_output = EncIntegerAvgFinalFuncWorkflow::exec(host_input, eid).unwrap_or_else(|e| {
-        panic!(
-            "failed to finalize avg state in enclave (Enclave ID: {}), {:?}",
-            eid, e
-        )
-    });
-    f32::from(host_output)
+    EncIntegerAvgFinalFuncWorkflow::exec(host_input, eid)
+        .unwrap_or_else(|e| {
+            panic!(
+                "failed to finalize avg state in enclave (Enclave ID: {}), {:?}",
+                eid, e
+            )
+        })
+        .into()
 }
