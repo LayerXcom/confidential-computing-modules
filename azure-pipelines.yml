@@ -40,33 +40,33 @@ stages:
 #           condition: always()
 #           displayName: 'occlum docker-compose down'
 
-# - stage:
-#   # condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e-esop')
-#   jobs:
-#   - job: E2E_encrypted_sql_ops_pg
-#     pool:
-#       name: 'AnonifyAgent'
-#     steps:
-#       - task: Docker@2
-#         displayName: Build encrypted-sql-ops-pg image
-#         inputs:
-#           command: build
-#           containerRegistry: anonify-ci-cd-acr
-#           repository: encrypted-sql-ops-pg
-#           tags: latest
-#           dockerfile: ./docker/example-encrypted-sql-ops-pg.Dockerfile
-#           buildContext: .
-#           arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
-#       - script: |
-#           export SPID=$(SPID)
-#           export SUB_KEY=$(SUB_KEY)
-#           docker-compose -f esop-docker-compose.yml up encrypted_sql_ops_pg
-#         displayName: 'Run E2E tests for encrypted-sql-ops-pg'
-#       - script: docker image prune -f
-#         displayName: Remove dangling images
-#       - script: docker-compose -f esop-docker-compose.yml down
-#         condition: always()
-#         displayName: 'Shutdown'
+- stage:
+  # condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e-esop')
+  jobs:
+  - job: E2E_encrypted_sql_ops_pg
+    pool:
+      name: 'AnonifyAgent'
+    steps:
+      - task: Docker@2
+        displayName: Build encrypted-sql-ops-pg image
+        inputs:
+          command: build
+          containerRegistry: anonify-ci-cd-acr
+          repository: encrypted-sql-ops-pg
+          tags: latest
+          dockerfile: ./docker/example-encrypted-sql-ops-pg.Dockerfile
+          buildContext: .
+          arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
+      - script: |
+          export SPID=$(SPID)
+          export SUB_KEY=$(SUB_KEY)
+          docker-compose -f esop-docker-compose.yml up encrypted_sql_ops_pg
+        displayName: 'Run E2E tests for encrypted-sql-ops-pg'
+      - script: docker image prune -f
+        displayName: Remove dangling images
+      - script: docker-compose -f esop-docker-compose.yml down
+        condition: always()
+        displayName: 'Shutdown'
 
 # - stage:
 #   condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e')
@@ -97,7 +97,7 @@ stages:
 #         displayName: 'Shutdown'
         
 - stage: Build_and_Push_Base_Docker_Images
-  # condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
   - job: Docker
     pool:
@@ -164,7 +164,7 @@ stages:
       displayName: Remove dangling images
 
 - stage: Build_and_Push_Example_Docker
-  # condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
   - job: Docker
     pool:
