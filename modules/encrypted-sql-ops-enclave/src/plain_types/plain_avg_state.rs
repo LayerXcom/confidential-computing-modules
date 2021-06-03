@@ -57,18 +57,17 @@ impl AggregateCalc for PlainAvgState {
 
 #[cfg(test)]
 mod tests {
-    use crate::aggregate_calc::AggregateCalc;
-    use module_encrypted_sql_ops_ecall_types::aggregate_state::AvgState;
+    use crate::{aggregate_calc::AggregateCalc, plain_types::PlainAvgState};
 
     #[test]
     fn test_no_sample() {
-        let avg_state = AvgState::default();
+        let avg_state = PlainAvgState::default();
         assert!(avg_state.finalize().is_nan());
     }
 
     #[test]
     fn test_calculation() {
-        let mut avg_state = AvgState::default();
+        let mut avg_state = PlainAvgState::default();
         avg_state.accumulate(1);
         avg_state.accumulate(2);
         assert_eq!(avg_state.finalize(), 1.5);

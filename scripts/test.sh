@@ -185,7 +185,10 @@ RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \
   -p unit-tests-host \
   -p frame-runtime \
   -p frame-retrier \
-  -p frame-sodium -- --nocapture
+  -p frame-sodium \
+  -p module-encrypted-sql-ops-enclave \
+  -- --nocapture
+
 
 #
 # Compile Checks
