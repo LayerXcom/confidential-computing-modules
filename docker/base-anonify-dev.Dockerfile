@@ -11,3 +11,5 @@ RUN set -x && \
     sudo chmod 755 /usr/bin/solc
 
 RUN git clone --depth 1 -b v1.1.3 https://github.com/baidu/rust-sgx-sdk.git sgx
+
+CMD ["bash"]
