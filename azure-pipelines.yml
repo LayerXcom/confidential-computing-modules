@@ -61,7 +61,7 @@ stages:
           export SPID=$(SPID)
           export SUB_KEY=$(SUB_KEY)
           docker-compose -f esop-docker-compose.yml up -d encrypted_sql_ops_pg
-          docker-compose -f esop-docker-compose.yml exec bash -c 'cd anonify/example/encrypted-sql-ops/pg-extension ; USER=anonify-dev cargo pgx test pg13'
+          docker-compose -f esop-docker-compose.yml exec encrypted_sql_ops_pg bash -c 'cd anonify/example/encrypted-sql-ops/pg-extension ; USER=anonify-dev cargo pgx test pg13'
         displayName: 'Run E2E tests for encrypted-sql-ops-pg'
       - script: docker image prune -f
         displayName: Remove dangling images
