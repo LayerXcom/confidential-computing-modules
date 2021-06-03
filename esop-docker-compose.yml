@@ -29,7 +29,8 @@ services:
     tty: true
     command: |
       bash -c '
-        chown -R anonify-dev:anonify-dev ~/
+        set -x
+        chown -R anonify-dev:anonify-dev ~/{.anonify,anonify,.pgx}
         cd anonify/example/encrypted-sql-ops/pg-extension
         USER=anonify-dev cargo pgx test pg13
       '
