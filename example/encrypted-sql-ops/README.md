@@ -25,8 +25,8 @@ And then issue SQLs:
 ```sql
 DROP TABLE IF EXISTS t;
 
-DROP EXTENSION IF EXISTS encrypted_sql_ops;
-CREATE EXTENSION encrypted_sql_ops;
+DROP EXTENSION IF EXISTS encrypted_sql_ops_pg_extension;
+CREATE EXTENSION encrypted_sql_ops_pg_extension;
 
 CREATE TABLE t (c_plain INTEGER, c_enc ENCINTEGER);
 
