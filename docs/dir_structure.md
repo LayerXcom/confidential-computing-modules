@@ -5,6 +5,7 @@
 frame --> modules --> example の依存関係があります。
 
 * frame: ecall/ocallの抽象化、modulesで共通的に用いるプリミティブ実装などのレイヤ
+  * [詳説](framework.md)
 * modules:　frameのライブラリを用いて、TEEノードのコアロジックの実装をするレイヤ
 * example: クライアント、サーバー、状態遷移などアプリケーション部分の実装をするレイヤ
 
