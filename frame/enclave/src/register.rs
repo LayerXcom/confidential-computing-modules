@@ -12,7 +12,7 @@ macro_rules! register_ecall {
             match cmd {
                 $(
                     $(#[$feature])*
-                    $cmd => inner_ecall_handler::<$handler>(input, ecall_max_size),
+                    $cmd => inner_ecall_handler::<$handler>(input, ecall_max_size),  // TODO ここでマクロで定義した関数呼び出しではなく、EnclaveUseCaseのデフォルト関数呼び出しにする（マクロを小さくする）
                 )*
                 _ => anyhow::bail!("Not registered the ecall command"),
             }
@@ -66,6 +66,7 @@ macro_rules! register_ecall {
         ) -> frame_types::EnclaveStatus {
             let input = unsafe { std::slice::from_raw_parts_mut(input_buf, input_len) };
             let res = unsafe {
+                // TODO この箇所以外の前処理・後処理は、EnclaveUseCaseのデフォルト関数に任せる
                 match ecall_handler(command, input, ecall_max_size) {
                     Ok(out) => out,
                     Err(e) => {
