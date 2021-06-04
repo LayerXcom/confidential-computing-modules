@@ -37,7 +37,7 @@ impl BasicEnclaveEngine for EncIntegerAvgStateFuncCmdHandler {
 
         plain_current_state.accumulate(plain_next.to_i32());
 
-        let enc_next_state = plain_current_state.to_encrypted();
+        let enc_next_state = plain_current_state.into_encrypted();
         Ok(EnclaveEncAvgState::from(enc_next_state))
     }
 }

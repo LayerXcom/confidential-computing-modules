@@ -34,7 +34,7 @@ impl PlainAvgState {
     }
 
     /// Encrypt to EncAvgState
-    pub fn to_encrypted(self) -> EncAvgState {
+    pub fn into_encrypted(self) -> EncAvgState {
         let enc_sum = self.sum.encrypt();
         let enc_n = self.n.encrypt();
         EncAvgState::Interm {
@@ -74,6 +74,6 @@ pub(crate) mod tests {
         let mut avg_state = PlainAvgState::default();
         avg_state.accumulate(1);
         avg_state.accumulate(2);
-        assert_eq!(avg_state.finalize(), 1.5);
+        assert!((avg_state.finalize() - 1.5).abs() < f32::EPSILON);
     }
 }
