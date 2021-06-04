@@ -31,10 +31,10 @@ impl EnclaveConnector {
         }
     }
 
-    pub fn invoke_ecall<E, D>(&self, cmd: u32, input: E) -> Result<D>
+    pub fn invoke_ecall<EI, EO>(&self, cmd: u32, input: EI) -> Result<EO>
     where
-        E: Serialize + EcallInput,
-        D: DeserializeOwned + EcallOutput,
+        EI: Serialize + EcallInput,
+        EO: DeserializeOwned + EcallOutput,
     {
         let input_payload = bincode::DefaultOptions::new()
             .with_limit(self.ecall_max_size as u64)
