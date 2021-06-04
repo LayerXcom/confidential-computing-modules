@@ -77,6 +77,9 @@ $ docker-compose exec sgx_machine bash
 $ cd anonify && ./scripts/test.sh
 ```
 
+### Implementation Tips
+
+See [docs/](docs/) to understand code-level architecture.
 
 ## Documentations
 Currently, documents are only available in Japanese.
