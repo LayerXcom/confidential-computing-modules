@@ -51,6 +51,7 @@ cd ${ANONIFY_ROOT}
 RUST_LOG=error cargo fmt --all -- --check
 RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p erc20-server -p key-vault-server --all-targets --all-features
 RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p erc20-enclave -p key-vault-enclave --all-features
+RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p module-encrypted-sql-ops-enclave -p module-encrypted-sql-ops-host -p module-encrypted-sql-ops-ecall-types -p encrypted-sql-ops-enclave --all-targets --all-features
 # TODO: check lints of occlum libs
 
 #
