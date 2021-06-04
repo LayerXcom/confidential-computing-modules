@@ -31,5 +31,6 @@ services:
     command: |
       bash -c '
         cd anonify/example/encrypted-sql-ops/pg-extension
+        RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy --all-targets --all-features
         USER=anonify-dev cargo pgx test pg13
       '
