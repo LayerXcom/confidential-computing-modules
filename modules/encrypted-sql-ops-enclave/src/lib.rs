@@ -5,10 +5,8 @@
 //! Ideally, everything in this crate serves for any RDBMS's extension development.
 
 #![deny(missing_debug_implementations, missing_docs)]
-#![cfg_attr(not(target_env = "sgx"), no_std)]
-#![cfg_attr(target_env = "sgx", feature(rustc_private))]
+#![no_std]
 
-#[cfg(not(target_env = "sgx"))]
 #[macro_use]
 extern crate sgx_tstd as std;
 
@@ -18,3 +16,15 @@ pub mod enclave_context;
 pub mod error;
 pub mod plain_types;
 pub mod type_crypt;
+
+///
+#[cfg(debug_assertions)]
+pub mod tests {
+    use std::prelude::v1::*;
+    use test_utils::check_all_passed;
+
+    /// called from test-utils crate
+    pub fn run_tests() -> bool {
+        check_all_passed!(crate::plain_types::plain_avg_state::tests::run_tests(),)
+    }
+}

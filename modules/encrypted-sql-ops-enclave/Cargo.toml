@@ -12,6 +12,7 @@ frame-runtime = { path = "../../frame/runtime", default-features = false, featur
 frame-sodium = { path = "../../frame/sodium", default-features = false, features = ["sgx"] }
 frame-treekem = { path = "../../frame/treekem" }
 module-encrypted-sql-ops-ecall-types = { path = "../encrypted-sql-ops-ecall-types", default-features = false, features = ["sgx"] }
+test-utils = { path = "../../tests/utils", default-features = false, features = ["sgx"] }
 serde = { git = "https://github.com/mesalock-linux/serde-sgx.git" } # Don't specify version due to serde_json dependency
 aes = "0.7.2"
 thiserror = { git = "https://github.com/mesalock-linux/thiserror-sgx.git" }

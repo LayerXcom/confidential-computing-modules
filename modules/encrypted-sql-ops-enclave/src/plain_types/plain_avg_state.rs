@@ -55,17 +55,21 @@ impl AggregateCalc for PlainAvgState {
     }
 }
 
-#[cfg(test)]
-mod tests {
+#[cfg(debug_assertions)]
+pub(crate) mod tests {
     use crate::{aggregate_calc::AggregateCalc, plain_types::PlainAvgState};
+    use std::{string::String, vec::Vec};
+    use test_utils::{run_tests, runner::*};
 
-    #[test]
+    pub(crate) fn run_tests() -> bool {
+        run_tests!(test_no_sample, test_calculation,)
+    }
+
     fn test_no_sample() {
         let avg_state = PlainAvgState::default();
         assert!(avg_state.finalize().is_nan());
     }
 
-    #[test]
     fn test_calculation() {
         let mut avg_state = PlainAvgState::default();
         avg_state.accumulate(1);

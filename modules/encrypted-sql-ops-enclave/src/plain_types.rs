@@ -1,6 +1,7 @@
 //! Plain data types read/written only inside enclave.
 
-mod plain_avg_state;
+pub(crate) mod plain_avg_state;
+
 mod plain_integer;
 mod plain_real;
 
