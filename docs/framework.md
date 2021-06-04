@@ -20,7 +20,7 @@
 **Ecall** によって Host から Enclave に処理が移り、 **Ocall** （など）によって Enclave から Host に処理が移ります。
 
 ```text
- [Hostの命令・データメモリ]   |   [Enclaveの命令・データメモリ]
+   [Hostの命令・データメモリ]    |   [Enclaveの命令・データメモリ]
                               |
                     ecall  ------>
                            <------ ocall
@@ -101,7 +101,7 @@ impl EcallController for MyEcallController {
 関連型が4つもあって面食らいますが、以下のようなデータフローです。
 
 ```text
- [Hostの命令・データメモリ]   |   [Enclaveの命令・データメモリ]
+    [Hostの命令・データメモリ]   |   [Enclaveの命令・データメモリ]
                               |
       HI (Host Input) ---- <ecall>  ---> EI (Enclave Input)
                               |                  |
