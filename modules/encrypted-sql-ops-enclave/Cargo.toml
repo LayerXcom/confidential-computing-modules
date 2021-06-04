@@ -8,9 +8,9 @@ edition = "2018"
 sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["net","backtrace"] }
 frame-enclave = { path = "../../frame/enclave" }
 frame-config = { path = "../../frame/config", default-features = false, features = ["sgx"] }
-frame-runtime = { path = "../../frame/runtime", default-features = false, features = ["sgx", "backup-enable"] }
+frame-runtime = { path = "../../frame/runtime", default-features = false, features = ["sgx"] }
 frame-sodium = { path = "../../frame/sodium", default-features = false, features = ["sgx"] }
-frame-treekem = { path = "../../frame/treekem" }
+frame-treekem = { path = "../../frame/treekem", default-features = false }
 module-encrypted-sql-ops-ecall-types = { path = "../encrypted-sql-ops-ecall-types", default-features = false, features = ["sgx"] }
 test-utils = { path = "../../tests/utils", default-features = false, features = ["sgx"] }
 serde = { git = "https://github.com/mesalock-linux/serde-sgx.git" } # Don't specify version due to serde_json dependency
