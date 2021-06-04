@@ -20,12 +20,12 @@
 **Ecall** によって Host から Enclave に処理が移り、 **Ocall** （など）によって Enclave から Host に処理が移ります。
 
 ```text
-   [Hostの命令・データメモリ]    |   [Enclaveの命令・データメモリ]
-                              |
-                    ecall  ------>
-                           <------ ocall
-                              |
-                              |
+  [Host instruction/data memory]  |  [Enclave instruction/data memory]
+                                  |
+                        ecall  ------>
+                               <------ ocall
+                                  |
+                                  |
 ```
 
 ## ecall の実現方法
@@ -101,15 +101,15 @@ impl EcallController for MyEcallController {
 関連型が4つもあって面食らいますが、以下のようなデータフローです。
 
 ```text
-    [Hostの命令・データメモリ]   |   [Enclaveの命令・データメモリ]
-                              |
-      HI (Host Input) ---- <ecall>  ---> EI (Enclave Input)
-                              |                  |
-                              |           <EnclaveUseCase>
-                              |                  |
-                              |                  v
-  HO (Host Output) <--- <ecall return> --- EO (Enclave Output)
-                              |
+  [Host instruction/data memory]  |  [Enclave instruction/data memory]
+                                  |
+          HI (Host Input) ---- <ecall>  ---> EI (Enclave Input)
+                                  |                  |
+                                  |           <EnclaveUseCase>
+                                  |                  |
+                                  |                  v
+      HO (Host Output) <--- <ecall return> --- EO (Enclave Output)
+                                  |
 ```
 
 上図からは読み取れませんが、実際には `Host Input -> Enclave Input` の変換と `Enclave Output -> Host Output` の変換は Host のメモリ空間で行われます。
@@ -162,10 +162,11 @@ pub extern "C" fn ecall_entry_point(
         MyEnclaveUseCase::ENCLAVE_USE_CASE_ID => MyEnclaveUseCase::run(input),
         MyEnclaveUseCase2::ENCLAVE_USE_CASE_ID => MyEnclaveUseCase2::run(input),
     };
+    ...
 }
 ```
 
-コントローラーを呼び出すと、内部的に `ecall_entry_point(MyEcallController::ENCLAVE_USE_CASE_ID, ...)` が呼び出されます。
+コントローラーを呼び出すと、内部的に `ecall_entry_point(MyEcallController::ENCLAVE_USE_CASE_ID, ...)` が呼び出されます。
 IDの一致により `MyEcallController` -> `MyEnclaveUseCase` の呼び出しが実現されてますね。
 
 ### コントローラーの呼び出し
