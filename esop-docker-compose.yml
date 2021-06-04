@@ -1,4 +1,7 @@
 # esop: encrypted-sql-ops-pg
+#
+# Use this to run encrypted-sql-ops-pg docker image.
+# $ docker-compose -f esop-docker-compose.yml up
 
 version: "3.7"
 services:
@@ -31,6 +34,5 @@ services:
     command: |
       bash -c '
         cd anonify/example/encrypted-sql-ops/pg-extension
-        RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy --all-targets --all-features
-        USER=anonify-dev cargo pgx test pg13
+        cargo pgx run pg13
       '
