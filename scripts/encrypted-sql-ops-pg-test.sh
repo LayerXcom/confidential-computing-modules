@@ -3,6 +3,8 @@ set -ex
 
 # Prerequisite: cargo-pgx must be installed
 
+id
+
 export PATH=~/.cargo/bin:$PATH
 export SGX_MODE=HW
 export RUSTFLAGS=-Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3

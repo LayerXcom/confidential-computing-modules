@@ -10,7 +10,7 @@ services:
       - /var/run/aesmd:/var/run/aesmd
     devices:
       - "/dev/sgx/enclave"
-    user: "${UID}:${GID}"
+    user: "anonify-dev:anonify-dev"
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug
@@ -23,7 +23,6 @@ services:
       KEY_VAULT_ENCLAVE_PKG_NAME: ${KEY_VAULT_ENCLAVE_PKG_NAME}
       CMD_DEC_SECRET_DIR: ${CMD_DEC_SECRET_DIR}
       IAS_ROOT_CERT_PATH: ${IAS_ROOT_CERT_PATH}
-      PJ_ROOT_DIR: ${PJ_ROOT_DIR}
       FIXUID_MODE: verbose
     stdin_open: true
     tty: true
