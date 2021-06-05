@@ -27,6 +27,7 @@ pub fn ecall_run_tests() {
         frame_treekem::tests::run_tests(),
         anonify_enclave::tests::run_tests(),
         frame_mra_tls::tests::run_tests(),
+        module_encrypted_sql_ops_enclave::tests::run_tests(),
     );
 
     assert!(ret);

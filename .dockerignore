@@ -12,3 +12,4 @@ docker/
 !docker/entrypoint
 
 .dockerignore
+.git

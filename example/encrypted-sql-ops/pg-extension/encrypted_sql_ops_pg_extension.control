@@ -1,0 +1,5 @@
+comment = 'encrypted_sql_ops_pg_extension: Runs operations to encrypted columns in SGX Enclave'
+default_version = '0.1.0'
+module_pathname = '$libdir/encrypted_sql_ops_pg_extension'
+relocatable = false
+superuser = false

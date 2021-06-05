@@ -33,6 +33,8 @@ pub trait HostInput: Sized {
 pub trait HostOutput: Sized {
     type EcallOutput: EcallOutput;
 
+    // TODO: should not define default implementation.
+    // Implementers of this trait will have trouble in run-time (should be in compile-time).
     fn set_ecall_output(self, _output: Self::EcallOutput) -> anyhow::Result<Self> {
         Ok(self)
     }
