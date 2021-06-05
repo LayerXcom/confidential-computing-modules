@@ -28,7 +28,7 @@ stages:
             export SPID=$(SPID)
             export SUB_KEY=$(SUB_KEY)
 
-            docker-compose -f pgx-docker-compose.yml up -d
+            UID=`id -u` GID=`id -g` docker-compose -f pgx-docker-compose.yml up -d
             docker-compose -f pgx-docker-compose.yml exec -T sgx_machine_pgx bash -c "cd anonify && ./scripts/encrypted-sql-ops-pg-test.sh"
           displayName: 'Run encrypted-sql-ops-pg integration tests'
         - script: docker-compose -f pgx-docker-compose.yml down
