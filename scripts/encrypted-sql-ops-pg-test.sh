@@ -12,7 +12,7 @@ ANONIFY_ROOT="$(cd $(dirname $0); pwd)/.."
 export PJ_ROOT_DIR=$ANONIFY_ROOT
 ANONIFY_TAG=v0.5.11
 
-sudo chown anonify-dev:anonify-dev -R ~/{.rustup,.pgx}  # in case fixuid is too slow
+sudo chown anonify-dev:anonify-dev -R ~/{.rustup,.pgx,anonify}  # in case fixuid is too slow
 
 # Generate signed.so and measurement.txt
 echo "Integration testing..."
