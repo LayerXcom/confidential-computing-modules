@@ -64,5 +64,6 @@ COPY --from=builder ${HOME}/anonify/contract-build/AnonifyWithTreeKem.abi ./cont
 COPY --from=builder ${HOME}/anonify/contract-build/AnonifyWithTreeKem.bin ./contract-build/
 COPY --from=builder ${HOME}/anonify/contract-build/DeployAnonify.abi ./contract-build/
 COPY --from=builder ${HOME}/anonify/contract-build/DeployAnonify.bin ./contract-build/
+COPY --from=builder ${HOME}/fixuid.bash ./
 
 CMD ["./target/release/erc20-server"]
