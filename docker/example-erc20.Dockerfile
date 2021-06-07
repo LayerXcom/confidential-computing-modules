@@ -1,3 +1,6 @@
+ARG user_name=anonify-dev
+ARG group_name=anonify-dev
+
 FROM anonify.azurecr.io/anonify-dev:latest as builder
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
@@ -11,8 +14,8 @@ RUN set -x && \
     sudo python3 -m pip install --upgrade pip --target /usr/lib64/az/lib/python3.6/site-packages/ && \
     sudo rm -rf /var/lib/apt/lists/*
 
-ARG user_name=anonify-dev
-ARG group_name=anonify-dev
+ARG user_name
+ARG group_name
 COPY --chown=${user_name}:${group_name} . ${HOME}/anonify
 WORKDIR ${HOME}/anonify
 
@@ -52,6 +55,9 @@ FROM anonify.azurecr.io/anonify-dev:latest
 LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 WORKDIR ${HOME}/anonify
+
+ARG user_name
+ARG group_name
 
 COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/config/ias_root_cert.pem ./config/ias_root_cert.pem
 COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify/erc20.signed.so ./.anonify/erc20.signed.so
