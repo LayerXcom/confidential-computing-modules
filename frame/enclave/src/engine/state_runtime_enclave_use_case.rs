@@ -4,7 +4,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 pub trait StateRuntimeEnclaveUseCase: Sized + Default {
     type EI: EnclaveInput + DeserializeOwned + Default;
-    type EO: EnclaveOutput + Serialize + Default;
+    type EO: EnclaveOutput + Serialize;
 
     fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
@@ -18,12 +18,8 @@ pub trait StateRuntimeEnclaveUseCase: Sized + Default {
         Ok(())
     }
 
-    /// Handler for state transition runtime
     fn run<R, C>(self, _enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
-        C: ContextOps<S = StateType> + Clone,
-    {
-        Ok(Self::EO::default())
-    }
+        C: ContextOps<S = StateType> + Clone;
 }
