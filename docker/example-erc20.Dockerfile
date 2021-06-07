@@ -60,9 +60,7 @@ ARG user_name
 ARG group_name
 
 COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/config/ias_root_cert.pem ./config/ias_root_cert.pem
-COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify/erc20.signed.so ./.anonify/erc20.signed.so
-COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify/erc20_measurement.txt ./.anonify/erc20_measurement.txt
-COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify/key_vault_measurement.txt ./.anonify/key_vault_measurement.txt
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify ./.anonify
 COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/target/release/erc20-server ./target/release/
 COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/contract-build/AnonifyWithEnclaveKey.abi ./contract-build/
 COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/contract-build/AnonifyWithEnclaveKey.bin ./contract-build/
