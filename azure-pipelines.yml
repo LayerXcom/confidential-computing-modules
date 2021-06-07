@@ -2,57 +2,57 @@ trigger:
 - main
 
 stages:
-# - stage: Test
-#   condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
-#   jobs:
-#     - job: CI
-#       pool:
-#         name: 'AnonifyAgent'
-#       steps:
-#         - script: |
-#             cp .env.sample .env
-#             export SPID=$(SPID)
-#             export SUB_KEY=$(SUB_KEY)
+- stage: Test
+  condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
+  jobs:
+    - job: CI
+      pool:
+        name: 'AnonifyAgent'
+      steps:
+        - script: |
+            cp .env.sample .env
+            export SPID=$(SPID)
+            export SUB_KEY=$(SUB_KEY)
 
-#             # TODO: Workaround for duplicate aesm service
-#             # Remove here once https://github.com/occlum/occlum/pull/443 merged.
-#             docker-compose up -d
-#             docker-compose exec -T sgx_machine bash -c "sudo chown -R anonify-dev:anonify-dev anonify ; cd anonify && ./scripts/test.sh"
-#           displayName: 'Run rust-sgx-sdk tests'
-#         - script: docker-compose down
-#           condition: always()
-#           displayName: 'rust-sgx-sdk docker-compose down'
+            # TODO: Workaround for duplicate aesm service
+            # Remove here once https://github.com/occlum/occlum/pull/443 merged.
+            docker-compose up -d
+            docker-compose exec -T sgx_machine bash -c "sudo chown -R anonify-dev:anonify-dev anonify ; cd anonify && ./scripts/test.sh"
+          displayName: 'Run rust-sgx-sdk tests'
+        - script: docker-compose down
+          condition: always()
+          displayName: 'rust-sgx-sdk docker-compose down'
 
-#         - script: |
-#             cp .env.sample .env
-#             export SPID=$(SPID)
-#             export SUB_KEY=$(SUB_KEY)
+        - script: |
+            cp .env.sample .env
+            export SPID=$(SPID)
+            export SUB_KEY=$(SUB_KEY)
 
-#             docker-compose -f pgx-docker-compose.yml up -d
-#             docker-compose -f pgx-docker-compose.yml exec -T sgx_machine_pgx bash -c "cd anonify && ./scripts/encrypted-sql-ops-pg-test.sh"
-#           displayName: 'Run encrypted-sql-ops-pg integration tests'
-#         - script: docker-compose -f pgx-docker-compose.yml down
-#           condition: always()
-#           displayName: 'pgx docker-compose down'
+            docker-compose -f pgx-docker-compose.yml up -d
+            docker-compose -f pgx-docker-compose.yml exec -T sgx_machine_pgx bash -c "cd anonify && ./scripts/encrypted-sql-ops-pg-test.sh"
+          displayName: 'Run encrypted-sql-ops-pg integration tests'
+        - script: docker-compose -f pgx-docker-compose.yml down
+          condition: always()
+          displayName: 'pgx docker-compose down'
 
-#         # NOTE: temporary removed: Add once occlum version bump up to 0.23.0
-#         # - script: |
-#         #     cp .env.sample .env
-#         #     export SPID=$(SPID)
-#         #     export SUB_KEY=$(SUB_KEY)
-#         #     docker-compose -f occlum-docker-compose.yml up -d
+        # NOTE: temporary removed: Add once occlum version bump up to 0.23.0
+        # - script: |
+        #     cp .env.sample .env
+        #     export SPID=$(SPID)
+        #     export SUB_KEY=$(SUB_KEY)
+        #     docker-compose -f occlum-docker-compose.yml up -d
 
-#         #     # TODO: Remove the dettached mode flag once the enclave runs as the embedded mode.
-#         #     docker-compose -f occlum-docker-compose.yml exec -d -T enclave bash -c "./anonify/scripts/occlum-enclave-test.sh"
-#         #     docker-compose -f occlum-docker-compose.yml exec -T host bash -c "./anonify/scripts/occlum-host-test.sh"
-#         #   displayName: 'Run occlum tests'
-#         # - script: |
-#         #     sudo systemctl restart aesmd
-#         #     LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service
+        #     # TODO: Remove the dettached mode flag once the enclave runs as the embedded mode.
+        #     docker-compose -f occlum-docker-compose.yml exec -d -T enclave bash -c "./anonify/scripts/occlum-enclave-test.sh"
+        #     docker-compose -f occlum-docker-compose.yml exec -T host bash -c "./anonify/scripts/occlum-host-test.sh"
+        #   displayName: 'Run occlum tests'
+        # - script: |
+        #     sudo systemctl restart aesmd
+        #     LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service
 
-#         #     docker-compose -f occlum-docker-compose.yml down
-#         #   condition: always()
-#         #   displayName: 'occlum docker-compose down'
+        #     docker-compose -f occlum-docker-compose.yml down
+        #   condition: always()
+        #   displayName: 'occlum docker-compose down'
 
 - stage:
   condition: contains(variables['System.PullRequest.SourceBranch'], 'e2e')
@@ -92,75 +92,75 @@ stages:
         condition: always()
         displayName: 'Shutdown'
 
-# - stage: Build_and_Push_Base_Docker_Images
-#   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
-#   jobs:
-#   - job: Docker
-#     pool:
-#       name: 'AnonifyAgent'
-#     steps:
-#     - task: Docker@2
-#       displayName: Build rust-sgx-sdk-rootless image
-#       inputs:
-#         command: build
-#         containerRegistry: anonify-ci-cd-acr
-#         repository: rust-sgx-sdk-rootless
-#         tags: latest
-#         dockerfile: ./docker/base-rust-sgx-sdk-rootless.Dockerfile
-#         buildContext: .
-#     - task: Docker@2
-#       displayName: Push rust-sgx-sdk-rootless image
-#       inputs:
-#         command: push
-#         containerRegistry: anonify-ci-cd-acr
-#         repository: rust-sgx-sdk-rootless
-#         tags: latest
-#         dockerfile: ./docker/base-rust-sgx-sdk-rootless.Dockerfile
-#         buildContext: .
+- stage: Build_and_Push_Base_Docker_Images
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  jobs:
+  - job: Docker
+    pool:
+      name: 'AnonifyAgent'
+    steps:
+    - task: Docker@2
+      displayName: Build rust-sgx-sdk-rootless image
+      inputs:
+        command: build
+        containerRegistry: anonify-ci-cd-acr
+        repository: rust-sgx-sdk-rootless
+        tags: latest
+        dockerfile: ./docker/base-rust-sgx-sdk-rootless.Dockerfile
+        buildContext: .
+    - task: Docker@2
+      displayName: Push rust-sgx-sdk-rootless image
+      inputs:
+        command: push
+        containerRegistry: anonify-ci-cd-acr
+        repository: rust-sgx-sdk-rootless
+        tags: latest
+        dockerfile: ./docker/base-rust-sgx-sdk-rootless.Dockerfile
+        buildContext: .
 
-#     - task: Docker@2
-#       displayName: Build anonify-dev image
-#       inputs:
-#         command: build
-#         containerRegistry: anonify-ci-cd-acr
-#         repository: anonify-dev
-#         tags: latest
-#         dockerfile: ./docker/base-anonify-dev.Dockerfile
-#         buildContext: .
-#     - task: Docker@2
-#       displayName: Push anonify-dev image
-#       inputs:
-#         command: push
-#         containerRegistry: anonify-ci-cd-acr
-#         repository: anonify-dev
-#         tags: latest
-#         dockerfile: ./docker/base-anonify-dev.Dockerfile
-#         buildContext: .
+    - task: Docker@2
+      displayName: Build anonify-dev image
+      inputs:
+        command: build
+        containerRegistry: anonify-ci-cd-acr
+        repository: anonify-dev
+        tags: latest
+        dockerfile: ./docker/base-anonify-dev.Dockerfile
+        buildContext: .
+    - task: Docker@2
+      displayName: Push anonify-dev image
+      inputs:
+        command: push
+        containerRegistry: anonify-ci-cd-acr
+        repository: anonify-dev
+        tags: latest
+        dockerfile: ./docker/base-anonify-dev.Dockerfile
+        buildContext: .
 
-#     - task: Docker@2
-#       displayName: Build anonify-dev-pgx image
-#       inputs:
-#         command: build
-#         containerRegistry: anonify-ci-cd-acr
-#         repository: anonify-dev-pgx
-#         tags: latest
-#         dockerfile: ./docker/base-anonify-dev-pgx.Dockerfile
-#         buildContext: .
-#     - task: Docker@2
-#       displayName: Push anonify-dev-pgx image
-#       inputs:
-#         command: push
-#         containerRegistry: anonify-ci-cd-acr
-#         repository: anonify-dev-pgx
-#         tags: latest
-#         dockerfile: ./docker/base-anonify-dev-pgx.Dockerfile
-#         buildContext: .
+    - task: Docker@2
+      displayName: Build anonify-dev-pgx image
+      inputs:
+        command: build
+        containerRegistry: anonify-ci-cd-acr
+        repository: anonify-dev-pgx
+        tags: latest
+        dockerfile: ./docker/base-anonify-dev-pgx.Dockerfile
+        buildContext: .
+    - task: Docker@2
+      displayName: Push anonify-dev-pgx image
+      inputs:
+        command: push
+        containerRegistry: anonify-ci-cd-acr
+        repository: anonify-dev-pgx
+        tags: latest
+        dockerfile: ./docker/base-anonify-dev-pgx.Dockerfile
+        buildContext: .
 
-#     - script: docker image prune -f
-#       displayName: Remove dangling images
+    - script: docker image prune -f
+      displayName: Remove dangling images
 
 - stage: Build_and_Push_Example_Docker
-  # condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
   - job: Docker
     pool:
