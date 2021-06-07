@@ -21,6 +21,13 @@ impl StateRuntimeEnclaveUseCase for PathSecretsBackupper {
     type EI = input::Empty;
     type EO = output::Empty;
 
+    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    where
+        C: ContextOps<S = StateType> + Clone,
+    {
+        Ok(Self::default())
+    }
+
     fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
@@ -60,6 +67,13 @@ impl StateRuntimeEnclaveUseCase for PathSecretsRecoverer {
     type EI = input::Empty;
     type EO = output::Empty;
 
+    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    where
+        C: ContextOps<S = StateType> + Clone,
+    {
+        Ok(Self::default())
+    }
+
     fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
@@ -94,6 +108,13 @@ impl StateRuntimeEnclaveUseCase for EnclaveKeyBackupper {
     type EI = input::Empty;
     type EO = output::Empty;
 
+    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    where
+        C: ContextOps<S = StateType> + Clone,
+    {
+        Ok(Self::default())
+    }
+
     fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
@@ -111,6 +132,13 @@ pub struct EnclaveKeyRecoverer;
 impl StateRuntimeEnclaveUseCase for EnclaveKeyRecoverer {
     type EI = input::Empty;
     type EO = output::Empty;
+
+    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    where
+        C: ContextOps<S = StateType> + Clone,
+    {
+        Ok(Self::default())
+    }
 
     fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where

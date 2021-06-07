@@ -532,6 +532,13 @@ impl StateRuntimeEnclaveUseCase for ReportRegistration {
     type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
 
+    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    where
+        C: ContextOps<S = StateType> + Clone,
+    {
+        Ok(Self::default())
+    }
+
     fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
