@@ -2,7 +2,7 @@ use frame_common::{EnclaveInput, EnclaveOutput};
 use frame_runtime::ConfigGetter;
 use serde::{de::DeserializeOwned, Serialize};
 
-pub trait BasicEnclaveUseCase: Sized + Default {
+pub trait BasicEnclaveUseCase: Sized {
     type EI: EnclaveInput + DeserializeOwned + Default;
     type EO: EnclaveOutput + Serialize;
 
