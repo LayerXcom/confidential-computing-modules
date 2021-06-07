@@ -363,7 +363,7 @@ pub struct SodiumCiphertext {
     ciphertext: Vec<u8>,
 }
 
-impl frame_common::EcallInput for SodiumCiphertext {}
+impl frame_common::EnclaveInput for SodiumCiphertext {}
 
 impl SodiumCiphertext {
     pub fn encrypt<R>(

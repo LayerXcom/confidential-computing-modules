@@ -159,10 +159,10 @@ pub mod host_input {
     }
 
     impl HostInput for Command {
-        type EcallInput = input::Command;
+        type EnclaveInput = input::Command;
         type HostOutput = host_output::Command;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
             let host_output = host_output::Command::new(self.signer, self.gas);
             let ecall_input = input::Command::new(self.ciphertext, self.user_id);
 
@@ -191,13 +191,13 @@ pub mod host_input {
     }
 
     impl HostInput for JoinGroup {
-        type EcallInput = input::Empty;
+        type EnclaveInput = input::Empty;
         type HostOutput = host_output::JoinGroup;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
             let host_output = host_output::JoinGroup::new(self.signer, self.gas);
 
-            Ok((Self::EcallInput::default(), host_output))
+            Ok((Self::EnclaveInput::default(), host_output))
         }
 
         fn ecall_cmd(&self) -> u32 {
@@ -222,13 +222,13 @@ pub mod host_input {
     }
 
     impl HostInput for RegisterReport {
-        type EcallInput = input::Empty;
+        type EnclaveInput = input::Empty;
         type HostOutput = host_output::RegisterReport;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
             let host_output = host_output::RegisterReport::new(self.signer, self.gas);
 
-            Ok((Self::EcallInput::default(), host_output))
+            Ok((Self::EnclaveInput::default(), host_output))
         }
 
         fn ecall_cmd(&self) -> u32 {
@@ -253,13 +253,13 @@ pub mod host_input {
     }
 
     impl HostInput for Handshake {
-        type EcallInput = input::Empty;
+        type EnclaveInput = input::Empty;
         type HostOutput = host_output::Handshake;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
             let host_output = host_output::Handshake::new(self.signer, self.gas);
 
-            Ok((Self::EcallInput::default(), host_output))
+            Ok((Self::EnclaveInput::default(), host_output))
         }
 
         fn ecall_cmd(&self) -> u32 {
@@ -282,10 +282,10 @@ pub mod host_input {
     }
 
     impl HostInput for RegisterNotification {
-        type EcallInput = SodiumCiphertext;
+        type EnclaveInput = SodiumCiphertext;
         type HostOutput = host_output::RegisterNotification;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
             Ok((self.ciphertext, Self::HostOutput::default()))
         }
 
@@ -309,10 +309,10 @@ pub mod host_input {
     }
 
     impl HostInput for GetState {
-        type EcallInput = SodiumCiphertext;
+        type EnclaveInput = SodiumCiphertext;
         type HostOutput = host_output::GetState;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
             Ok((self.ciphertext, Self::HostOutput::new()))
         }
 
@@ -336,10 +336,10 @@ pub mod host_input {
     }
 
     impl HostInput for GetUserCounter {
-        type EcallInput = SodiumCiphertext;
+        type EnclaveInput = SodiumCiphertext;
         type HostOutput = host_output::GetUserCounter;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
             Ok((self.ciphertext, Self::HostOutput::new()))
         }
 
@@ -369,11 +369,11 @@ pub mod host_input {
     }
 
     impl HostInput for InsertCiphertext {
-        type EcallInput = input::InsertCiphertext;
+        type EnclaveInput = input::InsertCiphertext;
         type HostOutput = host_output::InsertCiphertext;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let ecall_input = Self::EcallInput::new(self.ciphertext, self.state_counter);
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
+            let ecall_input = Self::EnclaveInput::new(self.ciphertext, self.state_counter);
 
             Ok((ecall_input, Self::HostOutput::new()))
         }
@@ -404,11 +404,11 @@ pub mod host_input {
     }
 
     impl HostInput for InsertHandshake {
-        type EcallInput = input::InsertHandshake;
+        type EnclaveInput = input::InsertHandshake;
         type HostOutput = host_output::InsertHandshake;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            let ecall_input = Self::EcallInput::new(self.handshake, self.state_counter);
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
+            let ecall_input = Self::EnclaveInput::new(self.handshake, self.state_counter);
 
             Ok((ecall_input, Self::HostOutput::default()))
         }
@@ -429,11 +429,11 @@ pub mod host_input {
     }
 
     impl HostInput for GetEncryptionKey {
-        type EcallInput = input::Empty;
+        type EnclaveInput = input::Empty;
         type HostOutput = host_output::ReturnEncryptionKey;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            Ok((Self::EcallInput::default(), Self::HostOutput::new()))
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
+            Ok((Self::EnclaveInput::default(), Self::HostOutput::new()))
         }
 
         fn ecall_cmd(&self) -> u32 {
@@ -452,11 +452,11 @@ pub mod host_input {
     }
 
     impl HostInput for Backup {
-        type EcallInput = input::Empty;
+        type EnclaveInput = input::Empty;
         type HostOutput = host_output::Backup;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            Ok((Self::EcallInput::default(), Self::HostOutput::default()))
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
+            Ok((Self::EnclaveInput::default(), Self::HostOutput::default()))
         }
 
         fn ecall_cmd(&self) -> u32 {
@@ -475,11 +475,11 @@ pub mod host_input {
     }
 
     impl HostInput for Recover {
-        type EcallInput = input::Empty;
+        type EnclaveInput = input::Empty;
         type HostOutput = host_output::Recover;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            Ok((Self::EcallInput::default(), Self::HostOutput::default()))
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
+            Ok((Self::EnclaveInput::default(), Self::HostOutput::default()))
         }
 
         fn ecall_cmd(&self) -> u32 {
@@ -499,9 +499,9 @@ pub mod host_output {
     }
 
     impl HostOutput for Command {
-        type EcallOutput = output::Command;
+        type EnclaveOutput = output::Command;
 
-        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
             self.ecall_output = Some(output);
 
             Ok(self)
@@ -526,9 +526,9 @@ pub mod host_output {
     }
 
     impl HostOutput for JoinGroup {
-        type EcallOutput = output::ReturnJoinGroup;
+        type EnclaveOutput = output::ReturnJoinGroup;
 
-        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
             self.ecall_output = Some(output);
 
             Ok(self)
@@ -553,9 +553,9 @@ pub mod host_output {
     }
 
     impl HostOutput for RegisterReport {
-        type EcallOutput = output::ReturnRegisterReport;
+        type EnclaveOutput = output::ReturnRegisterReport;
 
-        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
             self.ecall_output = Some(output);
 
             Ok(self)
@@ -580,9 +580,9 @@ pub mod host_output {
     }
 
     impl HostOutput for Handshake {
-        type EcallOutput = output::ReturnHandshake;
+        type EnclaveOutput = output::ReturnHandshake;
 
-        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
             self.ecall_output = Some(output);
 
             Ok(self)
@@ -603,7 +603,7 @@ pub mod host_output {
     pub struct RegisterNotification;
 
     impl HostOutput for RegisterNotification {
-        type EcallOutput = output::Empty;
+        type EnclaveOutput = output::Empty;
     }
 
     pub struct GetState {
@@ -611,9 +611,9 @@ pub mod host_output {
     }
 
     impl HostOutput for GetState {
-        type EcallOutput = output::ReturnState;
+        type EnclaveOutput = output::ReturnState;
 
-        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
             self.ecall_output = Some(output);
 
             Ok(self)
@@ -631,9 +631,9 @@ pub mod host_output {
     }
 
     impl HostOutput for GetUserCounter {
-        type EcallOutput = output::ReturnUserCounter;
+        type EnclaveOutput = output::ReturnUserCounter;
 
-        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
             self.ecall_output = Some(output);
 
             Ok(self)
@@ -651,9 +651,9 @@ pub mod host_output {
     }
 
     impl HostOutput for InsertCiphertext {
-        type EcallOutput = output::ReturnNotifyState;
+        type EnclaveOutput = output::ReturnNotifyState;
 
-        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
             self.ecall_output = Some(output);
 
             Ok(self)
@@ -670,7 +670,7 @@ pub mod host_output {
     pub struct InsertHandshake;
 
     impl HostOutput for InsertHandshake {
-        type EcallOutput = output::Empty;
+        type EnclaveOutput = output::Empty;
     }
 
     pub struct ReturnEncryptionKey {
@@ -678,9 +678,9 @@ pub mod host_output {
     }
 
     impl HostOutput for ReturnEncryptionKey {
-        type EcallOutput = output::ReturnEncryptionKey;
+        type EnclaveOutput = output::ReturnEncryptionKey;
 
-        fn set_ecall_output(mut self, output: Self::EcallOutput) -> anyhow::Result<Self> {
+        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
             self.ecall_output = Some(output);
 
             Ok(self)
@@ -697,13 +697,13 @@ pub mod host_output {
     pub struct Backup;
 
     impl HostOutput for Backup {
-        type EcallOutput = output::Empty;
+        type EnclaveOutput = output::Empty;
     }
 
     #[derive(Default)]
     pub struct Recover;
 
     impl HostOutput for Recover {
-        type EcallOutput = output::Empty;
+        type EnclaveOutput = output::Empty;
     }
 }

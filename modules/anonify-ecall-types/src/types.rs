@@ -12,7 +12,7 @@ use frame_common::{
     crypto::{AccountId, ExportHandshake},
     state_types::{StateCounter, StateType, UserCounter},
     traits::AccessPolicy,
-    EcallInput, EcallOutput,
+    EnclaveInput, EnclaveOutput,
 };
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 
@@ -26,7 +26,7 @@ pub mod input {
         user_id: Option<AccountId>,
     }
 
-    impl EcallInput for Command {}
+    impl EnclaveInput for Command {}
 
     impl Command {
         pub fn new(ciphertext: SodiumCiphertext, user_id: Option<AccountId>) -> Self {
@@ -52,7 +52,7 @@ pub mod input {
         state_counter: StateCounter,
     }
 
-    impl EcallInput for InsertCiphertext {}
+    impl EnclaveInput for InsertCiphertext {}
 
     impl InsertCiphertext {
         pub fn new(ciphertext: CommandCiphertext, state_counter: StateCounter) -> Self {
@@ -78,7 +78,7 @@ pub mod input {
         state_counter: StateCounter,
     }
 
-    impl EcallInput for InsertHandshake {}
+    impl EnclaveInput for InsertHandshake {}
 
     impl InsertHandshake {
         pub fn new(handshake: ExportHandshake, state_counter: StateCounter) -> Self {
@@ -180,7 +180,7 @@ pub mod input {
         access_policy: AP,
     }
 
-    impl<AP: AccessPolicy> EcallInput for RegisterNotification<AP> {}
+    impl<AP: AccessPolicy> EnclaveInput for RegisterNotification<AP> {}
 
     impl<AP: AccessPolicy> RegisterNotification<AP> {
         pub fn new(access_policy: AP) -> Self {
@@ -196,7 +196,7 @@ pub mod input {
     #[serde(crate = "crate::serde")]
     pub struct Empty;
 
-    impl EcallInput for Empty {}
+    impl EnclaveInput for Empty {}
 }
 
 pub mod output {
@@ -221,7 +221,7 @@ pub mod output {
         }
     }
 
-    impl EcallOutput for Command {}
+    impl EnclaveOutput for Command {}
 
     impl Serialize for Command {
         // not for human readable, used for binary encoding
@@ -316,7 +316,7 @@ pub mod output {
         pub state: Option<serde_bytes::ByteBuf>,
     }
 
-    impl EcallOutput for ReturnNotifyState {}
+    impl EnclaveOutput for ReturnNotifyState {}
 
     impl Default for ReturnNotifyState {
         fn default() -> Self {
@@ -336,7 +336,7 @@ pub mod output {
         enclave_encryption_key: SodiumPubKey,
     }
 
-    impl EcallOutput for ReturnEncryptionKey {}
+    impl EnclaveOutput for ReturnEncryptionKey {}
 
     impl ReturnEncryptionKey {
         pub fn new(enclave_encryption_key: SodiumPubKey) -> Self {
@@ -354,7 +354,7 @@ pub mod output {
     #[serde(crate = "crate::serde")]
     pub struct Empty;
 
-    impl EcallOutput for Empty {}
+    impl EnclaveOutput for Empty {}
 
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
@@ -362,7 +362,7 @@ pub mod output {
         pub state: StateType,
     }
 
-    impl EcallOutput for ReturnState {}
+    impl EnclaveOutput for ReturnState {}
 
     impl ReturnState {
         pub fn new(state: StateType) -> Self {
@@ -376,7 +376,7 @@ pub mod output {
         pub user_counter: UserCounter,
     }
 
-    impl EcallOutput for ReturnUserCounter {}
+    impl EnclaveOutput for ReturnUserCounter {}
 
     impl ReturnUserCounter {
         pub fn new(user_counter: UserCounter) -> Self {
@@ -424,7 +424,7 @@ pub mod output {
         }
     }
 
-    impl EcallOutput for ReturnJoinGroup {}
+    impl EnclaveOutput for ReturnJoinGroup {}
 
     impl ReturnJoinGroup {
         pub fn new(
@@ -488,7 +488,7 @@ pub mod output {
         }
     }
 
-    impl EcallOutput for ReturnRegisterReport {}
+    impl EnclaveOutput for ReturnRegisterReport {}
 
     impl ReturnRegisterReport {
         pub fn new(
@@ -541,7 +541,7 @@ pub mod output {
         }
     }
 
-    impl EcallOutput for ReturnHandshake {}
+    impl EnclaveOutput for ReturnHandshake {}
 
     impl Serialize for ReturnHandshake {
         // not for human readable, used for binary encoding

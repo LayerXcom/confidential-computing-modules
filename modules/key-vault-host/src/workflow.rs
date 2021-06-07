@@ -37,11 +37,11 @@ pub mod host_input {
     }
 
     impl HostInput for StartServer {
-        type EcallInput = input::CallServerStarter;
+        type EnclaveInput = input::CallServerStarter;
         type HostOutput = host_output::StartServer;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            Ok((Self::EcallInput::default(), Self::HostOutput::default()))
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
+            Ok((Self::EnclaveInput::default(), Self::HostOutput::default()))
         }
 
         fn ecall_cmd(&self) -> u32 {
@@ -60,11 +60,11 @@ pub mod host_input {
     }
 
     impl HostInput for StopServer {
-        type EcallInput = input::CallServerStopper;
+        type EnclaveInput = input::CallServerStopper;
         type HostOutput = host_output::StopServer;
 
-        fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
-            Ok((Self::EcallInput::default(), Self::HostOutput::default()))
+        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
+            Ok((Self::EnclaveInput::default(), Self::HostOutput::default()))
         }
 
         fn ecall_cmd(&self) -> u32 {
@@ -80,13 +80,13 @@ pub mod host_output {
     pub struct StartServer;
 
     impl HostOutput for StartServer {
-        type EcallOutput = output::Empty;
+        type EnclaveOutput = output::Empty;
     }
 
     #[derive(Default)]
     pub struct StopServer;
 
     impl HostOutput for StopServer {
-        type EcallOutput = output::Empty;
+        type EnclaveOutput = output::Empty;
     }
 }

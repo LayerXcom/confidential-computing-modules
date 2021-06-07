@@ -1,10 +1,10 @@
-use frame_common::{state_types::StateType, EcallInput, EcallOutput};
+use frame_common::{state_types::StateType, EnclaveInput, EnclaveOutput};
 use frame_runtime::{ContextOps, RuntimeExecutor};
 use serde::{de::DeserializeOwned, Serialize};
 
 pub trait StateRuntimeEnclaveUseCase: Sized + Default {
-    type EI: EcallInput + DeserializeOwned + Default;
-    type EO: EcallOutput + Serialize + Default;
+    type EI: EnclaveInput + DeserializeOwned + Default;
+    type EO: EnclaveOutput + Serialize + Default;
 
     fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where

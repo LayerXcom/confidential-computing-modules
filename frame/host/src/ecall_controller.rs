@@ -1,14 +1,14 @@
 use crate::ecalls::EnclaveConnector;
-use frame_common::{EcallInput, EcallOutput};
+use frame_common::{EnclaveInput, EnclaveOutput};
 use serde::{de::DeserializeOwned, Serialize};
 
 use sgx_types::sgx_enclave_id_t;
 
 pub trait EcallController {
-    type HI: HostInput<EcallInput = Self::EI, HostOutput = Self::HO>;
-    type EI: EcallInput + Serialize;
-    type EO: EcallOutput + DeserializeOwned;
-    type HO: HostOutput<EcallOutput = Self::EO>;
+    type HI: HostInput<EnclaveInput = Self::EI, HostOutput = Self::HO>;
+    type EI: EnclaveInput + Serialize;
+    type EO: EnclaveOutput + DeserializeOwned;
+    type HO: HostOutput<EnclaveOutput = Self::EO>;
     const ECALL_MAX_SIZE: usize;
 
     fn exec(input: Self::HI, eid: sgx_enclave_id_t) -> anyhow::Result<Self::HO> {
@@ -22,18 +22,18 @@ pub trait EcallController {
 }
 
 pub trait HostInput: Sized {
-    type EcallInput: EcallInput;
+    type EnclaveInput: EnclaveInput;
     type HostOutput: HostOutput;
 
-    fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)>;
+    fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)>;
 
     fn ecall_cmd(&self) -> u32;
 }
 
 pub trait HostOutput: Sized {
-    type EcallOutput: EcallOutput;
+    type EnclaveOutput: EnclaveOutput;
 
-    fn set_ecall_output(self, _output: Self::EcallOutput) -> anyhow::Result<Self> {
+    fn set_ecall_output(self, _output: Self::EnclaveOutput) -> anyhow::Result<Self> {
         Ok(self)
     }
 }

@@ -1,6 +1,6 @@
 use crate::error::{FrameHostError, Result};
 use bincode::Options;
-use frame_common::{EcallInput, EcallOutput};
+use frame_common::{EnclaveInput, EnclaveOutput};
 use frame_types::EnclaveStatus;
 use serde::{de::DeserializeOwned, Serialize};
 use sgx_types::{sgx_enclave_id_t, sgx_status_t};
@@ -33,8 +33,8 @@ impl EnclaveConnector {
 
     pub fn invoke_ecall<EI, EO>(&self, cmd: u32, input: EI) -> Result<EO>
     where
-        EI: Serialize + EcallInput,
-        EO: DeserializeOwned + EcallOutput,
+        EI: Serialize + EnclaveInput,
+        EO: DeserializeOwned + EnclaveOutput,
     {
         let input_payload = bincode::DefaultOptions::new()
             .with_limit(self.ecall_max_size as u64)
