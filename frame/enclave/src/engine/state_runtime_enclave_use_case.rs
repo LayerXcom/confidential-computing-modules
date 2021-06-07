@@ -19,7 +19,7 @@ pub trait StateRuntimeEnclaveUseCase: Sized + Default {
     }
 
     /// Handler for state transition runtime
-    fn handle<R, C>(self, _enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<R, C>(self, _enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,

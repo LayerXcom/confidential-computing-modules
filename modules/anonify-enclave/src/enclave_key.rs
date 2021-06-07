@@ -38,7 +38,7 @@ impl StateRuntimeEnclaveUseCase for EncryptionKeyGetter {
     type EI = input::Empty;
     type EO = output::ReturnEncryptionKey;
 
-    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,

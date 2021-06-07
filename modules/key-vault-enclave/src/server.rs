@@ -14,7 +14,7 @@ impl BasicEnclaveUseCase for ServerStarter {
     type EI = input::CallServerStarter;
     type EO = output::Empty;
 
-    fn handle<C>(self, enclave_context: &C) -> anyhow::Result<Self::EO>
+    fn run<C>(self, enclave_context: &C) -> anyhow::Result<Self::EO>
     where
         C: ConfigGetter,
     {
@@ -48,7 +48,7 @@ impl BasicEnclaveUseCase for ServerStopper {
     type EI = input::CallServerStopper;
     type EO = output::Empty;
 
-    fn handle<C>(self, _enclave_context: &C) -> anyhow::Result<Self::EO>
+    fn run<C>(self, _enclave_context: &C) -> anyhow::Result<Self::EO>
     where
         C: ConfigGetter,
     {

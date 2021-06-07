@@ -12,7 +12,7 @@ impl StateRuntimeEnclaveUseCase for JoinGroupWithEnclaveKey {
     type EI = input::Empty;
     type EO = output::ReturnJoinGroup;
 
-    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
+    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,

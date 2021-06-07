@@ -13,8 +13,7 @@ pub trait BasicEnclaveUseCase: Sized + Default {
         Ok(Self::default())
     }
 
-    /// Handler for basic engine
-    fn handle<C>(self, _enclave_context: &C) -> anyhow::Result<Self::EO>
+    fn run<C>(self, _enclave_context: &C) -> anyhow::Result<Self::EO>
     where
         C: ConfigGetter,
     {

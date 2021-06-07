@@ -468,7 +468,7 @@ impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for GetState<AP> {
         self.ecall_input.access_policy().verify()
     }
 
-    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
@@ -512,7 +512,7 @@ impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for GetUserCounter<AP> {
         self.ecall_input.access_policy().verify()
     }
 
-    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
@@ -532,7 +532,7 @@ impl StateRuntimeEnclaveUseCase for ReportRegistration {
     type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
 
-    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,

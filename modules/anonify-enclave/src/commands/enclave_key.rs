@@ -59,7 +59,7 @@ where
         Ok(())
     }
 
-    fn handle<R, C>(self, enclave_context: &C, max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<R, C>(self, enclave_context: &C, max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
@@ -113,7 +113,7 @@ where
     /// 1. Verify the order of transactions for each State Runtime node (verify_state_counter_increment)
     /// 2. Verify the order of transactions for each user (verify_user_counter_increment)
     /// 3. State transitions
-    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,

@@ -58,7 +58,7 @@ where
         Ok(())
     }
 
-    fn handle<R, C>(self, enclave_context: &C, max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<R, C>(self, enclave_context: &C, max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
@@ -118,7 +118,7 @@ where
     /// 2. Ratchet keychains
     /// 3. Verify the order of transactions for each user (verify_user_counter_increment)
     /// 4. State transitions
-    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,

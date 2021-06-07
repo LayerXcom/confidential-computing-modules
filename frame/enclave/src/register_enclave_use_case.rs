@@ -31,7 +31,7 @@ macro_rules! register_enclave_use_case {
 
                 let slf = EE::new::<$ctx_ops>(ecall_input, $ctx)?;
                 EE::eval_policy(&slf)?;
-                EE::handle::<$runtime_exec, $ctx_ops>(slf, $ctx, $max_mem)?
+                EE::run::<$runtime_exec, $ctx_ops>(slf, $ctx, $max_mem)?
             };
 
             bincode::serialize(&res).map_err(Into::into)
@@ -49,7 +49,7 @@ macro_rules! register_enclave_use_case {
                     .map_err(|e| anyhow!("{:?}", e))?;
 
                 let slf = EE::new::<$ctx_ops>(ecall_input, $ctx)?;
-                EE::handle::<$ctx_ops>(slf, $ctx)?
+                EE::run::<$ctx_ops>(slf, $ctx)?
             };
 
             bincode::serialize(&res).map_err(Into::into)
