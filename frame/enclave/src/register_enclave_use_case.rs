@@ -48,8 +48,7 @@ macro_rules! register_enclave_use_case {
                     .deserialize(&input_payload[..])
                     .map_err(|e| anyhow!("{:?}", e))?;
 
-                let slf = EE::new::<$ctx_ops>(ecall_input, $ctx)?;
-                EE::run::<$ctx_ops>(slf, $ctx)?
+                EE::run::<$ctx_ops>(ecall_input, $ctx)?
             };
 
             bincode::serialize(&res).map_err(Into::into)

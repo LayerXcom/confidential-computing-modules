@@ -62,9 +62,9 @@ impl BasicEnclaveUseCase for MyEnclaveUseCase {
 
     const ENCLAVE_USE_CASE_ID: u32 = MY_ENCLAVE_USE_CASE_ID;
 
-    fn run<C>(self, enclave_input: Self::EI, enclave_config: &C) -> Result<Self::EO>
+    fn run<C>(enclave_input: Self::EI, enclave_context: &C) -> Result<Self::EO>
     where
-        C: ConfigGetter,
+        C: ConfigGetter
     { ... }
 }
 ```

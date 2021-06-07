@@ -7,21 +7,14 @@ use key_vault_ecall_types::*;
 use std::env;
 
 /// A server starter
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ServerStarter;
 
 impl BasicEnclaveUseCase for ServerStarter {
     type EI = input::CallServerStarter;
     type EO = output::Empty;
 
-    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ConfigGetter,
-    {
-        Ok(Self::default())
-    }
-
-    fn run<C>(self, enclave_context: &C) -> anyhow::Result<Self::EO>
+    fn run<C>(_ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self::EO>
     where
         C: ConfigGetter,
     {
@@ -55,14 +48,7 @@ impl BasicEnclaveUseCase for ServerStopper {
     type EI = input::CallServerStopper;
     type EO = output::Empty;
 
-    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ConfigGetter,
-    {
-        Ok(Self::default())
-    }
-
-    fn run<C>(self, _enclave_context: &C) -> anyhow::Result<Self::EO>
+    fn run<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self::EO>
     where
         C: ConfigGetter,
     {
