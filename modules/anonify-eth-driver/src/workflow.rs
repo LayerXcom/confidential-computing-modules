@@ -7,7 +7,7 @@ use frame_host::ecall_controller::*;
 use frame_sodium::SodiumCiphertext;
 use web3::types::Address;
 
-pub const ECALL_MAX_SIZE: usize = 2048;
+pub const EI_MAX_SIZE: usize = 2048;
 
 pub struct CommandWorkflow;
 
@@ -16,7 +16,7 @@ impl EcallController for CommandWorkflow {
     type EI = input::Command;
     type EO = output::Command;
     type HO = host_output::Command;
-    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
+    const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 }
 
 pub struct JoinGroupWorkflow;
@@ -26,7 +26,7 @@ impl EcallController for JoinGroupWorkflow {
     type EI = input::Empty;
     type EO = output::ReturnJoinGroup;
     type HO = host_output::JoinGroup;
-    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
+    const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 }
 
 pub struct RegisterReportWorkflow;
@@ -36,7 +36,7 @@ impl EcallController for RegisterReportWorkflow {
     type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
     type HO = host_output::RegisterReport;
-    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
+    const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 }
 
 pub struct HandshakeWorkflow;
@@ -46,7 +46,7 @@ impl EcallController for HandshakeWorkflow {
     type EI = input::Empty;
     type EO = output::ReturnHandshake;
     type HO = host_output::Handshake;
-    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
+    const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 }
 
 pub struct RegisterNotificationWorkflow;
@@ -56,7 +56,7 @@ impl EcallController for RegisterNotificationWorkflow {
     type EI = SodiumCiphertext;
     type EO = output::Empty;
     type HO = host_output::RegisterNotification;
-    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
+    const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 }
 
 pub struct GetStateWorkflow;
@@ -66,7 +66,7 @@ impl EcallController for GetStateWorkflow {
     type EI = SodiumCiphertext;
     type EO = output::ReturnState;
     type HO = host_output::GetState;
-    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
+    const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 }
 
 pub struct InsertCiphertextWorkflow;
@@ -76,7 +76,7 @@ impl EcallController for InsertCiphertextWorkflow {
     type EI = input::InsertCiphertext;
     type EO = output::ReturnNotifyState;
     type HO = host_output::InsertCiphertext;
-    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
+    const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 }
 
 pub struct InsertHandshakeWorkflow;
@@ -86,7 +86,7 @@ impl EcallController for InsertHandshakeWorkflow {
     type EI = input::InsertHandshake;
     type EO = output::Empty;
     type HO = host_output::InsertHandshake;
-    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
+    const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 }
 
 pub struct GetEncryptionKeyWorkflow;
@@ -96,7 +96,7 @@ impl EcallController for GetEncryptionKeyWorkflow {
     type EI = input::Empty;
     type EO = output::ReturnEncryptionKey;
     type HO = host_output::ReturnEncryptionKey;
-    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
+    const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 }
 
 pub struct BackupWorkflow;
@@ -106,7 +106,7 @@ impl EcallController for BackupWorkflow {
     type EI = input::Empty;
     type EO = output::Empty;
     type HO = host_output::Backup;
-    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
+    const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 }
 
 pub struct RecoverWorkflow;
@@ -116,7 +116,7 @@ impl EcallController for RecoverWorkflow {
     type EI = input::Empty;
     type EO = output::Empty;
     type HO = host_output::Recover;
-    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
+    const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 }
 
 pub struct GetUserCounterWorkflow;
@@ -126,7 +126,7 @@ impl EcallController for GetUserCounterWorkflow {
     type EI = SodiumCiphertext;
     type EO = output::ReturnUserCounter;
     type HO = host_output::GetUserCounter;
-    const ECALL_MAX_SIZE: usize = ECALL_MAX_SIZE;
+    const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 }
 
 pub mod host_input {

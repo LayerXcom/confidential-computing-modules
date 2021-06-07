@@ -9,12 +9,15 @@ pub trait EcallController {
     type EI: EnclaveInput + Serialize;
     type EO: EnclaveOutput + DeserializeOwned;
     type HO: HostOutput<EnclaveOutput = Self::EO>;
-    const ECALL_MAX_SIZE: usize;
+
+    /// Max acceptable size of enclave input.
+    /// This is to avoid DoS attack by too large input.
+    const EI_MAX_SIZE: usize;
 
     fn exec(input: Self::HI, eid: sgx_enclave_id_t) -> anyhow::Result<Self::HO> {
         let ecall_cmd = input.ecall_cmd();
         let (ecall_input, host_output) = input.apply()?;
-        let ecall_output = EnclaveConnector::new(eid, Self::ECALL_MAX_SIZE)
+        let ecall_output = EnclaveConnector::new(eid, Self::EI_MAX_SIZE)
             .invoke_ecall::<Self::EI, Self::EO>(ecall_cmd, ecall_input)?;
 
         host_output.set_ecall_output(ecall_output)
