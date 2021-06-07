@@ -28,6 +28,10 @@ impl StateRuntimeEnclaveUseCase for PathSecretsBackupper {
         Ok(Self::default())
     }
 
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
@@ -74,6 +78,10 @@ impl StateRuntimeEnclaveUseCase for PathSecretsRecoverer {
         Ok(Self::default())
     }
 
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
@@ -115,6 +123,10 @@ impl StateRuntimeEnclaveUseCase for EnclaveKeyBackupper {
         Ok(Self::default())
     }
 
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
@@ -138,6 +150,10 @@ impl StateRuntimeEnclaveUseCase for EnclaveKeyRecoverer {
         C: ContextOps<S = StateType> + Clone,
     {
         Ok(Self::default())
+    }
+
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        Ok(())
     }
 
     fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>

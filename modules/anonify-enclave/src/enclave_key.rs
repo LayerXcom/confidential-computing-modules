@@ -45,6 +45,10 @@ impl StateRuntimeEnclaveUseCase for EncryptionKeyGetter {
         Ok(Self::default())
     }
 
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,

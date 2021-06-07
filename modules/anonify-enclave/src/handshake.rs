@@ -22,6 +22,10 @@ impl StateRuntimeEnclaveUseCase for HandshakeSender {
         Ok(Self::default())
     }
 
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
         R: RuntimeExecutor<C, S = StateType>,
@@ -81,6 +85,10 @@ impl StateRuntimeEnclaveUseCase for HandshakeReceiver {
         C: ContextOps<S = StateType> + Clone,
     {
         Ok(Self { ecall_input })
+    }
+
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        Ok(())
     }
 
     fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>

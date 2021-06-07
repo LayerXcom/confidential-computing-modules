@@ -113,6 +113,10 @@ where
         })
     }
 
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     /// NOTE: Since this operation is stateful, you need to be careful about the order of processing, considering the possibility of processing failure.
     /// 1. Verify the order of transactions for each State Runtime node (verify_state_counter_increment)
     /// 2. Ratchet keychains

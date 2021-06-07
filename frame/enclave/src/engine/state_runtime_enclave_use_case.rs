@@ -11,9 +11,7 @@ pub trait StateRuntimeEnclaveUseCase: Sized {
         C: ContextOps<S = StateType> + Clone;
 
     /// Evaluate policies like authentication and idempotency
-    fn eval_policy(&self) -> anyhow::Result<()> {
-        Ok(())
-    }
+    fn eval_policy(&self) -> anyhow::Result<()>;
 
     fn run<R, C>(self, _enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
