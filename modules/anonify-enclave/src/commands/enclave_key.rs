@@ -59,9 +59,8 @@ where
         Ok(())
     }
 
-    fn run<R, C>(self, enclave_context: &C, max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         let my_roster_idx = enclave_context.my_roster_idx() as u32;
@@ -117,9 +116,8 @@ where
     /// 1. Verify the order of transactions for each State Runtime node (verify_state_counter_increment)
     /// 2. Verify the order of transactions for each user (verify_user_counter_increment)
     /// 3. State transitions
-    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         let ciphertext: &SodiumCiphertext = match self.ecall_input.ciphertext() {

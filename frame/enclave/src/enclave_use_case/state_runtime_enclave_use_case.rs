@@ -13,8 +13,7 @@ pub trait StateRuntimeEnclaveUseCase: Sized {
     /// Evaluate policies like authentication and idempotency
     fn eval_policy(&self) -> anyhow::Result<()>;
 
-    fn run<R, C>(self, _enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<C>(self, _enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone;
 }

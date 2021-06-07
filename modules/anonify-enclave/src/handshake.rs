@@ -26,9 +26,8 @@ impl StateRuntimeEnclaveUseCase for HandshakeSender {
         Ok(())
     }
 
-    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &*enclave_context.read_group_key();
@@ -91,9 +90,8 @@ impl StateRuntimeEnclaveUseCase for HandshakeReceiver {
         Ok(())
     }
 
-    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();

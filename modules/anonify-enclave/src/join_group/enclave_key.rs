@@ -23,9 +23,8 @@ impl StateRuntimeEnclaveUseCase for JoinGroupWithEnclaveKey {
         Ok(())
     }
 
-    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         let attested_report = enclave_context.quote()?.remote_attestation(

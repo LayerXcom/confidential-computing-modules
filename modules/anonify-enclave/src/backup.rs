@@ -32,9 +32,8 @@ impl StateRuntimeEnclaveUseCase for PathSecretsBackupper {
         Ok(())
     }
 
-    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         let store_path_secrets = enclave_context.store_path_secrets();
@@ -82,9 +81,8 @@ impl StateRuntimeEnclaveUseCase for PathSecretsRecoverer {
         Ok(())
     }
 
-    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         // fetch path_secrets from key-vault server
@@ -127,9 +125,8 @@ impl StateRuntimeEnclaveUseCase for EnclaveKeyBackupper {
         Ok(())
     }
 
-    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         enclave_context.backup_enclave_key()?;
@@ -156,9 +153,8 @@ impl StateRuntimeEnclaveUseCase for EnclaveKeyRecoverer {
         Ok(())
     }
 
-    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         // fetch path_secrets from key-vault server

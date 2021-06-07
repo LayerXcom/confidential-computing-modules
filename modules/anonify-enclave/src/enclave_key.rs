@@ -49,9 +49,8 @@ impl StateRuntimeEnclaveUseCase for EncryptionKeyGetter {
         Ok(())
     }
 
-    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         let enclave_encryption_key = enclave_context.enclave_encryption_key()?;

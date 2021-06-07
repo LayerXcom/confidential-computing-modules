@@ -53,9 +53,8 @@ impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for RegisterNotification<AP> {
         self.ecall_input.access_policy().verify()
     }
 
-    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         let account_id = self.ecall_input.access_policy().into_account_id();

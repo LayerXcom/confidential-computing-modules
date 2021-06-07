@@ -468,9 +468,8 @@ impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for GetState<AP> {
         self.ecall_input.access_policy().verify()
     }
 
-    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         let input::GetState {
@@ -512,9 +511,8 @@ impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for GetUserCounter<AP> {
         self.ecall_input.access_policy().verify()
     }
 
-    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         let account_id = self.ecall_input.access_policy().into_account_id();
@@ -543,9 +541,8 @@ impl StateRuntimeEnclaveUseCase for ReportRegistration {
         Ok(())
     }
 
-    fn run<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
+    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
-        R: RuntimeExecutor<C, S = StateType>,
         C: ContextOps<S = StateType> + Clone,
     {
         let ias_url = enclave_context.ias_url();
