@@ -53,5 +53,6 @@ COPY --from=builder ${HOME}/anonify/.anonify/key_vault.signed.so ./.anonify/key_
 COPY --from=builder ${HOME}/anonify/.anonify/erc20_measurement.txt ./.anonify/erc20_measurement.txt
 COPY --from=builder ${HOME}/anonify/.anonify/key_vault_measurement.txt ./.anonify/key_vault_measurement.txt
 COPY --from=builder ${HOME}/anonify/target/release/key-vault-server ./target/release/
+COPY --from=builder ${HOME}/fixuid.bash ./
 
 CMD ["./target/release/key-vault-server"]

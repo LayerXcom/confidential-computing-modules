@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 export ANONIFY_TAG=v0.5.10
 export DEPLOYER_TAG=v0.5.12
