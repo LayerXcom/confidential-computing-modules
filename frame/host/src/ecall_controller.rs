@@ -14,7 +14,7 @@ pub trait EcallController {
     /// This is to avoid DoS attack by too large input.
     const EI_MAX_SIZE: usize;
 
-    fn exec(input: Self::HI, eid: sgx_enclave_id_t) -> anyhow::Result<Self::HO> {
+    fn run(input: Self::HI, eid: sgx_enclave_id_t) -> anyhow::Result<Self::HO> {
         let ecall_cmd = input.ecall_cmd();
         let (ecall_input, host_output) = input.apply()?;
         let ecall_output = EnclaveConnector::new(eid, Self::EI_MAX_SIZE)

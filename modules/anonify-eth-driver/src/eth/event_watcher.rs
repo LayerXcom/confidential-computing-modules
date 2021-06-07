@@ -428,7 +428,7 @@ impl InnerEnclaveLog {
         eid: sgx_enclave_id_t,
         ciphertext: &CommandCiphertext,
     ) -> Option<serde_json::Value> {
-        match InsertCiphertextWorkflow::exec(inp, eid)
+        match InsertCiphertextWorkflow::run(inp, eid)
             .map_err(Into::into)
             .and_then(|e| e.ecall_output.ok_or(HostError::EnclaveOutputNotSet))
         {
@@ -506,7 +506,7 @@ impl InnerEnclaveLog {
         fetch_handshake_cmd: u32,
     ) -> Result<()> {
         let input = host_input::InsertHandshake::new(handshake, state_counter, fetch_handshake_cmd);
-        InsertHandshakeWorkflow::exec(input, eid)?;
+        InsertHandshakeWorkflow::run(input, eid)?;
 
         Ok(())
     }

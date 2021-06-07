@@ -196,7 +196,7 @@ impl Dispatcher {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         let input = host_input::RegisterReport::new(signer, gas, SEND_REGISTER_REPORT_CMD);
-        let host_output = RegisterReportWorkflow::exec(input, eid)?;
+        let host_output = RegisterReportWorkflow::run(input, eid)?;
 
         let tx_hash = inner
             .sender
@@ -217,7 +217,7 @@ impl Dispatcher {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         let input = host_input::JoinGroup::new(signer, gas, ecall_cmd);
-        let host_output = JoinGroupWorkflow::exec(input, eid)?;
+        let host_output = JoinGroupWorkflow::run(input, eid)?;
 
         let receipt = inner
             .sender
@@ -240,7 +240,7 @@ impl Dispatcher {
         let inner = self.inner.read();
         let input = host_input::Command::new(ciphertext, user_id, signer, gas, ecall_cmd);
         let eid = inner.enclave_id;
-        let host_output = CommandWorkflow::exec(input, eid)?;
+        let host_output = CommandWorkflow::run(input, eid)?;
 
         match &inner.sender {
             Some(s) => s.send_command(&host_output).await,
@@ -251,7 +251,7 @@ impl Dispatcher {
     pub fn get_state(&self, ciphertext: SodiumCiphertext) -> Result<serde_json::Value> {
         let eid = self.inner.read().enclave_id;
         let input = host_input::GetState::new(ciphertext, GET_STATE_CMD);
-        let state = GetStateWorkflow::exec(input, eid)?
+        let state = GetStateWorkflow::run(input, eid)?
             .ecall_output
             .ok_or(HostError::EnclaveOutputNotSet)?;
 
@@ -262,7 +262,7 @@ impl Dispatcher {
     pub fn get_user_counter(&self, ciphertext: SodiumCiphertext) -> Result<serde_json::Value> {
         let eid = self.inner.read().enclave_id;
         let input = host_input::GetUserCounter::new(ciphertext, GET_USER_COUNTER_CMD);
-        let user_counter = GetUserCounterWorkflow::exec(input, eid)?
+        let user_counter = GetUserCounterWorkflow::run(input, eid)?
             .ecall_output
             .ok_or(HostError::EnclaveOutputNotSet)?;
 
@@ -273,7 +273,7 @@ impl Dispatcher {
         let inner = self.inner.read();
         let input = host_input::Handshake::new(signer, gas, SEND_HANDSHAKE_TREEKEM_CMD);
         let eid = inner.enclave_id;
-        let host_output = HandshakeWorkflow::exec(input, eid)?;
+        let host_output = HandshakeWorkflow::run(input, eid)?;
 
         let tx_hash = inner
             .sender
@@ -298,7 +298,7 @@ impl Dispatcher {
     pub fn get_enclave_encryption_key(&self) -> Result<SodiumPubKey> {
         let input = host_input::GetEncryptionKey::new(GET_ENCLAVE_ENCRYPTION_KEY_CMD);
         let eid = self.inner.read().enclave_id;
-        let enclave_encryption_key = GetEncryptionKeyWorkflow::exec(input, eid)?;
+        let enclave_encryption_key = GetEncryptionKeyWorkflow::run(input, eid)?;
 
         Ok(enclave_encryption_key
             .ecall_output
@@ -310,7 +310,7 @@ impl Dispatcher {
         let inner = self.inner.read();
         let input = host_input::RegisterNotification::new(ciphertext, REGISTER_NOTIFICATION_CMD);
         let eid = inner.enclave_id;
-        let _host_output = RegisterNotificationWorkflow::exec(input, eid)?;
+        let _host_output = RegisterNotificationWorkflow::run(input, eid)?;
 
         Ok(())
     }

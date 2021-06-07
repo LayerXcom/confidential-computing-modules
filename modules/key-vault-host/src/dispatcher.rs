@@ -30,7 +30,7 @@ impl Dispatcher {
         let builder = std::thread::Builder::new().name(thread_name);
         builder
             .spawn(move || {
-                let _host_output = StartServerWorkflow::exec(input, eid).unwrap();
+                let _host_output = StartServerWorkflow::run(input, eid).unwrap();
             })
             .map_err(|e| anyhow!("Failed to spawn new thread: {}", e))?;
 
@@ -40,7 +40,7 @@ impl Dispatcher {
     pub async fn stop(&self) -> Result<()> {
         let eid = self.inner.read().enclave_id;
         let input = host_input::StopServer::new(STOP_SERVER_CMD);
-        let _host_output = StopServerWorkflow::exec(input, eid)?;
+        let _host_output = StopServerWorkflow::run(input, eid)?;
 
         Ok(())
     }
