@@ -9,7 +9,7 @@ pub trait BasicEnclaveUseCase: Sized {
     type EI: EnclaveInput + DeserializeOwned + Default;
     type EO: EnclaveOutput + Serialize;
 
-    fn run<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self::EO>
+    fn run<C>(enclave_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self::EO>
     where
         C: ConfigGetter;
 
