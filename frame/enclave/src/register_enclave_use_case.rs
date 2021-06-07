@@ -1,5 +1,5 @@
 #[macro_export]
-macro_rules! register_ecall {
+macro_rules! register_enclave_use_case {
     (   $ctx: expr,
         $max_mem: expr,
         $runtime_exec: ty,
