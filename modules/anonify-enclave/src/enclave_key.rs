@@ -4,7 +4,7 @@ use crate::error::{EnclaveError, Result};
 use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
-use frame_enclave::StateRuntimeEnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveUseCase;
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::{
     key_vault::request::{
@@ -34,7 +34,7 @@ pub const DEC_KEY_FILE_NAME: &str = "sr_enclave_decryption_key";
 #[derive(Debug, Clone, Default)]
 pub struct EncryptionKeyGetter;
 
-impl StateRuntimeEnclaveEngine for EncryptionKeyGetter {
+impl StateRuntimeEnclaveUseCase for EncryptionKeyGetter {
     type EI = input::Empty;
     type EO = output::ReturnEncryptionKey;
 

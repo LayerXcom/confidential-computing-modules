@@ -2,7 +2,7 @@ use frame_common::{state_types::StateType, EcallInput, EcallOutput};
 use frame_runtime::{ContextOps, RuntimeExecutor};
 use serde::{de::DeserializeOwned, Serialize};
 
-pub trait StateRuntimeEnclaveEngine: Sized + Default {
+pub trait StateRuntimeEnclaveUseCase: Sized + Default {
     type EI: EcallInput + DeserializeOwned + Default;
     type EO: EcallOutput + Serialize + Default;
 

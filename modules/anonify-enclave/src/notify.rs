@@ -1,6 +1,6 @@
 use anonify_ecall_types::*;
 use frame_common::{crypto::AccountId, state_types::StateType, AccessPolicy};
-use frame_enclave::StateRuntimeEnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveUseCase;
 use frame_runtime::traits::*;
 use frame_sodium::SodiumCiphertext;
 use std::{
@@ -36,7 +36,7 @@ pub struct RegisterNotification<AP: AccessPolicy> {
     ecall_input: input::RegisterNotification<AP>,
 }
 
-impl<AP: AccessPolicy> StateRuntimeEnclaveEngine for RegisterNotification<AP> {
+impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for RegisterNotification<AP> {
     type EI = SodiumCiphertext;
     type EO = output::Empty;
 

@@ -4,7 +4,7 @@ use crate::enclave_key::DEC_KEY_FILE_NAME;
 use anonify_ecall_types::*;
 use anyhow::{anyhow, Result};
 use frame_common::state_types::StateType;
-use frame_enclave::StateRuntimeEnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveUseCase;
 use frame_mra_tls::key_vault::request::{
     BackupPathSecretRequestBody, BackupPathSecretsRequestBody, RecoverPathSecretsRequestBody,
 };
@@ -17,7 +17,7 @@ use std::vec::Vec;
 #[derive(Debug, Clone, Default)]
 pub struct PathSecretsBackupper;
 
-impl StateRuntimeEnclaveEngine for PathSecretsBackupper {
+impl StateRuntimeEnclaveUseCase for PathSecretsBackupper {
     type EI = input::Empty;
     type EO = output::Empty;
 
@@ -56,7 +56,7 @@ impl StateRuntimeEnclaveEngine for PathSecretsBackupper {
 #[derive(Debug, Clone, Default)]
 pub struct PathSecretsRecoverer;
 
-impl StateRuntimeEnclaveEngine for PathSecretsRecoverer {
+impl StateRuntimeEnclaveUseCase for PathSecretsRecoverer {
     type EI = input::Empty;
     type EO = output::Empty;
 
@@ -90,7 +90,7 @@ impl StateRuntimeEnclaveEngine for PathSecretsRecoverer {
 #[derive(Debug, Clone, Default)]
 pub struct EnclaveKeyBackupper;
 
-impl StateRuntimeEnclaveEngine for EnclaveKeyBackupper {
+impl StateRuntimeEnclaveUseCase for EnclaveKeyBackupper {
     type EI = input::Empty;
     type EO = output::Empty;
 
@@ -108,7 +108,7 @@ impl StateRuntimeEnclaveEngine for EnclaveKeyBackupper {
 #[derive(Debug, Clone, Default)]
 pub struct EnclaveKeyRecoverer;
 
-impl StateRuntimeEnclaveEngine for EnclaveKeyRecoverer {
+impl StateRuntimeEnclaveUseCase for EnclaveKeyRecoverer {
     type EI = input::Empty;
     type EO = output::Empty;
 

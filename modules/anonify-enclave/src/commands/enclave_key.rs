@@ -7,7 +7,7 @@ use frame_common::{
     state_types::StateType,
     AccessPolicy,
 };
-use frame_enclave::StateRuntimeEnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveUseCase;
 use frame_runtime::traits::*;
 use frame_sodium::{rng::SgxRng, SodiumCiphertext};
 use serde::{Deserialize, Serialize};
@@ -20,7 +20,7 @@ pub struct CommandByEnclaveKeySender<AP: AccessPolicy> {
     user_id: Option<AccountId>,
 }
 
-impl<AP> StateRuntimeEnclaveEngine for CommandByEnclaveKeySender<AP>
+impl<AP> StateRuntimeEnclaveUseCase for CommandByEnclaveKeySender<AP>
 where
     AP: AccessPolicy,
 {
@@ -92,7 +92,7 @@ pub struct CommandByEnclaveKeyReceiver<AP> {
     ap: PhantomData<AP>,
 }
 
-impl<AP> StateRuntimeEnclaveEngine for CommandByEnclaveKeyReceiver<AP>
+impl<AP> StateRuntimeEnclaveUseCase for CommandByEnclaveKeyReceiver<AP>
 where
     AP: AccessPolicy,
 {

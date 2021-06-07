@@ -1,7 +1,7 @@
 use anonify_ecall_types::*;
 use anyhow::Result;
 use frame_common::state_types::StateType;
-use frame_enclave::StateRuntimeEnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveUseCase;
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::key_vault::request::BackupPathSecretRequestBody;
 use frame_runtime::traits::*;
@@ -10,7 +10,7 @@ use frame_runtime::traits::*;
 #[derive(Debug, Clone, Default)]
 pub struct JoinGroupWithTreeKem;
 
-impl StateRuntimeEnclaveEngine for JoinGroupWithTreeKem {
+impl StateRuntimeEnclaveUseCase for JoinGroupWithTreeKem {
     type EI = input::Empty;
     type EO = output::ReturnJoinGroup;
 

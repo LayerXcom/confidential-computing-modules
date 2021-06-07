@@ -1,7 +1,7 @@
 use anonify_ecall_types::*;
 use anyhow::{anyhow, Result};
 use frame_common::{crypto::Sha256, state_types::StateType};
-use frame_enclave::StateRuntimeEnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveUseCase;
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::key_vault::request::BackupPathSecretRequestBody;
 use frame_runtime::traits::*;
@@ -11,7 +11,7 @@ use frame_treekem::handshake::HandshakeParams;
 #[derive(Debug, Clone, Default)]
 pub struct HandshakeSender;
 
-impl StateRuntimeEnclaveEngine for HandshakeSender {
+impl StateRuntimeEnclaveUseCase for HandshakeSender {
     type EI = input::Empty;
     type EO = output::ReturnHandshake;
 
@@ -65,7 +65,7 @@ pub struct HandshakeReceiver {
     ecall_input: input::InsertHandshake,
 }
 
-impl StateRuntimeEnclaveEngine for HandshakeReceiver {
+impl StateRuntimeEnclaveUseCase for HandshakeReceiver {
     type EI = input::InsertHandshake;
     type EO = output::Empty;
 
