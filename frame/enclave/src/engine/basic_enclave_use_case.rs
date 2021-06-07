@@ -8,10 +8,7 @@ pub trait BasicEnclaveUseCase: Sized + Default {
 
     fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
-        C: ConfigGetter,
-    {
-        Ok(Self::default())
-    }
+        C: ConfigGetter;
 
     fn run<C>(self, _enclave_context: &C) -> anyhow::Result<Self::EO>
     where

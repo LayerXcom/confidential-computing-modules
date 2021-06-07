@@ -14,6 +14,13 @@ impl BasicEnclaveUseCase for ServerStarter {
     type EI = input::CallServerStarter;
     type EO = output::Empty;
 
+    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    where
+        C: ConfigGetter,
+    {
+        Ok(Self::default())
+    }
+
     fn run<C>(self, enclave_context: &C) -> anyhow::Result<Self::EO>
     where
         C: ConfigGetter,
@@ -47,6 +54,13 @@ pub struct ServerStopper;
 impl BasicEnclaveUseCase for ServerStopper {
     type EI = input::CallServerStopper;
     type EO = output::Empty;
+
+    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    where
+        C: ConfigGetter,
+    {
+        Ok(Self::default())
+    }
 
     fn run<C>(self, _enclave_context: &C) -> anyhow::Result<Self::EO>
     where
