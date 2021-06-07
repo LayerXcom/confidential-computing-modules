@@ -253,7 +253,7 @@ impl Dispatcher {
         let input = host_input::GetState::new(ciphertext, GET_STATE_CMD);
         let state = GetStateWorkflow::exec(input, eid)?
             .ecall_output
-            .ok_or(HostError::EcallOutputNotSet)?;
+            .ok_or(HostError::EnclaveOutputNotSet)?;
 
         let bytes: Vec<u8> = bincode::deserialize(&state.state.as_bytes())?;
         serde_json::from_slice(&bytes[..]).map_err(Into::into)
@@ -264,7 +264,7 @@ impl Dispatcher {
         let input = host_input::GetUserCounter::new(ciphertext, GET_USER_COUNTER_CMD);
         let user_counter = GetUserCounterWorkflow::exec(input, eid)?
             .ecall_output
-            .ok_or(HostError::EcallOutputNotSet)?;
+            .ok_or(HostError::EnclaveOutputNotSet)?;
 
         serde_json::to_value(user_counter.user_counter).map_err(Into::into)
     }
@@ -302,7 +302,7 @@ impl Dispatcher {
 
         Ok(enclave_encryption_key
             .ecall_output
-            .ok_or(HostError::EcallOutputNotSet)?
+            .ok_or(HostError::EnclaveOutputNotSet)?
             .enclave_encryption_key())
     }
 

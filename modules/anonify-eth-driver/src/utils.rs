@@ -26,7 +26,7 @@ pub const fn deployer_retry_condition(res: &Result<Address>) -> bool {
             HostError::Web3ContractDeployError(web3_err) => {
                 !matches!(web3_err, web3::contract::deploy::Error::Abi(_))
             }
-            HostError::EcallOutputNotSet => false,
+            HostError::EnclaveOutputNotSet => false,
             // error reading abi and bin path
             HostError::IoError(_) => false,
             _ => true,
@@ -43,7 +43,7 @@ pub const fn sender_retry_condition(res: &Result<H256>) -> bool {
             HostError::Web3ContractError(web3_err) => {
                 !matches!(web3_err, web3::contract::Error::Abi(_))
             }
-            HostError::EcallOutputNotSet => false,
+            HostError::EnclaveOutputNotSet => false,
             _ => true,
         },
     }
@@ -56,7 +56,7 @@ pub const fn call_with_conf_retry_condition(res: &Result<TransactionReceipt>) ->
             HostError::Web3ContractError(web3_err) => {
                 !matches!(web3_err, web3::contract::Error::Abi(_))
             }
-            HostError::EcallOutputNotSet => false,
+            HostError::EnclaveOutputNotSet => false,
             _ => true,
         },
     }
@@ -69,7 +69,7 @@ pub const fn event_fetch_retry_condition(res: &Result<Vec<Log>>) -> bool {
             HostError::Web3ContractError(web3_err) => {
                 !matches!(web3_err, web3::contract::Error::Abi(_))
             }
-            HostError::EcallOutputNotSet => false,
+            HostError::EnclaveOutputNotSet => false,
             _ => true,
         },
     }
