@@ -1,7 +1,7 @@
 use crate::ENCLAVE_CONTEXT;
 use anyhow::anyhow;
 use bincode::Options;
-use frame_enclave::{register_ecall, BasicEnclaveEngine};
+use frame_enclave::{register_ecall, BasicEnclaveUseCase};
 use key_vault_ecall_types::cmd::*;
 use key_vault_enclave::{context::KeyVaultEnclaveContext, workflow::*};
 use log::error;

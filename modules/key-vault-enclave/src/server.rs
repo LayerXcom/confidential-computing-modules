@@ -1,6 +1,6 @@
 use crate::handlers::KeyVaultHandler;
 use frame_config::{ANONIFY_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
-use frame_enclave::BasicEnclaveEngine;
+use frame_enclave::BasicEnclaveUseCase;
 use frame_mra_tls::{AttestedTlsConfig, Server, ServerConfig};
 use frame_runtime::traits::*;
 use key_vault_ecall_types::*;
@@ -10,7 +10,7 @@ use std::env;
 #[derive(Debug, Clone, Default)]
 pub struct ServerStarter;
 
-impl BasicEnclaveEngine for ServerStarter {
+impl BasicEnclaveUseCase for ServerStarter {
     type EI = input::CallServerStarter;
     type EO = output::Empty;
 
@@ -44,7 +44,7 @@ impl BasicEnclaveEngine for ServerStarter {
 #[derive(Debug, Clone, Default)]
 pub struct ServerStopper;
 
-impl BasicEnclaveEngine for ServerStopper {
+impl BasicEnclaveUseCase for ServerStopper {
     type EI = input::CallServerStopper;
     type EO = output::Empty;
 

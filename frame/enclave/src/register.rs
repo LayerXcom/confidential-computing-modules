@@ -40,7 +40,7 @@ macro_rules! register_ecall {
         #[cfg(not(feature = "runtime_enabled"))]
         fn inner_ecall_handler<EE>(input_payload: &[u8], ecall_max_size: usize) -> anyhow::Result<Vec<u8>>
         where
-            EE: BasicEnclaveEngine,
+            EE: BasicEnclaveUseCase,
         {
             let res = {
                 let ecall_input = bincode::DefaultOptions::new()
