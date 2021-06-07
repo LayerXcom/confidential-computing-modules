@@ -55,8 +55,12 @@ ARG user_name
 ARG group_name
 
 COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/config/ias_root_cert.pem ./config/ias_root_cert.pem
-COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify ./.anonify
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify/key_vault.signed.so ./.anonify/key_vault.signed.so
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify/erc20_measurement.txt ./.anonify/erc20_measurement.txt
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify/key_vault_measurement.txt ./.anonify/key_vault_measurement.txt
 COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/target/release/key-vault-server ./target/release/
 COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/fixuid.bash ./
+
+RUN sudo chown ${user_name}:${group_name} .
 
 CMD ["./target/release/key-vault-server"]
