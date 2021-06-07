@@ -37,7 +37,7 @@ services:
       IAS_ROOT_CERT_PATH: "config/ias_root_cert.pem"
       EVENT_LIMIT: "100"
       UNLOCK_DURATION: "60"
-      PJ_ROOT_DIR: "/home-anonify-dev/anonify"
+      PJ_ROOT_DIR: "/home/anonify-dev/anonify"
       IS_DEBUG: "false"
       FIXUID_MODE: "skip" # bacause it's too slow. Nothing matters even if UID of host & guest differs.
     # Add an lookup from the IP Adress to FQDN because of the following limition of rustls
