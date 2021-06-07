@@ -182,8 +182,7 @@ fn main() {
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
 
-    let controller = MyEcallController::new(eid);
-    let my_host_output = controller.run(my_host_input).unwrap();
+    let my_host_output = MyEcallController::run(my_host_input, eid).unwrap();
 
     ...
 }
