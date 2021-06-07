@@ -43,4 +43,4 @@ FROM anonify.azurecr.io/anonify-dev-pgx:latest
 
 WORKDIR ${HOME}
 
-COPY --from=builder ${HOME}/anonify ${HOME}/anonify
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify ${HOME}/anonify

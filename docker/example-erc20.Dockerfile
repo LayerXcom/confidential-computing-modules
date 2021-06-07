@@ -53,17 +53,17 @@ LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 WORKDIR ${HOME}/anonify
 
-COPY --from=builder ${HOME}/anonify/config/ias_root_cert.pem ./config/ias_root_cert.pem
-COPY --from=builder ${HOME}/anonify/.anonify/erc20.signed.so ./.anonify/erc20.signed.so
-COPY --from=builder ${HOME}/anonify/.anonify/erc20_measurement.txt ./.anonify/erc20_measurement.txt
-COPY --from=builder ${HOME}/anonify/.anonify/key_vault_measurement.txt ./.anonify/key_vault_measurement.txt
-COPY --from=builder ${HOME}/anonify/target/release/erc20-server ./target/release/
-COPY --from=builder ${HOME}/anonify/contract-build/AnonifyWithEnclaveKey.abi ./contract-build/
-COPY --from=builder ${HOME}/anonify/contract-build/AnonifyWithEnclaveKey.bin ./contract-build/
-COPY --from=builder ${HOME}/anonify/contract-build/AnonifyWithTreeKem.abi ./contract-build/
-COPY --from=builder ${HOME}/anonify/contract-build/AnonifyWithTreeKem.bin ./contract-build/
-COPY --from=builder ${HOME}/anonify/contract-build/DeployAnonify.abi ./contract-build/
-COPY --from=builder ${HOME}/anonify/contract-build/DeployAnonify.bin ./contract-build/
-COPY --from=builder ${HOME}/fixuid.bash ./
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/config/ias_root_cert.pem ./config/ias_root_cert.pem
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify/erc20.signed.so ./.anonify/erc20.signed.so
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify/erc20_measurement.txt ./.anonify/erc20_measurement.txt
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify/key_vault_measurement.txt ./.anonify/key_vault_measurement.txt
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/target/release/erc20-server ./target/release/
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/contract-build/AnonifyWithEnclaveKey.abi ./contract-build/
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/contract-build/AnonifyWithEnclaveKey.bin ./contract-build/
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/contract-build/AnonifyWithTreeKem.abi ./contract-build/
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/contract-build/AnonifyWithTreeKem.bin ./contract-build/
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/contract-build/DeployAnonify.abi ./contract-build/
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/contract-build/DeployAnonify.bin ./contract-build/
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/fixuid.bash ./
 
 CMD ["./target/release/erc20-server"]

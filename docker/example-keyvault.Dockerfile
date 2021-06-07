@@ -48,11 +48,11 @@ LABEL maintainer="osuke.sudo@layerx.co.jp"
 
 WORKDIR ${HOME}/anonify
 
-COPY --from=builder ${HOME}/anonify/config/ias_root_cert.pem ./config/ias_root_cert.pem
-COPY --from=builder ${HOME}/anonify/.anonify/key_vault.signed.so ./.anonify/key_vault.signed.so
-COPY --from=builder ${HOME}/anonify/.anonify/erc20_measurement.txt ./.anonify/erc20_measurement.txt
-COPY --from=builder ${HOME}/anonify/.anonify/key_vault_measurement.txt ./.anonify/key_vault_measurement.txt
-COPY --from=builder ${HOME}/anonify/target/release/key-vault-server ./target/release/
-COPY --from=builder ${HOME}/fixuid.bash ./
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/config/ias_root_cert.pem ./config/ias_root_cert.pem
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify/key_vault.signed.so ./.anonify/key_vault.signed.so
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify/erc20_measurement.txt ./.anonify/erc20_measurement.txt
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/.anonify/key_vault_measurement.txt ./.anonify/key_vault_measurement.txt
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify/target/release/key-vault-server ./target/release/
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/fixuid.bash ./
 
 CMD ["./target/release/key-vault-server"]
