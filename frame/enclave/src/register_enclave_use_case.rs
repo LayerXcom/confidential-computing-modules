@@ -5,7 +5,7 @@ macro_rules! register_enclave_use_case {
         $runtime_exec: ty,
         $ctx_ops: ty,
         $(  $(#[$feature: meta])*
-            ($cmd: path, $handler: ty),
+            ($cmd: path, $use_case: ty),
         )*
     ) => {
         #[cfg(feature = "runtime_enabled")]
@@ -13,7 +13,7 @@ macro_rules! register_enclave_use_case {
             match cmd {
                 $(
                     $(#[$feature])*
-                    $cmd => inner_ecall_handler::<$handler>(input, ecall_max_size),  // TODO ここでマクロで定義した関数呼び出しではなく、EnclaveUseCaseのデフォルト関数呼び出しにする（マクロを小さくする）
+                    $cmd => inner_ecall_handler::<$use_case>(input, ecall_max_size),  // TODO ここでマクロで定義した関数呼び出しではなく、EnclaveUseCaseのデフォルト関数呼び出しにする（マクロを小さくする）
                 )*
                 _ => anyhow::bail!("Not registered the ecall command"),
             }
@@ -50,7 +50,7 @@ macro_rules! register_enclave_use_case {
             match cmd {
                 $(
                     $(#[$feature])*
-                    $cmd => <$handler>::ecall_entry_point(input_buf,input_len,output_buf,ecall_max_size,output_len, $ctx),
+                    $cmd => <$use_case>::ecall_entry_point(input_buf,input_len,output_buf,ecall_max_size,output_len, $ctx),
                 )*
                 _ => unreachable!("Not registered the ecall command"),
             }
