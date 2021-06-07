@@ -4,7 +4,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use sgx_types::sgx_enclave_id_t;
 
-pub trait HostEngine {
+pub trait EcallController {
     type HI: HostInput<EcallInput = Self::EI, HostOutput = Self::HO>;
     type EI: EcallInput + Serialize;
     type EO: EcallOutput + DeserializeOwned;

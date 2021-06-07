@@ -12,7 +12,7 @@ use crate::{
 use anonify_ecall_types::{CommandCiphertext, EnclaveKeyCiphertext};
 use ethabi::ParamType;
 use frame_common::{crypto::ExportHandshake, state_types::StateCounter, TreeKemCiphertext};
-use frame_host::engine::HostEngine;
+use frame_host::ecall_controller::EcallController;
 use sgx_types::sgx_enclave_id_t;
 use std::fmt;
 use tracing::{debug, error, info, warn, Span};

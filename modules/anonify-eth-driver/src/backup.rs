@@ -2,7 +2,7 @@
 use crate::error::Result;
 use crate::workflow::host_input;
 use crate::workflow::*;
-use frame_host::engine::HostEngine;
+use frame_host::ecall_controller::EcallController;
 use sgx_types::sgx_enclave_id_t;
 
 #[derive(Debug, Default, Clone)]

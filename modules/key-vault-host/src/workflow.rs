@@ -1,11 +1,11 @@
-use frame_host::engine::*;
+use frame_host::ecall_controller::*;
 use key_vault_ecall_types::*;
 
 pub const ECALL_MAX_SIZE: usize = 2048;
 
 pub struct StartServerWorkflow;
 
-impl HostEngine for StartServerWorkflow {
+impl EcallController for StartServerWorkflow {
     type HI = host_input::StartServer;
     type EI = input::CallServerStarter;
     type EO = output::Empty;
@@ -15,7 +15,7 @@ impl HostEngine for StartServerWorkflow {
 
 pub struct StopServerWorkflow;
 
-impl HostEngine for StopServerWorkflow {
+impl EcallController for StopServerWorkflow {
     type HI = host_input::StopServer;
     type EI = input::CallServerStopper;
     type EO = output::Empty;

@@ -9,7 +9,7 @@ use crate::{
 };
 use anonify_ecall_types::cmd::*;
 use frame_common::crypto::AccountId;
-use frame_host::engine::HostEngine;
+use frame_host::ecall_controller::EcallController;
 use frame_sodium::{SodiumCiphertext, SodiumPubKey};
 use opentelemetry::trace::TraceContextExt;
 use parking_lot::RwLock;

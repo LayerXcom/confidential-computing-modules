@@ -3,7 +3,7 @@ use frame_common::{
     crypto::{AccountId, ExportHandshake},
     state_types::StateCounter,
 };
-use frame_host::engine::*;
+use frame_host::ecall_controller::*;
 use frame_sodium::SodiumCiphertext;
 use web3::types::Address;
 
@@ -11,7 +11,7 @@ pub const ECALL_MAX_SIZE: usize = 2048;
 
 pub struct CommandWorkflow;
 
-impl HostEngine for CommandWorkflow {
+impl EcallController for CommandWorkflow {
     type HI = host_input::Command;
     type EI = input::Command;
     type EO = output::Command;
@@ -21,7 +21,7 @@ impl HostEngine for CommandWorkflow {
 
 pub struct JoinGroupWorkflow;
 
-impl HostEngine for JoinGroupWorkflow {
+impl EcallController for JoinGroupWorkflow {
     type HI = host_input::JoinGroup;
     type EI = input::Empty;
     type EO = output::ReturnJoinGroup;
@@ -31,7 +31,7 @@ impl HostEngine for JoinGroupWorkflow {
 
 pub struct RegisterReportWorkflow;
 
-impl HostEngine for RegisterReportWorkflow {
+impl EcallController for RegisterReportWorkflow {
     type HI = host_input::RegisterReport;
     type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
@@ -41,7 +41,7 @@ impl HostEngine for RegisterReportWorkflow {
 
 pub struct HandshakeWorkflow;
 
-impl HostEngine for HandshakeWorkflow {
+impl EcallController for HandshakeWorkflow {
     type HI = host_input::Handshake;
     type EI = input::Empty;
     type EO = output::ReturnHandshake;
@@ -51,7 +51,7 @@ impl HostEngine for HandshakeWorkflow {
 
 pub struct RegisterNotificationWorkflow;
 
-impl HostEngine for RegisterNotificationWorkflow {
+impl EcallController for RegisterNotificationWorkflow {
     type HI = host_input::RegisterNotification;
     type EI = SodiumCiphertext;
     type EO = output::Empty;
@@ -61,7 +61,7 @@ impl HostEngine for RegisterNotificationWorkflow {
 
 pub struct GetStateWorkflow;
 
-impl HostEngine for GetStateWorkflow {
+impl EcallController for GetStateWorkflow {
     type HI = host_input::GetState;
     type EI = SodiumCiphertext;
     type EO = output::ReturnState;
@@ -71,7 +71,7 @@ impl HostEngine for GetStateWorkflow {
 
 pub struct InsertCiphertextWorkflow;
 
-impl HostEngine for InsertCiphertextWorkflow {
+impl EcallController for InsertCiphertextWorkflow {
     type HI = host_input::InsertCiphertext;
     type EI = input::InsertCiphertext;
     type EO = output::ReturnNotifyState;
@@ -81,7 +81,7 @@ impl HostEngine for InsertCiphertextWorkflow {
 
 pub struct InsertHandshakeWorkflow;
 
-impl HostEngine for InsertHandshakeWorkflow {
+impl EcallController for InsertHandshakeWorkflow {
     type HI = host_input::InsertHandshake;
     type EI = input::InsertHandshake;
     type EO = output::Empty;
@@ -91,7 +91,7 @@ impl HostEngine for InsertHandshakeWorkflow {
 
 pub struct GetEncryptionKeyWorkflow;
 
-impl HostEngine for GetEncryptionKeyWorkflow {
+impl EcallController for GetEncryptionKeyWorkflow {
     type HI = host_input::GetEncryptionKey;
     type EI = input::Empty;
     type EO = output::ReturnEncryptionKey;
@@ -101,7 +101,7 @@ impl HostEngine for GetEncryptionKeyWorkflow {
 
 pub struct BackupWorkflow;
 
-impl HostEngine for BackupWorkflow {
+impl EcallController for BackupWorkflow {
     type HI = host_input::Backup;
     type EI = input::Empty;
     type EO = output::Empty;
@@ -111,7 +111,7 @@ impl HostEngine for BackupWorkflow {
 
 pub struct RecoverWorkflow;
 
-impl HostEngine for RecoverWorkflow {
+impl EcallController for RecoverWorkflow {
     type HI = host_input::Recover;
     type EI = input::Empty;
     type EO = output::Empty;
@@ -121,7 +121,7 @@ impl HostEngine for RecoverWorkflow {
 
 pub struct GetUserCounterWorkflow;
 
-impl HostEngine for GetUserCounterWorkflow {
+impl EcallController for GetUserCounterWorkflow {
     type HI = host_input::GetUserCounter;
     type EI = SodiumCiphertext;
     type EO = output::ReturnUserCounter;

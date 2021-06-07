@@ -1,6 +1,6 @@
 use crate::{error::Result, workflow::*};
 use anyhow::anyhow;
-use frame_host::engine::HostEngine;
+use frame_host::ecall_controller::EcallController;
 use key_vault_ecall_types::cmd::*;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
