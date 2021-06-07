@@ -4,7 +4,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 pub trait BasicEnclaveUseCase: Sized + Default {
     type EI: EnclaveInput + DeserializeOwned + Default;
-    type EO: EnclaveOutput + Serialize + Default;
+    type EO: EnclaveOutput + Serialize;
 
     fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
@@ -15,8 +15,5 @@ pub trait BasicEnclaveUseCase: Sized + Default {
 
     fn run<C>(self, _enclave_context: &C) -> anyhow::Result<Self::EO>
     where
-        C: ConfigGetter,
-    {
-        Ok(Self::EO::default())
-    }
+        C: ConfigGetter;
 }
