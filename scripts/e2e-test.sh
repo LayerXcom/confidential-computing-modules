@@ -30,7 +30,7 @@ sleep 10
 
 cd "$CI_ROOT_DIR"
 
-pubkey=$(curl "$STATE_RUNTIME_URL"/api/v1/enclave_encryption_key -s -f -k -X GET -H "Content-Type: application/json" -d '')
+pubkey=$(curl -v "$STATE_RUNTIME_URL"/api/v1/enclave_encryption_key -s -f -k -X GET -H "Content-Type: application/json" -d '')
 if [[ $pubkey == *"enclave_encryption_key"* ]]; then
   echo $pubkey
 else

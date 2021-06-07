@@ -1,3 +1,6 @@
+ARG user_name=anonify-dev
+ARG group_name=anonify-dev
+
 FROM anonify.azurecr.io/anonify-dev:latest as builder
 
 SHELL ["/bin/bash", "-c"]
@@ -10,8 +13,8 @@ RUN set -x && \
     sudo python3 -m pip install --upgrade pip --target /usr/lib64/az/lib/python3.6/site-packages/ && \
     sudo rm -rf /var/lib/apt/lists/*
 
-ARG user_name=anonify-dev
-ARG group_name=anonify-dev
+ARG user_name
+ARG group_name
 COPY --chown=${user_name}:${group_name} . ${HOME}/anonify
 WORKDIR ${HOME}/anonify
 
@@ -43,4 +46,7 @@ FROM anonify.azurecr.io/anonify-dev-pgx:latest
 
 WORKDIR ${HOME}
 
-COPY --from=builder ${HOME}/anonify ${HOME}/anonify
+ARG user_name
+ARG group_name
+
+COPY --from=builder --chown=${user_name}:${group_name} ${HOME}/anonify ${HOME}/anonify
