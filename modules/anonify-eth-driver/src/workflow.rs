@@ -38,7 +38,7 @@ impl EcallController for JoinGroupWorkflow {
     type HO = host_output::JoinGroup;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 
-    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+    fn translate_input(_host_input: Self::HI) -> anyhow::Result<Self::EI> {
         Ok(input::Empty::default())
     }
 
@@ -56,7 +56,7 @@ impl EcallController for RegisterReportWorkflow {
     type HO = host_output::RegisterReport;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 
-    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+    fn translate_input(_host_input: Self::HI) -> anyhow::Result<Self::EI> {
         Ok(input::Empty::default())
     }
 
@@ -74,7 +74,7 @@ impl EcallController for HandshakeWorkflow {
     type HO = host_output::Handshake;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 
-    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+    fn translate_input(_host_input: Self::HI) -> anyhow::Result<Self::EI> {
         Ok(input::Empty::default())
     }
 
@@ -96,7 +96,7 @@ impl EcallController for RegisterNotificationWorkflow {
         Ok(host_input.ciphertext)
     }
 
-    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+    fn translate_output(_enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
         Ok(host_output::RegisterNotification::default())
     }
 }
@@ -156,7 +156,7 @@ impl EcallController for InsertHandshakeWorkflow {
         ))
     }
 
-    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+    fn translate_output(_enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
         Ok(host_output::InsertHandshake::default())
     }
 }
@@ -170,7 +170,7 @@ impl EcallController for GetEncryptionKeyWorkflow {
     type HO = host_output::ReturnEncryptionKey;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 
-    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+    fn translate_input(_host_input: Self::HI) -> anyhow::Result<Self::EI> {
         Ok(input::Empty::default())
     }
 
@@ -188,11 +188,11 @@ impl EcallController for BackupWorkflow {
     type HO = host_output::Backup;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 
-    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+    fn translate_input(_host_input: Self::HI) -> anyhow::Result<Self::EI> {
         Ok(input::Empty::default())
     }
 
-    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+    fn translate_output(_enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
         Ok(host_output::Backup::default())
     }
 }
@@ -206,11 +206,11 @@ impl EcallController for RecoverWorkflow {
     type HO = host_output::Recover;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 
-    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+    fn translate_input(_host_input: Self::HI) -> anyhow::Result<Self::EI> {
         Ok(input::Empty)
     }
 
-    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+    fn translate_output(_enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
         Ok(host_output::Recover::default())
     }
 }
