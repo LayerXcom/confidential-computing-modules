@@ -1,7 +1,5 @@
 use frame_runtime::prelude::*;
 
-pub const MAX_MEM_SIZE: usize = 100;
-
 impl_memory! {
     (0, "Balance", U64),
     (1, "Approved", Approved),
