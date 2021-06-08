@@ -263,7 +263,7 @@ impl Dispatcher {
         let eid = self.inner.read().enclave_id;
         let input = host_input::GetUserCounter::new(ciphertext, GET_USER_COUNTER_CMD);
         let user_counter = GetUserCounterWorkflow::run(input, eid)?
-            .ecall_output
+            .enclave_output
             .ok_or(HostError::EnclaveOutputNotSet)?;
 
         serde_json::to_value(user_counter.user_counter).map_err(Into::into)

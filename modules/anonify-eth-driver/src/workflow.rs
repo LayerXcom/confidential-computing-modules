@@ -224,6 +224,14 @@ impl EcallController for GetUserCounterWorkflow {
     type EO = output::ReturnUserCounter;
     type HO = host_output::GetUserCounter;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(host_input.ciphertext)
+    }
+
+    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::GetUserCounter { enclave_output })
+    }
 }
 
 pub mod host_input {
@@ -373,13 +381,6 @@ pub mod host_input {
     }
 
     impl HostInput for GetUserCounter {
-        type EnclaveInput = SodiumCiphertext;
-        type HostOutput = host_output::GetUserCounter;
-
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            Ok((self.ciphertext, Self::HostOutput::new()))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
@@ -543,24 +544,10 @@ pub mod host_output {
     }
 
     pub struct GetUserCounter {
-        pub ecall_output: Option<output::ReturnUserCounter>,
+        pub enclave_output: output::ReturnUserCounter,
     }
 
-    impl HostOutput for GetUserCounter {
-        type EnclaveOutput = output::ReturnUserCounter;
-
-        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
-            self.ecall_output = Some(output);
-
-            Ok(self)
-        }
-    }
-
-    impl GetUserCounter {
-        pub fn new() -> Self {
-            GetUserCounter { ecall_output: None }
-        }
-    }
+    impl HostOutput for GetUserCounter {}
 
     pub struct InsertCiphertext {
         pub enclave_output: output::ReturnNotifyState,
