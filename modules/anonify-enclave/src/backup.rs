@@ -107,29 +107,28 @@ impl StateRuntimeEnclaveUseCase for PathSecretsRecoverer {
 }
 
 /// A EnclaveKey Backupper
-#[derive(Debug, Clone, Default)]
-pub struct EnclaveKeyBackupper;
+#[derive(Debug, Clone)]
+pub struct EnclaveKeyBackupper<'c, C> {
+    enclave_context: &'c C,
+}
 
-impl StateRuntimeEnclaveUseCase for EnclaveKeyBackupper {
+impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for EnclaveKeyBackupper<'c, C>
+where
+    C: ContextOps<S = StateType> + Clone,
+{
     type EI = input::Empty;
     type EO = output::Empty;
 
-    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        Ok(Self::default())
+    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+        Ok(Self { enclave_context })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
         Ok(())
     }
 
-    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        enclave_context.backup_enclave_key()?;
+    fn run(self) -> Result<Self::EO> {
+        self.enclave_context.backup_enclave_key()?;
         Ok(output::Empty::default())
     }
 }
