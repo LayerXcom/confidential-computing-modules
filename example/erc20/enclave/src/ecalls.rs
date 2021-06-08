@@ -7,9 +7,6 @@ use frame_enclave::{register_enclave_use_case, StateRuntimeEnclaveUseCase};
 
 register_enclave_use_case!(
     &*ENCLAVE_CONTEXT,
-    MAX_MEM_SIZE,
-    Runtime<AnonifyEnclaveContext>,
-    AnonifyEnclaveContext,
     #[cfg(feature = "enclave_key")]
     (
         SEND_COMMAND_ENCLAVE_KEY_CMD,

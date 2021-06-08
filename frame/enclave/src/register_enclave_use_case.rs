@@ -1,9 +1,6 @@
 #[macro_export]
 macro_rules! register_enclave_use_case {
     (   $ctx: expr,
-        $max_mem: expr,
-        $runtime_exec: ty,
-        $ctx_ops: ty,
         $(  $(#[$feature: meta])*
             ($cmd: path, $use_case: ty),
         )*
