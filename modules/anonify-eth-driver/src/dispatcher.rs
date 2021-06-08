@@ -2,10 +2,10 @@
 use crate::backup::SecretBackup;
 use crate::{
     cache::EventCache,
+    controller::*,
     error::{HostError, Result},
     eth::{EthSender, EventWatcher},
     utils::*,
-    controller::*,
 };
 use anonify_ecall_types::cmd::*;
 use frame_common::crypto::AccountId;

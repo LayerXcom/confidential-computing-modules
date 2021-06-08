@@ -1,7 +1,7 @@
 #![cfg(feature = "backup-enable")]
-use crate::error::Result;
 use crate::controller::host_input;
 use crate::controller::*;
+use crate::error::Result;
 use frame_host::ecall_controller::EcallController;
 use sgx_types::sgx_enclave_id_t;
 

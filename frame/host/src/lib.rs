@@ -1,5 +1,5 @@
-pub mod ecalls;
 pub mod ecall_controller;
+pub mod ecalls;
 mod error;
 pub mod init_enclave;
 mod ocalls;

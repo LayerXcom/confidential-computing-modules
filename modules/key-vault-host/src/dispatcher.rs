@@ -1,4 +1,4 @@
-use crate::{error::Result, controller::*};
+use crate::{controller::*, error::Result};
 use anyhow::anyhow;
 use frame_host::ecall_controller::EcallController;
 use key_vault_ecall_types::cmd::*;
@@ -30,7 +30,8 @@ impl Dispatcher {
         let builder = std::thread::Builder::new().name(thread_name);
         builder
             .spawn(move || {
-                let _host_output = StartServerController::run(input, START_SERVER_CMD,eid).unwrap();
+                let _host_output =
+                    StartServerController::run(input, START_SERVER_CMD, eid).unwrap();
             })
             .map_err(|e| anyhow!("Failed to spawn new thread: {}", e))?;
 
@@ -40,7 +41,7 @@ impl Dispatcher {
     pub async fn stop(&self) -> Result<()> {
         let eid = self.inner.read().enclave_id;
         let input = host_input::StopServer::new();
-        let _host_output = StopServerController::run(input,STOP_SERVER_CMD, eid)?;
+        let _host_output = StopServerController::run(input, STOP_SERVER_CMD, eid)?;
 
         Ok(())
     }

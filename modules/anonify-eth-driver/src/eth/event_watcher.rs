@@ -5,9 +5,9 @@ use super::{
 };
 use crate::{
     cache::EventCache,
+    controller::*,
     error::{HostError, Result},
     utils::*,
-    controller::*,
 };
 use anonify_ecall_types::{CommandCiphertext, EnclaveKeyCiphertext};
 use ethabi::ParamType;
@@ -390,7 +390,10 @@ impl InnerEnclaveLog {
                             e.state_counter(),
                             fetch_handshake_cmd,
                         ) {
-                            error!("Error in enclave (InsertHandshakeController::exec): {:?}", e);
+                            error!(
+                                "Error in enclave (InsertHandshakeController::exec): {:?}",
+                                e
+                            );
                             continue;
                         }
                     }

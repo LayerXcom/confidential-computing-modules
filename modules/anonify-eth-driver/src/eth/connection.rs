@@ -1,9 +1,9 @@
 use super::{event_def::*, event_watcher::Web3Logs};
 use crate::{
     cache::EventCache,
+    controller::*,
     error::{HostError, Result},
     utils::{event_fetch_retry_condition, ContractInfo},
-    controller::*,
 };
 use anonify_ecall_types::CommandCiphertext;
 use anyhow::anyhow;
