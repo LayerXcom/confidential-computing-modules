@@ -60,7 +60,9 @@ impl Web3Contract {
         gas: u64,
         confirmations: usize,
     ) -> Result<TransactionReceipt> {
-        let ecall_output = output.enclave_output.ok_or(HostError::EnclaveOutputNotSet)?;
+        let ecall_output = output
+            .enclave_output
+            .ok_or(HostError::EnclaveOutputNotSet)?;
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
         let trace_id = get_trace_id();
@@ -104,17 +106,23 @@ impl Web3Contract {
         }
     }
 
-    pub async fn register_report(&self, output: host_output::RegisterReport) -> Result<H256> {
-        let ecall_output = output.ecall_output.ok_or(HostError::EnclaveOutputNotSet)?;
+    pub async fn register_report(
+        &self,
+        output: host_output::RegisterReport,
+        signer: Address,
+        gas: u64,
+    ) -> Result<H256> {
+        let ecall_output = output
+            .enclave_output
+            .ok_or(HostError::EnclaveOutputNotSet)?;
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
-        let gas = output.gas;
 
         self.contract
             .call(
                 "registerReport",
                 (report, report_sig, ecall_output.mrenclave_ver()),
-                output.signer,
+                signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
             )
             .await

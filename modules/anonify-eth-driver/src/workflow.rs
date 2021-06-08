@@ -56,6 +56,14 @@ impl EcallController for RegisterReportWorkflow {
     type EO = output::ReturnRegisterReport;
     type HO = host_output::RegisterReport;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(input::Empty::default())
+    }
+
+    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::RegisterReport { enclave_output })
+    }
 }
 
 pub struct HandshakeWorkflow;
@@ -194,25 +202,16 @@ pub mod host_input {
     }
 
     pub struct RegisterReport {
-        signer: Address,
-        gas: u64,
         ecall_cmd: u32,
     }
 
     impl RegisterReport {
-        pub fn new(signer: Address, gas: u64, ecall_cmd: u32) -> Self {
-            RegisterReport {
-                signer,
-                gas,
-                ecall_cmd,
-            }
+        pub fn new(ecall_cmd: u32) -> Self {
+            RegisterReport { ecall_cmd }
         }
     }
 
     impl HostInput for RegisterReport {
-        type EnclaveInput = input::Empty;
-        type HostOutput = host_output::RegisterReport;
-
         fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
             let host_output = host_output::RegisterReport::new(self.signer, self.gas);
 
@@ -495,30 +494,10 @@ pub mod host_output {
 
     #[derive(Debug, Clone)]
     pub struct RegisterReport {
-        pub signer: Address,
-        pub gas: u64,
-        pub ecall_output: Option<output::ReturnRegisterReport>,
+        pub enclave_output: output::ReturnRegisterReport,
     }
 
-    impl HostOutput for RegisterReport {
-        type EnclaveOutput = output::ReturnRegisterReport;
-
-        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
-            self.ecall_output = Some(output);
-
-            Ok(self)
-        }
-    }
-
-    impl RegisterReport {
-        pub fn new(signer: Address, gas: u64) -> Self {
-            RegisterReport {
-                signer,
-                gas,
-                ecall_output: None,
-            }
-        }
-    }
+    impl HostOutput for RegisterReport {}
 
     #[derive(Debug, Clone)]
     pub struct Handshake {

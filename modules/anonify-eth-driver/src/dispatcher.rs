@@ -195,14 +195,14 @@ impl Dispatcher {
     pub async fn register_report(&self, signer: Address, gas: u64) -> Result<H256> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
-        let input = host_input::RegisterReport::new(signer, gas, SEND_REGISTER_REPORT_CMD);
+        let input = host_input::RegisterReport::new(SEND_REGISTER_REPORT_CMD);
         let host_output = RegisterReportWorkflow::run(input, eid)?;
 
         let tx_hash = inner
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .register_report(&host_output)
+            .register_report(&host_output, signer, gas)
             .await?;
 
         Ok(tx_hash)

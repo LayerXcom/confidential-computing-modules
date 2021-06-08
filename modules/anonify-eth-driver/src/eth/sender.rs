@@ -68,7 +68,12 @@ impl EthSender {
         .await
     }
 
-    pub async fn register_report(&self, host_output: &host_output::RegisterReport) -> Result<H256> {
+    pub async fn register_report(
+        &self,
+        host_output: &host_output::RegisterReport,
+        signer: Address,
+        gas: u64,
+    ) -> Result<H256> {
         info!("Registering report to blockchain: {:?}", host_output);
         Retry::new(
             "send_command",
@@ -76,7 +81,11 @@ impl EthSender {
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
-        .spawn_async(|| async { self.contract.register_report(host_output.clone()).await })
+        .spawn_async(|| async {
+            self.contract
+                .register_report(host_output.clone(), signer, gas)
+                .await
+        })
         .await
     }
 
