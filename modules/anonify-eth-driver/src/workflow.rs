@@ -188,6 +188,14 @@ impl EcallController for BackupWorkflow {
     type EO = output::Empty;
     type HO = host_output::Backup;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(input::Empty::default())
+    }
+
+    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::Backup::default())
+    }
 }
 
 pub struct RecoverWorkflow;
@@ -448,13 +456,6 @@ pub mod host_input {
     }
 
     impl HostInput for Backup {
-        type EnclaveInput = input::Empty;
-        type HostOutput = host_output::Backup;
-
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            Ok((Self::EnclaveInput::default(), Self::HostOutput::default()))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
@@ -580,9 +581,7 @@ pub mod host_output {
     #[derive(Default)]
     pub struct Backup;
 
-    impl HostOutput for Backup {
-        type EnclaveOutput = output::Empty;
-    }
+    impl HostOutput for Backup {}
 
     #[derive(Default)]
     pub struct Recover;
