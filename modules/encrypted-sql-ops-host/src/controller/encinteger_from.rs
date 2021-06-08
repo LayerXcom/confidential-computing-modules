@@ -3,7 +3,7 @@
 //! FIXME: Workflow -> Controller
 
 use super::host_types::{HostEncInteger, HostPlainInteger};
-use frame_host::engine::*;
+use frame_host::ecall_controller::EcallController;
 use module_encrypted_sql_ops_ecall_types::enclave_types::{EnclaveEncInteger, EnclavePlainInteger};
 
 /// Constructor of `ENCINTEGER` custom type.
@@ -24,12 +24,20 @@ use module_encrypted_sql_ops_ecall_types::enclave_types::{EnclaveEncInteger, Enc
 ///
 /// We should do the similar.
 #[derive(Debug)]
-pub struct EncIntegerFromWorkflow;
+pub struct EncIntegerFromController;
 
-impl HostEngine for EncIntegerFromWorkflow {
+impl EcallController for EncIntegerFromController {
     type HI = HostPlainInteger;
     type EI = EnclavePlainInteger;
     type EO = EnclaveEncInteger;
     type HO = HostEncInteger;
-    const ECALL_MAX_SIZE: usize = 64;
+    const EI_MAX_SIZE: usize = 64;
+
+    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(EnclavePlainInteger::from(host_input.integer))
+    }
+
+    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(HostEncInteger::from(enclave_output))
+    }
 }

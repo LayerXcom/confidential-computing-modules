@@ -13,32 +13,23 @@ use super::HostOutputEncAvgState;
 pub struct HostEncAvgStateWithNext {
     state: EncAvgState,
     next: EncInteger,
-    ecall_cmd: u32,
 }
 
 impl HostInput for HostEncAvgStateWithNext {
-    type EcallInput = EnclaveEncAvgStateWithNext;
+    type EnclaveInput = EnclaveEncAvgStateWithNext;
     type HostOutput = HostOutputEncAvgState;
 
-    fn apply(self) -> anyhow::Result<(Self::EcallInput, Self::HostOutput)> {
+    fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
         Ok((
             EnclaveEncAvgStateWithNext::new(self.state, self.next),
             HostOutputEncAvgState(None),
         ))
-    }
-
-    fn ecall_cmd(&self) -> u32 {
-        self.ecall_cmd
     }
 }
 
 impl HostEncAvgStateWithNext {
     /// Constructor
     pub fn new(state: EncAvgState, next: EncInteger, ecall_cmd: u32) -> Self {
-        Self {
-            state,
-            next,
-            ecall_cmd,
-        }
+        Self { state, next }
     }
 }
