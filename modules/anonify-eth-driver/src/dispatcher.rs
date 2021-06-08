@@ -301,7 +301,7 @@ impl Dispatcher {
         let enclave_encryption_key = GetEncryptionKeyWorkflow::run(input, eid)?;
 
         Ok(enclave_encryption_key
-            .ecall_output
+            .enclave_output
             .ok_or(HostError::EnclaveOutputNotSet)?
             .enclave_encryption_key())
     }

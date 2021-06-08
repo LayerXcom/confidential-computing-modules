@@ -170,6 +170,14 @@ impl EcallController for GetEncryptionKeyWorkflow {
     type EO = output::ReturnEncryptionKey;
     type HO = host_output::ReturnEncryptionKey;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(input::Empty::default())
+    }
+
+    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::ReturnEncryptionKey { enclave_output })
+    }
 }
 
 pub struct BackupWorkflow;
@@ -424,13 +432,6 @@ pub mod host_input {
     }
 
     impl HostInput for GetEncryptionKey {
-        type EnclaveInput = input::Empty;
-        type HostOutput = host_output::ReturnEncryptionKey;
-
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            Ok((Self::EnclaveInput::default(), Self::HostOutput::new()))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
@@ -571,24 +572,10 @@ pub mod host_output {
     impl HostOutput for InsertHandshake {}
 
     pub struct ReturnEncryptionKey {
-        pub ecall_output: Option<output::ReturnEncryptionKey>,
+        pub enclave_output: output::ReturnEncryptionKey,
     }
 
-    impl HostOutput for ReturnEncryptionKey {
-        type EnclaveOutput = output::ReturnEncryptionKey;
-
-        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
-            self.ecall_output = Some(output);
-
-            Ok(self)
-        }
-    }
-
-    impl ReturnEncryptionKey {
-        pub fn new() -> Self {
-            ReturnEncryptionKey { ecall_output: None }
-        }
-    }
+    impl HostOutput for ReturnEncryptionKey {}
 
     #[derive(Default)]
     pub struct Backup;
