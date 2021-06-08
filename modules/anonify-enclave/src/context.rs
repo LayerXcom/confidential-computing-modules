@@ -523,38 +523,37 @@ impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for GetUserCounter<AP> {
 }
 
 /// A report registration engine
-#[derive(Debug, Clone, Default)]
-pub struct ReportRegistration;
+#[derive(Debug, Clone)]
+pub struct ReportRegistration<'c, C> {
+    enclave_context: &'c C,
+}
 
-impl StateRuntimeEnclaveUseCase for ReportRegistration {
+impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for ReportRegistration<'c, C>
+where
+    C: ContextOps<S = StateType> + Clone,
+{
     type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
 
-    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        Ok(Self::default())
+    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+        Ok(Self { enclave_context })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
         Ok(())
     }
 
-    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        let ias_url = enclave_context.ias_url();
-        let sub_key = enclave_context.sub_key();
-        let attested_report = enclave_context.quote()?.remote_attestation(
+    fn run(self) -> anyhow::Result<Self::EO> {
+        let ias_url = self.enclave_context.ias_url();
+        let sub_key = self.enclave_context.sub_key();
+        let attested_report = self.enclave_context.quote()?.remote_attestation(
             ias_url,
             sub_key,
             IAS_ROOT_CERT.to_vec(),
         )?;
 
-        let mrenclave_ver = enclave_context.mrenclave_ver();
-        let my_roster_idx = enclave_context.read_group_key().my_roster_idx();
+        let mrenclave_ver = self.enclave_context.mrenclave_ver();
+        let my_roster_idx = self.enclave_context.read_group_key().my_roster_idx();
 
         Ok(output::ReturnRegisterReport::new(
             attested_report.report().to_vec(),
