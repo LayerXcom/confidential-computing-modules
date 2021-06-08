@@ -2,7 +2,7 @@
 
 pub mod dispatcher;
 mod error;
-mod workflow;
+mod controller;
 
 pub use dispatcher::Dispatcher;
 pub use error::KeyVaultHostError;

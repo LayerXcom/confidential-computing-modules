@@ -7,7 +7,7 @@ pub mod dispatcher;
 pub mod error;
 pub mod eth;
 pub mod utils;
-mod workflow;
+mod controller;
 
 pub use cache::EventCache;
 pub use dispatcher::Dispatcher;

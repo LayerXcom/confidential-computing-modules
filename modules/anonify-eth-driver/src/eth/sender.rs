@@ -1,5 +1,5 @@
 use super::connection::{Web3Contract, Web3Http};
-use crate::{error::Result, utils::*, workflow::*};
+use crate::{error::Result, utils::*, controller::*};
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use sgx_types::sgx_enclave_id_t;

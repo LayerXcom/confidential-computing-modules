@@ -7,7 +7,7 @@ use crate::{
     cache::EventCache,
     error::{HostError, Result},
     utils::*,
-    workflow::*,
+    controller::*,
 };
 use anonify_ecall_types::{CommandCiphertext, EnclaveKeyCiphertext};
 use ethabi::ParamType;
@@ -390,7 +390,7 @@ impl InnerEnclaveLog {
                             e.state_counter(),
                             fetch_handshake_cmd,
                         ) {
-                            error!("Error in enclave (InsertHandshakeWorkflow::exec): {:?}", e);
+                            error!("Error in enclave (InsertHandshakeController::exec): {:?}", e);
                             continue;
                         }
                     }
@@ -433,7 +433,7 @@ impl InnerEnclaveLog {
         eid: sgx_enclave_id_t,
         ciphertext: &CommandCiphertext,
     ) -> Option<serde_json::Value> {
-        match InsertCiphertextWorkflow::run(inp, ecall_cmd, eid).map(|e| e.enclave_output) {
+        match InsertCiphertextController::run(inp, ecall_cmd, eid).map(|e| e.enclave_output) {
             Ok(notify) => {
                 if let Some(notify_state) = notify.state {
                     match bincode::deserialize::<Vec<u8>>(&notify_state.into_vec()[..]) {
@@ -451,7 +451,7 @@ impl InnerEnclaveLog {
             // so skip the event.
             Err(err) => {
                 error!(
-                    "Error in enclave (InsertCiphertextWorkflow::exec): {:?}",
+                    "Error in enclave (InsertCiphertextController::exec): {:?}",
                     err
                 );
 
@@ -508,7 +508,7 @@ impl InnerEnclaveLog {
         fetch_handshake_cmd: u32,
     ) -> Result<()> {
         let input = host_input::InsertHandshake::new(handshake, state_counter);
-        InsertHandshakeWorkflow::run(input, fetch_handshake_cmd, eid)?;
+        InsertHandshakeController::run(input, fetch_handshake_cmd, eid)?;
 
         Ok(())
     }

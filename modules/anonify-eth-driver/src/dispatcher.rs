@@ -5,7 +5,7 @@ use crate::{
     error::{HostError, Result},
     eth::{EthSender, EventWatcher},
     utils::*,
-    workflow::*,
+    controller::*,
 };
 use anonify_ecall_types::cmd::*;
 use frame_common::crypto::AccountId;
@@ -196,7 +196,7 @@ impl Dispatcher {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         let input = host_input::RegisterReport::new();
-        let host_output = RegisterReportWorkflow::run(input, SEND_REGISTER_REPORT_CMD, eid)?;
+        let host_output = RegisterReportController::run(input, SEND_REGISTER_REPORT_CMD, eid)?;
 
         let tx_hash = inner
             .sender
@@ -217,7 +217,7 @@ impl Dispatcher {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
         let input = host_input::JoinGroup::new();
-        let host_output = JoinGroupWorkflow::run(input, ecall_cmd, eid)?;
+        let host_output = JoinGroupController::run(input, ecall_cmd, eid)?;
 
         let receipt = inner
             .sender
@@ -240,7 +240,7 @@ impl Dispatcher {
         let inner = self.inner.read();
         let input = host_input::Command::new(ciphertext, user_id);
         let eid = inner.enclave_id;
-        let host_output = CommandWorkflow::run(input, ecall_cmd, eid)?;
+        let host_output = CommandController::run(input, ecall_cmd, eid)?;
 
         match &inner.sender {
             Some(s) => s.send_command(&host_output, signer, gas).await,
@@ -251,7 +251,7 @@ impl Dispatcher {
     pub fn get_state(&self, ciphertext: SodiumCiphertext) -> Result<serde_json::Value> {
         let eid = self.inner.read().enclave_id;
         let input = host_input::GetState::new(ciphertext);
-        let state = GetStateWorkflow::run(input, GET_STATE_CMD, eid)?.enclave_output;
+        let state = GetStateController::run(input, GET_STATE_CMD, eid)?.enclave_output;
 
         let bytes: Vec<u8> = bincode::deserialize(&state.state.as_bytes())?;
         serde_json::from_slice(&bytes[..]).map_err(Into::into)
@@ -261,7 +261,7 @@ impl Dispatcher {
         let eid = self.inner.read().enclave_id;
         let input = host_input::GetUserCounter::new(ciphertext);
         let user_counter =
-            GetUserCounterWorkflow::run(input, GET_USER_COUNTER_CMD, eid)?.enclave_output;
+            GetUserCounterController::run(input, GET_USER_COUNTER_CMD, eid)?.enclave_output;
 
         serde_json::to_value(user_counter.user_counter).map_err(Into::into)
     }
@@ -270,7 +270,7 @@ impl Dispatcher {
         let inner = self.inner.read();
         let input = host_input::Handshake::new();
         let eid = inner.enclave_id;
-        let host_output = HandshakeWorkflow::run(input, SEND_HANDSHAKE_TREEKEM_CMD, eid)?;
+        let host_output = HandshakeController::run(input, SEND_HANDSHAKE_TREEKEM_CMD, eid)?;
 
         let tx_hash = inner
             .sender
@@ -296,7 +296,7 @@ impl Dispatcher {
         let input = host_input::GetEncryptionKey::new();
         let eid = self.inner.read().enclave_id;
         let enclave_encryption_key =
-            GetEncryptionKeyWorkflow::run(input, GET_ENCLAVE_ENCRYPTION_KEY_CMD, eid)?;
+            GetEncryptionKeyController::run(input, GET_ENCLAVE_ENCRYPTION_KEY_CMD, eid)?;
 
         Ok(enclave_encryption_key
             .enclave_output
@@ -308,7 +308,7 @@ impl Dispatcher {
         let input = host_input::RegisterNotification::new(ciphertext);
         let eid = inner.enclave_id;
         let _host_output =
-            RegisterNotificationWorkflow::run(input, REGISTER_NOTIFICATION_CMD, eid)?;
+            RegisterNotificationController::run(input, REGISTER_NOTIFICATION_CMD, eid)?;
 
         Ok(())
     }

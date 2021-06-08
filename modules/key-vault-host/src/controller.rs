@@ -3,9 +3,9 @@ use key_vault_ecall_types::*;
 
 pub const EI_MAX_SIZE: usize = 2048;
 
-pub struct StartServerWorkflow;
+pub struct StartServerController;
 
-impl EcallController for StartServerWorkflow {
+impl EcallController for StartServerController {
     type HI = host_input::StartServer;
     type EI = input::CallServerStarter;
     type EO = output::Empty;
@@ -21,9 +21,9 @@ impl EcallController for StartServerWorkflow {
     }
 }
 
-pub struct StopServerWorkflow;
+pub struct StopServerController;
 
-impl EcallController for StopServerWorkflow {
+impl EcallController for StopServerController {
     type HI = host_input::StopServer;
     type EI = input::CallServerStopper;
     type EO = output::Empty;

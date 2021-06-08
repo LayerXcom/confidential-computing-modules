@@ -8,9 +8,9 @@ use frame_sodium::SodiumCiphertext;
 
 pub const EI_MAX_SIZE: usize = 2048;
 
-pub struct CommandWorkflow;
+pub struct CommandController;
 
-impl EcallController for CommandWorkflow {
+impl EcallController for CommandController {
     type HI = host_input::Command;
     type EI = input::Command;
     type EO = output::Command;
@@ -29,9 +29,9 @@ impl EcallController for CommandWorkflow {
     }
 }
 
-pub struct JoinGroupWorkflow;
+pub struct JoinGroupController;
 
-impl EcallController for JoinGroupWorkflow {
+impl EcallController for JoinGroupController {
     type HI = host_input::JoinGroup;
     type EI = input::Empty;
     type EO = output::ReturnJoinGroup;
@@ -47,9 +47,9 @@ impl EcallController for JoinGroupWorkflow {
     }
 }
 
-pub struct RegisterReportWorkflow;
+pub struct RegisterReportController;
 
-impl EcallController for RegisterReportWorkflow {
+impl EcallController for RegisterReportController {
     type HI = host_input::RegisterReport;
     type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
@@ -65,9 +65,9 @@ impl EcallController for RegisterReportWorkflow {
     }
 }
 
-pub struct HandshakeWorkflow;
+pub struct HandshakeController;
 
-impl EcallController for HandshakeWorkflow {
+impl EcallController for HandshakeController {
     type HI = host_input::Handshake;
     type EI = input::Empty;
     type EO = output::ReturnHandshake;
@@ -83,9 +83,9 @@ impl EcallController for HandshakeWorkflow {
     }
 }
 
-pub struct RegisterNotificationWorkflow;
+pub struct RegisterNotificationController;
 
-impl EcallController for RegisterNotificationWorkflow {
+impl EcallController for RegisterNotificationController {
     type HI = host_input::RegisterNotification;
     type EI = SodiumCiphertext;
     type EO = output::Empty;
@@ -101,9 +101,9 @@ impl EcallController for RegisterNotificationWorkflow {
     }
 }
 
-pub struct GetStateWorkflow;
+pub struct GetStateController;
 
-impl EcallController for GetStateWorkflow {
+impl EcallController for GetStateController {
     type HI = host_input::GetState;
     type EI = SodiumCiphertext;
     type EO = output::ReturnState;
@@ -119,9 +119,9 @@ impl EcallController for GetStateWorkflow {
     }
 }
 
-pub struct InsertCiphertextWorkflow;
+pub struct InsertCiphertextController;
 
-impl EcallController for InsertCiphertextWorkflow {
+impl EcallController for InsertCiphertextController {
     type HI = host_input::InsertCiphertext;
     type EI = input::InsertCiphertext;
     type EO = output::ReturnNotifyState;
@@ -140,9 +140,9 @@ impl EcallController for InsertCiphertextWorkflow {
     }
 }
 
-pub struct InsertHandshakeWorkflow;
+pub struct InsertHandshakeController;
 
-impl EcallController for InsertHandshakeWorkflow {
+impl EcallController for InsertHandshakeController {
     type HI = host_input::InsertHandshake;
     type EI = input::InsertHandshake;
     type EO = output::Empty;
@@ -161,9 +161,9 @@ impl EcallController for InsertHandshakeWorkflow {
     }
 }
 
-pub struct GetEncryptionKeyWorkflow;
+pub struct GetEncryptionKeyController;
 
-impl EcallController for GetEncryptionKeyWorkflow {
+impl EcallController for GetEncryptionKeyController {
     type HI = host_input::GetEncryptionKey;
     type EI = input::Empty;
     type EO = output::ReturnEncryptionKey;
@@ -179,9 +179,9 @@ impl EcallController for GetEncryptionKeyWorkflow {
     }
 }
 
-pub struct BackupWorkflow;
+pub struct BackupController;
 
-impl EcallController for BackupWorkflow {
+impl EcallController for BackupController {
     type HI = host_input::Backup;
     type EI = input::Empty;
     type EO = output::Empty;
@@ -197,9 +197,9 @@ impl EcallController for BackupWorkflow {
     }
 }
 
-pub struct RecoverWorkflow;
+pub struct RecoverController;
 
-impl EcallController for RecoverWorkflow {
+impl EcallController for RecoverController {
     type HI = host_input::Recover;
     type EI = input::Empty;
     type EO = output::Empty;
@@ -215,9 +215,9 @@ impl EcallController for RecoverWorkflow {
     }
 }
 
-pub struct GetUserCounterWorkflow;
+pub struct GetUserCounterController;
 
-impl EcallController for GetUserCounterWorkflow {
+impl EcallController for GetUserCounterController {
     type HI = host_input::GetUserCounter;
     type EI = SodiumCiphertext;
     type EO = output::ReturnUserCounter;

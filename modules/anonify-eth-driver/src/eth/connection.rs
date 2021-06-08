@@ -3,7 +3,7 @@ use crate::{
     cache::EventCache,
     error::{HostError, Result},
     utils::{event_fetch_retry_condition, ContractInfo},
-    workflow::*,
+    controller::*,
 };
 use anonify_ecall_types::CommandCiphertext;
 use anyhow::anyhow;

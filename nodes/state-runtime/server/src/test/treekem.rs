@@ -317,7 +317,7 @@ async fn test_treekem_skip_invalid_event() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 100);
     assert!(logs_contain(
-        "Error in enclave (InsertCiphertextWorkflow::exec)"
+        "Error in enclave (InsertCiphertextController::exec)"
     )); // transfer amount (U64(110)) exceeds balance (U64(100))
     assert!(logs_contain(
         "A event is skipped because of occurring error in enclave"
@@ -906,7 +906,7 @@ async fn test_treekem_duplicated_out_of_order_request_from_same_user() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90); // failed
     assert!(logs_contain(
-        "Error in enclave (InsertCiphertextWorkflow::exec)"
+        "Error in enclave (InsertCiphertextController::exec)"
     )); // InvalidUserCounter
     assert!(logs_contain(
         "A event is skipped because of occurring error in enclave"
@@ -937,7 +937,7 @@ async fn test_treekem_duplicated_out_of_order_request_from_same_user() {
     let balance: state_runtime_node_api::state::get::Response = test::read_body_json(resp).await;
     assert_eq!(balance.state, 90); // failed
     assert!(logs_contain(
-        "Error in enclave (InsertCiphertextWorkflow::exec)"
+        "Error in enclave (InsertCiphertextController::exec)"
     )); // InvalidUserCounter
     assert!(logs_contain(
         "A event is skipped because of occurring error in enclave"
