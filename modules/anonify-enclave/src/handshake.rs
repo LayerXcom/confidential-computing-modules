@@ -70,41 +70,43 @@ impl StateRuntimeEnclaveUseCase for HandshakeSender {
 }
 
 /// A handshake receiver
-#[derive(Debug, Clone, Default)]
-pub struct HandshakeReceiver {
+#[derive(Debug, Clone)]
+pub struct HandshakeReceiver<'c, C> {
     enclave_input: input::InsertHandshake,
+    enclave_context: &'c C,
 }
 
-impl StateRuntimeEnclaveUseCase for HandshakeReceiver {
+impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for HandshakeReceiver<'c, C>
+where
+    C: ContextOps<S = StateType> + Clone,
+{
     type EI = input::InsertHandshake;
     type EO = output::Empty;
 
-    fn new<C>(enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        Ok(Self { enclave_input })
+    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+        Ok(Self {
+            enclave_input,
+            enclave_context,
+        })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
         Ok(())
     }
 
-    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        let group_key = &mut *enclave_context.write_group_key();
+    fn run(self) -> Result<Self::EO> {
+        let group_key = &mut *self.enclave_context.write_group_key();
         let handshake = HandshakeParams::decode(&self.enclave_input.handshake().handshake()[..])
             .map_err(|_| anyhow!("HandshakeParams::decode Error"))?;
 
         // Even if `process_handshake` fails, state_counter must be incremented so it doesn't get stuck.
-        enclave_context.verify_state_counter_increment(self.enclave_input.state_counter())?;
+        self.enclave_context
+            .verify_state_counter_increment(self.enclave_input.state_counter())?;
         group_key.process_handshake(
             enclave_context.store_path_secrets(),
             &handshake,
             #[cfg(feature = "backup-enable")]
-            |ps_id, roster_idx| C::recover_path_secret(enclave_context, ps_id, roster_idx),
+            |ps_id, roster_idx| C::recover_path_secret(self.enclave_context, ps_id, roster_idx),
         )?;
 
         Ok(output::Empty::default())
