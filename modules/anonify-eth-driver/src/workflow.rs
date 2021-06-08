@@ -38,6 +38,14 @@ impl EcallController for JoinGroupWorkflow {
     type EO = output::ReturnJoinGroup;
     type HO = host_output::JoinGroup;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(input::Empty::default())
+    }
+
+    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::JoinGroup { enclave_output })
+    }
 }
 
 pub struct RegisterReportWorkflow;
@@ -170,31 +178,16 @@ pub mod host_input {
     }
 
     pub struct JoinGroup {
-        signer: Address,
-        gas: u64,
         ecall_cmd: u32,
     }
 
     impl JoinGroup {
-        pub fn new(signer: Address, gas: u64, ecall_cmd: u32) -> Self {
-            JoinGroup {
-                signer,
-                gas,
-                ecall_cmd,
-            }
+        pub fn new(ecall_cmd: u32) -> Self {
+            JoinGroup { ecall_cmd }
         }
     }
 
     impl HostInput for JoinGroup {
-        type EnclaveInput = input::Empty;
-        type HostOutput = host_output::JoinGroup;
-
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            let host_output = host_output::JoinGroup::new(self.signer, self.gas);
-
-            Ok((Self::EnclaveInput::default(), host_output))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
@@ -495,30 +488,10 @@ pub mod host_output {
 
     #[derive(Debug, Clone)]
     pub struct JoinGroup {
-        pub signer: Address,
-        pub gas: u64,
-        pub ecall_output: Option<output::ReturnJoinGroup>,
+        pub enclave_output: output::ReturnJoinGroup,
     }
 
-    impl HostOutput for JoinGroup {
-        type EnclaveOutput = output::ReturnJoinGroup;
-
-        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
-            self.ecall_output = Some(output);
-
-            Ok(self)
-        }
-    }
-
-    impl JoinGroup {
-        pub fn new(signer: Address, gas: u64) -> Self {
-            JoinGroup {
-                signer,
-                gas,
-                ecall_output: None,
-            }
-        }
-    }
+    impl HostOutput for JoinGroup {}
 
     #[derive(Debug, Clone)]
     pub struct RegisterReport {

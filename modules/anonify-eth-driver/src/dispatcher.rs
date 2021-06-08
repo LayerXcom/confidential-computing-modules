@@ -216,14 +216,14 @@ impl Dispatcher {
     ) -> Result<TransactionReceipt> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
-        let input = host_input::JoinGroup::new(signer, gas, ecall_cmd);
+        let input = host_input::JoinGroup::new(ecall_cmd);
         let host_output = JoinGroupWorkflow::run(input, eid)?;
 
         let receipt = inner
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .join_group(&host_output, inner.confirmations)
+            .join_group(&host_output, signer, gas, inner.confirmations)
             .await?;
 
         Ok(receipt)

@@ -49,6 +49,8 @@ impl EthSender {
     pub async fn join_group(
         &self,
         host_output: &host_output::JoinGroup,
+        signer: Address,
+        gas: u64,
         confirmations: usize,
     ) -> Result<TransactionReceipt> {
         info!("join_group to blockchain: {:?}", host_output);
@@ -60,7 +62,7 @@ impl EthSender {
         .set_condition(call_with_conf_retry_condition)
         .spawn_async(|| async {
             self.contract
-                .join_group(host_output.clone(), confirmations)
+                .join_group(host_output.clone(), signer, gas, confirmations)
                 .await
         })
         .await
@@ -91,7 +93,11 @@ impl EthSender {
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
-        .spawn_async(|| async { self.contract.send_command(host_output.clone(), signer,gas).await })
+        .spawn_async(|| async {
+            self.contract
+                .send_command(host_output.clone(), signer, gas)
+                .await
+        })
         .await
     }
 
