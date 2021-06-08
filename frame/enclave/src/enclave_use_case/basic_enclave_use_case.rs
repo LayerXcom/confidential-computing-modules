@@ -6,7 +6,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use super::{mk_input_ecall_entry_point, mk_output_ecall_entry_point};
 
 pub trait BasicEnclaveUseCase: Sized {
-    type EI: EnclaveInput + DeserializeOwned + Default;
+    type EI: EnclaveInput + DeserializeOwned;
     type EO: EnclaveOutput + Serialize;
 
     fn run<C>(enclave_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self::EO>
