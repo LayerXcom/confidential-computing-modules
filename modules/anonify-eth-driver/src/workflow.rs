@@ -149,6 +149,17 @@ impl EcallController for InsertHandshakeWorkflow {
     type EO = output::Empty;
     type HO = host_output::InsertHandshake;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(input::InsertHandshake::new(
+            host_input.handshake,
+            host_input.state_counter,
+        ))
+    }
+
+    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::InsertHandshake::default())
+    }
 }
 
 pub struct GetEncryptionKeyWorkflow;
@@ -397,15 +408,6 @@ pub mod host_input {
     }
 
     impl HostInput for InsertHandshake {
-        type EnclaveInput = input::InsertHandshake;
-        type HostOutput = host_output::InsertHandshake;
-
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            let enclave_input = Self::EnclaveInput::new(self.handshake, self.state_counter);
-
-            Ok((enclave_input, Self::HostOutput::default()))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
@@ -566,9 +568,7 @@ pub mod host_output {
     #[derive(Default)]
     pub struct InsertHandshake;
 
-    impl HostOutput for InsertHandshake {
-        type EnclaveOutput = output::Empty;
-    }
+    impl HostOutput for InsertHandshake {}
 
     pub struct ReturnEncryptionKey {
         pub ecall_output: Option<output::ReturnEncryptionKey>,
