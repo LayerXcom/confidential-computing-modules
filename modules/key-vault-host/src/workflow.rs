@@ -11,6 +11,14 @@ impl EcallController for StartServerWorkflow {
     type EO = output::Empty;
     type HO = host_output::StartServer;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(_host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(input::CallServerStarter::default())
+    }
+
+    fn translate_output(_enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::StartServer::default())
+    }
 }
 
 pub struct StopServerWorkflow;
@@ -21,6 +29,14 @@ impl EcallController for StopServerWorkflow {
     type EO = output::Empty;
     type HO = host_output::StopServer;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(_host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(input::CallServerStopper::default())
+    }
+
+    fn translate_output(_enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::StopServer::default())
+    }
 }
 
 pub mod host_input {
@@ -37,13 +53,6 @@ pub mod host_input {
     }
 
     impl HostInput for StartServer {
-        type EnclaveInput = input::CallServerStarter;
-        type HostOutput = host_output::StartServer;
-
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            Ok((Self::EnclaveInput::default(), Self::HostOutput::default()))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
@@ -60,13 +69,6 @@ pub mod host_input {
     }
 
     impl HostInput for StopServer {
-        type EnclaveInput = input::CallServerStopper;
-        type HostOutput = host_output::StopServer;
-
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            Ok((Self::EnclaveInput::default(), Self::HostOutput::default()))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
@@ -79,14 +81,10 @@ pub mod host_output {
     #[derive(Default)]
     pub struct StartServer;
 
-    impl HostOutput for StartServer {
-        type EnclaveOutput = output::Empty;
-    }
+    impl HostOutput for StartServer {}
 
     #[derive(Default)]
     pub struct StopServer;
 
-    impl HostOutput for StopServer {
-        type EnclaveOutput = output::Empty;
-    }
+    impl HostOutput for StopServer {}
 }
