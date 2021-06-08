@@ -11,6 +11,6 @@ register_enclave_use_case!(
     0,
     DummyType,
     KeyVaultEnclaveContext,
-    (START_SERVER_CMD, ServerStarter),
-    (STOP_SERVER_CMD, ServerStopper),
+    (START_SERVER_CMD, ServerStarter<KeyVaultEnclaveContext>),
+    (STOP_SERVER_CMD, ServerStopper<KeyVaultEnclaveContext>),
 );

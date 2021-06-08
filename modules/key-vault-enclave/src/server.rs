@@ -8,19 +8,25 @@ use std::env;
 
 /// A server starter
 #[derive(Debug, Clone)]
-pub struct ServerStarter;
+pub struct ServerStarter<'c, C> {
+    enclave_context: &'c C,
+}
 
-impl BasicEnclaveUseCase for ServerStarter {
+impl<'c, C> BasicEnclaveUseCase<'c, C> for ServerStarter<'c, C>
+where
+    C: ConfigGetter,
+{
     type EI = input::CallServerStarter;
     type EO = output::Empty;
 
-    fn run<C>(_enclave_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self::EO>
-    where
-        C: ConfigGetter,
-    {
-        let ias_url = enclave_context.ias_url();
-        let sub_key = enclave_context.sub_key();
-        let spid = enclave_context.spid();
+    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+        Ok(Self { enclave_context })
+    }
+
+    fn run(self) -> anyhow::Result<Self::EO> {
+        let ias_url = self.enclave_context.ias_url();
+        let sub_key = self.enclave_context.sub_key();
+        let spid = self.enclave_context.spid();
 
         let attested_tls_config =
             AttestedTlsConfig::new_by_ra(&spid, &ias_url, &sub_key, IAS_ROOT_CERT.to_vec())?;
@@ -30,8 +36,8 @@ impl BasicEnclaveUseCase for ServerStarter {
 
         let key_vault_address = env::var("KEY_VAULT_ENDPOINT_FOR_KEY_VAULT")?;
         let mut server = Server::new(key_vault_address, server_config);
-        let store_path_secrets = enclave_context.store_path_secrets();
-        let store_enclave_dec_key = enclave_context.store_enclave_dec_key();
+        let store_path_secrets = self.enclave_context.store_path_secrets();
+        let store_enclave_dec_key = self.enclave_context.store_enclave_dec_key();
         let handler =
             KeyVaultHandler::new(store_path_secrets.clone(), store_enclave_dec_key.clone());
         server.run(handler).unwrap();
@@ -41,17 +47,23 @@ impl BasicEnclaveUseCase for ServerStarter {
 }
 
 /// A server stopper
-#[derive(Debug, Clone, Default)]
-pub struct ServerStopper;
+#[derive(Debug, Clone)]
+pub struct ServerStopper<'c, C> {
+    enclave_context: &'c C,
+}
 
-impl BasicEnclaveUseCase for ServerStopper {
+impl<'c, C> BasicEnclaveUseCase<'c, C> for ServerStopper<'c, C>
+where
+    C: ConfigGetter,
+{
     type EI = input::CallServerStopper;
     type EO = output::Empty;
 
-    fn run<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self::EO>
-    where
-        C: ConfigGetter,
-    {
+    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+        Ok(Self { enclave_context })
+    }
+
+    fn run(self) -> anyhow::Result<Self::EO> {
         Ok(output::Empty::default())
     }
 }

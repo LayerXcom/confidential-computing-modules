@@ -56,20 +56,27 @@ TBD
 （本ドキュメントで出てくるコードは理解を促す目的であり、コンパイルが通ることは期待してはいけません。フレームワーク側に完全に追従できているとも限らないので...）
 
 ```rust
-impl BasicEnclaveUseCase for MyEnclaveUseCase {
+impl<'c, C> BasicEnclaveUseCase<'c, C> for MyEnclaveUseCase
+where
+    C: ConfigGetter,
+{
     type EI = MyEnclaveInput;
     type EO = MyEnclaveOutput;
 
     const ENCLAVE_USE_CASE_ID: u32 = MY_ENCLAVE_USE_CASE_ID;
 
-    fn run<C>(enclave_input: Self::EI, enclave_context: &C) -> Result<Self::EO>
-    where
-        C: ConfigGetter
-    { ... }
+    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> Result<Self> {
+        ...
+    }
+
+    fn run(self) -> Result<Self::EO> {
+        ...
+    }
 }
 ```
 
-`fn run()` の中に、Enclave内で行いたい処理を記述します。
+`fn new()` に Enclave Input が渡されるので、必要に応じて変換処理などをした後で `MyEnclaveUseCase` のフィールドとして持たせましょう。`enclave_context` は Enclave に関する設定値が入るので、これも必要に応じて `MyEnclaveUseCase` のフィールドとして持たせます。
+そして `fn run()` の中に、Enclave内で行いたい処理を記述します。
 
 ```rust
     const ENCLAVE_USE_CASE_ID: u32 = MY_ENCLAVE_USE_CASE_ID;
