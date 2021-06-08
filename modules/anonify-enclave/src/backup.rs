@@ -63,34 +63,34 @@ impl StateRuntimeEnclaveUseCase for PathSecretsBackupper {
 }
 
 /// A PathSecret Recoverer
-#[derive(Debug, Clone, Default)]
-pub struct PathSecretsRecoverer;
+#[derive(Debug, Clone)]
+pub struct PathSecretsRecoverer<'c, C> {
+    enclave_context: &'c C,
+}
 
-impl StateRuntimeEnclaveUseCase for PathSecretsRecoverer {
+impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for PathSecretsRecoverer<'c, C>
+where
+    C: ContextOps<S = StateType> + Clone,
+{
     type EI = input::Empty;
     type EO = output::Empty;
 
-    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        Ok(Self::default())
+    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+        Ok(Self { enclave_context })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
         Ok(())
     }
 
-    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
+    fn run(self) -> Result<Self::EO> {
         // fetch path_secrets from key-vault server
-        let group_key = &*enclave_context.read_group_key();
+        let group_key = &*self.enclave_context.read_group_key();
         let roster_idx = group_key.my_roster_idx();
         let recover_request = RecoverPathSecretsRequestBody::new(roster_idx);
-        let recovered_path_secrets =
-            enclave_context.manually_recover_path_secrets(recover_request)?;
+        let recovered_path_secrets = self
+            .enclave_context
+            .manually_recover_path_secrets(recover_request)?;
 
         // save path_secrets to own file system
         for rps in recovered_path_secrets {
@@ -98,7 +98,7 @@ impl StateRuntimeEnclaveUseCase for PathSecretsRecoverer {
             let eps = path_secret
                 .clone()
                 .try_into_exporting(rps.epoch(), rps.id())?;
-            enclave_context
+            self.enclave_context
                 .store_path_secrets()
                 .save_to_local_filesystem(&eps)?;
         }
