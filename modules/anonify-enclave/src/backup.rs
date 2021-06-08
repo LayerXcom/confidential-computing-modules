@@ -14,32 +14,31 @@ use frame_treekem::PathSecret;
 use std::vec::Vec;
 
 /// A PathSecret Backupper
-#[derive(Debug, Clone, Default)]
-pub struct PathSecretsBackupper;
+#[derive(Debug, Clone)]
+pub struct PathSecretsBackupper<'c, C> {
+    enclave_context: &'c C,
+}
 
-impl StateRuntimeEnclaveUseCase for PathSecretsBackupper {
+impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for PathSecretsBackupper<'c, C>
+where
+    C: ContextOps<S = StateType> + Clone,
+{
     type EI = input::Empty;
     type EO = output::Empty;
 
-    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        Ok(Self::default())
+    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+        Ok(Self { enclave_context })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
         Ok(())
     }
 
-    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        let store_path_secrets = enclave_context.store_path_secrets();
+    fn run(self) -> Result<Self::EO> {
+        let store_path_secrets = self.enclave_context.store_path_secrets();
         // retrieve local path_secrets IDs
         let ids = store_path_secrets.get_all_path_secret_ids()?;
-        let roster_idx = (&*enclave_context.read_group_key()).my_roster_idx();
+        let roster_idx = (&*self.enclave_context.read_group_key()).my_roster_idx();
 
         // backup path_secrets to key-vault server
         let mut backup_path_secrets: Vec<BackupPathSecretRequestBody> = vec![];
@@ -55,7 +54,7 @@ impl StateRuntimeEnclaveUseCase for PathSecretsBackupper {
             backup_path_secrets.push(backup_path_secret);
         }
 
-        enclave_context
+        self.enclave_context
             .manually_backup_path_secrets(BackupPathSecretsRequestBody::new(backup_path_secrets))?;
 
         Ok(output::Empty::default())
