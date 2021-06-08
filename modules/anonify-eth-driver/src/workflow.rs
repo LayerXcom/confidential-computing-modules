@@ -5,7 +5,6 @@ use frame_common::{
 };
 use frame_host::ecall_controller::*;
 use frame_sodium::SodiumCiphertext;
-use web3::types::Address;
 
 pub const EI_MAX_SIZE: usize = 2048;
 
@@ -116,7 +115,7 @@ impl EcallController for GetStateWorkflow {
     }
 
     fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
-        Ok(host_output::GetState::new())
+        Ok(host_output::GetState { enclave_output })
     }
 }
 
@@ -137,7 +136,7 @@ impl EcallController for InsertCiphertextWorkflow {
     }
 
     fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
-        Ok(host_output::InsertCiphertext::new())
+        Ok(host_output::InsertCiphertext { enclave_output })
     }
 }
 
@@ -208,7 +207,7 @@ impl EcallController for RecoverWorkflow {
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
 
     fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
-        Ok(host_input::Recover::default())
+        Ok(input::Empty)
     }
 
     fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
@@ -238,8 +237,8 @@ pub mod host_input {
     use super::*;
 
     pub struct Command {
-        ciphertext: SodiumCiphertext,
-        user_id: Option<AccountId>,
+        pub(super) ciphertext: SodiumCiphertext,
+        pub(super) user_id: Option<AccountId>,
         ecall_cmd: u32,
     }
 
@@ -290,12 +289,6 @@ pub mod host_input {
     }
 
     impl HostInput for RegisterReport {
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            let host_output = host_output::RegisterReport::new(self.signer, self.gas);
-
-            Ok((Self::EnclaveInput::default(), host_output))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
@@ -312,15 +305,6 @@ pub mod host_input {
     }
 
     impl HostInput for Handshake {
-        type EnclaveInput = input::Empty;
-        type HostOutput = host_output::Handshake;
-
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            let host_output = host_output::Handshake::new(self.signer, self.gas);
-
-            Ok((Self::EnclaveInput::default(), host_output))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
@@ -367,7 +351,7 @@ pub mod host_input {
     }
 
     pub struct GetUserCounter {
-        ciphertext: SodiumCiphertext,
+        pub(super) ciphertext: SodiumCiphertext,
         ecall_cmd: u32,
     }
 
@@ -387,8 +371,8 @@ pub mod host_input {
     }
 
     pub struct InsertCiphertext {
-        ciphertext: CommandCiphertext,
-        state_counter: StateCounter,
+        pub(super) ciphertext: CommandCiphertext,
+        pub(super) state_counter: StateCounter,
         ecall_cmd: u32,
     }
 
@@ -413,8 +397,8 @@ pub mod host_input {
     }
 
     pub struct InsertHandshake {
-        handshake: ExportHandshake,
-        state_counter: StateCounter,
+        pub(super) handshake: ExportHandshake,
+        pub(super) state_counter: StateCounter,
         ecall_cmd: u32,
     }
 
@@ -524,24 +508,10 @@ pub mod host_output {
     impl HostOutput for RegisterNotification {}
 
     pub struct GetState {
-        pub ecall_output: Option<output::ReturnState>,
+        pub enclave_output: output::ReturnState,
     }
 
-    impl HostOutput for GetState {
-        type EnclaveOutput = output::ReturnState;
-
-        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
-            self.ecall_output = Some(output);
-
-            Ok(self)
-        }
-    }
-
-    impl GetState {
-        pub fn new() -> Self {
-            GetState { ecall_output: None }
-        }
-    }
+    impl HostOutput for GetState {}
 
     pub struct GetUserCounter {
         pub enclave_output: output::ReturnUserCounter,

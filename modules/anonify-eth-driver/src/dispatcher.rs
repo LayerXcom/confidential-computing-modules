@@ -252,7 +252,7 @@ impl Dispatcher {
         let eid = self.inner.read().enclave_id;
         let input = host_input::GetState::new(ciphertext, GET_STATE_CMD);
         let state = GetStateWorkflow::run(input, eid)?
-            .ecall_output
+            .enclave_output
             .ok_or(HostError::EnclaveOutputNotSet)?;
 
         let bytes: Vec<u8> = bincode::deserialize(&state.state.as_bytes())?;
