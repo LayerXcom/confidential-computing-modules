@@ -1,6 +1,6 @@
-use super::MAX_MEM_SIZE;
 use super::executor::CommandExecutor;
 use super::plaintext::CommandPlaintext;
+use super::MAX_MEM_SIZE;
 use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{
@@ -10,7 +10,6 @@ use frame_common::{
 };
 use frame_enclave::StateRuntimeEnclaveUseCase;
 use frame_runtime::traits::*;
-use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
 /// A message sender that encrypts commands

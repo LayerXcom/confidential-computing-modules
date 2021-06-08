@@ -103,7 +103,7 @@ where
         self.enclave_context
             .verify_state_counter_increment(self.enclave_input.state_counter())?;
         group_key.process_handshake(
-            enclave_context.store_path_secrets(),
+            self.enclave_context.store_path_secrets(),
             &handshake,
             #[cfg(feature = "backup-enable")]
             |ps_id, roster_idx| C::recover_path_secret(self.enclave_context, ps_id, roster_idx),

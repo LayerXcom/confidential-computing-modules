@@ -11,7 +11,6 @@ use frame_common::{
 use frame_enclave::StateRuntimeEnclaveUseCase;
 use frame_runtime::traits::*;
 use frame_sodium::{rng::SgxRng, SodiumCiphertext};
-use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
 /// A message sender that encrypts commands
@@ -138,7 +137,7 @@ where
             decrypted_cmds.counter(),
         )?;
         // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
-        let state_iter = decrypted_cmds.state_transition(enclave_context.clone())?;
+        let state_iter = decrypted_cmds.state_transition(self.enclave_context.clone())?;
 
         if let Some(notify_state) = self
             .enclave_context
