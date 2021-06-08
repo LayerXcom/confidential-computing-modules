@@ -31,34 +31,35 @@ impl Notifier {
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct RegisterNotification<AP: AccessPolicy> {
+#[derive(Debug, Clone)]
+pub struct RegisterNotification<'c, C, AP: AccessPolicy> {
     enclave_input: input::RegisterNotification<AP>,
+    enclave_context: &'c C,
 }
 
-impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for RegisterNotification<AP> {
+impl<'c, C, AP: AccessPolicy> StateRuntimeEnclaveUseCase<'c, C> for RegisterNotification<'c, C, AP>
+where
+    C: ContextOps<S = StateType> + Clone,
+{
     type EI = SodiumCiphertext;
     type EO = output::Empty;
 
-    fn new<C>(enclave_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
+    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         let buf = enclave_context.decrypt(&enclave_input)?;
         let enclave_input = serde_json::from_slice(&buf[..])?;
-        Ok(Self { enclave_input })
+        Ok(Self {
+            enclave_input,
+            enclave_context,
+        })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
         self.enclave_input.access_policy().verify()
     }
 
-    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
+    fn run(self) -> anyhow::Result<Self::EO> {
         let account_id = self.enclave_input.access_policy().into_account_id();
-        enclave_context.set_notification(account_id);
+        self.enclave_context.set_notification(account_id);
 
         Ok(output::Empty::default())
     }
