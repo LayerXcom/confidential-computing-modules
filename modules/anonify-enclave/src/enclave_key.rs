@@ -31,29 +31,28 @@ const FILLED_REPORT_DATA_SIZE: usize = HASHED_PUBKEY_SIZE + ENCLAVE_ENCRYPTION_K
 const REPORT_DATA_SIZE: usize = 64;
 pub const DEC_KEY_FILE_NAME: &str = "sr_enclave_decryption_key";
 
-#[derive(Debug, Clone, Default)]
-pub struct EncryptionKeyGetter;
+#[derive(Debug, Clone)]
+pub struct EncryptionKeyGetter<'c, C> {
+    enclave_context: &'c C,
+}
 
-impl StateRuntimeEnclaveUseCase for EncryptionKeyGetter {
+impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for EncryptionKeyGetter<'c, C>
+where
+    C: ContextOps<S = StateType> + Clone,
+{
     type EI = input::Empty;
     type EO = output::ReturnEncryptionKey;
 
-    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        Ok(Self::default())
+    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+        Ok(Self { enclave_context })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
         Ok(())
     }
 
-    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        let enclave_encryption_key = enclave_context.enclave_encryption_key()?;
+    fn run(self) -> anyhow::Result<Self::EO> {
+        let enclave_encryption_key = self.enclave_context.enclave_encryption_key()?;
 
         Ok(output::ReturnEncryptionKey::new(enclave_encryption_key))
     }
