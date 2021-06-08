@@ -85,25 +85,25 @@ where
 }
 
 /// A message receiver that decrypt commands and make state transition
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct CommandByEnclaveKeyReceiver<AP> {
+#[derive(Debug, Clone)]
+pub struct CommandByEnclaveKeyReceiver<'c, C, AP> {
     enclave_input: input::InsertCiphertext,
+    enclave_context: &'c C,
     ap: PhantomData<AP>,
 }
 
-impl<AP> StateRuntimeEnclaveUseCase for CommandByEnclaveKeyReceiver<AP>
+impl<'c, C, AP> StateRuntimeEnclaveUseCase<'c, C> for CommandByEnclaveKeyReceiver<'c, C, AP>
 where
+    C: ContextOps<S = StateType> + Clone,
     AP: AccessPolicy,
 {
     type EI = input::InsertCiphertext;
     type EO = output::ReturnNotifyState;
 
-    fn new<C>(enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
+    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self {
             enclave_input,
+            enclave_context,
             ap: PhantomData,
         })
     }
@@ -116,20 +116,18 @@ where
     /// 1. Verify the order of transactions for each State Runtime node (verify_state_counter_increment)
     /// 2. Verify the order of transactions for each user (verify_user_counter_increment)
     /// 3. State transitions
-    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
+    fn run(self) -> anyhow::Result<Self::EO> {
         let ciphertext: &SodiumCiphertext = match self.enclave_input.ciphertext() {
             CommandCiphertext::EnclaveKey(ciphertext) => ciphertext.encrypted_state(),
             _ => return Err(anyhow!("CommandCiphertext is not for enclave_key")),
         };
 
         // Even if group_key's ratchet operations and state transitions fail, state_counter must be incremented so it doesn't get stuck.
-        enclave_context.verify_state_counter_increment(self.enclave_input.state_counter())?;
+        self.enclave_context
+            .verify_state_counter_increment(self.enclave_input.state_counter())?;
 
         let mut output = output::ReturnNotifyState::default();
-        let enclave_decryption_key = enclave_context.enclave_decryption_key()?;
+        let enclave_decryption_key = self.enclave_context.enclave_decryption_key()?;
         let decrypted_cmds = CommandExecutor::<R, C, AP>::decrypt_with_enclave_key(
             ciphertext,
             &enclave_decryption_key,
@@ -137,14 +135,17 @@ where
 
         // Since the command data is valid for the error at the time of state transition,
         // `user_counter` must be verified and incremented before the state transition.
-        enclave_context.verify_user_counter_increment(
+        self.enclave_context.verify_user_counter_increment(
             decrypted_cmds.my_account_id(),
             decrypted_cmds.counter(),
         )?;
         // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
         let state_iter = decrypted_cmds.state_transition(enclave_context.clone())?;
 
-        if let Some(notify_state) = enclave_context.update_state(state_iter.0, state_iter.1) {
+        if let Some(notify_state) = self
+            .enclave_context
+            .update_state(state_iter.0, state_iter.1)
+        {
             let json = serde_json::to_vec(&notify_state)?;
             let bytes = bincode::serialize(&json[..])?;
             output.update(bytes);
