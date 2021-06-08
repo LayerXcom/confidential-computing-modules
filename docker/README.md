@@ -26,6 +26,8 @@ Should match to the name: `docker/base-*.Dockerfile` in order for CI to build & 
   - for developing in the occlum-enable environment
 - `base-occlum-host.Dockerfile`
   - for a non-sgx environment to communicate with occlum enclave
+- `base-anonify-dev-pgx.Dockerfile`
+  - [pgx](https://github.com/zombodb/pgx) is installed in addition to `anonify-dev` container.
 
 #### Example `docker run` command
 
@@ -47,6 +49,3 @@ $ docker run  --env-file .env -v `pwd`:/home/anonify-dev/anonify --rm -it anonif
 ### Application Images
 
 Should match to the name: `docker/example-*.Dockerfile` in order for CI to build & push every time main branch has been changed (supposing app codes have been modified).
-
-- `example-erc20.Dockerfile`
-- `example-keyvault.Dockerfile`

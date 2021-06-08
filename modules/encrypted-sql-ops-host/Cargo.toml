@@ -1,0 +1,10 @@
+[package]
+authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
+edition = "2018"
+name = "module-encrypted-sql-ops-host"
+version = "0.1.0"
+
+[dependencies]
+frame-host = { path = "../../frame/host" }
+module-encrypted-sql-ops-ecall-types = {path = "../encrypted-sql-ops-ecall-types", features = ["std"]}
+anyhow = "1.0"

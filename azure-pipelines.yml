@@ -22,6 +22,19 @@ stages:
         - script: docker-compose down
           condition: always()
           displayName: 'rust-sgx-sdk docker-compose down'
+
+        - script: |
+            cp .env.sample .env
+            export SPID=$(SPID)
+            export SUB_KEY=$(SUB_KEY)
+
+            docker-compose -f pgx-docker-compose.yml up -d
+            docker-compose -f pgx-docker-compose.yml exec -T sgx_machine_pgx bash -c "cd anonify && ./scripts/encrypted-sql-ops-pg-test.sh"
+          displayName: 'Run encrypted-sql-ops-pg integration tests'
+        - script: docker-compose -f pgx-docker-compose.yml down
+          condition: always()
+          displayName: 'pgx docker-compose down'
+
         # NOTE: temporary removed: Add once occlum version bump up to 0.23.0
         # - script: |
         #     cp .env.sample .env
@@ -55,7 +68,7 @@ stages:
           containerRegistry: anonify-ci-cd-acr
           repository: erc20-state-runtime
           tags: latest
-          dockerfile: ./docker/erc20.Dockerfile
+          dockerfile: ./docker/example-erc20.Dockerfile
           buildContext: .
           arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
       - task: Docker@2
@@ -65,7 +78,7 @@ stages:
           containerRegistry: anonify-ci-cd-acr
           repository: key-vault-for-erc20
           tags: latest
-          dockerfile: ./docker/keyvault.Dockerfile
+          dockerfile: ./docker/example-keyvault.Dockerfile
           buildContext: .
           arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
       - script: |
@@ -124,6 +137,25 @@ stages:
         dockerfile: ./docker/base-anonify-dev.Dockerfile
         buildContext: .
 
+    - task: Docker@2
+      displayName: Build anonify-dev-pgx image
+      inputs:
+        command: build
+        containerRegistry: anonify-ci-cd-acr
+        repository: anonify-dev-pgx
+        tags: latest
+        dockerfile: ./docker/base-anonify-dev-pgx.Dockerfile
+        buildContext: .
+    - task: Docker@2
+      displayName: Push anonify-dev-pgx image
+      inputs:
+        command: push
+        containerRegistry: anonify-ci-cd-acr
+        repository: anonify-dev-pgx
+        tags: latest
+        dockerfile: ./docker/base-anonify-dev-pgx.Dockerfile
+        buildContext: .
+
     - script: docker image prune -f
       displayName: Remove dangling images
 
@@ -153,6 +185,7 @@ stages:
         tags: latest
         dockerfile: ./docker/example-erc20.Dockerfile
         buildContext: .
+
     - task: Docker@2
       displayName: Build key-vault for erc20 image
       inputs:
@@ -172,5 +205,26 @@ stages:
         tags: latest
         dockerfile: ./docker/example-keyvault.Dockerfile
         buildContext: .
+
+    - task: Docker@2
+      displayName: Build encrypted-sql-ops-pg image
+      inputs:
+        command: build
+        containerRegistry: anonify-ci-cd-acr
+        repository: encrypted-sql-ops-pg
+        tags: latest
+        dockerfile: ./docker/example-encrypted-sql-ops-pg.Dockerfile
+        buildContext: .
+        arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
+    - task: Docker@2
+      displayName: Push encrypted-sql-ops-pg image
+      inputs:
+        command: push
+        containerRegistry: anonify-ci-cd-acr
+        repository: encrypted-sql-ops-pg
+        tags: latest
+        dockerfile: ./docker/example-encrypted-sql-ops-pg.Dockerfile
+        buildContext: .
+
     - script: docker image prune -f
       displayName: Remove dangling images

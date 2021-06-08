@@ -1,0 +1,28 @@
+# Use this to run anonify-dev-pgx docker image.
+# $ UID=`id -u` GID=`id -g` docker-compose -f pgx-docker-compose.yml up -d
+
+version: "3.7"
+services:
+  sgx_machine_pgx:
+    image: anonify.azurecr.io/anonify-dev-pgx:latest
+    volumes:
+      - .:/home/anonify-dev/anonify
+      - /var/run/aesmd:/var/run/aesmd
+    devices:
+      - "/dev/sgx/enclave"
+    user: "anonify-dev:anonify-dev"
+    environment:
+      RUST_BACKTRACE: 1
+      RUST_LOG: debug
+      SPID: ${SPID}
+      SUB_KEY: ${SUB_KEY}
+      IAS_URL: ${IAS_URL}
+      KEY_VAULT_ENDPOINT_FOR_STATE_RUNTIME: "${KEY_VAULT_FQDN}:${KEY_VAULT_PORT}"
+      KEY_VAULT_ENDPOINT_FOR_KEY_VAULT: "${KEY_VAULT_IP_ADDRESS}:${KEY_VAULT_PORT}"
+      ENCLAVE_PKG_NAME: ${ENCLAVE_PKG_NAME}
+      KEY_VAULT_ENCLAVE_PKG_NAME: ${KEY_VAULT_ENCLAVE_PKG_NAME}
+      CMD_DEC_SECRET_DIR: ${CMD_DEC_SECRET_DIR}
+      IAS_ROOT_CERT_PATH: ${IAS_ROOT_CERT_PATH}
+      FIXUID_MODE: verbose
+    stdin_open: true
+    tty: true

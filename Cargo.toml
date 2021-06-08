@@ -20,6 +20,9 @@ members = [
     "modules/key-vault-ecall-types",
     "modules/occlum-enclave",
     "modules/occlum-host",
+    "modules/encrypted-sql-ops-enclave",
+    "modules/encrypted-sql-ops-host",
+    "modules/encrypted-sql-ops-ecall-types",
     "nodes/key-vault",
     "nodes/state-runtime/api",
     "nodes/state-runtime/server",
@@ -31,9 +34,14 @@ members = [
     "example/occlum/rpc-types",
     "example/occlum/enclave",
     "example/occlum/host",
+    "example/encrypted-sql-ops/enclave",
     "example/wallet",
     "tests/integration",
     "tests/units/enclave",
     "tests/units/host",
     "tests/utils",
+]
+exclude = [
+    # If adding this to workspace, top-level `cargo check` needs `pgx` installed and initialized.
+    "example/encrypted-sql-ops/pg-extension",
 ]
