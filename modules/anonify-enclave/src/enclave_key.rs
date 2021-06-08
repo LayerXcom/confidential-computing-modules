@@ -1,6 +1,7 @@
 //! This module contains enclave specific cryptographic logics.
 
 use crate::error::{EnclaveError, Result};
+use anonify_ecall_types::cmd::GET_ENCLAVE_ENCRYPTION_KEY_CMD;
 use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
@@ -42,6 +43,7 @@ where
 {
     type EI = input::Empty;
     type EO = output::ReturnEncryptionKey;
+    const ENCLAVE_USE_CASE_ID: u32 = GET_ENCLAVE_ENCRYPTION_KEY_CMD;
 
     fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })

@@ -3,7 +3,9 @@ use frame_config::{ANONIFY_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
 use frame_enclave::BasicEnclaveUseCase;
 use frame_mra_tls::{AttestedTlsConfig, Server, ServerConfig};
 use frame_runtime::traits::*;
+use key_vault_ecall_types::cmd::{START_SERVER_CMD, STOP_SERVER_CMD};
 use key_vault_ecall_types::*;
+
 use std::env;
 
 /// A server starter
@@ -18,6 +20,7 @@ where
 {
     type EI = input::CallServerStarter;
     type EO = output::Empty;
+    const ENCLAVE_USE_CASE_ID: u32 = START_SERVER_CMD;
 
     fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
@@ -58,6 +61,7 @@ where
 {
     type EI = input::CallServerStopper;
     type EO = output::Empty;
+    const ENCLAVE_USE_CASE_ID: u32 = STOP_SERVER_CMD;
 
     fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })

@@ -1,3 +1,5 @@
+use anonify_ecall_types::cmd::FETCH_HANDSHAKE_TREEKEM_CMD;
+use anonify_ecall_types::cmd::SEND_HANDSHAKE_TREEKEM_CMD;
 use anonify_ecall_types::*;
 use anyhow::{anyhow, Result};
 use frame_common::{crypto::Sha256, state_types::StateType};
@@ -19,6 +21,7 @@ where
 {
     type EI = input::Empty;
     type EO = output::ReturnHandshake;
+    const ENCLAVE_USE_CASE_ID: u32 = SEND_HANDSHAKE_TREEKEM_CMD;
 
     fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
@@ -82,6 +85,7 @@ where
 {
     type EI = input::InsertHandshake;
     type EO = output::Empty;
+    const ENCLAVE_USE_CASE_ID: u32 = FETCH_HANDSHAKE_TREEKEM_CMD;
 
     fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self {

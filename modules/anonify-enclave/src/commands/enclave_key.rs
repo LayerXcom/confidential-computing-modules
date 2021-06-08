@@ -1,6 +1,8 @@
 use super::executor::CommandExecutor;
 use super::plaintext::CommandPlaintext;
 use super::MAX_MEM_SIZE;
+use anonify_ecall_types::cmd::FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD;
+use anonify_ecall_types::cmd::SEND_COMMAND_ENCLAVE_KEY_CMD;
 use anonify_ecall_types::*;
 use anyhow::anyhow;
 use frame_common::{
@@ -30,6 +32,7 @@ where
 {
     type EI = input::Command;
     type EO = output::Command;
+    const ENCLAVE_USE_CASE_ID: u32 = SEND_COMMAND_ENCLAVE_KEY_CMD;
 
     fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         let buf = enclave_context.decrypt(enclave_input.ciphertext())?;
@@ -100,6 +103,7 @@ where
 {
     type EI = input::InsertCiphertext;
     type EO = output::ReturnNotifyState;
+    const ENCLAVE_USE_CASE_ID: u32 = FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD;
 
     fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self {

@@ -5,8 +5,10 @@ use crate::{
     kvs::{UserCounterDB, UserStateDB},
     notify::Notifier,
 };
+use anonify_ecall_types::cmd::{GET_STATE_CMD, GET_USER_COUNTER_CMD, SEND_REGISTER_REPORT_CMD};
 use anonify_ecall_types::*;
 use anyhow::{anyhow, bail};
+use core::marker::PhantomData;
 use frame_common::{
     crypto::AccountId,
     state_types::{
@@ -39,7 +41,6 @@ use frame_treekem::{
 };
 use rand_core::{CryptoRng, RngCore};
 use remote_attestation::{EncodedQuote, QuoteTarget};
-use core::marker::PhantomData;
 use std::{
     env,
     prelude::v1::*,
@@ -460,6 +461,7 @@ where
 {
     type EI = SodiumCiphertext;
     type EO = output::ReturnState;
+    const ENCLAVE_USE_CASE_ID: u32 = GET_STATE_CMD;
 
     fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         let buf = enclave_context.decrypt(&enclave_input)?;
@@ -505,6 +507,7 @@ where
 {
     type EI = SodiumCiphertext;
     type EO = output::ReturnUserCounter;
+    const ENCLAVE_USE_CASE_ID: u32 = GET_USER_COUNTER_CMD;
 
     fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         let buf = enclave_context.decrypt(&enclave_input)?;
@@ -540,6 +543,7 @@ where
 {
     type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
+    const ENCLAVE_USE_CASE_ID: u32 = SEND_REGISTER_REPORT_CMD;
 
     fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })

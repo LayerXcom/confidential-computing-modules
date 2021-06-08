@@ -1,3 +1,4 @@
+use anonify_ecall_types::cmd::REGISTER_NOTIFICATION_CMD;
 use anonify_ecall_types::*;
 use frame_common::{crypto::AccountId, state_types::StateType, AccessPolicy};
 use frame_enclave::StateRuntimeEnclaveUseCase;
@@ -43,6 +44,7 @@ where
 {
     type EI = SodiumCiphertext;
     type EO = output::Empty;
+    const ENCLAVE_USE_CASE_ID: u32 = REGISTER_NOTIFICATION_CMD;
 
     fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         let buf = enclave_context.decrypt(&enclave_input)?;

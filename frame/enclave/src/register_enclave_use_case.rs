@@ -2,7 +2,7 @@
 macro_rules! register_enclave_use_case {
     (   $ctx: expr,
         $(  $(#[$feature: meta])*
-            ($cmd: path, $use_case: ty),
+            $use_case: ty,
         )*
     ) => {
         #[no_mangle]
@@ -17,7 +17,7 @@ macro_rules! register_enclave_use_case {
             match cmd {
                 $(
                     $(#[$feature])*
-                    $cmd => <$use_case>::ecall_entry_point(input_buf,input_len,output_buf,ecall_max_size,output_len, $ctx),
+                    <$use_case>::ENCLAVE_USE_CASE_ID => <$use_case>::ecall_entry_point(input_buf,input_len,output_buf,ecall_max_size,output_len, $ctx),
                 )*
                 _ => unreachable!("Not registered the ecall command"),
             }

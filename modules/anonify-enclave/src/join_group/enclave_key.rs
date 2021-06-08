@@ -1,3 +1,4 @@
+use anonify_ecall_types::cmd::JOIN_GROUP_ENCLAVE_KEY_CMD;
 use anonify_ecall_types::*;
 use anyhow::Result;
 use frame_common::state_types::StateType;
@@ -16,6 +17,7 @@ where
 {
     type EI = input::Empty;
     type EO = output::ReturnJoinGroup;
+    const ENCLAVE_USE_CASE_ID: u32 = JOIN_GROUP_ENCLAVE_KEY_CMD;
 
     fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })

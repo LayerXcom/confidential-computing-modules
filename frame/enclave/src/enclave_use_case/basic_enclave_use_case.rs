@@ -12,6 +12,9 @@ where
     type EI: EnclaveInput + DeserializeOwned;
     type EO: EnclaveOutput + Serialize;
 
+    /// Use the same ID with EcallController.
+    const ENCLAVE_USE_CASE_ID: u32;
+
     fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self>;
 
     fn run(self) -> anyhow::Result<Self::EO>;

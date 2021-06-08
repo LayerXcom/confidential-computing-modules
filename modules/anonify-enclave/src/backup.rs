@@ -1,6 +1,10 @@
 #![cfg(feature = "backup-enable")]
 
 use crate::enclave_key::DEC_KEY_FILE_NAME;
+use anonify_ecall_types::cmd::{
+    BACKUP_ENCLAVE_KEY_CMD, BACKUP_PATH_SECRETS_CMD, RECOVER_ENCLAVE_KEY_CMD,
+    RECOVER_PATH_SECRETS_CMD,
+};
 use anonify_ecall_types::*;
 use anyhow::{anyhow, Result};
 use frame_common::state_types::StateType;
@@ -25,6 +29,7 @@ where
 {
     type EI = input::Empty;
     type EO = output::Empty;
+    const ENCLAVE_USE_CASE_ID: u32 = BACKUP_PATH_SECRETS_CMD;
 
     fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
@@ -73,6 +78,7 @@ where
 {
     type EI = input::Empty;
     type EO = output::Empty;
+    const ENCLAVE_USE_CASE_ID: u32 = RECOVER_PATH_SECRETS_CMD;
 
     fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
@@ -117,6 +123,7 @@ where
 {
     type EI = input::Empty;
     type EO = output::Empty;
+    const ENCLAVE_USE_CASE_ID: u32 = BACKUP_ENCLAVE_KEY_CMD;
 
     fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
@@ -144,6 +151,7 @@ where
 {
     type EI = input::Empty;
     type EO = output::Empty;
+    const ENCLAVE_USE_CASE_ID: u32 = RECOVER_ENCLAVE_KEY_CMD;
 
     fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
