@@ -206,6 +206,14 @@ impl EcallController for RecoverWorkflow {
     type EO = output::Empty;
     type HO = host_output::Recover;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(host_input::Recover::default())
+    }
+
+    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::Recover::default())
+    }
 }
 
 pub struct GetUserCounterWorkflow;
@@ -472,13 +480,6 @@ pub mod host_input {
     }
 
     impl HostInput for Recover {
-        type EnclaveInput = input::Empty;
-        type HostOutput = host_output::Recover;
-
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            Ok((Self::EnclaveInput::default(), Self::HostOutput::default()))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
@@ -586,7 +587,5 @@ pub mod host_output {
     #[derive(Default)]
     pub struct Recover;
 
-    impl HostOutput for Recover {
-        type EnclaveOutput = output::Empty;
-    }
+    impl HostOutput for Recover {}
 }
