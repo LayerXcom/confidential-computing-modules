@@ -445,40 +445,41 @@ impl AnonifyEnclaveContext {
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct GetState<AP: AccessPolicy> {
+#[derive(Debug, Clone)]
+pub struct GetState<'c, C, AP: AccessPolicy> {
     enclave_input: input::GetState<AP>,
+    enclave_context: &'c C,
 }
 
-impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for GetState<AP> {
+impl<'c, C, AP: AccessPolicy> StateRuntimeEnclaveUseCase<'c, C> for GetState<'c, C, AP>
+where
+    C: ContextOps<S = StateType> + Clone,
+{
     type EI = SodiumCiphertext;
     type EO = output::ReturnState;
 
-    fn new<C>(enclave_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
+    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         let buf = enclave_context.decrypt(&enclave_input)?;
         let enclave_input = serde_json::from_slice(&buf[..])?;
 
-        Ok(Self { enclave_input })
+        Ok(Self {
+            enclave_input,
+            enclave_context,
+        })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
         self.enclave_input.access_policy().verify()
     }
 
-    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
+    fn run(self) -> anyhow::Result<Self::EO> {
         let input::GetState {
             access_policy,
             runtime_params,
             state_name,
         } = self.enclave_input;
         let user_state = C::get_state_by_state_name::<_, R, _>(
-            enclave_context.clone(),
+            self.enclave_context.clone(),
             &state_name,
             access_policy.into_account_id(),
             runtime_params,
