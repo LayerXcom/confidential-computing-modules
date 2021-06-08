@@ -1,3 +1,4 @@
+use super::MAX_MEM_SIZE;
 use super::executor::CommandExecutor;
 use super::plaintext::CommandPlaintext;
 use anonify_ecall_types::*;
@@ -13,28 +14,28 @@ use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 
 /// A message sender that encrypts commands
-#[derive(Debug, Clone, Default)]
-pub struct CommandByTreeKemSender<AP: AccessPolicy> {
+#[derive(Debug, Clone)]
+pub struct CommandByTreeKemSender<'c, C, AP: AccessPolicy> {
     command_plaintext: CommandPlaintext<AP>,
+    enclave_context: &'c C,
     user_id: Option<AccountId>,
 }
 
-impl<AP> StateRuntimeEnclaveUseCase for CommandByTreeKemSender<AP>
+impl<'c, C, AP> StateRuntimeEnclaveUseCase<'c, C> for CommandByTreeKemSender<'c, C, AP>
 where
+    C: ContextOps<S = StateType> + Clone,
     AP: AccessPolicy,
 {
     type EI = input::Command;
     type EO = output::Command;
 
-    fn new<C>(enclave_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
+    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         let buf = enclave_context.decrypt(enclave_input.ciphertext())?;
         let command_plaintext = serde_json::from_slice(&buf[..])?;
 
         Ok(Self {
             command_plaintext,
+            enclave_context,
             user_id: enclave_input.user_id(),
         })
     }
@@ -58,18 +59,15 @@ where
         Ok(())
     }
 
-    fn run<C>(self, enclave_context: &C, max_mem_size: usize) -> anyhow::Result<Self::EO>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        let group_key = &mut *enclave_context.write_group_key();
+    fn run(self) -> anyhow::Result<Self::EO> {
+        let group_key = &mut *self.enclave_context.write_group_key();
         let roster_idx = group_key.my_roster_idx();
         // ratchet sender's app keychain per tx.
         group_key.sender_ratchet(roster_idx as usize)?;
 
         let my_account_id = self.command_plaintext.access_policy().into_account_id();
         let ciphertext = CommandExecutor::<R, C, AP>::new(my_account_id, self.command_plaintext)?
-            .encrypt_with_treekem(group_key, max_mem_size)?;
+            .encrypt_with_treekem(group_key, MAX_MEM_SIZE)?;
 
         let msg = Sha256::hash_for_attested_treekem_tx(
             &ciphertext.encode(),
@@ -77,7 +75,7 @@ where
             ciphertext.generation(),
             ciphertext.epoch(),
         );
-        let enclave_sig = enclave_context.sign(msg.as_bytes())?;
+        let enclave_sig = self.enclave_context.sign(msg.as_bytes())?;
         let command_output = output::Command::new(
             CommandCiphertext::TreeKem(ciphertext),
             enclave_sig.0,
