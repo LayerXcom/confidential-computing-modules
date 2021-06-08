@@ -110,7 +110,12 @@ impl EthSender {
         .await
     }
 
-    pub async fn handshake(&self, host_output: &host_output::Handshake) -> Result<H256> {
+    pub async fn handshake(
+        &self,
+        host_output: &host_output::Handshake,
+        signer: Address,
+        gas: u64,
+    ) -> Result<H256> {
         info!("Sending a handshake to blockchain: {:?}", host_output);
         Retry::new(
             "handshake",
@@ -118,7 +123,11 @@ impl EthSender {
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
-        .spawn_async(|| async { self.contract.handshake(host_output.clone()).await })
+        .spawn_async(|| async {
+            self.contract
+                .handshake(host_output.clone(), signer, gas)
+                .await
+        })
         .await
     }
 

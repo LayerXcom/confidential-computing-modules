@@ -271,7 +271,7 @@ impl Dispatcher {
 
     pub async fn handshake(&self, signer: Address, gas: u64) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Handshake::new(signer, gas, SEND_HANDSHAKE_TREEKEM_CMD);
+        let input = host_input::Handshake::new(SEND_HANDSHAKE_TREEKEM_CMD);
         let eid = inner.enclave_id;
         let host_output = HandshakeWorkflow::run(input, eid)?;
 
@@ -279,7 +279,7 @@ impl Dispatcher {
             .sender
             .as_ref()
             .ok_or(HostError::AddressNotSet)?
-            .handshake(&host_output)
+            .handshake(&host_output, signer, gas)
             .await?;
 
         Ok(tx_hash)

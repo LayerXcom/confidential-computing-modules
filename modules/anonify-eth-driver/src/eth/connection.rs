@@ -179,13 +179,19 @@ impl Web3Contract {
         }
     }
 
-    pub async fn handshake(&self, output: host_output::Handshake) -> Result<H256> {
-        let ecall_output = output.ecall_output.ok_or(HostError::EnclaveOutputNotSet)?;
+    pub async fn handshake(
+        &self,
+        output: host_output::Handshake,
+        signer: Address,
+        gas: u64,
+    ) -> Result<H256> {
+        let ecall_output = output
+            .enclave_output
+            .ok_or(HostError::EnclaveOutputNotSet)?;
         let handshake = ecall_output.handshake();
         let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
-        let gas = output.gas;
         let trace_id = get_trace_id();
 
         self.contract
@@ -199,7 +205,7 @@ impl Web3Contract {
                     handshake.prior_epoch() + 1,
                     trace_id,
                 ),
-                output.signer,
+                signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
             )
             .await

@@ -74,6 +74,14 @@ impl EcallController for HandshakeWorkflow {
     type EO = output::ReturnHandshake;
     type HO = host_output::Handshake;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(input::Empty::default())
+    }
+
+    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::Handshake { enclave_output })
+    }
 }
 
 pub struct RegisterNotificationWorkflow;
@@ -224,18 +232,12 @@ pub mod host_input {
     }
 
     pub struct Handshake {
-        signer: Address,
-        gas: u64,
         ecall_cmd: u32,
     }
 
     impl Handshake {
-        pub fn new(signer: Address, gas: u64, ecall_cmd: u32) -> Self {
-            Handshake {
-                signer,
-                gas,
-                ecall_cmd,
-            }
+        pub fn new(ecall_cmd: u32) -> Self {
+            Handshake { ecall_cmd }
         }
     }
 
@@ -501,30 +503,10 @@ pub mod host_output {
 
     #[derive(Debug, Clone)]
     pub struct Handshake {
-        pub signer: Address,
-        pub gas: u64,
-        pub ecall_output: Option<output::ReturnHandshake>,
+        pub enclave_output: output::ReturnHandshake,
     }
 
-    impl HostOutput for Handshake {
-        type EnclaveOutput = output::ReturnHandshake;
-
-        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
-            self.ecall_output = Some(output);
-
-            Ok(self)
-        }
-    }
-
-    impl Handshake {
-        pub fn new(signer: Address, gas: u64) -> Self {
-            Handshake {
-                signer,
-                gas,
-                ecall_output: None,
-            }
-        }
-    }
+    impl HostOutput for Handshake {}
 
     #[derive(Default)]
     pub struct RegisterNotification;
