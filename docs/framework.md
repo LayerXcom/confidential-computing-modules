@@ -96,7 +96,6 @@ impl EcallController for MyEcallController {
     type EO = MyEnclaveOutput;
     type HO = MyHostOutput;
 
-    const ENCLAVE_USE_CASE_ID: u32 = MY_ENCLAVE_USE_CASE_ID;
     const EI_MAX_SIZE: usize = 1024;
 
     fn translate_input(host_input: Self::HI) -> Result<Self::EI> { ... }
@@ -123,16 +122,6 @@ impl EcallController for MyEcallController {
 例えばHost側では暗号文で、Enclave内では平文でデータ処理を行うようなアプリケーションを開発するならば、Enclave Input/Output までは暗号文で扱い、Enclave内で更に追加で平文のデータ構造を持つようにしましょう。
 
 ```rust
-    const ENCLAVE_USE_CASE_ID: u32 = MY_ENCLAVE_USE_CASE_ID;
-```
-
-の部分は、コントローラーが呼び出すべきユースケースを指定しています。
-EnclaveUseCase 側の定義にも全く同じ const 定義があったのを覚えているでしょうか？（忘れていたら前のセクションに戻ってください）
-
-.edl で定義されている唯一のecall関数 `ecall_entry_point()` は、 `cmd: u32` という引数によって Enclave 処理をディスパッチしています。コントローラーとユースケースの紐付けがこの `u32` によって行われているというわけです。
-（通常は `impl<U: UseCase> Controller<U> for MyController {}` のように型パラメータで紐付けることが自然ですが、Cのプリミティブ変数でディスパッチを表現することが必要なのでこうなっています。）
-
-```rust
     const EI_MAX_SIZE: usize = 1024;
 ```
 
@@ -147,10 +136,13 @@ Enclave Input が固定長フィールドのみから構成される場合はシ
 
 ```rust
 register_enclave_use_case!(
+    &*MY_ENCLAVE_CONTEXT,
     MyEnclaveUseCase,
     MyEnclaveUseCase2,
 );
 ```
+
+第一引数は、環境変数などからかき集めたEnclaveの設定値です。第二引数以降に use case を列挙します。
 
 このマクロによって、大まかに言って下記のコードが生成されます。
 
@@ -173,8 +165,9 @@ pub extern "C" fn ecall_entry_point(
 }
 ```
 
-コントローラーを呼び出すと、内部的に `ecall_entry_point(MyEcallController::ENCLAVE_USE_CASE_ID, ...)` が呼び出されます。
+後述しますが、コントローラーを起動する際に use case のIDを引数 ( `cmd: u32` ) として渡します。コントローラーは内部的に `ecall_entry_point(cmd, ...)` が呼び出します。
 IDの一致により `MyEcallController` -> `MyEnclaveUseCase` の呼び出しが実現されてますね。
+（通常は `impl<U: UseCase> Controller<U> for MyController {}` のように型パラメータで紐付けることが自然ですが、Cのプリミティブ変数でディスパッチを表現することが必要なのでこうなっています。）
 
 ### コントローラーの呼び出し
 
@@ -189,8 +182,10 @@ fn main() {
         .expect("Failed to initialize enclave.");
     let eid = enclave.geteid();
 
-    let my_host_output = MyEcallController::run(my_host_input, eid).unwrap();
+    let my_host_output = MyEcallController::run(my_host_input, MY_ENCLAVE_USE_CASE_ID, eid).unwrap();
 
     ...
 }
 ```
+
+`MY_ENCLAVE_USE_CASE_ID` はコントローラーが呼び出すべきユースケースを指定しています。
