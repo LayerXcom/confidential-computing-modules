@@ -39,6 +39,7 @@ use frame_treekem::{
 };
 use rand_core::{CryptoRng, RngCore};
 use remote_attestation::{EncodedQuote, QuoteTarget};
+use core::marker::PhantomData;
 use std::{
     env,
     prelude::v1::*,
@@ -446,14 +447,16 @@ impl AnonifyEnclaveContext {
 }
 
 #[derive(Debug, Clone)]
-pub struct GetState<'c, C, AP: AccessPolicy> {
+pub struct GetState<'c, C, R, AP: AccessPolicy> {
     enclave_input: input::GetState<AP>,
     enclave_context: &'c C,
+    _p: PhantomData<R>,
 }
 
-impl<'c, C, AP: AccessPolicy> StateRuntimeEnclaveUseCase<'c, C> for GetState<'c, C, AP>
+impl<'c, C, R, AP: AccessPolicy> StateRuntimeEnclaveUseCase<'c, C> for GetState<'c, C, R, AP>
 where
     C: ContextOps<S = StateType> + Clone,
+    R: RuntimeExecutor<C, S = StateType>,
 {
     type EI = SodiumCiphertext;
     type EO = output::ReturnState;
@@ -465,6 +468,7 @@ where
         Ok(Self {
             enclave_input,
             enclave_context,
+            _p: PhantomData::default(),
         })
     }
 

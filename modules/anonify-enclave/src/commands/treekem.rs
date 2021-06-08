@@ -14,15 +14,17 @@ use std::marker::PhantomData;
 
 /// A message sender that encrypts commands
 #[derive(Debug, Clone)]
-pub struct CommandByTreeKemSender<'c, C, AP: AccessPolicy> {
+pub struct CommandByTreeKemSender<'c, C, R, AP: AccessPolicy> {
     command_plaintext: CommandPlaintext<AP>,
     enclave_context: &'c C,
     user_id: Option<AccountId>,
+    _p: PhantomData<R>,
 }
 
-impl<'c, C, AP> StateRuntimeEnclaveUseCase<'c, C> for CommandByTreeKemSender<'c, C, AP>
+impl<'c, C, R, AP> StateRuntimeEnclaveUseCase<'c, C> for CommandByTreeKemSender<'c, C, R, AP>
 where
     C: ContextOps<S = StateType> + Clone,
+    R: RuntimeExecutor<C, S = StateType>,
     AP: AccessPolicy,
 {
     type EI = input::Command;
@@ -36,6 +38,7 @@ where
             command_plaintext,
             enclave_context,
             user_id: enclave_input.user_id(),
+            _p: PhantomData::default(),
         })
     }
 
@@ -87,15 +90,16 @@ where
 
 /// A message receiver that decrypt commands and make state transition
 #[derive(Debug, Clone)]
-pub struct CommandByTreeKemReceiver<'c, C, AP> {
+pub struct CommandByTreeKemReceiver<'c, C, R, AP> {
     enclave_input: input::InsertCiphertext,
     enclave_context: &'c C,
-    ap: PhantomData<AP>,
+    _p: PhantomData<(R, AP)>,
 }
 
-impl<'c, C, AP> StateRuntimeEnclaveUseCase<'c, C> for CommandByTreeKemReceiver<'c, C, AP>
+impl<'c, C, R, AP> StateRuntimeEnclaveUseCase<'c, C> for CommandByTreeKemReceiver<'c, C, R, AP>
 where
     C: ContextOps<S = StateType> + Clone,
+    R: RuntimeExecutor<C, S = StateType>,
     AP: AccessPolicy,
 {
     type EI = input::InsertCiphertext;
@@ -105,7 +109,7 @@ where
         Ok(Self {
             enclave_input,
             enclave_context,
-            ap: PhantomData,
+            _p: PhantomData,
         })
     }
 
