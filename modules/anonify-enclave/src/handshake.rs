@@ -8,34 +8,33 @@ use frame_runtime::traits::*;
 use frame_treekem::handshake::HandshakeParams;
 
 /// A update handshake sender
-#[derive(Debug, Clone, Default)]
-pub struct HandshakeSender;
+#[derive(Debug, Clone)]
+pub struct HandshakeSender<'c, C> {
+    enclave_context: &'c C,
+}
 
-impl StateRuntimeEnclaveUseCase for HandshakeSender {
+impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for HandshakeSender<'c, C>
+where
+    C: ContextOps<S = StateType> + Clone,
+{
     type EI = input::Empty;
     type EO = output::ReturnHandshake;
 
-    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        Ok(Self::default())
+    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+        Ok(Self { enclave_context })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
         Ok(())
     }
 
-    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        let group_key = &*enclave_context.read_group_key();
+    fn run(self) -> Result<Self::EO> {
+        let group_key = &*self.enclave_context.read_group_key();
         let (handshake, path_secret) = group_key.create_handshake()?;
         let epoch = handshake.prior_epoch();
         let id = handshake.hash();
         let export_path_secret = path_secret.clone().try_into_exporting(epoch, id.as_ref())?;
-        enclave_context
+        self.enclave_context
             .store_path_secrets()
             .save_to_local_filesystem(&export_path_secret)?;
         let export_handshake = handshake.clone().into_export();
@@ -48,7 +47,8 @@ impl StateRuntimeEnclaveUseCase for HandshakeSender {
                 handshake.roster_idx(),
                 id.as_ref().to_vec(),
             );
-            enclave_context.backup_path_secret(backup_path_secret)?;
+            self.enclave_context
+                .backup_path_secret(backup_path_secret)?;
         }
 
         let msg = Sha256::hash_for_attested_treekem_tx(
@@ -57,7 +57,7 @@ impl StateRuntimeEnclaveUseCase for HandshakeSender {
             0,         // processing handshake reset generation
             epoch + 1, // handshaked next epoch should be counted
         );
-        let sig = enclave_context.sign(msg.as_bytes())?;
+        let sig = self.enclave_context.sign(msg.as_bytes())?;
         let enclave_sig = sig.0;
         let recovery_id = sig.1;
 
