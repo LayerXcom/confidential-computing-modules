@@ -92,6 +92,14 @@ impl EcallController for RegisterNotificationWorkflow {
     type EO = output::Empty;
     type HO = host_output::RegisterNotification;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(host_input.ciphertext)
+    }
+
+    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::RegisterNotification::default())
+    }
 }
 
 pub struct GetStateWorkflow;
@@ -257,7 +265,7 @@ pub mod host_input {
     }
 
     pub struct RegisterNotification {
-        ciphertext: SodiumCiphertext,
+        pub(super) ciphertext: SodiumCiphertext,
         ecall_cmd: u32,
     }
 
@@ -271,13 +279,6 @@ pub mod host_input {
     }
 
     impl HostInput for RegisterNotification {
-        type EnclaveInput = SodiumCiphertext;
-        type HostOutput = host_output::RegisterNotification;
-
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            Ok((self.ciphertext, Self::HostOutput::default()))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
@@ -511,9 +512,7 @@ pub mod host_output {
     #[derive(Default)]
     pub struct RegisterNotification;
 
-    impl HostOutput for RegisterNotification {
-        type EnclaveOutput = output::Empty;
-    }
+    impl HostOutput for RegisterNotification {}
 
     pub struct GetState {
         pub ecall_output: Option<output::ReturnState>,
