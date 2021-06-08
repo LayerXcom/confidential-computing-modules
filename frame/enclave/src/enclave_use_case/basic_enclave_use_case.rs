@@ -12,9 +12,7 @@ where
     type EI: EnclaveInput + DeserializeOwned;
     type EO: EnclaveOutput + Serialize;
 
-    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self>
-    where
-        C: ConfigGetter;
+    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self>;
 
     fn run(self) -> anyhow::Result<Self::EO>;
 
