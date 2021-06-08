@@ -11,8 +11,8 @@
 extern crate sgx_tstd as std;
 
 pub mod aggregate_calc;
-pub mod ecall_cmd_handler;
 pub mod enclave_context;
+pub mod enclave_use_cases;
 pub mod error;
 pub mod plain_types;
 pub mod type_crypt;

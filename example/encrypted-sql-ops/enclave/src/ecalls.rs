@@ -1,27 +1,18 @@
 use crate::ENCLAVE_CONTEXT;
-use anyhow::anyhow;
-use bincode::Options;
-use frame_enclave::{register_ecall, BasicEnclaveEngine};
-use log::error;
-use module_encrypted_sql_ops_ecall_types::ecall_cmd::*;
+use frame_enclave::{register_enclave_use_case, BasicEnclaveUseCase};
 use module_encrypted_sql_ops_enclave::{
-    ecall_cmd_handler::{
-        EncIntegerAvgFinalFuncCmdHandler, EncIntegerAvgStateFuncCmdHandler,
-        EncIntegerFromCmdHandler,
-    },
     enclave_context::EncryptedSqlOpsEnclaveContext,
+    enclave_use_cases::{
+        EncIntegerAvgFinalFuncUseCase, EncIntegerAvgStateFuncUseCase, EncIntegerFromUseCase,
+    },
 };
-use std::{ptr, vec::Vec};
 
 #[allow(dead_code)]
 struct DummyType;
 
-register_ecall!(
+register_enclave_use_case!(
     &*ENCLAVE_CONTEXT,
-    0,
-    DummyType,
-    EncryptedSqlOpsEnclaveContext,
-    (ENCINTEGER_FROM, EncIntegerFromCmdHandler),
-    (ENCINTEGER_AVG_STATE_FUNC, EncIntegerAvgStateFuncCmdHandler),
-    (ENCINTEGER_AVG_FINAL_FUNC, EncIntegerAvgFinalFuncCmdHandler),
+    EncIntegerFromUseCase<EncryptedSqlOpsEnclaveContext>,
+    EncIntegerAvgStateFuncUseCase<EncryptedSqlOpsEnclaveContext>,
+    EncIntegerAvgFinalFuncUseCase<EncryptedSqlOpsEnclaveContext>,
 );

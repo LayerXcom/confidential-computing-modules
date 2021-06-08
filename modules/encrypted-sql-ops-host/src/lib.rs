@@ -11,4 +11,4 @@
 #![deny(missing_debug_implementations, missing_docs)]
 #![crate_type = "lib"]
 
-pub mod workflow;
+pub mod controller;

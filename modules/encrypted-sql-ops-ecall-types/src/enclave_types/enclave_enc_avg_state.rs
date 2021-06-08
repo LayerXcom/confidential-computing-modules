@@ -1,4 +1,4 @@
-use frame_common::{EcallInput, EcallOutput};
+use frame_common::{EnclaveInput, EnclaveOutput};
 
 use crate::{
     enc_type::enc_aggregate_state::EncAvgState,
@@ -10,8 +10,8 @@ use crate::{
 #[serde(crate = "crate::serde")]
 pub struct EnclaveEncAvgState(EncAvgState);
 
-impl EcallInput for EnclaveEncAvgState {}
-impl EcallOutput for EnclaveEncAvgState {}
+impl EnclaveInput for EnclaveEncAvgState {}
+impl EnclaveOutput for EnclaveEncAvgState {}
 
 impl From<EncAvgState> for EnclaveEncAvgState {
     fn from(e: EncAvgState) -> Self {
@@ -23,13 +23,5 @@ impl EnclaveEncAvgState {
     /// Get inner representation
     pub fn into_enc_avg_state(self) -> EncAvgState {
         self.0
-    }
-}
-
-impl Default for EnclaveEncAvgState {
-    fn default() -> Self {
-        unreachable!(
-            "FIXME stop requiring Default for *EnclaveEngine::EO (must be created via handle())"
-        )
     }
 }
