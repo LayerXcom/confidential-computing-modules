@@ -135,37 +135,36 @@ impl StateRuntimeEnclaveUseCase for EnclaveKeyBackupper {
 }
 
 /// A EnclaveKey Recoverer
-#[derive(Debug, Clone, Default)]
-pub struct EnclaveKeyRecoverer;
+#[derive(Debug, Clone)]
+pub struct EnclaveKeyRecoverer<'c, C> {
+    enclave_context: &'c C,
+}
 
-impl StateRuntimeEnclaveUseCase for EnclaveKeyRecoverer {
+impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for EnclaveKeyRecoverer<'c, C>
+where
+    C: ContextOps<S = StateType> + Clone,
+{
     type EI = input::Empty;
     type EO = output::Empty;
 
-    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        Ok(Self::default())
+    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+        Ok(Self { enclave_context })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
         Ok(())
     }
 
-    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
+    fn run(self) -> Result<Self::EO> {
         // fetch path_secrets from key-vault server
-        let dec_key = enclave_context.recover_enclave_key()?;
+        let dec_key = self.enclave_context.recover_enclave_key()?;
 
         // save path_secrets to own file system
         let encoded = dec_key.try_into_sealing()?;
         let sealed =
             SealedEnclaveDecryptionKey::decode(&encoded).map_err(|e| anyhow!("{:?}", e))?;
 
-        let store_dec_key = enclave_context.store_enclave_dec_key();
+        let store_dec_key = self.enclave_context.store_enclave_dec_key();
         store_dec_key.save_to_local_filesystem(&sealed, DEC_KEY_FILE_NAME)?;
 
         Ok(output::Empty::default())
