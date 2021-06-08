@@ -110,6 +110,14 @@ impl EcallController for GetStateWorkflow {
     type EO = output::ReturnState;
     type HO = host_output::GetState;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(host_input.ciphertext)
+    }
+
+    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::GetState::new())
+    }
 }
 
 pub struct InsertCiphertextWorkflow;
@@ -285,7 +293,7 @@ pub mod host_input {
     }
 
     pub struct GetState {
-        ciphertext: SodiumCiphertext,
+        pub(super) ciphertext: SodiumCiphertext,
         ecall_cmd: u32,
     }
 
@@ -299,13 +307,6 @@ pub mod host_input {
     }
 
     impl HostInput for GetState {
-        type EnclaveInput = SodiumCiphertext;
-        type HostOutput = host_output::GetState;
-
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            Ok((self.ciphertext, Self::HostOutput::new()))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
