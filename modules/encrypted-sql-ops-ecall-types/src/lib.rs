@@ -9,7 +9,6 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 
 #[cfg(all(not(feature = "std"), not(test)))]
-#[macro_use]
 extern crate sgx_tstd as std;
 
 #[cfg(feature = "sgx")]
