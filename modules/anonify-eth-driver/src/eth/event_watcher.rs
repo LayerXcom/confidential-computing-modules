@@ -428,10 +428,7 @@ impl InnerEnclaveLog {
         eid: sgx_enclave_id_t,
         ciphertext: &CommandCiphertext,
     ) -> Option<serde_json::Value> {
-        match InsertCiphertextWorkflow::run(inp, eid)
-            .map_err(Into::into)
-            .and_then(|e| e.enclave_output.ok_or(HostError::EnclaveOutputNotSet))
-        {
+        match InsertCiphertextWorkflow::run(inp, eid).map(|e| e.enclave_output) {
             Ok(notify) => {
                 if let Some(notify_state) = notify.state {
                     match bincode::deserialize::<Vec<u8>>(&notify_state.into_vec()[..]) {

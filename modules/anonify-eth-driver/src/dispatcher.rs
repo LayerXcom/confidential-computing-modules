@@ -251,9 +251,7 @@ impl Dispatcher {
     pub fn get_state(&self, ciphertext: SodiumCiphertext) -> Result<serde_json::Value> {
         let eid = self.inner.read().enclave_id;
         let input = host_input::GetState::new(ciphertext, GET_STATE_CMD);
-        let state = GetStateWorkflow::run(input, eid)?
-            .enclave_output
-            .ok_or(HostError::EnclaveOutputNotSet)?;
+        let state = GetStateWorkflow::run(input, eid)?.enclave_output;
 
         let bytes: Vec<u8> = bincode::deserialize(&state.state.as_bytes())?;
         serde_json::from_slice(&bytes[..]).map_err(Into::into)
@@ -262,9 +260,7 @@ impl Dispatcher {
     pub fn get_user_counter(&self, ciphertext: SodiumCiphertext) -> Result<serde_json::Value> {
         let eid = self.inner.read().enclave_id;
         let input = host_input::GetUserCounter::new(ciphertext, GET_USER_COUNTER_CMD);
-        let user_counter = GetUserCounterWorkflow::run(input, eid)?
-            .enclave_output
-            .ok_or(HostError::EnclaveOutputNotSet)?;
+        let user_counter = GetUserCounterWorkflow::run(input, eid)?.enclave_output;
 
         serde_json::to_value(user_counter.user_counter).map_err(Into::into)
     }
@@ -302,7 +298,6 @@ impl Dispatcher {
 
         Ok(enclave_encryption_key
             .enclave_output
-            .ok_or(HostError::EnclaveOutputNotSet)?
             .enclave_encryption_key())
     }
 

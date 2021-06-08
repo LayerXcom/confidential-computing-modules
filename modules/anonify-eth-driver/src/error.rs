@@ -12,8 +12,6 @@ pub enum HostError {
     AnonifyAddressNotSet,
     #[error("Event watcher have not been set.")]
     EventWatcherNotSet,
-    #[error("Enclave output is not set. An error would have occurred in the enclave")]
-    EnclaveOutputNotSet,
     #[error("Failed unlock the account")]
     UnlockError,
     #[error("Decoded EthLogToken to invalid TokenType")]

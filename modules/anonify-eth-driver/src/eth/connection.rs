@@ -60,9 +60,7 @@ impl Web3Contract {
         gas: u64,
         confirmations: usize,
     ) -> Result<TransactionReceipt> {
-        let ecall_output = output
-            .enclave_output
-            .ok_or(HostError::EnclaveOutputNotSet)?;
+        let ecall_output = output.enclave_output;
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
         let trace_id = get_trace_id();
@@ -112,9 +110,7 @@ impl Web3Contract {
         signer: Address,
         gas: u64,
     ) -> Result<H256> {
-        let ecall_output = output
-            .enclave_output
-            .ok_or(HostError::EnclaveOutputNotSet)?;
+        let ecall_output = output.enclave_output;
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
 
@@ -135,9 +131,7 @@ impl Web3Contract {
         signer: Address,
         gas: u64,
     ) -> Result<H256> {
-        let ecall_output = output
-            .enclave_output
-            .ok_or(HostError::EnclaveOutputNotSet)?;
+        let ecall_output = output.enclave_output;
         let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
@@ -185,9 +179,7 @@ impl Web3Contract {
         signer: Address,
         gas: u64,
     ) -> Result<H256> {
-        let ecall_output = output
-            .enclave_output
-            .ok_or(HostError::EnclaveOutputNotSet)?;
+        let ecall_output = output.enclave_output;
         let handshake = ecall_output.handshake();
         let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
