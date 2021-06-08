@@ -1,6 +1,6 @@
 use crate::state_transition::Runtime;
 use crate::ENCLAVE_CONTEXT;
-use anonify_enclave::{context::AnonifyEnclaveContext, workflow::*};
+use anonify_enclave::{context::AnonifyEnclaveContext, use_case::*};
 use frame_common::crypto::NoAuth;
 use frame_enclave::{register_enclave_use_case, StateRuntimeEnclaveUseCase};
 

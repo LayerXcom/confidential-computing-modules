@@ -17,7 +17,7 @@ mod join_group;
 mod kvs;
 mod notify;
 
-pub mod workflow {
+pub mod use_case {
     #[cfg(feature = "backup-enable")]
     pub use crate::backup::{
         EnclaveKeyBackupper, EnclaveKeyRecoverer, PathSecretsBackupper, PathSecretsRecoverer,
