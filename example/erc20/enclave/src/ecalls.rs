@@ -1,13 +1,9 @@
-use crate::state_transition::{Runtime, MAX_MEM_SIZE};
+use crate::state_transition::Runtime;
 use crate::ENCLAVE_CONTEXT;
 use anonify_ecall_types::cmd::*;
 use anonify_enclave::{context::AnonifyEnclaveContext, workflow::*};
-use anyhow::anyhow;
-use bincode::Options;
 use frame_common::crypto::NoAuth;
 use frame_enclave::{register_enclave_use_case, StateRuntimeEnclaveUseCase};
-use log::error;
-use std::{ptr, vec::Vec};
 
 register_enclave_use_case!(
     &*ENCLAVE_CONTEXT,
