@@ -430,7 +430,7 @@ impl InnerEnclaveLog {
     ) -> Option<serde_json::Value> {
         match InsertCiphertextWorkflow::run(inp, eid)
             .map_err(Into::into)
-            .and_then(|e| e.ecall_output.ok_or(HostError::EnclaveOutputNotSet))
+            .and_then(|e| e.enclave_output.ok_or(HostError::EnclaveOutputNotSet))
         {
             Ok(notify) => {
                 if let Some(notify_state) = notify.state {

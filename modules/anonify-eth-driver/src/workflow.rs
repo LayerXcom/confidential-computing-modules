@@ -128,6 +128,17 @@ impl EcallController for InsertCiphertextWorkflow {
     type EO = output::ReturnNotifyState;
     type HO = host_output::InsertCiphertext;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(input::InsertCiphertext::new(
+            host_input.ciphertext,
+            host_input.state_counter,
+        ))
+    }
+
+    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::InsertCiphertext::new())
+    }
 }
 
 pub struct InsertHandshakeWorkflow;
@@ -360,15 +371,6 @@ pub mod host_input {
     }
 
     impl HostInput for InsertCiphertext {
-        type EnclaveInput = input::InsertCiphertext;
-        type HostOutput = host_output::InsertCiphertext;
-
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            let enclave_input = Self::EnclaveInput::new(self.ciphertext, self.state_counter);
-
-            Ok((enclave_input, Self::HostOutput::new()))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
@@ -556,24 +558,10 @@ pub mod host_output {
     }
 
     pub struct InsertCiphertext {
-        pub ecall_output: Option<output::ReturnNotifyState>,
+        pub enclave_output: output::ReturnNotifyState,
     }
 
-    impl HostOutput for InsertCiphertext {
-        type EnclaveOutput = output::ReturnNotifyState;
-
-        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
-            self.ecall_output = Some(output);
-
-            Ok(self)
-        }
-    }
-
-    impl InsertCiphertext {
-        pub fn new() -> Self {
-            InsertCiphertext { ecall_output: None }
-        }
-    }
+    impl HostOutput for InsertCiphertext {}
 
     #[derive(Default)]
     pub struct InsertHandshake;
