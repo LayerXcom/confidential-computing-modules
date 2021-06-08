@@ -78,7 +78,12 @@ impl EthSender {
         .await
     }
 
-    pub async fn send_command(&self, host_output: &host_output::Command) -> Result<H256> {
+    pub async fn send_command(
+        &self,
+        host_output: &host_output::Command,
+        signer: Address,
+        gas: u64,
+    ) -> Result<H256> {
         info!("Sending a command to blockchain: {:?}", host_output);
         Retry::new(
             "send_command",
@@ -86,7 +91,7 @@ impl EthSender {
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
-        .spawn_async(|| async { self.contract.send_command(host_output.clone()).await })
+        .spawn_async(|| async { self.contract.send_command(host_output.clone(), signer,gas).await })
         .await
     }
 

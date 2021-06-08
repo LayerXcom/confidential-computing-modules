@@ -238,12 +238,12 @@ impl Dispatcher {
         ecall_cmd: u32,
     ) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Command::new(ciphertext, user_id, signer, gas, ecall_cmd);
+        let input = host_input::Command::new(ciphertext, user_id, ecall_cmd);
         let eid = inner.enclave_id;
         let host_output = CommandWorkflow::run(input, eid)?;
 
         match &inner.sender {
-            Some(s) => s.send_command(&host_output).await,
+            Some(s) => s.send_command(&host_output, signer, gas).await,
             None => Err(HostError::AddressNotSet),
         }
     }

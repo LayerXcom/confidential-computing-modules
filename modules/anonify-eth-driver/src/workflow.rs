@@ -17,6 +17,17 @@ impl EcallController for CommandWorkflow {
     type EO = output::Command;
     type HO = host_output::Command;
     const EI_MAX_SIZE: usize = EI_MAX_SIZE;
+
+    fn translate_input(host_input: Self::HI) -> anyhow::Result<Self::EI> {
+        Ok(input::Command::new(
+            host_input.ciphertext,
+            host_input.user_id,
+        ))
+    }
+
+    fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO> {
+        Ok(host_output::Command { enclave_output })
+    }
 }
 
 pub struct JoinGroupWorkflow;
@@ -135,8 +146,6 @@ pub mod host_input {
     pub struct Command {
         ciphertext: SodiumCiphertext,
         user_id: Option<AccountId>,
-        signer: Address,
-        gas: u64,
         ecall_cmd: u32,
     }
 
@@ -144,31 +153,17 @@ pub mod host_input {
         pub fn new(
             ciphertext: SodiumCiphertext,
             user_id: Option<AccountId>,
-            signer: Address,
-            gas: u64,
             ecall_cmd: u32,
         ) -> Self {
             Command {
                 ciphertext,
                 user_id,
-                signer,
-                gas,
                 ecall_cmd,
             }
         }
     }
 
     impl HostInput for Command {
-        type EnclaveInput = input::Command;
-        type HostOutput = host_output::Command;
-
-        fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            let host_output = host_output::Command::new(self.signer, self.gas);
-            let enclave_input = input::Command::new(self.ciphertext, self.user_id);
-
-            Ok((enclave_input, host_output))
-        }
-
         fn ecall_cmd(&self) -> u32 {
             self.ecall_cmd
         }
@@ -493,30 +488,10 @@ pub mod host_output {
 
     #[derive(Debug, Clone)]
     pub struct Command {
-        pub signer: Address,
-        pub gas: u64,
-        pub ecall_output: Option<output::Command>,
+        pub enclave_output: output::Command,
     }
 
-    impl HostOutput for Command {
-        type EnclaveOutput = output::Command;
-
-        fn set_ecall_output(mut self, output: Self::EnclaveOutput) -> anyhow::Result<Self> {
-            self.ecall_output = Some(output);
-
-            Ok(self)
-        }
-    }
-
-    impl Command {
-        pub fn new(signer: Address, gas: u64) -> Self {
-            Command {
-                signer,
-                gas,
-                ecall_output: None,
-            }
-        }
-    }
+    impl HostOutput for Command {}
 
     #[derive(Debug, Clone)]
     pub struct JoinGroup {
