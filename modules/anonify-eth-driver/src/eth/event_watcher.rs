@@ -355,11 +355,15 @@ impl InnerEnclaveLog {
                         let inp = host_input::InsertCiphertext::new(
                             ciphertext.clone(),
                             e.state_counter(),
-                            fetch_ciphertext_cmd,
                         );
 
-                        match self.insert_ciphertext(CiphertextKind::TreeKem, inp, eid, &ciphertext)
-                        {
+                        match self.insert_ciphertext(
+                            CiphertextKind::TreeKem,
+                            inp,
+                            fetch_ciphertext_cmd,
+                            eid,
+                            &ciphertext,
+                        ) {
                             Some(notification) => acc.push(notification),
                             None => continue,
                         }
@@ -397,12 +401,12 @@ impl InnerEnclaveLog {
                         let inp = host_input::InsertCiphertext::new(
                             ciphertext.clone(),
                             e.state_counter(),
-                            fetch_ciphertext_cmd,
                         );
 
                         match self.insert_ciphertext(
                             CiphertextKind::EnclaveKey,
                             inp,
+                            fetch_ciphertext_cmd,
                             eid,
                             &ciphertext,
                         ) {
@@ -425,10 +429,11 @@ impl InnerEnclaveLog {
         &self,
         ciphertext_kind: CiphertextKind,
         inp: host_input::InsertCiphertext,
+        ecall_cmd: u32,
         eid: sgx_enclave_id_t,
         ciphertext: &CommandCiphertext,
     ) -> Option<serde_json::Value> {
-        match InsertCiphertextWorkflow::run(inp, eid).map(|e| e.enclave_output) {
+        match InsertCiphertextWorkflow::run(inp, ecall_cmd, eid).map(|e| e.enclave_output) {
             Ok(notify) => {
                 if let Some(notify_state) = notify.state {
                     match bincode::deserialize::<Vec<u8>>(&notify_state.into_vec()[..]) {
@@ -502,8 +507,8 @@ impl InnerEnclaveLog {
         state_counter: StateCounter,
         fetch_handshake_cmd: u32,
     ) -> Result<()> {
-        let input = host_input::InsertHandshake::new(handshake, state_counter, fetch_handshake_cmd);
-        InsertHandshakeWorkflow::run(input, eid)?;
+        let input = host_input::InsertHandshake::new(handshake, state_counter);
+        InsertHandshakeWorkflow::run(input, fetch_handshake_cmd, eid)?;
 
         Ok(())
     }

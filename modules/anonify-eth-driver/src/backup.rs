@@ -10,14 +10,14 @@ pub struct SecretBackup;
 
 impl SecretBackup {
     pub fn backup(&self, eid: sgx_enclave_id_t, ecall_cmd: u32) -> Result<()> {
-        let input = host_input::Backup::new(ecall_cmd);
-        let _ = BackupWorkflow::run(input, eid)?;
+        let input = host_input::Backup::new();
+        let _ = BackupWorkflow::run(input, ecall_cmd, eid)?;
         Ok(())
     }
 
     pub fn recover(&self, eid: sgx_enclave_id_t, ecall_cmd: u32) -> Result<()> {
-        let input = host_input::Recover::new(ecall_cmd);
-        let _ = RecoverWorkflow::run(input, eid)?;
+        let input = host_input::Recover::new();
+        let _ = RecoverWorkflow::run(input, ecall_cmd, eid)?;
         Ok(())
     }
 }

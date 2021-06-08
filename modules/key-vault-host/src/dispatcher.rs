@@ -24,13 +24,13 @@ impl Dispatcher {
 
     pub async fn start(self) -> Result<Self> {
         let eid = self.inner.read().enclave_id;
-        let input = host_input::StartServer::new(START_SERVER_CMD);
+        let input = host_input::StartServer::new();
 
         let thread_name = format!("key-vault-host:{}", eid);
         let builder = std::thread::Builder::new().name(thread_name);
         builder
             .spawn(move || {
-                let _host_output = StartServerWorkflow::run(input, eid).unwrap();
+                let _host_output = StartServerWorkflow::run(input, START_SERVER_CMD,eid).unwrap();
             })
             .map_err(|e| anyhow!("Failed to spawn new thread: {}", e))?;
 
@@ -39,8 +39,8 @@ impl Dispatcher {
 
     pub async fn stop(&self) -> Result<()> {
         let eid = self.inner.read().enclave_id;
-        let input = host_input::StopServer::new(STOP_SERVER_CMD);
-        let _host_output = StopServerWorkflow::run(input, eid)?;
+        let input = host_input::StopServer::new();
+        let _host_output = StopServerWorkflow::run(input,STOP_SERVER_CMD, eid)?;
 
         Ok(())
     }

@@ -18,8 +18,7 @@ pub trait EcallController {
 
     fn translate_output(enclave_output: Self::EO) -> anyhow::Result<Self::HO>;
 
-    fn run(input: Self::HI, eid: sgx_enclave_id_t) -> anyhow::Result<Self::HO> {
-        let ecall_cmd = input.ecall_cmd();
+    fn run(input: Self::HI, ecall_cmd: u32, eid: sgx_enclave_id_t) -> anyhow::Result<Self::HO> {
         let enclave_input = Self::translate_input(input)?;
 
         let enclave_output = EnclaveConnector::new(eid, Self::EI_MAX_SIZE)
@@ -29,8 +28,6 @@ pub trait EcallController {
     }
 }
 
-pub trait HostInput: Sized {
-    fn ecall_cmd(&self) -> u32;
-}
+pub trait HostInput: Sized {}
 
 pub trait HostOutput: Sized {}

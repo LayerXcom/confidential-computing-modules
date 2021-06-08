@@ -239,236 +239,146 @@ pub mod host_input {
     pub struct Command {
         pub(super) ciphertext: SodiumCiphertext,
         pub(super) user_id: Option<AccountId>,
-        ecall_cmd: u32,
     }
 
     impl Command {
-        pub fn new(
-            ciphertext: SodiumCiphertext,
-            user_id: Option<AccountId>,
-            ecall_cmd: u32,
-        ) -> Self {
+        pub fn new(ciphertext: SodiumCiphertext, user_id: Option<AccountId>) -> Self {
             Command {
                 ciphertext,
                 user_id,
-                ecall_cmd,
             }
         }
     }
 
-    impl HostInput for Command {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for Command {}
 
-    pub struct JoinGroup {
-        ecall_cmd: u32,
-    }
+    pub struct JoinGroup {}
 
     impl JoinGroup {
-        pub fn new(ecall_cmd: u32) -> Self {
-            JoinGroup { ecall_cmd }
+        pub fn new() -> Self {
+            Self {}
         }
     }
 
-    impl HostInput for JoinGroup {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for JoinGroup {}
 
-    pub struct RegisterReport {
-        ecall_cmd: u32,
-    }
+    pub struct RegisterReport {}
 
     impl RegisterReport {
-        pub fn new(ecall_cmd: u32) -> Self {
-            RegisterReport { ecall_cmd }
+        pub fn new() -> Self {
+            RegisterReport {}
         }
     }
 
-    impl HostInput for RegisterReport {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for RegisterReport {}
 
-    pub struct Handshake {
-        ecall_cmd: u32,
-    }
+    pub struct Handshake {}
 
     impl Handshake {
-        pub fn new(ecall_cmd: u32) -> Self {
-            Handshake { ecall_cmd }
+        pub fn new() -> Self {
+            Handshake {}
         }
     }
 
-    impl HostInput for Handshake {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for Handshake {}
 
     pub struct RegisterNotification {
         pub(super) ciphertext: SodiumCiphertext,
-        ecall_cmd: u32,
     }
 
     impl RegisterNotification {
-        pub fn new(ciphertext: SodiumCiphertext, ecall_cmd: u32) -> Self {
-            RegisterNotification {
-                ciphertext,
-                ecall_cmd,
-            }
+        pub fn new(ciphertext: SodiumCiphertext) -> Self {
+            RegisterNotification { ciphertext }
         }
     }
 
-    impl HostInput for RegisterNotification {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for RegisterNotification {}
 
     pub struct GetState {
         pub(super) ciphertext: SodiumCiphertext,
-        ecall_cmd: u32,
     }
 
     impl GetState {
-        pub fn new(ciphertext: SodiumCiphertext, ecall_cmd: u32) -> Self {
-            GetState {
-                ciphertext,
-                ecall_cmd,
-            }
+        pub fn new(ciphertext: SodiumCiphertext) -> Self {
+            GetState { ciphertext }
         }
     }
 
-    impl HostInput for GetState {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for GetState {}
 
     pub struct GetUserCounter {
         pub(super) ciphertext: SodiumCiphertext,
-        ecall_cmd: u32,
     }
 
     impl GetUserCounter {
-        pub fn new(ciphertext: SodiumCiphertext, ecall_cmd: u32) -> Self {
-            GetUserCounter {
-                ciphertext,
-                ecall_cmd,
-            }
+        pub fn new(ciphertext: SodiumCiphertext) -> Self {
+            GetUserCounter { ciphertext }
         }
     }
 
-    impl HostInput for GetUserCounter {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for GetUserCounter {}
 
     pub struct InsertCiphertext {
         pub(super) ciphertext: CommandCiphertext,
         pub(super) state_counter: StateCounter,
-        ecall_cmd: u32,
     }
 
     impl InsertCiphertext {
-        pub fn new(
-            ciphertext: CommandCiphertext,
-            state_counter: StateCounter,
-            ecall_cmd: u32,
-        ) -> Self {
+        pub fn new(ciphertext: CommandCiphertext, state_counter: StateCounter) -> Self {
             InsertCiphertext {
                 ciphertext,
                 state_counter,
-                ecall_cmd,
             }
         }
     }
 
-    impl HostInput for InsertCiphertext {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for InsertCiphertext {}
 
     pub struct InsertHandshake {
         pub(super) handshake: ExportHandshake,
         pub(super) state_counter: StateCounter,
-        ecall_cmd: u32,
     }
 
     impl InsertHandshake {
-        pub fn new(
-            handshake: ExportHandshake,
-            state_counter: StateCounter,
-            ecall_cmd: u32,
-        ) -> Self {
+        pub fn new(handshake: ExportHandshake, state_counter: StateCounter) -> Self {
             InsertHandshake {
                 handshake,
                 state_counter,
-                ecall_cmd,
             }
         }
     }
 
-    impl HostInput for InsertHandshake {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for InsertHandshake {}
 
-    pub struct GetEncryptionKey {
-        ecall_cmd: u32,
-    }
+    pub struct GetEncryptionKey {}
 
     impl GetEncryptionKey {
-        pub fn new(ecall_cmd: u32) -> Self {
-            GetEncryptionKey { ecall_cmd }
+        pub fn new() -> Self {
+            GetEncryptionKey {}
         }
     }
 
-    impl HostInput for GetEncryptionKey {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for GetEncryptionKey {}
 
-    pub struct Backup {
-        ecall_cmd: u32,
-    }
+    pub struct Backup {}
 
     impl Backup {
-        pub fn new(ecall_cmd: u32) -> Self {
-            Backup { ecall_cmd }
+        pub fn new() -> Self {
+            Backup {}
         }
     }
 
-    impl HostInput for Backup {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for Backup {}
 
-    pub struct Recover {
-        ecall_cmd: u32,
-    }
+    pub struct Recover {}
 
     impl Recover {
-        pub fn new(ecall_cmd: u32) -> Self {
-            Recover { ecall_cmd }
+        pub fn new() -> Self {
+            Recover {}
         }
     }
 
-    impl HostInput for Recover {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for Recover {}
 }
 
 pub mod host_output {

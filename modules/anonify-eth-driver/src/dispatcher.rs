@@ -195,8 +195,8 @@ impl Dispatcher {
     pub async fn register_report(&self, signer: Address, gas: u64) -> Result<H256> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
-        let input = host_input::RegisterReport::new(SEND_REGISTER_REPORT_CMD);
-        let host_output = RegisterReportWorkflow::run(input, eid)?;
+        let input = host_input::RegisterReport::new();
+        let host_output = RegisterReportWorkflow::run(input, SEND_REGISTER_REPORT_CMD, eid)?;
 
         let tx_hash = inner
             .sender
@@ -216,8 +216,8 @@ impl Dispatcher {
     ) -> Result<TransactionReceipt> {
         let inner = self.inner.read();
         let eid = inner.enclave_id;
-        let input = host_input::JoinGroup::new(ecall_cmd);
-        let host_output = JoinGroupWorkflow::run(input, eid)?;
+        let input = host_input::JoinGroup::new();
+        let host_output = JoinGroupWorkflow::run(input, ecall_cmd, eid)?;
 
         let receipt = inner
             .sender
@@ -238,9 +238,9 @@ impl Dispatcher {
         ecall_cmd: u32,
     ) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Command::new(ciphertext, user_id, ecall_cmd);
+        let input = host_input::Command::new(ciphertext, user_id);
         let eid = inner.enclave_id;
-        let host_output = CommandWorkflow::run(input, eid)?;
+        let host_output = CommandWorkflow::run(input, ecall_cmd, eid)?;
 
         match &inner.sender {
             Some(s) => s.send_command(&host_output, signer, gas).await,
@@ -250,8 +250,8 @@ impl Dispatcher {
 
     pub fn get_state(&self, ciphertext: SodiumCiphertext) -> Result<serde_json::Value> {
         let eid = self.inner.read().enclave_id;
-        let input = host_input::GetState::new(ciphertext, GET_STATE_CMD);
-        let state = GetStateWorkflow::run(input, eid)?.enclave_output;
+        let input = host_input::GetState::new(ciphertext);
+        let state = GetStateWorkflow::run(input, GET_STATE_CMD, eid)?.enclave_output;
 
         let bytes: Vec<u8> = bincode::deserialize(&state.state.as_bytes())?;
         serde_json::from_slice(&bytes[..]).map_err(Into::into)
@@ -259,17 +259,18 @@ impl Dispatcher {
 
     pub fn get_user_counter(&self, ciphertext: SodiumCiphertext) -> Result<serde_json::Value> {
         let eid = self.inner.read().enclave_id;
-        let input = host_input::GetUserCounter::new(ciphertext, GET_USER_COUNTER_CMD);
-        let user_counter = GetUserCounterWorkflow::run(input, eid)?.enclave_output;
+        let input = host_input::GetUserCounter::new(ciphertext);
+        let user_counter =
+            GetUserCounterWorkflow::run(input, GET_USER_COUNTER_CMD, eid)?.enclave_output;
 
         serde_json::to_value(user_counter.user_counter).map_err(Into::into)
     }
 
     pub async fn handshake(&self, signer: Address, gas: u64) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Handshake::new(SEND_HANDSHAKE_TREEKEM_CMD);
+        let input = host_input::Handshake::new();
         let eid = inner.enclave_id;
-        let host_output = HandshakeWorkflow::run(input, eid)?;
+        let host_output = HandshakeWorkflow::run(input, SEND_HANDSHAKE_TREEKEM_CMD, eid)?;
 
         let tx_hash = inner
             .sender
@@ -292,9 +293,10 @@ impl Dispatcher {
     }
 
     pub fn get_enclave_encryption_key(&self) -> Result<SodiumPubKey> {
-        let input = host_input::GetEncryptionKey::new(GET_ENCLAVE_ENCRYPTION_KEY_CMD);
+        let input = host_input::GetEncryptionKey::new();
         let eid = self.inner.read().enclave_id;
-        let enclave_encryption_key = GetEncryptionKeyWorkflow::run(input, eid)?;
+        let enclave_encryption_key =
+            GetEncryptionKeyWorkflow::run(input, GET_ENCLAVE_ENCRYPTION_KEY_CMD, eid)?;
 
         Ok(enclave_encryption_key
             .enclave_output
@@ -303,9 +305,10 @@ impl Dispatcher {
 
     pub fn register_notification(&self, ciphertext: SodiumCiphertext) -> Result<()> {
         let inner = self.inner.read();
-        let input = host_input::RegisterNotification::new(ciphertext, REGISTER_NOTIFICATION_CMD);
+        let input = host_input::RegisterNotification::new(ciphertext);
         let eid = inner.enclave_id;
-        let _host_output = RegisterNotificationWorkflow::run(input, eid)?;
+        let _host_output =
+            RegisterNotificationWorkflow::run(input, REGISTER_NOTIFICATION_CMD, eid)?;
 
         Ok(())
     }

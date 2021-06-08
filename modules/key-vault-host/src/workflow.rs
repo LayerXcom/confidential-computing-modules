@@ -42,37 +42,25 @@ impl EcallController for StopServerWorkflow {
 pub mod host_input {
     use super::*;
 
-    pub struct StartServer {
-        ecall_cmd: u32,
-    }
+    pub struct StartServer {}
 
     impl StartServer {
-        pub fn new(ecall_cmd: u32) -> Self {
-            StartServer { ecall_cmd }
+        pub fn new() -> Self {
+            StartServer {}
         }
     }
 
-    impl HostInput for StartServer {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for StartServer {}
 
-    pub struct StopServer {
-        ecall_cmd: u32,
-    }
+    pub struct StopServer {}
 
     impl StopServer {
-        pub fn new(ecall_cmd: u32) -> Self {
-            StopServer { ecall_cmd }
+        pub fn new() -> Self {
+            StopServer {}
         }
     }
 
-    impl HostInput for StopServer {
-        fn ecall_cmd(&self) -> u32 {
-            self.ecall_cmd
-        }
-    }
+    impl HostInput for StopServer {}
 }
 
 pub mod host_output {
