@@ -26,16 +26,16 @@ where
     type EI = input::Command;
     type EO = output::Command;
 
-    fn new<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(enclave_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(ecall_input.ciphertext())?;
+        let buf = enclave_context.decrypt(enclave_input.ciphertext())?;
         let command_plaintext = serde_json::from_slice(&buf[..])?;
 
         Ok(Self {
             command_plaintext,
-            user_id: ecall_input.user_id(),
+            user_id: enclave_input.user_id(),
         })
     }
 
@@ -91,7 +91,7 @@ where
 /// A message receiver that decrypt commands and make state transition
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct CommandByTreeKemReceiver<AP> {
-    ecall_input: input::InsertCiphertext,
+    enclave_input: input::InsertCiphertext,
     ap: PhantomData<AP>,
 }
 
@@ -102,12 +102,12 @@ where
     type EI = input::InsertCiphertext;
     type EO = output::ReturnNotifyState;
 
-    fn new<C>(ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
         Ok(Self {
-            ecall_input,
+            enclave_input,
             ap: PhantomData,
         })
     }
@@ -126,7 +126,7 @@ where
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();
-        let treekem_ciphertext = match self.ecall_input.ciphertext() {
+        let treekem_ciphertext = match self.enclave_input.ciphertext() {
             CommandCiphertext::TreeKem(ciphertext) => ciphertext,
             _ => return Err(anyhow!("CommandCiphertext is not for treekem")),
         };
@@ -135,7 +135,7 @@ where
         let msg_gen = treekem_ciphertext.generation();
 
         // Even if group_key's ratchet operations and state transitions fail, state_counter must be incremented so it doesn't get stuck.
-        enclave_context.verify_state_counter_increment(self.ecall_input.state_counter())?;
+        enclave_context.verify_state_counter_increment(self.enclave_input.state_counter())?;
 
         // Since the sender's keychain has already ratcheted,
         // even if an error occurs in the state transition, the receiver's keychain also ratchet.

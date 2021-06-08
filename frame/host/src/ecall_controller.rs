@@ -16,9 +16,9 @@ pub trait EcallController {
 
     fn run(input: Self::HI, eid: sgx_enclave_id_t) -> anyhow::Result<Self::HO> {
         let ecall_cmd = input.ecall_cmd();
-        let (ecall_input, host_output) = input.apply()?;
+        let (enclave_input, host_output) = input.apply()?;
         let ecall_output = EnclaveConnector::new(eid, Self::EI_MAX_SIZE)
-            .invoke_ecall::<Self::EI, Self::EO>(ecall_cmd, ecall_input)?;
+            .invoke_ecall::<Self::EI, Self::EO>(ecall_cmd, enclave_input)?;
 
         host_output.set_ecall_output(ecall_output)
     }

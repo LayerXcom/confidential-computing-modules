@@ -447,25 +447,25 @@ impl AnonifyEnclaveContext {
 
 #[derive(Debug, Clone, Default)]
 pub struct GetState<AP: AccessPolicy> {
-    ecall_input: input::GetState<AP>,
+    enclave_input: input::GetState<AP>,
 }
 
 impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for GetState<AP> {
     type EI = SodiumCiphertext;
     type EO = output::ReturnState;
 
-    fn new<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(enclave_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(&ecall_input)?;
-        let ecall_input = serde_json::from_slice(&buf[..])?;
+        let buf = enclave_context.decrypt(&enclave_input)?;
+        let enclave_input = serde_json::from_slice(&buf[..])?;
 
-        Ok(Self { ecall_input })
+        Ok(Self { enclave_input })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
-        self.ecall_input.access_policy().verify()
+        self.enclave_input.access_policy().verify()
     }
 
     fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
@@ -476,7 +476,7 @@ impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for GetState<AP> {
             access_policy,
             runtime_params,
             state_name,
-        } = self.ecall_input;
+        } = self.enclave_input;
         let user_state = C::get_state_by_state_name::<_, R, _>(
             enclave_context.clone(),
             &state_name,
@@ -490,32 +490,32 @@ impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for GetState<AP> {
 
 #[derive(Debug, Clone, Default)]
 pub struct GetUserCounter<AP: AccessPolicy> {
-    ecall_input: input::GetUserCounter<AP>,
+    enclave_input: input::GetUserCounter<AP>,
 }
 
 impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for GetUserCounter<AP> {
     type EI = SodiumCiphertext;
     type EO = output::ReturnUserCounter;
 
-    fn new<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(enclave_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(&ecall_input)?;
-        let ecall_input = serde_json::from_slice(&buf[..])?;
+        let buf = enclave_context.decrypt(&enclave_input)?;
+        let enclave_input = serde_json::from_slice(&buf[..])?;
 
-        Ok(Self { ecall_input })
+        Ok(Self { enclave_input })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
-        self.ecall_input.access_policy().verify()
+        self.enclave_input.access_policy().verify()
     }
 
     fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let account_id = self.ecall_input.access_policy().into_account_id();
+        let account_id = self.enclave_input.access_policy().into_account_id();
         let user_counter = enclave_context.get_user_counter(account_id);
 
         Ok(output::ReturnUserCounter::new(user_counter))
@@ -530,7 +530,7 @@ impl StateRuntimeEnclaveUseCase for ReportRegistration {
     type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
 
-    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {

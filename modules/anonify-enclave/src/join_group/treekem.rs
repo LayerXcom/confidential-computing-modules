@@ -14,7 +14,7 @@ impl StateRuntimeEnclaveUseCase for JoinGroupWithTreeKem {
     type EI = input::Empty;
     type EO = output::ReturnJoinGroup;
 
-    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {

@@ -33,31 +33,31 @@ impl Notifier {
 
 #[derive(Debug, Clone, Default)]
 pub struct RegisterNotification<AP: AccessPolicy> {
-    ecall_input: input::RegisterNotification<AP>,
+    enclave_input: input::RegisterNotification<AP>,
 }
 
 impl<AP: AccessPolicy> StateRuntimeEnclaveUseCase for RegisterNotification<AP> {
     type EI = SodiumCiphertext;
     type EO = output::Empty;
 
-    fn new<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(enclave_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let buf = enclave_context.decrypt(&ecall_input)?;
-        let ecall_input = serde_json::from_slice(&buf[..])?;
-        Ok(Self { ecall_input })
+        let buf = enclave_context.decrypt(&enclave_input)?;
+        let enclave_input = serde_json::from_slice(&buf[..])?;
+        Ok(Self { enclave_input })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
-        self.ecall_input.access_policy().verify()
+        self.enclave_input.access_policy().verify()
     }
 
     fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        let account_id = self.ecall_input.access_policy().into_account_id();
+        let account_id = self.enclave_input.access_policy().into_account_id();
         enclave_context.set_notification(account_id);
 
         Ok(output::Empty::default())

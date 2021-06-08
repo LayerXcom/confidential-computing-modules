@@ -164,9 +164,9 @@ pub mod host_input {
 
         fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
             let host_output = host_output::Command::new(self.signer, self.gas);
-            let ecall_input = input::Command::new(self.ciphertext, self.user_id);
+            let enclave_input = input::Command::new(self.ciphertext, self.user_id);
 
-            Ok((ecall_input, host_output))
+            Ok((enclave_input, host_output))
         }
 
         fn ecall_cmd(&self) -> u32 {
@@ -373,9 +373,9 @@ pub mod host_input {
         type HostOutput = host_output::InsertCiphertext;
 
         fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            let ecall_input = Self::EnclaveInput::new(self.ciphertext, self.state_counter);
+            let enclave_input = Self::EnclaveInput::new(self.ciphertext, self.state_counter);
 
-            Ok((ecall_input, Self::HostOutput::new()))
+            Ok((enclave_input, Self::HostOutput::new()))
         }
 
         fn ecall_cmd(&self) -> u32 {
@@ -408,9 +408,9 @@ pub mod host_input {
         type HostOutput = host_output::InsertHandshake;
 
         fn apply(self) -> anyhow::Result<(Self::EnclaveInput, Self::HostOutput)> {
-            let ecall_input = Self::EnclaveInput::new(self.handshake, self.state_counter);
+            let enclave_input = Self::EnclaveInput::new(self.handshake, self.state_counter);
 
-            Ok((ecall_input, Self::HostOutput::default()))
+            Ok((enclave_input, Self::HostOutput::default()))
         }
 
         fn ecall_cmd(&self) -> u32 {

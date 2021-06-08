@@ -21,7 +21,7 @@ impl StateRuntimeEnclaveUseCase for PathSecretsBackupper {
     type EI = input::Empty;
     type EO = output::Empty;
 
-    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
@@ -70,7 +70,7 @@ impl StateRuntimeEnclaveUseCase for PathSecretsRecoverer {
     type EI = input::Empty;
     type EO = output::Empty;
 
-    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
@@ -114,7 +114,7 @@ impl StateRuntimeEnclaveUseCase for EnclaveKeyBackupper {
     type EI = input::Empty;
     type EO = output::Empty;
 
-    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
@@ -142,7 +142,7 @@ impl StateRuntimeEnclaveUseCase for EnclaveKeyRecoverer {
     type EI = input::Empty;
     type EO = output::Empty;
 
-    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {

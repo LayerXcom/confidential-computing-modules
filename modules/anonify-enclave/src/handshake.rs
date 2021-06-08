@@ -15,7 +15,7 @@ impl StateRuntimeEnclaveUseCase for HandshakeSender {
     type EI = input::Empty;
     type EO = output::ReturnHandshake;
 
-    fn new<C>(_ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(_enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
@@ -72,18 +72,18 @@ impl StateRuntimeEnclaveUseCase for HandshakeSender {
 /// A handshake receiver
 #[derive(Debug, Clone, Default)]
 pub struct HandshakeReceiver {
-    ecall_input: input::InsertHandshake,
+    enclave_input: input::InsertHandshake,
 }
 
 impl StateRuntimeEnclaveUseCase for HandshakeReceiver {
     type EI = input::InsertHandshake;
     type EO = output::Empty;
 
-    fn new<C>(ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
+    fn new<C>(enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
     where
         C: ContextOps<S = StateType> + Clone,
     {
-        Ok(Self { ecall_input })
+        Ok(Self { enclave_input })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
@@ -95,11 +95,11 @@ impl StateRuntimeEnclaveUseCase for HandshakeReceiver {
         C: ContextOps<S = StateType> + Clone,
     {
         let group_key = &mut *enclave_context.write_group_key();
-        let handshake = HandshakeParams::decode(&self.ecall_input.handshake().handshake()[..])
+        let handshake = HandshakeParams::decode(&self.enclave_input.handshake().handshake()[..])
             .map_err(|_| anyhow!("HandshakeParams::decode Error"))?;
 
         // Even if `process_handshake` fails, state_counter must be incremented so it doesn't get stuck.
-        enclave_context.verify_state_counter_increment(self.ecall_input.state_counter())?;
+        enclave_context.verify_state_counter_increment(self.enclave_input.state_counter())?;
         group_key.process_handshake(
             enclave_context.store_path_secrets(),
             &handshake,

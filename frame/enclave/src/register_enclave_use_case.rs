@@ -25,12 +25,12 @@ macro_rules! register_enclave_use_case {
             EE: StateRuntimeEnclaveUseCase,
         {
             let res = {
-                let ecall_input = bincode::DefaultOptions::new()
+                let enclave_input = bincode::DefaultOptions::new()
                     .with_limit(ecall_max_size as u64)
                     .deserialize(&input_payload[..])
                     .map_err(|e| anyhow!("{:?}", e))?;
 
-                let slf = EE::new::<$ctx_ops>(ecall_input, $ctx)?;
+                let slf = EE::new::<$ctx_ops>(enclave_input, $ctx)?;
                 EE::eval_policy(&slf)?;
                 EE::run::<$runtime_exec, $ctx_ops>(slf, $ctx, $max_mem)?
             };
