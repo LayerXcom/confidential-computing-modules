@@ -89,25 +89,25 @@ where
 }
 
 /// A message receiver that decrypt commands and make state transition
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct CommandByTreeKemReceiver<AP> {
+#[derive(Debug, Clone)]
+pub struct CommandByTreeKemReceiver<'c, C, AP> {
     enclave_input: input::InsertCiphertext,
+    enclave_context: &'c C,
     ap: PhantomData<AP>,
 }
 
-impl<AP> StateRuntimeEnclaveUseCase for CommandByTreeKemReceiver<AP>
+impl<'c, C, AP> StateRuntimeEnclaveUseCase<'c, C> for CommandByTreeKemReceiver<'c, C, AP>
 where
+    C: ContextOps<S = StateType> + Clone,
     AP: AccessPolicy,
 {
     type EI = input::InsertCiphertext;
     type EO = output::ReturnNotifyState;
 
-    fn new<C>(enclave_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
+    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
         Ok(Self {
             enclave_input,
+            enclave_context,
             ap: PhantomData,
         })
     }
@@ -121,11 +121,8 @@ where
     /// 2. Ratchet keychains
     /// 3. Verify the order of transactions for each user (verify_user_counter_increment)
     /// 4. State transitions
-    fn run<C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        let group_key = &mut *enclave_context.write_group_key();
+    fn run(self) -> anyhow::Result<Self::EO> {
+        let group_key = &mut *self.enclave_context.write_group_key();
         let treekem_ciphertext = match self.enclave_input.ciphertext() {
             CommandCiphertext::TreeKem(ciphertext) => ciphertext,
             _ => return Err(anyhow!("CommandCiphertext is not for treekem")),
@@ -135,7 +132,8 @@ where
         let msg_gen = treekem_ciphertext.generation();
 
         // Even if group_key's ratchet operations and state transitions fail, state_counter must be incremented so it doesn't get stuck.
-        enclave_context.verify_state_counter_increment(self.enclave_input.state_counter())?;
+        self.enclave_context
+            .verify_state_counter_increment(self.enclave_input.state_counter())?;
 
         // Since the sender's keychain has already ratcheted,
         // even if an error occurs in the state transition, the receiver's keychain also ratchet.
@@ -155,11 +153,15 @@ where
         if let Some(cmds) = decrypted_cmds {
             // Since the command data is valid for the error at the time of state transition,
             // `user_counter` must be verified and incremented before the state transition.
-            enclave_context.verify_user_counter_increment(cmds.my_account_id(), cmds.counter())?;
+            self.enclave_context
+                .verify_user_counter_increment(cmds.my_account_id(), cmds.counter())?;
             // Even if an error occurs in the state transition logic here, there is no problem because the state of `app_keychain` is consistent.
-            let state_iter = cmds.state_transition(enclave_context.clone())?;
+            let state_iter = cmds.state_transition(self.enclave_context.clone())?;
 
-            if let Some(notify_state) = enclave_context.update_state(state_iter.0, state_iter.1) {
+            if let Some(notify_state) = self
+                .enclave_context
+                .update_state(state_iter.0, state_iter.1)
+            {
                 let json = serde_json::to_vec(&notify_state)?;
                 let bytes = bincode::serialize(&json[..])?;
                 output.update(bytes);
