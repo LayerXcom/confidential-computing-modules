@@ -4,6 +4,7 @@ use frame_sodium::StoreEnclaveDecryptionKey;
 use frame_treekem::StorePathSecrets;
 use std::{env, string::String, vec::Vec};
 
+#[derive(Debug)]
 pub struct KeyVaultEnclaveContext {
     version: usize,
     ias_url: String,

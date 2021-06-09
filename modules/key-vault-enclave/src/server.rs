@@ -1,3 +1,4 @@
+use crate::context::KeyVaultEnclaveContext;
 use crate::handlers::KeyVaultHandler;
 use frame_config::{ANONIFY_ENCLAVE_MEASUREMENT, IAS_ROOT_CERT};
 use frame_enclave::BasicEnclaveUseCase;
@@ -10,19 +11,19 @@ use std::env;
 
 /// A server starter
 #[derive(Debug, Clone)]
-pub struct ServerStarter<'c, C> {
-    enclave_context: &'c C,
+pub struct ServerStarter<'c> {
+    enclave_context: &'c KeyVaultEnclaveContext,
 }
 
-impl<'c, C> BasicEnclaveUseCase<'c, C> for ServerStarter<'c, C>
-where
-    C: ConfigGetter,
-{
+impl<'c> BasicEnclaveUseCase<'c, KeyVaultEnclaveContext> for ServerStarter<'c> {
     type EI = input::CallServerStarter;
     type EO = output::Empty;
     const ENCLAVE_USE_CASE_ID: u32 = START_SERVER_CMD;
 
-    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        _enclave_input: Self::EI,
+        enclave_context: &'c KeyVaultEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
     }
 
@@ -51,19 +52,19 @@ where
 
 /// A server stopper
 #[derive(Debug, Clone)]
-pub struct ServerStopper<'c, C> {
-    enclave_context: &'c C,
+pub struct ServerStopper<'c> {
+    enclave_context: &'c KeyVaultEnclaveContext,
 }
 
-impl<'c, C> BasicEnclaveUseCase<'c, C> for ServerStopper<'c, C>
-where
-    C: ConfigGetter,
-{
+impl<'c> BasicEnclaveUseCase<'c, KeyVaultEnclaveContext> for ServerStopper<'c> {
     type EI = input::CallServerStopper;
     type EO = output::Empty;
     const ENCLAVE_USE_CASE_ID: u32 = STOP_SERVER_CMD;
 
-    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        _enclave_input: Self::EI,
+        enclave_context: &'c KeyVaultEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
     }
 
