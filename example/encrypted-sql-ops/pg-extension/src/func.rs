@@ -47,7 +47,7 @@ fn encinteger_avg_state_func(
     let eid = Enclave::global().geteid();
 
     let host_output =
-        EncIntegerAvgStateFuncController::exec(host_input, ENCINTEGER_AVG_STATE_FUNC, eid)
+        EncIntegerAvgStateFuncController::run(host_input, ENCINTEGER_AVG_STATE_FUNC, eid)
             .unwrap_or_else(|e| {
                 panic!(
                     "failed to calculate next avg state in enclave (Enclave ID: {}), {:?}",
@@ -63,7 +63,7 @@ fn encinteger_avg_final_func(internal_state: EncAvgState) -> f32 {
     let host_input = HostInputEncAvgState::new(ModuleEncAvgState::from(internal_state));
     let eid = Enclave::global().geteid();
 
-    EncIntegerAvgFinalFuncController::exec(host_input, ENCINTEGER_AVG_FINAL_FUNC, eid)
+    EncIntegerAvgFinalFuncController::run(host_input, ENCINTEGER_AVG_FINAL_FUNC, eid)
         .unwrap_or_else(|e| {
             panic!(
                 "failed to finalize avg state in enclave (Enclave ID: {}), {:?}",
