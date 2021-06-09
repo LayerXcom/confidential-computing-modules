@@ -14,10 +14,22 @@ macro_rules! register_enclave_use_case {
             ecall_max_size: usize,
             output_len: &mut usize,
         ) -> frame_types::EnclaveStatus {
+            use log::error;
+
             match cmd {
                 $(
                     $(#[$feature])*
-                    <$use_case>::ENCLAVE_USE_CASE_ID => <$use_case>::ecall_entry_point(input_buf,input_len,output_buf,ecall_max_size,output_len, $ctx),
+                    <$use_case>::ENCLAVE_USE_CASE_ID => <$use_case>::ecall_entry_point(
+                        input_buf,
+                        input_len,
+                        output_buf,
+                        ecall_max_size,
+                        output_len,
+                        $ctx
+                    ).unwrap_or_else(|e| {
+                        error!("Error in enclave (ecall_entry_point): {:?}", e);
+                        frame_types::EnclaveStatus::error()
+                    }),
                 )*
                 _ => unreachable!("Not registered the ecall command"),
             }

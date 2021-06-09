@@ -1,6 +1,5 @@
 use frame_common::{state_types::StateType, EnclaveInput, EnclaveOutput};
 use frame_runtime::ContextOps;
-use log::error;
 use serde::{de::DeserializeOwned, Serialize};
 
 use super::{mk_input_ecall_entry_point, mk_output_ecall_entry_point};
@@ -29,23 +28,10 @@ where
         ecall_max_size: usize,
         output_len: &mut usize,
         enclave_context: &'c C,
-    ) -> frame_types::EnclaveStatus {
-        mk_input_ecall_entry_point(input_buf, input_len, ecall_max_size)
-            .and_then(|enclave_input| {
-                Self::new(enclave_input, enclave_context).and_then(|slf| {
-                    slf.run().and_then(|enclave_output| {
-                        mk_output_ecall_entry_point(
-                            enclave_output,
-                            output_buf,
-                            ecall_max_size,
-                            output_len,
-                        )
-                    })
-                })
-            })
-            .unwrap_or_else(|e| {
-                error!("Error in enclave (ecall_entry_point): {:?}", e);
-                frame_types::EnclaveStatus::error()
-            })
+    ) -> anyhow::Result<frame_types::EnclaveStatus> {
+        let enclave_input = mk_input_ecall_entry_point(input_buf, input_len, ecall_max_size)?;
+        let slf = Self::new(enclave_input, enclave_context)?;
+        let enclave_output = slf.run()?;
+        mk_output_ecall_entry_point(enclave_output, output_buf, ecall_max_size, output_len)
     }
 }
