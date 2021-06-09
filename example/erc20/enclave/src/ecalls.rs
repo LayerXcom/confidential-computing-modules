@@ -5,41 +5,40 @@ use frame_common::crypto::NoAuth;
 use frame_enclave::{register_enclave_use_case, StateRuntimeEnclaveUseCase};
 
 register_enclave_use_case!(
-    &*ENCLAVE_CONTEXT,
     #[cfg(feature = "enclave_key")]
-    CommandByEnclaveKeySender<Runtime<AnonifyEnclaveContext>,NoAuth>,
+    (CommandByEnclaveKeySender<Runtime<AnonifyEnclaveContext>,NoAuth>, &*ENCLAVE_CONTEXT),
     #[cfg(feature = "treekem")]
-    CommandByTreeKemSender<Runtime<AnonifyEnclaveContext>,NoAuth>,
+    (CommandByTreeKemSender<Runtime<AnonifyEnclaveContext>,NoAuth>, &*ENCLAVE_CONTEXT),
     #[cfg(feature = "enclave_key")]
-    CommandByEnclaveKeyReceiver<Runtime<AnonifyEnclaveContext>,NoAuth>,
+    (CommandByEnclaveKeyReceiver<Runtime<AnonifyEnclaveContext>,NoAuth>, &*ENCLAVE_CONTEXT),
     // Fetch a ciphertext in event logs from blockchain nodes into enclave's memory database.
     #[cfg(feature = "treekem")]
-    CommandByTreeKemReceiver<Runtime<AnonifyEnclaveContext>,  NoAuth>,
+    (CommandByTreeKemReceiver<Runtime<AnonifyEnclaveContext>,  NoAuth>, &*ENCLAVE_CONTEXT),
     #[cfg(feature = "treekem")]
-    HandshakeSender,
+    (HandshakeSender, &*ENCLAVE_CONTEXT),
     // Fetch handshake received from blockchain nodes into enclave.
     #[cfg(feature = "treekem")]
-    HandshakeReceiver,
+    (HandshakeReceiver, &*ENCLAVE_CONTEXT),
     // Get current state of the user represented the given public key from enclave memory database.
     #[cfg(feature = "enclave_key")]
-    JoinGroupWithEnclaveKey,
+    (JoinGroupWithEnclaveKey, &*ENCLAVE_CONTEXT),
     #[cfg(feature = "treekem")]
-    JoinGroupWithTreeKem,
-    GetState<Runtime<AnonifyEnclaveContext>,NoAuth>,
-    RegisterNotification<NoAuth>,
-    EncryptionKeyGetter,
-    ReportRegistration,
-    #[cfg(feature = "treekem")]
-    #[cfg(feature = "backup-enable")]
-    PathSecretsBackupper,
+    (JoinGroupWithTreeKem, &*ENCLAVE_CONTEXT),
+    (GetState<Runtime<AnonifyEnclaveContext>,NoAuth>, &*ENCLAVE_CONTEXT),
+    (RegisterNotification<NoAuth>, &*ENCLAVE_CONTEXT),
+    (EncryptionKeyGetter, &*ENCLAVE_CONTEXT),
+    (ReportRegistration, &*ENCLAVE_CONTEXT),
     #[cfg(feature = "treekem")]
     #[cfg(feature = "backup-enable")]
-    PathSecretsRecoverer,
-    GetUserCounter<NoAuth>,
+    (PathSecretsBackupper, &*ENCLAVE_CONTEXT),
+    #[cfg(feature = "treekem")]
+    #[cfg(feature = "backup-enable")]
+    (PathSecretsRecoverer, &*ENCLAVE_CONTEXT),
+    (GetUserCounter<NoAuth>, &*ENCLAVE_CONTEXT),
     #[cfg(feature = "enclave_key")]
     #[cfg(feature = "backup-enable")]
-    EnclaveKeyBackupper,
+    (EnclaveKeyBackupper, &*ENCLAVE_CONTEXT),
     #[cfg(feature = "enclave_key")]
     #[cfg(feature = "backup-enable")]
-    EnclaveKeyRecoverer,
+    (EnclaveKeyRecoverer, &*ENCLAVE_CONTEXT),
 );

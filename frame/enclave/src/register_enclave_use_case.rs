@@ -1,8 +1,8 @@
 #[macro_export]
 macro_rules! register_enclave_use_case {
-    (   $ctx: expr,
+    (
         $(  $(#[$feature: meta])*
-            $use_case: ty,
+            ($use_case: ty, $ctx: expr),
         )*
     ) => {
         #[no_mangle]

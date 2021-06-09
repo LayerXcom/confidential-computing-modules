@@ -4,8 +4,7 @@ use module_encrypted_sql_ops_enclave::enclave_use_cases::{
     EncIntegerAvgFinalFuncUseCase, EncIntegerAvgStateFuncUseCase, EncIntegerFromUseCase,
 };
 register_enclave_use_case!(
-    &*ENCLAVE_CONTEXT,
-    EncIntegerFromUseCase,
-    EncIntegerAvgStateFuncUseCase,
-    EncIntegerAvgFinalFuncUseCase,
+    (EncIntegerFromUseCase, &*ENCLAVE_CONTEXT),
+    (EncIntegerAvgStateFuncUseCase, &*ENCLAVE_CONTEXT),
+    (EncIntegerAvgFinalFuncUseCase, &*ENCLAVE_CONTEXT),
 );
