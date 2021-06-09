@@ -7,7 +7,7 @@ extern crate sgx_tstd as std;
 mod ecalls;
 mod state_transition;
 
-use anonify_enclave::context::AnonifyEnclaveContext;
+use anonify_enclave::{context::AnonifyEnclaveContext, use_case::ContextWithCmdCipherPaddingSize};
 use frame_sodium::rng::SgxRng;
 use lazy_static::lazy_static;
 use log::debug;
@@ -28,5 +28,11 @@ lazy_static! {
         let mut rng = SgxRng::new().unwrap();
         AnonifyEnclaveContext::new(ANONIFY_MRENCLAVE_VERSION, &mut rng)
             .expect("Failed to instantiate ENCLAVE_CONTEXT")
+    };
+    pub static ref ENCLAVE_CONTEXT_WITH_CMD_CIPHER_PADDING_SIZE: ContextWithCmdCipherPaddingSize<'static> = {
+        ContextWithCmdCipherPaddingSize {
+            ctx: &*ENCLAVE_CONTEXT,
+            cmd_cipher_padding_size: 100,
+        }
     };
 }

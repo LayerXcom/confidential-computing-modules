@@ -25,6 +25,7 @@ pub mod use_case {
     pub use crate::commands::{
         enclave_key::{CommandByEnclaveKeyReceiver, CommandByEnclaveKeySender},
         treekem::{CommandByTreeKemReceiver, CommandByTreeKemSender},
+        ContextWithCmdCipherPaddingSize,
     };
     pub use crate::context::{GetState, GetUserCounter, ReportRegistration};
     pub use crate::enclave_key::EncryptionKeyGetter;

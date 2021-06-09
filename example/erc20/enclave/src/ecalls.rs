@@ -1,14 +1,14 @@
 use crate::state_transition::Runtime;
-use crate::ENCLAVE_CONTEXT;
+use crate::{ENCLAVE_CONTEXT, ENCLAVE_CONTEXT_WITH_CMD_CIPHER_PADDING_SIZE};
 use anonify_enclave::{context::AnonifyEnclaveContext, use_case::*};
 use frame_common::crypto::NoAuth;
 use frame_enclave::{register_enclave_use_case, StateRuntimeEnclaveUseCase};
 
 register_enclave_use_case!(
     #[cfg(feature = "enclave_key")]
-    (CommandByEnclaveKeySender<Runtime<AnonifyEnclaveContext>,NoAuth>, &*ENCLAVE_CONTEXT),
+    (CommandByEnclaveKeySender<Runtime<AnonifyEnclaveContext>,NoAuth>, &*ENCLAVE_CONTEXT_WITH_CMD_CIPHER_PADDING_SIZE),
     #[cfg(feature = "treekem")]
-    (CommandByTreeKemSender<Runtime<AnonifyEnclaveContext>,NoAuth>, &*ENCLAVE_CONTEXT),
+    (CommandByTreeKemSender<Runtime<AnonifyEnclaveContext>,NoAuth>, &*ENCLAVE_CONTEXT_WITH_CMD_CIPHER_PADDING_SIZE),
     #[cfg(feature = "enclave_key")]
     (CommandByEnclaveKeyReceiver<Runtime<AnonifyEnclaveContext>,NoAuth>, &*ENCLAVE_CONTEXT),
     // Fetch a ciphertext in event logs from blockchain nodes into enclave's memory database.

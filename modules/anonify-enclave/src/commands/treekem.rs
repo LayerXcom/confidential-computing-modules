@@ -1,8 +1,8 @@
 use crate::context::AnonifyEnclaveContext;
 
+use super::ContextWithCmdCipherPaddingSize;
 use super::executor::CommandExecutor;
 use super::plaintext::CommandPlaintext;
-use super::MAX_MEM_SIZE;
 use anonify_ecall_types::cmd::FETCH_CIPHERTEXT_TREEKEM_CMD;
 use anonify_ecall_types::cmd::SEND_COMMAND_TREEKEM_CMD;
 use anonify_ecall_types::*;
@@ -20,12 +20,12 @@ use std::marker::PhantomData;
 #[derive(Debug, Clone)]
 pub struct CommandByTreeKemSender<'c, R, AP: AccessPolicy> {
     command_plaintext: CommandPlaintext<AP>,
-    enclave_context: &'c AnonifyEnclaveContext,
+    enclave_context: &'c ContextWithCmdCipherPaddingSize<'c>,
     user_id: Option<AccountId>,
     _p: PhantomData<R>,
 }
 
-impl<'c, R, AP> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext>
+impl<'c, R, AP> StateRuntimeEnclaveUseCase<'c, ContextWithCmdCipherPaddingSize<'c>>
     for CommandByTreeKemSender<'c, R, AP>
 where
     R: RuntimeExecutor<AnonifyEnclaveContext, S = StateType>,
@@ -37,9 +37,9 @@ where
 
     fn new(
         enclave_input: Self::EI,
-        enclave_context: &'c AnonifyEnclaveContext,
+        enclave_context: &'c ContextWithCmdCipherPaddingSize<'c>,
     ) -> anyhow::Result<Self> {
-        let buf = enclave_context.decrypt(enclave_input.ciphertext())?;
+        let buf = enclave_context.ctx.decrypt(enclave_input.ciphertext())?;
         let command_plaintext = serde_json::from_slice(&buf[..])?;
 
         Ok(Self {
@@ -70,7 +70,7 @@ where
     }
 
     fn run(self) -> anyhow::Result<Self::EO> {
-        let group_key = &mut *self.enclave_context.write_group_key();
+        let group_key = &mut *self.enclave_context.ctx.write_group_key();
         let roster_idx = group_key.my_roster_idx();
         // ratchet sender's app keychain per tx.
         group_key.sender_ratchet(roster_idx as usize)?;
@@ -80,7 +80,7 @@ where
             my_account_id,
             self.command_plaintext,
         )?
-        .encrypt_with_treekem(group_key, MAX_MEM_SIZE)?;
+        .encrypt_with_treekem(group_key, self.enclave_context.cmd_cipher_padding_size)?;
 
         let msg = Sha256::hash_for_attested_treekem_tx(
             &ciphertext.encode(),
@@ -88,7 +88,7 @@ where
             ciphertext.generation(),
             ciphertext.epoch(),
         );
-        let enclave_sig = self.enclave_context.sign(msg.as_bytes())?;
+        let enclave_sig = self.enclave_context.ctx.sign(msg.as_bytes())?;
         let command_output = output::Command::new(
             CommandCiphertext::TreeKem(ciphertext),
             enclave_sig.0,

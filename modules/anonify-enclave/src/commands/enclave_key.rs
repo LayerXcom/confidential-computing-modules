@@ -2,7 +2,7 @@ use crate::context::AnonifyEnclaveContext;
 
 use super::executor::CommandExecutor;
 use super::plaintext::CommandPlaintext;
-use super::MAX_MEM_SIZE;
+use super::ContextWithCmdCipherPaddingSize;
 use anonify_ecall_types::cmd::FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD;
 use anonify_ecall_types::cmd::SEND_COMMAND_ENCLAVE_KEY_CMD;
 use anonify_ecall_types::*;
@@ -21,12 +21,12 @@ use std::marker::PhantomData;
 #[derive(Debug, Clone)]
 pub struct CommandByEnclaveKeySender<'c, R, AP: AccessPolicy> {
     command_plaintext: CommandPlaintext<AP>,
-    enclave_context: &'c AnonifyEnclaveContext,
+    enclave_context: &'c ContextWithCmdCipherPaddingSize<'c>,
     user_id: Option<AccountId>,
     _p: PhantomData<R>,
 }
 
-impl<'c, R, AP> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext>
+impl<'c, R, AP> StateRuntimeEnclaveUseCase<'c, ContextWithCmdCipherPaddingSize<'c>>
     for CommandByEnclaveKeySender<'c, R, AP>
 where
     R: RuntimeExecutor<AnonifyEnclaveContext, S = StateType>,
@@ -38,9 +38,9 @@ where
 
     fn new(
         enclave_input: Self::EI,
-        enclave_context: &'c AnonifyEnclaveContext,
+        enclave_context: &'c ContextWithCmdCipherPaddingSize<'c>,
     ) -> anyhow::Result<Self> {
-        let buf = enclave_context.decrypt(enclave_input.ciphertext())?;
+        let buf = enclave_context.ctx.decrypt(enclave_input.ciphertext())?;
         let command_plaintext = serde_json::from_slice(&buf[..])?;
 
         Ok(Self {
@@ -71,8 +71,8 @@ where
     }
 
     fn run(self) -> anyhow::Result<Self::EO> {
-        let my_roster_idx = self.enclave_context.my_roster_idx() as u32;
-        let pubkey = self.enclave_context.enclave_encryption_key()?;
+        let my_roster_idx = self.enclave_context.ctx.my_roster_idx() as u32;
+        let pubkey = self.enclave_context.ctx.enclave_encryption_key()?;
         let my_account_id = self.command_plaintext.access_policy().into_account_id();
 
         let mut csprng = SgxRng::new()?;
@@ -80,10 +80,15 @@ where
             my_account_id,
             self.command_plaintext,
         )?
-        .encrypt_with_enclave_key(&mut csprng, pubkey, MAX_MEM_SIZE, my_roster_idx)?;
+        .encrypt_with_enclave_key(
+            &mut csprng,
+            pubkey,
+            self.enclave_context.cmd_cipher_padding_size,
+            my_roster_idx,
+        )?;
 
         let msg = Sha256::hash_for_attested_enclave_key_tx(&ciphertext.encode(), my_roster_idx);
-        let enclave_sig = self.enclave_context.sign(msg.as_bytes())?;
+        let enclave_sig = self.enclave_context.ctx.sign(msg.as_bytes())?;
         let command_output = output::Command::new(
             CommandCiphertext::EnclaveKey(ciphertext),
             enclave_sig.0,
