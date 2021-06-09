@@ -9,7 +9,6 @@ use frame_common::{
     traits::*,
 };
 use frame_config::ANONIFY_ABI_PATH;
-use frame_config::CMD_CIPHER_PADDING_SIZE;
 use frame_config::{FACTORY_ABI_PATH, FACTORY_BIN_PATH};
 use frame_host::EnclaveDir;
 use frame_runtime::primitives::U64;
@@ -109,7 +108,6 @@ pub async fn test_enclave_key_integration_eth_construct() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -251,7 +249,6 @@ async fn test_enclave_key_auto_notification() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -309,7 +306,6 @@ async fn test_enclave_key_auto_notification() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -430,7 +426,6 @@ async fn test_enclave_key_integration_eth_transfer() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -498,7 +493,6 @@ async fn test_enclave_key_integration_eth_transfer() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -635,7 +629,6 @@ async fn test_enclave_key_integration_eth_approve() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -697,7 +690,6 @@ async fn test_enclave_key_integration_eth_approve() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -829,7 +821,6 @@ async fn test_enclave_key_integration_eth_transfer_from() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -937,7 +928,6 @@ async fn test_enclave_key_integration_eth_transfer_from() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -1047,7 +1037,6 @@ async fn test_enclave_key_integration_eth_transfer_from() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -1224,7 +1213,6 @@ async fn test_enclave_key_integration_eth_mint() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -1259,7 +1247,6 @@ async fn test_enclave_key_integration_eth_mint() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -1397,7 +1384,6 @@ async fn test_enclave_key_integration_eth_burn() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -1432,7 +1418,6 @@ async fn test_enclave_key_integration_eth_burn() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,
@@ -1464,7 +1449,6 @@ async fn test_enclave_key_integration_eth_burn() {
         .send_command(
             encrypted_command,
             None,
-            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr,
             gas,
             SEND_COMMAND_ENCLAVE_KEY_CMD,

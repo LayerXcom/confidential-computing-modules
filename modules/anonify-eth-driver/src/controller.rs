@@ -21,7 +21,6 @@ impl EcallController for CommandController {
         Ok(input::Command::new(
             host_input.ciphertext,
             host_input.user_id,
-            host_input.cmd_cipher_padding_size,
         ))
     }
 
@@ -240,19 +239,13 @@ pub mod host_input {
     pub struct Command {
         pub(super) ciphertext: SodiumCiphertext,
         pub(super) user_id: Option<AccountId>,
-        pub(super) cmd_cipher_padding_size: usize,
     }
 
     impl Command {
-        pub fn new(
-            ciphertext: SodiumCiphertext,
-            user_id: Option<AccountId>,
-            cmd_cipher_padding_size: usize,
-        ) -> Self {
+        pub fn new(ciphertext: SodiumCiphertext, user_id: Option<AccountId>) -> Self {
             Command {
                 ciphertext,
                 user_id,
-                cmd_cipher_padding_size,
             }
         }
     }

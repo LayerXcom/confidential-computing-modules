@@ -233,13 +233,12 @@ impl Dispatcher {
         &self,
         ciphertext: SodiumCiphertext,
         user_id: Option<AccountId>,
-        cmd_cipher_padding_size: usize,
         signer: Address,
         gas: u64,
         ecall_cmd: u32,
     ) -> Result<H256> {
         let inner = self.inner.read();
-        let input = host_input::Command::new(ciphertext, user_id, cmd_cipher_padding_size);
+        let input = host_input::Command::new(ciphertext, user_id);
         let eid = inner.enclave_id;
         let host_output = CommandController::run(input, ecall_cmd, eid)?;
 

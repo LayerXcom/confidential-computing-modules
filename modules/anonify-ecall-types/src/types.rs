@@ -24,21 +24,15 @@ pub mod input {
     pub struct Command {
         ciphertext: SodiumCiphertext,
         user_id: Option<AccountId>,
-        cmd_cipher_padding_size: usize,
     }
 
     impl EnclaveInput for Command {}
 
     impl Command {
-        pub fn new(
-            ciphertext: SodiumCiphertext,
-            user_id: Option<AccountId>,
-            cmd_cipher_padding_size: usize,
-        ) -> Self {
+        pub fn new(ciphertext: SodiumCiphertext, user_id: Option<AccountId>) -> Self {
             Self {
                 ciphertext,
                 user_id,
-                cmd_cipher_padding_size,
             }
         }
 
@@ -48,10 +42,6 @@ pub mod input {
 
         pub fn user_id(&self) -> Option<AccountId> {
             self.user_id
-        }
-
-        pub fn cmd_cipher_padding_size(&self) -> usize {
-            self.cmd_cipher_padding_size
         }
     }
 
