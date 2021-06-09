@@ -49,7 +49,7 @@ use std::{
 };
 
 /// spid: Service provider ID for the ISV.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AnonifyEnclaveContext {
     version: usize,
     my_roster_idx: usize,
@@ -448,22 +448,25 @@ impl AnonifyEnclaveContext {
 }
 
 #[derive(Debug, Clone)]
-pub struct GetState<'c, C, R, AP: AccessPolicy> {
+pub struct GetState<'c, R, AP: AccessPolicy> {
     enclave_input: input::GetState<AP>,
-    enclave_context: &'c C,
+    enclave_context: &'c AnonifyEnclaveContext,
     _p: PhantomData<R>,
 }
 
-impl<'c, C, R, AP: AccessPolicy> StateRuntimeEnclaveUseCase<'c, C> for GetState<'c, C, R, AP>
+impl<'c, R, AP: AccessPolicy> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext>
+    for GetState<'c, R, AP>
 where
-    C: ContextOps<S = StateType> + Clone,
-    R: RuntimeExecutor<C, S = StateType>,
+    R: RuntimeExecutor<AnonifyEnclaveContext, S = StateType>,
 {
     type EI = SodiumCiphertext;
     type EO = output::ReturnState;
     const ENCLAVE_USE_CASE_ID: u32 = GET_STATE_CMD;
 
-    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
         let buf = enclave_context.decrypt(&enclave_input)?;
         let enclave_input = serde_json::from_slice(&buf[..])?;
 
@@ -484,7 +487,7 @@ where
             runtime_params,
             state_name,
         } = self.enclave_input;
-        let user_state = C::get_state_by_state_name::<_, R, _>(
+        let user_state = AnonifyEnclaveContext::get_state_by_state_name::<_, R, _>(
             self.enclave_context.clone(),
             &state_name,
             access_policy.into_account_id(),
@@ -496,20 +499,22 @@ where
 }
 
 #[derive(Debug, Clone)]
-pub struct GetUserCounter<'c, C, AP: AccessPolicy> {
+pub struct GetUserCounter<'c, AP: AccessPolicy> {
     enclave_input: input::GetUserCounter<AP>,
-    enclave_context: &'c C,
+    enclave_context: &'c AnonifyEnclaveContext,
 }
 
-impl<'c, C, AP: AccessPolicy> StateRuntimeEnclaveUseCase<'c, C> for GetUserCounter<'c, C, AP>
-where
-    C: ContextOps<S = StateType> + Clone,
+impl<'c, AP: AccessPolicy> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext>
+    for GetUserCounter<'c, AP>
 {
     type EI = SodiumCiphertext;
     type EO = output::ReturnUserCounter;
     const ENCLAVE_USE_CASE_ID: u32 = GET_USER_COUNTER_CMD;
 
-    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
         let buf = enclave_context.decrypt(&enclave_input)?;
         let enclave_input = serde_json::from_slice(&buf[..])?;
 
@@ -533,19 +538,19 @@ where
 
 /// A report registration engine
 #[derive(Debug, Clone)]
-pub struct ReportRegistration<'c, C> {
-    enclave_context: &'c C,
+pub struct ReportRegistration<'c> {
+    enclave_context: &'c AnonifyEnclaveContext,
 }
 
-impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for ReportRegistration<'c, C>
-where
-    C: ContextOps<S = StateType> + Clone,
-{
+impl<'c> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext> for ReportRegistration<'c> {
     type EI = input::Empty;
     type EO = output::ReturnRegisterReport;
     const ENCLAVE_USE_CASE_ID: u32 = SEND_REGISTER_REPORT_CMD;
 
-    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        _enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
     }
 

@@ -2,28 +2,30 @@ use anonify_ecall_types::cmd::FETCH_HANDSHAKE_TREEKEM_CMD;
 use anonify_ecall_types::cmd::SEND_HANDSHAKE_TREEKEM_CMD;
 use anonify_ecall_types::*;
 use anyhow::{anyhow, Result};
-use frame_common::{crypto::Sha256, state_types::StateType};
+use frame_common::crypto::Sha256;
 use frame_enclave::StateRuntimeEnclaveUseCase;
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::key_vault::request::BackupPathSecretRequestBody;
 use frame_runtime::traits::*;
 use frame_treekem::handshake::HandshakeParams;
 
+use crate::context::AnonifyEnclaveContext;
+
 /// A update handshake sender
 #[derive(Debug, Clone)]
-pub struct HandshakeSender<'c, C> {
-    enclave_context: &'c C,
+pub struct HandshakeSender<'c> {
+    enclave_context: &'c AnonifyEnclaveContext,
 }
 
-impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for HandshakeSender<'c, C>
-where
-    C: ContextOps<S = StateType> + Clone,
-{
+impl<'c> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext> for HandshakeSender<'c> {
     type EI = input::Empty;
     type EO = output::ReturnHandshake;
     const ENCLAVE_USE_CASE_ID: u32 = SEND_HANDSHAKE_TREEKEM_CMD;
 
-    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        _enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
     }
 
@@ -74,20 +76,20 @@ where
 
 /// A handshake receiver
 #[derive(Debug, Clone)]
-pub struct HandshakeReceiver<'c, C> {
+pub struct HandshakeReceiver<'c> {
     enclave_input: input::InsertHandshake,
-    enclave_context: &'c C,
+    enclave_context: &'c AnonifyEnclaveContext,
 }
 
-impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for HandshakeReceiver<'c, C>
-where
-    C: ContextOps<S = StateType> + Clone,
-{
+impl<'c> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext> for HandshakeReceiver<'c> {
     type EI = input::InsertHandshake;
     type EO = output::Empty;
     const ENCLAVE_USE_CASE_ID: u32 = FETCH_HANDSHAKE_TREEKEM_CMD;
 
-    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self {
             enclave_input,
             enclave_context,
@@ -110,7 +112,9 @@ where
             self.enclave_context.store_path_secrets(),
             &handshake,
             #[cfg(feature = "backup-enable")]
-            |ps_id, roster_idx| C::recover_path_secret(self.enclave_context, ps_id, roster_idx),
+            |ps_id, roster_idx| {
+                AnonifyEnclaveContext::recover_path_secret(self.enclave_context, ps_id, roster_idx)
+            },
         )?;
 
         Ok(output::Empty::default())

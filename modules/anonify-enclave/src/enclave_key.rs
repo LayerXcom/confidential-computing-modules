@@ -1,10 +1,11 @@
 //! This module contains enclave specific cryptographic logics.
 
+use crate::context::AnonifyEnclaveContext;
 use crate::error::{EnclaveError, Result};
 use anonify_ecall_types::cmd::GET_ENCLAVE_ENCRYPTION_KEY_CMD;
 use anonify_ecall_types::*;
 use anyhow::anyhow;
-use frame_common::{crypto::rand_assign, state_types::StateType, traits::Keccak256};
+use frame_common::{crypto::rand_assign, traits::Keccak256};
 use frame_enclave::StateRuntimeEnclaveUseCase;
 #[cfg(feature = "backup-enable")]
 use frame_mra_tls::{
@@ -33,19 +34,19 @@ const REPORT_DATA_SIZE: usize = 64;
 pub const DEC_KEY_FILE_NAME: &str = "sr_enclave_decryption_key";
 
 #[derive(Debug, Clone)]
-pub struct EncryptionKeyGetter<'c, C> {
-    enclave_context: &'c C,
+pub struct EncryptionKeyGetter<'c> {
+    enclave_context: &'c AnonifyEnclaveContext,
 }
 
-impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for EncryptionKeyGetter<'c, C>
-where
-    C: ContextOps<S = StateType> + Clone,
-{
+impl<'c> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext> for EncryptionKeyGetter<'c> {
     type EI = input::Empty;
     type EO = output::ReturnEncryptionKey;
     const ENCLAVE_USE_CASE_ID: u32 = GET_ENCLAVE_ENCRYPTION_KEY_CMD;
 
-    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        _enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
     }
 

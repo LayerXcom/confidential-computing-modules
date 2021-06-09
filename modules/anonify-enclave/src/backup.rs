@@ -1,5 +1,6 @@
 #![cfg(feature = "backup-enable")]
 
+use crate::context::AnonifyEnclaveContext;
 use crate::enclave_key::DEC_KEY_FILE_NAME;
 use anonify_ecall_types::cmd::{
     BACKUP_ENCLAVE_KEY_CMD, BACKUP_PATH_SECRETS_CMD, RECOVER_ENCLAVE_KEY_CMD,
@@ -7,7 +8,6 @@ use anonify_ecall_types::cmd::{
 };
 use anonify_ecall_types::*;
 use anyhow::{anyhow, Result};
-use frame_common::state_types::StateType;
 use frame_enclave::StateRuntimeEnclaveUseCase;
 use frame_mra_tls::key_vault::request::{
     BackupPathSecretRequestBody, BackupPathSecretsRequestBody, RecoverPathSecretsRequestBody,
@@ -19,19 +19,19 @@ use std::vec::Vec;
 
 /// A PathSecret Backupper
 #[derive(Debug, Clone)]
-pub struct PathSecretsBackupper<'c, C> {
-    enclave_context: &'c C,
+pub struct PathSecretsBackupper<'c> {
+    enclave_context: &'c AnonifyEnclaveContext,
 }
 
-impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for PathSecretsBackupper<'c, C>
-where
-    C: ContextOps<S = StateType> + Clone,
-{
+impl<'c> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext> for PathSecretsBackupper<'c> {
     type EI = input::Empty;
     type EO = output::Empty;
     const ENCLAVE_USE_CASE_ID: u32 = BACKUP_PATH_SECRETS_CMD;
 
-    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        _enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
     }
 
@@ -68,19 +68,19 @@ where
 
 /// A PathSecret Recoverer
 #[derive(Debug, Clone)]
-pub struct PathSecretsRecoverer<'c, C> {
-    enclave_context: &'c C,
+pub struct PathSecretsRecoverer<'c> {
+    enclave_context: &'c AnonifyEnclaveContext,
 }
 
-impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for PathSecretsRecoverer<'c, C>
-where
-    C: ContextOps<S = StateType> + Clone,
-{
+impl<'c> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext> for PathSecretsRecoverer<'c> {
     type EI = input::Empty;
     type EO = output::Empty;
     const ENCLAVE_USE_CASE_ID: u32 = RECOVER_PATH_SECRETS_CMD;
 
-    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        _enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
     }
 
@@ -113,19 +113,19 @@ where
 
 /// A EnclaveKey Backupper
 #[derive(Debug, Clone)]
-pub struct EnclaveKeyBackupper<'c, C> {
-    enclave_context: &'c C,
+pub struct EnclaveKeyBackupper<'c> {
+    enclave_context: &'c AnonifyEnclaveContext,
 }
 
-impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for EnclaveKeyBackupper<'c, C>
-where
-    C: ContextOps<S = StateType> + Clone,
-{
+impl<'c> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext> for EnclaveKeyBackupper<'c> {
     type EI = input::Empty;
     type EO = output::Empty;
     const ENCLAVE_USE_CASE_ID: u32 = BACKUP_ENCLAVE_KEY_CMD;
 
-    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        _enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
     }
 
@@ -141,19 +141,19 @@ where
 
 /// A EnclaveKey Recoverer
 #[derive(Debug, Clone)]
-pub struct EnclaveKeyRecoverer<'c, C> {
-    enclave_context: &'c C,
+pub struct EnclaveKeyRecoverer<'c> {
+    enclave_context: &'c AnonifyEnclaveContext,
 }
 
-impl<'c, C> StateRuntimeEnclaveUseCase<'c, C> for EnclaveKeyRecoverer<'c, C>
-where
-    C: ContextOps<S = StateType> + Clone,
-{
+impl<'c> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext> for EnclaveKeyRecoverer<'c> {
     type EI = input::Empty;
     type EO = output::Empty;
     const ENCLAVE_USE_CASE_ID: u32 = RECOVER_ENCLAVE_KEY_CMD;
 
-    fn new(_enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        _enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self { enclave_context })
     }
 

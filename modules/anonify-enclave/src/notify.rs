@@ -1,6 +1,6 @@
 use anonify_ecall_types::cmd::REGISTER_NOTIFICATION_CMD;
 use anonify_ecall_types::*;
-use frame_common::{crypto::AccountId, state_types::StateType, AccessPolicy};
+use frame_common::{crypto::AccountId, AccessPolicy};
 use frame_enclave::StateRuntimeEnclaveUseCase;
 use frame_runtime::traits::*;
 use frame_sodium::SodiumCiphertext;
@@ -8,6 +8,8 @@ use std::{
     collections::HashSet,
     sync::{Arc, SgxRwLock},
 };
+
+use crate::context::AnonifyEnclaveContext;
 
 #[derive(Debug, Clone)]
 pub struct Notifier {
@@ -33,20 +35,22 @@ impl Notifier {
 }
 
 #[derive(Debug, Clone)]
-pub struct RegisterNotification<'c, C, AP: AccessPolicy> {
+pub struct RegisterNotification<'c, AP: AccessPolicy> {
     enclave_input: input::RegisterNotification<AP>,
-    enclave_context: &'c C,
+    enclave_context: &'c AnonifyEnclaveContext,
 }
 
-impl<'c, C, AP: AccessPolicy> StateRuntimeEnclaveUseCase<'c, C> for RegisterNotification<'c, C, AP>
-where
-    C: ContextOps<S = StateType> + Clone,
+impl<'c, AP: AccessPolicy> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext>
+    for RegisterNotification<'c, AP>
 {
     type EI = SodiumCiphertext;
     type EO = output::Empty;
     const ENCLAVE_USE_CASE_ID: u32 = REGISTER_NOTIFICATION_CMD;
 
-    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
         let buf = enclave_context.decrypt(&enclave_input)?;
         let enclave_input = serde_json::from_slice(&buf[..])?;
         Ok(Self {

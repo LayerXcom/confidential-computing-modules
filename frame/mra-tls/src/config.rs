@@ -1,9 +1,10 @@
 use crate::error::Result;
 use crate::key::NistP256KeyPair;
 use crate::verifier::AttestedReportVerifier;
+use core::fmt;
 use frame_config::EnclaveMeasurement;
 use remote_attestation::QuoteTarget;
-use std::{sync::Arc, vec::Vec};
+use std::{string::ToString, sync::Arc, vec::Vec};
 
 const CERT_ISSUER: &str = "Anonify";
 const CERT_SUBJECT: &str = "CN=Anonify";
@@ -81,6 +82,14 @@ impl Default for ClientConfig {
         Self {
             tls: client_tls_config,
         }
+    }
+}
+
+impl fmt::Debug for ClientConfig {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt.debug_struct("ClientConfig")
+            .field("tls", &"(omitted)".to_string())
+            .finish()
     }
 }
 

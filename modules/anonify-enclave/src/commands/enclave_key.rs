@@ -1,3 +1,5 @@
+use crate::context::AnonifyEnclaveContext;
+
 use super::executor::CommandExecutor;
 use super::plaintext::CommandPlaintext;
 use super::MAX_MEM_SIZE;
@@ -17,24 +19,27 @@ use std::marker::PhantomData;
 
 /// A message sender that encrypts commands
 #[derive(Debug, Clone)]
-pub struct CommandByEnclaveKeySender<'c, C, R, AP: AccessPolicy> {
+pub struct CommandByEnclaveKeySender<'c, R, AP: AccessPolicy> {
     command_plaintext: CommandPlaintext<AP>,
-    enclave_context: &'c C,
+    enclave_context: &'c AnonifyEnclaveContext,
     user_id: Option<AccountId>,
     _p: PhantomData<R>,
 }
 
-impl<'c, C, R, AP> StateRuntimeEnclaveUseCase<'c, C> for CommandByEnclaveKeySender<'c, C, R, AP>
+impl<'c, R, AP> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext>
+    for CommandByEnclaveKeySender<'c, R, AP>
 where
-    C: ContextOps<S = StateType> + Clone,
-    R: RuntimeExecutor<C, S = StateType>,
+    R: RuntimeExecutor<AnonifyEnclaveContext, S = StateType>,
     AP: AccessPolicy,
 {
     type EI = input::Command;
     type EO = output::Command;
     const ENCLAVE_USE_CASE_ID: u32 = SEND_COMMAND_ENCLAVE_KEY_CMD;
 
-    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
         let buf = enclave_context.decrypt(enclave_input.ciphertext())?;
         let command_plaintext = serde_json::from_slice(&buf[..])?;
 
@@ -71,9 +76,11 @@ where
         let my_account_id = self.command_plaintext.access_policy().into_account_id();
 
         let mut csprng = SgxRng::new()?;
-        let ciphertext =
-            CommandExecutor::<R, C, AP>::new(my_account_id, self.command_plaintext)?
-                .encrypt_with_enclave_key(&mut csprng, pubkey, MAX_MEM_SIZE, my_roster_idx)?;
+        let ciphertext = CommandExecutor::<R, AnonifyEnclaveContext, AP>::new(
+            my_account_id,
+            self.command_plaintext,
+        )?
+        .encrypt_with_enclave_key(&mut csprng, pubkey, MAX_MEM_SIZE, my_roster_idx)?;
 
         let msg = Sha256::hash_for_attested_enclave_key_tx(&ciphertext.encode(), my_roster_idx);
         let enclave_sig = self.enclave_context.sign(msg.as_bytes())?;
@@ -89,23 +96,26 @@ where
 
 /// A message receiver that decrypt commands and make state transition
 #[derive(Debug, Clone)]
-pub struct CommandByEnclaveKeyReceiver<'c, C, R, AP> {
+pub struct CommandByEnclaveKeyReceiver<'c, R, AP> {
     enclave_input: input::InsertCiphertext,
-    enclave_context: &'c C,
+    enclave_context: &'c AnonifyEnclaveContext,
     _p: PhantomData<(R, AP)>,
 }
 
-impl<'c, C, R, AP> StateRuntimeEnclaveUseCase<'c, C> for CommandByEnclaveKeyReceiver<'c, C, R, AP>
+impl<'c, R, AP> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext>
+    for CommandByEnclaveKeyReceiver<'c, R, AP>
 where
-    C: ContextOps<S = StateType> + Clone,
-    R: RuntimeExecutor<C, S = StateType>,
+    R: RuntimeExecutor<AnonifyEnclaveContext, S = StateType>,
     AP: AccessPolicy,
 {
     type EI = input::InsertCiphertext;
     type EO = output::ReturnNotifyState;
     const ENCLAVE_USE_CASE_ID: u32 = FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD;
 
-    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self {
             enclave_input,
             enclave_context,
@@ -133,10 +143,11 @@ where
 
         let mut output = output::ReturnNotifyState::default();
         let enclave_decryption_key = self.enclave_context.enclave_decryption_key()?;
-        let decrypted_cmds = CommandExecutor::<R, C, AP>::decrypt_with_enclave_key(
-            ciphertext,
-            &enclave_decryption_key,
-        )?;
+        let decrypted_cmds =
+            CommandExecutor::<R, AnonifyEnclaveContext, AP>::decrypt_with_enclave_key(
+                ciphertext,
+                &enclave_decryption_key,
+            )?;
 
         // Since the command data is valid for the error at the time of state transition,
         // `user_counter` must be verified and incremented before the state transition.
