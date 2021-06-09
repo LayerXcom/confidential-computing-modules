@@ -1,8 +1,8 @@
 use crate::aggregate_calc::AggregateCalc;
+use crate::enclave_context::EncryptedSqlOpsEnclaveContext;
 use crate::plain_types::PlainAvgState;
 use crate::type_crypt::Pad16BytesDecrypt;
 use frame_enclave::BasicEnclaveUseCase;
-use frame_runtime::ConfigGetter;
 use module_encrypted_sql_ops_ecall_types::ecall_cmd::ENCINTEGER_AVG_STATE_FUNC;
 use module_encrypted_sql_ops_ecall_types::enclave_types::{
     EnclaveEncAvgState, EnclaveEncAvgStateWithNext,
@@ -10,20 +10,22 @@ use module_encrypted_sql_ops_ecall_types::enclave_types::{
 
 /// EncIntegerAvgStateFunc command running inside enclave.
 #[derive(Clone, Debug)]
-pub struct EncIntegerAvgStateFuncUseCase<'c, C> {
+pub struct EncIntegerAvgStateFuncUseCase<'c> {
     enclave_input: EnclaveEncAvgStateWithNext,
-    enclave_context: &'c C,
+    enclave_context: &'c EncryptedSqlOpsEnclaveContext,
 }
 
-impl<'c, C> BasicEnclaveUseCase<'c, C> for EncIntegerAvgStateFuncUseCase<'c, C>
-where
-    C: ConfigGetter,
+impl<'c> BasicEnclaveUseCase<'c, EncryptedSqlOpsEnclaveContext>
+    for EncIntegerAvgStateFuncUseCase<'c>
 {
     type EI = EnclaveEncAvgStateWithNext;
     type EO = EnclaveEncAvgState;
     const ENCLAVE_USE_CASE_ID: u32 = ENCINTEGER_AVG_STATE_FUNC;
 
-    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        enclave_input: Self::EI,
+        enclave_context: &'c EncryptedSqlOpsEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self {
             enclave_input,
             enclave_context,

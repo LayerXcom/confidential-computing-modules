@@ -1,28 +1,29 @@
+use crate::{
+    enclave_context::EncryptedSqlOpsEnclaveContext, plain_types::PlainInteger,
+    type_crypt::Pad16BytesEncrypt,
+};
 use frame_enclave::BasicEnclaveUseCase;
-use frame_runtime::ConfigGetter;
 use module_encrypted_sql_ops_ecall_types::{
     ecall_cmd::ENCINTEGER_FROM,
     enclave_types::{EnclaveEncInteger, EnclavePlainInteger},
 };
 
-use crate::{plain_types::PlainInteger, type_crypt::Pad16BytesEncrypt};
-
 /// EncIntegerFrom command running inside enclave.
-#[derive(Clone, Hash, Debug)]
-pub struct EncIntegerFromUseCase<'c, C> {
+#[derive(Clone, Debug)]
+pub struct EncIntegerFromUseCase<'c> {
     enclave_input: EnclavePlainInteger,
-    enclave_context: &'c C,
+    enclave_context: &'c EncryptedSqlOpsEnclaveContext,
 }
 
-impl<'c, C> BasicEnclaveUseCase<'c, C> for EncIntegerFromUseCase<'c, C>
-where
-    C: ConfigGetter,
-{
+impl<'c> BasicEnclaveUseCase<'c, EncryptedSqlOpsEnclaveContext> for EncIntegerFromUseCase<'c> {
     type EI = EnclavePlainInteger;
     type EO = EnclaveEncInteger;
     const ENCLAVE_USE_CASE_ID: u32 = ENCINTEGER_FROM;
 
-    fn new(enclave_input: Self::EI, enclave_context: &'c C) -> anyhow::Result<Self> {
+    fn new(
+        enclave_input: Self::EI,
+        enclave_context: &'c EncryptedSqlOpsEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self {
             enclave_input,
             enclave_context,
