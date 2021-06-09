@@ -1,13 +1,9 @@
 use frame_common::{EnclaveInput, EnclaveOutput};
-use frame_runtime::ConfigGetter;
 use serde::{de::DeserializeOwned, Serialize};
 
 use super::{mk_input_ecall_entry_point, mk_output_ecall_entry_point};
 
-pub trait BasicEnclaveUseCase<'c, C>: Sized
-where
-    C: ConfigGetter,
-{
+pub trait BasicEnclaveUseCase<'c, C>: Sized {
     type EI: EnclaveInput + DeserializeOwned;
     type EO: EnclaveOutput + Serialize;
 

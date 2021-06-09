@@ -1,13 +1,9 @@
-use frame_common::{state_types::StateType, EnclaveInput, EnclaveOutput};
-use frame_runtime::ContextOps;
+use frame_common::{EnclaveInput, EnclaveOutput};
 use serde::{de::DeserializeOwned, Serialize};
 
 use super::{mk_input_ecall_entry_point, mk_output_ecall_entry_point};
 
-pub trait StateRuntimeEnclaveUseCase<'c, C>: Sized
-where
-    C: ContextOps<S = StateType> + Clone,
-{
+pub trait StateRuntimeEnclaveUseCase<'c, C>: Sized {
     type EI: EnclaveInput + DeserializeOwned;
     type EO: EnclaveOutput + Serialize;
 
