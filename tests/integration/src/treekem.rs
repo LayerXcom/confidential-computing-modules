@@ -4,6 +4,7 @@ use anonify_eth_driver::dispatcher::*;
 use anonify_eth_driver::EventCache;
 use eth_deployer::EthDeployer;
 use frame_config::ANONIFY_ABI_PATH;
+use frame_config::CMD_CIPHER_PADDING_SIZE;
 use frame_config::{FACTORY_ABI_PATH, FACTORY_BIN_PATH};
 use frame_host::EnclaveDir;
 use frame_sodium::SodiumCiphertext;
@@ -126,6 +127,7 @@ async fn test_treekem_key_rotation() {
         .send_command(
             encrypted_command,
             None,
+            *CMD_CIPHER_PADDING_SIZE,
             deployer_addr.clone(),
             gas,
             SEND_COMMAND_TREEKEM_CMD,

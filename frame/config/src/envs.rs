@@ -79,6 +79,12 @@ lazy_static! {
         bin_path.push(bin_path_from_root);
         bin_path
     };
+    pub static ref CMD_CIPHER_PADDING_SIZE: usize = {
+        env::var("CMD_CIPHER_PADDING_SIZE")
+            .unwrap_or_else(|_| "100".to_string())
+            .parse::<usize>()
+            .unwrap()
+    };
     pub static ref ANONIFY_PARAMS_DIR: PathBuf = {
         let mut measurement_file_path = PJ_ROOT_DIR.clone();
         measurement_file_path.push(".anonify");

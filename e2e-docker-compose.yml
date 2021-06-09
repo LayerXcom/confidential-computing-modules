@@ -28,6 +28,7 @@ services:
       FACTORY_ABI_PATH: "contract-build/DeployAnonify.abi"
       FACTORY_BIN_PATH: "contract-build/DeployAnonify.bin"
       FACTORY_CONTRACT_ADDRESS: ${FACTORY_CONTRACT_ADDRESS}
+      CMD_CIPHER_PADDING_SIZE: "100"
       CONFIRMATIONS: "0" # Set 0 if using ganache, otherwise 1 or more
       ACCOUNT_INDEX: "0" # Set 0 if using ganache, otherwise 1 or more
       PASSWORD: "anonify0101" # just for testing

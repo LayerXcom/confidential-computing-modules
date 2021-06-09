@@ -2,7 +2,6 @@ use crate::context::AnonifyEnclaveContext;
 
 use super::executor::CommandExecutor;
 use super::plaintext::CommandPlaintext;
-use super::MAX_MEM_SIZE;
 use anonify_ecall_types::cmd::FETCH_CIPHERTEXT_TREEKEM_CMD;
 use anonify_ecall_types::cmd::SEND_COMMAND_TREEKEM_CMD;
 use anonify_ecall_types::*;
@@ -22,6 +21,7 @@ pub struct CommandByTreeKemSender<'c, R, AP: AccessPolicy> {
     command_plaintext: CommandPlaintext<AP>,
     enclave_context: &'c AnonifyEnclaveContext,
     user_id: Option<AccountId>,
+    cmd_cipher_padding_size: usize,
     _p: PhantomData<R>,
 }
 
@@ -46,6 +46,7 @@ where
             command_plaintext,
             enclave_context,
             user_id: enclave_input.user_id(),
+            cmd_cipher_padding_size: enclave_input.cmd_cipher_padding_size(),
             _p: PhantomData::default(),
         })
     }
@@ -80,7 +81,7 @@ where
             my_account_id,
             self.command_plaintext,
         )?
-        .encrypt_with_treekem(group_key, MAX_MEM_SIZE)?;
+        .encrypt_with_treekem(group_key, self.cmd_cipher_padding_size)?;
 
         let msg = Sha256::hash_for_attested_treekem_tx(
             &ciphertext.encode(),

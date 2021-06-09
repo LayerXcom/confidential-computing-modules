@@ -2,6 +2,7 @@ use crate::error::{Result, ServerError};
 use crate::{CmdEncryptionAlgo, Server, DEFAULT_GAS};
 use actix_web::{web, HttpResponse, Responder};
 use anonify_ecall_types::cmd::*;
+use frame_config::CMD_CIPHER_PADDING_SIZE;
 use opentelemetry::trace::TraceContextExt;
 use std::sync::Arc;
 use tracing::Span;
@@ -38,6 +39,7 @@ pub async fn handle_send_command(
         .send_command(
             req.ciphertext.clone(),
             req.user_id,
+            *CMD_CIPHER_PADDING_SIZE,
             server.sender_address,
             DEFAULT_GAS,
             ecall_cmd,
