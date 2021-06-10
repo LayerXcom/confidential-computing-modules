@@ -51,10 +51,10 @@ where
     pub fn encrypt_with_treekem<GK: GroupKeyOps>(
         &self,
         key: &GK,
-        max_mem_size: usize,
+        cmd_cipher_padding_size: usize,
     ) -> Result<TreeKemCiphertext> {
         let mut buf = bincode::serialize(&self).unwrap(); // must not fail
-        Self::append_padding(&mut buf, max_mem_size);
+        Self::append_padding(&mut buf, cmd_cipher_padding_size);
         key.encrypt(buf).map_err(Into::into)
     }
 
@@ -62,11 +62,11 @@ where
         &self,
         csprng: &mut RNG,
         pubkey: SodiumPubKey,
-        max_mem_size: usize,
+        cmd_cipher_padding_size: usize,
         roster_idx: u32,
     ) -> Result<EnclaveKeyCiphertext> {
         let mut buf = bincode::serialize(&self).unwrap(); // must not fail
-        Self::append_padding(&mut buf, max_mem_size);
+        Self::append_padding(&mut buf, cmd_cipher_padding_size);
         let encrypted_state = SodiumCiphertext::encrypt(csprng, &pubkey, &buf)?;
         Ok(EnclaveKeyCiphertext::new(encrypted_state, roster_idx))
     }
@@ -123,8 +123,8 @@ where
     // Add padding to fix the ciphertext size of all state types.
     // The padding works for fixing the ciphertext size so that
     // other people cannot distinguish what state is encrypted based on the size.
-    fn append_padding(buf: &mut Vec<u8>, max_mem_size: usize) {
-        let padding_size = max_mem_size - buf.len();
+    fn append_padding(buf: &mut Vec<u8>, cmd_cipher_padding_size: usize) {
+        let padding_size = cmd_cipher_padding_size - buf.len();
         let padding = vec![0u8; padding_size];
         buf.extend_from_slice(&padding);
     }
