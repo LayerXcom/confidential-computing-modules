@@ -1,9 +1,9 @@
 use super::{event_def::*, event_watcher::Web3Logs};
 use crate::{
     cache::EventCache,
+    controller::*,
     error::{HostError, Result},
     utils::{event_fetch_retry_condition, ContractInfo},
-    workflow::*,
 };
 use anonify_ecall_types::CommandCiphertext;
 use anyhow::anyhow;
@@ -56,12 +56,13 @@ impl Web3Contract {
     pub async fn join_group(
         &self,
         output: host_output::JoinGroup,
+        signer: Address,
+        gas: u64,
         confirmations: usize,
     ) -> Result<TransactionReceipt> {
-        let ecall_output = output.ecall_output.ok_or(HostError::EcallOutputNotSet)?;
+        let ecall_output = output.enclave_output;
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
-        let gas = output.gas;
         let trace_id = get_trace_id();
 
         match ecall_output.handshake() {
@@ -77,7 +78,7 @@ impl Web3Contract {
                         ecall_output.roster_idx(),
                         trace_id,
                     ),
-                    output.signer,
+                    signer,
                     Options::with(|opt| opt.gas = Some(gas.into())),
                     confirmations,
                 )
@@ -94,7 +95,7 @@ impl Web3Contract {
                         ecall_output.roster_idx(),
                         trace_id,
                     ),
-                    output.signer,
+                    signer,
                     Options::with(|opt| opt.gas = Some(gas.into())),
                     confirmations,
                 )
@@ -103,29 +104,37 @@ impl Web3Contract {
         }
     }
 
-    pub async fn register_report(&self, output: host_output::RegisterReport) -> Result<H256> {
-        let ecall_output = output.ecall_output.ok_or(HostError::EcallOutputNotSet)?;
+    pub async fn register_report(
+        &self,
+        output: host_output::RegisterReport,
+        signer: Address,
+        gas: u64,
+    ) -> Result<H256> {
+        let ecall_output = output.enclave_output;
         let report = ecall_output.report().to_vec();
         let report_sig = ecall_output.report_sig().to_vec();
-        let gas = output.gas;
 
         self.contract
             .call(
                 "registerReport",
                 (report, report_sig, ecall_output.mrenclave_ver()),
-                output.signer,
+                signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
             )
             .await
             .map_err(Into::into)
     }
 
-    pub async fn send_command(&self, output: host_output::Command) -> Result<H256> {
-        let ecall_output = output.ecall_output.ok_or(HostError::EcallOutputNotSet)?;
+    pub async fn send_command(
+        &self,
+        output: host_output::Command,
+        signer: Address,
+        gas: u64,
+    ) -> Result<H256> {
+        let ecall_output = output.enclave_output;
         let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
-        let gas = output.gas;
         let trace_id = get_trace_id();
 
         match ecall_output.ciphertext() {
@@ -141,7 +150,7 @@ impl Web3Contract {
                         ciphertext.epoch(),
                         trace_id,
                     ),
-                    output.signer,
+                    signer,
                     Options::with(|opt| opt.gas = Some(gas.into())),
                 )
                 .await
@@ -156,7 +165,7 @@ impl Web3Contract {
                         ciphertext.roster_idx(),
                         trace_id,
                     ),
-                    output.signer,
+                    signer,
                     Options::with(|opt| opt.gas = Some(gas.into())),
                 )
                 .await
@@ -164,13 +173,17 @@ impl Web3Contract {
         }
     }
 
-    pub async fn handshake(&self, output: host_output::Handshake) -> Result<H256> {
-        let ecall_output = output.ecall_output.ok_or(HostError::EcallOutputNotSet)?;
+    pub async fn handshake(
+        &self,
+        output: host_output::Handshake,
+        signer: Address,
+        gas: u64,
+    ) -> Result<H256> {
+        let ecall_output = output.enclave_output;
         let handshake = ecall_output.handshake();
         let mut enclave_sig = ecall_output.encode_enclave_sig().to_vec();
         let recovery_id = ecall_output.encode_recovery_id() + RECOVERY_ID_OFFSET;
         enclave_sig.push(recovery_id);
-        let gas = output.gas;
         let trace_id = get_trace_id();
 
         self.contract
@@ -184,7 +197,7 @@ impl Web3Contract {
                     handshake.prior_epoch() + 1,
                     trace_id,
                 ),
-                output.signer,
+                signer,
                 Options::with(|opt| opt.gas = Some(gas.into())),
             )
             .await

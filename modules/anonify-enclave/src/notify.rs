@@ -1,12 +1,15 @@
+use anonify_ecall_types::cmd::REGISTER_NOTIFICATION_CMD;
 use anonify_ecall_types::*;
-use frame_common::{crypto::AccountId, state_types::StateType, AccessPolicy};
-use frame_enclave::StateRuntimeEnclaveEngine;
+use frame_common::{crypto::AccountId, AccessPolicy};
+use frame_enclave::StateRuntimeEnclaveUseCase;
 use frame_runtime::traits::*;
 use frame_sodium::SodiumCiphertext;
 use std::{
     collections::HashSet,
     sync::{Arc, SgxRwLock},
 };
+
+use crate::context::AnonifyEnclaveContext;
 
 #[derive(Debug, Clone)]
 pub struct Notifier {
@@ -31,35 +34,38 @@ impl Notifier {
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct RegisterNotification<AP: AccessPolicy> {
-    ecall_input: input::RegisterNotification<AP>,
+#[derive(Debug, Clone)]
+pub struct RegisterNotification<'c, AP: AccessPolicy> {
+    enclave_input: input::RegisterNotification<AP>,
+    enclave_context: &'c AnonifyEnclaveContext,
 }
 
-impl<AP: AccessPolicy> StateRuntimeEnclaveEngine for RegisterNotification<AP> {
+impl<'c, AP: AccessPolicy> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext>
+    for RegisterNotification<'c, AP>
+{
     type EI = SodiumCiphertext;
     type EO = output::Empty;
+    const ENCLAVE_USE_CASE_ID: u32 = REGISTER_NOTIFICATION_CMD;
 
-    fn new<C>(ecall_input: Self::EI, enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ContextOps<S = StateType> + Clone,
-    {
-        let buf = enclave_context.decrypt(&ecall_input)?;
-        let ecall_input = serde_json::from_slice(&buf[..])?;
-        Ok(Self { ecall_input })
+    fn new(
+        enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
+        let buf = enclave_context.decrypt(&enclave_input)?;
+        let enclave_input = serde_json::from_slice(&buf[..])?;
+        Ok(Self {
+            enclave_input,
+            enclave_context,
+        })
     }
 
     fn eval_policy(&self) -> anyhow::Result<()> {
-        self.ecall_input.access_policy().verify()
+        self.enclave_input.access_policy().verify()
     }
 
-    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> anyhow::Result<Self::EO>
-    where
-        R: RuntimeExecutor<C, S = StateType>,
-        C: ContextOps<S = StateType> + Clone,
-    {
-        let account_id = self.ecall_input.access_policy().into_account_id();
-        enclave_context.set_notification(account_id);
+    fn run(self) -> anyhow::Result<Self::EO> {
+        let account_id = self.enclave_input.access_policy().into_account_id();
+        self.enclave_context.set_notification(account_id);
 
         Ok(output::Empty::default())
     }

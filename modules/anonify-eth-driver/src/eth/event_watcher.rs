@@ -5,14 +5,14 @@ use super::{
 };
 use crate::{
     cache::EventCache,
+    controller::*,
     error::{HostError, Result},
     utils::*,
-    workflow::*,
 };
 use anonify_ecall_types::{CommandCiphertext, EnclaveKeyCiphertext};
 use ethabi::ParamType;
 use frame_common::{crypto::ExportHandshake, state_types::StateCounter, TreeKemCiphertext};
-use frame_host::engine::HostEngine;
+use frame_host::ecall_controller::EcallController;
 use sgx_types::sgx_enclave_id_t;
 use std::fmt;
 use tracing::{debug, error, info, warn, Span};
@@ -355,11 +355,15 @@ impl InnerEnclaveLog {
                         let inp = host_input::InsertCiphertext::new(
                             ciphertext.clone(),
                             e.state_counter(),
-                            fetch_ciphertext_cmd,
                         );
 
-                        match self.insert_ciphertext(CiphertextKind::TreeKem, inp, eid, &ciphertext)
-                        {
+                        match self.insert_ciphertext(
+                            CiphertextKind::TreeKem,
+                            inp,
+                            fetch_ciphertext_cmd,
+                            eid,
+                            &ciphertext,
+                        ) {
                             Some(notification) => acc.push(notification),
                             None => continue,
                         }
@@ -386,7 +390,10 @@ impl InnerEnclaveLog {
                             e.state_counter(),
                             fetch_handshake_cmd,
                         ) {
-                            error!("Error in enclave (InsertHandshakeWorkflow::exec): {:?}", e);
+                            error!(
+                                "Error in enclave (InsertHandshakeController::exec): {:?}",
+                                e
+                            );
                             continue;
                         }
                     }
@@ -397,12 +404,12 @@ impl InnerEnclaveLog {
                         let inp = host_input::InsertCiphertext::new(
                             ciphertext.clone(),
                             e.state_counter(),
-                            fetch_ciphertext_cmd,
                         );
 
                         match self.insert_ciphertext(
                             CiphertextKind::EnclaveKey,
                             inp,
+                            fetch_ciphertext_cmd,
                             eid,
                             &ciphertext,
                         ) {
@@ -425,13 +432,11 @@ impl InnerEnclaveLog {
         &self,
         ciphertext_kind: CiphertextKind,
         inp: host_input::InsertCiphertext,
+        ecall_cmd: u32,
         eid: sgx_enclave_id_t,
         ciphertext: &CommandCiphertext,
     ) -> Option<serde_json::Value> {
-        match InsertCiphertextWorkflow::exec(inp, eid)
-            .map_err(Into::into)
-            .and_then(|e| e.ecall_output.ok_or(HostError::EcallOutputNotSet))
-        {
+        match InsertCiphertextController::run(inp, ecall_cmd, eid).map(|e| e.enclave_output) {
             Ok(notify) => {
                 if let Some(notify_state) = notify.state {
                     match bincode::deserialize::<Vec<u8>>(&notify_state.into_vec()[..]) {
@@ -449,7 +454,7 @@ impl InnerEnclaveLog {
             // so skip the event.
             Err(err) => {
                 error!(
-                    "Error in enclave (InsertCiphertextWorkflow::exec): {:?}",
+                    "Error in enclave (InsertCiphertextController::exec): {:?}",
                     err
                 );
 
@@ -505,8 +510,8 @@ impl InnerEnclaveLog {
         state_counter: StateCounter,
         fetch_handshake_cmd: u32,
     ) -> Result<()> {
-        let input = host_input::InsertHandshake::new(handshake, state_counter, fetch_handshake_cmd);
-        InsertHandshakeWorkflow::exec(input, eid)?;
+        let input = host_input::InsertHandshake::new(handshake, state_counter);
+        InsertHandshakeController::run(input, fetch_handshake_cmd, eid)?;
 
         Ok(())
     }

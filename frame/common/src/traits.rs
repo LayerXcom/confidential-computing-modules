@@ -14,8 +14,8 @@ pub trait AccessPolicy: Clone + Debug + DeserializeOwned + Serialize + Default {
     fn into_account_id(&self) -> AccountId;
 }
 
-pub trait EcallInput {}
-pub trait EcallOutput {}
+pub trait EnclaveInput {}
+pub trait EnclaveOutput {}
 
 /// Trait of each user's state.
 pub trait State: Sized + Default + Clone + Debug + DeserializeOwned + Serialize {

@@ -1,4 +1,4 @@
-use frame_common::EcallInput;
+use frame_common::EnclaveInput;
 
 use crate::{
     enc_type::{enc_aggregate_state::EncAvgState, EncInteger},
@@ -13,7 +13,7 @@ pub struct EnclaveEncAvgStateWithNext {
     next: EncInteger,
 }
 
-impl EcallInput for EnclaveEncAvgStateWithNext {}
+impl EnclaveInput for EnclaveEncAvgStateWithNext {}
 
 impl EnclaveEncAvgStateWithNext {
     /// Constructor
@@ -24,11 +24,5 @@ impl EnclaveEncAvgStateWithNext {
     /// Get raw representation
     pub fn into_inner(self) -> (EncAvgState, EncInteger) {
         (self.state, self.next)
-    }
-}
-
-impl Default for EnclaveEncAvgStateWithNext {
-    fn default() -> Self {
-        unreachable!("FIXME stop requiring Default for *EnclaveEngine::EI")
     }
 }

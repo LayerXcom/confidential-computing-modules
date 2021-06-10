@@ -17,7 +17,7 @@ mod join_group;
 mod kvs;
 mod notify;
 
-pub mod workflow {
+pub mod use_case {
     #[cfg(feature = "backup-enable")]
     pub use crate::backup::{
         EnclaveKeyBackupper, EnclaveKeyRecoverer, PathSecretsBackupper, PathSecretsRecoverer,
@@ -25,6 +25,7 @@ pub mod workflow {
     pub use crate::commands::{
         enclave_key::{CommandByEnclaveKeyReceiver, CommandByEnclaveKeySender},
         treekem::{CommandByTreeKemReceiver, CommandByTreeKemSender},
+        ContextWithCmdCipherPaddingSize,
     };
     pub use crate::context::{GetState, GetUserCounter, ReportRegistration};
     pub use crate::enclave_key::EncryptionKeyGetter;

@@ -9,6 +9,6 @@ pub mod context;
 mod handlers;
 pub mod server;
 
-pub mod workflow {
+pub mod use_case {
     pub use crate::server::{ServerStarter, ServerStopper};
 }

@@ -1,6 +1,6 @@
-use crate::{error::Result, workflow::*};
+use crate::{controller::*, error::Result};
 use anyhow::anyhow;
-use frame_host::engine::HostEngine;
+use frame_host::ecall_controller::EcallController;
 use key_vault_ecall_types::cmd::*;
 use parking_lot::RwLock;
 use sgx_types::sgx_enclave_id_t;
@@ -24,13 +24,14 @@ impl Dispatcher {
 
     pub async fn start(self) -> Result<Self> {
         let eid = self.inner.read().enclave_id;
-        let input = host_input::StartServer::new(START_SERVER_CMD);
+        let input = host_input::StartServer::new();
 
         let thread_name = format!("key-vault-host:{}", eid);
         let builder = std::thread::Builder::new().name(thread_name);
         builder
             .spawn(move || {
-                let _host_output = StartServerWorkflow::exec(input, eid).unwrap();
+                let _host_output =
+                    StartServerController::run(input, START_SERVER_CMD, eid).unwrap();
             })
             .map_err(|e| anyhow!("Failed to spawn new thread: {}", e))?;
 
@@ -39,8 +40,8 @@ impl Dispatcher {
 
     pub async fn stop(&self) -> Result<()> {
         let eid = self.inner.read().enclave_id;
-        let input = host_input::StopServer::new(STOP_SERVER_CMD);
-        let _host_output = StopServerWorkflow::exec(input, eid)?;
+        let input = host_input::StopServer::new();
+        let _host_output = StopServerController::run(input, STOP_SERVER_CMD, eid)?;
 
         Ok(())
     }

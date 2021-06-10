@@ -1,8 +1,8 @@
 #![cfg(feature = "backup-enable")]
+use crate::controller::host_input;
+use crate::controller::*;
 use crate::error::Result;
-use crate::workflow::host_input;
-use crate::workflow::*;
-use frame_host::engine::HostEngine;
+use frame_host::ecall_controller::EcallController;
 use sgx_types::sgx_enclave_id_t;
 
 #[derive(Debug, Default, Clone)]
@@ -10,14 +10,14 @@ pub struct SecretBackup;
 
 impl SecretBackup {
     pub fn backup(&self, eid: sgx_enclave_id_t, ecall_cmd: u32) -> Result<()> {
-        let input = host_input::Backup::new(ecall_cmd);
-        let _ = BackupWorkflow::exec(input, eid)?;
+        let input = host_input::Backup::new();
+        let _ = BackupController::run(input, ecall_cmd, eid)?;
         Ok(())
     }
 
     pub fn recover(&self, eid: sgx_enclave_id_t, ecall_cmd: u32) -> Result<()> {
-        let input = host_input::Recover::new(ecall_cmd);
-        let _ = RecoverWorkflow::exec(input, eid)?;
+        let input = host_input::Recover::new();
+        let _ = RecoverController::run(input, ecall_cmd, eid)?;
         Ok(())
     }
 }

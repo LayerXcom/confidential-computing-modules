@@ -1,5 +1,5 @@
 use crate::serde::{Deserialize, Serialize};
-use frame_common::{EcallInput, EcallOutput};
+use frame_common::{EnclaveInput, EnclaveOutput};
 
 pub mod input {
     use super::*;
@@ -8,13 +8,13 @@ pub mod input {
     #[serde(crate = "crate::serde")]
     pub struct CallServerStarter;
 
-    impl EcallInput for CallServerStarter {}
+    impl EnclaveInput for CallServerStarter {}
 
     #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     #[serde(crate = "crate::serde")]
     pub struct CallServerStopper;
 
-    impl EcallInput for CallServerStopper {}
+    impl EnclaveInput for CallServerStopper {}
 }
 
 pub mod output {
@@ -24,5 +24,5 @@ pub mod output {
     #[serde(crate = "crate::serde")]
     pub struct Empty;
 
-    impl EcallOutput for Empty {}
+    impl EnclaveOutput for Empty {}
 }

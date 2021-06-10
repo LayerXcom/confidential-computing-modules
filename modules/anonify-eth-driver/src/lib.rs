@@ -3,11 +3,11 @@
 #[cfg(feature = "backup-enable")]
 mod backup;
 mod cache;
+mod controller;
 pub mod dispatcher;
 pub mod error;
 pub mod eth;
 pub mod utils;
-mod workflow;
 
 pub use cache::EventCache;
 pub use dispatcher::Dispatcher;

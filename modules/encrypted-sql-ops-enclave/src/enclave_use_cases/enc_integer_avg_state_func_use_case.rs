@@ -1,35 +1,38 @@
 use crate::aggregate_calc::AggregateCalc;
+use crate::enclave_context::EncryptedSqlOpsEnclaveContext;
 use crate::plain_types::PlainAvgState;
 use crate::type_crypt::Pad16BytesDecrypt;
-use frame_enclave::BasicEnclaveEngine;
-use frame_runtime::ConfigGetter;
+use frame_enclave::BasicEnclaveUseCase;
+use module_encrypted_sql_ops_ecall_types::ecall_cmd::ENCINTEGER_AVG_STATE_FUNC;
 use module_encrypted_sql_ops_ecall_types::enclave_types::{
     EnclaveEncAvgState, EnclaveEncAvgStateWithNext,
 };
 
 /// EncIntegerAvgStateFunc command running inside enclave.
 #[derive(Clone, Debug)]
-pub struct EncIntegerAvgStateFuncCmdHandler {
+pub struct EncIntegerAvgStateFuncUseCase<'c> {
     enclave_input: EnclaveEncAvgStateWithNext,
+    enclave_context: &'c EncryptedSqlOpsEnclaveContext,
 }
 
-impl BasicEnclaveEngine for EncIntegerAvgStateFuncCmdHandler {
+impl<'c> BasicEnclaveUseCase<'c, EncryptedSqlOpsEnclaveContext>
+    for EncIntegerAvgStateFuncUseCase<'c>
+{
     type EI = EnclaveEncAvgStateWithNext;
     type EO = EnclaveEncAvgState;
+    const ENCLAVE_USE_CASE_ID: u32 = ENCINTEGER_AVG_STATE_FUNC;
 
-    fn new<C>(ecall_input: Self::EI, _enclave_context: &C) -> anyhow::Result<Self>
-    where
-        C: ConfigGetter,
-    {
+    fn new(
+        enclave_input: Self::EI,
+        enclave_context: &'c EncryptedSqlOpsEnclaveContext,
+    ) -> anyhow::Result<Self> {
         Ok(Self {
-            enclave_input: ecall_input,
+            enclave_input,
+            enclave_context,
         })
     }
 
-    fn handle<C>(self, _enclave_context: &C) -> anyhow::Result<Self::EO>
-    where
-        C: ConfigGetter,
-    {
+    fn run(self) -> anyhow::Result<Self::EO> {
         let (enc_current_state, enc_next) = self.enclave_input.into_inner();
 
         let mut plain_current_state = PlainAvgState::from_encrypted(enc_current_state)?;
@@ -39,11 +42,5 @@ impl BasicEnclaveEngine for EncIntegerAvgStateFuncCmdHandler {
 
         let enc_next_state = plain_current_state.into_encrypted();
         Ok(EnclaveEncAvgState::from(enc_next_state))
-    }
-}
-
-impl Default for EncIntegerAvgStateFuncCmdHandler {
-    fn default() -> Self {
-        unreachable!("FIXME stop requiring Default for *EnclaveEngine")
     }
 }

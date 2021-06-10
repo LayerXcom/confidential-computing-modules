@@ -1,5 +1,5 @@
 use super::connection::{Web3Contract, Web3Http};
-use crate::{error::Result, utils::*, workflow::*};
+use crate::{controller::*, error::Result, utils::*};
 use frame_config::{REQUEST_RETRIES, RETRY_DELAY_MILLS};
 use frame_retrier::{strategy, Retry};
 use sgx_types::sgx_enclave_id_t;
@@ -49,6 +49,8 @@ impl EthSender {
     pub async fn join_group(
         &self,
         host_output: &host_output::JoinGroup,
+        signer: Address,
+        gas: u64,
         confirmations: usize,
     ) -> Result<TransactionReceipt> {
         info!("join_group to blockchain: {:?}", host_output);
@@ -60,13 +62,18 @@ impl EthSender {
         .set_condition(call_with_conf_retry_condition)
         .spawn_async(|| async {
             self.contract
-                .join_group(host_output.clone(), confirmations)
+                .join_group(host_output.clone(), signer, gas, confirmations)
                 .await
         })
         .await
     }
 
-    pub async fn register_report(&self, host_output: &host_output::RegisterReport) -> Result<H256> {
+    pub async fn register_report(
+        &self,
+        host_output: &host_output::RegisterReport,
+        signer: Address,
+        gas: u64,
+    ) -> Result<H256> {
         info!("Registering report to blockchain: {:?}", host_output);
         Retry::new(
             "send_command",
@@ -74,11 +81,20 @@ impl EthSender {
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
-        .spawn_async(|| async { self.contract.register_report(host_output.clone()).await })
+        .spawn_async(|| async {
+            self.contract
+                .register_report(host_output.clone(), signer, gas)
+                .await
+        })
         .await
     }
 
-    pub async fn send_command(&self, host_output: &host_output::Command) -> Result<H256> {
+    pub async fn send_command(
+        &self,
+        host_output: &host_output::Command,
+        signer: Address,
+        gas: u64,
+    ) -> Result<H256> {
         info!("Sending a command to blockchain: {:?}", host_output);
         Retry::new(
             "send_command",
@@ -86,11 +102,20 @@ impl EthSender {
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
-        .spawn_async(|| async { self.contract.send_command(host_output.clone()).await })
+        .spawn_async(|| async {
+            self.contract
+                .send_command(host_output.clone(), signer, gas)
+                .await
+        })
         .await
     }
 
-    pub async fn handshake(&self, host_output: &host_output::Handshake) -> Result<H256> {
+    pub async fn handshake(
+        &self,
+        host_output: &host_output::Handshake,
+        signer: Address,
+        gas: u64,
+    ) -> Result<H256> {
         info!("Sending a handshake to blockchain: {:?}", host_output);
         Retry::new(
             "handshake",
@@ -98,7 +123,11 @@ impl EthSender {
             strategy::FixedDelay::new(*RETRY_DELAY_MILLS),
         )
         .set_condition(sender_retry_condition)
-        .spawn_async(|| async { self.contract.handshake(host_output.clone()).await })
+        .spawn_async(|| async {
+            self.contract
+                .handshake(host_output.clone(), signer, gas)
+                .await
+        })
         .await
     }
 

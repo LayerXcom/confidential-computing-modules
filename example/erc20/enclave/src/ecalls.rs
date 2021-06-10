@@ -1,71 +1,44 @@
-use crate::state_transition::{Runtime, MAX_MEM_SIZE};
-use crate::ENCLAVE_CONTEXT;
-use anonify_ecall_types::cmd::*;
-use anonify_enclave::{context::AnonifyEnclaveContext, workflow::*};
-use anyhow::anyhow;
-use bincode::Options;
+use crate::state_transition::Runtime;
+use crate::{ENCLAVE_CONTEXT, ENCLAVE_CONTEXT_WITH_CMD_CIPHER_PADDING_SIZE};
+use anonify_enclave::{context::AnonifyEnclaveContext, use_case::*};
 use frame_common::crypto::NoAuth;
-use frame_enclave::{register_ecall, StateRuntimeEnclaveEngine};
-use log::error;
-use std::{ptr, vec::Vec};
+use frame_enclave::{register_enclave_use_case, StateRuntimeEnclaveUseCase};
 
-register_ecall!(
-    &*ENCLAVE_CONTEXT,
-    MAX_MEM_SIZE,
-    Runtime<AnonifyEnclaveContext>,
-    AnonifyEnclaveContext,
+register_enclave_use_case!(
     #[cfg(feature = "enclave_key")]
-    (
-        SEND_COMMAND_ENCLAVE_KEY_CMD,
-        CommandByEnclaveKeySender<NoAuth>
-    ),
+    (CommandByEnclaveKeySender<Runtime<AnonifyEnclaveContext>,NoAuth>, &*ENCLAVE_CONTEXT_WITH_CMD_CIPHER_PADDING_SIZE),
     #[cfg(feature = "treekem")]
-    (
-        SEND_COMMAND_TREEKEM_CMD,
-        CommandByTreeKemSender<NoAuth>
-    ),
+    (CommandByTreeKemSender<Runtime<AnonifyEnclaveContext>,NoAuth>, &*ENCLAVE_CONTEXT_WITH_CMD_CIPHER_PADDING_SIZE),
     #[cfg(feature = "enclave_key")]
-    (
-        FETCH_CIPHERTEXT_ENCLAVE_KEY_CMD,
-        CommandByEnclaveKeyReceiver<NoAuth>
-    ),
+    (CommandByEnclaveKeyReceiver<Runtime<AnonifyEnclaveContext>,NoAuth>, &*ENCLAVE_CONTEXT),
     // Fetch a ciphertext in event logs from blockchain nodes into enclave's memory database.
     #[cfg(feature = "treekem")]
-    (
-        FETCH_CIPHERTEXT_TREEKEM_CMD,
-        CommandByTreeKemReceiver<NoAuth>
-    ),
+    (CommandByTreeKemReceiver<Runtime<AnonifyEnclaveContext>,  NoAuth>, &*ENCLAVE_CONTEXT),
     #[cfg(feature = "treekem")]
-    (SEND_HANDSHAKE_TREEKEM_CMD, HandshakeSender),
+    (HandshakeSender, &*ENCLAVE_CONTEXT),
     // Fetch handshake received from blockchain nodes into enclave.
     #[cfg(feature = "treekem")]
-    (FETCH_HANDSHAKE_TREEKEM_CMD, HandshakeReceiver),
+    (HandshakeReceiver, &*ENCLAVE_CONTEXT),
     // Get current state of the user represented the given public key from enclave memory database.
     #[cfg(feature = "enclave_key")]
-    (JOIN_GROUP_ENCLAVE_KEY_CMD, JoinGroupWithEnclaveKey),
+    (JoinGroupWithEnclaveKey, &*ENCLAVE_CONTEXT),
     #[cfg(feature = "treekem")]
-    (JOIN_GROUP_TREEKEM_CMD, JoinGroupWithTreeKem),
-    (GET_STATE_CMD, GetState<NoAuth>),
-    (
-        REGISTER_NOTIFICATION_CMD,
-        RegisterNotification<NoAuth>
-    ),
-    (GET_ENCLAVE_ENCRYPTION_KEY_CMD, EncryptionKeyGetter),
-    (SEND_REGISTER_REPORT_CMD, ReportRegistration),
+    (JoinGroupWithTreeKem, &*ENCLAVE_CONTEXT),
+    (GetState<Runtime<AnonifyEnclaveContext>,NoAuth>, &*ENCLAVE_CONTEXT),
+    (RegisterNotification<NoAuth>, &*ENCLAVE_CONTEXT),
+    (EncryptionKeyGetter, &*ENCLAVE_CONTEXT),
+    (ReportRegistration, &*ENCLAVE_CONTEXT),
     #[cfg(feature = "treekem")]
     #[cfg(feature = "backup-enable")]
-    (BACKUP_PATH_SECRETS_CMD, PathSecretsBackupper),
+    (PathSecretsBackupper, &*ENCLAVE_CONTEXT),
     #[cfg(feature = "treekem")]
     #[cfg(feature = "backup-enable")]
-    (RECOVER_PATH_SECRETS_CMD, PathSecretsRecoverer),
-    (
-        GET_USER_COUNTER_CMD,
-        GetUserCounter<NoAuth>
-    ),
+    (PathSecretsRecoverer, &*ENCLAVE_CONTEXT),
+    (GetUserCounter<NoAuth>, &*ENCLAVE_CONTEXT),
     #[cfg(feature = "enclave_key")]
     #[cfg(feature = "backup-enable")]
-    (BACKUP_ENCLAVE_KEY_CMD, EnclaveKeyBackupper),
+    (EnclaveKeyBackupper, &*ENCLAVE_CONTEXT),
     #[cfg(feature = "enclave_key")]
     #[cfg(feature = "backup-enable")]
-    (RECOVER_ENCLAVE_KEY_CMD, EnclaveKeyRecoverer),
+    (EnclaveKeyRecoverer, &*ENCLAVE_CONTEXT),
 );

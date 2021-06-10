@@ -1,10 +1,14 @@
 #![cfg(feature = "backup-enable")]
 
+use crate::context::AnonifyEnclaveContext;
 use crate::enclave_key::DEC_KEY_FILE_NAME;
+use anonify_ecall_types::cmd::{
+    BACKUP_ENCLAVE_KEY_CMD, BACKUP_PATH_SECRETS_CMD, RECOVER_ENCLAVE_KEY_CMD,
+    RECOVER_PATH_SECRETS_CMD,
+};
 use anonify_ecall_types::*;
 use anyhow::{anyhow, Result};
-use frame_common::state_types::StateType;
-use frame_enclave::StateRuntimeEnclaveEngine;
+use frame_enclave::StateRuntimeEnclaveUseCase;
 use frame_mra_tls::key_vault::request::{
     BackupPathSecretRequestBody, BackupPathSecretsRequestBody, RecoverPathSecretsRequestBody,
 };
@@ -14,22 +18,32 @@ use frame_treekem::PathSecret;
 use std::vec::Vec;
 
 /// A PathSecret Backupper
-#[derive(Debug, Clone, Default)]
-pub struct PathSecretsBackupper;
+#[derive(Debug, Clone)]
+pub struct PathSecretsBackupper<'c> {
+    enclave_context: &'c AnonifyEnclaveContext,
+}
 
-impl StateRuntimeEnclaveEngine for PathSecretsBackupper {
+impl<'c> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext> for PathSecretsBackupper<'c> {
     type EI = input::Empty;
     type EO = output::Empty;
+    const ENCLAVE_USE_CASE_ID: u32 = BACKUP_PATH_SECRETS_CMD;
 
-    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
-    where
-        R: RuntimeExecutor<C, S = StateType>,
-        C: ContextOps<S = StateType> + Clone,
-    {
-        let store_path_secrets = enclave_context.store_path_secrets();
+    fn new(
+        _enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
+        Ok(Self { enclave_context })
+    }
+
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn run(self) -> Result<Self::EO> {
+        let store_path_secrets = self.enclave_context.store_path_secrets();
         // retrieve local path_secrets IDs
         let ids = store_path_secrets.get_all_path_secret_ids()?;
-        let roster_idx = (&*enclave_context.read_group_key()).my_roster_idx();
+        let roster_idx = (&*self.enclave_context.read_group_key()).my_roster_idx();
 
         // backup path_secrets to key-vault server
         let mut backup_path_secrets: Vec<BackupPathSecretRequestBody> = vec![];
@@ -45,7 +59,7 @@ impl StateRuntimeEnclaveEngine for PathSecretsBackupper {
             backup_path_secrets.push(backup_path_secret);
         }
 
-        enclave_context
+        self.enclave_context
             .manually_backup_path_secrets(BackupPathSecretsRequestBody::new(backup_path_secrets))?;
 
         Ok(output::Empty::default())
@@ -53,24 +67,35 @@ impl StateRuntimeEnclaveEngine for PathSecretsBackupper {
 }
 
 /// A PathSecret Recoverer
-#[derive(Debug, Clone, Default)]
-pub struct PathSecretsRecoverer;
+#[derive(Debug, Clone)]
+pub struct PathSecretsRecoverer<'c> {
+    enclave_context: &'c AnonifyEnclaveContext,
+}
 
-impl StateRuntimeEnclaveEngine for PathSecretsRecoverer {
+impl<'c> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext> for PathSecretsRecoverer<'c> {
     type EI = input::Empty;
     type EO = output::Empty;
+    const ENCLAVE_USE_CASE_ID: u32 = RECOVER_PATH_SECRETS_CMD;
 
-    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
-    where
-        R: RuntimeExecutor<C, S = StateType>,
-        C: ContextOps<S = StateType> + Clone,
-    {
+    fn new(
+        _enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
+        Ok(Self { enclave_context })
+    }
+
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn run(self) -> Result<Self::EO> {
         // fetch path_secrets from key-vault server
-        let group_key = &*enclave_context.read_group_key();
+        let group_key = &*self.enclave_context.read_group_key();
         let roster_idx = group_key.my_roster_idx();
         let recover_request = RecoverPathSecretsRequestBody::new(roster_idx);
-        let recovered_path_secrets =
-            enclave_context.manually_recover_path_secrets(recover_request)?;
+        let recovered_path_secrets = self
+            .enclave_context
+            .manually_recover_path_secrets(recover_request)?;
 
         // save path_secrets to own file system
         for rps in recovered_path_secrets {
@@ -78,7 +103,7 @@ impl StateRuntimeEnclaveEngine for PathSecretsRecoverer {
             let eps = path_secret
                 .clone()
                 .try_into_exporting(rps.epoch(), rps.id())?;
-            enclave_context
+            self.enclave_context
                 .store_path_secrets()
                 .save_to_local_filesystem(&eps)?;
         }
@@ -87,45 +112,65 @@ impl StateRuntimeEnclaveEngine for PathSecretsRecoverer {
 }
 
 /// A EnclaveKey Backupper
-#[derive(Debug, Clone, Default)]
-pub struct EnclaveKeyBackupper;
+#[derive(Debug, Clone)]
+pub struct EnclaveKeyBackupper<'c> {
+    enclave_context: &'c AnonifyEnclaveContext,
+}
 
-impl StateRuntimeEnclaveEngine for EnclaveKeyBackupper {
+impl<'c> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext> for EnclaveKeyBackupper<'c> {
     type EI = input::Empty;
     type EO = output::Empty;
+    const ENCLAVE_USE_CASE_ID: u32 = BACKUP_ENCLAVE_KEY_CMD;
 
-    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
-    where
-        R: RuntimeExecutor<C, S = StateType>,
-        C: ContextOps<S = StateType> + Clone,
-    {
-        enclave_context.backup_enclave_key()?;
+    fn new(
+        _enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
+        Ok(Self { enclave_context })
+    }
+
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn run(self) -> Result<Self::EO> {
+        self.enclave_context.backup_enclave_key()?;
         Ok(output::Empty::default())
     }
 }
 
 /// A EnclaveKey Recoverer
-#[derive(Debug, Clone, Default)]
-pub struct EnclaveKeyRecoverer;
+#[derive(Debug, Clone)]
+pub struct EnclaveKeyRecoverer<'c> {
+    enclave_context: &'c AnonifyEnclaveContext,
+}
 
-impl StateRuntimeEnclaveEngine for EnclaveKeyRecoverer {
+impl<'c> StateRuntimeEnclaveUseCase<'c, AnonifyEnclaveContext> for EnclaveKeyRecoverer<'c> {
     type EI = input::Empty;
     type EO = output::Empty;
+    const ENCLAVE_USE_CASE_ID: u32 = RECOVER_ENCLAVE_KEY_CMD;
 
-    fn handle<R, C>(self, enclave_context: &C, _max_mem_size: usize) -> Result<Self::EO>
-    where
-        R: RuntimeExecutor<C, S = StateType>,
-        C: ContextOps<S = StateType> + Clone,
-    {
+    fn new(
+        _enclave_input: Self::EI,
+        enclave_context: &'c AnonifyEnclaveContext,
+    ) -> anyhow::Result<Self> {
+        Ok(Self { enclave_context })
+    }
+
+    fn eval_policy(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn run(self) -> Result<Self::EO> {
         // fetch path_secrets from key-vault server
-        let dec_key = enclave_context.recover_enclave_key()?;
+        let dec_key = self.enclave_context.recover_enclave_key()?;
 
         // save path_secrets to own file system
         let encoded = dec_key.try_into_sealing()?;
         let sealed =
             SealedEnclaveDecryptionKey::decode(&encoded).map_err(|e| anyhow!("{:?}", e))?;
 
-        let store_dec_key = enclave_context.store_enclave_dec_key();
+        let store_dec_key = self.enclave_context.store_enclave_dec_key();
         store_dec_key.save_to_local_filesystem(&sealed, DEC_KEY_FILE_NAME)?;
 
         Ok(output::Empty::default())

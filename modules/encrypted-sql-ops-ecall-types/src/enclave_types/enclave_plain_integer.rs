@@ -1,12 +1,12 @@
 use crate::serde::{Deserialize, Serialize};
-use frame_common::EcallInput;
+use frame_common::EnclaveInput;
 
 /// Plain-text INTEGER.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
 pub struct EnclavePlainInteger(i32);
 
-impl EcallInput for EnclavePlainInteger {}
+impl EnclaveInput for EnclavePlainInteger {}
 
 impl From<i32> for EnclavePlainInteger {
     fn from(integer: i32) -> Self {
@@ -18,11 +18,5 @@ impl EnclavePlainInteger {
     /// Gets raw representation
     pub fn to_i32(&self) -> i32 {
         self.0
-    }
-}
-
-impl Default for EnclavePlainInteger {
-    fn default() -> Self {
-        unreachable!("FIXME stop requiring Default for *EnclaveEngine::EI")
     }
 }
