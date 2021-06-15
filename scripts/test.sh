@@ -37,139 +37,139 @@ solc -o contract-build --bin --abi --optimize --overwrite \
 cd ${ANONIFY_ROOT}/anonify-contracts/deployer
 export FACTORY_CONTRACT_ADDRESS=$(cargo run factory)
 
-# # Generate key-vault's signed.so and measurement.txt
-# echo "Integration testing..."
-# cd ${ANONIFY_ROOT}/scripts
-# export ENCLAVE_PKG_NAME=key_vault
-# make DEBUG=1 ENCLAVE_DIR=example/key-vault/enclave
+# Generate key-vault's signed.so and measurement.txt
+echo "Integration testing..."
+cd ${ANONIFY_ROOT}/scripts
+export ENCLAVE_PKG_NAME=key_vault
+make DEBUG=1 ENCLAVE_DIR=example/key-vault/enclave
 
-# #
-# # Lints checks
-# #
+#
+# Lints checks
+#
 
-# cd ${ANONIFY_ROOT}
-# RUST_LOG=error cargo fmt --all -- --check
-# RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p erc20-server -p key-vault-server --all-targets --all-features
-# RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p erc20-enclave -p key-vault-enclave --all-features
-# RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p module-encrypted-sql-ops-enclave --all-features
-# # TODO: check lints of occlum libs
+cd ${ANONIFY_ROOT}
+RUST_LOG=error cargo fmt --all -- --check
+RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p erc20-server -p key-vault-server --all-targets --all-features
+RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p erc20-enclave -p key-vault-enclave --all-features
+RUSTFLAGS='-D warnings' RUST_LOG=error cargo clippy -p module-encrypted-sql-ops-enclave --all-features
+# TODO: check lints of occlum libs
 
-# #
-# # Tests for enclave key
-# #
+#
+# Tests for enclave key
+#
 
-# # Integration Tests
-# cd ${ANONIFY_ROOT}/scripts
-# export ENCLAVE_PKG_NAME=erc20
-# # make with backup disabled
-# make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,enclave_key"
-# cd ${ANONIFY_ROOT}/tests/integration
-# RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_enclave_key -- --nocapture
+# Integration Tests
+cd ${ANONIFY_ROOT}/scripts
+export ENCLAVE_PKG_NAME=erc20
+# make with backup disabled
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,enclave_key"
+cd ${ANONIFY_ROOT}/tests/integration
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_enclave_key -- --nocapture
 
-# # ERC20 Application Tests
+# ERC20 Application Tests
 
-# function exec_sr_enclave_key_node_tests() {
-#   for N in "$@"
-#   do
-#     cd ${ANONIFY_ROOT}/anonify-contracts/deployer
-#     cargo run anonify_ek "$FACTORY_CONTRACT_ADDRESS"
-#     cd ${ANONIFY_ROOT}/nodes/state-runtime/server
+function exec_sr_enclave_key_node_tests() {
+  for N in "$@"
+  do
+    cd ${ANONIFY_ROOT}/anonify-contracts/deployer
+    cargo run anonify_ek "$FACTORY_CONTRACT_ADDRESS"
+    cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 
-#     RUST_BACKTRACE=1 RUST_LOG=debug cargo test "$N" -- --nocapture
-#     sleep 1
-#   done
-# }
+    RUST_BACKTRACE=1 RUST_LOG=debug cargo test "$N" -- --nocapture
+    sleep 1
+  done
+}
 
-# exec_sr_enclave_key_node_tests test_health_check \
-#   test_enclave_key_evaluate_access_policy_by_user_id_field \
-#   test_enclave_key_multiple_messages \
-#   test_enclave_key_skip_invalid_event \
-#   test_enclave_key_node_recovery \
-#   test_enclave_key_join_group_then_handshake \
-#   test_enclave_key_duplicated_out_of_order_request_from_same_user
+exec_sr_enclave_key_node_tests test_health_check \
+  test_enclave_key_evaluate_access_policy_by_user_id_field \
+  test_enclave_key_multiple_messages \
+  test_enclave_key_skip_invalid_event \
+  test_enclave_key_node_recovery \
+  test_enclave_key_join_group_then_handshake \
+  test_enclave_key_duplicated_out_of_order_request_from_same_user
 
-# # Secret Backup Application Tests
+# Secret Backup Application Tests
 
-# cd ${ANONIFY_ROOT}/scripts
-# export ENCLAVE_PKG_NAME=erc20
-# make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
+cd ${ANONIFY_ROOT}/scripts
+export ENCLAVE_PKG_NAME=erc20
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave
 
-# cd ${ANONIFY_ROOT}/nodes/key-vault
-# RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_health_check -- --nocapture
+cd ${ANONIFY_ROOT}/nodes/key-vault
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_health_check -- --nocapture
 
-# function exec_kv_enclave_key_node_tests() {
-#   for N in "$@"
-#   do
-#     cd ${ANONIFY_ROOT}/anonify-contracts/deployer
-#     cargo run anonify_ek "$FACTORY_CONTRACT_ADDRESS"
-#     cd ${ANONIFY_ROOT}/nodes/key-vault
+function exec_kv_enclave_key_node_tests() {
+  for N in "$@"
+  do
+    cd ${ANONIFY_ROOT}/anonify-contracts/deployer
+    cargo run anonify_ek "$FACTORY_CONTRACT_ADDRESS"
+    cd ${ANONIFY_ROOT}/nodes/key-vault
 
-#     RUST_BACKTRACE=1 RUST_LOG=debug cargo test "$N" -- --nocapture
-#     sleep 1
-#   done
-# }
+    RUST_BACKTRACE=1 RUST_LOG=debug cargo test "$N" -- --nocapture
+    sleep 1
+  done
+}
 
-# exec_kv_enclave_key_node_tests test_health_check \
-#   test_enclave_key_backup \
-#   test_enclave_key_manually_backup \
-#   test_enclave_key_manually_recover
+exec_kv_enclave_key_node_tests test_health_check \
+  test_enclave_key_backup \
+  test_enclave_key_manually_backup \
+  test_enclave_key_manually_recover
 
-# #
-# # Tests for treekem
-# #
+#
+# Tests for treekem
+#
 
-# # Integration Tests
-# cd ${ANONIFY_ROOT}/scripts
-# export ENCLAVE_PKG_NAME=erc20
-# # make with backup disabled
-# make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,treekem"
-# cd ${ANONIFY_ROOT}/tests/integration
-# RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_treekem --no-default-features -- --nocapture
+# Integration Tests
+cd ${ANONIFY_ROOT}/scripts
+export ENCLAVE_PKG_NAME=erc20
+# make with backup disabled
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,treekem"
+cd ${ANONIFY_ROOT}/tests/integration
+RUST_BACKTRACE=1 RUST_LOG=debug cargo test test_treekem --no-default-features -- --nocapture
 
-# # ERC20 Application Tests
+# ERC20 Application Tests
 
-# function exec_sr_treekem_node_tests() {
-#   for N in "$@"
-#   do
-#     cd ${ANONIFY_ROOT}/anonify-contracts/deployer
-#     cargo run anonify_tk "$FACTORY_CONTRACT_ADDRESS"
-#     cd ${ANONIFY_ROOT}/nodes/state-runtime/server
+function exec_sr_treekem_node_tests() {
+  for N in "$@"
+  do
+    cd ${ANONIFY_ROOT}/anonify-contracts/deployer
+    cargo run anonify_tk "$FACTORY_CONTRACT_ADDRESS"
+    cd ${ANONIFY_ROOT}/nodes/state-runtime/server
 
-#     RUST_BACKTRACE=1 RUST_LOG=debug cargo test "$N" -- --nocapture
-#     sleep 1
-#   done
-# }
+    RUST_BACKTRACE=1 RUST_LOG=debug cargo test "$N" -- --nocapture
+    sleep 1
+  done
+}
 
-# exec_sr_treekem_node_tests \
-#   test_treekem_evaluate_access_policy_by_user_id_field \
-#   test_treekem_multiple_messages \
-#   test_treekem_skip_invalid_event \
-#   test_treekem_join_group_then_handshake \
-#   test_treekem_duplicated_out_of_order_request_from_same_user
+exec_sr_treekem_node_tests \
+  test_treekem_evaluate_access_policy_by_user_id_field \
+  test_treekem_multiple_messages \
+  test_treekem_skip_invalid_event \
+  test_treekem_join_group_then_handshake \
+  test_treekem_duplicated_out_of_order_request_from_same_user
 
-# # Secret Backup Application Tests
+# Secret Backup Application Tests
 
-# cd ${ANONIFY_ROOT}/scripts
-# export ENCLAVE_PKG_NAME=erc20
-# make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,backup-enable,treekem"
+cd ${ANONIFY_ROOT}/scripts
+export ENCLAVE_PKG_NAME=erc20
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,backup-enable,treekem"
 
-# function exec_kv_treekem_node_tests() {
-#   for N in "$@"
-#   do
-#     cd ${ANONIFY_ROOT}/anonify-contracts/deployer
-#     cargo run anonify_tk "$FACTORY_CONTRACT_ADDRESS"
-#     cd ${ANONIFY_ROOT}/nodes/key-vault
+function exec_kv_treekem_node_tests() {
+  for N in "$@"
+  do
+    cd ${ANONIFY_ROOT}/anonify-contracts/deployer
+    cargo run anonify_tk "$FACTORY_CONTRACT_ADDRESS"
+    cd ${ANONIFY_ROOT}/nodes/key-vault
 
-#     RUST_BACKTRACE=1 RUST_LOG=debug cargo test "$N" -- --nocapture
-#     sleep 1
-#   done
-# }
+    RUST_BACKTRACE=1 RUST_LOG=debug cargo test "$N" -- --nocapture
+    sleep 1
+  done
+}
 
-# exec_kv_treekem_node_tests \
-#   test_treekem_backup_path_secret \
-#   test_treekem_recover_without_key_vault \
-#   test_treekem_manually_backup \
-#   test_treekem_manually_recover
+exec_kv_treekem_node_tests \
+  test_treekem_backup_path_secret \
+  test_treekem_recover_without_key_vault \
+  test_treekem_manually_backup \
+  test_treekem_manually_recover
 
 #
 # Unit Tests
@@ -183,22 +183,22 @@ make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave FEATURE_FLAGS="runtime_enabl
 
 cd ${ANONIFY_ROOT}
 RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \
+  -p unit-tests-host \
   -p frame-azure-client \
+  -p frame-runtime \
+  -p frame-retrier \
+  -p frame-sodium \
   -- --nocapture
-  # -p unit-tests-host \
-  # -p frame-runtime \
-  # -p frame-retrier \
-  # -p frame-sodium \
 
 
 #
 # Compile Checks
 #
 
-# ./scripts/build-cli.sh
-# cd ${ANONIFY_ROOT}/example/erc20/server
-# RUST_BACKTRACE=1 RUST_LOG=debug cargo c
-# cd ${ANONIFY_ROOT}/example/key-vault/server
-# RUST_BACKTRACE=1 RUST_LOG=debug cargo c
-# cd ${ANONIFY_ROOT}/example/wallet
-# RUST_BACKTRACE=1 RUST_LOG=debug cargo c
+./scripts/build-cli.sh
+cd ${ANONIFY_ROOT}/example/erc20/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo c
+cd ${ANONIFY_ROOT}/example/key-vault/server
+RUST_BACKTRACE=1 RUST_LOG=debug cargo c
+cd ${ANONIFY_ROOT}/example/wallet
+RUST_BACKTRACE=1 RUST_LOG=debug cargo c
