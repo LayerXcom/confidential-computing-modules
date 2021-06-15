@@ -184,21 +184,21 @@ make DEBUG=1 TEST=1 ENCLAVE_DIR=tests/units/enclave FEATURE_FLAGS="runtime_enabl
 cd ${ANONIFY_ROOT}
 RUST_BACKTRACE=1 RUST_LOG=debug TEST=1 cargo test \
   -p frame-azure-client
+  -- --nocapture
   # -p unit-tests-host \
   # -p frame-runtime \
   # -p frame-retrier \
   # -p frame-sodium \
-  -- --nocapture
 
 
 #
 # Compile Checks
 #
 
-./scripts/build-cli.sh
-cd ${ANONIFY_ROOT}/example/erc20/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo c
-cd ${ANONIFY_ROOT}/example/key-vault/server
-RUST_BACKTRACE=1 RUST_LOG=debug cargo c
-cd ${ANONIFY_ROOT}/example/wallet
-RUST_BACKTRACE=1 RUST_LOG=debug cargo c
+# ./scripts/build-cli.sh
+# cd ${ANONIFY_ROOT}/example/erc20/server
+# RUST_BACKTRACE=1 RUST_LOG=debug cargo c
+# cd ${ANONIFY_ROOT}/example/key-vault/server
+# RUST_BACKTRACE=1 RUST_LOG=debug cargo c
+# cd ${ANONIFY_ROOT}/example/wallet
+# RUST_BACKTRACE=1 RUST_LOG=debug cargo c
