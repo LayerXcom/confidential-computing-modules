@@ -94,7 +94,7 @@ stages:
 - stage: Build_and_Push_Base_Docker_Images
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
-  - job: Build_and_Push_rust-sgx-sdk-rootless_image
+  - job: Build_and_Push_rust_sgx_sdk_rootless_image
     pool:
       name: 'AnonifyAgent'
     steps:
@@ -119,7 +119,7 @@ stages:
     - script: docker image prune -f
       displayName: Remove dangling images
 
-  - job: Build_and_Push_anonify-dev_image
+  - job: Build_and_Push_anonify_dev_image
     pool:
       name: 'AnonifyAgent'
     steps:
@@ -144,7 +144,7 @@ stages:
     - script: docker image prune -f
       displayName: Remove dangling images
 
-  - job: Build_and_Push_anonify-dev-pgx_image
+  - job: Build_and_Push_anonify_dev_pgx_image
     pool:
       name: 'AnonifyAgent'
     steps:
@@ -198,7 +198,7 @@ stages:
     - script: docker image prune -f
       displayName: Remove dangling images
 
-  - job: Build_and_Push_key-vault_for_erc20_image
+  - job: Build_and_Push_key_vault_for_erc20_image
     pool:
       name: 'AnonifyAgent'
     steps:
@@ -224,7 +224,7 @@ stages:
     - script: docker image prune -f
       displayName: Remove dangling images
 
-  - job: Build_and_Push_encrypted-sql-ops-pg_image
+  - job: Build_and_Push_encrypted_sql_ops-pg_image
     pool:
       name: 'AnonifyAgent'
     steps:
