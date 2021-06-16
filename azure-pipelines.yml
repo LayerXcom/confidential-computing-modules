@@ -172,7 +172,7 @@ stages:
     steps:
       - script: docker image prune -f
         condition: always()
-        displayName: Remove dangling images
+        displayName: Remove dangling images for base
 
 - stage: Build_and_Push_Example_Docker
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -257,4 +257,4 @@ stages:
     steps:
       - script: docker image prune -f
         condition: always()
-        displayName: Remove dangling images
+        displayName: Remove dangling images for example
