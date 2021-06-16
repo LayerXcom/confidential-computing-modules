@@ -98,7 +98,7 @@ const generate_balance_of_request = () => {
             .then((result) => {
                 const balance = JSON.parse(result).state;
                 if (balance !== 100) {
-                    console.log('go unexpected balance');
+                    console.log('got unexpected balance: ' + balance);
                     process.exit(1);
                 }
             })
