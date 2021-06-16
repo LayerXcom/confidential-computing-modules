@@ -224,7 +224,7 @@ stages:
     - script: docker image prune -f
       displayName: Remove dangling images
 
-  - job: Build_and_Push_encrypted_sql_ops-pg_image
+  - job: Build_and_Push_encrypted_sql_ops_pg_image
     pool:
       name: 'AnonifyAgent'
     steps:
