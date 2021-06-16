@@ -66,6 +66,7 @@ stages:
             ./scripts/e2e-test.sh
           displayName: 'Run E2E tests'
         - script: docker image prune -f
+          condition: always()
           displayName: Remove dangling images
         - script: docker-compose -f e2e-docker-compose.yml down
           condition: always()
@@ -117,8 +118,6 @@ stages:
         tags: latest
         dockerfile: ./docker/base-rust-sgx-sdk-rootless.Dockerfile
         buildContext: .
-    - script: docker image prune -f
-      displayName: Remove dangling images
 
   - job: Build_and_Push_anonify_dev_image
     pool:
@@ -142,8 +141,6 @@ stages:
         tags: latest
         dockerfile: ./docker/base-anonify-dev.Dockerfile
         buildContext: .
-    - script: docker image prune -f
-      displayName: Remove dangling images
 
   - job: Build_and_Push_anonify_dev_pgx_image
     pool:
@@ -167,8 +164,15 @@ stages:
         tags: latest
         dockerfile: ./docker/base-anonify-dev-pgx.Dockerfile
         buildContext: .
-    - script: docker image prune -f
-      displayName: Remove dangling images
+
+  - job: CleanUp
+    pool:
+      name: 'AnonifyAgent'
+    dependsOn: ['Build_and_Push_rust_sgx_sdk_rootless_image', 'Build_and_Push_anonify_dev_image', 'Build_and_Push_anonify_dev_pgx_image']
+    steps:
+      - script: docker image prune -f
+        condition: always()
+        displayName: Remove dangling images
 
 - stage: Build_and_Push_Example_Docker
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -196,8 +200,6 @@ stages:
         tags: latest
         dockerfile: ./docker/example-erc20.Dockerfile
         buildContext: .
-    - script: docker image prune -f
-      displayName: Remove dangling images
 
   - job: Build_and_Push_key_vault_for_erc20_image
     pool:
@@ -222,7 +224,6 @@ stages:
         tags: latest
         dockerfile: ./docker/example-keyvault.Dockerfile
         buildContext: .
-    - script: docker image prune -f
       displayName: Remove dangling images
 
   - job: Build_and_Push_encrypted_sql_ops_pg_image
@@ -249,5 +250,11 @@ stages:
         dockerfile: ./docker/example-encrypted-sql-ops-pg.Dockerfile
         buildContext: .
 
-    - script: docker image prune -f
-      displayName: Remove dangling images
+  - job: CleanUp
+    pool:
+      name: 'AnonifyAgent'
+    dependsOn: ['Build_and_Push_rust_sgx_sdk_rootless_image', 'Build_and_Push_anonify_dev_image', 'Build_and_Push_anonify_dev_pgx_image']
+    steps:
+      - script: docker image prune -f
+        condition: always()
+        displayName: Remove dangling images
