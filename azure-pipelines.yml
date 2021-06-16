@@ -252,7 +252,7 @@ stages:
   - job: CleanUp
     pool:
       name: 'AnonifyAgent'
-    dependsOn: ['Build_and_Push_rust_sgx_sdk_rootless_image', 'Build_and_Push_anonify_dev_image', 'Build_and_Push_anonify_dev_pgx_image']
+    dependsOn: ['Build_and_Push_erc20_image', 'Build_and_Push_key_vault_for_erc20_image', 'Build_and_Push_encrypted_sql_ops_pg_image']
     steps:
       - script: docker image prune -f
         condition: always()
