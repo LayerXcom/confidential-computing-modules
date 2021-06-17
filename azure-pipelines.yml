@@ -217,9 +217,9 @@ stages:
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
   - job: CI
-  pool:
-    name: 'AnonifyAgent'
-  steps:
+    pool:
+      name: 'AnonifyAgent'
+    steps:
     - script: |
         cp .env.sample .env
         export SPID=$(SPID)
