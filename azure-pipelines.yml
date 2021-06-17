@@ -9,11 +9,8 @@ stages:
       pool:
         name: 'AnonifyAgent'
       steps:
+        - template: templates/setup_env.yml
         - script: |
-            cp .env.sample .env
-            export SPID=$(SPID)
-            export SUB_KEY=$(SUB_KEY)
-
             # TODO: Workaround for duplicate aesm service
             # Remove here once https://github.com/occlum/occlum/pull/443 merged.
             docker-compose up -d
@@ -27,11 +24,8 @@ stages:
       pool:
         name: 'AnonifyAgent'
       steps:
+        - template: templates/setup_env.yml
         - script: |
-            cp .env.sample .env
-            export SPID=$(SPID)
-            export SUB_KEY=$(SUB_KEY)
-
             docker-compose -f pgx-docker-compose.yml up -d
             docker-compose -f pgx-docker-compose.yml exec -T sgx_machine_pgx bash -c "cd anonify && ./scripts/encrypted-sql-ops-pg-test.sh"
           displayName: 'Run encrypted-sql-ops-pg integration tests'
@@ -63,11 +57,8 @@ stages:
             dockerfile: ./docker/example-keyvault.Dockerfile
             buildContext: .
             arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
-        - script: |
-            cp .env.sample .env
-            export SPID=$(SPID)
-            export SUB_KEY=$(SUB_KEY)
-            ./scripts/e2e-test.sh
+        - template: templates/setup_env.yml
+        - script: ./scripts/e2e-test.sh
           displayName: 'Run E2E tests'
         - script: docker image prune -f
           condition: always()
@@ -78,10 +69,8 @@ stages:
 
     # NOTE: temporary removed: Add once occlum version bump up to 0.23.0
     # - job: OCCLUM_CI
+        # - template: templates/setup_env.yml
         # - script: |
-        #     cp .env.sample .env
-        #     export SPID=$(SPID)
-        #     export SUB_KEY=$(SUB_KEY)
         #     docker-compose -f occlum-docker-compose.yml up -d
 
         #     # TODO: Remove the dettached mode flag once the enclave runs as the embedded mode.
@@ -220,11 +209,8 @@ stages:
     pool:
       name: 'AnonifyAgent'
     steps:
+    - template: templates/setup_env.yml
     - script: |
-        cp .env.sample .env
-        export SPID=$(SPID)
-        export SUB_KEY=$(SUB_KEY)
-
         # TODO: Workaround for duplicate aesm service
         # Remove here once https://github.com/occlum/occlum/pull/443 merged.
         docker-compose up -d
@@ -287,11 +273,8 @@ stages:
       name: 'AnonifyAgent'
     dependsOn: ['Build_and_Push_erc20_image', 'Build_and_Push_key_vault_for_erc20_image']
     steps:
-      - script: |
-          cp .env.sample .env
-          export SPID=$(SPID)
-          export SUB_KEY=$(SUB_KEY)
-          ./scripts/e2e-test.sh
+      - template: templates/setup_env.yml
+      - script: ./scripts/e2e-test.sh
         displayName: 'Run E2E tests'
       - script: docker-compose -f e2e-docker-compose.yml down
         condition: always()
@@ -301,11 +284,8 @@ stages:
     pool:
       name: 'AnonifyAgent'
     steps:
+      - template: templates/setup_env.yml
       - script: |
-          cp .env.sample .env
-          export SPID=$(SPID)
-          export SUB_KEY=$(SUB_KEY)
-
           docker-compose -f pgx-docker-compose.yml up -d
           docker-compose -f pgx-docker-compose.yml exec -T sgx_machine_pgx bash -c "cd anonify && ./scripts/encrypted-sql-ops-pg-test.sh"
         displayName: 'Run encrypted-sql-ops-pg integration tests'
