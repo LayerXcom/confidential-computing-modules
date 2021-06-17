@@ -77,7 +77,7 @@ stages:
           displayName: 'Shutdown'
 
     # NOTE: temporary removed: Add once occlum version bump up to 0.23.0
-    # - job: occlum
+    # - job: OCCLUM_CI
         # - script: |
         #     cp .env.sample .env
         #     export SPID=$(SPID)
