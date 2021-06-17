@@ -1,6 +1,10 @@
 trigger:
 - main
 
+variables:
+  spid: $(SPID)
+  sub_key: $(SUB_KEY)
+
 stages:
 - stage: Pull_Request
   condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
