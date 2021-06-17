@@ -23,6 +23,10 @@ stages:
           condition: always()
           displayName: 'rust-sgx-sdk docker-compose down'
 
+    - job: PGX_CI
+      pool:
+        name: 'AnonifyAgent'
+      steps:
         - script: |
             cp .env.sample .env
             export SPID=$(SPID)
