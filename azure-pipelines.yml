@@ -133,7 +133,7 @@ stages:
     pool:
       name: 'AnonifyAgent'
     dependsOn: CheckChanges
-        condition: eq(dependencies.CheckChanges.outputs['check_changes.SOURCE_CODE_CHANGED'], 'true')
+      condition: eq(dependencies.CheckChanges.outputs['check_changes.SOURCE_CODE_CHANGED'], 'true')
     steps:
     - task: Docker@2
       displayName: Build rust-sgx-sdk-rootless image
