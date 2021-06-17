@@ -157,6 +157,8 @@ stages:
   - job: Build_and_Push_anonify_dev_image
     pool:
       name: 'AnonifyAgent'
+    dependsOn: CheckChanges
+    condition: eq(dependencies.CheckChanges.outputs['check_changes.SOURCE_CODE_CHANGED'], 'true')
     steps:
     - task: Docker@2
       displayName: Build anonify-dev image
@@ -180,6 +182,8 @@ stages:
   - job: Build_and_Push_anonify_dev_pgx_image
     pool:
       name: 'AnonifyAgent'
+    dependsOn: CheckChanges
+    condition: eq(dependencies.CheckChanges.outputs['check_changes.SOURCE_CODE_CHANGED'], 'true')
     steps:
     - task: Docker@2
       displayName: Build anonify-dev-pgx image
