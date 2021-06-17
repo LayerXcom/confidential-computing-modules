@@ -92,31 +92,7 @@ stages:
   - job: CheckChangesOfBaseDockerfile
     displayName: 'Check changes of base Dockerfile'
     steps:
-      - bash: |
-          PATH_FILTER="docker/base"
-          CHANGED_FILES=$(git diff HEAD HEAD~ --name-only)
-          MATCH_COUNT=0
-
-          echo "Checking for base Dockerfile changes..."
-          for FILE in $CHANGED_FILES
-          do
-            if [[ $FILE == *$PATH_FILTER* ]]; then
-              echo "MATCH:  ${FILE} changed"
-              MATCH_FOUND=true
-              MATCH_COUNT=$(($MATCH_COUNT+1))
-            else
-              echo "IGNORE: ${FILE} changed"
-            fi
-          done
-
-          echo "$MATCH_COUNT match(es) for filter '$PATH_FILTER' found."
-          if [[ $MATCH_COUNT -gt 0 ]]; then
-            echo "##vso[task.setvariable variable=SOURCE_CODE_CHANGED;isOutput=true]true"
-          else
-            echo "##vso[task.setvariable variable=SOURCE_CODE_CHANGED;isOutput=true]false"
-          fi
-        name: check_changes_of_base_dockerfile
-        displayName: 'Check changed base Dockerfiles'
+    - template: templates/check_changes_of_base_dockerfile.yml
 
   - job: Build_and_Push_rust_sgx_sdk_rootless_image
     pool:
