@@ -1,0 +1,4 @@
+steps:
+- script: |
+    cp .env.sample .env
+  displayName: 'setup env'
