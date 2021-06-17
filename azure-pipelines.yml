@@ -2,7 +2,7 @@ trigger:
 - main
 
 stages:
-- stage: Test
+- stage: Pull_Request
   condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
     - job: CI
@@ -97,7 +97,7 @@ stages:
         #   displayName: 'occlum docker-compose down'
 
 
-- stage: Build_and_Push_Base_Docker_Images
+- stage: Merge_to_main_for_base
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
   - job: Build_and_Push_rust_sgx_sdk_rootless_image
@@ -178,9 +178,27 @@ stages:
         condition: always()
         displayName: Remove dangling images for base
 
-- stage: Build_and_Push_Example_Docker
+- stage: Merge_to_main_base_for_example
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   jobs:
+  - job: CI
+  pool:
+    name: 'AnonifyAgent'
+  steps:
+    - script: |
+        cp .env.sample .env
+        export SPID=$(SPID)
+        export SUB_KEY=$(SUB_KEY)
+
+        # TODO: Workaround for duplicate aesm service
+        # Remove here once https://github.com/occlum/occlum/pull/443 merged.
+        docker-compose up -d
+        docker-compose exec -T sgx_machine bash -c "sudo chown -R anonify-dev:anonify-dev anonify ; cd anonify && ./scripts/test.sh"
+      displayName: 'Run rust-sgx-sdk tests'
+    - script: docker-compose down
+      condition: always()
+      displayName: 'rust-sgx-sdk docker-compose down'
+
   - job: Build_and_Push_erc20_image
     pool:
       name: 'AnonifyAgent'
@@ -228,6 +246,37 @@ stages:
         tags: latest
         dockerfile: ./docker/example-keyvault.Dockerfile
         buildContext: .
+
+  - job: E2E_CI
+    pool:
+      name: 'AnonifyAgent'
+    dependsOn: ['Build_and_Push_erc20_image', 'Build_and_Push_key_vault_for_erc20_image']
+    steps:
+      - script: |
+          cp .env.sample .env
+          export SPID=$(SPID)
+          export SUB_KEY=$(SUB_KEY)
+          ./scripts/e2e-test.sh
+        displayName: 'Run E2E tests'
+      - script: docker-compose -f e2e-docker-compose.yml down
+        condition: always()
+        displayName: 'Shutdown'
+
+  - job: PGX_CI
+    pool:
+      name: 'AnonifyAgent'
+    steps:
+      - script: |
+          cp .env.sample .env
+          export SPID=$(SPID)
+          export SUB_KEY=$(SUB_KEY)
+
+          docker-compose -f pgx-docker-compose.yml up -d
+          docker-compose -f pgx-docker-compose.yml exec -T sgx_machine_pgx bash -c "cd anonify && ./scripts/encrypted-sql-ops-pg-test.sh"
+        displayName: 'Run encrypted-sql-ops-pg integration tests'
+      - script: docker-compose -f pgx-docker-compose.yml down
+        condition: always()
+        displayName: 'pgx docker-compose down'
 
   - job: Build_and_Push_encrypted_sql_ops_pg_image
     pool:
