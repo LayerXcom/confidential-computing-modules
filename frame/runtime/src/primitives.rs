@@ -248,6 +248,16 @@ impl StateDecoder for Approved {
     }
 }
 
+#[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
+pub struct Question(Vec<U64>);
+
+impl Question {
+    pub fn new(inner: Vec<U64>) -> Self {
+        Question(inner)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
