@@ -258,6 +258,29 @@ impl Question {
     }
 }
 
+impl From<Question> for StateType {
+    fn from(a: Question) -> Self {
+        StateType::new(a.0.encode_s())
+    }
+}
+
+impl StateDecoder for Question {
+    fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
+        if v.is_empty() {
+            return Ok(Default::default());
+        }
+        let buf = v;
+        Question::decode_s(&buf)
+    }
+
+    fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
+        if b.is_empty() {
+            return Ok(Default::default());
+        }
+        Question::decode_s(b)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
