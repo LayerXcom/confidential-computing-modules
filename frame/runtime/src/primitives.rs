@@ -250,17 +250,40 @@ impl StateDecoder for Approved {
 
 #[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
-pub struct Answer(Vec<U64>);
+pub struct Answer {
+    v: Vec<U64>,
+}
+
+pub struct AnswerIter<'a> {
+    a: &'a Answer,
+    now: usize,
+}
 
 impl Answer {
-    pub fn new(inner: Vec<U64>) -> Self {
-        Answer(inner)
+    pub fn new(v: Vec<U64>) -> Self {
+        Answer { v: v }
+    }
+
+    pub fn iter(&self) -> AnswerIter {
+        AnswerIter { a: &self, now: 0 }
+    }
+}
+
+impl<'a> Iterator for AnswerIter<'a> {
+    type Item = U64;
+    fn next(&mut self) -> Option<U64> {
+        self.now += 1;
+        if self.now - 1 < self.a.v.len() {
+            Some(self.a.v[self.now - 1])
+        } else {
+            None
+        }
     }
 }
 
 impl From<Answer> for StateType {
     fn from(a: Answer) -> Self {
-        StateType::new(a.0.encode_s())
+        StateType::new(a.v.encode_s())
     }
 }
 
