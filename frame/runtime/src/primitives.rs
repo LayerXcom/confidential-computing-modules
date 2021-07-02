@@ -250,34 +250,34 @@ impl StateDecoder for Approved {
 
 #[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
-pub struct Question(Vec<U64>);
+pub struct Answer(Vec<U64>);
 
-impl Question {
+impl Answer {
     pub fn new(inner: Vec<U64>) -> Self {
-        Question(inner)
+        Answer(inner)
     }
 }
 
-impl From<Question> for StateType {
-    fn from(a: Question) -> Self {
+impl From<Answer> for StateType {
+    fn from(a: Answer) -> Self {
         StateType::new(a.0.encode_s())
     }
 }
 
-impl StateDecoder for Question {
+impl StateDecoder for Answer {
     fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
         if v.is_empty() {
             return Ok(Default::default());
         }
         let buf = v;
-        Question::decode_s(&buf)
+        Answer::decode_s(&buf)
     }
 
     fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
         if b.is_empty() {
             return Ok(Default::default());
         }
-        Question::decode_s(b)
+        Answer::decode_s(b)
     }
 }
 
