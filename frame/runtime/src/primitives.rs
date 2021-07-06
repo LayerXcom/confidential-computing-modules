@@ -250,7 +250,7 @@ impl StateDecoder for Approved {
 
 #[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
-pub struct Answer(Vec<U64>);
+pub struct Answer(Vec<Choice>);
 
 pub struct AnswerIter<'a> {
     a: &'a Answer,
@@ -258,7 +258,7 @@ pub struct AnswerIter<'a> {
 }
 
 impl Answer {
-    pub fn new(v: Vec<U64>) -> Self {
+    pub fn new(v: Vec<Choice>) -> Self {
         Answer(v)
     }
 
@@ -268,11 +268,11 @@ impl Answer {
 }
 
 impl<'a> Iterator for AnswerIter<'a> {
-    type Item = U64;
-    fn next(&mut self) -> Option<U64> {
+    type Item = Choice;
+    fn next(&mut self) -> Option<Choice> {
         self.now += 1;
         if self.now - 1 < self.a.0.len() {
-            Some(self.a.0[self.now - 1])
+            Some(self.a.0[&self.now - 1].clone())
         } else {
             None
         }
@@ -299,6 +299,60 @@ impl StateDecoder for Answer {
             return Ok(Default::default());
         }
         Answer::decode_s(b)
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
+pub struct Choice(Vec<U64>);
+
+pub struct ChoiceIter<'a> {
+    a: &'a Choice,
+    now: usize,
+}
+
+impl Choice {
+    pub fn new(v: Vec<U64>) -> Self {
+        Choice(v)
+    }
+
+    pub fn iter(&self) -> ChoiceIter {
+        ChoiceIter { a: &self, now: 0 }
+    }
+}
+
+impl<'a> Iterator for ChoiceIter<'a> {
+    type Item = U64;
+    fn next(&mut self) -> Option<U64> {
+        self.now += 1;
+        if self.now - 1 < self.a.0.len() {
+            Some(self.a.0[&self.now - 1].clone())
+        } else {
+            None
+        }
+    }
+}
+
+impl From<Choice> for StateType {
+    fn from(a: Choice) -> Self {
+        StateType::new(a.0.encode_s())
+    }
+}
+
+impl StateDecoder for Choice {
+    fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
+        if v.is_empty() {
+            return Ok(Default::default());
+        }
+        let buf = v;
+        Choice::decode_s(&buf)
+    }
+
+    fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
+        if b.is_empty() {
+            return Ok(Default::default());
+        }
+        Choice::decode_s(b)
     }
 }
 
