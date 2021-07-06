@@ -258,8 +258,13 @@ pub struct AnswerIter<'a> {
 }
 
 impl Answer {
-    pub fn new(v: Vec<Choice>) -> Self {
+    pub fn new() -> Self {
+        let v: Vec<Choice> = Vec::new();
         Answer(v)
+    }
+
+    pub fn push(&mut self, c: Choice) {
+        self.0.push(c);
     }
 
     pub fn iter(&self) -> AnswerIter {
