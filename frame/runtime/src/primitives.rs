@@ -372,8 +372,8 @@ pub struct AnswerVecIter<'a, T> {
 }
 
 impl<T> AnswerVec<T> {
-    pub fn new() -> Self {
-        let v: Vec<T> = Vec::new();
+    pub fn new(value: T) -> Self {
+        let v: Vec<T> = vec![value];
         AnswerVec {
             v
         }
