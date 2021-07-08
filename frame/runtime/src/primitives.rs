@@ -258,8 +258,7 @@ pub struct AnswerIter<'a> {
 }
 
 impl Answer {
-    pub fn new() -> Self {
-        let v: Vec<Choice> = Vec::new();
+    pub fn new(v: Vec<Choice>) -> Self {
         Answer(v)
     }
 
@@ -358,6 +357,75 @@ impl StateDecoder for Choice {
             return Ok(Default::default());
         }
         Choice::decode_s(b)
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
+pub struct AnswerVec<T> {
+    v: Vec<T>,
+}
+
+pub struct AnswerVecIter<'a, T> {
+    a: &'a AnswerVec<T>,
+    now: usize,
+}
+
+impl<T> AnswerVec<T> {
+    pub fn new() -> Self {
+        let v: Vec<T> = Vec::new();
+        AnswerVec {
+            v
+        }
+    }
+
+    pub fn push(&mut self, value: T) {
+        self.v.push(value);
+    }
+
+    pub fn iter(&self) -> AnswerVecIter<T> {
+        AnswerVecIter { a: &self, now: 0 }
+    }
+}
+
+impl<'a, T: Clone> Iterator for AnswerVecIter<'a, T> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        self.now += 1;
+        if self.now - 1 < self.a.v.len() {
+            Some(self.a.v[&self.now - 1].clone())
+        } else {
+            None
+        }
+    }
+}
+
+impl From<AnswerVec<U64>> for StateType {
+    fn from(a: AnswerVec<U64>) -> Self {
+        StateType::new(a.v.encode_s())
+    }
+}
+
+impl From<AnswerVec<AnswerVec<U64>>> for StateType {
+    fn from(a: AnswerVec<AnswerVec<U64>>) -> Self {
+        StateType::new(a.v.encode_s())
+    }
+}
+
+impl StateDecoder for AnswerVec<AnswerVec<U64>> {
+    fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
+        if v.is_empty() {
+            return Ok(Default::default());
+        }
+        let buf = v;
+        AnswerVec::decode_s(&buf)
+    }
+
+    fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
+        if b.is_empty() {
+            return Ok(Default::default());
+        }
+        AnswerVec::decode_s(b)
     }
 }
 
