@@ -383,6 +383,10 @@ impl<T> AnswerVec<T> {
         self.v.push(value);
     }
 
+    pub fn len(&self) -> usize {
+        self.v.len()
+    }
+
     pub fn iter(&self) -> AnswerVecIter<T> {
         AnswerVecIter { a: &self, now: 0 }
     }
