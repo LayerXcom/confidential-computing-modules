@@ -266,6 +266,10 @@ impl Answer {
         self.0.push(c);
     }
 
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
     pub fn iter(&self) -> AnswerIter {
         AnswerIter { a: &self, now: 0 }
     }
