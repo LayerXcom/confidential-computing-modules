@@ -324,6 +324,10 @@ impl Choice {
         Choice(v)
     }
 
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
     pub fn iter(&self) -> ChoiceIter {
         ChoiceIter { a: &self, now: 0 }
     }
