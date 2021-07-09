@@ -2,7 +2,6 @@ use crate::bincode;
 use crate::local_anyhow::{anyhow, Error, Result};
 use crate::localstd::{
     fmt::Debug,
-    fmt::Display,
     collections::BTreeMap,
     convert::TryFrom,
     mem::size_of,
@@ -396,6 +395,8 @@ impl<T: AVecTrait> AVec<T> {
     }
 }
 
+impl AVecTrait for AVec<AVec<U64>> {}
+impl AVecTrait for AVec<U64> {}
 impl AVecTrait for U64 {}
 
 impl<'a, T: AVecTrait + Clone> Iterator for AVecIter<'a, T> {
