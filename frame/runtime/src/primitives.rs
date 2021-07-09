@@ -298,14 +298,8 @@ impl<'a, T: AVecTrait + Clone> Iterator for AVecIter<'a, T> {
 impl AVecTrait for AVec<U64> {}
 impl AVecTrait for U64 {}
 
-impl From<AVec<U64>> for StateType {
-    fn from(a: AVec<U64>) -> Self {
-        StateType::new(a.0.encode_s())
-    }
-}
-
-impl From<AVec<AVec<U64>>> for StateType {
-    fn from(a: AVec<AVec<U64>>) -> Self {
+impl<T: AVecTrait + State> From<AVec<T>> for StateType {
+    fn from(a: AVec<T>) -> Self {
         StateType::new(a.0.encode_s())
     }
 }
