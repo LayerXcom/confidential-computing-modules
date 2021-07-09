@@ -370,19 +370,19 @@ impl StateDecoder for Choice {
 
 #[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
-pub struct AnswerVec<T> {
+pub struct AVec<T> {
     v: Vec<T>,
 }
 
-pub struct AnswerVecIter<'a, T> {
-    a: &'a AnswerVec<T>,
+pub struct AVecIter<'a, T> {
+    a: &'a AVec<T>,
     now: usize,
 }
 
-impl<T> AnswerVec<T> {
-    pub fn new(value: T) -> Self {
-        let v: Vec<T> = vec![value];
-        AnswerVec {
+impl<T> AVec<T> {
+    pub fn new() -> Self {
+        let v: Vec<T> = Vec::new();
+        AVec {
             v
         }
     }
@@ -395,12 +395,12 @@ impl<T> AnswerVec<T> {
         self.v.len()
     }
 
-    pub fn iter(&self) -> AnswerVecIter<T> {
-        AnswerVecIter { a: &self, now: 0 }
+    pub fn iter(&self) -> AVecIter<T> {
+        AVecIter { a: &self, now: 0 }
     }
 }
 
-impl<'a, T: Clone> Iterator for AnswerVecIter<'a, T> {
+impl<'a, T: Clone> Iterator for AVecIter<'a, T> {
     type Item = T;
     fn next(&mut self) -> Option<T> {
         self.now += 1;
@@ -412,32 +412,32 @@ impl<'a, T: Clone> Iterator for AnswerVecIter<'a, T> {
     }
 }
 
-impl From<AnswerVec<U64>> for StateType {
-    fn from(a: AnswerVec<U64>) -> Self {
+impl From<AVec<U64>> for StateType {
+    fn from(a: AVec<U64>) -> Self {
         StateType::new(a.v.encode_s())
     }
 }
 
-impl From<AnswerVec<AnswerVec<U64>>> for StateType {
-    fn from(a: AnswerVec<AnswerVec<U64>>) -> Self {
+impl From<AVec<AVec<U64>>> for StateType {
+    fn from(a: AVec<AVec<U64>>) -> Self {
         StateType::new(a.v.encode_s())
     }
 }
 
-impl StateDecoder for AnswerVec<AnswerVec<U64>> {
+impl StateDecoder for AVec<AVec<U64>> {
     fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
         if v.is_empty() {
             return Ok(Default::default());
         }
         let buf = v;
-        AnswerVec::decode_s(&buf)
+        AVec::decode_s(&buf)
     }
 
     fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
         if b.is_empty() {
             return Ok(Default::default());
         }
-        AnswerVec::decode_s(b)
+        AVec::decode_s(b)
     }
 }
 
