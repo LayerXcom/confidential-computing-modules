@@ -380,8 +380,15 @@ pub struct AVecIter<'a, T> {
 }
 
 impl<T> AVec<T> {
-    pub fn new() -> Self {
-        let v: Vec<T> = Vec::new();
+    // pub fn new() -> Self {
+    //     let v: Vec<T> = Vec::new();
+    //     AVec {
+    //         v
+    //     }
+    // }
+
+    pub fn new(value: T) -> Self {
+        let v: Vec<T> = vec![value];
         AVec {
             v
         }
@@ -421,6 +428,23 @@ impl From<AVec<U64>> for StateType {
 impl From<AVec<AVec<U64>>> for StateType {
     fn from(a: AVec<AVec<U64>>) -> Self {
         StateType::new(a.v.encode_s())
+    }
+}
+
+impl StateDecoder for AVec<U64> {
+    fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
+        if v.is_empty() {
+            return Ok(Default::default());
+        }
+        let buf = v;
+        AVec::decode_s(&buf)
+    }
+
+    fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
+        if b.is_empty() {
+            return Ok(Default::default());
+        }
+        AVec::decode_s(b)
     }
 }
 
