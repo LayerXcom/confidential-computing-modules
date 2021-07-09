@@ -270,6 +270,14 @@ impl<T: AVecTrait> AVec<T> {
         self.0.len()
     }
 
+    pub fn push(&mut self, v: T) {
+        self.0.push(v)
+    }
+
+    pub fn from(v: Vec<T>) -> Self {
+        AVec(v)
+    }
+
     pub fn iter(&self) -> AVecIter<T> {
         AVecIter { a: &self, now: 0 }
     }
