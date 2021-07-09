@@ -1,6 +1,8 @@
 use crate::bincode;
 use crate::local_anyhow::{anyhow, Error, Result};
 use crate::localstd::{
+    fmt::Debug,
+    fmt::Display,
     collections::BTreeMap,
     convert::TryFrom,
     mem::size_of,
@@ -368,38 +370,25 @@ impl StateDecoder for Choice {
     }
 }
 
+pub trait AVecTrait {}
+
 #[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
-pub struct AVec<T> {
-    v: Vec<T>,
-}
+pub struct AVec<A>(Vec<A>) where A: AVecTrait;
 
-pub struct AVecIter<'a, T> {
-    a: &'a AVec<T>,
+pub struct AVecIter<'a, A: AVecTrait> {
+    a: &'a AVec<A>,
     now: usize,
 }
 
-impl<T> AVec<T> {
-    // pub fn new() -> Self {
-    //     let v: Vec<T> = Vec::new();
-    //     AVec {
-    //         v
-    //     }
-    // }
-
-    pub fn new(value: T) -> Self {
-        let v: Vec<T> = vec![value];
-        AVec {
-            v
-        }
-    }
-
-    pub fn push(&mut self, value: T) {
-        self.v.push(value);
+impl<T: AVecTrait> AVec<T> {
+    pub fn new() -> Self {
+        let v: Vec<T> = Vec::new();
+        AVec(v)
     }
 
     pub fn len(&self) -> usize {
-        self.v.len()
+        self.0.len()
     }
 
     pub fn iter(&self) -> AVecIter<T> {
@@ -407,12 +396,14 @@ impl<T> AVec<T> {
     }
 }
 
-impl<'a, T: Clone> Iterator for AVecIter<'a, T> {
+impl AVecTrait for U64 {}
+
+impl<'a, T: AVecTrait + Clone> Iterator for AVecIter<'a, T> {
     type Item = T;
     fn next(&mut self) -> Option<T> {
         self.now += 1;
-        if self.now - 1 < self.a.v.len() {
-            Some(self.a.v[&self.now - 1].clone())
+        if self.now - 1 < self.a.0.len() {
+            Some(self.a.0[&self.now - 1].clone())
         } else {
             None
         }
@@ -421,34 +412,11 @@ impl<'a, T: Clone> Iterator for AVecIter<'a, T> {
 
 impl From<AVec<U64>> for StateType {
     fn from(a: AVec<U64>) -> Self {
-        StateType::new(a.v.encode_s())
+        StateType::new(a.0.encode_s())
     }
 }
 
-impl From<AVec<AVec<U64>>> for StateType {
-    fn from(a: AVec<AVec<U64>>) -> Self {
-        StateType::new(a.v.encode_s())
-    }
-}
-
-impl StateDecoder for AVec<U64> {
-    fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
-        if v.is_empty() {
-            return Ok(Default::default());
-        }
-        let buf = v;
-        AVec::decode_s(&buf)
-    }
-
-    fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
-        if b.is_empty() {
-            return Ok(Default::default());
-        }
-        AVec::decode_s(b)
-    }
-}
-
-impl StateDecoder for AVec<AVec<U64>> {
+impl<T: AVecTrait + State> StateDecoder for AVec<T> {
     fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
         if v.is_empty() {
             return Ok(Default::default());
