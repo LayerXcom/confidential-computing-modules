@@ -286,7 +286,7 @@ where
     }
 
     pub fn is_empty(&self) -> bool {
-        self.size() == 0
+        self.len() == 0
     }
 }
 
