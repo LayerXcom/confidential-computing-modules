@@ -1,9 +1,9 @@
 use crate::bincode;
 use crate::local_anyhow::{anyhow, Error, Result};
 use crate::localstd::{
-    fmt::Debug,
     collections::BTreeMap,
     convert::TryFrom,
+    fmt::Debug,
     mem::size_of,
     ops::{Add, Div, Mul, Sub},
     vec::Vec,
@@ -260,7 +260,7 @@ pub struct StateVecIter<'a, S: StateVector> {
     now: usize,
 }
 
-impl<S> StateVec<S> 
+impl<S> StateVec<S>
 where
     S: StateVector,
 {
