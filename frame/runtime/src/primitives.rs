@@ -284,6 +284,10 @@ where
     pub fn iter(&self) -> StateVecIter<S> {
         StateVecIter { a: &self, now: 0 }
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.size() == 0
+    }
 }
 
 impl<'a, T> Iterator for StateVecIter<'a, T>
