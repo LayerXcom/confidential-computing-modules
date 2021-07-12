@@ -13,7 +13,7 @@ use crate::serde_bytes;
 use frame_common::{
     crypto::AccountId,
     state_types::StateType,
-    traits::{State, StateDecoder},
+    traits::{State, StateDecoder, StateVector},
 };
 
 macro_rules! impl_uint {
@@ -87,6 +87,8 @@ macro_rules! impl_uint {
                 $name(r)
             }
         }
+
+        impl StateVector for $name {}
 
         impl StateDecoder for $name {
             fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
@@ -249,41 +251,45 @@ impl StateDecoder for Approved {
     }
 }
 
-pub trait AVecTrait {}
-
 #[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize, Deserialize)]
 #[serde(crate = "crate::serde")]
-pub struct AVec<A>(Vec<A>) where A: AVecTrait;
+pub struct StateVec<S: StateVector>(Vec<S>);
 
-pub struct AVecIter<'a, A: AVecTrait> {
-    a: &'a AVec<A>,
+pub struct StateVecIter<'a, S: StateVector> {
+    a: &'a StateVec<S>,
     now: usize,
 }
 
-impl<T: AVecTrait> AVec<T> {
+impl<S> StateVec<S> 
+where
+    S: StateVector,
+{
     pub fn new() -> Self {
-        let v: Vec<T> = Vec::new();
-        AVec(v)
+        let v: Vec<S> = Vec::new();
+        StateVec(v)
     }
 
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
-    pub fn push(&mut self, v: T) {
+    pub fn push(&mut self, v: S) {
         self.0.push(v)
     }
 
-    pub fn from(v: Vec<T>) -> Self {
-        AVec(v)
+    pub fn from(v: Vec<S>) -> Self {
+        StateVec(v)
     }
 
-    pub fn iter(&self) -> AVecIter<T> {
-        AVecIter { a: &self, now: 0 }
+    pub fn iter(&self) -> StateVecIter<S> {
+        StateVecIter { a: &self, now: 0 }
     }
 }
 
-impl<'a, T: AVecTrait + Clone> Iterator for AVecIter<'a, T> {
+impl<'a, T> Iterator for StateVecIter<'a, T>
+where
+    T: StateVector + Clone,
+{
     type Item = T;
     fn next(&mut self) -> Option<T> {
         self.now += 1;
@@ -295,29 +301,34 @@ impl<'a, T: AVecTrait + Clone> Iterator for AVecIter<'a, T> {
     }
 }
 
-impl AVecTrait for AVec<U64> {}
-impl AVecTrait for U64 {}
+impl<S: StateVector> StateVector for StateVec<S> {}
 
-impl<T: AVecTrait + State> From<AVec<T>> for StateType {
-    fn from(a: AVec<T>) -> Self {
+impl<T> From<StateVec<T>> for StateType
+where
+    T: StateVector + State,
+{
+    fn from(a: StateVec<T>) -> Self {
         StateType::new(a.0.encode_s())
     }
 }
 
-impl<T: AVecTrait + State> StateDecoder for AVec<T> {
+impl<T> StateDecoder for StateVec<T>
+where
+    T: StateVector + State,
+{
     fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
         if v.is_empty() {
             return Ok(Default::default());
         }
         let buf = v;
-        AVec::decode_s(&buf)
+        StateVec::decode_s(&buf)
     }
 
     fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
         if b.is_empty() {
             return Ok(Default::default());
         }
-        AVec::decode_s(b)
+        StateVec::decode_s(b)
     }
 }
 
