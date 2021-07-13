@@ -62,6 +62,8 @@ pub trait Hash256 {
     fn from_pubkey(pubkey: &PublicKey) -> Self;
 }
 
+pub trait StateVector {}
+
 /// A trait that will hash using Keccak256 the object it's implemented on.
 pub trait Keccak256<T> {
     /// This will return a sized object with the hash

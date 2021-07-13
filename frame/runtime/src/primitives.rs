@@ -3,6 +3,7 @@ use crate::local_anyhow::{anyhow, Error, Result};
 use crate::localstd::{
     collections::BTreeMap,
     convert::TryFrom,
+    fmt::Debug,
     mem::size_of,
     ops::{Add, Div, Mul, Sub},
     vec::Vec,
@@ -12,7 +13,7 @@ use crate::serde_bytes;
 use frame_common::{
     crypto::AccountId,
     state_types::StateType,
-    traits::{State, StateDecoder},
+    traits::{State, StateDecoder, StateVector},
 };
 
 macro_rules! impl_uint {
@@ -86,6 +87,8 @@ macro_rules! impl_uint {
                 $name(r)
             }
         }
+
+        impl StateVector for $name {}
 
         impl StateDecoder for $name {
             fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
@@ -245,6 +248,91 @@ impl StateDecoder for Approved {
             return Ok(Default::default());
         }
         Approved::decode_s(b)
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord, Hash, Serialize, Deserialize)]
+#[serde(crate = "crate::serde")]
+pub struct StateVec<S: StateVector>(Vec<S>);
+
+pub struct StateVecIter<'a, S: StateVector> {
+    a: &'a StateVec<S>,
+    now: usize,
+}
+
+impl<S> StateVec<S>
+where
+    S: StateVector,
+{
+    pub fn new() -> Self {
+        let v: Vec<S> = Vec::new();
+        StateVec(v)
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn push(&mut self, v: S) {
+        self.0.push(v)
+    }
+
+    pub fn from(v: Vec<S>) -> Self {
+        StateVec(v)
+    }
+
+    pub fn iter(&self) -> StateVecIter<S> {
+        StateVecIter { a: &self, now: 0 }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+impl<'a, T> Iterator for StateVecIter<'a, T>
+where
+    T: StateVector + Clone,
+{
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        self.now += 1;
+        if self.now - 1 < self.a.0.len() {
+            Some(self.a.0[&self.now - 1].clone())
+        } else {
+            None
+        }
+    }
+}
+
+impl<S: StateVector> StateVector for StateVec<S> {}
+
+impl<T> From<StateVec<T>> for StateType
+where
+    T: StateVector + State,
+{
+    fn from(a: StateVec<T>) -> Self {
+        StateType::new(a.0.encode_s())
+    }
+}
+
+impl<T> StateDecoder for StateVec<T>
+where
+    T: StateVector + State,
+{
+    fn decode_vec(v: Vec<u8>) -> Result<Self, Error> {
+        if v.is_empty() {
+            return Ok(Default::default());
+        }
+        let buf = v;
+        StateVec::decode_s(&buf)
+    }
+
+    fn decode_mut_bytes(b: &mut [u8]) -> Result<Self, Error> {
+        if b.is_empty() {
+            return Ok(Default::default());
+        }
+        StateVec::decode_s(b)
     }
 }
 
