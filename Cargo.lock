@@ -386,8 +386,8 @@ dependencies = [
  "libsecp256k1 0.2.2",
  "serde 1.0.117",
  "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
- "serde_bytes 0.11.3",
- "serde_bytes 0.11.5",
+ "serde_bytes 0.11.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_bytes 0.11.5 (git+https://github.com/mesalock-linux/serde-bytes-sgx)",
  "serde_json 1.0.51",
  "serde_json 1.0.59",
  "sgx_tstd",
@@ -461,7 +461,7 @@ dependencies = [
  "parity-crypto",
  "rand 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.117",
- "serde_bytes 0.11.5",
+ "serde_bytes 0.11.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.59",
  "smallvec 0.6.14",
  "thiserror 1.0.22",
@@ -1919,8 +1919,8 @@ dependencies = [
  "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
  "serde-big-array 0.2.0",
  "serde-big-array 0.3.0",
- "serde_bytes 0.11.3",
- "serde_bytes 0.11.5",
+ "serde_bytes 0.11.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_bytes 0.11.5 (git+https://github.com/mesalock-linux/serde-bytes-sgx)",
  "serde_json 1.0.51",
  "serde_json 1.0.59",
  "sgx_trts",
@@ -1997,7 +1997,7 @@ dependencies = [
  "remote-attestation",
  "rustls 0.19.0 (git+https://github.com/mesalock-linux/rustls?branch=mesalock_sgx)",
  "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
- "serde_bytes 0.11.3",
+ "serde_bytes 0.11.5 (git+https://github.com/mesalock-linux/serde-bytes-sgx)",
  "serde_json 1.0.51",
  "sgx_tcrypto",
  "sgx_tstd",
@@ -2036,8 +2036,8 @@ dependencies = [
  "remote-attestation",
  "serde 1.0.117",
  "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
- "serde_bytes 0.11.3",
- "serde_bytes 0.11.5",
+ "serde_bytes 0.11.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_bytes 0.11.5 (git+https://github.com/mesalock-linux/serde-bytes-sgx)",
  "serde_json 1.0.51",
  "sgx_tstd",
 ]
@@ -2087,7 +2087,7 @@ dependencies = [
  "rand_core 0.5.1 (git+https://github.com/mesalock-linux/rand-sgx?rev=v0.7.3_sgx1.1.3)",
  "ring 0.16.19",
  "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
- "serde_bytes 0.11.3",
+ "serde_bytes 0.11.5 (git+https://github.com/mesalock-linux/serde-bytes-sgx)",
  "serde_json 1.0.51",
  "sgx_tseal",
  "sgx_tstd",
@@ -4872,20 +4872,20 @@ dependencies = [
 
 [[package]]
 name = "serde_bytes"
-version = "0.11.3"
-source = "git+https://github.com/mesalock-linux/serde-bytes-sgx#c3e6d52347dadcb226af05875abbf357a006e3a4"
-dependencies = [
- "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
- "sgx_tstd",
-]
-
-[[package]]
-name = "serde_bytes"
 version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16ae07dd2f88a366f15bd0632ba725227018c69a1c8550a927324f8eb8368bb9"
 dependencies = [
  "serde 1.0.117",
+]
+
+[[package]]
+name = "serde_bytes"
+version = "0.11.5"
+source = "git+https://github.com/mesalock-linux/serde-bytes-sgx#0bdf5e0596258f8895ce60527d82b6b5961a2eae"
+dependencies = [
+ "serde 1.0.118 (git+https://github.com/mesalock-linux/serde-sgx.git)",
+ "sgx_tstd",
 ]
 
 [[package]]
