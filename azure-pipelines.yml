@@ -129,6 +129,9 @@ stages:
         tags: latest
         dockerfile: ./docker/base-rust-sgx-sdk-rootless.Dockerfile
         buildContext: .
+    - script: docker image prune -f
+      condition: always()
+      displayName: 'Remove dangling images for example'
 
   - job: Build_and_Push_anonify_dev_image
     pool:
@@ -154,6 +157,9 @@ stages:
         tags: latest
         dockerfile: ./docker/base-anonify-dev.Dockerfile
         buildContext: .
+    - script: docker image prune -f
+      condition: always()
+      displayName: 'Remove dangling images for example'
 
   - job: Build_and_Push_anonify_dev_pgx_image
     pool:
@@ -179,6 +185,9 @@ stages:
         tags: latest
         dockerfile: ./docker/base-anonify-dev-pgx.Dockerfile
         buildContext: .
+    - script: docker image prune -f
+      condition: always()
+      displayName: 'Remove dangling images for example'
 
   - job: CleanUp
     pool:
@@ -233,6 +242,9 @@ stages:
         tags: latest
         dockerfile: ./docker/example-erc20.Dockerfile
         buildContext: .
+    - script: docker image prune -f
+      condition: always()
+      displayName: 'Remove dangling images for example'
 
   - job: Build_and_Push_key_vault_for_erc20_image
     pool:
@@ -257,6 +269,9 @@ stages:
         tags: latest
         dockerfile: ./docker/example-keyvault.Dockerfile
         buildContext: .
+    - script: docker image prune -f
+      condition: always()
+      displayName: 'Remove dangling images for example'
 
   - job: E2E_CI
     pool:
@@ -312,12 +327,6 @@ stages:
         tags: latest
         dockerfile: ./docker/example-encrypted-sql-ops-pg.Dockerfile
         buildContext: .
-
-  - job: CleanUp
-    pool:
-      name: 'AnonifyAgent'
-    dependsOn: ['Build_and_Push_erc20_image', 'Build_and_Push_key_vault_for_erc20_image', 'Build_and_Push_encrypted_sql_ops_pg_image']
-    steps:
-      - script: docker image prune -f
-        condition: always()
-        displayName: 'Remove dangling images for example'
+    - script: docker image prune -f
+      condition: always()
+      displayName: 'Remove dangling images for example'
