@@ -284,6 +284,11 @@ stages:
       name: 'AnonifyAgent'
     dependsOn: ['Build_and_Push_erc20_image', 'Build_and_Push_key_vault_for_erc20_image']
     steps:
+      - task: Docker@2
+        displayName: 'Login to ACR'
+        inputs:
+          command: login
+          containerRegistry: anonify-ci-cd-acr
       - template: templates/setup_env.yml
       - script: ./scripts/e2e-test.sh
         env:
@@ -298,6 +303,11 @@ stages:
     pool:
       name: 'AnonifyAgent'
     steps:
+      - task: Docker@2
+        displayName: 'Login to ACR'
+        inputs:
+          command: login
+          containerRegistry: anonify-ci-cd-acr
       - template: templates/setup_env.yml
       - script: |
           docker-compose -f pgx-docker-compose.yml up -d
