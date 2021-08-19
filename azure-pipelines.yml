@@ -9,6 +9,11 @@ stages:
       pool:
         name: 'AnonifyAgent'
       steps:
+        - task: Docker@2
+          displayName: 'Login to ACR'
+          inputs:
+            command: login
+            containerRegistry: anonify-ci-cd-acr
         - template: templates/setup_env.yml
         - script: |
             # TODO: Workaround for duplicate aesm service
@@ -19,7 +24,7 @@ stages:
             SPID: $(SPID)
             SUB_KEY: $(SUB_KEY)
           displayName: 'Run rust-sgx-sdk tests'
-        - script: docker-compose down
+        - script: docker-compose down --rmi all --volumes --remove-orphans
           condition: always()
           displayName: 'rust-sgx-sdk docker-compose down'
 
@@ -27,6 +32,11 @@ stages:
       pool:
         name: 'AnonifyAgent'
       steps:
+        - task: Docker@2
+          displayName: 'Login to ACR'
+          inputs:
+            command: login
+            containerRegistry: anonify-ci-cd-acr
         - template: templates/setup_env.yml
         - script: |
             docker-compose -f pgx-docker-compose.yml up -d
@@ -35,7 +45,7 @@ stages:
             SPID: $(SPID)
             SUB_KEY: $(SUB_KEY)
           displayName: 'Run encrypted-sql-ops-pg integration tests'
-        - script: docker-compose -f pgx-docker-compose.yml down
+        - script: docker-compose -f pgx-docker-compose.yml down --rmi all --volumes --remove-orphans
           condition: always()
           displayName: 'pgx docker-compose down'
 
@@ -63,6 +73,11 @@ stages:
             dockerfile: ./docker/example-keyvault.Dockerfile
             buildContext: .
             arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
+        - task: Docker@2
+          displayName: 'Login to ACR'
+          inputs:
+            command: login
+            containerRegistry: anonify-ci-cd-acr
         - template: templates/setup_env.yml
         - script: ./scripts/e2e-test.sh
           env:
@@ -71,8 +86,8 @@ stages:
           displayName: 'Run E2E tests'
         - script: docker image prune -f
           condition: always()
-          displayName: Remove dangling images
-        - script: docker-compose -f e2e-docker-compose.yml down
+          displayName: 'Remove dangling images'
+        - script: docker-compose -f e2e-docker-compose.yml down --rmi all --volumes --remove-orphans
           condition: always()
           displayName: 'Shutdown'
 
@@ -92,7 +107,7 @@ stages:
         #     sudo systemctl restart aesmd
         #     LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aesm/aesm_service
 
-        #     docker-compose -f occlum-docker-compose.yml down
+        #     docker-compose -f occlum-docker-compose.yml down --rmi all --volumes --remove-orphans
         #   condition: always()
         #   displayName: 'occlum docker-compose down'
 
@@ -112,7 +127,7 @@ stages:
     condition: eq(dependencies.CheckChangesOfBaseDockerfile.outputs['check_changes_of_base_dockerfile.SOURCE_CODE_CHANGED'], 'true')
     steps:
     - task: Docker@2
-      displayName: Build rust-sgx-sdk-rootless image
+      displayName: 'Build rust-sgx-sdk-rootless image'
       inputs:
         command: build
         containerRegistry: anonify-ci-cd-acr
@@ -121,7 +136,7 @@ stages:
         dockerfile: ./docker/base-rust-sgx-sdk-rootless.Dockerfile
         buildContext: .
     - task: Docker@2
-      displayName: Push rust-sgx-sdk-rootless image
+      displayName: 'Push rust-sgx-sdk-rootless image'
       inputs:
         command: push
         containerRegistry: anonify-ci-cd-acr
@@ -129,6 +144,12 @@ stages:
         tags: latest
         dockerfile: ./docker/base-rust-sgx-sdk-rootless.Dockerfile
         buildContext: .
+    - script: docker image prune -f
+      condition: always()
+      displayName: 'Remove dangling images for rootless'
+    - script: docker rmi anonify.azurecr.io/rust-sgx-sdk-rootless:latest
+      condition: always()
+      displayName: 'Remove built images for rootless'
 
   - job: Build_and_Push_anonify_dev_image
     pool:
@@ -137,7 +158,7 @@ stages:
     condition: eq(dependencies.CheckChangesOfBaseDockerfile.outputs['check_changes_of_base_dockerfile.SOURCE_CODE_CHANGED'], 'true')
     steps:
     - task: Docker@2
-      displayName: Build anonify-dev image
+      displayName: 'Build anonify-dev image'
       inputs:
         command: build
         containerRegistry: anonify-ci-cd-acr
@@ -146,7 +167,7 @@ stages:
         dockerfile: ./docker/base-anonify-dev.Dockerfile
         buildContext: .
     - task: Docker@2
-      displayName: Push anonify-dev image
+      displayName: 'Push anonify-dev image'
       inputs:
         command: push
         containerRegistry: anonify-ci-cd-acr
@@ -154,6 +175,12 @@ stages:
         tags: latest
         dockerfile: ./docker/base-anonify-dev.Dockerfile
         buildContext: .
+    - script: docker image prune -f
+      condition: always()
+      displayName: 'Remove dangling images for base'
+    - script: docker rmi anonify.azurecr.io/anonify-dev:latest
+      condition: always()
+      displayName: 'Remove built images for base'
 
   - job: Build_and_Push_anonify_dev_pgx_image
     pool:
@@ -162,7 +189,7 @@ stages:
     condition: eq(dependencies.CheckChangesOfBaseDockerfile.outputs['check_changes_of_base_dockerfile.SOURCE_CODE_CHANGED'], 'true')
     steps:
     - task: Docker@2
-      displayName: Build anonify-dev-pgx image
+      displayName: 'Build anonify-dev-pgx image'
       inputs:
         command: build
         containerRegistry: anonify-ci-cd-acr
@@ -171,7 +198,7 @@ stages:
         dockerfile: ./docker/base-anonify-dev-pgx.Dockerfile
         buildContext: .
     - task: Docker@2
-      displayName: Push anonify-dev-pgx image
+      displayName: 'Push anonify-dev-pgx image'
       inputs:
         command: push
         containerRegistry: anonify-ci-cd-acr
@@ -179,15 +206,12 @@ stages:
         tags: latest
         dockerfile: ./docker/base-anonify-dev-pgx.Dockerfile
         buildContext: .
-
-  - job: CleanUp
-    pool:
-      name: 'AnonifyAgent'
-    dependsOn: ['Build_and_Push_rust_sgx_sdk_rootless_image', 'Build_and_Push_anonify_dev_image', 'Build_and_Push_anonify_dev_pgx_image']
-    steps:
-      - script: docker image prune -f
-        condition: always()
-        displayName: Remove dangling images for base
+    - script: docker image prune -f
+      condition: always()
+      displayName: 'Remove dangling images for pgx'
+    - script: docker rmi anonify.azurecr.io/anonify-dev-pgx:latest
+      condition: always()
+      displayName: 'Remove built images for pgx'
 
 - stage: Merge_to_main_base_for_example
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -206,7 +230,7 @@ stages:
         SPID: $(SPID)
         SUB_KEY: $(SUB_KEY)
       displayName: 'Run rust-sgx-sdk tests'
-    - script: docker-compose down
+    - script: docker-compose down --rmi all --volumes --remove-orphans
       condition: always()
       displayName: 'rust-sgx-sdk docker-compose down'
 
@@ -215,7 +239,7 @@ stages:
       name: 'AnonifyAgent'
     steps:
     - task: Docker@2
-      displayName: Build erc20 image
+      displayName: 'Build erc20 image'
       inputs:
         command: build
         containerRegistry: anonify-ci-cd-acr
@@ -225,7 +249,7 @@ stages:
         buildContext: .
         arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
     - task: Docker@2
-      displayName: Push erc20 image
+      displayName: 'Push erc20 image'
       inputs:
         command: push
         containerRegistry: anonify-ci-cd-acr
@@ -233,13 +257,19 @@ stages:
         tags: latest
         dockerfile: ./docker/example-erc20.Dockerfile
         buildContext: .
+    - script: docker image prune -f
+      condition: always()
+      displayName: 'Remove dangling images for state-runtime-erc20'
+    - script: docker rmi anonify.azurecr.io/erc20-state-runtime:latest
+      condition: always()
+      displayName: 'Remove built images for state-runtime-rc20'
 
   - job: Build_and_Push_key_vault_for_erc20_image
     pool:
       name: 'AnonifyAgent'
     steps:
     - task: Docker@2
-      displayName: Build key-vault for erc20 image
+      displayName: 'Build key-vault for erc20 image'
       inputs:
         command: build
         containerRegistry: anonify-ci-cd-acr
@@ -249,7 +279,7 @@ stages:
         buildContext: .
         arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
     - task: Docker@2
-      displayName: Push key-vault for erc20 image
+      displayName: 'Push key-vault for erc20 image'
       inputs:
         command: push
         containerRegistry: anonify-ci-cd-acr
@@ -257,19 +287,30 @@ stages:
         tags: latest
         dockerfile: ./docker/example-keyvault.Dockerfile
         buildContext: .
+    - script: docker image prune -f
+      condition: always()
+      displayName: 'Remove dangling images for key-vault-erc20'
+    - script: docker rmi anonify.azurecr.io/key-vault-for-erc20:latest
+      condition: always()
+      displayName: 'Remove built images for key-vault-erc20'
 
   - job: E2E_CI
     pool:
       name: 'AnonifyAgent'
     dependsOn: ['Build_and_Push_erc20_image', 'Build_and_Push_key_vault_for_erc20_image']
     steps:
+      - task: Docker@2
+        displayName: 'Login to ACR'
+        inputs:
+          command: login
+          containerRegistry: anonify-ci-cd-acr
       - template: templates/setup_env.yml
       - script: ./scripts/e2e-test.sh
         env:
           SPID: $(SPID)
           SUB_KEY: $(SUB_KEY)
         displayName: 'Run E2E tests'
-      - script: docker-compose -f e2e-docker-compose.yml down
+      - script: docker-compose -f e2e-docker-compose.yml down --rmi all --volumes --remove-orphans
         condition: always()
         displayName: 'Shutdown'
 
@@ -277,6 +318,11 @@ stages:
     pool:
       name: 'AnonifyAgent'
     steps:
+      - task: Docker@2
+        displayName: 'Login to ACR'
+        inputs:
+          command: login
+          containerRegistry: anonify-ci-cd-acr
       - template: templates/setup_env.yml
       - script: |
           docker-compose -f pgx-docker-compose.yml up -d
@@ -285,7 +331,7 @@ stages:
           SPID: $(SPID)
           SUB_KEY: $(SUB_KEY)
         displayName: 'Run encrypted-sql-ops-pg integration tests'
-      - script: docker-compose -f pgx-docker-compose.yml down
+      - script: docker-compose -f pgx-docker-compose.yml down --rmi all --volumes --remove-orphans
         condition: always()
         displayName: 'pgx docker-compose down'
 
@@ -294,7 +340,7 @@ stages:
       name: 'AnonifyAgent'
     steps:
     - task: Docker@2
-      displayName: Build encrypted-sql-ops-pg image
+      displayName: 'Build encrypted-sql-ops-pg image'
       inputs:
         command: build
         containerRegistry: anonify-ci-cd-acr
@@ -304,7 +350,7 @@ stages:
         buildContext: .
         arguments: '--build-arg AZ_KV_ENDPOINT=$(AZ_KV_ENDPOINT) --build-arg AZURE_CLIENT_ID=$(AZURE_CLIENT_ID) --build-arg AZURE_CLIENT_SECRET=$(AZURE_CLIENT_SECRET) --build-arg AZURE_TENANT_ID=$(AZURE_TENANT_ID) --build-arg PROD_ID=$(PROD_ID) --build-arg ISVSVN=$(ISVSVN)'
     - task: Docker@2
-      displayName: Push encrypted-sql-ops-pg image
+      displayName: 'Push encrypted-sql-ops-pg image'
       inputs:
         command: push
         containerRegistry: anonify-ci-cd-acr
@@ -312,12 +358,9 @@ stages:
         tags: latest
         dockerfile: ./docker/example-encrypted-sql-ops-pg.Dockerfile
         buildContext: .
-
-  - job: CleanUp
-    pool:
-      name: 'AnonifyAgent'
-    dependsOn: ['Build_and_Push_erc20_image', 'Build_and_Push_key_vault_for_erc20_image', 'Build_and_Push_encrypted_sql_ops_pg_image']
-    steps:
-      - script: docker image prune -f
-        condition: always()
-        displayName: Remove dangling images for example
+    - script: docker image prune -f
+      condition: always()
+      displayName: 'Remove dangling images for sql'
+    - script: docker rmi anonify.azurecr.io/encrypted-sql-ops-pg:latest
+      condition: always()
+      displayName: 'Remove built images for sql'
