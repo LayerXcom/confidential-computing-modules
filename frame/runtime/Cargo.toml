@@ -24,7 +24,7 @@ serde_bytes_std = { package = "serde_bytes", version = "0.11", optional = true }
 serde_bytes_sgx = { package = "serde_bytes", git = "https://github.com/mesalock-linux/serde-bytes-sgx", optional = true }
 
 [features]
-default = ["std", "backup-enable"]
+default = ["std", "backup-enable", "verify-mr-enclave-enable"]
 std = [
     "frame-common/std",
     "anyhow-std",
@@ -48,3 +48,4 @@ sgx = [
     "serde_bytes_sgx",
 ]
 backup-enable = []
+verify-mr-enclave-enable = []

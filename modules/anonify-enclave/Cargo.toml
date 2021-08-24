@@ -29,8 +29,9 @@ sgx_tstd = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.g
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 
 [features]
-default = ["backup-enable"]
+default = ["backup-enable", "verify-mr-enclave-enable"]
 backup-enable = [
     "frame-runtime/backup-enable",
     "frame-treekem/backup-enable",
 ]
+verify-mr-enclave-enable = []

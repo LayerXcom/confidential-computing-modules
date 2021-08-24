@@ -26,5 +26,6 @@ serde_bytes = { git = "https://github.com/mesalock-linux/serde-bytes-sgx" }
 base64 = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rust-base64-sgx" }
 
 [features]
-default = ["backup-enable"]
+default = ["backup-enable", "verify-mr-enclave-enable"]
 backup-enable = []
+verify-mr-enclave-enable = []
