@@ -48,7 +48,11 @@ impl AttestedReportVerifier {
         quote.read_exact(&mut report_data)?;
 
         Self::verify_pubkey_eq(pubkey, report_data)?;
-        self.verify_measurement(mr_enclave, mr_signer)?;
+
+        #[cfg(feature = "verify-mr-enclave-enable")]
+        self.verify_mr_enclave(mr_enclave)?;
+
+        self.verify_mr_signer(mr_signer)?;
 
         Ok(())
     }
@@ -65,7 +69,8 @@ impl AttestedReportVerifier {
         Ok(())
     }
 
-    fn verify_measurement(&self, mr_enclave: [u8; 32], mr_signer: [u8; 32]) -> Result<()> {
+    #[cfg(feature = "verify-mr-enclave-enable")]
+    fn verify_mr_enclave(&self, mr_enclave: [u8; 32]) -> Result<()> {
         if self.measurement.mr_enclave() != mr_enclave {
             return Err(MraTLSError::Error(anyhow!(
                 "Invalid mr_enclave: local mr_enclave: {:?}, received mr_enclave: {:?}",
@@ -73,6 +78,11 @@ impl AttestedReportVerifier {
                 mr_enclave
             )));
         }
+
+        Ok(())
+    }
+
+    fn verify_mr_signer(&self, mr_signer: [u8; 32]) -> Result<()> {
         if self.measurement.mr_signer() != mr_signer {
             return Err(MraTLSError::Error(anyhow!(
                 "Invalid mr_signer: local mr_signer: {:?}, received mr_signer: {:?}",
