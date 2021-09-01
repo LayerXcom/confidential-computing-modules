@@ -93,6 +93,26 @@ impl BlobClient {
         Ok(())
     }
 
+    // list up blob names
+    pub async fn list(&self, container_name: impl Into<String>) -> anyhow::Result<Vec<String>> {
+        let container_client = self.client.as_container_client(container_name);
+
+        let blobs = container_client
+            .list_blobs()
+            .execute()
+            .await
+            .map_err(|err| anyhow!(err))?;
+
+        let res = blobs
+            .blobs
+            .blobs
+            .into_iter()
+            .map(|blob| blob.name)
+            .collect::<Vec<_>>();
+
+        Ok(res)
+    }
+
     /// list_containers gets list of container names.
     #[cfg(test)]
     pub async fn list_containers(&self) -> anyhow::Result<Vec<String>> {
