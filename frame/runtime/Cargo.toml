@@ -48,4 +48,6 @@ sgx = [
     "serde_bytes_sgx",
 ]
 backup-enable = []
-verify-mr-enclave-enable = []
+verify-mr-enclave-enable = [
+    "frame-mra-tls/verify-mr-enclave-enable",
+]
