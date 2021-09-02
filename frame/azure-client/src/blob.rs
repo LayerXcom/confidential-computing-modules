@@ -61,7 +61,7 @@ impl BlobClient {
 
         let response = blob_client
             .get()
-            .range(Range::new(0, 2048)) // TODO: Fix range nums
+            .range(Range::new(0, 1500)) // TODO: Fix range nums
             .execute()
             .await
             .map_err(|err| anyhow!(err))?;
