@@ -8,7 +8,7 @@ edition = "2018"
 frame-types = { path = "../../frame/types" }
 frame-common = { path = "../../frame/common" }
 frame-sodium = { path = "../../frame/sodium" }
-frame-runtime = { path = "../../frame/runtime" }
+frame-runtime = { path = "../../frame/runtime", default-features = false}
 frame-host = { path = "../../frame/host" }
 frame-retrier = { path = "../../frame/retrier" }
 frame-config = { path = "../../frame/config" }
@@ -31,5 +31,6 @@ tracing-opentelemetry = "0.10"
 tracing-futures = "0.2.5"
 
 [features]
-default = ["backup-enable"]
+default = ["backup-enable", "verify-mr-enclave-enable"]
 backup-enable = []
+verify-mr-enclave-enable = []
