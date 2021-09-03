@@ -18,7 +18,7 @@ frame-config = { path = "../../frame/config" }
 frame-common = { path = "../../frame/common" }
 frame-sodium = { path = "../../frame/sodium" }
 anonify-eth-driver = { path = "../../modules/anonify-eth-driver", default-features = false }
-state-runtime-node-server = { path = "../../nodes/state-runtime/server" }
+state-runtime-node-server = { path = "../../nodes/state-runtime/server", default-features = false }
 state-runtime-node-api = { path = "../../nodes/state-runtime/api" }
 test-utils = { path = "../../tests/utils" }
 actix-rt = "1.1"
