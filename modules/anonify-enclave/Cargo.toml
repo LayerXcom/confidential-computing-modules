@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 frame-types = { path = "../../frame/types" }
-frame-enclave = { path = "../../frame/enclave" }
+frame-enclave = { path = "../../frame/enclave", default-features = false }
 frame-config = { path = "../../frame/config", default-features = false, features = ["sgx"] }
 frame-runtime = { path = "../../frame/runtime", default-features = false, features = ["sgx"] }
 frame-treekem = { path = "../../frame/treekem", default-features = false }
