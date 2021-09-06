@@ -71,7 +71,6 @@ impl AttestedReportVerifier {
 
     #[cfg(feature = "verify-mr-enclave-enable")]
     fn verify_mr_enclave(&self, mr_enclave: [u8; 32]) -> Result<()> {
-        println!("##### verify_mr_enclave");
         if self.measurement.mr_enclave() != mr_enclave {
             return Err(MraTLSError::Error(anyhow!(
                 "Invalid mr_enclave: local mr_enclave: {:?}, received mr_enclave: {:?}",
