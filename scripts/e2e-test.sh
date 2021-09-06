@@ -8,6 +8,18 @@ export ETH_URL=http://172.16.14.2:8545
 export COMPOSE_NETWORK_PREFIX=s
 CI_ROOT_DIR=$(pwd)
 
+# docker logs
+docker_logs() {
+    docker-compose -f e2e-docker-compose.yml ps
+    echo "state_runtime log..."
+    docker-compose -f e2e-docker-compose.yml logs state_runtime
+    echo "key_vault log..."
+    docker-compose -f e2e-docker-compose.yml logs key_vault
+    echo "ganache log..."
+    docker-compose -f e2e-docker-compose.yml logs ganache
+    echo "cat .env"
+}
+
 echo "ganache is starting..."
 docker-compose -f e2e-docker-compose.yml up -d ganache
 sleep 5
@@ -35,6 +47,7 @@ if [[ $pubkey == *"enclave_encryption_key"* ]]; then
   echo $pubkey
 else
   echo "failed to fetch enclave_encryption_key"
+  docker_logs
   exit 1
 fi
 
@@ -45,5 +58,6 @@ npm install libsodium-wrappers
 
 if ! node ./scripts/client.js; then
     echo "js client failed..."
+    docker_logs
     exit 1
 fi
