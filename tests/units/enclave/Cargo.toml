@@ -10,7 +10,7 @@ crate-type = ["staticlib"]
 
 [dependencies]
 frame-treekem = { path = "../../../frame/treekem", default-features = false }
-frame-mra-tls = { path = "../../../frame/mra-tls", default-features = false }
+frame-mra-tls = { path = "../../../frame/mra-tls" }
 frame-config = { path = "../../../frame/config", default-features = false, features = ["sgx"] }
 anonify-enclave = { path = "../../../modules/anonify-enclave", default-features = false }
 module-encrypted-sql-ops-enclave = { path = "../../../modules/encrypted-sql-ops-enclave" }
