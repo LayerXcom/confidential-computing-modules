@@ -30,5 +30,3 @@ rand_core = "0.5"
 rand = "0.7"
 tracing-core = "0.1"
 
-[features]
-default = []
