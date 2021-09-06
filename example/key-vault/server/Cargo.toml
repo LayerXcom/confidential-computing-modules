@@ -13,8 +13,7 @@ failure = "0.1"
 tracing-subscriber = "0.2"
 
 [features]
-default = ["backup-enable", "verify-mr-enclave-enable"]
+default = ["backup-enable"]
 backup-enable = [
     "anonify-eth-driver/backup-enable",
 ]
-verify-mr-enclave-enable = []
