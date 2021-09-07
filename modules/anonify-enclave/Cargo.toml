@@ -35,6 +35,9 @@ backup-enable = [
     "frame-treekem/backup-enable",
 ]
 verify-mr-enclave-enable = [
+    "frame-enclave/verify-mr-enclave-enable",
     "frame-runtime/verify-mr-enclave-enable",
+    "frame-treekem/verify-mr-enclave-enable",
     "frame-mra-tls/verify-mr-enclave-enable",
+    "anonify-ecall-types/verify-mr-enclave-enable",
 ]

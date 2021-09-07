@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 state-runtime-node-api = { path = "../api" }
-anonify-ecall-types = { path = "../../../modules/anonify-ecall-types"}
+anonify-ecall-types = { path = "../../../modules/anonify-ecall-types", default-features = false }
 anonify-eth-driver = { path = "../../../modules/anonify-eth-driver", default-features = false }
 frame-host = { path = "../../../frame/host" }
 frame-common = { path = "../../../frame/common" }
@@ -41,4 +41,7 @@ default = ["backup-enable", "verify-mr-enclave-enable"]
 backup-enable = [
     "anonify-eth-driver/backup-enable",
 ]
-verify-mr-enclave-enable = []
+verify-mr-enclave-enable = [
+    "anonify-ecall-types/verify-mr-enclave-enable",
+    "anonify-eth-driver/verify-mr-enclave-enable",
+]

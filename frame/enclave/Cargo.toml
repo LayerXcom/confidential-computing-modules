@@ -19,4 +19,6 @@ log = { git = "https://github.com/mesalock-linux/log-sgx" }
 
 [features]
 default = ["verify-mr-enclave-enable"]
-verify-mr-enclave-enable = []
+verify-mr-enclave-enable = [
+    "frame-runtime/verify-mr-enclave-enable",
+]

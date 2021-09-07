@@ -17,7 +17,7 @@ frame-host = { path = "../../frame/host" }
 frame-config = { path = "../../frame/config" }
 frame-common = { path = "../../frame/common" }
 frame-sodium = { path = "../../frame/sodium" }
-anonify-eth-driver = { path = "../../modules/anonify-eth-driver" }
+anonify-eth-driver = { path = "../../modules/anonify-eth-driver", default-features = false }
 state-runtime-node-server = { path = "../../nodes/state-runtime/server" }
 state-runtime-node-api = { path = "../../nodes/state-runtime/api" }
 test-utils = { path = "../../tests/utils" }
@@ -30,3 +30,8 @@ rand_core = "0.5"
 rand = "0.7"
 tracing-core = "0.1"
 
+[features]
+default = ["verify-mr-enclave-enable"]
+verify-mr-enclave-enable = [
+    "anonify-eth-driver/verify-mr-enclave-enable",
+]

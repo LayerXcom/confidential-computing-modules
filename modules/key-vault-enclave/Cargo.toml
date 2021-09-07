@@ -26,4 +26,7 @@ hex = { version = "0.4", default-features = false }
 default = ["verify-mr-enclave-enable"]
 verify-mr-enclave-enable = [
     "frame-mra-tls/verify-mr-enclave-enable",
-]
+    "frame-enclave/verify-mr-enclave-enable",
+    "frame-runtime/verify-mr-enclave-enable",
+    "frame-treekem/verify-mr-enclave-enable",
+]           

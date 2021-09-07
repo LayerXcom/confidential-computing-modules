@@ -21,7 +21,7 @@ bincode-std = { package = "bincode", version = "1.3", optional = true }
 bincode-sgx = { package = "bincode", git = "https://github.com/mesalock-linux/bincode-sgx", optional = true }
 
 [features]
-default = ["std"]
+default = ["std", "verify-mr-enclave-enable"]
 std = [
     "frame-common/std",
     "frame-runtime/std",
@@ -40,4 +40,7 @@ sgx = [
     "serde_json_sgx",
     "serde_bytes_sgx",
     "bincode-sgx",
+]
+verify-mr-enclave-enable = [
+    "frame-runtime/verify-mr-enclave-enable",
 ]

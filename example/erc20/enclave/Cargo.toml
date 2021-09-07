@@ -11,7 +11,7 @@ crate-type = ["staticlib"]
 [dependencies]
 frame-runtime = { path = "../../../frame/runtime", default-features = false, features = ["sgx"] }
 frame-config = { path = "../../../frame/config", default-features = false, features = ["sgx"] }
-frame-enclave = { path = "../../../frame/enclave" }
+frame-enclave = { path = "../../../frame/enclave", default-features = false }
 frame-sodium = { path = "../../../frame/sodium", default-features = false, features = ["sgx"] }
 frame-types = { path = "../../../frame/types" }
 frame-common = { path = "../../../frame/common", default-features = false, features = ["sgx"] }
@@ -27,8 +27,14 @@ env_logger = { git = "https://github.com/mesalock-linux/env_logger-sgx", default
 log = { git = "https://github.com/mesalock-linux/log-sgx" }
 
 [features]
-default = ["backup-enable", "runtime_enabled", "enclave_key"]
+default = ["backup-enable", "runtime_enabled", "enclave_key", "verify-mr-enclave-enable"]
 backup-enable = ["anonify-enclave/backup-enable"]
 runtime_enabled = []
 enclave_key = []
 treekem = []
+verify-mr-enclave-enable = [
+    "frame-runtime/verify-mr-enclave-enable",
+    "frame-enclave/verify-mr-enclave-enable",
+    "anonify-enclave/verify-mr-enclave-enable",
+    "anonify-ecall-types/verify-mr-enclave-enable",
+]
