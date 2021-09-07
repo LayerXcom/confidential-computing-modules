@@ -31,8 +31,12 @@ tracing-opentelemetry = "0.10"
 tracing-futures = "0.2.5"
 
 [features]
-default = ["backup-enable", "verify-mr-enclave-enable"]
+default = ["std", "backup-enable", "verify-mr-enclave-enable"]
 backup-enable = []
+std = [
+    "frame-runtime/std",
+    "anonify-ecall-types/std",
+]
 verify-mr-enclave-enable = [
     "frame-runtime/verify-mr-enclave-enable",
     "anonify-ecall-types/verify-mr-enclave-enable",

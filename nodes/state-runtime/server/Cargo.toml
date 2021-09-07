@@ -37,9 +37,13 @@ tracing-subscriber = "0.2"
 tracing-core = "0.1"
 
 [features]
-default = ["backup-enable", "verify-mr-enclave-enable"]
+default = ["std", "backup-enable", "verify-mr-enclave-enable"]
 backup-enable = [
     "anonify-eth-driver/backup-enable",
+]
+std = [
+    "anonify-eth-driver/std",
+    "anonify-ecall-types/std",
 ]
 verify-mr-enclave-enable = [
     "anonify-ecall-types/verify-mr-enclave-enable",
