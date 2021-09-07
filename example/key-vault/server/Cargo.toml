@@ -5,7 +5,7 @@ authors = ["LayerX Labs <div-labs@layerx.co.jp>"]
 edition = "2018"
 
 [dependencies]
-key-vault-node-server = { path = "../../../nodes/key-vault", default-features = false }
+key-vault-node-server = { path = "../../../nodes/key-vault" }
 anonify-eth-driver = { path = "../../../modules/anonify-eth-driver", default-features = false }
 frame-host = { path = "../../../frame/host" }
 actix-web = "3"
@@ -18,6 +18,5 @@ backup-enable = [
     "anonify-eth-driver/backup-enable",
 ]
 verify-mr-enclave-enable = [
-    "key-vault-node-server/verify-mr-enclave-enable",
     "anonify-eth-driver/verify-mr-enclave-enable",
 ]
