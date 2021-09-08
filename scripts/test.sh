@@ -151,7 +151,7 @@ exec_sr_treekem_node_tests \
 
 cd ${ANONIFY_ROOT}/scripts
 export ENCLAVE_PKG_NAME=erc20
-make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,backup-enable,treekem"
+make DEBUG=1 ENCLAVE_DIR=example/erc20/enclave FEATURE_FLAGS="runtime_enabled,backup-enable,treekem,verify-mr-enclave-enable"
 
 function exec_kv_treekem_node_tests() {
   for N in "$@"

@@ -10,7 +10,7 @@ crate-type = ["staticlib"]
 
 [dependencies]
 frame-treekem = { path = "../../../frame/treekem", default-features = false }
-frame-mra-tls = { path = "../../../frame/mra-tls" }
+frame-mra-tls = { path = "../../../frame/mra-tls", default-features = false }
 frame-config = { path = "../../../frame/config", default-features = false, features = ["sgx"] }
 anonify-enclave = { path = "../../../modules/anonify-enclave", default-features = false }
 module-encrypted-sql-ops-enclave = { path = "../../../modules/encrypted-sql-ops-enclave" }
@@ -19,9 +19,14 @@ lazy_static = { version = "1.4", features = ["spin_no_std"] }
 test-utils = { path = "../../utils", default-features = false, features = ["sgx"] }
 
 [features]
-default = ["backup-enable", "runtime_enabled"]
+default = ["backup-enable", "runtime_enabled", "verify-mr-enclave-enable"]
 backup-enable = [
     "anonify-enclave/backup-enable",
     "frame-treekem/backup-enable",
 ]
 runtime_enabled = []
+verify-mr-enclave-enable = [
+    "frame-treekem/verify-mr-enclave-enable",
+    "frame-mra-tls/verify-mr-enclave-enable",
+    "anonify-enclave/verify-mr-enclave-enable",
+]

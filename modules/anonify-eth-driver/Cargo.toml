@@ -8,11 +8,11 @@ edition = "2018"
 frame-types = { path = "../../frame/types" }
 frame-common = { path = "../../frame/common" }
 frame-sodium = { path = "../../frame/sodium" }
-frame-runtime = { path = "../../frame/runtime" }
+frame-runtime = { path = "../../frame/runtime", default-features = false }
 frame-host = { path = "../../frame/host" }
 frame-retrier = { path = "../../frame/retrier" }
 frame-config = { path = "../../frame/config" }
-anonify-ecall-types = { path = "../anonify-ecall-types" }
+anonify-ecall-types = { path = "../anonify-ecall-types", default-features = false }
 sgx_types = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 thiserror = "1.0"
 anyhow = "1.0"
@@ -31,5 +31,13 @@ tracing-opentelemetry = "0.10"
 tracing-futures = "0.2.5"
 
 [features]
-default = ["backup-enable"]
+default = ["std", "backup-enable", "verify-mr-enclave-enable"]
 backup-enable = []
+std = [
+    "frame-runtime/std",
+    "anonify-ecall-types/std",
+]
+verify-mr-enclave-enable = [
+    "frame-runtime/verify-mr-enclave-enable",
+    "anonify-ecall-types/verify-mr-enclave-enable",
+]

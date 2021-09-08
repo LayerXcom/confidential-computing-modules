@@ -16,8 +16,15 @@ opentelemetry-jaeger = { version = "0.10", features = ["tokio"] }
 tracing-opentelemetry = "0.10"
 
 [features]
-default = ["backup-enable"]
+default = ["std", "backup-enable", "verify-mr-enclave-enable"]
+std = [
+    "anonify-eth-driver/std",
+]
 backup-enable = [
     "state-runtime-node-server/backup-enable",
     "anonify-eth-driver/backup-enable",
+]
+verify-mr-enclave-enable = [
+    "state-runtime-node-server/verify-mr-enclave-enable",
+    "anonify-eth-driver/verify-mr-enclave-enable",
 ]

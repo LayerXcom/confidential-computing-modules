@@ -17,8 +17,8 @@ frame-host = { path = "../../frame/host" }
 frame-config = { path = "../../frame/config" }
 frame-common = { path = "../../frame/common" }
 frame-sodium = { path = "../../frame/sodium" }
-anonify-eth-driver = { path = "../../modules/anonify-eth-driver" }
-state-runtime-node-server = { path = "../../nodes/state-runtime/server" }
+anonify-eth-driver = { path = "../../modules/anonify-eth-driver", default-features = false }
+state-runtime-node-server = { path = "../../nodes/state-runtime/server", default-features = false }
 state-runtime-node-api = { path = "../../nodes/state-runtime/api" }
 test-utils = { path = "../../tests/utils" }
 actix-rt = "1.1"
@@ -29,3 +29,17 @@ sgx_urts = "1.1.1"
 rand_core = "0.5"
 rand = "0.7"
 tracing-core = "0.1"
+
+[features]
+default = ["std", "backup-enable", "verify-mr-enclave-enable"]
+std = [
+    "anonify-eth-driver/std",
+]
+backup-enable = [
+    "state-runtime-node-server/backup-enable",
+    "anonify-eth-driver/backup-enable",
+]
+verify-mr-enclave-enable = [
+    "state-runtime-node-server/verify-mr-enclave-enable",
+    "anonify-eth-driver/verify-mr-enclave-enable",
+]
