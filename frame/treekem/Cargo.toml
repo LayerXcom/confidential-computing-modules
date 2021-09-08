@@ -28,4 +28,6 @@ base64 = { rev = "sgx_1.1.3", git = "https://github.com/mesalock-linux/rust-base
 [features]
 default = ["backup-enable", "verify-mr-enclave-enable"]
 backup-enable = []
-verify-mr-enclave-enable = []
+verify-mr-enclave-enable = [
+    "frame-mra-tls/verify-mr-enclave-enable",
+]
