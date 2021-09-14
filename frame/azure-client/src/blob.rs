@@ -53,7 +53,7 @@ impl BlobClient {
         &self,
         container_name: impl Into<String>,
         blob_name: impl Into<String>,
-        blob_size: usize,
+        blob_size: u64,
     ) -> anyhow::Result<String> {
         let blob_client = self
             .client
@@ -176,7 +176,7 @@ mod tests {
             .await
             .unwrap();
 
-        let blob_size: usize = 1024;
+        let blob_size: u64 = 1024;
         // putしたデータを取得できることを確認する
         let res = client.get("emulcont", "test.txt", blob_size).await.unwrap();
         assert_eq!(data, res);
