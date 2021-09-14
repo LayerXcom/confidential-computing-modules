@@ -53,6 +53,7 @@ impl BlobClient {
         &self,
         container_name: impl Into<String>,
         blob_name: impl Into<String>,
+        blob_size: usize,
     ) -> anyhow::Result<String> {
         let blob_client = self
             .client
@@ -61,7 +62,7 @@ impl BlobClient {
 
         let response = blob_client
             .get()
-            .range(Range::new(0, 2048)) // TODO: Fix range nums
+            .range(Range::new(0, blob_size)) // TODO: Fix range nums
             .execute()
             .await
             .map_err(|err| anyhow!(err))?;
@@ -175,8 +176,9 @@ mod tests {
             .await
             .unwrap();
 
+        let blob_size: usize = 1024;
         // putしたデータを取得できることを確認する
-        let res = client.get("emulcont", "test.txt").await.unwrap();
+        let res = client.get("emulcont", "test.txt", blob_size).await.unwrap();
         assert_eq!(data, res);
     }
 }
