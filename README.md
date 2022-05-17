@@ -1,11 +1,6 @@
-<div align="center">
-<img src="https://user-images.githubusercontent.com/10915207/81931155-9c178e80-9624-11ea-9a32-5ad7985d1cb3.png" width="400px">
-</div>
-</br>
+CCMs (Confidential Computing Modules) is a blockchain-agnostic execution environment with privacy and auditability based on TEE (Trusted Execution Environment). CCMs enables flexible execution of business logic while protecting a shared state that is not desired to be revealed to the others. CCMs also provides auditability, i.e., only an auditor can read a specific part of the state. The current implementation of CCMs only supports Ethereum-based blockchains such as [Quorum](https://github.com/jpmorganchase/quorum) as the backend.
 
-Anonify is a blockchain-agnostic execution environment with privacy and auditability based on TEE (Trusted Execution Environment). Anonify enables flexible execution of business logic while protecting a shared state that is not desired to be revealed to the others. Anonify also provides auditability, i.e., only an auditor can read a specific part of the state. The current implementation of Anonify only supports Ethereum-based blockchains such as [Quorum](https://github.com/jpmorganchase/quorum) as the backend.
-
-Please refer to [White Paper (JP)](https://layerx.co.jp/wp-content/uploads/2020/06/anonify.pdf), [Anonify Book(EN)](https://layerxcom.github.io/anonify-book-en/) / [Anonify Book(JP)](https://layerxcom.github.io/anonify-book/) for more information.
+Please refer to [White Paper (JP)](https://layerx.co.jp/wp-content/uploads/2020/06/anonify.pdf), [CCMs Book(EN)](https://layerxcom.github.io/anonify-book-en/) / [CCMs Book(JP)](https://layerxcom.github.io/anonify-book/) for more information.
 
 *Note: This is a prototype implementation and has not been tested for production.*
 
@@ -15,7 +10,7 @@ Copy environment variables and set your `SPID` and `SUB_KEY`.
 $ cp .env.sample .env
 ```
 
-## Running anonify nodes
+## Running CCMs nodes
 
 ### docker
 [The ERC20-like application](example/erc20/state-transition/src/lib.rs) is implemented as the initial state transition functions. (Assumed your hardware supports Intel SGX.)
@@ -37,9 +32,9 @@ $ ./scripts/run-server.sh
 ```
 
 ## Using CLI
-You can use anonify-cli to communicate with a whole anonify system. See the [transfer tutorial section](https://layerxcom.github.io/anonify-book-en/Tutorials/ERC20/transfer/) for usage.
+You can use ccms-cli to communicate with a whole CCMs system. See the [transfer tutorial section](https://layerxcom.github.io/anonify-book-en/Tutorials/ERC20/transfer/) for usage.
 
-Build Anonify's command line utilities.
+Build CCMs's command line utilities.
 ```
 $ ./scripts/build-cli.sh
 ```
@@ -55,7 +50,7 @@ You can try to build the codebase on your local machine or test it in sgx-enable
 
 ###  Building in simulation mode
 
-Anonify assumes your hardware supports Intel SGX. Without such hardware, you can build it in simulation mode, which allows you to build on macOS.
+CCMs assumes your hardware supports Intel SGX. Without such hardware, you can build it in simulation mode, which allows you to build on macOS.
 
 ```
 $ docker run -v `pwd`:/root/anonify --rm -it osuketh/anonify:20210310-1804-1.1.3
@@ -72,7 +67,7 @@ LD_LIBRARY_PATH=/opt/intel/sgx-aesm-service/aesm /opt/intel/sgx-aesm-service/aes
 
 Running intel SGX environment, and then, you can build in HW mode.
 ```
-$ cd anonify 
+$ cd anonify
 $ UID=`id -u` GID=`id -g` docker-compose up -d
 $ docker-compose exec sgx_machine bash
 $ ./scripts/test.sh
@@ -87,8 +82,8 @@ Currently, documents are only available in Japanese.
 
 - [White Paper](https://layerx.co.jp/wp-content/uploads/2020/06/anonify.pdf)
 - [Slides](https://speakerdeck.com/layerx/anonify)
-- [Anonify Book(EN)](https://layerxcom.github.io/anonify-book-en/) / [Anonify Book(JP)](https://layerxcom.github.io/anonify-book/)
+- [CCMs Book(EN)](https://layerxcom.github.io/anonify-book-en/) / [CCMs Book(JP)](https://layerxcom.github.io/anonify-book/)
 
 ## License
 
-Anonify is primarily distributed under the terms of the [Apache License (Version 2.0)], see [LICENSE](https://github.com/LayerXcom/anonify/blob/main/LICENSE) for details.
+CCMs is primarily distributed under the terms of the [Apache License (Version 2.0)], see [LICENSE](https://github.com/LayerXcom/confidential-computing-modules/blob/main/LICENSE) for details.
